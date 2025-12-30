@@ -1,15 +1,13 @@
 <?php
 /**
  * Environment Configuration Loader
- *
- * Loads .env file and provides env() helper function.
- * Include this file at the very beginning of your application bootstrap.
  */
 
-// Prevent multiple inclusions
-if (function_exists('env')) {
+// Prevent multiple loads
+if (defined('ENV_LOADED')) {
     return;
 }
+define('ENV_LOADED', true);
 
 /**
  * Load .env file into environment
@@ -33,10 +31,9 @@ function loadEnv(string $path): bool
             $key = trim($key);
             $value = trim($value);
 
-            // Remove surrounding quotes
-            if (preg_match('/^"(.+)"$/', $value, $matches)) {
+            if (preg_match('/^"(.*)"$/', $value, $matches)) {
                 $value = $matches[1];
-            } elseif (preg_match("/^'(.+)'$/", $value, $matches)) {
+            } elseif (preg_match("/^'(.*)'$/", $value, $matches)) {
                 $value = $matches[1];
             }
 
@@ -49,7 +46,7 @@ function loadEnv(string $path): bool
 }
 
 /**
- * Get environment variable with optional default value
+ * Get environment variable with default
  */
 function env(string $key, $default = null)
 {
@@ -59,23 +56,14 @@ function env(string $key, $default = null)
         return $default;
     }
 
-    // Convert string booleans
     $lower = strtolower($value);
     if ($lower === 'true') return true;
     if ($lower === 'false') return false;
     if ($lower === 'null') return null;
 
-    // Remove quotes if present
-    if (preg_match('/^"(.+)"$/', $value, $matches)) {
-        return $matches[1];
-    }
-    if (preg_match("/^'(.+)'$/", $value, $matches)) {
-        return $matches[1];
-    }
-
     return $value;
 }
 
-// Auto-load .env from project root
+// Auto-load .env
 $envPath = dirname(__DIR__) . '/.env';
 loadEnv($envPath);

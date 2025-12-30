@@ -5,7 +5,7 @@ namespace Core;
 class Router
 {
     private static array $routes = [];
-    private static string $basePath = '/seo-toolkit/public';
+    private static string $basePath = '';
 
     public static function setBasePath(string $path): void
     {
