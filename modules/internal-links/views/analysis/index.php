@@ -126,14 +126,11 @@
                         <input type="number" id="batch-size" value="5" min="1" max="20" class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3">
                         <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Link per batch (1-20)</p>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Modello AI</label>
-                        <select id="ai-model" class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3">
-                            <option value="gpt-4o-mini">GPT-4o Mini (Economico)</option>
-                            <option value="gpt-4o">GPT-4o (Avanzato)</option>
-                            <option value="claude-3-haiku">Claude 3 Haiku (Economico)</option>
-                            <option value="claude-3-sonnet">Claude 3 Sonnet (Avanzato)</option>
-                        </select>
+                    <div class="flex items-center text-sm text-slate-500 dark:text-slate-400">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>Modello AI configurato dall'amministratore</span>
                     </div>
                 </div>
             </div>
@@ -206,8 +203,7 @@ const elements = {
     statAnalyzed: document.getElementById('stat-analyzed'),
     statPending: document.getElementById('stat-pending'),
     log: document.getElementById('analysis-log'),
-    batchSize: document.getElementById('batch-size'),
-    aiModel: document.getElementById('ai-model')
+    batchSize: document.getElementById('batch-size')
 };
 
 elements.btnStart.addEventListener('click', startAnalysis);
@@ -255,17 +251,16 @@ async function startAnalysis() {
     log('Avvio analisi AI...', 'info');
 
     const batchSize = parseInt(elements.batchSize.value) || 5;
-    const model = elements.aiModel.value;
 
     while (!shouldStop) {
         try {
-            const response = await fetch(`<?= url('/internal-links/project/' . $project['id']) ?>/analysis/batch`, {
+            const response = await fetch(`<?= url('/internal-links/project/' . $project['id']) ?>/analysis/start`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-Token': csrfToken
                 },
-                body: JSON.stringify({ batch_size: batchSize, model: model })
+                body: JSON.stringify({ batch_size: batchSize })
             });
 
             const data = await response.json();
