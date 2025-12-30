@@ -38,3 +38,8 @@ nul
 cookies.txt
 storage/*.json
 .claude/
+
+# SSH Keys
+siteground_key
+siteground_key.pub
+*.pem
