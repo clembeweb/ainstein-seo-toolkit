@@ -1,0 +1,11 @@
+{
+    "name": "Template Module",
+    "slug": "template",
+    "version": "1.0.0",
+    "description": "Modulo template da usare come base per nuovi moduli",
+    "author": "SEO Toolkit",
+    "requires": {
+        "php": ">=8.0",
+        "credits": true
+    }
+}

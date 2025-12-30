@@ -1,0 +1,13 @@
+{
+    "name": "Internal Links Analyzer",
+    "slug": "internal-links",
+    "version": "1.0.0",
+    "description": "Analizza e ottimizza la struttura di link interni",
+    "icon": "link",
+    "menu_order": 10,
+    "requires": {
+        "php": ">=8.0",
+        "credits": true,
+        "services": ["ai", "scraper"]
+    }
+}

@@ -1,0 +1,43 @@
+{
+    "name": "AI SEO Content Generator",
+    "slug": "ai-content",
+    "version": "1.0.0",
+    "description": "Genera articoli SEO-ottimizzati con AI partendo da analisi SERP",
+    "icon": "pencil-square",
+    "color": "purple",
+    "menu_order": 20,
+    "requires": {
+        "php": ">=8.0",
+        "credits": true,
+        "services": ["ai", "scraper"]
+    },
+    "credits": {
+        "serp_extraction": 3,
+        "scrape_per_url": 1,
+        "article_generation": 10,
+        "wp_publish": 0
+    },
+    "settings": {
+        "serpapi_key": {
+            "type": "password",
+            "label": "SerpAPI Key",
+            "admin_only": true
+        },
+        "default_language": {
+            "type": "select",
+            "label": "Lingua default",
+            "options": ["it", "en", "es", "de", "fr"],
+            "default": "it"
+        },
+        "default_word_count": {
+            "type": "number",
+            "label": "Parole target articolo",
+            "default": 1500
+        },
+        "max_sources": {
+            "type": "number",
+            "label": "Max fonti per articolo",
+            "default": 6
+        }
+    }
+}

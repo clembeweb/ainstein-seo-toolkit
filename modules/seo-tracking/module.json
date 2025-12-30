@@ -1,0 +1,65 @@
+{
+    "name": "SEO Position Tracking",
+    "slug": "seo-tracking",
+    "version": "1.0.0",
+    "description": "Monitoraggio posizionamento keyword, traffico organico e revenue con GSC + GA4 e analisi AI",
+    "icon": "chart-bar",
+    "menu_order": 15,
+    "requires": {
+        "php": ">=8.0",
+        "services": ["ai"]
+    },
+    "credits": {
+        "gsc_full_sync": {
+            "cost": 10,
+            "description": "Sync storico completo GSC (16 mesi)"
+        },
+        "weekly_digest": {
+            "cost": 5,
+            "description": "Report settimanale AI"
+        },
+        "monthly_executive": {
+            "cost": 15,
+            "description": "Report mensile executive AI"
+        },
+        "keyword_analysis": {
+            "cost": 5,
+            "description": "Analisi keyword AI on-demand"
+        },
+        "revenue_attribution": {
+            "cost": 8,
+            "description": "Analisi revenue attribution AI"
+        },
+        "anomaly_detection": {
+            "cost": 5,
+            "description": "Rilevamento anomalie AI"
+        },
+        "alert_ai_insight": {
+            "cost": 1,
+            "description": "Insight AI per alert"
+        }
+    },
+    "settings": {
+        "gsc_client_id": {
+            "label": "Google OAuth Client ID",
+            "type": "text",
+            "description": "Client ID dalla Google Cloud Console",
+            "admin_only": true
+        },
+        "gsc_client_secret": {
+            "label": "Google OAuth Client Secret",
+            "type": "password",
+            "description": "Client Secret dalla Google Cloud Console",
+            "admin_only": true
+        },
+        "gsc_redirect_uri": {
+            "label": "Google OAuth Redirect URI",
+            "type": "text",
+            "description": "Copia questo URL nella Google Cloud Console",
+            "admin_only": true,
+            "readonly": true,
+            "default": "/seo-tracking/gsc/callback"
+        }
+    },
+    "routes_prefix": "/seo-tracking"
+}
