@@ -1,6 +1,6 @@
 # AINSTEIN - Stato Sviluppo
 
-**Ultimo aggiornamento:** 2025-01-02
+**Ultimo aggiornamento:** 2026-01-02
 **Deploy:** LIVE su https://ainstein.it
 
 ---
@@ -17,13 +17,14 @@
 
 ## STATO MODULI
 
-| Modulo | Slug | Stato | Note |
-|--------|------|-------|------|
-| AI SEO Content Generator | `ai-content` | 98% | Wizard completo |
-| Internal Links Analyzer | `internal-links` | 85% | 39 Lucide icons da migrare |
-| SEO Audit | `seo-audit` | 90% | Bug logica crawl |
-| SEO Position Tracking | `seo-tracking` | 70% | Bug routes/controller |
-| AI Content Bulk Creator | `content-creator` | 0% | Non implementato |
+| Modulo | Slug | Files | Stato | Note |
+|--------|------|-------|-------|------|
+| AI SEO Content Generator | `ai-content` | 23 | 98% | Wizard completo, fix MySQL timeout |
+| Internal Links Analyzer | `internal-links` | 28 | 85% | 39 Lucide icons da migrare |
+| SEO Audit | `seo-audit` | 26 | 95% | Crawler, Issues, AI, GSC OAuth |
+| SEO Position Tracking | `seo-tracking` | 53 | 80% | OAuth centralizzato, fix routes |
+| Google Ads Analyzer | `ads-analyzer` | 24 | 90% | Nuovo modulo, CSV analysis |
+| AI Content Bulk Creator | `content-creator` | 0 | 0% | Non implementato |
 
 ---
 
@@ -86,12 +87,42 @@ brief_generated_at, brief_model, brief_tokens_used
 
 ---
 
+## FIX COMPLETATI (2026-01-02)
+
+### 5. OAuth Google Centralizzato
+| Problema | Causa | Soluzione |
+|----------|-------|-----------|
+| Redirect URI diversi per modulo | Ogni modulo aveva callback proprio | Unico callback `/oauth/google/callback` |
+
+**File creati:**
+- `services/GoogleOAuthService.php` - servizio OAuth centralizzato
+- `controllers/OAuthController.php` - callback centralizzato
+
+**File modificati:**
+- `public/index.php` - aggiunta route OAuth e autoloader Controllers
+- `admin/views/settings.php` - redirect URI readonly con copy button
+- `modules/seo-tracking/routes.php` - usa callback centralizzato
+- `modules/seo-tracking/controllers/GscController.php` - usa GoogleOAuthService
+
+### 6. Fix Routes GSC seo-tracking
+| Problema | Causa | Soluzione |
+|----------|-------|-----------|
+| POST select-property non salvava | Chiamava `selectProperty()` invece di `saveProperty()` | Corretto mapping route→controller |
+| sync-full method mismatch | Chiamava `syncFull()` invece di `fullSync()` | Corretto nome metodo |
+
+**File modificati:**
+- `modules/seo-tracking/routes.php` - fix POST select-property, fix sync-full, aggiunto GET select-property
+
+---
+
 ## DA FARE (Bug Fix)
 
 ### CRITICAL (seo-tracking)
+- [x] ~~Fix route selectProperty → saveProperty~~ (fatto 2026-01-02)
+- [x] ~~Fix route syncFull → fullSync~~ (fatto 2026-01-02)
+- [ ] Test completo OAuth GSC end-to-end
+- [ ] Test GA4 Service Account upload
 - [ ] AiReportService -> usa AiService centralizzato
-- [ ] KeywordController metodi mancanti (add, all)
-- [ ] Redirect paths errati
 
 ### HIGH (internal-links)
 - [ ] Migrare 39 Lucide icons -> Heroicons SVG
@@ -100,6 +131,7 @@ brief_generated_at, brief_model, brief_tokens_used
 ### MEDIUM
 - [ ] Creare SiteConfig model in seo-audit
 - [ ] Fix logica status crawl
+- [ ] Configurare redirect URI in Google Cloud Console
 
 ---
 
@@ -181,11 +213,47 @@ ssh ... "mysql -u USER -pPASS DB < ~/backup.sql"
 
 | Metrica | Valore |
 |---------|--------|
-| File PHP | ~200 |
-| Moduli attivi | 4 |
-| Tabelle DB | 52 |
+| File PHP totali | ~154 (solo moduli) |
+| Moduli attivi | 5 |
+| Tabelle DB | 52+ |
 | Lucide icons da fixare | 39 |
+
+### File per modulo
+| Modulo | Files PHP |
+|--------|-----------|
+| seo-tracking | 53 |
+| internal-links | 28 |
+| seo-audit | 26 |
+| ads-analyzer | 24 |
+| ai-content | 23 |
 
 ---
 
-*Aggiornato: 2025-01-02 - Fix WordPress, Database, Brief persistence*
+## FILE MODIFICATI OGGI (41 files)
+
+**Core/Services:**
+- services/ScraperService.php
+- services/GoogleOAuthService.php (NEW)
+- controllers/OAuthController.php (NEW)
+- public/index.php
+- core/Database.php
+- admin/views/settings.php
+
+**ads-analyzer (nuovo modulo):**
+- 24 file totali (controllers, services, models, views, routes)
+
+**ai-content:**
+- controllers/KeywordController.php, WizardController.php, ArticleController.php, WordPressController.php
+- models/Keyword.php
+- views/keywords/wizard.php
+
+**seo-tracking:**
+- controllers/GscController.php
+- routes.php
+
+**seo-audit:**
+- services/GscService.php
+
+---
+
+*Aggiornato: 2026-01-02 - OAuth centralizzato, fix routes GSC, nuovo modulo ads-analyzer*
