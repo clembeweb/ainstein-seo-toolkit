@@ -11,7 +11,7 @@ use Modules\AdsAnalyzer\Services\ValidationService;
 
 class SettingsController
 {
-    public function index(): void
+    public function index(): string
     {
         $user = Auth::user();
 
@@ -26,7 +26,7 @@ class SettingsController
         // Carica contesti salvati
         $savedContexts = BusinessContext::getByUser($user['id']);
 
-        View::render('ads-analyzer/settings/index', [
+        return View::render('ads-analyzer/settings/index', [
             'title' => 'Impostazioni - Google Ads Analyzer',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),

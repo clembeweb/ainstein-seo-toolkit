@@ -30,7 +30,7 @@ class AnalysisController
     /**
      * Step 1: Upload CSV
      */
-    public function upload(int $projectId): void
+    public function upload(int $projectId): string
     {
         $user = Auth::user();
         $project = Project::findByUserAndId($user['id'], $projectId);
@@ -40,7 +40,7 @@ class AnalysisController
             redirect('/ads-analyzer');
         }
 
-        View::render('ads-analyzer/analysis/upload', [
+        return View::render('ads-analyzer/analysis/upload', [
             'title' => 'Carica CSV - ' . $project['name'],
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
@@ -134,7 +134,7 @@ class AnalysisController
     /**
      * Step 2: Contesto business
      */
-    public function context(int $projectId): void
+    public function context(int $projectId): string
     {
         $user = Auth::user();
         $project = Project::findByUserAndId($user['id'], $projectId);
@@ -151,7 +151,7 @@ class AnalysisController
         $adGroupCount = count($adGroups);
         $estimatedCredits = $adGroupCount <= 3 ? $adGroupCount * 2 : ceil($adGroupCount * 1.5);
 
-        View::render('ads-analyzer/analysis/context', [
+        return View::render('ads-analyzer/analysis/context', [
             'title' => 'Contesto Business - ' . $project['name'],
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
@@ -261,7 +261,7 @@ class AnalysisController
     /**
      * Step 4: Risultati
      */
-    public function results(int $projectId): void
+    public function results(int $projectId): string
     {
         $user = Auth::user();
         $project = Project::findByUserAndId($user['id'], $projectId);
@@ -289,7 +289,7 @@ class AnalysisController
         $selectedCount = NegativeKeyword::countSelectedByProject($projectId);
         $totalNegatives = NegativeKeyword::countByProject($projectId);
 
-        View::render('ads-analyzer/analysis/results', [
+        return View::render('ads-analyzer/analysis/results', [
             'title' => 'Risultati - ' . $project['name'],
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),

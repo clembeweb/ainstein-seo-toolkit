@@ -9,7 +9,7 @@ use Modules\AdsAnalyzer\Models\Project;
 
 class DashboardController
 {
-    public function index(): void
+    public function index(): string
     {
         $user = Auth::user();
 
@@ -17,7 +17,7 @@ class DashboardController
         $stats = Project::getStats($user['id']);
         $recentProjects = Project::getRecent($user['id'], 5);
 
-        View::render('ads-analyzer/dashboard/index', [
+        return View::render('ads-analyzer/dashboard/index', [
             'title' => 'Google Ads Analyzer',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),

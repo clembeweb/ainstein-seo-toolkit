@@ -13,7 +13,7 @@ use Modules\AdsAnalyzer\Services\ValidationService;
 
 class ProjectController
 {
-    public function index(): void
+    public function index(): string
     {
         $user = Auth::user();
 
@@ -21,7 +21,7 @@ class ProjectController
         $projects = Project::getAllByUser($user['id'], $status);
         $stats = Project::getStats($user['id']);
 
-        View::render('ads-analyzer/projects/index', [
+        return View::render('ads-analyzer/projects/index', [
             'title' => 'Progetti - Google Ads Analyzer',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
@@ -31,11 +31,11 @@ class ProjectController
         ]);
     }
 
-    public function create(): void
+    public function create(): string
     {
         $user = Auth::user();
 
-        View::render('ads-analyzer/projects/create', [
+        return View::render('ads-analyzer/projects/create', [
             'title' => 'Nuovo Progetto - Google Ads Analyzer',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id'])
@@ -68,7 +68,7 @@ class ProjectController
         redirect("/ads-analyzer/projects/{$projectId}/upload");
     }
 
-    public function show(int $id): void
+    public function show(int $id): string
     {
         $user = Auth::user();
         $project = Project::findByUserAndId($user['id'], $id);
@@ -83,7 +83,7 @@ class ProjectController
         $selectedCount = NegativeKeyword::countSelectedByProject($id);
         $totalNegatives = NegativeKeyword::countByProject($id);
 
-        View::render('ads-analyzer/projects/show', [
+        return View::render('ads-analyzer/projects/show', [
             'title' => $project['name'] . ' - Google Ads Analyzer',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
@@ -95,7 +95,7 @@ class ProjectController
         ]);
     }
 
-    public function edit(int $id): void
+    public function edit(int $id): string
     {
         $user = Auth::user();
         $project = Project::findByUserAndId($user['id'], $id);
@@ -105,7 +105,7 @@ class ProjectController
             redirect('/ads-analyzer');
         }
 
-        View::render('ads-analyzer/projects/edit', [
+        return View::render('ads-analyzer/projects/edit', [
             'title' => 'Modifica ' . $project['name'],
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
