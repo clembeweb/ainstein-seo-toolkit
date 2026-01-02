@@ -273,7 +273,7 @@ $fallbackEnabled = ($settings['ai_fallback_enabled']['value'] ?? '1') === '1';
                         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                     </svg>
-                    Google Search Console (SEO Audit)
+                    Google OAuth (GSC / Analytics)
                 </h3>
             </div>
             <div class="p-6 space-y-6">
@@ -287,9 +287,9 @@ $fallbackEnabled = ($settings['ai_fallback_enabled']['value'] ?? '1') === '1';
                             <ol class="list-decimal list-inside space-y-1 text-blue-600 dark:text-blue-400">
                                 <li>Vai su <a href="https://console.cloud.google.com/apis/credentials" target="_blank" class="underline hover:no-underline">Google Cloud Console</a></li>
                                 <li>Crea un nuovo progetto o seleziona esistente</li>
-                                <li>Abilita l'API "Search Console API"</li>
+                                <li>Abilita "Search Console API" e/o "Google Analytics Data API"</li>
                                 <li>Crea credenziali OAuth 2.0 (Web application)</li>
-                                <li>Aggiungi il Redirect URI nelle origini autorizzate</li>
+                                <li>Aggiungi il Redirect URI mostrato sotto nelle origini autorizzate</li>
                             </ol>
                         </div>
                     </div>
@@ -316,12 +316,19 @@ $fallbackEnabled = ($settings['ai_fallback_enabled']['value'] ?? '1') === '1';
                     </div>
                 </div>
                 <div>
-                    <label for="gsc_redirect_uri" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Redirect URI</label>
-                    <input type="text" name="gsc_redirect_uri" id="gsc_redirect_uri"
-                           value="<?= e($settings['gsc_redirect_uri']['value'] ?? '/seo-audit/gsc/callback') ?>"
-                           class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Redirect URI (da configurare in Google Cloud Console)</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" readonly
+                               value="<?= rtrim($config['url'] ?? 'https://ainstein.it', '/') ?>/oauth/google/callback"
+                               class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-600 text-slate-700 dark:text-slate-300 py-2 px-3 cursor-not-allowed"
+                               onclick="this.select()">
+                        <button type="button" onclick="navigator.clipboard.writeText(this.previousElementSibling.value); this.innerHTML='<svg class=\'w-5 h-5 text-green-500\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'currentColor\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M5 13l4 4L19 7\'/></svg>'; setTimeout(() => this.innerHTML='<svg class=\'w-5 h-5\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'currentColor\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z\'/></svg>', 2000)"
+                                class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700" title="Copia">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        </button>
+                    </div>
                     <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        URI completo: <code class="bg-slate-100 dark:bg-slate-700 px-1 rounded"><?= rtrim(url(''), '/') ?>/seo-audit/gsc/callback</code>
+                        Questo URI centralizzato gestisce OAuth per tutti i moduli (SEO Tracking, SEO Audit, ecc.)
                     </p>
                 </div>
             </div>
