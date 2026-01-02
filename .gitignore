@@ -24,9 +24,13 @@
 Thumbs.db
 
 # Sensitive
-*.sql
 *.zip
 *.bak
+
+# SQL files (except migrations)
+/*.sql
+/storage/**/*.sql
+!/database/migrations/*.sql
 
 # Laragon
 .laragon/
