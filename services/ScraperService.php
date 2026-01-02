@@ -213,8 +213,8 @@ class ScraperService
     public function fetchRaw(string $url, array $options = []): array
     {
         $timeout = $options['timeout'] ?? 30;
-        // Merge custom headers with defaults (custom headers override defaults)
-        $headers = array_merge($this->defaultHeaders, $options['headers'] ?? []);
+        // Smart merge: custom headers override defaults by header name
+        $headers = $this->mergeHeaders($this->defaultHeaders, $options['headers'] ?? []);
         $followRedirects = $options['follow_redirects'] ?? true;
 
         $ch = curl_init($url);
@@ -253,9 +253,9 @@ class ScraperService
     public function postRaw(string $url, $data, array $options = []): array
     {
         $timeout = $options['timeout'] ?? 30;
-        // Merge with default headers to ensure User-Agent is always sent
+        // Smart merge: custom headers override defaults by header name
         $defaultPostHeaders = array_merge($this->defaultHeaders, ['Content-Type: application/json']);
-        $headers = array_merge($defaultPostHeaders, $options['headers'] ?? []);
+        $headers = $this->mergeHeaders($defaultPostHeaders, $options['headers'] ?? []);
         $isJson = $options['json'] ?? true;
 
         $ch = curl_init($url);
@@ -284,6 +284,38 @@ class ScraperService
             'body' => $response,
             'http_code' => $httpCode,
         ];
+    }
+
+    /**
+     * Merge headers intelligently - custom headers override defaults by header name
+     * e.g. 'Accept: application/json' will replace 'Accept: text/html,...'
+     */
+    private function mergeHeaders(array $defaults, array $custom): array
+    {
+        // Parse default headers into name => full_header map
+        $headerMap = [];
+        foreach ($defaults as $header) {
+            $colonPos = strpos($header, ':');
+            if ($colonPos !== false) {
+                $name = strtolower(trim(substr($header, 0, $colonPos)));
+                $headerMap[$name] = $header;
+            } else {
+                $headerMap[$header] = $header;
+            }
+        }
+
+        // Override with custom headers
+        foreach ($custom as $header) {
+            $colonPos = strpos($header, ':');
+            if ($colonPos !== false) {
+                $name = strtolower(trim(substr($header, 0, $colonPos)));
+                $headerMap[$name] = $header;
+            } else {
+                $headerMap[$header] = $header;
+            }
+        }
+
+        return array_values($headerMap);
     }
 
     /**
