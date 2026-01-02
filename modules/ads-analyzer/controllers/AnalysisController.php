@@ -39,7 +39,7 @@ class AnalysisController
             redirect('/ads-analyzer');
         }
 
-        View::render('ads-analyzer', 'analysis/upload', [
+        View::render('ads-analyzer/analysis/upload', [
             'project' => $project,
             'pageTitle' => 'Carica CSV - ' . $project['name']
         ]);
@@ -148,7 +148,7 @@ class AnalysisController
         $adGroupCount = count($adGroups);
         $estimatedCredits = $adGroupCount <= 3 ? $adGroupCount * 2 : ceil($adGroupCount * 1.5);
 
-        View::render('ads-analyzer', 'analysis/context', [
+        View::render('ads-analyzer/analysis/context', [
             'project' => $project,
             'adGroups' => $adGroups,
             'savedContexts' => $savedContexts,
@@ -284,7 +284,7 @@ class AnalysisController
         $selectedCount = NegativeKeyword::countSelectedByProject($projectId);
         $totalNegatives = NegativeKeyword::countByProject($projectId);
 
-        View::render('ads-analyzer', 'analysis/results', [
+        View::render('ads-analyzer/analysis/results', [
             'project' => $project,
             'adGroups' => $adGroups,
             'analysisData' => $analysisData,

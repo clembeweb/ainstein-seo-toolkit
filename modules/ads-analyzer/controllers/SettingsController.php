@@ -25,7 +25,7 @@ class SettingsController
         // Carica contesti salvati
         $savedContexts = BusinessContext::getByUser($user['id']);
 
-        View::render('ads-analyzer', 'settings/index', [
+        View::render('ads-analyzer/settings/index', [
             'pageTitle' => 'Impostazioni - Google Ads Analyzer',
             'settings' => $settings,
             'savedContexts' => $savedContexts

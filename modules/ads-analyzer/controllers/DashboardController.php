@@ -16,7 +16,7 @@ class DashboardController
         $stats = Project::getStats($user['id']);
         $recentProjects = Project::getRecent($user['id'], 5);
 
-        View::render('ads-analyzer', 'dashboard/index', [
+        View::render('ads-analyzer/dashboard/index', [
             'pageTitle' => 'Google Ads Analyzer',
             'projects' => $projects,
             'stats' => $stats,

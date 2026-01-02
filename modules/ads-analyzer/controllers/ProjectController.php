@@ -20,7 +20,7 @@ class ProjectController
         $projects = Project::getAllByUser($user['id'], $status);
         $stats = Project::getStats($user['id']);
 
-        View::render('ads-analyzer', 'projects/index', [
+        View::render('ads-analyzer/projects/index', [
             'pageTitle' => 'Progetti - Google Ads Analyzer',
             'projects' => $projects,
             'stats' => $stats,
@@ -30,7 +30,7 @@ class ProjectController
 
     public function create(): void
     {
-        View::render('ads-analyzer', 'projects/create', [
+        View::render('ads-analyzer/projects/create', [
             'pageTitle' => 'Nuovo Progetto - Google Ads Analyzer'
         ]);
     }
@@ -76,7 +76,7 @@ class ProjectController
         $selectedCount = NegativeKeyword::countSelectedByProject($id);
         $totalNegatives = NegativeKeyword::countByProject($id);
 
-        View::render('ads-analyzer', 'projects/show', [
+        View::render('ads-analyzer/projects/show', [
             'pageTitle' => $project['name'] . ' - Google Ads Analyzer',
             'project' => $project,
             'adGroups' => $adGroups,
@@ -96,7 +96,7 @@ class ProjectController
             redirect('/ads-analyzer');
         }
 
-        View::render('ads-analyzer', 'projects/edit', [
+        View::render('ads-analyzer/projects/edit', [
             'pageTitle' => 'Modifica ' . $project['name'],
             'project' => $project
         ]);
