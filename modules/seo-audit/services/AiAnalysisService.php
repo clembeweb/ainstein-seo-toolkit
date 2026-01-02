@@ -420,7 +420,7 @@ CONTENT;
      */
     private function saveAnalysis(int $projectId, string $type, ?string $category, string $result, int $creditsUsed): int
     {
-        Database::insert('sa_ai_analyses', [
+        $analysisId = Database::insert('sa_ai_analyses', [
             'project_id' => $projectId,
             'type' => $type,
             'category' => $category,
@@ -429,7 +429,7 @@ CONTENT;
             'created_at' => date('Y-m-d H:i:s'),
         ]);
 
-        return (int) Database::lastInsertId();
+        return $analysisId;
     }
 
     /**

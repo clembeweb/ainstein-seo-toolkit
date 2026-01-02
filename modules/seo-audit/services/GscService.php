@@ -431,7 +431,7 @@ class GscService
 
         $expiresAt = date('Y-m-d H:i:s', time() + ($tokens['expires_in'] ?? 3600));
 
-        Database::insert('sa_gsc_connections', [
+        $connectionId = Database::insert('sa_gsc_connections', [
             'project_id' => $projectId,
             'user_id' => $userId,
             'access_token' => $this->encryptToken($tokens['access_token']),
@@ -446,7 +446,7 @@ class GscService
         // Update project gsc_connected flag
         Database::update('sa_projects', ['gsc_connected' => 1], 'id = ?', [$projectId]);
 
-        return (int) Database::lastInsertId();
+        return $connectionId;
     }
 
     /**
