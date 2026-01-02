@@ -30,6 +30,7 @@ class GscController
 
     /**
      * Inizia flow OAuth - redirect a Google
+     * Usa GoogleOAuthService centralizzato
      */
     public function connect(int $id): void
     {
@@ -42,44 +43,41 @@ class GscController
             return;
         }
 
-        if (!$this->gscService->isConfigured()) {
-            $_SESSION['_flash']['error'] = 'Credenziali GSC non configurate. Contatta l\'amministratore.';
+        // Usa servizio OAuth centralizzato
+        $oauth = new \Services\GoogleOAuthService();
+
+        if (!$oauth->isConfigured()) {
+            $_SESSION['_flash']['error'] = 'Credenziali Google non configurate. Contatta l\'amministratore.';
             Router::redirect('/seo-tracking/projects/' . $id . '/settings');
             return;
         }
 
-        $authUrl = $this->gscService->getAuthUrl($id);
-        Router::redirect($authUrl);
+        $authUrl = $oauth->getAuthUrl('seo-tracking', $id);
+        header('Location: ' . $authUrl);
+        exit;
     }
 
     /**
-     * Callback OAuth da Google
+     * Riceve redirect dal callback OAuth centralizzato
+     * I tokens sono in $_SESSION['google_oauth_tokens'] (salvati da OAuthController)
      */
-    public function callback(): void
+    public function connected(): void
     {
         $user = Auth::user();
 
-        // Verifica state
-        $state = $_GET['state'] ?? '';
-        $savedState = $_SESSION['gsc_oauth_state'] ?? '';
+        // Leggi tokens dalla sessione (salvati da OAuthController)
+        $tokenData = $_SESSION['google_oauth_tokens'] ?? null;
 
-        if (empty($state) || $state !== $savedState) {
-            $_SESSION['_flash']['error'] = 'Stato OAuth non valido';
+        if (!$tokenData) {
+            $_SESSION['_flash']['error'] = 'Sessione OAuth scaduta o non valida';
             Router::redirect('/seo-tracking');
             return;
         }
 
-        unset($_SESSION['gsc_oauth_state']);
+        $projectId = $tokenData['project_id'];
 
-        // Decode state
-        $stateData = json_decode(base64_decode($state), true);
-        $projectId = $stateData['project_id'] ?? 0;
-
-        if (!$projectId) {
-            $_SESSION['_flash']['error'] = 'Progetto non trovato nel callback';
-            Router::redirect('/seo-tracking');
-            return;
-        }
+        // Pulisci sessione
+        unset($_SESSION['google_oauth_tokens']);
 
         // Verifica accesso progetto
         $project = $this->project->find($projectId, $user['id']);
@@ -90,45 +88,20 @@ class GscController
             return;
         }
 
-        // Errore OAuth?
-        if (isset($_GET['error'])) {
-            $_SESSION['_flash']['error'] = 'Autorizzazione negata: ' . ($_GET['error_description'] ?? $_GET['error']);
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/settings');
-            return;
-        }
+        // Salva connessione
+        $expiresAt = date('Y-m-d H:i:s', time() + ($tokenData['expires_in'] ?? 3600));
 
-        // Scambia code per token
-        $code = $_GET['code'] ?? '';
+        $this->gscConnection->upsert($projectId, [
+            'access_token' => $tokenData['access_token'],
+            'refresh_token' => $tokenData['refresh_token'] ?? null,
+            'token_expires_at' => $expiresAt,
+        ]);
 
-        if (empty($code)) {
-            $_SESSION['_flash']['error'] = 'Codice autorizzazione mancante';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/settings');
-            return;
-        }
+        // Salva in sessione per selezione property
+        $_SESSION['gsc_temp_project_id'] = $projectId;
 
-        try {
-            $tokens = $this->gscService->exchangeCode($code);
-
-            // Salva connessione
-            $expiresAt = date('Y-m-d H:i:s', time() + ($tokens['expires_in'] ?? 3600));
-
-            $this->gscConnection->upsert($projectId, [
-                'access_token' => $tokens['access_token'],
-                'refresh_token' => $tokens['refresh_token'] ?? null,
-                'token_expires_at' => $expiresAt,
-                'scope' => $tokens['scope'] ?? '',
-            ]);
-
-            // Salva in sessione per selezione property
-            $_SESSION['gsc_temp_project_id'] = $projectId;
-
-            $_SESSION['_flash']['success'] = 'Autorizzazione completata! Ora seleziona la property.';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/gsc/select-property');
-
-        } catch (\Exception $e) {
-            $_SESSION['_flash']['error'] = 'Errore OAuth: ' . $e->getMessage();
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/settings');
-        }
+        $_SESSION['_flash']['success'] = 'Autorizzazione completata! Ora seleziona la property.';
+        Router::redirect('/seo-tracking/projects/' . $projectId . '/gsc/select-property');
     }
 
     /**

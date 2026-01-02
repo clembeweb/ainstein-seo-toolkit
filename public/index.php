@@ -21,6 +21,7 @@ spl_autoload_register(function ($class) {
     $paths = [
         'Core\\' => BASE_PATH . '/core/',
         'Services\\' => BASE_PATH . '/services/',
+        'Controllers\\' => BASE_PATH . '/controllers/',
         'Admin\\Controllers\\' => BASE_PATH . '/admin/controllers/',
     ];
 
@@ -296,6 +297,9 @@ Router::post('/profile/password', function () {
     $_SESSION['_flash']['success'] = 'Password aggiornata';
     Router::redirect('/profile');
 });
+
+// --- OAuth Routes (centralizzati) ---
+Router::get('/oauth/google/callback', [Controllers\OAuthController::class, 'googleCallback']);
 
 // --- Admin Routes ---
 require_once BASE_PATH . '/admin/routes.php';

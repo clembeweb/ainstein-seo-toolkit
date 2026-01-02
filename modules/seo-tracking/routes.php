@@ -76,9 +76,10 @@ Router::get('/seo-tracking/projects/{id}/gsc/connect', function ($id) {
     return (new GscController())->connect((int) $id);
 });
 
-// Callback OAuth (NO CSRF - viene da Google)
-Router::get('/seo-tracking/gsc/callback', function () {
-    return (new GscController())->callback();
+// Callback OAuth centralizzato - riceve redirect da /oauth/google/callback
+Router::get('/seo-tracking/gsc/connected', function () {
+    Middleware::auth();
+    return (new GscController())->connected();
 });
 
 // Lista proprietà GSC disponibili
