@@ -88,11 +88,17 @@ Router::get('/seo-tracking/projects/{id}/gsc/properties', function ($id) {
     return (new GscController())->properties((int) $id);
 });
 
-// Seleziona proprietà GSC
+// Pagina selezione proprietà GSC (GET)
+Router::get('/seo-tracking/projects/{id}/gsc/select-property', function ($id) {
+    Middleware::auth();
+    return (new GscController())->selectProperty((int) $id);
+});
+
+// Salva proprietà GSC selezionata (POST)
 Router::post('/seo-tracking/projects/{id}/gsc/select-property', function ($id) {
     Middleware::auth();
     Middleware::csrf();
-    return (new GscController())->selectProperty((int) $id);
+    return (new GscController())->saveProperty((int) $id);
 });
 
 // Sync giornaliero manuale
@@ -106,7 +112,7 @@ Router::post('/seo-tracking/projects/{id}/gsc/sync', function ($id) {
 Router::post('/seo-tracking/projects/{id}/gsc/sync-full', function ($id) {
     Middleware::auth();
     Middleware::csrf();
-    return (new GscController())->syncFull((int) $id);
+    return (new GscController())->fullSync((int) $id);
 });
 
 // Disconnetti GSC
