@@ -104,10 +104,16 @@ class GscService
 
     /**
      * Redirect URI per OAuth callback
+     * MUST return full URL for Google OAuth (not relative path)
      */
     public function getRedirectUri(): string
     {
-        return url('/seo-audit/gsc/callback');
+        // Load APP_URL from config
+        $configFile = dirname(__DIR__, 3) . '/config/app.php';
+        $config = file_exists($configFile) ? require $configFile : [];
+        $appUrl = $config['url'] ?? 'http://localhost';
+
+        return rtrim($appUrl, '/') . '/seo-audit/gsc/callback';
     }
 
     /**
