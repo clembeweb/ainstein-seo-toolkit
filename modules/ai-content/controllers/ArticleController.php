@@ -9,6 +9,7 @@ use Core\ModuleLoader;
 use Modules\AiContent\Models\Article;
 use Modules\AiContent\Models\Keyword;
 use Modules\AiContent\Models\Source;
+use Modules\AiContent\Models\WpSite;
 
 /**
  * ArticleController
@@ -20,6 +21,7 @@ class ArticleController
     private Article $article;
     private Keyword $keyword;
     private Source $source;
+    private WpSite $wpSite;
 
     // Credit costs
     private const CREDIT_GENERATE = 10;
@@ -30,6 +32,7 @@ class ArticleController
         $this->article = new Article();
         $this->keyword = new Keyword();
         $this->source = new Source();
+        $this->wpSite = new WpSite();
     }
 
     /**
@@ -42,6 +45,7 @@ class ArticleController
         $status = $_GET['status'] ?? null;
 
         $articlesData = $this->article->allByUser($user['id'], $page, 20, $status);
+        $wpSites = $this->wpSite->getActiveSites($user['id']);
 
         return View::render('ai-content/articles/index', [
             'title' => 'Articoli - AI Content',
@@ -55,7 +59,8 @@ class ArticleController
                 'per_page' => $articlesData['per_page']
             ],
             'currentStatus' => $status,
-            'stats' => $this->article->getStats($user['id'])
+            'stats' => $this->article->getStats($user['id']),
+            'wpSites' => $wpSites
         ]);
     }
 
@@ -79,11 +84,14 @@ class ArticleController
             $article['brief_data'] = json_decode($article['brief_data'], true);
         }
 
+        $wpSites = $this->wpSite->getActiveSites($user['id']);
+
         return View::render('ai-content/articles/show', [
             'title' => ($article['title'] ?: 'Articolo #' . $id) . ' - AI Content',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
-            'article' => $article
+            'article' => $article,
+            'wpSites' => $wpSites
         ]);
     }
 
