@@ -218,15 +218,22 @@ class ScraperService
         $followRedirects = $options['follow_redirects'] ?? true;
 
         $ch = curl_init($url);
-        curl_setopt_array($ch, [
+
+        $curlOptions = [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => $followRedirects,
             CURLOPT_MAXREDIRS => 5,
             CURLOPT_TIMEOUT => $timeout,
             CURLOPT_HTTPHEADER => $headers,
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_SSL_VERIFYHOST => 0,
-        ]);
+        ];
+
+        // SSL verification: enable by default for API calls, disable only if explicitly requested
+        if ($options['skip_ssl_verify'] ?? false) {
+            $curlOptions[CURLOPT_SSL_VERIFYPEER] = false;
+            $curlOptions[CURLOPT_SSL_VERIFYHOST] = 0;
+        }
+
+        curl_setopt_array($ch, $curlOptions);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -259,15 +266,22 @@ class ScraperService
         $isJson = $options['json'] ?? true;
 
         $ch = curl_init($url);
-        curl_setopt_array($ch, [
+
+        $curlOptions = [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => $isJson ? json_encode($data) : $data,
             CURLOPT_TIMEOUT => $timeout,
             CURLOPT_HTTPHEADER => $headers,
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_SSL_VERIFYHOST => 0,
-        ]);
+        ];
+
+        // SSL verification: enable by default, disable only if explicitly requested
+        if ($options['skip_ssl_verify'] ?? false) {
+            $curlOptions[CURLOPT_SSL_VERIFYPEER] = false;
+            $curlOptions[CURLOPT_SSL_VERIFYHOST] = 0;
+        }
+
+        curl_setopt_array($ch, $curlOptions);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
