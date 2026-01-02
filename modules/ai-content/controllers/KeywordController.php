@@ -101,6 +101,11 @@ class KeywordController
             }
         }
 
+        // Se non c'e' brief da article, controlla se c'e' brief salvato nella keyword
+        if ($briefData === null && $this->keyword->hasBrief($id)) {
+            $briefData = $this->keyword->getBrief($id);
+        }
+
         // Calculate current step based on data
         $currentStep = $this->calculateWizardStep($serpExtracted, $sources, $article);
 

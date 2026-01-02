@@ -166,4 +166,71 @@ class Keyword
             ]);
         }
     }
+
+    /**
+     * Save brief to keyword record
+     */
+    public function saveBrief(int $keywordId, array $briefData): bool
+    {
+        $data = [
+            'brief_search_intent' => $briefData['searchIntent'] ?? $briefData['search_intent']['primary'] ?? null,
+            'brief_structure' => is_array($briefData['suggestedHeadings'] ?? null)
+                ? json_encode($briefData['suggestedHeadings'])
+                : ($briefData['suggestedHeadings'] ?? null),
+            'brief_entities' => is_array($briefData['entities'] ?? null)
+                ? json_encode($briefData['entities'])
+                : ($briefData['entities'] ?? null),
+            'brief_word_count' => $briefData['targetWordCount'] ?? $briefData['recommended_word_count'] ?? null,
+            'brief_notes' => $briefData['additionalNotes'] ?? $briefData['notes'] ?? null,
+            'brief_generated_at' => date('Y-m-d H:i:s')
+        ];
+
+        return Database::update($this->table, $data, 'id = ?', [$keywordId]) > 0;
+    }
+
+    /**
+     * Get brief from keyword record
+     */
+    public function getBrief(int $keywordId): ?array
+    {
+        $keyword = $this->find($keywordId);
+
+        if (!$keyword || empty($keyword['brief_generated_at'])) {
+            return null;
+        }
+
+        return [
+            'searchIntent' => $keyword['brief_search_intent'],
+            'intentDescription' => $this->getIntentDescription($keyword['brief_search_intent']),
+            'suggestedHeadings' => json_decode($keyword['brief_structure'], true) ?? [],
+            'entities' => json_decode($keyword['brief_entities'], true) ?? [],
+            'targetWordCount' => $keyword['brief_word_count'] ?? 1500,
+            'additionalNotes' => $keyword['brief_notes'] ?? '',
+            'generated_at' => $keyword['brief_generated_at']
+        ];
+    }
+
+    /**
+     * Check if keyword has a saved brief
+     */
+    public function hasBrief(int $keywordId): bool
+    {
+        $keyword = $this->find($keywordId);
+        return $keyword && !empty($keyword['brief_generated_at']);
+    }
+
+    /**
+     * Get search intent description
+     */
+    private function getIntentDescription(?string $intent): string
+    {
+        $descriptions = [
+            'informational' => 'L\'utente cerca informazioni, guide o spiegazioni su questo argomento.',
+            'commercial' => 'L\'utente sta valutando opzioni e confrontando prodotti/servizi.',
+            'transactional' => 'L\'utente è pronto ad acquistare o completare un\'azione.',
+            'navigational' => 'L\'utente cerca un sito o una pagina specifica.',
+        ];
+
+        return $descriptions[$intent] ?? 'Search intent non determinato.';
+    }
 }

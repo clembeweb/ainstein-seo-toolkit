@@ -208,6 +208,10 @@ class WizardController
                 'additionalNotes' => '',
             ];
 
+            // Salva brief anche nella tabella aic_keywords per persistenza
+            $this->keyword->saveBrief($keywordId, $wizardBrief);
+            error_log("Brief saved to aic_keywords for keyword ID: " . $keywordId);
+
             // Pulisci buffer prima di inviare JSON
             ob_end_clean();
 
