@@ -521,13 +521,14 @@ class WordPressController
         $options = [
             'timeout' => self::HTTP_TIMEOUT,
             'headers' => $headers,
+            'api_mode' => true, // Skip default browser headers that may trigger WAF
         ];
 
         if ($method === 'GET') {
             $result = $this->scraper->fetchJson($url, $options);
         } else {
-            // POST or other methods
-            $result = $this->scraper->postJson($url, $data ?? [], $headers);
+            // POST or other methods - pass api_mode in options
+            $result = $this->scraper->postJson($url, $data ?? [], $headers, $options);
         }
 
         if (isset($result['error'])) {

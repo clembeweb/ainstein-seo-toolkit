@@ -213,9 +213,15 @@ class ScraperService
     public function fetchRaw(string $url, array $options = []): array
     {
         $timeout = $options['timeout'] ?? 30;
-        // Smart merge: custom headers override defaults by header name
-        $headers = $this->mergeHeaders($this->defaultHeaders, $options['headers'] ?? []);
         $followRedirects = $options['follow_redirects'] ?? true;
+
+        // For API calls, skip default browser headers that may trigger WAF
+        if ($options['api_mode'] ?? false) {
+            $headers = $options['headers'] ?? [];
+        } else {
+            // Smart merge: custom headers override defaults by header name
+            $headers = $this->mergeHeaders($this->defaultHeaders, $options['headers'] ?? []);
+        }
 
         $ch = curl_init($url);
 
@@ -260,10 +266,16 @@ class ScraperService
     public function postRaw(string $url, $data, array $options = []): array
     {
         $timeout = $options['timeout'] ?? 30;
-        // Smart merge: custom headers override defaults by header name
-        $defaultPostHeaders = array_merge($this->defaultHeaders, ['Content-Type: application/json']);
-        $headers = $this->mergeHeaders($defaultPostHeaders, $options['headers'] ?? []);
         $isJson = $options['json'] ?? true;
+
+        // For API calls, skip default browser headers that may trigger WAF
+        if ($options['api_mode'] ?? false) {
+            $headers = array_merge(['Content-Type: application/json'], $options['headers'] ?? []);
+        } else {
+            // Smart merge: custom headers override defaults by header name
+            $defaultPostHeaders = array_merge($this->defaultHeaders, ['Content-Type: application/json']);
+            $headers = $this->mergeHeaders($defaultPostHeaders, $options['headers'] ?? []);
+        }
 
         $ch = curl_init($url);
 
@@ -394,12 +406,13 @@ class ScraperService
     /**
      * Post JSON and get JSON response (convenience method for APIs)
      */
-    public function postJson(string $url, array $data, array $headers = []): array
+    public function postJson(string $url, array $data, array $headers = [], array $options = []): array
     {
         $defaultHeaders = ['Content-Type: application/json'];
         $headers = array_merge($defaultHeaders, $headers);
 
-        $result = $this->postRaw($url, $data, ['headers' => $headers, 'json' => true]);
+        $postOptions = array_merge($options, ['headers' => $headers, 'json' => true]);
+        $result = $this->postRaw($url, $data, $postOptions);
 
         if (isset($result['error'])) {
             return $result;
