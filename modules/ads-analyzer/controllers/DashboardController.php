@@ -4,6 +4,7 @@ namespace Modules\AdsAnalyzer\Controllers;
 
 use Core\View;
 use Core\Auth;
+use Core\ModuleLoader;
 use Modules\AdsAnalyzer\Models\Project;
 
 class DashboardController
@@ -17,7 +18,9 @@ class DashboardController
         $recentProjects = Project::getRecent($user['id'], 5);
 
         View::render('ads-analyzer/dashboard/index', [
-            'pageTitle' => 'Google Ads Analyzer',
+            'title' => 'Google Ads Analyzer',
+            'user' => $user,
+            'modules' => ModuleLoader::getUserModules($user['id']),
             'projects' => $projects,
             'stats' => $stats,
             'recentProjects' => $recentProjects

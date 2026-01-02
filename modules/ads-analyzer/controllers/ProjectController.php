@@ -4,6 +4,7 @@ namespace Modules\AdsAnalyzer\Controllers;
 
 use Core\View;
 use Core\Auth;
+use Core\ModuleLoader;
 use Modules\AdsAnalyzer\Models\Project;
 use Modules\AdsAnalyzer\Models\AdGroup;
 use Modules\AdsAnalyzer\Models\SearchTerm;
@@ -21,7 +22,9 @@ class ProjectController
         $stats = Project::getStats($user['id']);
 
         View::render('ads-analyzer/projects/index', [
-            'pageTitle' => 'Progetti - Google Ads Analyzer',
+            'title' => 'Progetti - Google Ads Analyzer',
+            'user' => $user,
+            'modules' => ModuleLoader::getUserModules($user['id']),
             'projects' => $projects,
             'stats' => $stats,
             'currentStatus' => $status
@@ -30,8 +33,12 @@ class ProjectController
 
     public function create(): void
     {
+        $user = Auth::user();
+
         View::render('ads-analyzer/projects/create', [
-            'pageTitle' => 'Nuovo Progetto - Google Ads Analyzer'
+            'title' => 'Nuovo Progetto - Google Ads Analyzer',
+            'user' => $user,
+            'modules' => ModuleLoader::getUserModules($user['id'])
         ]);
     }
 
@@ -77,7 +84,9 @@ class ProjectController
         $totalNegatives = NegativeKeyword::countByProject($id);
 
         View::render('ads-analyzer/projects/show', [
-            'pageTitle' => $project['name'] . ' - Google Ads Analyzer',
+            'title' => $project['name'] . ' - Google Ads Analyzer',
+            'user' => $user,
+            'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
             'adGroups' => $adGroups,
             'termStats' => $termStats,
@@ -97,7 +106,9 @@ class ProjectController
         }
 
         View::render('ads-analyzer/projects/edit', [
-            'pageTitle' => 'Modifica ' . $project['name'],
+            'title' => 'Modifica ' . $project['name'],
+            'user' => $user,
+            'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project
         ]);
     }

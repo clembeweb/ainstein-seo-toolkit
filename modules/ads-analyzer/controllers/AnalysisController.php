@@ -5,6 +5,7 @@ namespace Modules\AdsAnalyzer\Controllers;
 use Core\View;
 use Core\Auth;
 use Core\Credits;
+use Core\ModuleLoader;
 use Modules\AdsAnalyzer\Models\Project;
 use Modules\AdsAnalyzer\Models\AdGroup;
 use Modules\AdsAnalyzer\Models\SearchTerm;
@@ -40,8 +41,10 @@ class AnalysisController
         }
 
         View::render('ads-analyzer/analysis/upload', [
-            'project' => $project,
-            'pageTitle' => 'Carica CSV - ' . $project['name']
+            'title' => 'Carica CSV - ' . $project['name'],
+            'user' => $user,
+            'modules' => ModuleLoader::getUserModules($user['id']),
+            'project' => $project
         ]);
     }
 
@@ -149,12 +152,14 @@ class AnalysisController
         $estimatedCredits = $adGroupCount <= 3 ? $adGroupCount * 2 : ceil($adGroupCount * 1.5);
 
         View::render('ads-analyzer/analysis/context', [
+            'title' => 'Contesto Business - ' . $project['name'],
+            'user' => $user,
+            'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
             'adGroups' => $adGroups,
             'savedContexts' => $savedContexts,
             'estimatedCredits' => $estimatedCredits,
-            'userCredits' => Credits::getBalance($user['id']),
-            'pageTitle' => 'Contesto Business - ' . $project['name']
+            'userCredits' => Credits::getBalance($user['id'])
         ]);
     }
 
@@ -285,12 +290,14 @@ class AnalysisController
         $totalNegatives = NegativeKeyword::countByProject($projectId);
 
         View::render('ads-analyzer/analysis/results', [
+            'title' => 'Risultati - ' . $project['name'],
+            'user' => $user,
+            'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
             'adGroups' => $adGroups,
             'analysisData' => $analysisData,
             'selectedCount' => $selectedCount,
-            'totalNegatives' => $totalNegatives,
-            'pageTitle' => 'Risultati - ' . $project['name']
+            'totalNegatives' => $totalNegatives
         ]);
     }
 

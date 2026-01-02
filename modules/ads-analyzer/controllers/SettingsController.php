@@ -5,6 +5,7 @@ namespace Modules\AdsAnalyzer\Controllers;
 use Core\View;
 use Core\Auth;
 use Core\Settings;
+use Core\ModuleLoader;
 use Modules\AdsAnalyzer\Models\BusinessContext;
 use Modules\AdsAnalyzer\Services\ValidationService;
 
@@ -26,7 +27,9 @@ class SettingsController
         $savedContexts = BusinessContext::getByUser($user['id']);
 
         View::render('ads-analyzer/settings/index', [
-            'pageTitle' => 'Impostazioni - Google Ads Analyzer',
+            'title' => 'Impostazioni - Google Ads Analyzer',
+            'user' => $user,
+            'modules' => ModuleLoader::getUserModules($user['id']),
             'settings' => $settings,
             'savedContexts' => $savedContexts
         ]);
