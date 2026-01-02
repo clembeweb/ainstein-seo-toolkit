@@ -1,6 +1,6 @@
 # AINSTEIN - Stato Sviluppo
 
-**Ultimo aggiornamento:** 2025-12-30
+**Ultimo aggiornamento:** 2025-01-02
 **Deploy:** LIVE su https://ainstein.it
 
 ---
@@ -40,6 +40,52 @@
 
 ---
 
+## FIX COMPLETATI (2025-01-02)
+
+### 1. WordPress Connector - Invalid JSON Response
+| Problema | Causa | Soluzione |
+|----------|-------|-----------|
+| "Invalid JSON response" | WAF SiteGround blocca User-Agent Chrome simulato | Aggiunto `api_mode` in ScraperService |
+
+**File modificati:**
+- `services/ScraperService.php` - opzione `api_mode` per bypass browser headers, smart merge headers
+- `modules/ai-content/controllers/WordPressController.php` - usa `api_mode: true`
+
+### 2. Database Auto-Reconnect
+| Problema | Causa | Soluzione |
+|----------|-------|-----------|
+| "MySQL server has gone away" | Connessione scade durante chiamate AI lunghe | Auto-reconnect con retry logic |
+
+**File modificati:**
+- `core/Database.php` - metodi `ping()`, `reconnect()`, `isGoneAway()`, retry su tutte le query
+
+### 3. Brief Persistence
+| Problema | Causa | Soluzione |
+|----------|-------|-----------|
+| Brief perso tornando indietro | Non salvato in DB | Salvataggio in `aic_keywords` |
+
+**File modificati:**
+- `modules/ai-content/models/Keyword.php` - metodi `saveBrief()`, `getBrief()`, `hasBrief()`
+- `modules/ai-content/controllers/WizardController.php` - salva brief dopo generazione
+- `modules/ai-content/controllers/KeywordController.php` - ripristina brief esistente
+- `modules/ai-content/views/keywords/wizard.php` - carica brief salvato
+
+**Colonne aggiunte a `aic_keywords`:**
+```sql
+brief_outline, brief_sources, brief_suggestions,
+brief_generated_at, brief_model, brief_tokens_used
+```
+
+### 4. WordPress Dropdown Fix
+| Problema | Causa | Soluzione |
+|----------|-------|-----------|
+| Dropdown vuoto in articoli | `wpSites` non passato alle view | Aggiunto in ArticleController |
+
+**File modificati:**
+- `modules/ai-content/controllers/ArticleController.php` - passa `wpSites` a index() e show()
+
+---
+
 ## DA FARE (Bug Fix)
 
 ### CRITICAL (seo-tracking)
@@ -49,7 +95,7 @@
 
 ### HIGH (internal-links)
 - [ ] Migrare 39 Lucide icons -> Heroicons SVG
-- [ ] Rimuovere dropdown modello AI deprecato
+- [x] ~~Rimuovere dropdown modello AI deprecato~~ (fatto 2025-01-02)
 
 ### MEDIUM
 - [ ] Creare SiteConfig model in seo-audit
@@ -142,4 +188,4 @@ ssh ... "mysql -u USER -pPASS DB < ~/backup.sql"
 
 ---
 
-*Aggiornato post-deploy 2025-12-30*
+*Aggiornato: 2025-01-02 - Fix WordPress, Database, Brief persistence*
