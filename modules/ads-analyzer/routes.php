@@ -12,6 +12,7 @@ use Core\ModuleLoader;
 use Modules\AdsAnalyzer\Controllers\DashboardController;
 use Modules\AdsAnalyzer\Controllers\ProjectController;
 use Modules\AdsAnalyzer\Controllers\AnalysisController;
+use Modules\AdsAnalyzer\Controllers\AnalysisHistoryController;
 use Modules\AdsAnalyzer\Controllers\ExportController;
 use Modules\AdsAnalyzer\Controllers\SettingsController;
 
@@ -118,6 +119,7 @@ Router::get('/ads-analyzer/projects/{id}/upload', function ($id) {
 // Step 1: Process upload (AJAX)
 Router::post('/ads-analyzer/projects/{id}/upload', function ($id) {
     Middleware::auth();
+    Middleware::csrf();
     $controller = new AnalysisController();
     return $controller->processUpload((int) $id);
 });
@@ -127,6 +129,37 @@ Router::get('/ads-analyzer/projects/{id}/context', function ($id) {
     Middleware::auth();
     $controller = new AnalysisController();
     return $controller->context((int) $id);
+});
+
+// Step 2 alternativo: Landing URLs (form)
+Router::get('/ads-analyzer/projects/{id}/landing-urls', function ($id) {
+    Middleware::auth();
+    $controller = new AnalysisController();
+    return $controller->landingUrls((int) $id);
+});
+
+// Salva URL landing per Ad Group (AJAX)
+Router::post('/ads-analyzer/projects/{id}/ad-groups/{adGroupId}/landing-url', function ($id, $adGroupId) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new AnalysisController();
+    return $controller->saveLandingUrl((int) $id, (int) $adGroupId);
+});
+
+// Estrai contesto da landing page (AJAX)
+Router::post('/ads-analyzer/projects/{id}/ad-groups/{adGroupId}/extract-context', function ($id, $adGroupId) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new AnalysisController();
+    return $controller->extractContext((int) $id, (int) $adGroupId);
+});
+
+// Estrai contesto da tutte le landing pages (AJAX)
+Router::post('/ads-analyzer/projects/{id}/extract-all-contexts', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new AnalysisController();
+    return $controller->extractAllContexts((int) $id);
 });
 
 // Step 3: Avvia analisi AI (AJAX)
@@ -155,6 +188,53 @@ Router::post('/ads-analyzer/projects/{id}/categories/{categoryId}/{action}', fun
     Middleware::auth();
     $controller = new AnalysisController();
     return $controller->toggleCategory((int) $id, (int) $categoryId, $action);
+});
+
+// ============================================
+// STORICO ANALISI
+// ============================================
+
+// Lista analisi per progetto
+Router::get('/ads-analyzer/projects/{id}/analyses', function ($id) {
+    Middleware::auth();
+    $controller = new AnalysisHistoryController();
+    return $controller->index((int) $id);
+});
+
+// Dettaglio singola analisi
+Router::get('/ads-analyzer/projects/{id}/analyses/{analysisId}', function ($id, $analysisId) {
+    Middleware::auth();
+    $controller = new AnalysisHistoryController();
+    return $controller->show((int) $id, (int) $analysisId);
+});
+
+// Elimina analisi (AJAX)
+Router::post('/ads-analyzer/projects/{id}/analyses/{analysisId}/delete', function ($id, $analysisId) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new AnalysisHistoryController();
+    return $controller->delete((int) $id, (int) $analysisId);
+});
+
+// Export analisi
+Router::get('/ads-analyzer/projects/{id}/analyses/{analysisId}/export', function ($id, $analysisId) {
+    Middleware::auth();
+    $controller = new AnalysisHistoryController();
+    return $controller->export((int) $id, (int) $analysisId);
+});
+
+// Toggle keyword analisi (AJAX)
+Router::post('/ads-analyzer/projects/{id}/analyses/{analysisId}/keywords/{keywordId}/toggle', function ($id, $analysisId, $keywordId) {
+    Middleware::auth();
+    $controller = new AnalysisHistoryController();
+    return $controller->toggleKeyword((int) $id, (int) $analysisId, (int) $keywordId);
+});
+
+// Toggle categoria analisi (AJAX)
+Router::post('/ads-analyzer/projects/{id}/analyses/{analysisId}/categories/{categoryId}/{action}', function ($id, $analysisId, $categoryId, $action) {
+    Middleware::auth();
+    $controller = new AnalysisHistoryController();
+    return $controller->toggleCategory((int) $id, (int) $analysisId, (int) $categoryId, $action);
 });
 
 // ============================================

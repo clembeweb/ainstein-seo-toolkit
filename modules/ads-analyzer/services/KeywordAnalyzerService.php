@@ -23,31 +23,65 @@ class KeywordAnalyzerService
         array $terms,
         int $maxTerms = 300
     ): array {
-        // Prepara termini per prompt (limita a maxTerms)
-        $termsForPrompt = array_slice($terms, 0, $maxTerms);
-        $termsSummary = array_map(
-            fn($t) => "{$t['term']} | {$t['clicks']} clic | {$t['impressions']} imp",
-            $termsForPrompt
-        );
-        $termsText = implode("\n", $termsSummary);
+        error_log("=== KeywordAnalyzerService::analyzeAdGroup START ===");
+        error_log("User ID: $userId");
+        error_log("Business Context length: " . strlen($businessContext));
+        error_log("Terms count: " . count($terms));
+        error_log("Max terms: $maxTerms");
 
-        // Costruisci prompt
-        $prompt = $this->buildPrompt($businessContext, $termsText);
+        try {
+            // Prepara termini per prompt (limita a maxTerms)
+            $termsForPrompt = array_slice($terms, 0, $maxTerms);
+            error_log("Terms for prompt: " . count($termsForPrompt));
 
-        // Chiama AI
-        $response = $this->aiService->analyze(
-            $userId,
-            $prompt,
-            '', // Content vuoto, tutto nel prompt
-            'ads-analyzer'
-        );
+            $termsSummary = array_map(
+                fn($t) => "{$t['term']} | {$t['clicks']} clic | {$t['impressions']} imp",
+                $termsForPrompt
+            );
+            $termsText = implode("\n", $termsSummary);
+            error_log("Terms text length: " . strlen($termsText));
 
-        if (isset($response['error'])) {
-            throw new \Exception($response['message'] ?? 'Errore AI');
+            // Costruisci prompt
+            $prompt = $this->buildPrompt($businessContext, $termsText);
+            error_log("Prompt length: " . strlen($prompt));
+            error_log("Prompt preview (first 300 chars): " . substr($prompt, 0, 300) . "...");
+
+            error_log("Calling AiService->analyze()...");
+
+            // Chiama AI
+            $response = $this->aiService->analyze(
+                $userId,
+                $prompt,
+                '', // Content vuoto, tutto nel prompt
+                'ads-analyzer'
+            );
+
+            error_log("AiService response keys: " . implode(', ', array_keys($response)));
+
+            if (isset($response['error'])) {
+                error_log("AI ERROR: " . ($response['message'] ?? 'Unknown error'));
+                throw new \Exception($response['message'] ?? 'Errore AI');
+            }
+
+            error_log("AI Response result length: " . strlen($response['result'] ?? ''));
+            error_log("AI Response result preview: " . substr($response['result'] ?? '', 0, 500) . "...");
+
+            // Parse risposta JSON
+            error_log("Parsing AI response...");
+            $result = $this->parseResponse($response['result']);
+
+            error_log("Parsed result - categories count: " . count($result['categories'] ?? []));
+            error_log("=== KeywordAnalyzerService::analyzeAdGroup SUCCESS ===");
+
+            return $result;
+
+        } catch (\Exception $e) {
+            error_log("=== KeywordAnalyzerService EXCEPTION ===");
+            error_log("Message: " . $e->getMessage());
+            error_log("File: " . $e->getFile() . ":" . $e->getLine());
+            error_log("Trace: " . $e->getTraceAsString());
+            throw $e;
         }
-
-        // Parse risposta JSON
-        return $this->parseResponse($response['result']);
     }
 
     /**

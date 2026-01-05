@@ -7,9 +7,17 @@ use Core\Credits;
 class ScraperService
 {
     private array $defaultHeaders = [
-        'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+        'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
         'Accept-Language: it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Accept-Encoding: gzip, deflate',
+        'Connection: keep-alive',
+        'Upgrade-Insecure-Requests: 1',
+        'Sec-Fetch-Dest: document',
+        'Sec-Fetch-Mode: navigate',
+        'Sec-Fetch-Site: none',
+        'Sec-Fetch-User: ?1',
+        'Cache-Control: max-age=0',
     ];
 
     public function fetch(int $userId, string $url, ?string $moduleSlug = null): array
@@ -231,6 +239,7 @@ class ScraperService
             CURLOPT_MAXREDIRS => 5,
             CURLOPT_TIMEOUT => $timeout,
             CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_ENCODING => '',  // Auto-decompress gzip/deflate/br
         ];
 
         // SSL verification: enable by default for API calls, disable only if explicitly requested
@@ -451,8 +460,14 @@ class ScraperService
             throw new \Exception($result['message'] ?? 'Scraping failed');
         }
 
+        // Check HTTP status code
+        $httpCode = $result['http_code'] ?? 0;
+        if ($httpCode >= 400) {
+            throw new \Exception("HTTP Error {$httpCode}: impossibile accedere alla pagina");
+        }
+
         $html = $result['body'] ?? '';
-        $finalUrl = $result['url'] ?? $url;
+        $finalUrl = $result['final_url'] ?? $url;
 
         if (empty($html)) {
             throw new \Exception('Empty response from URL');

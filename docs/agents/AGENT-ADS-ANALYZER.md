@@ -3,16 +3,31 @@
 ## CONTESTO
 
 **Modulo:** `ads-analyzer`
-**Stato:** 90% Completato
+**Stato:** Completato (100%)
 **Prefisso DB:** `ga_`
 
 Modulo per analisi termini di ricerca Google Ads:
 - Import CSV export Google Ads (formato italiano)
+- Estrazione contesto automatica da landing page
 - Estrazione keyword negative con AI
 - Categorizzazione automatica
+- Storico analisi multiple per progetto
 - Export per Google Ads Editor
 
-Flow: Upload CSV → Contesto Business → Analisi AI → Risultati + Export
+Flow: Upload CSV -> Landing URLs -> Contesto (auto/manual) -> Analisi AI -> Risultati + Export
+
+---
+
+## FUNZIONALITA COMPLETATE (5 Gen 2026)
+
+1. Upload CSV formato italiano
+2. Estrazione contesto manuale
+3. Estrazione contesto automatica (landing page)
+4. Analisi AI keyword negative
+5. Analisi multiple per progetto (storico)
+6. CRUD completo analisi
+7. Export CSV e Google Ads Editor
+8. Logging AI completo
 
 ---
 
@@ -26,25 +41,33 @@ modules/ads-analyzer/
 │   ├── DashboardController.php
 │   ├── ProjectController.php
 │   ├── AnalysisController.php              # Flow principale
-│   └── ExportController.php
+│   ├── AnalysisHistoryController.php       # Storico analisi (NUOVO)
+│   ├── ExportController.php
+│   └── SettingsController.php
 ├── models/
 │   ├── Project.php
 │   ├── AdGroup.php
 │   ├── SearchTerm.php
+│   ├── Analysis.php                        # Storico analisi (NUOVO)
 │   ├── NegativeCategory.php
 │   ├── NegativeKeyword.php
 │   └── BusinessContext.php
 ├── services/
 │   ├── CsvParserService.php                # Parser CSV italiano
 │   ├── KeywordAnalyzerService.php          # AI analysis
-│   └── NegativeExtractorService.php
+│   ├── ContextExtractorService.php         # Scraping + AI (NUOVO)
+│   └── ValidationService.php
 └── views/
     ├── dashboard/
     ├── projects/
     ├── analysis/
     │   ├── upload.php                      # Step 1
-    │   ├── context.php                     # Step 2
+    │   ├── landing-urls.php                # Step 2 (NUOVO)
+    │   ├── context.php                     # Step 2 alt
     │   └── results.php                     # Step 3-4
+    ├── analyses/                           # NUOVO
+    │   ├── index.php
+    │   └── show.php
     └── export/
 ```
 
@@ -56,21 +79,24 @@ modules/ads-analyzer/
 |---------|-------------|
 | `ga_projects` | Progetti analisi |
 | `ga_saved_contexts` | Contesti business riutilizzabili |
-| `ga_ad_groups` | Ad Group dal CSV |
+| `ga_ad_groups` | Ad Group con landing_url, extracted_context |
 | `ga_search_terms` | Termini di ricerca importati |
-| `ga_negative_categories` | Categorie trovate dall'AI |
-| `ga_negative_keywords` | Keyword negative estratte |
-| `ga_analysis_log` | Log analisi AI |
+| `ga_analyses` | Storico analisi (NUOVO) |
+| `ga_negative_categories` | Categorie con analysis_id |
+| `ga_negative_keywords` | Keyword con analysis_id |
 
 ---
 
-## BUG APERTI
+## BUG RISOLTI (5 Gen 2026)
 
-| Bug | Severity | Status |
-|-----|----------|--------|
-| Nessun bug critico | - | ✅ |
-
-**Modulo nuovo (2 Gen 2026)**, testato e funzionante.
+| Bug | Fix |
+|-----|-----|
+| redirect() non esiste | Usato header('Location:') |
+| CSRF token name errato | Usato _token e csrf_token() |
+| is_zero_ctr boolean | Cast corretto |
+| Database::execute | Database::update |
+| Scraping 403 | Rimosso brotli da Accept-Encoding |
+| HTML sporco | Pulizia avanzata con DOMDocument |
 
 ---
 
@@ -79,13 +105,14 @@ modules/ads-analyzer/
 1. **CSV Parser** - Gestisce formato italiano (`;` separatore, `,` decimale)
 2. **BOM UTF-8** - CsvParserService rimuove BOM automaticamente
 3. **KeywordAnalyzerService** - Usa AiService('ads-analyzer')
-4. **Categorie dinamiche** - Generate dall'AI, non predefinite
-5. **Priorità keyword** - high, medium, evaluate
-6. **Checkbox UI** - Alpine.js per selezione fluida
-7. **Crediti:**
-   - Analisi per Ad Group (≤3): 2 crediti
-   - Analisi bulk (4+): 1.5 crediti/gruppo
-   - Re-analisi: 2 crediti
+4. **ContextExtractorService** - Usa DOMDocument per pulizia HTML
+5. **Categorie dinamiche** - Generate dall'AI, non predefinite
+6. **Priorita keyword** - high, medium, evaluate
+7. **Checkbox UI** - Alpine.js per selezione fluida
+8. **Ogni analisi** - Ha propri categories/keywords via analysis_id
+9. **Crediti:**
+   - Analisi per Ad Group: 2 crediti
+   - Estrazione contesto da landing: 3 crediti
 
 ---
 
@@ -108,7 +135,7 @@ Formato Google Ads italiano:
 ```
 Ottimizza prompt in KeywordAnalyzerService.php
 
-OBIETTIVO: [es. categorie più precise, meno falsi positivi]
+OBIETTIVO: [es. categorie piu precise, meno falsi positivi]
 
 FILE: modules/ads-analyzer/services/KeywordAnalyzerService.php
 
@@ -138,32 +165,21 @@ Formati esistenti:
 Nuovo formato: [specifiche]
 ```
 
-### 4. Aggiungere filtri risultati
+### 4. Migliorare estrazione contesto
 ```
-Aggiungi filtri alla pagina risultati
+Migliora ContextExtractorService.php
 
-FILE: modules/ads-analyzer/views/analysis/results.php
+FILE: modules/ads-analyzer/services/ContextExtractorService.php
 
-FILTRI:
-- Per priorità (high/medium/evaluate)
-- Per categoria
-- Per Ad Group
-- Ricerca keyword
+ATTUALE:
+- Selettori CSS per main content
+- Rimozione nav, footer, sidebar
+- Conversione HTML -> testo
 
-USA Alpine.js per filtering client-side.
+MIGLIORARE:
+- [es. nuovi selettori, handling JavaScript, etc.]
 ```
 
-### 5. Salvare contesti business
-```
-Implementa salvataggio contesti business riutilizzabili
+---
 
-TABELLA: ga_saved_contexts
-FILE:
-- controllers/AnalysisController.php
-- views/analysis/context.php
-
-FLOW:
-- Checkbox "Salva per riutilizzo"
-- Nome contesto
-- Dropdown per selezionare contesto salvato
-```
+*Aggiornato 5 Gen 2026*

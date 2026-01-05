@@ -19,7 +19,7 @@ class SearchTerm
             'cost' => $data['cost'] ?? 0,
             'conversions' => $data['conversions'] ?? 0,
             'conversion_value' => $data['conversion_value'] ?? 0,
-            'is_zero_ctr' => $data['is_zero_ctr'] ?? false
+            'is_zero_ctr' => (int)($data['is_zero_ctr'] ?? 0)
         ]);
     }
 

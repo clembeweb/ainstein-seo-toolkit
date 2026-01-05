@@ -41,19 +41,7 @@ class BusinessContext
 
     public static function update(int $id, array $data): bool
     {
-        $fields = [];
-        $params = [];
-
-        foreach ($data as $key => $value) {
-            $fields[] = "{$key} = ?";
-            $params[] = $value;
-        }
-
-        $params[] = $id;
-
-        $sql = "UPDATE ga_saved_contexts SET " . implode(', ', $fields) . " WHERE id = ?";
-
-        return Database::execute($sql, $params) > 0;
+        return Database::update('ga_saved_contexts', $data, 'id = ?', [$id]) > 0;
     }
 
     public static function delete(int $id): bool

@@ -47,6 +47,65 @@
         </div>
     </div>
 
+    <?php
+    // Verifica se ci sono contesti estratti
+    $hasExtractedContexts = false;
+    $extractedContexts = [];
+    foreach ($adGroups as $ag) {
+        if (!empty($ag['extracted_context'])) {
+            $hasExtractedContexts = true;
+            $extractedContexts[$ag['name']] = $ag['extracted_context'];
+        }
+    }
+    ?>
+
+    <?php if ($hasExtractedContexts): ?>
+    <!-- Contesti Estratti Automaticamente -->
+    <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6">
+        <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div class="flex-1">
+                <p class="font-medium text-emerald-800 dark:text-emerald-300">Contesti estratti automaticamente</p>
+                <p class="text-sm text-emerald-700 dark:text-emerald-400 mt-1">I contesti seguenti sono stati estratti dalle landing page. Puoi usarli come base o modificarli.</p>
+
+                <div class="mt-3 space-y-2">
+                    <?php foreach ($extractedContexts as $name => $context): ?>
+                    <details class="bg-white dark:bg-slate-800 rounded p-3 border border-emerald-200 dark:border-emerald-700">
+                        <summary class="cursor-pointer font-medium text-sm text-emerald-800 dark:text-emerald-300"><?= e($name) ?></summary>
+                        <p class="mt-2 text-sm text-slate-700 dark:text-slate-300"><?= e($context) ?></p>
+                    </details>
+                    <?php endforeach; ?>
+                </div>
+
+                <button
+                    type="button"
+                    class="mt-3 text-sm text-emerald-700 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-200 underline"
+                    onclick="useExtractedContexts()"
+                >
+                    Usa tutti i contesti estratti
+                </button>
+            </div>
+        </div>
+    </div>
+    <?php else: ?>
+    <!-- Link a estrazione automatica -->
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            <p class="text-sm text-blue-800 dark:text-blue-300">
+                Vuoi estrarre il contesto automaticamente dalle landing page?
+                <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/landing-urls') ?>" class="font-medium underline hover:no-underline">
+                    Vai all'estrazione automatica
+                </a>
+            </p>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Context Form -->
     <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6"
          x-data="contextForm()"
@@ -173,7 +232,33 @@ Esempio: E-commerce di scarpe running. Vendiamo solo scarpe da corsa uomo/donna 
     </div>
 </div>
 
+<?php
+// Prepara contesti estratti per JavaScript
+$extractedContextsJson = [];
+foreach ($adGroups as $ag) {
+    if (!empty($ag['extracted_context'])) {
+        $extractedContextsJson[$ag['name']] = $ag['extracted_context'];
+    }
+}
+?>
+
 <script>
+// Contesti estratti per uso JS
+const extractedContexts = <?= json_encode($extractedContextsJson, JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+
+function useExtractedContexts() {
+    const contexts = Object.entries(extractedContexts).map(([name, ctx]) => {
+        return `[${name}]\n${ctx}`;
+    }).join('\n\n---\n\n');
+
+    const textarea = document.getElementById('business_context');
+    if (textarea) {
+        textarea.value = contexts;
+        // Trigger Alpine.js update
+        textarea.dispatchEvent(new Event('input'));
+    }
+}
+
 function contextForm() {
     return {
         context: '<?= addslashes($project['business_context'] ?? '') ?>',
@@ -192,6 +277,9 @@ function contextForm() {
         },
 
         async startAnalysis() {
+            console.log('=== START ANALYSIS ===');
+            console.log('Context length:', this.context.length);
+
             if (this.context.length < 30) {
                 this.error = 'Il contesto deve essere almeno 30 caratteri';
                 return;
@@ -205,7 +293,18 @@ function contextForm() {
             try {
                 const formData = new FormData();
                 formData.append('business_context', this.context);
-                formData.append('_token', document.querySelector('input[name="_token"]').value);
+
+                const csrfInput = document.querySelector('input[name="_csrf_token"]');
+                console.log('CSRF input found:', !!csrfInput);
+                if (csrfInput) {
+                    console.log('CSRF token:', csrfInput.value.substring(0, 10) + '...');
+                    formData.append('_csrf_token', csrfInput.value);
+                } else {
+                    console.error('CSRF TOKEN NOT FOUND!');
+                    this.error = 'Token CSRF non trovato';
+                    this.isAnalyzing = false;
+                    return;
+                }
 
                 if (this.saveContext && this.contextName) {
                     formData.append('save_context', '1');
@@ -215,19 +314,41 @@ function contextForm() {
                 this.currentStep = 'Analisi AI in corso...';
                 this.progress = 30;
 
-                const response = await fetch('<?= url('/ads-analyzer/projects/' . $project['id'] . '/analyze') ?>', {
+                const analyzeUrl = '<?= url('/ads-analyzer/projects/' . $project['id'] . '/analyze') ?>';
+                console.log('Analyze URL:', analyzeUrl);
+                console.log('Sending request...');
+
+                const response = await fetch(analyzeUrl, {
                     method: 'POST',
                     body: formData
                 });
 
-                const data = await response.json();
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+
+                const responseText = await response.text();
+                console.log('Response text (first 500 chars):', responseText.substring(0, 500));
+
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                    console.log('Parsed JSON:', data);
+                } catch (jsonErr) {
+                    console.error('JSON parse error:', jsonErr);
+                    console.error('Full response:', responseText);
+                    this.error = 'Errore server: risposta non valida. Controlla console (F12).';
+                    this.isAnalyzing = false;
+                    return;
+                }
 
                 if (data.error) {
+                    console.log('Server error:', data.error);
                     this.error = data.error;
                     this.isAnalyzing = false;
                     return;
                 }
 
+                console.log('=== ANALYSIS SUCCESS ===');
                 this.currentStep = 'Completato!';
                 this.progress = 100;
 
@@ -236,7 +357,10 @@ function contextForm() {
                 }, 1000);
 
             } catch (err) {
-                this.error = 'Errore durante l\'analisi. Riprova.';
+                console.error('=== FETCH ERROR ===');
+                console.error('Error:', err.message);
+                console.error('Stack:', err.stack);
+                this.error = 'Errore: ' + err.message;
                 this.isAnalyzing = false;
             }
         }

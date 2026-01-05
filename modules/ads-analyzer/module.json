@@ -19,6 +19,10 @@
         "bulk_analyze": {
             "cost": 1.5,
             "description": "Analisi Ad Group in bulk (4+ gruppi)"
+        },
+        "extract_context": {
+            "cost": 3,
+            "description": "Estrazione contesto da landing page (scraping + AI)"
         }
     },
     "settings": {

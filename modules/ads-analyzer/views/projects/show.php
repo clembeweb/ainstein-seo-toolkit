@@ -21,12 +21,12 @@
                 </svg>
                 Carica CSV
             </a>
-            <?php elseif ($project['status'] === 'completed'): ?>
-            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/results') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors">
+            <?php elseif ($project['status'] === 'completed' && $totalAnalyses > 0): ?>
+            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/analyses') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
-                Vedi Risultati
+                Vedi Analisi (<?= $totalAnalyses ?>)
             </a>
             <?php endif; ?>
         </div>
@@ -167,6 +167,58 @@
     </div>
     <?php endif; ?>
 
+    <!-- Recent Analyses -->
+    <?php if (!empty($recentAnalyses)): ?>
+    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Analisi Recenti</h2>
+            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/analyses') ?>" class="text-sm text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 font-medium">
+                Vedi tutte (<?= $totalAnalyses ?>)
+            </a>
+        </div>
+        <div class="divide-y divide-slate-200 dark:divide-slate-700">
+            <?php foreach ($recentAnalyses as $analysis): ?>
+            <div class="px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/analyses/' . $analysis['id']) ?>" class="font-medium text-slate-900 dark:text-white hover:text-amber-600 dark:hover:text-amber-400">
+                            <?= e($analysis['name']) ?>
+                        </a>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                            <?= date('d/m/Y H:i', strtotime($analysis['created_at'])) ?>
+                            <?php if ($analysis['total_keywords'] > 0): ?>
+                            - <?= $analysis['total_keywords'] ?> keyword trovate
+                            <?php endif; ?>
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <?php
+                        $statusColors = [
+                            'draft' => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
+                            'analyzing' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
+                            'completed' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300',
+                            'error' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'
+                        ];
+                        $statusColor = $statusColors[$analysis['status']] ?? $statusColors['draft'];
+                        ?>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $statusColor ?>">
+                            <?= ucfirst($analysis['status']) ?>
+                        </span>
+                        <?php if ($analysis['status'] === 'completed'): ?>
+                        <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/analyses/' . $analysis['id']) ?>" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Actions -->
     <div class="flex items-center justify-between">
         <form action="<?= url('/ads-analyzer/projects/' . $project['id'] . '/delete') ?>" method="POST" onsubmit="return confirm('Eliminare questo progetto e tutti i dati associati?')">
@@ -176,13 +228,31 @@
             </button>
         </form>
 
-        <?php if ($project['status'] === 'draft' && $project['total_ad_groups'] > 0): ?>
-        <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/context') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors">
-            Continua Analisi
-            <svg class="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
-        </a>
-        <?php endif; ?>
+        <div class="flex gap-3">
+            <?php if ($project['total_ad_groups'] > 0): ?>
+            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/analyses') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Storico Analisi
+            </a>
+            <?php endif; ?>
+
+            <?php if ($project['status'] === 'draft' && $project['total_ad_groups'] > 0): ?>
+            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/landing-urls') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors">
+                Continua Analisi
+                <svg class="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+            <?php elseif ($project['status'] === 'completed' && $project['total_ad_groups'] > 0): ?>
+            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/landing-urls') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Nuova Analisi
+            </a>
+            <?php endif; ?>
+        </div>
     </div>
 </div>

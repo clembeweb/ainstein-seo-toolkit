@@ -8,6 +8,7 @@ use Core\ModuleLoader;
 use Modules\AdsAnalyzer\Models\Project;
 use Modules\AdsAnalyzer\Models\AdGroup;
 use Modules\AdsAnalyzer\Models\SearchTerm;
+use Modules\AdsAnalyzer\Models\Analysis;
 use Modules\AdsAnalyzer\Models\NegativeKeyword;
 use Modules\AdsAnalyzer\Services\ValidationService;
 
@@ -58,14 +59,16 @@ class ProjectController
         if (!empty($errors)) {
             $_SESSION['flash_error'] = implode(', ', $errors);
             $_SESSION['old_input'] = $data;
-            redirect('/ads-analyzer/projects/create');
+            header('Location: ' . url('/ads-analyzer/projects/create'));
+            exit;
         }
 
         // Crea progetto
         $projectId = Project::create($data);
 
         $_SESSION['flash_success'] = 'Progetto creato con successo';
-        redirect("/ads-analyzer/projects/{$projectId}/upload");
+        header('Location: ' . url("/ads-analyzer/projects/{$projectId}/upload"));
+        exit;
     }
 
     public function show(int $id): string
@@ -75,13 +78,19 @@ class ProjectController
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
-            redirect('/ads-analyzer');
+            header('Location: ' . url('/ads-analyzer'));
+            exit;
         }
 
         $adGroups = AdGroup::getWithStats($id);
         $termStats = SearchTerm::getStatsByProject($id);
         $selectedCount = NegativeKeyword::countSelectedByProject($id);
         $totalNegatives = NegativeKeyword::countByProject($id);
+
+        // Analisi recenti (ultime 3)
+        $recentAnalyses = Analysis::findByProjectId($id);
+        $recentAnalyses = array_slice($recentAnalyses, 0, 3);
+        $totalAnalyses = Analysis::countByProject($id);
 
         return View::render('ads-analyzer/projects/show', [
             'title' => $project['name'] . ' - Google Ads Analyzer',
@@ -91,7 +100,9 @@ class ProjectController
             'adGroups' => $adGroups,
             'termStats' => $termStats,
             'selectedCount' => $selectedCount,
-            'totalNegatives' => $totalNegatives
+            'totalNegatives' => $totalNegatives,
+            'recentAnalyses' => $recentAnalyses,
+            'totalAnalyses' => $totalAnalyses
         ]);
     }
 
@@ -102,7 +113,8 @@ class ProjectController
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
-            redirect('/ads-analyzer');
+            header('Location: ' . url('/ads-analyzer'));
+            exit;
         }
 
         return View::render('ads-analyzer/projects/edit', [
@@ -120,7 +132,8 @@ class ProjectController
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
-            redirect('/ads-analyzer');
+            header('Location: ' . url('/ads-analyzer'));
+            exit;
         }
 
         $data = [
@@ -133,13 +146,15 @@ class ProjectController
 
         if (!empty($errors)) {
             $_SESSION['flash_error'] = implode(', ', $errors);
-            redirect("/ads-analyzer/projects/{$id}/edit");
+            header('Location: ' . url("/ads-analyzer/projects/{$id}/edit"));
+            exit;
         }
 
         Project::update($id, $data);
 
         $_SESSION['flash_success'] = 'Progetto aggiornato';
-        redirect("/ads-analyzer/projects/{$id}");
+        header('Location: ' . url("/ads-analyzer/projects/{$id}"));
+        exit;
     }
 
     public function destroy(int $id): void
@@ -148,11 +163,13 @@ class ProjectController
 
         if (!Project::deleteByUser($user['id'], $id)) {
             $_SESSION['flash_error'] = 'Impossibile eliminare il progetto';
-            redirect('/ads-analyzer');
+            header('Location: ' . url('/ads-analyzer'));
+            exit;
         }
 
         $_SESSION['flash_success'] = 'Progetto eliminato';
-        redirect('/ads-analyzer');
+        header('Location: ' . url('/ads-analyzer'));
+        exit;
     }
 
     public function duplicate(int $id): void
@@ -162,7 +179,8 @@ class ProjectController
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
-            redirect('/ads-analyzer');
+            header('Location: ' . url('/ads-analyzer'));
+            exit;
         }
 
         $newProjectId = Project::create([
@@ -174,7 +192,8 @@ class ProjectController
         ]);
 
         $_SESSION['flash_success'] = 'Progetto duplicato';
-        redirect("/ads-analyzer/projects/{$newProjectId}");
+        header('Location: ' . url("/ads-analyzer/projects/{$newProjectId}"));
+        exit;
     }
 
     public function toggleArchive(int $id): void
@@ -184,7 +203,8 @@ class ProjectController
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
-            redirect('/ads-analyzer');
+            header('Location: ' . url('/ads-analyzer'));
+            exit;
         }
 
         $newStatus = $project['status'] === 'archived' ? 'completed' : 'archived';
@@ -192,6 +212,7 @@ class ProjectController
 
         $message = $newStatus === 'archived' ? 'Progetto archiviato' : 'Progetto ripristinato';
         $_SESSION['flash_success'] = $message;
-        redirect('/ads-analyzer');
+        header('Location: ' . url('/ads-analyzer'));
+        exit;
     }
 }

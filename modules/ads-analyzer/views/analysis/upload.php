@@ -166,28 +166,67 @@ function csvUploader() {
         async uploadFile() {
             if (!this.file) return;
 
+            console.log('=== UPLOAD START ===');
+            console.log('File:', this.file.name, this.file.size, 'bytes');
+
             this.isUploading = true;
             this.error = null;
             this.success = false;
 
             const formData = new FormData();
             formData.append('csv_file', this.file);
-            formData.append('_token', document.querySelector('input[name="_token"]').value);
+
+            const csrfInput = document.querySelector('input[name="_csrf_token"]');
+            console.log('CSRF input found:', !!csrfInput);
+            if (csrfInput) {
+                console.log('CSRF token:', csrfInput.value.substring(0, 10) + '...');
+                formData.append('_csrf_token', csrfInput.value);
+            } else {
+                console.error('CSRF TOKEN NOT FOUND!');
+                this.error = 'Token CSRF non trovato';
+                this.isUploading = false;
+                return;
+            }
+
+            const uploadUrl = '<?= url('/ads-analyzer/projects/' . $project['id'] . '/upload') ?>';
+            console.log('Upload URL:', uploadUrl);
 
             try {
-                const response = await fetch('<?= url('/ads-analyzer/projects/' . $project['id'] . '/upload') ?>', {
+                console.log('Sending fetch request...');
+                const response = await fetch(uploadUrl, {
                     method: 'POST',
                     body: formData
                 });
 
-                const data = await response.json();
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                console.log('Response headers:', [...response.headers.entries()]);
+
+                // Get raw text first
+                const responseText = await response.text();
+                console.log('Response text (first 500 chars):', responseText.substring(0, 500));
+
+                // Try to parse as JSON
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                    console.log('Parsed JSON:', data);
+                } catch (jsonErr) {
+                    console.error('JSON parse error:', jsonErr);
+                    console.error('Full response text:', responseText);
+                    this.error = 'Errore server: risposta non valida. Controlla console per dettagli.';
+                    this.isUploading = false;
+                    return;
+                }
 
                 if (data.error) {
+                    console.log('Server returned error:', data.error);
                     this.error = data.error;
                     this.isUploading = false;
                     return;
                 }
 
+                console.log('=== UPLOAD SUCCESS ===');
                 this.success = true;
                 this.successMessage = `${data.ad_groups} Ad Group e ${data.total_terms} termini importati`;
                 this.progress = 100;
@@ -197,7 +236,11 @@ function csvUploader() {
                 }, 1500);
 
             } catch (err) {
-                this.error = 'Errore durante il caricamento. Riprova.';
+                console.error('=== FETCH ERROR ===');
+                console.error('Error type:', err.constructor.name);
+                console.error('Error message:', err.message);
+                console.error('Error stack:', err.stack);
+                this.error = 'Errore: ' + err.message;
                 this.isUploading = false;
             }
         }

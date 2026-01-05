@@ -36,19 +36,7 @@ class AdGroup
 
     public static function update(int $id, array $data): bool
     {
-        $fields = [];
-        $params = [];
-
-        foreach ($data as $key => $value) {
-            $fields[] = "{$key} = ?";
-            $params[] = $value;
-        }
-
-        $params[] = $id;
-
-        $sql = "UPDATE ga_ad_groups SET " . implode(', ', $fields) . " WHERE id = ?";
-
-        return Database::execute($sql, $params) > 0;
+        return Database::update('ga_ad_groups', $data, 'id = ?', [$id]) > 0;
     }
 
     public static function delete(int $id): bool
@@ -79,5 +67,40 @@ class AdGroup
         ";
 
         return Database::fetchAll($sql, [$projectId]);
+    }
+
+    /**
+     * Aggiorna URL landing per un Ad Group
+     */
+    public static function updateLandingUrl(int $id, string $url): bool
+    {
+        return Database::update('ga_ad_groups', ['landing_url' => $url], 'id = ?', [$id]) >= 0;
+    }
+
+    /**
+     * Salva contenuto scrappato
+     */
+    public static function saveScrapedContent(int $id, string $content): bool
+    {
+        return Database::update('ga_ad_groups', ['scraped_content' => $content], 'id = ?', [$id]) >= 0;
+    }
+
+    /**
+     * Salva contesto estratto da AI
+     */
+    public static function saveExtractedContext(int $id, string $context): bool
+    {
+        return Database::update('ga_ad_groups', ['extracted_context' => $context], 'id = ?', [$id]) >= 0;
+    }
+
+    /**
+     * Trova Ad Groups con URL landing impostato
+     */
+    public static function getWithLandingUrl(int $projectId): array
+    {
+        return Database::fetchAll(
+            "SELECT * FROM ga_ad_groups WHERE project_id = ? AND landing_url IS NOT NULL AND landing_url != '' ORDER BY name ASC",
+            [$projectId]
+        );
     }
 }

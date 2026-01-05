@@ -46,7 +46,8 @@ class SettingsController
         Settings::setUser($user['id'], 'ads_analyzer_match_type', $_POST['default_match_type'] ?? 'phrase');
 
         $_SESSION['flash_success'] = 'Impostazioni salvate';
-        redirect('/ads-analyzer/settings');
+        header('Location: ' . url('/ads-analyzer/settings'));
+        exit;
     }
 
     /**
