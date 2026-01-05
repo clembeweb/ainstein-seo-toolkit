@@ -79,6 +79,33 @@ class GscConnection
     }
 
     /**
+     * Upsert connessione (INSERT o UPDATE basato su project_id)
+     */
+    public function upsert(int $projectId, array $data): array
+    {
+        $existing = $this->findByProject($projectId);
+
+        if ($existing) {
+            // UPDATE
+            $this->update($projectId, $data);
+            return array_merge($existing, $data);
+        } else {
+            // INSERT
+            $insertData = array_merge(['project_id' => $projectId], $data);
+            $id = $this->create($insertData);
+            return array_merge(['id' => $id, 'project_id' => $projectId], $data);
+        }
+    }
+
+    /**
+     * Aggiorna site_url/property_url
+     */
+    public function updateSiteUrl(int $projectId, string $siteUrl): bool
+    {
+        return $this->update($projectId, ['property_url' => $siteUrl]);
+    }
+
+    /**
      * Elimina connessione
      */
     public function delete(int $projectId): bool
