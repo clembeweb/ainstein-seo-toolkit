@@ -220,4 +220,17 @@ if (!function_exists('getModuleSetting')) {
     }
 }
 
+if (!function_exists('jsonResponse')) {
+    /**
+     * Send JSON response and exit
+     */
+    function jsonResponse(array $data, int $statusCode = 200): void
+    {
+        http_response_code($statusCode);
+        header('Content-Type: application/json');
+        echo json_encode($data);
+        exit;
+    }
+}
+
 } // end global namespace

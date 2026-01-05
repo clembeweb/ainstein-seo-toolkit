@@ -1,6 +1,6 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /seo-toolkit/public/
+    RewriteBase /
 
     # Redirect tutto a index.php tranne file esistenti
     RewriteCond %{REQUEST_FILENAME} !-f
