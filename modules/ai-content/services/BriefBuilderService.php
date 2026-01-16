@@ -287,7 +287,7 @@ class BriefBuilderService
             foreach (['h1', 'h2', 'h3'] as $level) {
                 if (!empty($headings[$level])) {
                     foreach ($headings[$level] as $heading) {
-                        $allHeadings[$level][] = $heading;
+                        $allHeadings[$level][] = $this->sanitizeUtf8($heading);
                     }
                 }
             }
@@ -384,7 +384,7 @@ class BriefBuilderService
 
         foreach ($scrapedSources as $source) {
             if (!empty($source['content'])) {
-                $allText .= ' ' . $source['content'];
+                $allText .= ' ' . $this->sanitizeUtf8($source['content']);
             }
         }
 
@@ -552,11 +552,11 @@ class BriefBuilderService
             $summary[] = [
                 'index' => $index + 1,
                 'url' => $source['url'] ?? 'unknown',
-                'title' => $source['title'] ?? '',
+                'title' => $this->sanitizeUtf8($source['title'] ?? ''),
                 'word_count' => $source['word_count'] ?? 0,
                 'h2_count' => count($source['headings']['h2'] ?? []),
                 'h3_count' => count($source['headings']['h3'] ?? []),
-                'content_preview' => $this->truncateText($source['content'] ?? '', 200),
+                'content_preview' => $this->truncateText($this->sanitizeUtf8($source['content'] ?? ''), 200),
             ];
         }
 
@@ -899,5 +899,35 @@ PROMPT;
         }
 
         return null;
+    }
+
+    /**
+     * Sanitize string for valid UTF-8 encoding
+     * Removes invalid UTF-8 sequences that would cause json_encode to fail
+     */
+    private function sanitizeUtf8(string $text): string
+    {
+        // Remove null bytes
+        $text = str_replace("\0", '', $text);
+
+        // Convert to UTF-8 if not already valid
+        if (!mb_check_encoding($text, 'UTF-8')) {
+            // Try to detect encoding and convert
+            $detected = mb_detect_encoding($text, ['UTF-8', 'ISO-8859-1', 'Windows-1252', 'ASCII'], true);
+            if ($detected && $detected !== 'UTF-8') {
+                $text = mb_convert_encoding($text, 'UTF-8', $detected);
+            } else {
+                // Force UTF-8 by filtering invalid sequences
+                $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
+            }
+        }
+
+        // Remove any remaining invalid UTF-8 sequences (control characters except tabs, newlines)
+        $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $text);
+
+        // Remove non-printable unicode characters (except newlines, tabs, etc)
+        $text = preg_replace('/[^\PC\s]/u', '', $text);
+
+        return $text;
     }
 }

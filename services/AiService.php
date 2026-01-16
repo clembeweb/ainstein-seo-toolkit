@@ -376,6 +376,9 @@ class AiService
      */
     private function callAnthropic(string $apiKey, string $model, array $messages, int $maxTokens, ?string $system = null): array
     {
+        // Sanitize messages content for valid UTF-8
+        $messages = $this->sanitizeMessagesUtf8($messages);
+
         $data = [
             'model' => $model,
             'max_tokens' => $maxTokens,
@@ -383,14 +386,20 @@ class AiService
         ];
 
         if ($system) {
-            $data['system'] = $system;
+            $data['system'] = $this->sanitizeStringUtf8($system);
+        }
+
+        $jsonData = json_encode($data, JSON_UNESCAPED_UNICODE);
+        if ($jsonData === false) {
+            $jsonError = json_last_error_msg();
+            throw new \Exception("Errore encoding JSON per Anthropic: {$jsonError}. Verificare che il contenuto non contenga caratteri non validi.");
         }
 
         $ch = curl_init('https://api.anthropic.com/v1/messages');
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_POSTFIELDS => $jsonData,
             CURLOPT_HTTPHEADER => [
                 'Content-Type: application/json',
                 'x-api-key: ' . $apiKey,
@@ -429,13 +438,16 @@ class AiService
      */
     private function callOpenAI(string $apiKey, string $model, array $messages, int $maxTokens, ?string $system = null): array
     {
+        // Sanitize messages content for valid UTF-8
+        $messages = $this->sanitizeMessagesUtf8($messages);
+
         // Convert to OpenAI format - prepend system message
         $openaiMessages = [];
 
         if ($system) {
             $openaiMessages[] = [
                 'role' => 'system',
-                'content' => $system,
+                'content' => $this->sanitizeStringUtf8($system),
             ];
         }
 
@@ -452,11 +464,17 @@ class AiService
             'messages' => $openaiMessages,
         ];
 
+        $jsonData = json_encode($data, JSON_UNESCAPED_UNICODE);
+        if ($jsonData === false) {
+            $jsonError = json_last_error_msg();
+            throw new \Exception("Errore encoding JSON per OpenAI: {$jsonError}. Verificare che il contenuto non contenga caratteri non validi.");
+        }
+
         $ch = curl_init('https://api.openai.com/v1/chat/completions');
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_POSTFIELDS => $jsonData,
             CURLOPT_HTTPHEADER => [
                 'Content-Type: application/json',
                 'Authorization: Bearer ' . $apiKey,
@@ -754,5 +772,52 @@ class AiService
                 'label' => self::PROVIDERS['openai'],
             ],
         ];
+    }
+
+    // ========================================
+    // UTF-8 SANITIZATION HELPERS
+    // ========================================
+
+    /**
+     * Sanitize array of messages for valid UTF-8
+     */
+    private function sanitizeMessagesUtf8(array $messages): array
+    {
+        foreach ($messages as &$msg) {
+            if (isset($msg['content'])) {
+                $msg['content'] = $this->sanitizeStringUtf8($msg['content']);
+            }
+        }
+        return $messages;
+    }
+
+    /**
+     * Sanitize a string for valid UTF-8 encoding
+     * Removes invalid UTF-8 sequences that would cause json_encode to fail
+     */
+    private function sanitizeStringUtf8(string $text): string
+    {
+        // Remove null bytes
+        $text = str_replace("\0", '', $text);
+
+        // Convert to UTF-8 if not already valid
+        if (!mb_check_encoding($text, 'UTF-8')) {
+            // Try to detect encoding and convert
+            $detected = mb_detect_encoding($text, ['UTF-8', 'ISO-8859-1', 'Windows-1252', 'ASCII'], true);
+            if ($detected && $detected !== 'UTF-8') {
+                $text = mb_convert_encoding($text, 'UTF-8', $detected);
+            } else {
+                // Force UTF-8 by filtering invalid sequences
+                $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
+            }
+        }
+
+        // Remove any remaining invalid UTF-8 sequences (control characters except tabs, newlines)
+        $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $text);
+
+        // Remove non-printable unicode characters (except newlines, tabs, etc)
+        $text = preg_replace('/[^\PC\s]/u', '', $text);
+
+        return $text;
     }
 }

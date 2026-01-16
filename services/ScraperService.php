@@ -474,6 +474,9 @@ class ScraperService
             throw new \Exception('Empty response from URL');
         }
 
+        // Ensure HTML is valid UTF-8 (external sites may use different encodings)
+        $html = $this->ensureUtf8($html);
+
         // Extract meta
         $meta = $this->extractMeta($html);
 
@@ -563,6 +566,7 @@ class ScraperService
 
         // Clean up
         $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
+        $text = $this->sanitizeUtf8($text);
         $text = preg_replace('/\s+/', ' ', $text);
         $text = trim($text);
 
@@ -574,5 +578,69 @@ class ScraperService
         }
 
         return $text;
+    }
+
+    /**
+     * Ensure HTML content is valid UTF-8
+     * Handles common encodings from web pages
+     */
+    private function ensureUtf8(string $html): string
+    {
+        // Try to detect encoding from HTML meta tags
+        $encoding = null;
+
+        // Check for <meta charset="...">
+        if (preg_match('/<meta[^>]+charset=["\']?([^"\'\s>]+)/i', $html, $matches)) {
+            $encoding = strtoupper(trim($matches[1]));
+        }
+        // Check for <meta http-equiv="Content-Type" content="...; charset=...">
+        elseif (preg_match('/<meta[^>]+content=["\'][^"\']*charset=([^"\'\s;]+)/i', $html, $matches)) {
+            $encoding = strtoupper(trim($matches[1]));
+        }
+
+        // If encoding is already UTF-8, just sanitize
+        if ($encoding === 'UTF-8' || $encoding === 'UTF8') {
+            return $this->sanitizeUtf8($html);
+        }
+
+        // If we found an encoding, try to convert
+        if ($encoding) {
+            $converted = @mb_convert_encoding($html, 'UTF-8', $encoding);
+            if ($converted !== false) {
+                return $this->sanitizeUtf8($converted);
+            }
+        }
+
+        // Try auto-detection
+        if (!mb_check_encoding($html, 'UTF-8')) {
+            $detected = mb_detect_encoding($html, ['UTF-8', 'ISO-8859-1', 'Windows-1252', 'ISO-8859-15', 'ASCII'], true);
+            if ($detected && $detected !== 'UTF-8') {
+                $converted = @mb_convert_encoding($html, 'UTF-8', $detected);
+                if ($converted !== false) {
+                    return $this->sanitizeUtf8($converted);
+                }
+            }
+        }
+
+        // Fallback: sanitize as-is
+        return $this->sanitizeUtf8($html);
+    }
+
+    /**
+     * Sanitize string for valid UTF-8 encoding
+     * Removes invalid UTF-8 sequences
+     */
+    private function sanitizeUtf8(string $text): string
+    {
+        // Remove null bytes
+        $text = str_replace("\0", '', $text);
+
+        // Remove invalid UTF-8 sequences (control characters except tabs, newlines, carriage returns)
+        $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $text);
+
+        // Use iconv to remove any remaining invalid sequences
+        $clean = @iconv('UTF-8', 'UTF-8//IGNORE', $text);
+
+        return $clean !== false ? $clean : $text;
     }
 }

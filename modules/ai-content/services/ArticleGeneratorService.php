@@ -220,8 +220,10 @@ PROMPT;
             $num = $index + 1;
             $wordCount = $source['word_count'] ?? 0;
             $h2Count = count($source['headings']['h2'] ?? []);
-            $summary .= "{$num}. **{$source['title']}**\n";
-            $summary .= "   URL: {$source['url']}\n";
+            $title = $this->sanitizeUtf8($source['title'] ?? 'Titolo non disponibile');
+            $url = $source['url'] ?? 'URL non disponibile';
+            $summary .= "{$num}. **{$title}**\n";
+            $summary .= "   URL: {$url}\n";
             $summary .= "   Parole: {$wordCount} | Sezioni H2: {$h2Count}\n\n";
         }
 
@@ -242,12 +244,14 @@ PROMPT;
 
         foreach ($sources as $index => $source) {
             $num = $index + 1;
-            $content .= "### FONTE {$num}: {$source['title']}\n\n";
+            $title = $this->sanitizeUtf8($source['title'] ?? 'Fonte sconosciuta');
+            $content .= "### FONTE {$num}: {$title}\n\n";
 
             // Add headings structure
             if (!empty($source['headings']['h2'])) {
                 $content .= "**Struttura H2:**\n";
                 foreach (array_slice($source['headings']['h2'], 0, 8) as $h2) {
+                    $h2 = $this->sanitizeUtf8($h2);
                     $content .= "- {$h2}\n";
                 }
                 $content .= "\n";
@@ -255,7 +259,7 @@ PROMPT;
 
             // Add content preview (truncated)
             if (!empty($source['content'])) {
-                $sourceContent = $source['content'];
+                $sourceContent = $this->sanitizeUtf8($source['content']);
                 if (strlen($sourceContent) > $maxContentPerSource) {
                     $sourceContent = substr($sourceContent, 0, $maxContentPerSource) . "...";
                 }
@@ -266,6 +270,36 @@ PROMPT;
         }
 
         return $content;
+    }
+
+    /**
+     * Sanitize string for valid UTF-8 encoding
+     * Removes invalid UTF-8 sequences that would cause json_encode to fail
+     */
+    private function sanitizeUtf8(string $text): string
+    {
+        // Remove null bytes
+        $text = str_replace("\0", '', $text);
+
+        // Convert to UTF-8 if not already valid
+        if (!mb_check_encoding($text, 'UTF-8')) {
+            // Try to detect encoding and convert
+            $detected = mb_detect_encoding($text, ['UTF-8', 'ISO-8859-1', 'Windows-1252', 'ASCII'], true);
+            if ($detected && $detected !== 'UTF-8') {
+                $text = mb_convert_encoding($text, 'UTF-8', $detected);
+            } else {
+                // Force UTF-8 by filtering invalid sequences
+                $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
+            }
+        }
+
+        // Remove any remaining invalid UTF-8 sequences
+        $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $text);
+
+        // Remove non-printable unicode characters (except newlines, tabs)
+        $text = preg_replace('/[^\PC\s]/u', '', $text);
+
+        return $text;
     }
 
     /**
