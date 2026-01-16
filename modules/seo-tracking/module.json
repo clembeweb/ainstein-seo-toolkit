@@ -1,0 +1,128 @@
+{
+    "name": "SEO Position Tracking",
+    "slug": "seo-tracking",
+    "version": "1.0.0",
+    "description": "Monitoraggio posizionamento keyword, traffico organico e revenue con GSC + GA4 e analisi AI",
+    "icon": "chart-bar",
+    "menu_order": 15,
+    "requires": {
+        "php": ">=8.0",
+        "services": ["ai"]
+    },
+    "credits": {
+        "gsc_full_sync": {
+            "cost": 10,
+            "description": "Sync storico completo GSC (16 mesi)"
+        },
+        "weekly_digest": {
+            "cost": 5,
+            "description": "Report settimanale AI"
+        },
+        "monthly_executive": {
+            "cost": 15,
+            "description": "Report mensile executive AI"
+        },
+        "keyword_analysis": {
+            "cost": 5,
+            "description": "Analisi keyword AI on-demand"
+        },
+        "revenue_attribution": {
+            "cost": 8,
+            "description": "Analisi revenue attribution AI"
+        },
+        "anomaly_detection": {
+            "cost": 5,
+            "description": "Rilevamento anomalie AI"
+        },
+        "alert_ai_insight": {
+            "cost": 1,
+            "description": "Insight AI per alert"
+        }
+    },
+    "settings": {
+        "gsc_client_id": {
+            "label": "Google OAuth Client ID",
+            "type": "text",
+            "description": "Client ID dalla Google Cloud Console",
+            "admin_only": true
+        },
+        "gsc_client_secret": {
+            "label": "Google OAuth Client Secret",
+            "type": "password",
+            "description": "Client Secret dalla Google Cloud Console",
+            "admin_only": true
+        },
+        "gsc_redirect_uri": {
+            "label": "Google OAuth Redirect URI",
+            "type": "text",
+            "description": "Copia questo URL nella Google Cloud Console",
+            "admin_only": true,
+            "readonly": true,
+            "default": "/seo-tracking/gsc/callback"
+        },
+        "cost_gsc_full_sync": {
+            "type": "number",
+            "label": "Costo Sync Completa GSC",
+            "description": "Crediti per sincronizzazione completa GSC",
+            "default": 10,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_quick_wins": {
+            "type": "number",
+            "label": "Costo Analisi Quick Wins",
+            "description": "Crediti per analisi Quick Wins AI",
+            "default": 2,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_weekly_digest": {
+            "type": "number",
+            "label": "Costo Report Settimanale",
+            "description": "Crediti per report settimanale AI",
+            "default": 5,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_monthly_executive": {
+            "type": "number",
+            "label": "Costo Report Mensile",
+            "description": "Crediti per report mensile executive",
+            "default": 15,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_keyword_analysis": {
+            "type": "number",
+            "label": "Costo Analisi Keyword",
+            "description": "Crediti per analisi keyword AI on-demand",
+            "default": 5,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_anomaly_detection": {
+            "type": "number",
+            "label": "Costo Rilevamento Anomalie",
+            "description": "Crediti per rilevamento anomalie AI",
+            "default": 5,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_revenue_attribution": {
+            "type": "number",
+            "label": "Costo Revenue Attribution",
+            "description": "Crediti per analisi revenue attribution AI",
+            "default": 8,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        }
+    },
+    "routes_prefix": "/seo-tracking"
+}

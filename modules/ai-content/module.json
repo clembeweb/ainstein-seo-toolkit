@@ -1,0 +1,79 @@
+{
+    "name": "AI SEO Content Generator",
+    "slug": "ai-content",
+    "version": "1.0.0",
+    "description": "Genera articoli SEO-ottimizzati con AI partendo da analisi SERP",
+    "icon": "pencil-square",
+    "color": "purple",
+    "menu_order": 20,
+    "requires": {
+        "php": ">=8.0",
+        "credits": true,
+        "services": ["ai", "scraper"]
+    },
+    "credits": {
+        "serp_extraction": 3,
+        "scrape_per_url": 1,
+        "article_generation": 10,
+        "wp_publish": 0
+    },
+    "settings": {
+        "serpapi_key": {
+            "type": "password",
+            "label": "SerpAPI Key",
+            "admin_only": true
+        },
+        "default_language": {
+            "type": "select",
+            "label": "Lingua default",
+            "options": ["it", "en", "es", "de", "fr"],
+            "default": "it"
+        },
+        "default_word_count": {
+            "type": "number",
+            "label": "Parole target articolo",
+            "default": 1500
+        },
+        "max_sources": {
+            "type": "number",
+            "label": "Max fonti per articolo",
+            "default": 6
+        },
+        "cost_serp_extraction": {
+            "type": "number",
+            "label": "Costo Estrazione SERP",
+            "description": "Crediti per analisi SERP e competitor",
+            "default": 3,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_content_scrape": {
+            "type": "number",
+            "label": "Costo Scraping per URL",
+            "description": "Crediti per scraping contenuto pagina",
+            "default": 1,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_brief_generation": {
+            "type": "number",
+            "label": "Costo Generazione Brief",
+            "description": "Crediti per generazione brief AI",
+            "default": 5,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_article_generation": {
+            "type": "number",
+            "label": "Costo Generazione Articolo",
+            "description": "Crediti per generazione articolo completo",
+            "default": 10,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        }
+    }
+}

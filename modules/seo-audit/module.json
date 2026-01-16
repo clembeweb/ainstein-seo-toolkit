@@ -1,0 +1,72 @@
+{
+    "name": "SEO Audit",
+    "slug": "seo-audit",
+    "version": "1.0.0",
+    "description": "Audit SEO completo con Google Search Console e analisi AI",
+    "icon": "clipboard-document-check",
+    "menu_order": 20,
+    "requires": {
+        "php": ">=8.0",
+        "services": ["scraper", "ai", "sitemap"]
+    },
+    "credits": {
+        "crawl_per_page": {
+            "cost": 0.2,
+            "description": "Scansione singola pagina"
+        },
+        "gsc_sync": {
+            "cost": 5,
+            "description": "Sincronizzazione dati Google Search Console"
+        },
+        "ai_overview": {
+            "cost": 15,
+            "description": "Analisi AI panoramica completa"
+        },
+        "ai_category": {
+            "cost": 3,
+            "description": "Analisi AI singola categoria"
+        }
+    },
+    "settings": {
+        "gsc_client_id": {
+            "type": "text",
+            "label": "Google Client ID",
+            "default": "",
+            "admin_only": true
+        },
+        "gsc_client_secret": {
+            "type": "password",
+            "label": "Google Client Secret",
+            "default": "",
+            "admin_only": true
+        },
+        "cost_ai_overview": {
+            "type": "number",
+            "label": "Costo Analisi AI Overview",
+            "description": "Crediti per analisi AI overview progetto",
+            "default": 15,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_ai_category": {
+            "type": "number",
+            "label": "Costo Analisi AI Categoria",
+            "description": "Crediti per analisi AI per categoria issue",
+            "default": 3,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_gsc_sync": {
+            "type": "number",
+            "label": "Costo Sync GSC",
+            "description": "Crediti per sincronizzazione Google Search Console",
+            "default": 5,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        }
+    },
+    "routes_prefix": "/seo-audit"
+}

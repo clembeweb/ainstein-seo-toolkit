@@ -1,0 +1,99 @@
+{
+    "name": "Google Ads Analyzer",
+    "slug": "ads-analyzer",
+    "version": "1.0.0",
+    "description": "Analisi termini di ricerca Google Ads ed estrazione keyword negative con AI",
+    "icon": "chart-bar-square",
+    "color": "amber",
+    "menu_order": 25,
+    "requires": {
+        "php": ">=8.0",
+        "credits": true,
+        "services": ["ai"]
+    },
+    "credits": {
+        "analyze_ad_group": {
+            "cost": 2,
+            "description": "Analisi singolo Ad Group"
+        },
+        "bulk_analyze": {
+            "cost": 1.5,
+            "description": "Analisi Ad Group in bulk (4+ gruppi)"
+        },
+        "extract_context": {
+            "cost": 3,
+            "description": "Estrazione contesto da landing page (scraping + AI)"
+        }
+    },
+    "settings": {
+        "max_terms_per_analysis": {
+            "type": "number",
+            "label": "Termini max per analisi AI",
+            "default": 300,
+            "min": 50,
+            "max": 500,
+            "description": "Limite termini inviati all'AI per singola analisi"
+        },
+        "auto_select_high_priority": {
+            "type": "checkbox",
+            "label": "Auto-seleziona keyword priorita Alta",
+            "default": true,
+            "description": "Seleziona automaticamente le keyword con priorita 'high' per l'export"
+        },
+        "auto_select_medium_priority": {
+            "type": "checkbox",
+            "label": "Auto-seleziona keyword priorita Media",
+            "default": true,
+            "description": "Seleziona automaticamente le keyword con priorita 'medium' per l'export"
+        },
+        "default_match_type": {
+            "type": "select",
+            "label": "Match type predefinito export",
+            "default": "phrase",
+            "options": {
+                "exact": "Corrispondenza esatta [keyword]",
+                "phrase": "Corrispondenza a frase \"keyword\"",
+                "broad": "Corrispondenza generica"
+            },
+            "description": "Match type usato nell'export per Google Ads Editor"
+        },
+        "cost_context_extraction": {
+            "type": "number",
+            "label": "Costo Estrazione Contesto",
+            "description": "Crediti per estrazione contesto annunci",
+            "default": 3,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_ad_group_analysis": {
+            "type": "number",
+            "label": "Costo Analisi Ad Group",
+            "description": "Crediti per analisi singolo ad group",
+            "default": 2,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_bulk_analysis": {
+            "type": "number",
+            "label": "Costo Analisi Bulk",
+            "description": "Crediti per analisi bulk (4+ keywords)",
+            "default": 1.5,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_bulk_analysis_discount": {
+            "type": "number",
+            "label": "Sconto Analisi Bulk",
+            "description": "Moltiplicatore sconto per analisi bulk (es. 0.75 = 25% sconto)",
+            "default": 0.75,
+            "min": 0.1,
+            "max": 1,
+            "step": 0.05,
+            "admin_only": true
+        }
+    },
+    "routes_prefix": "/ads-analyzer"
+}

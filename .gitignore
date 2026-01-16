@@ -1,0 +1,60 @@
+# Dependencies
+/vendor/
+/node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Storage
+/storage/logs/*
+/storage/cache/*
+!/storage/logs/.gitkeep
+!/storage/cache/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Sensitive
+*.zip
+*.bak
+
+# SQL files (except migrations)
+/*.sql
+/storage/**/*.sql
+!/database/migrations/*.sql
+
+# Laragon
+.laragon/
+
+# Windows reserved names
+nul
+
+# Local/generated files
+cookies.txt
+storage/*.json
+.claude/
+
+# SSH Keys
+siteground_key
+siteground_key.pub
+*.pem
+
+# Backup directories
+*_backup_*/
+.git_old_backup/
+
+# Database dumps
+database_full_dump.sql
+
+# Temp files
+tmpclaude-*
+file-grafici/
