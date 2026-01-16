@@ -90,9 +90,11 @@ class CrawlController
             $sessionId = $this->sessionModel->create($id, $config);
 
             // Salva configurazione nel progetto - reset counters!
+            // IMPORTANTE: Aggiorna anche max_pages per CrawlerService::discoverUrls()
             $this->projectModel->update($id, [
                 'current_session_id' => $sessionId,
                 'crawl_config' => json_encode($config),
+                'max_pages' => $config['max_pages'], // FIX: Aggiorna limite pagine per crawler
                 'status' => 'crawling',
                 'pages_crawled' => 0,
                 'pages_found' => 0, // Reset anche questo!
