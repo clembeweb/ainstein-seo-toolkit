@@ -20,6 +20,7 @@ use Modules\SeoTracking\Controllers\AiController;
 use Modules\SeoTracking\Controllers\ExportController;
 use Modules\SeoTracking\Controllers\ApiController;
 use Modules\SeoTracking\Controllers\CronController;
+use Modules\SeoTracking\Controllers\CompareController;
 
 // =============================================
 // PROGETTI
@@ -246,6 +247,28 @@ Router::post('/seo-tracking/projects/{id}/pages/bulk-delete', function ($id) {
 //     Middleware::auth();
 //     return (new DashboardController())->revenue((int) $id);
 // });
+
+// =============================================
+// POSITION COMPARE
+// =============================================
+
+// Vista confronto posizioni
+Router::get('/seo-tracking/projects/{id}/compare', function ($id) {
+    Middleware::auth();
+    return (new CompareController())->index((int) $id);
+});
+
+// API dati confronto (AJAX)
+Router::post('/seo-tracking/projects/{id}/compare/data', function ($id) {
+    Middleware::auth();
+    return (new CompareController())->getData((int) $id);
+});
+
+// Export CSV confronto
+Router::get('/seo-tracking/projects/{id}/compare/export', function ($id) {
+    Middleware::auth();
+    return (new CompareController())->export((int) $id);
+});
 
 // =============================================
 // KEYWORD TRACKING
