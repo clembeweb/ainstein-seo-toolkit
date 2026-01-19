@@ -7,14 +7,26 @@ use Core\Database;
 /**
  * PositionCompareService
  * Confronta posizioni keyword tra due periodi (stile SEMrush)
+ *
+ * Utilizza approccio Smart Hybrid:
+ * - Dati recenti (90gg): legge da database locale
+ * - Dati storici (>90gg): chiama API GSC + cache 24h
  */
 class PositionCompareService
 {
     private int $projectId;
+    private GscDataService $gscDataService;
+
+    /** Metadata sulle fonti dati per i due periodi */
+    private array $sourceMeta = [
+        'period_a' => ['fonte' => 'db', 'cache_scade' => null],
+        'period_b' => ['fonte' => 'db', 'cache_scade' => null]
+    ];
 
     public function __construct(int $projectId)
     {
         $this->projectId = $projectId;
+        $this->gscDataService = new GscDataService();
     }
 
     /**
@@ -25,7 +37,7 @@ class PositionCompareService
      * @param string $dateFromB Data inizio periodo B (attuale)
      * @param string $dateToB Data fine periodo B
      * @param array $filters Filtri opzionali ['keyword' => '', 'url' => '']
-     * @return array
+     * @return array Include 'meta' con info sulle fonti dati
      */
     public function compare(
         string $dateFromA,
@@ -34,60 +46,81 @@ class PositionCompareService
         string $dateToB,
         array $filters = []
     ): array {
-        // Ottieni dati periodo A (precedente)
-        $periodA = $this->getPeriodData($dateFromA, $dateToA, $filters);
+        // Ottieni dati periodo A (precedente) - potrebbe usare API se >90gg
+        $periodAResult = $this->getPeriodDataHybrid($dateFromA, $dateToA, $filters);
+        $periodA = $periodAResult['data'];
+        $this->sourceMeta['period_a'] = [
+            'fonte' => $periodAResult['fonte'],
+            'cache_scade' => $periodAResult['cache_scade'] ?? null,
+            'cache_tempo_rimanente' => $periodAResult['cache_tempo_rimanente'] ?? null
+        ];
 
-        // Ottieni dati periodo B (attuale)
-        $periodB = $this->getPeriodData($dateFromB, $dateToB, $filters);
+        // Ottieni dati periodo B (attuale) - di solito da DB
+        $periodBResult = $this->getPeriodDataHybrid($dateFromB, $dateToB, $filters);
+        $periodB = $periodBResult['data'];
+        $this->sourceMeta['period_b'] = [
+            'fonte' => $periodBResult['fonte'],
+            'cache_scade' => $periodBResult['cache_scade'] ?? null,
+            'cache_tempo_rimanente' => $periodBResult['cache_tempo_rimanente'] ?? null
+        ];
 
         // Merge e calcola differenze
-        return $this->calculateDifferences($periodA, $periodB);
+        $results = $this->calculateDifferences($periodA, $periodB);
+
+        // Aggiungi metadata fonti
+        $results['meta'] = $this->sourceMeta;
+
+        return $results;
     }
 
     /**
-     * Ottiene dati aggregati per un periodo
+     * Ottiene dati usando approccio hybrid (DB o API+cache)
      */
-    private function getPeriodData(string $dateFrom, string $dateTo, array $filters): array
+    private function getPeriodDataHybrid(string $dateFrom, string $dateTo, array $filters): array
     {
-        $sql = "
-            SELECT
-                query as keyword,
-                ROUND(AVG(position), 1) as avg_position,
-                SUM(clicks) as total_clicks,
-                SUM(impressions) as total_impressions,
-                ROUND(SUM(clicks) / NULLIF(SUM(impressions), 0) * 100, 2) as ctr,
-                MAX(page) as url
-            FROM st_gsc_data
-            WHERE project_id = ?
-              AND date BETWEEN ? AND ?
-        ";
+        // Usa GscDataService per gestione automatica fonte
+        $result = $this->gscDataService->getKeywordData(
+            $this->projectId,
+            $dateFrom,
+            $dateTo,
+            $filters
+        );
 
-        $params = [$this->projectId, $dateFrom, $dateTo];
-
-        // Filtro keyword
-        if (!empty($filters['keyword'])) {
-            $sql .= " AND query LIKE ?";
-            $params[] = '%' . $filters['keyword'] . '%';
-        }
-
-        // Filtro URL
-        if (!empty($filters['url'])) {
-            $sql .= " AND page LIKE ?";
-            $params[] = '%' . $filters['url'] . '%';
-        }
-
-        $sql .= " GROUP BY query ORDER BY total_impressions DESC LIMIT 1000";
-
-        $results = Database::fetchAll($sql, $params);
-
-        // Indicizza per keyword per lookup veloce
+        // Converti in formato indicizzato per keyword
         $indexed = [];
-        foreach ($results as $row) {
-            $indexed[$row['keyword']] = $row;
+        foreach ($result['data'] as $row) {
+            $keyword = $row['keyword'] ?? '';
+            if (empty($keyword)) continue;
+
+            // Se esiste già, aggrega (può succedere con URL multipli)
+            if (isset($indexed[$keyword])) {
+                $indexed[$keyword]['total_clicks'] += (int)($row['clicks'] ?? 0);
+                $indexed[$keyword]['total_impressions'] += (int)($row['impressions'] ?? 0);
+                // Mantieni posizione migliore
+                if (($row['position'] ?? 100) < $indexed[$keyword]['avg_position']) {
+                    $indexed[$keyword]['avg_position'] = (float)($row['position'] ?? 0);
+                    $indexed[$keyword]['url'] = $row['url'] ?? '';
+                }
+            } else {
+                $indexed[$keyword] = [
+                    'keyword' => $keyword,
+                    'avg_position' => (float)($row['position'] ?? 0),
+                    'total_clicks' => (int)($row['clicks'] ?? 0),
+                    'total_impressions' => (int)($row['impressions'] ?? 0),
+                    'ctr' => (float)($row['ctr'] ?? 0),
+                    'url' => $row['url'] ?? ''
+                ];
+            }
         }
 
-        return $indexed;
+        return [
+            'data' => $indexed,
+            'fonte' => $result['fonte'],
+            'cache_scade' => $result['cache_scade'] ?? null,
+            'cache_tempo_rimanente' => $result['cache_tempo_rimanente'] ?? null
+        ];
     }
+
 
     /**
      * Calcola differenze tra i due periodi
@@ -208,17 +241,34 @@ class PositionCompareService
 
     /**
      * Ottiene range date disponibili per il progetto
+     * Include info su dati locali vs API
      */
     public function getAvailableDateRange(): array
     {
-        $sql = "SELECT MIN(date) as min_date, MAX(date) as max_date
-                FROM st_gsc_data WHERE project_id = ?";
-        $result = Database::fetch($sql, [$this->projectId]);
+        $rangeInfo = $this->gscDataService->getInfoRange($this->projectId);
 
         return [
-            'min_date' => $result['min_date'] ?? date('Y-m-d', strtotime('-16 months')),
-            'max_date' => $result['max_date'] ?? date('Y-m-d')
+            'min_date' => $rangeInfo['dati_api_da'],
+            'max_date' => $rangeInfo['dati_locali_a'],
+            'dati_locali_da' => $rangeInfo['dati_locali_da'],
+            'giorni_locali' => $rangeInfo['giorni_locali']
         ];
+    }
+
+    /**
+     * Ottiene metadata sulle fonti dati dell'ultimo confronto
+     */
+    public function getSourceMeta(): array
+    {
+        return $this->sourceMeta;
+    }
+
+    /**
+     * Verifica se un periodo richiederà chiamata API
+     */
+    public function richiedeApi(string $dateFrom): bool
+    {
+        return !$this->gscDataService->sonoDatiLocali($dateFrom);
     }
 
     /**

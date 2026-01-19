@@ -3,6 +3,11 @@
  * Cron Job: Daily Sync
  * Sincronizza dati GSC e GA4 per tutti i progetti attivi
  *
+ * Approccio Smart Hybrid:
+ * - Sync giornaliero: ultimi 10 giorni (delta)
+ * - Cleanup automatico: rimuove dati >90 giorni
+ * - Pulizia cache: rimuove file scaduti
+ *
  * Eseguire giornalmente alle 06:00
  * 0 6 * * * php /path/to/modules/seo-tracking/cron/daily-sync.php
  */
@@ -14,6 +19,8 @@ use Modules\SeoTracking\Models\Project;
 use Modules\SeoTracking\Services\GscService;
 use Modules\SeoTracking\Services\Ga4Service;
 use Modules\SeoTracking\Services\AlertService;
+use Modules\SeoTracking\Services\GscDataService;
+use Modules\SeoTracking\Services\GscCacheService;
 
 echo "[" . date('Y-m-d H:i:s') . "] Starting daily sync...\n";
 
@@ -63,6 +70,31 @@ foreach ($projects as $proj) {
 
     // Pausa tra progetti per non sovraccaricare le API
     sleep(2);
+}
+
+// === CLEANUP: Rimuovi dati vecchi (>90 giorni) ===
+echo "\n--- Cleanup dati storici ---\n";
+
+try {
+    $gscDataService = new GscDataService();
+    $cacheService = new GscCacheService();
+
+    // Pulisci dati DB vecchi
+    echo "Pulizia dati GSC >90 giorni... ";
+    $eliminati = $gscDataService->pulisciDatiVecchi();
+    echo "OK ({$eliminati} record eliminati)\n";
+
+    // Pulisci cache scaduta
+    echo "Pulizia cache scaduta... ";
+    $cacheEliminati = $cacheService->pulisciScaduti();
+    echo "OK ({$cacheEliminati} file eliminati)\n";
+
+    // Statistiche cache
+    $statsCache = $cacheService->getStatistiche();
+    echo "Cache attuale: {$statsCache['totale_file']} file, {$statsCache['dimensione_mb']} MB\n";
+
+} catch (\Exception $e) {
+    echo "ERROR durante cleanup: {$e->getMessage()}\n";
 }
 
 echo "\n[" . date('Y-m-d H:i:s') . "] Daily sync completed.\n";

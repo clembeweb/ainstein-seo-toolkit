@@ -6,6 +6,7 @@ use Core\View;
 use Core\Auth;
 use Modules\SeoTracking\Models\Project;
 use Modules\SeoTracking\Services\PositionCompareService;
+use Modules\SeoTracking\Services\GscDataService;
 
 /**
  * CompareController
@@ -29,8 +30,11 @@ class CompareController
         }
 
         $compareService = new PositionCompareService($projectId);
+        $gscDataService = new GscDataService();
+
         $dateRange = $compareService->getAvailableDateRange();
         $presets = PositionCompareService::getPresets();
+        $dataConfig = $gscDataService->getConfig();
 
         // Date default: ultimi 7 giorni vs 7 giorni precedenti
         $preset = $_GET['preset'] ?? '7d';
@@ -51,6 +55,10 @@ class CompareController
         // Tab attiva
         $activeTab = $_GET['tab'] ?? 'all';
 
+        // Verifica se i periodi richiederanno API
+        $richiedeApiA = $compareService->richiedeApi($dateFromA);
+        $richiedeApiB = $compareService->richiedeApi($dateFromB);
+
         View::render('seo-tracking::compare/index', [
             'project' => $project,
             'results' => $results,
@@ -62,7 +70,11 @@ class CompareController
             'dateFromB' => $dateFromB,
             'dateToB' => $dateToB,
             'filters' => $filters,
-            'activeTab' => $activeTab
+            'activeTab' => $activeTab,
+            'dataConfig' => $dataConfig,
+            'richiedeApiA' => $richiedeApiA,
+            'richiedeApiB' => $richiedeApiB,
+            'sourceMeta' => $results['meta'] ?? []
         ]);
     }
 

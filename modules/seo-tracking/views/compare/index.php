@@ -2,6 +2,10 @@
 /**
  * Position Compare View
  * Confronta posizioni keyword tra due periodi (stile SEMrush)
+ *
+ * Approccio Smart Hybrid:
+ * - Dati recenti (90gg): legge da database locale (istantaneo)
+ * - Dati storici (>90gg): chiama API GSC + cache 24h
  */
 
 use Modules\SeoTracking\Services\PositionCompareService;
@@ -10,6 +14,9 @@ $currentPage = 'compare';
 $presets = PositionCompareService::getPresets();
 $defaultPreset = $presets['28d'];
 $dateRange = $dateRange ?? ['min_date' => date('Y-m-d', strtotime('-16 months')), 'max_date' => date('Y-m-d')];
+$dataConfig = $dataConfig ?? ['giorni_dati_locali' => 90];
+$sourceMeta = $sourceMeta ?? ['period_a' => ['fonte' => 'db'], 'period_b' => ['fonte' => 'db']];
+$sogliaLocale = date('Y-m-d', strtotime('-' . ($dataConfig['giorni_dati_locali'] ?? 90) . ' days'));
 ?>
 <div class="space-y-6" x-data="positionCompare(<?= (int)$project['id'] ?>)">
     <!-- Header + Navigation -->
@@ -59,28 +66,80 @@ $dateRange = $dateRange ?? ['min_date' => date('Y-m-d', strtotime('-16 months'))
             <div class="grid grid-cols-2 gap-4">
                 <!-- Periodo A (Precedente) -->
                 <div class="space-y-2">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Periodo A (Precedente)</label>
+                    <div class="flex items-center justify-between">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Periodo A (Precedente)</label>
+                        <span x-show="sourceMetaA.fonte" x-cloak>
+                            <template x-if="sourceMetaA.fonte === 'api'">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300" title="Dati recuperati da API GSC">
+                                    <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    API
+                                </span>
+                            </template>
+                            <template x-if="sourceMetaA.fonte === 'cache'">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300" :title="'Cache - ' + (sourceMetaA.cache_tempo_rimanente || '24h')">
+                                    <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    Cache
+                                </span>
+                            </template>
+                            <template x-if="sourceMetaA.fonte === 'db'">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300" title="Dati dal database locale">
+                                    <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/></svg>
+                                    DB
+                                </span>
+                            </template>
+                        </span>
+                    </div>
                     <div class="flex gap-2">
-                        <input type="date" x-model="dateFromA" @change="activePreset = 'custom'"
+                        <input type="date" x-model="dateFromA" @change="activePreset = 'custom'; checkApiRequired()"
                                min="<?= e($dateRange['min_date']) ?>" max="<?= e($dateRange['max_date']) ?>"
                                class="flex-1 rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
-                        <input type="date" x-model="dateToA" @change="activePreset = 'custom'"
+                        <input type="date" x-model="dateToA" @change="activePreset = 'custom'; checkApiRequired()"
                                min="<?= e($dateRange['min_date']) ?>" max="<?= e($dateRange['max_date']) ?>"
                                class="flex-1 rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
                     </div>
+                    <p x-show="needsApiA" x-cloak class="text-xs text-blue-600 dark:text-blue-400">
+                        <svg class="w-3 h-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Dati oltre <?= $dataConfig['giorni_dati_locali'] ?? 90 ?> giorni - richiede chiamata API
+                    </p>
                 </div>
 
                 <!-- Periodo B (Attuale) -->
                 <div class="space-y-2">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Periodo B (Attuale)</label>
+                    <div class="flex items-center justify-between">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Periodo B (Attuale)</label>
+                        <span x-show="sourceMetaB.fonte" x-cloak>
+                            <template x-if="sourceMetaB.fonte === 'api'">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                                    <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    API
+                                </span>
+                            </template>
+                            <template x-if="sourceMetaB.fonte === 'cache'">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+                                    <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    Cache
+                                </span>
+                            </template>
+                            <template x-if="sourceMetaB.fonte === 'db'">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+                                    <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/></svg>
+                                    DB
+                                </span>
+                            </template>
+                        </span>
+                    </div>
                     <div class="flex gap-2">
-                        <input type="date" x-model="dateFromB" @change="activePreset = 'custom'"
+                        <input type="date" x-model="dateFromB" @change="activePreset = 'custom'; checkApiRequired()"
                                min="<?= e($dateRange['min_date']) ?>" max="<?= e($dateRange['max_date']) ?>"
                                class="flex-1 rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
-                        <input type="date" x-model="dateToB" @change="activePreset = 'custom'"
+                        <input type="date" x-model="dateToB" @change="activePreset = 'custom'; checkApiRequired()"
                                min="<?= e($dateRange['min_date']) ?>" max="<?= e($dateRange['max_date']) ?>"
                                class="flex-1 rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
                     </div>
+                    <p x-show="needsApiB" x-cloak class="text-xs text-blue-600 dark:text-blue-400">
+                        <svg class="w-3 h-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Dati oltre <?= $dataConfig['giorni_dati_locali'] ?? 90 ?> giorni - richiede chiamata API
+                    </p>
                 </div>
             </div>
         </div>
@@ -261,6 +320,8 @@ $dateRange = $dateRange ?? ['min_date' => date('Y-m-d', strtotime('-16 months'))
 function positionCompare(projectId) {
     const presets = <?= json_encode($presets) ?>;
     const defaultPreset = presets['28d'];
+    const sogliaLocale = '<?= $sogliaLocale ?>';
+    const giorniLocali = <?= (int)($dataConfig['giorni_dati_locali'] ?? 90) ?>;
 
     return {
         projectId: projectId,
@@ -279,6 +340,12 @@ function positionCompare(projectId) {
         filterKeyword: '',
         filterUrl: '',
 
+        // Source metadata (fonte dati)
+        sourceMetaA: { fonte: null },
+        sourceMetaB: { fonte: null },
+        needsApiA: false,
+        needsApiB: false,
+
         // Data
         data: {
             all: [],
@@ -295,8 +362,17 @@ function positionCompare(projectId) {
             lost: 0
         },
 
+        init() {
+            this.checkApiRequired();
+        },
+
         get currentData() {
             return this.data[this.activeTab] || [];
+        },
+
+        checkApiRequired() {
+            this.needsApiA = this.dateFromA < sogliaLocale;
+            this.needsApiB = this.dateFromB < sogliaLocale;
         },
 
         applyPreset(key) {
@@ -307,6 +383,7 @@ function positionCompare(projectId) {
                 this.dateToA = preset.dateToA;
                 this.dateFromB = preset.dateFromB;
                 this.dateToB = preset.dateToB;
+                this.checkApiRequired();
             }
         },
 
@@ -341,6 +418,13 @@ function positionCompare(projectId) {
                         lost: result.data.lost || []
                     };
                     this.stats = result.data.stats || {total: 0, improved: 0, declined: 0, new: 0, lost: 0};
+
+                    // Aggiorna source metadata
+                    if (result.data.meta) {
+                        this.sourceMetaA = result.data.meta.period_a || { fonte: 'db' };
+                        this.sourceMetaB = result.data.meta.period_b || { fonte: 'db' };
+                    }
+
                     this.hasData = true;
                 } else {
                     alert(result.error || 'Errore nel caricamento dei dati');

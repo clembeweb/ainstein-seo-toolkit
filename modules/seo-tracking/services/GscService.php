@@ -528,9 +528,18 @@ class GscService
 
     /**
      * Full sync storico (16 mesi)
+     *
+     * @deprecated Usa GscDataService con approccio Smart Hybrid.
+     *             I dati storici vengono ora recuperati on-demand via API + cache 24h.
+     *             Questo metodo rimane per compatibilità ma non dovrebbe essere usato.
      */
     public function fullHistoricalSync(int $projectId): array
     {
+        trigger_error(
+            'fullHistoricalSync() è deprecato. Usa GscDataService per approccio Smart Hybrid.',
+            E_USER_DEPRECATED
+        );
+
         $endDate = date('Y-m-d', strtotime('-3 days'));
         $startDate = date('Y-m-d', strtotime('-16 months'));
 
