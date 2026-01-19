@@ -1,16 +1,27 @@
 # AINSTEIN - Stato Progetto
 
-**Ultimo aggiornamento:** 2026-01-09
+**Ultimo aggiornamento:** 2026-01-19
 **Ambiente produzione:** https://ainstein.it
 **Repository:** https://github.com/clembeweb/ainstein-seo-toolkit.git
 
 ---
 
-## 🎯 OVERVIEW
+## VISION
+
+> **"Ainstein non ti mostra i problemi SEO. Li risolve per te."**
+
+Non siamo un SEO tool con AI appiccicata. Siamo un **AI-agent per SEO** che usa i tool come input.
+
+📄 Vedi: [STRATEGY.md](./STRATEGY.md) per posizionamento completo
+📄 Vedi: [ROADMAP.md](./ROADMAP.md) per piano sviluppo AI
+
+---
+
+## OVERVIEW
 
 Ainstein è una piattaforma SaaS modulare per tool SEO con integrazione AI.
 Target: agenzie, e-commerce, freelancer, consulenti digitali.
-Pricing model: simile a SEMrush (~50-60€/mese).
+Pricing model: ~55€/mese (vs 120€+ competitor).
 
 | Aspetto | Dettaglio |
 |---------|-----------|
@@ -21,97 +32,69 @@ Pricing model: simile a SEMrush (~50-60€/mese).
 
 ---
 
-## 📊 STATO MODULI (Aggiornato 9 Gen 2026)
+## STATO MODULI (Aggiornato 19 Gen 2026)
 
-| Modulo | Slug | Prefisso DB | Files | Stato | % |
-|--------|------|-------------|-------|-------|---|
-| AI SEO Content Generator | `ai-content` | `aic_` | 23 | ✅ Funzionante | 98% |
-| SEO Audit | `seo-audit` | `sa_` | 32 | ✅ Completato | 100% |
-| Google Ads Analyzer | `ads-analyzer` | `ga_` | 24 | 🆕 Nuovo | 90% |
-| Internal Links Analyzer | `internal-links` | `il_` | 28 | ⚠️ Parziale | 85% |
-| SEO Position Tracking | `seo-tracking` | `st_` | 53 | 🔄 In corso | 80% |
-| AI Content Bulk Creator | `content-creator` | `cc_` | 0 | ❌ Non impl. | 0% |
+| Modulo | Slug | Stato Base | Stato AI | % Totale |
+|--------|------|------------|----------|----------|
+| AI SEO Content Generator | `ai-content` | ✅ 98% | ✅ Completa | **98%** |
+| SEO Audit | `seo-audit` | ✅ 100% | ⚠️ Parziale | **90%** |
+| Google Ads Analyzer | `ads-analyzer` | ✅ 100% | ✅ Completa | **100%** |
+| Internal Links Analyzer | `internal-links` | ✅ 85% | ❌ Mancante | **75%** |
+| SEO Position Tracking | `seo-tracking` | 🔄 80% | ⚠️ Parziale | **70%** |
+| AI Content Bulk Creator | `content-creator` | ❌ 0% | ❌ | **0%** |
 
----
-
-## ✅ COMPLETATI (9 Gen 2026)
-
-### seo-audit (AGGIORNATO)
-- [x] Database 13 tabelle `sa_*`
-- [x] CrawlerService (sitemap + spider)
-- [x] IssueDetector (50+ tipi issue)
-- [x] AiAnalysisService integrato
-- [x] GscService OAuth2
-- [x] Dashboard con health score + trend
-- [x] Export CSV
-- [x] **Storico scansioni** - Vista /history con grafico trend
-- [x] **Session tracking** - session_id su issues e pages
-- [x] **Health score formula** - Calcolo con cap per severity
-
-### ai-content
-- [x] Fix "MySQL server has gone away" (Database::reconnect)
-- [x] Fix UI preview articolo (classe `prose` Tailwind)
-- [x] Card Keywords cliccabile in dashboard
-
-### ads-analyzer (NUOVO)
-- [x] Struttura modulo completa
-- [x] Parser CSV Google Ads (formato IT)
-- [x] KeywordAnalyzerService con AI
-- [x] Categorie negative dinamiche
-- [x] Export per Google Ads Editor
-
-### Core
-- [x] GoogleOAuthService centralizzato
-- [x] Database::reconnect() per operazioni lunghe
-- [x] ScraperService improvements
+### Legenda Stato AI
+- ✅ **Completa**: AI integrata e funzionante per tutte le feature
+- ⚠️ **Parziale**: AI presente ma mancano feature chiave (vedi ROADMAP.md)
+- ❌ **Mancante**: Nessuna integrazione AI
 
 ---
 
-## 🔴 BUG APERTI
+## GAP AI DA COLMARE (Priorità)
 
-### seo-tracking (Priorità ALTA)
-| Bug | File | Status |
-|-----|------|--------|
-| OAuth GSC callback | GscController.php | Test pending |
-| GA4 Service Account | Ga4Controller.php | Non testato |
-| Route selectProperty | routes.php | ✅ Fixato |
+### 🔴 Priorità Alta (FASE 1)
 
-### internal-links (Priorità MEDIA)
-| Bug | File | Status |
-|-----|------|--------|
-| Icone Lucide | views/*.php | 39 occorrenze |
-| Dropdown modello AI | views/analysis/index.php | Rimuovere |
+| Modulo | Feature Mancante | Impatto |
+|--------|------------------|---------|
+| **seo-audit** | AI Fix Generator (fix pronti per ogni issue) | Alto |
+| **internal-links** | AI Link Suggester (suggerimenti link + anchor) | Alto |
 
----
+### 🟡 Priorità Media (FASE 2)
 
-## 🎯 PROSSIMI STEP
+| Modulo | Feature Mancante | Impatto |
+|--------|------------------|---------|
+| **seo-tracking** | Weekly AI Digest | Alto |
+| **seo-tracking** | Quick Wins Finder | Alto |
+| **content-creator** | MVP completo | Medio |
 
-### Priorità 1: OAuth GSC
-1. Configurare redirect URI in Google Cloud Console:
-   `https://ainstein.it/oauth/google/callback`
-2. Test flusso completo seo-tracking
-3. Test flusso seo-audit
-
-### Priorità 2: Test Produzione
-1. Test completo seo-audit con sito reale
-2. Test ads-analyzer con export CSV
-3. Verificare logging AI in admin
-
-### Priorità 3: Fix UI
-1. Migrare icone Lucide → Heroicons (internal-links)
-2. Rimuovere dropdown modello AI
-
-### Priorità 4: Nuovi Moduli
-1. Implementare content-creator
+📄 Dettagli: [ROADMAP.md](./ROADMAP.md)
 
 ---
 
-## 🔧 SERVIZI CONDIVISI
+## COMPLETATI RECENTEMENTE
+
+### 2026-01-19
+- [x] Audit completo piattaforma pre-beta
+- [x] Documentazione strategica (STRATEGY.md, ROADMAP.md)
+- [x] Verifica stato tutti i moduli
+
+### 2026-01-16
+- [x] Fix crawler page limit bug (seo-audit)
+- [x] Fix UTF-8 sanitization (ai-content)
+
+### 2026-01-09
+- [x] Storico scansioni con health score trend (seo-audit)
+- [x] Session tracking su issues e pages
+- [x] Google Ads Analyzer completato
+
+---
+
+## SERVIZI CONDIVISI
 
 | Servizio | Descrizione | Usato da |
 |----------|-------------|----------|
-| `AiService.php` | Chiamate AI con logging | Tutti |
-| `ScraperService.php` | HTTP client + DOM parser | ai-content, seo-audit |
+| `AiService.php` | Multi-provider AI + logging | Tutti |
+| `ScraperService.php` | HTTP client + DOM parser | ai-content, seo-audit, internal-links |
 | `GoogleOAuthService.php` | OAuth2 centralizzato | seo-audit, seo-tracking |
 | `SitemapService.php` | Parser sitemap/robots.txt | seo-audit, internal-links |
 | `ExportService.php` | Export CSV/PDF | seo-audit, ads-analyzer |
@@ -119,39 +102,66 @@ Pricing model: simile a SEMrush (~50-60€/mese).
 
 ---
 
-## 📁 STRUTTURA PROGETTO
+## STRUTTURA PROGETTO
 
 ```
-C:\laragon\www\seo-toolkit\          # Locale
-~/www/ainstein.it/public_html/       # Produzione
-
+ainstein-seo-toolkit/
 ├── core/                    # Framework core
 ├── services/                # Servizi condivisi
 ├── modules/
-│   ├── ai-content/         # 23 files
-│   ├── seo-audit/          # 32 files
-│   ├── ads-analyzer/       # 24 files
-│   ├── internal-links/     # 28 files
-│   └── seo-tracking/       # 53 files
+│   ├── ai-content/         # Content Generator
+│   ├── seo-audit/          # Audit Tecnico
+│   ├── ads-analyzer/       # Google Ads Analyzer
+│   ├── internal-links/     # Link Analysis
+│   └── seo-tracking/       # Position Tracking
+├── admin/                   # Admin panel
 ├── shared/views/            # Layout, sidebar, components
 ├── config/                  # Configurazione
-├── docs/                    # Documentazione interna
+├── docs/                    # Documentazione
+│   ├── STRATEGY.md         # Posizionamento strategico
+│   ├── ROADMAP.md          # Piano sviluppo AI
+│   ├── specs/              # Specifiche moduli
+│   └── agents/             # Doc agenti AI
 └── storage/                 # Logs, cache
 ```
 
 ---
 
-## 🔐 CREDENZIALI E ACCESSI
+## PROSSIMI STEP
+
+### Immediati (questa settimana)
+1. Implementare AI Fix Generator (seo-audit)
+2. Definire prompt per AI Link Suggester
+3. Test beta con 2-3 utenti
+
+### Breve termine (2-3 settimane)
+1. Rilascio FASE 1 (Fix Generator + Link Suggester)
+2. Weekly AI Digest (seo-tracking)
+3. Quick Wins Finder
+
+### Medio termine (1 mese)
+1. Content Creator MVP
+2. Landing page + pricing
+3. Onboarding utenti beta
+
+---
+
+## METRICHE TARGET
+
+| Metrica | 6 mesi | 12 mesi |
+|---------|--------|---------|
+| Utenti paganti | 20 | 50 |
+| MRR | 1.100€ | 2.750€ |
+| Churn rate | <10% | <8% |
+
+---
+
+## ACCESSI
 
 ### SSH Produzione
 ```bash
 ssh -i ~/.ssh/siteground_key -p 18765 u1608-ykgnd3z1twn4@ssh.ainstein.it
 ```
-
-### Database Produzione
-- Host: localhost
-- DB: dbj0xoiwysdlk1
-- User: u6iaaermphtha
 
 ### Google OAuth
 - Redirect URI: `https://ainstein.it/oauth/google/callback`
@@ -159,15 +169,16 @@ ssh -i ~/.ssh/siteground_key -p 18765 u1608-ykgnd3z1twn4@ssh.ainstein.it
 
 ---
 
-## 📈 STATISTICHE
+## DOCUMENTAZIONE CORRELATA
 
-| Metrica | Valore |
-|---------|--------|
-| File PHP totali | 154 |
-| Moduli attivi | 5 |
-| Moduli da implementare | 1 |
-| Tabelle DB | ~40 |
+| Documento | Contenuto |
+|-----------|-----------|
+| [STRATEGY.md](./STRATEGY.md) | Posizionamento, competitor, economia |
+| [ROADMAP.md](./ROADMAP.md) | Piano sviluppo AI in 3 fasi |
+| [PLATFORM_OVERVIEW.md](./PLATFORM_OVERVIEW.md) | Architettura tecnica |
+| [GOLDEN-RULES.md](./GOLDEN-RULES.md) | Regole sviluppo |
+| [specs/*.md](./specs/) | Specifiche tecniche moduli |
 
 ---
 
-*Documento aggiornato automaticamente - 2026-01-09*
+*Documento aggiornato - 2026-01-19*

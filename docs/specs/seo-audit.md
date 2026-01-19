@@ -339,4 +339,43 @@ savePage($data)               # Salva con session_id (UPDATED)
 
 ---
 
-*Spec aggiornata - 2026-01-09*
+## GAP AI - Da Implementare (FASE 1)
+
+### Stato Attuale AI
+- ✅ Analisi AI panoramica globale
+- ✅ Analisi AI per categoria
+- ⚠️ Output generico, non azionabile
+
+### Feature Mancante: AI Fix Generator
+
+**Obiettivo:** Per ogni issue rilevata, fornire fix specifico pronto all'uso.
+
+**Input:** Lista issue rilevate dal crawl
+
+**Output per ogni issue:**
+```json
+{
+  "issue_type": "missing_meta_description",
+  "priority": 8,
+  "difficulty": "facile",
+  "time_estimate": "2 minuti",
+  "fix_code": "<meta name=\"description\" content=\"...\">",
+  "explanation": "La meta description mancante riduce il CTR...",
+  "impact": "Miglioramento CTR stimato: +15-25%"
+}
+```
+
+**Implementazione:**
+1. Nuovo metodo `generateFix($issue)` in `AiAnalysisService.php`
+2. Prompt specifico per tipo di issue
+3. Output strutturato JSON
+4. Vista "Fix Suggestions" con copia-incolla
+5. Export "To-Do List" azionabile
+
+**Priorità:** 🔴 ALTA - FASE 1 Roadmap
+
+📄 Vedi: [ROADMAP.md](../ROADMAP.md)
+
+---
+
+*Spec aggiornata - 2026-01-19*

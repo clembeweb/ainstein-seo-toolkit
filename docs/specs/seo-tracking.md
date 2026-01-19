@@ -226,4 +226,62 @@ Vedi: `docs/GOLDEN-RULES.md` - Regola #11
 
 ---
 
-*Spec aggiornata - 2026-01-07*
+## GAP AI - Da Implementare (FASE 2)
+
+### Stato Attuale AI
+- ⚠️ AiReportService presente ma non completamente funzionante
+- ❌ Weekly Digest non attivo
+- ❌ Quick Wins Finder non implementato
+
+### Feature Mancante 1: Weekly AI Digest
+
+**Obiettivo:** Report settimanale automatico con insight azionabili.
+
+**Cron settimanale che genera:**
+- Riepilogo performance vs settimana precedente
+- Top 3 azioni prioritarie
+- Keyword in crescita/calo
+- Opportunità identificate
+
+**Output esempio:**
+```markdown
+## Weekly SEO Digest - 13-19 Gennaio 2026
+
+### Performance
+- Traffico organico: +12% vs settimana precedente
+- Impression totali: 45.000 (+8%)
+
+### Top 3 Azioni Prioritarie
+1. "consulenza seo milano" - Posizione 11 → Ottimizza H1
+2. "audit seo gratuito" - CTR 1.2% → Riscrivi meta description
+3. "tool seo italiano" - 500 impression, 0 click → Verifica intent
+```
+
+**Implementazione:**
+1. Cron job settimanale (lunedi mattina)
+2. `AiReportService::generateWeeklyDigest($projectId)`
+3. Salvataggio in `st_ai_reports`
+4. Email notifica (opzionale)
+5. Vista dashboard con ultimo digest
+
+### Feature Mancante 2: Quick Wins Finder
+
+**Obiettivo:** Identificare keyword facili da spingere in top 10.
+
+**Criteri:**
+- Posizione 11-20 (quasi in top 10)
+- Volume ricerca > soglia
+- Bassa competizione stimata
+
+**Output:**
+- Lista keyword con potenziale
+- Azioni suggerite per ogni keyword
+- Priorità basata su impatto/effort
+
+**Priorità:** 🟡 MEDIA - FASE 2 Roadmap
+
+📄 Vedi: [ROADMAP.md](../ROADMAP.md)
+
+---
+
+*Spec aggiornata - 2026-01-19*
