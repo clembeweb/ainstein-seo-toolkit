@@ -7,8 +7,8 @@
 | **Slug** | `seo-tracking` |
 | **Prefisso DB** | `st_` |
 | **Files** | 57 |
-| **Stato** | 🔄 In corso (95%) |
-| **Ultimo update** | 2026-01-07 |
+| **Stato** | 🔄 In corso (98%) |
+| **Ultimo update** | 2026-01-19 |
 
 Modulo per monitoraggio posizionamento keyword, traffico organico e revenue con dati GSC + GA4 e report AI.
 
@@ -25,6 +25,7 @@ modules/seo-tracking/
 │   ├── DashboardController.php
 │   ├── KeywordController.php
 │   ├── GroupController.php        # Keyword Groups
+│   ├── CompareController.php      # Position Compare
 │   ├── GscController.php          # OAuth GSC
 │   ├── Ga4Controller.php          # Service Account GA4
 │   ├── AlertController.php
@@ -45,6 +46,7 @@ modules/seo-tracking/
 │   ├── GscService.php
 │   ├── Ga4Service.php
 │   ├── GroupStatsService.php      # Statistiche gruppi
+│   ├── PositionCompareService.php # Confronto posizioni
 │   ├── KeywordMatcher.php
 │   ├── RevenueAttributor.php
 │   ├── AlertService.php
@@ -54,6 +56,7 @@ modules/seo-tracking/
     ├── dashboard/
     ├── keywords/
     ├── groups/                    # Keyword Groups views
+    ├── compare/                   # Position Compare views
     ├── alerts/
     ├── reports/
     └── connections/
@@ -100,6 +103,7 @@ st_sync_log              -- Log sync
 - [x] CRUD progetti
 - [x] CRUD keyword tracking
 - [x] **Keyword Groups** (raggruppamento M:N con statistiche)
+- [x] **Position Compare** (confronto posizioni tra periodi - stile SEMrush)
 - [x] OAuth GSC completo e funzionante
 - [x] Redirect URI dinamico (multi-dominio)
 - [x] Token refresh automatico
@@ -152,6 +156,11 @@ GET  /seo-tracking/projects/{id}/groups/create        # Form crea
 GET  /seo-tracking/projects/{id}/groups/{gId}         # Dettaglio
 GET  /seo-tracking/projects/{id}/groups/{gId}/edit    # Form modifica
 
+// Position Compare
+GET  /seo-tracking/projects/{id}/compare              # Vista principale
+POST /seo-tracking/projects/{id}/compare/data         # AJAX dati confronto
+GET  /seo-tracking/projects/{id}/compare/export       # Export CSV
+
 // Connessioni
 GET  /seo-tracking/projects/{id}/gsc/connect          # OAuth start
 GET  /oauth/google/callback                           # OAuth callback (centralizzato)
@@ -180,7 +189,8 @@ POST /seo-tracking/projects/{id}/ga4/upload           # Upload Service Account
 | File | Descrizione |
 |------|-------------|
 | `migrations/full_schema_fix.sql` | Fix schema allineamento DB/codice |
-| `migrations/001_keyword_groups.sql` | ✅ NEW - Tabelle Keyword Groups |
+| `migrations/001_keyword_groups.sql` | ✅ Tabelle Keyword Groups |
+| `migrations/003_add_search_volume.sql` | ✅ NEW - Colonna search_volume + indici per Position Compare |
 
 ---
 
