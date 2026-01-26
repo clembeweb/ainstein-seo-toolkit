@@ -42,10 +42,10 @@
 | Modulo | Slug | Prefisso DB | Stato | Note |
 |--------|------|-------------|-------|------|
 | AI Content Generator | `ai-content` | `aic_` | 98% | Reference pattern |
-| SEO Audit | `seo-audit` | `sa_` | 100% | Storico crawl OK |
+| SEO Audit | `seo-audit` | `sa_` | 100% | Action Plan AI completato |
 | Google Ads Analyzer | `ads-analyzer` | `ga_` | 100% | Completo |
 | Internal Links | `internal-links` | `il_` | 85% | Manca AI Suggester |
-| SEO Tracking | `seo-tracking` | `st_` | 70% | OAuth GSC OK |
+| SEO Tracking | `seo-tracking` | `st_` | 85% | GA4 rimosso, Rank Check + Locations OK |
 | Content Creator | `content-creator` | `cc_` | 0% | Da implementare |
 
 ---
@@ -97,7 +97,7 @@ seo-toolkit/
 
 ### SSH Produzione
 ```bash
-ssh -i ~/.ssh/siteground_key -p 18765 u1608-ykgnd3z1twn4@ssh.ainstein.it
+ssh -i siteground_key -p 18765 u1608-ykgnd3z1twn4@ssh.ainstein.it
 cd ~/www/ainstein.it/public_html
 ```
 
@@ -261,6 +261,7 @@ Credits::consume($userId, $cost, 'operazione', 'nome-modulo');
 | Sidebar non appare | `$modules` non passato | Aggiungi a View::render() |
 | Icone non visibili | Lucide invece di Heroicons | Sostituisci con SVG |
 | Crediti non scalano | `Credits::consume()` mancante | Aggiungi dopo operazione |
+| "Database is limited" | Limite SiteGround temporaneo | Attendi qualche minuto e riprova |
 
 ---
 
