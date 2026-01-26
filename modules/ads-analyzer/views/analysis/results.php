@@ -1,5 +1,6 @@
 <div class="space-y-6" x-data="resultsManager(<?= htmlspecialchars(json_encode([
     'projectId' => $project['id'],
+    'baseUrl' => url(''),
     'selectedCount' => $selectedCount,
     'totalNegatives' => $totalNegatives
 ])) ?>)">
@@ -213,6 +214,7 @@
 function resultsManager(config) {
     return {
         projectId: config.projectId,
+        baseUrl: config.baseUrl,
         selectedCount: config.selectedCount,
         totalNegatives: config.totalNegatives,
         activeTab: <?= $adGroups[0]['id'] ?? 0 ?>,
@@ -250,7 +252,7 @@ function resultsManager(config) {
             this.updateSelectedCount();
 
             try {
-                await fetch(`/ads-analyzer/projects/${this.projectId}/keywords/${keywordId}/toggle`, {
+                await fetch(`${this.baseUrl}/ads-analyzer/projects/${this.projectId}/keywords/${keywordId}/toggle`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: '_token=' + document.querySelector('input[name="_token"]')?.value
@@ -276,7 +278,7 @@ function resultsManager(config) {
             this.updateSelectedCount();
 
             try {
-                await fetch(`/ads-analyzer/projects/${this.projectId}/categories/${categoryId}/${action}`, {
+                await fetch(`${this.baseUrl}/ads-analyzer/projects/${this.projectId}/categories/${categoryId}/${action}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: '_token=' + document.querySelector('input[name="_token"]')?.value
@@ -303,7 +305,7 @@ function resultsManager(config) {
 
         async copyAllKeywords() {
             try {
-                const response = await fetch(`/ads-analyzer/projects/${this.projectId}/copy-text`, {
+                const response = await fetch(`${this.baseUrl}/ads-analyzer/projects/${this.projectId}/copy-text`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: '_token=' + document.querySelector('input[name="_token"]')?.value

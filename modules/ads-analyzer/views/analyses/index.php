@@ -175,7 +175,7 @@
 
 <script>
 function deleteAnalysis(analysisId) {
-    fetch(`/ads-analyzer/projects/<?= $project['id'] ?>/analyses/${analysisId}/delete`, {
+    fetch(`<?= url('') ?>/ads-analyzer/projects/<?= $project['id'] ?>/analyses/${analysisId}/delete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: '_token=' + document.querySelector('input[name="_token"]')?.value
