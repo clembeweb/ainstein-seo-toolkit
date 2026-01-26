@@ -1,7 +1,7 @@
 <div class="max-w-2xl mx-auto space-y-6">
     <!-- Header -->
     <div>
-        <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/settings') ?>" class="inline-flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 mb-4">
+        <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/settings') ?>" class="inline-flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 mb-4">
             <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -27,7 +27,7 @@
         </div>
         <div class="divide-y divide-slate-200 dark:divide-slate-700">
             <?php foreach ($matchingSites as $site): ?>
-            <form action="<?= url('/seo-tracking/projects/' . $project['id'] . '/gsc/select-property') ?>" method="POST" class="p-5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+            <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/gsc/select-property') ?>" method="POST" class="p-5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                 <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
                 <input type="hidden" name="site_url" value="<?= e($site['siteUrl']) ?>">
                 <div class="flex items-center justify-between">
@@ -66,7 +66,7 @@
         </div>
         <div class="divide-y divide-slate-200 dark:divide-slate-700">
             <?php foreach ($otherSites as $site): ?>
-            <form action="<?= url('/seo-tracking/projects/' . $project['id'] . '/gsc/select-property') ?>" method="POST" class="p-5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+            <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/gsc/select-property') ?>" method="POST" class="p-5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                 <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
                 <input type="hidden" name="site_url" value="<?= e($site['siteUrl']) ?>">
                 <div class="flex items-center justify-between">
@@ -113,7 +113,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                 </svg>
             </a>
-            <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/gsc/connect') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
+            <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/gsc/connect') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
                 Riprova con altro account
             </a>
         </div>

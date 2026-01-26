@@ -48,7 +48,7 @@ class GscController
 
         if (!$oauth->isConfigured()) {
             $_SESSION['_flash']['error'] = 'Credenziali Google non configurate. Contatta l\'amministratore.';
-            Router::redirect('/seo-tracking/projects/' . $id . '/settings');
+            Router::redirect('/seo-tracking/project/' . $id . '/settings');
             return;
         }
 
@@ -101,7 +101,7 @@ class GscController
         $_SESSION['gsc_temp_project_id'] = $projectId;
 
         $_SESSION['_flash']['success'] = 'Autorizzazione completata! Ora seleziona la property.';
-        Router::redirect('/seo-tracking/projects/' . $projectId . '/gsc/select-property');
+        Router::redirect('/seo-tracking/project/' . $projectId . '/gsc/select-property');
     }
 
     /**
@@ -146,7 +146,7 @@ class GscController
 
         } catch (\Exception $e) {
             $_SESSION['_flash']['error'] = 'Errore nel recupero properties: ' . $e->getMessage();
-            Router::redirect('/seo-tracking/projects/' . $id . '/settings');
+            Router::redirect('/seo-tracking/project/' . $id . '/settings');
             exit;
         }
     }
@@ -169,14 +169,14 @@ class GscController
 
         if (empty($siteUrl)) {
             $_SESSION['_flash']['error'] = 'Seleziona una property';
-            Router::redirect('/seo-tracking/projects/' . $id . '/gsc/select-property');
+            Router::redirect('/seo-tracking/project/' . $id . '/gsc/select-property');
             return;
         }
 
         // Verifica accesso
         if (!$this->gscService->verifySiteAccess($id, $siteUrl)) {
             $_SESSION['_flash']['error'] = 'Non hai accesso a questa property';
-            Router::redirect('/seo-tracking/projects/' . $id . '/gsc/select-property');
+            Router::redirect('/seo-tracking/project/' . $id . '/gsc/select-property');
             return;
         }
 
@@ -188,7 +188,7 @@ class GscController
         $this->triggerBackgroundSync($id, 'gsc', 30);
 
         $_SESSION['_flash']['success'] = 'Google Search Console connesso! Sincronizzazione in corso...';
-        Router::redirect('/seo-tracking/projects/' . $id . '/settings');
+        Router::redirect('/seo-tracking/project/' . $id . '/settings');
     }
 
     /**
@@ -209,7 +209,7 @@ class GscController
         $this->project->setGscConnected($id, false);
 
         $_SESSION['_flash']['success'] = 'Google Search Console disconnesso';
-        Router::redirect('/seo-tracking/projects/' . $id . '/settings');
+        Router::redirect('/seo-tracking/project/' . $id . '/settings');
     }
 
     /**
@@ -457,7 +457,7 @@ class GscController
 
         if (!$project['gsc_connected']) {
             $_SESSION['_flash']['error'] = 'GSC non connesso';
-            Router::redirect('/seo-tracking/projects/' . $id . '/settings');
+            Router::redirect('/seo-tracking/project/' . $id . '/settings');
             return;
         }
 
@@ -465,7 +465,7 @@ class GscController
         $creditCost = Credits::getCost('gsc_full_sync', 'seo-tracking');
         if (!Credits::hasEnough($user['id'], $creditCost)) {
             $_SESSION['_flash']['error'] = 'Crediti insufficienti. Richiesti: ' . $creditCost;
-            Router::redirect('/seo-tracking/projects/' . $id . '/settings');
+            Router::redirect('/seo-tracking/project/' . $id . '/settings');
             return;
         }
 
@@ -478,11 +478,11 @@ class GscController
             $result = $this->gscService->fullHistoricalSync($id);
 
             $_SESSION['_flash']['success'] = 'Sincronizzazione storica completata: ' . $result['records_fetched'] . ' record elaborati';
-            Router::redirect('/seo-tracking/projects/' . $id . '/dashboard');
+            Router::redirect('/seo-tracking/project/' . $id . '/dashboard');
 
         } catch (\Exception $e) {
             $_SESSION['_flash']['error'] = 'Errore sync storico: ' . $e->getMessage();
-            Router::redirect('/seo-tracking/projects/' . $id . '/settings');
+            Router::redirect('/seo-tracking/project/' . $id . '/settings');
         }
     }
 

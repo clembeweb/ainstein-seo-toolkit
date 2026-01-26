@@ -105,7 +105,7 @@ class ReportController
 
         if (!$this->aiReportService->isConfigured()) {
             $_SESSION['_flash']['error'] = 'Claude API Key non configurata';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/reports');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/reports');
             exit;
         }
 
@@ -142,14 +142,14 @@ class ReportController
 
             if ($result) {
                 $_SESSION['_flash']['success'] = 'Report generato con successo';
-                Router::redirect('/seo-tracking/projects/' . $projectId . '/reports/' . $result['id']);
+                Router::redirect('/seo-tracking/project/' . $projectId . '/reports/' . $result['id']);
             } else {
                 $_SESSION['_flash']['error'] = 'Errore nella generazione del report. Verifica i crediti disponibili.';
-                Router::redirect('/seo-tracking/projects/' . $projectId . '/reports/create');
+                Router::redirect('/seo-tracking/project/' . $projectId . '/reports/create');
             }
         } catch (\Exception $e) {
             $_SESSION['_flash']['error'] = 'Errore: ' . $e->getMessage();
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/reports/create');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/reports/create');
         }
     }
 
@@ -178,7 +178,7 @@ class ReportController
         $this->aiReport->delete($id);
 
         $_SESSION['_flash']['success'] = 'Report eliminato';
-        Router::redirect('/seo-tracking/projects/' . $report['project_id'] . '/reports');
+        Router::redirect('/seo-tracking/project/' . $report['project_id'] . '/reports');
     }
 
     /**

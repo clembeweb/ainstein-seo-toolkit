@@ -9,8 +9,8 @@ use Core\ModuleLoader;
 use Modules\SeoTracking\Models\Project;
 use Modules\SeoTracking\Models\Keyword;
 use Modules\SeoTracking\Models\KeywordPosition;
-use Modules\SeoTracking\Models\KeywordRevenue;
 use Modules\SeoTracking\Models\GscData;
+use Modules\SeoTracking\Models\Location;
 
 /**
  * KeywordController
@@ -21,16 +21,16 @@ class KeywordController
     private Project $project;
     private Keyword $keyword;
     private KeywordPosition $keywordPosition;
-    private KeywordRevenue $keywordRevenue;
     private GscData $gscData;
+    private Location $location;
 
     public function __construct()
     {
         $this->project = new Project();
         $this->keyword = new Keyword();
         $this->keywordPosition = new KeywordPosition();
-        $this->keywordRevenue = new KeywordRevenue();
         $this->gscData = new GscData();
+        $this->location = new Location();
     }
 
     /**
@@ -85,6 +85,7 @@ class KeywordController
         }
 
         $groups = $this->keyword->getGroups($projectId);
+        $locations = $this->location->all();
 
         return View::render('seo-tracking/keywords/create', [
             'title' => 'Aggiungi Keyword - ' . $project['name'],
@@ -92,6 +93,7 @@ class KeywordController
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
             'groups' => $groups,
+            'locations' => $locations,
         ]);
     }
 
@@ -111,12 +113,19 @@ class KeywordController
 
         $keywordsInput = trim($_POST['keywords'] ?? '');
         $groupName = trim($_POST['group_name'] ?? '');
+        $locationCode = trim($_POST['location_code'] ?? 'IT');
         $isTracked = isset($_POST['is_tracked']) ? 1 : 0;
 
         if (empty($keywordsInput)) {
             $_SESSION['_flash']['error'] = 'Inserisci almeno una keyword';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/keywords/add');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/keywords/add');
             return;
+        }
+
+        // Valida location
+        $location = $this->location->findByCountryCode($locationCode);
+        if (!$location) {
+            $locationCode = 'IT'; // Fallback
         }
 
         // Parse keywords (una per riga)
@@ -138,6 +147,7 @@ class KeywordController
             $this->keyword->create([
                 'project_id' => $projectId,
                 'keyword' => $keyword,
+                'location_code' => $locationCode,
                 'group_name' => $groupName ?: null,
                 'is_tracked' => $isTracked,
                 'source' => 'manual',
@@ -152,7 +162,7 @@ class KeywordController
             $_SESSION['_flash']['warning'] = 'Nessuna keyword aggiunta (tutte duplicate)';
         }
 
-        Router::redirect('/seo-tracking/projects/' . $projectId . '/keywords');
+        Router::redirect('/seo-tracking/project/' . $projectId . '/keywords');
     }
 
     /**
@@ -182,11 +192,8 @@ class KeywordController
         $startDate = date('Y-m-d', strtotime('-90 days'));
         $positions = $this->keywordPosition->getByKeyword($id, $startDate, $endDate);
 
-        // Revenue attribuito
-        $revenue = $this->keywordRevenue->getByKeyword($keyword['keyword'], $keyword['project_id'], $startDate, $endDate);
-
         // Dati GSC recenti
-        $gscData = $this->gscData->getByQuery($keyword['project_id'], $keyword['keyword'], $startDate, $endDate);
+        $gscData = $this->gscData->getKeywordPositions($keyword['project_id'], $keyword['keyword'], $startDate, $endDate);
 
         return View::render('seo-tracking/keywords/show', [
             'title' => $keyword['keyword'] . ' - ' . $project['name'],
@@ -195,7 +202,6 @@ class KeywordController
             'project' => $project,
             'keyword' => $keyword,
             'positions' => $positions,
-            'revenue' => $revenue,
             'gscData' => $gscData,
             'dateRange' => ['start' => $startDate, 'end' => $endDate],
         ]);
@@ -253,7 +259,7 @@ class KeywordController
 
         if (!$keyword || (int)$keyword['project_id'] !== $projectId) {
             $_SESSION['_flash']['error'] = 'Keyword non trovata';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/keywords');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/keywords');
             return;
         }
 
@@ -271,35 +277,49 @@ class KeywordController
         ]);
 
         $_SESSION['_flash']['success'] = 'Keyword aggiornata';
-        Router::redirect('/seo-tracking/projects/' . $projectId . '/keywords/' . $keywordId);
+        Router::redirect('/seo-tracking/project/' . $projectId . '/keywords/' . $keywordId);
     }
 
     /**
      * Elimina keyword
      */
-    public function destroy(int $id): void
+    public function destroy(int $projectId, int $keywordId): string|null
     {
         $user = Auth::user();
-        $keyword = $this->keyword->find($id);
+        $keyword = $this->keyword->findByProject($keywordId, $projectId);
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+                  strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest' ||
+                  strpos($_SERVER['CONTENT_TYPE'] ?? '', 'application/x-www-form-urlencoded') !== false;
 
         if (!$keyword) {
+            if ($isAjax) {
+                return View::json(['success' => false, 'error' => 'Keyword non trovata'], 404);
+            }
             $_SESSION['_flash']['error'] = 'Keyword non trovata';
             Router::redirect('/seo-tracking');
-            return;
+            return null;
         }
 
-        $project = $this->project->find($keyword['project_id'], $user['id']);
+        $project = $this->project->find($projectId, $user['id']);
 
         if (!$project) {
+            if ($isAjax) {
+                return View::json(['success' => false, 'error' => 'Progetto non trovato'], 404);
+            }
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
             Router::redirect('/seo-tracking');
-            return;
+            return null;
         }
 
-        $this->keyword->delete($id);
+        $this->keyword->delete($keywordId);
+
+        if ($isAjax) {
+            return View::json(['success' => true, 'message' => 'Keyword eliminata']);
+        }
 
         $_SESSION['_flash']['success'] = 'Keyword eliminata';
-        Router::redirect('/seo-tracking/projects/' . $keyword['project_id'] . '/keywords');
+        Router::redirect('/seo-tracking/project/' . $projectId . '/keywords');
+        return null;
     }
 
     /**
@@ -347,7 +367,7 @@ class KeywordController
 
         if (empty($keywordIds)) {
             $_SESSION['_flash']['error'] = 'Seleziona almeno una keyword';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/keywords');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/keywords');
             return;
         }
 
@@ -391,7 +411,7 @@ class KeywordController
                 $_SESSION['_flash']['error'] = 'Azione non valida';
         }
 
-        Router::redirect('/seo-tracking/projects/' . $projectId . '/keywords');
+        Router::redirect('/seo-tracking/project/' . $projectId . '/keywords');
     }
 
     /**
@@ -455,7 +475,7 @@ class KeywordController
 
         if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
             $_SESSION['_flash']['error'] = 'Errore nel caricamento del file';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/keywords/add');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/keywords/add');
             return;
         }
 
@@ -492,7 +512,7 @@ class KeywordController
         fclose($file);
 
         $_SESSION['_flash']['success'] = "Importate {$added} keyword" . ($skipped > 0 ? " ({$skipped} duplicate)" : '');
-        Router::redirect('/seo-tracking/projects/' . $projectId . '/keywords');
+        Router::redirect('/seo-tracking/project/' . $projectId . '/keywords');
     }
 
     /**
@@ -510,6 +530,7 @@ class KeywordController
         }
 
         $groups = $this->keyword->getGroups($projectId);
+        $locations = $this->location->all();
 
         return View::render('seo-tracking/keywords/create', [
             'title' => 'Aggiungi Keyword - ' . $project['name'],
@@ -517,6 +538,7 @@ class KeywordController
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
             'groups' => $groups,
+            'locations' => $locations,
         ]);
     }
 
@@ -563,7 +585,7 @@ class KeywordController
 
         if (!$keyword || (int)$keyword['project_id'] !== $projectId) {
             $_SESSION['_flash']['error'] = 'Keyword non trovata';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/keywords');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/keywords');
             exit;
         }
 
@@ -572,11 +594,8 @@ class KeywordController
         $startDate = date('Y-m-d', strtotime('-90 days'));
         $positions = $this->keywordPosition->getByKeyword($keywordId, $startDate, $endDate);
 
-        // Revenue attribuito
-        $revenue = $this->keywordRevenue->getByKeyword($keyword['keyword'], $projectId, $startDate, $endDate);
-
         // Dati GSC recenti
-        $gscData = $this->gscData->getByQuery($projectId, $keyword['keyword'], $startDate, $endDate);
+        $gscData = $this->gscData->getKeywordPositions($projectId, $keyword['keyword'], $startDate, $endDate);
 
         return View::render('seo-tracking/keywords/show', [
             'title' => $keyword['keyword'] . ' - ' . $project['name'],
@@ -585,9 +604,44 @@ class KeywordController
             'project' => $project,
             'keyword' => $keyword,
             'positions' => $positions,
-            'revenue' => $revenue,
             'gscData' => $gscData,
             'dateRange' => ['start' => $startDate, 'end' => $endDate],
+        ]);
+    }
+
+    /**
+     * Aggiorna volumi di ricerca (AJAX)
+     */
+    public function updateVolumes(int $projectId): string
+    {
+        $user = Auth::user();
+        $project = $this->project->find($projectId, $user['id']);
+
+        if (!$project) {
+            return View::json(['success' => false, 'error' => 'Progetto non trovato'], 404);
+        }
+
+        $result = $this->keyword->updateSearchVolumes($projectId);
+
+        return View::json($result);
+    }
+
+    /**
+     * Verifica configurazione DataForSEO
+     */
+    public function checkVolumeService(int $projectId): string
+    {
+        $user = Auth::user();
+        $project = $this->project->find($projectId, $user['id']);
+
+        if (!$project) {
+            return View::json(['success' => false, 'error' => 'Progetto non trovato'], 404);
+        }
+
+        $dataForSeo = new \Services\DataForSeoService();
+
+        return View::json([
+            'configured' => $dataForSeo->isConfigured(),
         ]);
     }
 }

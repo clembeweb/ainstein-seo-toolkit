@@ -3,7 +3,7 @@
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
             <div class="flex items-center gap-3">
-                <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/dashboard') ?>" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/dashboard') ?>" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
@@ -15,7 +15,7 @@
             </p>
         </div>
         <div class="mt-4 sm:mt-0">
-            <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/reports/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
+            <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/reports/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -72,7 +72,7 @@
             </div>
             <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">Nessun report</h3>
             <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Genera il tuo primo report AI per ottenere insights dettagliati</p>
-            <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/reports/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
+            <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/reports/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
                 Genera Report
             </a>
         </div>
@@ -116,13 +116,13 @@
                         </p>
                     </div>
                     <div class="flex items-center gap-2 ml-4">
-                        <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/reports/' . $report['id']) ?>" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700" title="Visualizza">
+                        <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/reports/' . $report['id']) ?>" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700" title="Visualizza">
                             <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                             </svg>
                         </a>
-                        <form action="<?= url('/seo-tracking/projects/' . $project['id'] . '/reports/' . $report['id'] . '/delete') ?>" method="POST" class="inline" onsubmit="return confirm('Eliminare questo report?')">
+                        <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/reports/' . $report['id'] . '/delete') ?>" method="POST" class="inline" onsubmit="return confirm('Eliminare questo report?')">
                             <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
                             <button type="submit" class="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20" title="Elimina">
                                 <svg class="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">

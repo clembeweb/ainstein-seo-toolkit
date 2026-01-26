@@ -140,7 +140,7 @@ class AlertController
         $this->alert->markAllAsRead($projectId);
 
         $_SESSION['_flash']['success'] = 'Tutti gli alert sono stati marcati come letti';
-        Router::redirect('/seo-tracking/projects/' . $projectId . '/alerts');
+        Router::redirect('/seo-tracking/project/' . $projectId . '/alerts');
     }
 
     /**
@@ -188,7 +188,7 @@ class AlertController
             $_SESSION['_flash']['info'] = 'Nessun nuovo alert rilevato';
         }
 
-        Router::redirect('/seo-tracking/projects/' . $projectId . '/alerts');
+        Router::redirect('/seo-tracking/project/' . $projectId . '/alerts');
     }
 
     /**

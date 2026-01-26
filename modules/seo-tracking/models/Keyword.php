@@ -39,6 +39,11 @@ class Keyword
         $sql = "SELECT * FROM {$this->table} WHERE project_id = ?";
         $params = [$projectId];
 
+        if (isset($filters['is_tracked'])) {
+            $sql .= " AND is_tracked = ?";
+            $params[] = (int) $filters['is_tracked'];
+        }
+
         if (!empty($filters['group'])) {
             $sql .= " AND group_name = ?";
             $params[] = $filters['group'];
@@ -75,9 +80,9 @@ class Keyword
     }
 
     /**
-     * Keyword con dati posizione recenti
+     * Keyword con dati posizione recenti e volumi
      */
-    public function allWithPositions(int $projectId, int $days = 7): array
+    public function allWithPositions(int $projectId, int $days = 7, array $filters = []): array
     {
         $sql = "
             SELECT
@@ -105,23 +110,47 @@ class Keyword
                 GROUP BY keyword_id
             ) kp ON k.id = kp.keyword_id
             WHERE k.project_id = ?
-            ORDER BY k.last_position IS NULL, k.last_position ASC
         ";
 
-        return Database::fetchAll($sql, [$days, $projectId]);
+        $params = [$days, $projectId];
+
+        // Filtri
+        if (isset($filters['is_tracked']) && $filters['is_tracked'] !== '' && $filters['is_tracked'] !== null) {
+            $sql .= " AND k.is_tracked = ?";
+            $params[] = (int) $filters['is_tracked'];
+        }
+
+        if (!empty($filters['group_name'])) {
+            $sql .= " AND k.group_name = ?";
+            $params[] = $filters['group_name'];
+        }
+
+        if (!empty($filters['search'])) {
+            $sql .= " AND k.keyword LIKE ?";
+            $params[] = '%' . $filters['search'] . '%';
+        }
+
+        if (!empty($filters['position_max'])) {
+            $sql .= " AND k.last_position IS NOT NULL AND k.last_position <= ?";
+            $params[] = (int) $filters['position_max'];
+        }
+
+        $sql .= " ORDER BY k.last_position IS NULL, k.last_position ASC";
+
+        return Database::fetchAll($sql, $params);
     }
 
     /**
-     * Gruppi keyword distinti
+     * Gruppi keyword distinti con conteggio
      */
     public function getGroups(int $projectId): array
     {
-        $sql = "SELECT DISTINCT group_name FROM {$this->table}
-                WHERE project_id = ? AND group_name IS NOT NULL
+        $sql = "SELECT group_name, COUNT(*) as count
+                FROM {$this->table}
+                WHERE project_id = ? AND group_name IS NOT NULL AND group_name != ''
+                GROUP BY group_name
                 ORDER BY group_name";
-        $results = Database::fetchAll($sql, [$projectId]);
-
-        return array_column($results, 'group_name');
+        return Database::fetchAll($sql, [$projectId]);
     }
 
     /**
@@ -291,5 +320,131 @@ class Keyword
             'keywords_top10' => $top10,
             'keywords_with_clicks' => $withClicks,
         ];
+    }
+
+    /**
+     * Aggiorna volumi di ricerca per keyword del progetto
+     * Raggruppa le keyword per location_code e chiama DataForSEO per ogni gruppo
+     */
+    public function updateSearchVolumes(int $projectId): array
+    {
+        $dataForSeo = new \Services\DataForSeoService();
+
+        if (!$dataForSeo->isConfigured()) {
+            return ['success' => false, 'error' => 'DataForSEO non configurato. Vai in Admin > Impostazioni'];
+        }
+
+        // Prendi tutte le keyword del progetto
+        $keywords = $this->allByProject($projectId);
+
+        if (empty($keywords)) {
+            return ['success' => true, 'updated' => 0, 'message' => 'Nessuna keyword nel progetto'];
+        }
+
+        // Raggruppa keyword per location_code
+        $keywordsByLocation = [];
+        foreach ($keywords as $kw) {
+            $locCode = $kw['location_code'] ?? 'IT';
+            if (!isset($keywordsByLocation[$locCode])) {
+                $keywordsByLocation[$locCode] = [];
+            }
+            $keywordsByLocation[$locCode][] = $kw;
+        }
+
+        $updated = 0;
+        $totalCached = 0;
+        $totalFetched = 0;
+        $errors = [];
+
+        // Processa ogni gruppo di location
+        foreach ($keywordsByLocation as $locationCode => $locationKeywords) {
+            $keywordTexts = array_column($locationKeywords, 'keyword');
+
+            // Ottieni volumi per questa location
+            $result = $dataForSeo->getSearchVolumes($keywordTexts, $locationCode);
+
+            if (!$result['success']) {
+                $errors[] = "Errore per location {$locationCode}: " . ($result['error'] ?? 'unknown');
+                continue;
+            }
+
+            $totalCached += $result['cached'] ?? 0;
+            $totalFetched += $result['fetched'] ?? 0;
+
+            // Aggiorna keyword nel DB
+            foreach ($locationKeywords as $kw) {
+                $volumeData = $result['data'][$kw['keyword']] ?? null;
+                if ($volumeData) {
+                    // Sanitizza competition: deve essere decimal, non stringa
+                    $competition = $volumeData['competition'] ?? null;
+                    if ($competition !== null && !is_numeric($competition)) {
+                        $competition = null; // Se e' una stringa come 'LOW', usa null
+                    } elseif ($competition !== null) {
+                        $competition = (float) $competition;
+                    }
+
+                    $sql = "UPDATE {$this->table} SET
+                            search_volume = ?,
+                            cpc = ?,
+                            competition = ?,
+                            competition_level = ?,
+                            volume_updated_at = NOW()
+                            WHERE id = ?";
+
+                    Database::execute($sql, [
+                        $volumeData['search_volume'] ?? null,
+                        $volumeData['cpc'] ?? null,
+                        $competition,
+                        $volumeData['competition_level'] ?? null,
+                        $kw['id']
+                    ]);
+                    $updated++;
+                }
+            }
+        }
+
+        $response = [
+            'success' => true,
+            'updated' => $updated,
+            'total' => count($keywords),
+            'cached' => $totalCached,
+            'fetched' => $totalFetched,
+            'message' => "Volumi aggiornati per {$updated} keyword"
+        ];
+
+        if (!empty($errors)) {
+            $response['warnings'] = $errors;
+        }
+
+        return $response;
+    }
+
+    /**
+     * Keyword con volumi di ricerca
+     */
+    public function allWithVolumes(int $projectId, array $filters = []): array
+    {
+        $sql = "SELECT * FROM {$this->table} WHERE project_id = ?";
+        $params = [$projectId];
+
+        if (isset($filters['is_tracked'])) {
+            $sql .= " AND is_tracked = ?";
+            $params[] = (int) $filters['is_tracked'];
+        }
+
+        if (!empty($filters['group_name'])) {
+            $sql .= " AND group_name = ?";
+            $params[] = $filters['group_name'];
+        }
+
+        if (!empty($filters['search'])) {
+            $sql .= " AND keyword LIKE ?";
+            $params[] = '%' . $filters['search'] . '%';
+        }
+
+        // Ordinamento default per volume
+        $sql .= " ORDER BY search_volume DESC, keyword ASC";
+
+        return Database::fetchAll($sql, $params);
     }
 }

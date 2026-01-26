@@ -6,7 +6,7 @@
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Monitora posizioni, traffico e revenue dei tuoi siti web</p>
         </div>
         <div class="mt-4 sm:mt-0">
-            <a href="<?= url('/seo-tracking/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
+            <a href="<?= url('/seo-tracking/project/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -27,7 +27,7 @@
         <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
             Crea il tuo primo progetto per iniziare a monitorare le posizioni delle keyword e il traffico organico.
         </p>
-        <a href="<?= url('/seo-tracking/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
+        <a href="<?= url('/seo-tracking/project/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
             <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -43,7 +43,7 @@
             <div class="p-5 border-b border-slate-200 dark:border-slate-700">
                 <div class="flex items-start justify-between">
                     <div class="min-w-0 flex-1">
-                        <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/dashboard') ?>" class="block">
+                        <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/dashboard') ?>" class="block">
                             <h3 class="text-lg font-semibold text-slate-900 dark:text-white truncate hover:text-primary-600 dark:hover:text-primary-400">
                                 <?= e($project['name']) ?>
                             </h3>
@@ -56,11 +56,6 @@
                             GSC
                         </span>
                         <?php endif; ?>
-                        <?php if ($project['ga4_connected']): ?>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300" title="GA4 Connesso">
-                            GA4
-                        </span>
-                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -69,11 +64,11 @@
             <div class="grid grid-cols-3 divide-x divide-slate-200 dark:divide-slate-700">
                 <div class="p-4 text-center">
                     <p class="text-xl font-bold text-slate-900 dark:text-white"><?= number_format($project['keyword_count'] ?? 0) ?></p>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Keywords</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Tracciate</p>
                 </div>
                 <div class="p-4 text-center">
-                    <p class="text-xl font-bold text-slate-900 dark:text-white"><?= number_format($project['total_clicks'] ?? 0) ?></p>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Click (7gg)</p>
+                    <p class="text-xl font-bold text-blue-600 dark:text-blue-400"><?= number_format($project['checked_count'] ?? 0) ?></p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Verificate</p>
                 </div>
                 <div class="p-4 text-center">
                     <?php
@@ -106,12 +101,12 @@
                         <?php endif; ?>
                     </div>
                     <div class="flex items-center gap-1">
-                        <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/dashboard') ?>" class="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" title="Dashboard">
+                        <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/dashboard') ?>" class="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" title="Dashboard">
                             <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                             </svg>
                         </a>
-                        <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/settings') ?>" class="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" title="Impostazioni">
+                        <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/settings') ?>" class="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" title="Impostazioni">
                             <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -130,7 +125,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h3 class="text-lg font-semibold">Come funziona</h3>
-                <p class="text-blue-100 text-sm mt-1">Collega GSC e GA4 per iniziare il monitoraggio automatico</p>
+                <p class="text-blue-100 text-sm mt-1">Aggiungi keyword e verifica le posizioni sui motori di ricerca</p>
             </div>
             <div class="flex gap-6">
                 <div class="text-center">
@@ -143,19 +138,13 @@
                     <div class="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-1">
                         <span class="text-lg font-bold">2</span>
                     </div>
-                    <p class="text-xs text-blue-200">Collega GSC</p>
+                    <p class="text-xs text-blue-200">Aggiungi keyword</p>
                 </div>
                 <div class="text-center">
                     <div class="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-1">
                         <span class="text-lg font-bold">3</span>
                     </div>
-                    <p class="text-xs text-blue-200">Collega GA4</p>
-                </div>
-                <div class="text-center">
-                    <div class="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-1">
-                        <span class="text-lg font-bold">4</span>
-                    </div>
-                    <p class="text-xs text-blue-200">Monitora</p>
+                    <p class="text-xs text-blue-200">Verifica posizioni</p>
                 </div>
             </div>
         </div>

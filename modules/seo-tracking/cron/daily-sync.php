@@ -1,7 +1,7 @@
 <?php
 /**
  * Cron Job: Daily Sync
- * Sincronizza dati GSC e GA4 per tutti i progetti attivi
+ * Sincronizza dati GSC per tutti i progetti attivi
  *
  * Eseguire giornalmente alle 06:00
  * 0 6 * * * php /path/to/modules/seo-tracking/cron/daily-sync.php
@@ -12,14 +12,12 @@ require_once dirname(__DIR__, 3) . '/core/bootstrap.php';
 
 use Modules\SeoTracking\Models\Project;
 use Modules\SeoTracking\Services\GscService;
-use Modules\SeoTracking\Services\Ga4Service;
 use Modules\SeoTracking\Services\AlertService;
 
 echo "[" . date('Y-m-d H:i:s') . "] Starting daily sync...\n";
 
 $project = new Project();
 $gscService = new GscService();
-$ga4Service = new Ga4Service();
 $alertService = new AlertService();
 
 // Prendi tutti i progetti con sync abilitato
@@ -35,17 +33,6 @@ foreach ($projects as $proj) {
         echo "Syncing GSC... ";
         try {
             $result = $gscService->syncSearchAnalytics($proj['id']);
-            echo "OK ({$result['records_fetched']} records)\n";
-        } catch (\Exception $e) {
-            echo "ERROR: {$e->getMessage()}\n";
-        }
-    }
-
-    // Sync GA4
-    if ($proj['ga4_connected']) {
-        echo "Syncing GA4... ";
-        try {
-            $result = $ga4Service->syncAnalytics($proj['id']);
             echo "OK ({$result['records_fetched']} records)\n";
         } catch (\Exception $e) {
             echo "ERROR: {$e->getMessage()}\n";

@@ -61,7 +61,7 @@ class KeywordGroup
     }
 
     /**
-     * Gruppi con statistiche keyword
+     * Gruppi con statistiche keyword basate su rank checker
      */
     public function allWithStats(int $projectId): array
     {
@@ -69,20 +69,31 @@ class KeywordGroup
             SELECT
                 g.*,
                 COUNT(DISTINCT m.keyword_id) as keyword_count,
-                AVG(k.last_position) as avg_position,
-                SUM(k.last_clicks) as total_clicks,
-                SUM(k.last_impressions) as total_impressions,
-                SUM(CASE WHEN k.last_position <= 3 THEN 1 ELSE 0 END) as top3_count,
-                SUM(CASE WHEN k.last_position <= 10 THEN 1 ELSE 0 END) as top10_count
+                AVG(rc_latest.serp_position) as avg_position,
+                SUM(CASE WHEN rc_latest.serp_position <= 3 THEN 1 ELSE 0 END) as top3_count,
+                SUM(CASE WHEN rc_latest.serp_position <= 10 THEN 1 ELSE 0 END) as top10_count
             FROM {$this->table} g
             LEFT JOIN {$this->membersTable} m ON g.id = m.group_id
             LEFT JOIN st_keywords k ON m.keyword_id = k.id
+            LEFT JOIN (
+                SELECT rc1.keyword, rc1.serp_position
+                FROM st_rank_checks rc1
+                WHERE rc1.project_id = ?
+                  AND rc1.serp_position IS NOT NULL
+                  AND rc1.checked_at = (
+                      SELECT MAX(rc2.checked_at)
+                      FROM st_rank_checks rc2
+                      WHERE rc2.project_id = rc1.project_id
+                        AND rc2.keyword = rc1.keyword
+                        AND rc2.serp_position IS NOT NULL
+                  )
+            ) rc_latest ON k.keyword = rc_latest.keyword
             WHERE g.project_id = ?
             GROUP BY g.id
             ORDER BY g.sort_order ASC, g.name ASC
         ";
 
-        return Database::fetchAll($sql, [$projectId]);
+        return Database::fetchAll($sql, [$projectId, $projectId]);
     }
 
     /**
@@ -201,42 +212,63 @@ class KeywordGroup
     }
 
     /**
-     * Ottieni keyword del gruppo con metriche
+     * Ottieni keyword del gruppo con metriche da rank checker
      */
     public function getKeywordsWithMetrics(int $groupId, int $days = 7): array
     {
+        // Ottieni prima il project_id dal gruppo
+        $group = $this->find($groupId);
+        if (!$group) {
+            return [];
+        }
+        $projectId = $group['project_id'];
+
         $sql = "
             SELECT
                 k.*,
                 m.added_at as group_added_at,
-                kp.avg_position as period_position,
-                kp.total_clicks as period_clicks,
-                kp.total_impressions as period_impressions,
-                kp.position_change
+                rc_latest.serp_position as current_position,
+                rc_latest.serp_url as ranking_url,
+                rc_latest.checked_at as last_check,
+                rc_prev.serp_position as prev_position,
+                CASE
+                    WHEN rc_latest.serp_position IS NOT NULL AND rc_prev.serp_position IS NOT NULL
+                    THEN rc_prev.serp_position - rc_latest.serp_position
+                    ELSE NULL
+                END as position_change
             FROM st_keywords k
             JOIN {$this->membersTable} m ON k.id = m.keyword_id
             LEFT JOIN (
-                SELECT
-                    keyword_id,
-                    AVG(avg_position) as avg_position,
-                    SUM(total_clicks) as total_clicks,
-                    SUM(total_impressions) as total_impressions,
-                    (
-                        SELECT position_change
-                        FROM st_keyword_positions
-                        WHERE keyword_id = kp2.keyword_id
-                        ORDER BY date DESC
-                        LIMIT 1
-                    ) as position_change
-                FROM st_keyword_positions kp2
-                WHERE date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-                GROUP BY keyword_id
-            ) kp ON k.id = kp.keyword_id
+                SELECT rc1.keyword, rc1.serp_position, rc1.serp_url, rc1.checked_at
+                FROM st_rank_checks rc1
+                WHERE rc1.project_id = ?
+                  AND rc1.checked_at = (
+                      SELECT MAX(rc2.checked_at)
+                      FROM st_rank_checks rc2
+                      WHERE rc2.project_id = rc1.project_id
+                        AND rc2.keyword = rc1.keyword
+                  )
+            ) rc_latest ON k.keyword = rc_latest.keyword
+            LEFT JOIN (
+                SELECT rc3.keyword, rc3.serp_position
+                FROM st_rank_checks rc3
+                WHERE rc3.project_id = ?
+                  AND rc3.checked_at = (
+                      SELECT MAX(rc4.checked_at)
+                      FROM st_rank_checks rc4
+                      WHERE rc4.project_id = rc3.project_id
+                        AND rc4.keyword = rc3.keyword
+                        AND rc4.checked_at < (
+                            SELECT MAX(checked_at) FROM st_rank_checks
+                            WHERE project_id = rc3.project_id AND keyword = rc3.keyword
+                        )
+                  )
+            ) rc_prev ON k.keyword = rc_prev.keyword
             WHERE m.group_id = ?
-            ORDER BY k.last_position IS NULL, k.last_position ASC
+            ORDER BY rc_latest.serp_position IS NULL, rc_latest.serp_position ASC
         ";
 
-        return Database::fetchAll($sql, [$days, $groupId]);
+        return Database::fetchAll($sql, [$projectId, $projectId, $groupId]);
     }
 
     /**
@@ -277,38 +309,88 @@ class KeywordGroup
     }
 
     /**
-     * Statistiche aggregate del gruppo
+     * Statistiche aggregate del gruppo basate su rank checker
      */
     public function getStats(int $groupId): array
     {
+        // Ottieni project_id dal gruppo
+        $group = $this->find($groupId);
+        if (!$group) {
+            return [
+                'total_keywords' => 0,
+                'avg_position' => 0,
+                'top3_count' => 0,
+                'top10_count' => 0,
+                'top20_count' => 0,
+                'beyond20_count' => 0,
+                'improved_count' => 0,
+                'declined_count' => 0,
+            ];
+        }
+        $projectId = $group['project_id'];
+
+        // Conta keyword nel gruppo
+        $totalKeywords = $this->countKeywords($groupId);
+
+        // Statistiche basate su st_rank_checks (ultima posizione per ogni keyword)
         $sql = "
             SELECT
-                COUNT(DISTINCT m.keyword_id) as total_keywords,
-                AVG(k.last_position) as avg_position,
-                SUM(k.last_clicks) as total_clicks,
-                SUM(k.last_impressions) as total_impressions,
-                AVG(k.last_ctr) as avg_ctr,
-                SUM(CASE WHEN k.last_position <= 3 THEN 1 ELSE 0 END) as top3_count,
-                SUM(CASE WHEN k.last_position <= 10 THEN 1 ELSE 0 END) as top10_count,
-                SUM(CASE WHEN k.last_position > 10 AND k.last_position <= 20 THEN 1 ELSE 0 END) as top20_count,
-                SUM(CASE WHEN k.last_position > 20 OR k.last_position IS NULL THEN 1 ELSE 0 END) as beyond20_count
+                AVG(latest.serp_position) as avg_position,
+                SUM(CASE WHEN latest.serp_position <= 3 THEN 1 ELSE 0 END) as top3_count,
+                SUM(CASE WHEN latest.serp_position <= 10 THEN 1 ELSE 0 END) as top10_count,
+                SUM(CASE WHEN latest.serp_position > 10 AND latest.serp_position <= 20 THEN 1 ELSE 0 END) as top20_count,
+                SUM(CASE WHEN latest.serp_position > 20 OR latest.serp_position IS NULL THEN 1 ELSE 0 END) as beyond20_count
             FROM {$this->membersTable} m
-            LEFT JOIN st_keywords k ON m.keyword_id = k.id
+            JOIN st_keywords k ON m.keyword_id = k.id
+            LEFT JOIN (
+                SELECT rc1.keyword, rc1.serp_position
+                FROM st_rank_checks rc1
+                WHERE rc1.project_id = ?
+                  AND rc1.serp_position IS NOT NULL
+                  AND rc1.checked_at = (
+                      SELECT MAX(rc2.checked_at)
+                      FROM st_rank_checks rc2
+                      WHERE rc2.project_id = rc1.project_id
+                        AND rc2.keyword = rc1.keyword
+                        AND rc2.serp_position IS NOT NULL
+                  )
+            ) latest ON k.keyword = latest.keyword
             WHERE m.group_id = ?
         ";
 
-        $result = Database::fetch($sql, [$groupId]);
+        $result = Database::fetch($sql, [$projectId, $groupId]);
+
+        // Calcola miglioramenti/peggioramenti
+        $variationsSql = "
+            SELECT
+                SUM(CASE WHEN rc_new.serp_position < rc_old.serp_position THEN 1 ELSE 0 END) as improved,
+                SUM(CASE WHEN rc_new.serp_position > rc_old.serp_position THEN 1 ELSE 0 END) as declined
+            FROM {$this->membersTable} m
+            JOIN st_keywords k ON m.keyword_id = k.id
+            JOIN (
+                SELECT keyword, serp_position,
+                       ROW_NUMBER() OVER (PARTITION BY keyword ORDER BY checked_at DESC) as rn
+                FROM st_rank_checks WHERE project_id = ? AND serp_position IS NOT NULL
+            ) rc_new ON k.keyword = rc_new.keyword AND rc_new.rn = 1
+            JOIN (
+                SELECT keyword, serp_position,
+                       ROW_NUMBER() OVER (PARTITION BY keyword ORDER BY checked_at DESC) as rn
+                FROM st_rank_checks WHERE project_id = ? AND serp_position IS NOT NULL
+            ) rc_old ON k.keyword = rc_old.keyword AND rc_old.rn = 2
+            WHERE m.group_id = ?
+        ";
+
+        $variations = Database::fetch($variationsSql, [$projectId, $projectId, $groupId]);
 
         return [
-            'total_keywords' => (int)($result['total_keywords'] ?? 0),
+            'total_keywords' => $totalKeywords,
             'avg_position' => round((float)($result['avg_position'] ?? 0), 1),
-            'total_clicks' => (int)($result['total_clicks'] ?? 0),
-            'total_impressions' => (int)($result['total_impressions'] ?? 0),
-            'avg_ctr' => round((float)($result['avg_ctr'] ?? 0), 2),
             'top3_count' => (int)($result['top3_count'] ?? 0),
             'top10_count' => (int)($result['top10_count'] ?? 0),
             'top20_count' => (int)($result['top20_count'] ?? 0),
             'beyond20_count' => (int)($result['beyond20_count'] ?? 0),
+            'improved_count' => (int)($variations['improved'] ?? 0),
+            'declined_count' => (int)($variations['declined'] ?? 0),
         ];
     }
 

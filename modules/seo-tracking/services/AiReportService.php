@@ -8,7 +8,6 @@ use Core\Credits;
 use Modules\SeoTracking\Models\Project;
 use Modules\SeoTracking\Models\AiReport;
 use Modules\SeoTracking\Models\GscDaily;
-use Modules\SeoTracking\Models\Ga4Daily;
 use Modules\SeoTracking\Models\Keyword;
 use Modules\SeoTracking\Models\Alert;
 use Services\AiService;
@@ -22,7 +21,6 @@ class AiReportService
     private Project $project;
     private AiReport $aiReport;
     private GscDaily $gscDaily;
-    private Ga4Daily $ga4Daily;
     private Keyword $keyword;
     private Alert $alert;
     private AiService $aiService;
@@ -32,7 +30,6 @@ class AiReportService
         $this->project = new Project();
         $this->aiReport = new AiReport();
         $this->gscDaily = new GscDaily();
-        $this->ga4Daily = new Ga4Daily();
         $this->keyword = new Keyword();
         $this->alert = new Alert();
         $this->aiService = new AiService('seo-tracking');
@@ -64,12 +61,11 @@ class AiReportService
         $prevStartDate = date('Y-m-d', strtotime('-14 days'));
 
         $gscComparison = $this->gscDaily->comparePeriods($projectId, $startDate, $endDate, $prevStartDate, $prevEndDate);
-        $ga4Comparison = $this->ga4Daily->comparePeriods($projectId, $startDate, $endDate, $prevStartDate, $prevEndDate);
         $topMovers = $this->keyword->getTopMovers($projectId, 10);
         $recentAlerts = $this->alert->getByProject($projectId, ['limit' => 10]);
 
         // Costruisci prompt
-        $prompt = $this->buildWeeklyPrompt($project, $gscComparison, $ga4Comparison, $topMovers, $recentAlerts, $startDate, $endDate);
+        $prompt = $this->buildWeeklyPrompt($project, $gscComparison, $topMovers, $recentAlerts, $startDate, $endDate);
 
         // Chiama AI tramite AiService (gestisce crediti internamente)
         $response = $this->callAI($userId, $prompt, 'weekly_digest');
@@ -88,7 +84,6 @@ class AiReportService
             'content' => $response,
             'data_snapshot' => json_encode([
                 'gsc' => $gscComparison,
-                'ga4' => $ga4Comparison,
                 'top_movers' => $topMovers,
             ]),
             'period_start' => $startDate,
@@ -120,11 +115,10 @@ class AiReportService
         $prevStartDate = date('Y-m-d', strtotime('-60 days'));
 
         $gscComparison = $this->gscDaily->comparePeriods($projectId, $startDate, $endDate, $prevStartDate, $prevEndDate);
-        $ga4Comparison = $this->ga4Daily->comparePeriods($projectId, $startDate, $endDate, $prevStartDate, $prevEndDate);
         $topKeywords = $this->keyword->getTopByClicks($projectId, 20);
         $stats = $this->project->getStats($projectId);
 
-        $prompt = $this->buildMonthlyPrompt($project, $gscComparison, $ga4Comparison, $topKeywords, $stats, $startDate, $endDate);
+        $prompt = $this->buildMonthlyPrompt($project, $gscComparison, $topKeywords, $stats, $startDate, $endDate);
 
         // Chiama AI tramite AiService (gestisce crediti internamente)
         $response = $this->callAI($userId, $prompt, 'monthly_executive');
@@ -142,7 +136,6 @@ class AiReportService
             'content' => $response,
             'data_snapshot' => json_encode([
                 'gsc' => $gscComparison,
-                'ga4' => $ga4Comparison,
                 'top_keywords' => $topKeywords,
                 'stats' => $stats,
             ]),
@@ -212,10 +205,9 @@ class AiReportService
         $startDate = date('Y-m-d', strtotime('-30 days'));
 
         $gscData = $this->gscDaily->getSummary($projectId, $startDate, $endDate);
-        $ga4Data = $this->ga4Daily->getSummary($projectId, $startDate, $endDate);
         $topKeywords = $this->keyword->getTopByClicks($projectId, 20);
 
-        $prompt = $this->buildCustomPrompt($project, $gscData, $ga4Data, $topKeywords, $type, $customQuestion, $startDate, $endDate);
+        $prompt = $this->buildCustomPrompt($project, $gscData, $topKeywords, $type, $customQuestion, $startDate, $endDate);
 
         // Chiama AI tramite AiService (gestisce crediti internamente)
         $response = $this->callAI($userId, $prompt, 'custom');
@@ -245,7 +237,6 @@ class AiReportService
             'content' => $response,
             'data_snapshot' => json_encode([
                 'gsc' => $gscData,
-                'ga4' => $ga4Data,
                 'top_keywords' => $topKeywords,
                 'custom_question' => $customQuestion,
             ]),
@@ -263,7 +254,7 @@ class AiReportService
     /**
      * Build weekly digest prompt
      */
-    private function buildWeeklyPrompt(array $project, array $gsc, array $ga4, array $movers, array $alerts, string $start, string $end): string
+    private function buildWeeklyPrompt(array $project, array $gsc, array $movers, array $alerts, string $start, string $end): string
     {
         $data = [
             'dominio' => $project['domain'],
@@ -273,12 +264,6 @@ class AiReportService
                 'click_change' => ($gsc['clicks_change_pct'] ?? 0) . '%',
                 'impressioni' => $gsc['current']['total_impressions'] ?? 0,
                 'posizione_media' => round($gsc['current']['avg_position'] ?? 0, 1),
-            ],
-            'ga4' => [
-                'sessioni' => $ga4['current']['sessions'] ?? 0,
-                'sessioni_change' => ($ga4['sessions_change_pct'] ?? 0) . '%',
-                'revenue' => $ga4['current']['revenue'] ?? 0,
-                'revenue_change' => ($ga4['revenue_change_pct'] ?? 0) . '%',
             ],
             'top_movers' => array_map(fn($m) => [
                 'keyword' => $m['keyword'],
@@ -295,9 +280,8 @@ DATI:
 ISTRUZIONI:
 1. Scrivi un riassunto executive di 2-3 frasi
 2. Analizza le performance GSC (click, impressioni, posizione media)
-3. Analizza le performance GA4 (sessioni organiche, revenue)
-4. Evidenzia le keyword con maggiori variazioni
-5. Fornisci 3 raccomandazioni actionable
+3. Evidenzia le keyword con maggiori variazioni
+4. Fornisci 3 raccomandazioni actionable
 
 Usa un tono professionale ma accessibile. Formatta con markdown.";
     }
@@ -305,7 +289,7 @@ Usa un tono professionale ma accessibile. Formatta con markdown.";
     /**
      * Build monthly executive prompt
      */
-    private function buildMonthlyPrompt(array $project, array $gsc, array $ga4, array $keywords, array $stats, string $start, string $end): string
+    private function buildMonthlyPrompt(array $project, array $gsc, array $keywords, array $stats, string $start, string $end): string
     {
         $data = [
             'dominio' => $project['domain'],
@@ -315,12 +299,6 @@ Usa un tono professionale ma accessibile. Formatta con markdown.";
                 'impressioni_totali' => $gsc['current']['total_impressions'] ?? 0,
                 'posizione_media' => round($gsc['current']['avg_position'] ?? 0, 1),
                 'variazione_click' => ($gsc['clicks_change_pct'] ?? 0) . '%',
-            ],
-            'ga4' => [
-                'sessioni_totali' => $ga4['current']['sessions'] ?? 0,
-                'revenue_totale' => $ga4['current']['revenue'] ?? 0,
-                'acquisti' => $ga4['current']['purchases'] ?? 0,
-                'variazione_revenue' => ($ga4['revenue_change_pct'] ?? 0) . '%',
             ],
             'keyword_totali' => $stats['total_keywords'] ?? 0,
             'keyword_top10' => $stats['keywords_top10'] ?? 0,
@@ -340,9 +318,8 @@ STRUTTURA RICHIESTA:
 1. **Executive Summary** (3-4 frasi per decision maker)
 2. **Performance Overview** (metriche chiave con trend)
 3. **Analisi Keyword** (top performer, opportunita)
-4. **Revenue Attribution** (impatto SEO su conversioni)
-5. **Raccomandazioni Strategiche** (3-5 azioni prioritarie)
-6. **Outlook** (previsioni prossimo mese)
+4. **Raccomandazioni Strategiche** (3-5 azioni prioritarie)
+5. **Outlook** (previsioni prossimo mese)
 
 Usa tono executive, dati concreti, formattazione markdown professionale.";
     }
@@ -369,13 +346,12 @@ Rispondi in italiano con formattazione markdown.";
     /**
      * Build custom report prompt
      */
-    private function buildCustomPrompt(array $project, array $gsc, array $ga4, array $keywords, string $type, ?string $customQuestion, string $start, string $end): string
+    private function buildCustomPrompt(array $project, array $gsc, array $keywords, string $type, ?string $customQuestion, string $start, string $end): string
     {
         $data = [
             'dominio' => $project['domain'],
             'periodo' => "$start - $end",
             'gsc' => $gsc,
-            'ga4' => $ga4,
             'top_keywords' => array_map(fn($k) => [
                 'keyword' => $k['keyword'],
                 'click' => $k['last_clicks'] ?? 0,

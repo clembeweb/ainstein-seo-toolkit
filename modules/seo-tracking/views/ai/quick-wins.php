@@ -1,35 +1,13 @@
+<?php $currentPage = 'quick-wins'; ?>
 <div class="space-y-6" x-data="quickWinsApp()">
-    <!-- Header -->
-    <div class="sm:flex sm:items-center sm:justify-between">
-        <div>
-            <div class="flex items-center gap-3">
-                <?php if ($group): ?>
-                <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/groups/' . $group['id']) ?>" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-                <?php else: ?>
-                <a href="<?= url('/seo-tracking/projects/' . $project['id']) ?>" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-                <?php endif; ?>
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                    </svg>
-                </a>
-                <div class="flex items-center gap-3">
-                    <div class="p-2 bg-amber-100 dark:bg-amber-900/50 rounded-lg">
-                        <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                    </div>
-                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Quick Wins AI</h1>
-                </div>
-            </div>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                <?php if ($group): ?>
-                    Gruppo: <?= e($group['name']) ?> - <?= e($project['name']) ?>
-                <?php else: ?>
-                    <?= e($project['name']) ?>
-                <?php endif; ?>
-            </p>
-        </div>
-    </div>
+    <!-- Header + Navigation -->
+    <?php include __DIR__ . '/../partials/project-nav.php'; ?>
+
+    <?php if ($group): ?>
+    <p class="text-sm text-slate-500 dark:text-slate-400">
+        Gruppo: <?= e($group['name']) ?>
+    </p>
+    <?php endif; ?>
 
     <!-- Info Box -->
     <div class="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
@@ -410,9 +388,9 @@ function quickWinsApp() {
 
             try {
                 <?php if ($group): ?>
-                const url = '<?= url('/seo-tracking/projects/' . $project['id'] . '/groups/' . $group['id'] . '/ai/quick-wins/analyze') ?>';
+                const url = '<?= url('/seo-tracking/project/' . $project['id'] . '/groups/' . $group['id'] . '/ai/quick-wins/analyze') ?>';
                 <?php else: ?>
-                const url = '<?= url('/seo-tracking/projects/' . $project['id'] . '/ai/quick-wins/analyze') ?>';
+                const url = '<?= url('/seo-tracking/project/' . $project['id'] . '/ai/quick-wins/analyze') ?>';
                 <?php endif; ?>
 
                 const response = await fetch(url, {

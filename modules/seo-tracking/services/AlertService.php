@@ -7,7 +7,6 @@ use Modules\SeoTracking\Models\AlertSettings;
 use Modules\SeoTracking\Models\Project;
 use Modules\SeoTracking\Models\Keyword;
 use Modules\SeoTracking\Models\GscDaily;
-use Modules\SeoTracking\Models\Ga4Daily;
 
 /**
  * AlertService
@@ -20,7 +19,6 @@ class AlertService
     private Project $project;
     private Keyword $keyword;
     private GscDaily $gscDaily;
-    private Ga4Daily $ga4Daily;
 
     public function __construct()
     {
@@ -29,7 +27,6 @@ class AlertService
         $this->project = new Project();
         $this->keyword = new Keyword();
         $this->gscDaily = new GscDaily();
-        $this->ga4Daily = new Ga4Daily();
     }
 
     /**
@@ -150,41 +147,12 @@ class AlertService
     }
 
     /**
-     * Check calo revenue
+     * Check calo revenue (deprecato - GA4 rimosso)
      */
     private function checkRevenueAlerts(int $projectId, array $settings): array
     {
-        $alerts = [];
-        $threshold = $settings['revenue_drop_threshold'] ?? 20;
-
-        $endDate = date('Y-m-d', strtotime('-1 day'));
-        $startDate = date('Y-m-d', strtotime('-7 days'));
-        $prevEndDate = date('Y-m-d', strtotime('-8 days'));
-        $prevStartDate = date('Y-m-d', strtotime('-14 days'));
-
-        $comparison = $this->ga4Daily->comparePeriods($projectId, $startDate, $endDate, $prevStartDate, $prevEndDate);
-
-        $revenueChange = $comparison['revenue_change_pct'] ?? 0;
-
-        if ($revenueChange <= -$threshold) {
-            $message = "Revenue organico calato del " . abs(round($revenueChange)) . "% rispetto alla settimana precedente";
-
-            $alertId = $this->alert->create([
-                'project_id' => $projectId,
-                'alert_type' => 'revenue_drop',
-                'severity' => abs($revenueChange) >= 50 ? 'critical' : 'high',
-                'message' => $message,
-                'data' => json_encode([
-                    'current_revenue' => $comparison['current']['revenue'] ?? 0,
-                    'previous_revenue' => $comparison['previous']['revenue'] ?? 0,
-                    'change_pct' => $revenueChange,
-                ]),
-            ]);
-
-            $alerts[] = ['id' => $alertId, 'type' => 'revenue_drop', 'message' => $message];
-        }
-
-        return $alerts;
+        // Revenue alerts rimossi con GA4
+        return [];
     }
 
     /**
@@ -230,7 +198,7 @@ class AlertService
         }
 
         $body .= "\n---\n";
-        $body .= "Visualizza tutti gli alert: " . url('/seo-tracking/projects/' . $projectId . '/alerts') . "\n";
+        $body .= "Visualizza tutti gli alert: " . url('/seo-tracking/project/' . $projectId . '/alerts') . "\n";
 
         // Invia email (usa la funzione mail di PHP o un servizio esterno)
         foreach ($emails as $email) {

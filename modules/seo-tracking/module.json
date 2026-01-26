@@ -2,7 +2,7 @@
     "name": "SEO Position Tracking",
     "slug": "seo-tracking",
     "version": "1.0.0",
-    "description": "Monitoraggio posizionamento keyword, traffico organico e revenue con GSC + GA4 e analisi AI",
+    "description": "Monitoraggio posizionamento keyword e traffico organico con GSC e analisi AI",
     "icon": "chart-bar",
     "menu_order": 15,
     "requires": {
@@ -10,6 +10,10 @@
         "services": ["ai"]
     },
     "credits": {
+        "rank_check": {
+            "cost": 1,
+            "description": "Verifica posizione SERP singola keyword"
+        },
         "gsc_full_sync": {
             "cost": 10,
             "description": "Sync storico completo GSC (16 mesi)"
@@ -25,10 +29,6 @@
         "keyword_analysis": {
             "cost": 5,
             "description": "Analisi keyword AI on-demand"
-        },
-        "revenue_attribution": {
-            "cost": 8,
-            "description": "Analisi revenue attribution AI"
         },
         "anomaly_detection": {
             "cost": 5,
@@ -110,15 +110,6 @@
             "label": "Costo Rilevamento Anomalie",
             "description": "Crediti per rilevamento anomalie AI",
             "default": 5,
-            "min": 0,
-            "step": 0.1,
-            "admin_only": true
-        },
-        "cost_revenue_attribution": {
-            "type": "number",
-            "label": "Costo Revenue Attribution",
-            "description": "Crediti per analisi revenue attribution AI",
-            "default": 8,
             "min": 0,
             "step": 0.1,
             "admin_only": true

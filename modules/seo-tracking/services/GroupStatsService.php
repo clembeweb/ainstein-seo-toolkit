@@ -33,23 +33,33 @@ class GroupStatsService
     }
 
     /**
-     * Trend posizione media nel periodo
+     * Trend posizione media nel periodo (basato su rank checker)
      */
     public function getPositionTrend(int $groupId, int $days = 7): array
     {
+        // Ottieni project_id dal gruppo
+        $group = $this->groupModel->find($groupId);
+        if (!$group) {
+            return ['direction' => 'stable', 'change' => 0, 'data' => []];
+        }
+        $projectId = $group['project_id'];
+
         $sql = "
             SELECT
-                AVG(kp.avg_position) as avg_position,
-                kp.date
-            FROM st_keyword_positions kp
-            JOIN st_keyword_group_members m ON kp.keyword_id = m.keyword_id
-            WHERE m.group_id = ?
-              AND kp.date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-            GROUP BY kp.date
-            ORDER BY kp.date ASC
+                DATE(rc.checked_at) as date,
+                AVG(rc.serp_position) as avg_position,
+                COUNT(DISTINCT rc.keyword) as keywords_checked
+            FROM st_rank_checks rc
+            JOIN st_keyword_group_members m ON m.group_id = ?
+            JOIN st_keywords k ON m.keyword_id = k.id AND k.keyword = rc.keyword
+            WHERE rc.project_id = ?
+              AND rc.checked_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+              AND rc.serp_position IS NOT NULL
+            GROUP BY DATE(rc.checked_at)
+            ORDER BY date ASC
         ";
 
-        $data = Database::fetchAll($sql, [$groupId, $days]);
+        $data = Database::fetchAll($sql, [$groupId, $projectId, $days]);
 
         if (count($data) < 2) {
             return ['direction' => 'stable', 'change' => 0, 'data' => $data];
@@ -96,44 +106,81 @@ class GroupStatsService
     }
 
     /**
-     * Top performer del gruppo
+     * Top performer del gruppo (migliori posizioni da rank checker)
      */
     public function getTopPerformers(int $groupId, int $limit = 5): array
     {
-        $sql = "
-            SELECT k.*
-            FROM st_keywords k
-            JOIN st_keyword_group_members m ON k.id = m.keyword_id
-            WHERE m.group_id = ?
-              AND k.last_clicks IS NOT NULL
-            ORDER BY k.last_clicks DESC
-            LIMIT ?
-        ";
+        // Ottieni project_id dal gruppo
+        $group = $this->groupModel->find($groupId);
+        if (!$group) {
+            return [];
+        }
+        $projectId = $group['project_id'];
 
-        return Database::fetchAll($sql, [$groupId, $limit]);
-    }
-
-    /**
-     * Keyword con maggiori variazioni nel gruppo
-     */
-    public function getTopMovers(int $groupId, int $limit = 5): array
-    {
         $sql = "
             SELECT
                 k.*,
-                kp.position_change,
-                kp.avg_position as current_position
+                rc_latest.serp_position as current_position,
+                rc_latest.serp_url as ranking_url
             FROM st_keywords k
             JOIN st_keyword_group_members m ON k.id = m.keyword_id
-            JOIN st_keyword_positions kp ON k.id = kp.keyword_id
+            JOIN (
+                SELECT rc1.keyword, rc1.serp_position, rc1.serp_url
+                FROM st_rank_checks rc1
+                WHERE rc1.project_id = ?
+                  AND rc1.serp_position IS NOT NULL
+                  AND rc1.checked_at = (
+                      SELECT MAX(rc2.checked_at)
+                      FROM st_rank_checks rc2
+                      WHERE rc2.project_id = rc1.project_id
+                        AND rc2.keyword = rc1.keyword
+                        AND rc2.serp_position IS NOT NULL
+                  )
+            ) rc_latest ON k.keyword = rc_latest.keyword
             WHERE m.group_id = ?
-              AND kp.date = (SELECT MAX(date) FROM st_keyword_positions WHERE keyword_id = k.id)
-              AND kp.position_change IS NOT NULL
-            ORDER BY ABS(kp.position_change) DESC
+            ORDER BY rc_latest.serp_position ASC
             LIMIT ?
         ";
 
-        return Database::fetchAll($sql, [$groupId, $limit]);
+        return Database::fetchAll($sql, [$projectId, $groupId, $limit]);
+    }
+
+    /**
+     * Keyword con maggiori variazioni nel gruppo (da rank checker)
+     */
+    public function getTopMovers(int $groupId, int $limit = 5): array
+    {
+        // Ottieni project_id dal gruppo
+        $group = $this->groupModel->find($groupId);
+        if (!$group) {
+            return [];
+        }
+        $projectId = $group['project_id'];
+
+        $sql = "
+            SELECT
+                k.*,
+                rc_new.serp_position as current_position,
+                rc_old.serp_position as prev_position,
+                (rc_old.serp_position - rc_new.serp_position) as position_change
+            FROM st_keywords k
+            JOIN st_keyword_group_members m ON k.id = m.keyword_id
+            JOIN (
+                SELECT keyword, serp_position,
+                       ROW_NUMBER() OVER (PARTITION BY keyword ORDER BY checked_at DESC) as rn
+                FROM st_rank_checks WHERE project_id = ? AND serp_position IS NOT NULL
+            ) rc_new ON k.keyword = rc_new.keyword AND rc_new.rn = 1
+            JOIN (
+                SELECT keyword, serp_position,
+                       ROW_NUMBER() OVER (PARTITION BY keyword ORDER BY checked_at DESC) as rn
+                FROM st_rank_checks WHERE project_id = ? AND serp_position IS NOT NULL
+            ) rc_old ON k.keyword = rc_old.keyword AND rc_old.rn = 2
+            WHERE m.group_id = ?
+            ORDER BY ABS(rc_old.serp_position - rc_new.serp_position) DESC
+            LIMIT ?
+        ";
+
+        return Database::fetchAll($sql, [$projectId, $projectId, $groupId, $limit]);
     }
 
     /**
@@ -182,64 +229,97 @@ class GroupStatsService
     }
 
     /**
-     * Storico variazioni gruppo
+     * Storico variazioni gruppo (basato su rank checker)
      */
     public function getHistoricalComparison(int $groupId, int $periodDays = 7): array
     {
+        // Ottieni project_id dal gruppo
+        $group = $this->groupModel->find($groupId);
+        if (!$group) {
+            return [
+                'current' => ['avg_position' => 0, 'improved' => 0, 'declined' => 0],
+                'previous' => ['avg_position' => 0],
+                'changes' => ['position' => 0],
+            ];
+        }
+        $projectId = $group['project_id'];
+
+        // Posizione media attuale (ultima verifica per ogni keyword)
         $currentSql = "
-            SELECT
-                AVG(k.last_position) as avg_position,
-                SUM(k.last_clicks) as total_clicks,
-                SUM(k.last_impressions) as total_impressions
-            FROM st_keywords k
-            JOIN st_keyword_group_members m ON k.id = m.keyword_id
+            SELECT AVG(latest.serp_position) as avg_position
+            FROM st_keyword_group_members m
+            JOIN st_keywords k ON m.keyword_id = k.id
+            JOIN (
+                SELECT rc1.keyword, rc1.serp_position
+                FROM st_rank_checks rc1
+                WHERE rc1.project_id = ?
+                  AND rc1.serp_position IS NOT NULL
+                  AND rc1.checked_at = (
+                      SELECT MAX(rc2.checked_at)
+                      FROM st_rank_checks rc2
+                      WHERE rc2.project_id = rc1.project_id
+                        AND rc2.keyword = rc1.keyword
+                        AND rc2.serp_position IS NOT NULL
+                  )
+            ) latest ON k.keyword = latest.keyword
             WHERE m.group_id = ?
         ";
 
+        // Posizione media N giorni fa
         $previousSql = "
-            SELECT
-                AVG(kp.avg_position) as avg_position,
-                SUM(kp.total_clicks) as total_clicks,
-                SUM(kp.total_impressions) as total_impressions
-            FROM st_keyword_positions kp
-            JOIN st_keyword_group_members m ON kp.keyword_id = m.keyword_id
+            SELECT AVG(rc.serp_position) as avg_position
+            FROM st_keyword_group_members m
+            JOIN st_keywords k ON m.keyword_id = k.id
+            JOIN st_rank_checks rc ON k.keyword = rc.keyword
             WHERE m.group_id = ?
-              AND kp.date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-              AND kp.date < DATE_SUB(CURDATE(), INTERVAL ? DAY)
+              AND rc.project_id = ?
+              AND rc.serp_position IS NOT NULL
+              AND DATE(rc.checked_at) = (
+                  SELECT MAX(DATE(checked_at))
+                  FROM st_rank_checks
+                  WHERE project_id = ?
+                    AND DATE(checked_at) <= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+              )
         ";
 
-        $current = Database::fetch($currentSql, [$groupId]);
-        $previous = Database::fetch($previousSql, [$groupId, $periodDays * 2, $periodDays]);
+        // Conta miglioramenti/peggioramenti
+        $variationsSql = "
+            SELECT
+                SUM(CASE WHEN rc_new.serp_position < rc_old.serp_position THEN 1 ELSE 0 END) as improved,
+                SUM(CASE WHEN rc_new.serp_position > rc_old.serp_position THEN 1 ELSE 0 END) as declined
+            FROM st_keyword_group_members m
+            JOIN st_keywords k ON m.keyword_id = k.id
+            JOIN (
+                SELECT keyword, serp_position,
+                       ROW_NUMBER() OVER (PARTITION BY keyword ORDER BY checked_at DESC) as rn
+                FROM st_rank_checks WHERE project_id = ? AND serp_position IS NOT NULL
+            ) rc_new ON k.keyword = rc_new.keyword AND rc_new.rn = 1
+            JOIN (
+                SELECT keyword, serp_position,
+                       ROW_NUMBER() OVER (PARTITION BY keyword ORDER BY checked_at DESC) as rn
+                FROM st_rank_checks WHERE project_id = ? AND serp_position IS NOT NULL
+            ) rc_old ON k.keyword = rc_old.keyword AND rc_old.rn = 2
+            WHERE m.group_id = ?
+        ";
 
-        $calcChange = function($curr, $prev) {
-            if (!$prev || $prev == 0) return null;
-            return round((($curr - $prev) / $prev) * 100, 1);
-        };
+        $current = Database::fetch($currentSql, [$projectId, $groupId]);
+        $previous = Database::fetch($previousSql, [$groupId, $projectId, $projectId, $periodDays]);
+        $variations = Database::fetch($variationsSql, [$projectId, $projectId, $groupId]);
+
+        $currentPos = round((float)($current['avg_position'] ?? 0), 1);
+        $previousPos = round((float)($previous['avg_position'] ?? 0), 1);
 
         return [
             'current' => [
-                'avg_position' => round((float)($current['avg_position'] ?? 0), 1),
-                'total_clicks' => (int)($current['total_clicks'] ?? 0),
-                'total_impressions' => (int)($current['total_impressions'] ?? 0),
+                'avg_position' => $currentPos,
+                'improved' => (int)($variations['improved'] ?? 0),
+                'declined' => (int)($variations['declined'] ?? 0),
             ],
             'previous' => [
-                'avg_position' => round((float)($previous['avg_position'] ?? 0), 1),
-                'total_clicks' => (int)($previous['total_clicks'] ?? 0),
-                'total_impressions' => (int)($previous['total_impressions'] ?? 0),
+                'avg_position' => $previousPos,
             ],
             'changes' => [
-                'position' => round(
-                    (float)($previous['avg_position'] ?? 0) - (float)($current['avg_position'] ?? 0),
-                    1
-                ),
-                'clicks_percent' => $calcChange(
-                    $current['total_clicks'] ?? 0,
-                    $previous['total_clicks'] ?? 0
-                ),
-                'impressions_percent' => $calcChange(
-                    $current['total_impressions'] ?? 0,
-                    $previous['total_impressions'] ?? 0
-                ),
+                'position' => $previousPos > 0 ? round($previousPos - $currentPos, 1) : 0,
             ],
         ];
     }

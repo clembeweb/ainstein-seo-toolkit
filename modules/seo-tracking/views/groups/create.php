@@ -1,7 +1,7 @@
 <div class="space-y-6">
     <!-- Header -->
     <div class="flex items-center gap-3">
-        <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/groups') ?>" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+        <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/groups') ?>" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -13,7 +13,7 @@
     </div>
 
     <!-- Form -->
-    <form action="<?= url('/seo-tracking/projects/' . $project['id'] . '/groups/store') ?>" method="POST" class="space-y-6">
+    <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/groups/store') ?>" method="POST" class="space-y-6">
         <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
 
         <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6 space-y-6">
@@ -125,7 +125,7 @@
 
         <!-- Actions -->
         <div class="flex items-center justify-end gap-3">
-            <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/groups') ?>" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+            <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/groups') ?>" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                 Annulla
             </a>
             <button type="submit" class="px-6 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">

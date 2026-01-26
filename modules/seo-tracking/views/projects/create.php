@@ -12,7 +12,7 @@
     </div>
 
     <!-- Form -->
-    <form action="<?= url('/seo-tracking/projects/store') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <form action="<?= url('/seo-tracking/project/store') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
         <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
         <!-- Basic Info -->
         <div class="p-6 space-y-6">
@@ -113,7 +113,7 @@
         <!-- Footer -->
         <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 rounded-b-lg flex items-center justify-between">
             <p class="text-sm text-slate-500 dark:text-slate-400">
-                Dopo la creazione potrai collegare GSC e GA4
+                Dopo la creazione potrai collegare Google Search Console
             </p>
             <div class="flex gap-3">
                 <a href="<?= url('/seo-tracking') ?>" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">

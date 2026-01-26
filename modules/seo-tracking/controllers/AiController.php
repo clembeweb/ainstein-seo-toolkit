@@ -47,7 +47,7 @@ class AiController
 
         if (!$this->aiService->isConfigured()) {
             $_SESSION['_flash']['error'] = 'API Claude non configurata';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/reports');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/reports');
             return;
         }
 
@@ -56,14 +56,14 @@ class AiController
 
             if ($result) {
                 $_SESSION['_flash']['success'] = 'Report settimanale generato con successo';
-                Router::redirect('/seo-tracking/projects/' . $projectId . '/reports/' . $result['id']);
+                Router::redirect('/seo-tracking/project/' . $projectId . '/reports/' . $result['id']);
             } else {
                 $_SESSION['_flash']['error'] = 'Crediti insufficienti per generare il report';
-                Router::redirect('/seo-tracking/projects/' . $projectId . '/reports');
+                Router::redirect('/seo-tracking/project/' . $projectId . '/reports');
             }
         } catch (\Exception $e) {
             $_SESSION['_flash']['error'] = 'Errore generazione: ' . $e->getMessage();
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/reports');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/reports');
         }
     }
 
@@ -83,7 +83,7 @@ class AiController
 
         if (!$this->aiService->isConfigured()) {
             $_SESSION['_flash']['error'] = 'API Claude non configurata';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/reports');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/reports');
             return;
         }
 
@@ -92,14 +92,14 @@ class AiController
 
             if ($result) {
                 $_SESSION['_flash']['success'] = 'Report executive generato con successo';
-                Router::redirect('/seo-tracking/projects/' . $projectId . '/reports/' . $result['id']);
+                Router::redirect('/seo-tracking/project/' . $projectId . '/reports/' . $result['id']);
             } else {
                 $_SESSION['_flash']['error'] = 'Crediti insufficienti per generare il report';
-                Router::redirect('/seo-tracking/projects/' . $projectId . '/reports');
+                Router::redirect('/seo-tracking/project/' . $projectId . '/reports');
             }
         } catch (\Exception $e) {
             $_SESSION['_flash']['error'] = 'Errore generazione: ' . $e->getMessage();
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/reports');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/reports');
         }
     }
 
@@ -119,7 +119,7 @@ class AiController
 
         if (!$this->aiService->isConfigured()) {
             $_SESSION['_flash']['error'] = 'API Claude non configurata';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/reports');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/reports');
             return;
         }
 
@@ -129,14 +129,14 @@ class AiController
 
             if ($result) {
                 $_SESSION['_flash']['success'] = 'Analisi keyword generata con successo';
-                Router::redirect('/seo-tracking/projects/' . $projectId . '/reports/' . $result['id']);
+                Router::redirect('/seo-tracking/project/' . $projectId . '/reports/' . $result['id']);
             } else {
                 $_SESSION['_flash']['error'] = 'Crediti insufficienti per generare il report';
-                Router::redirect('/seo-tracking/projects/' . $projectId . '/reports');
+                Router::redirect('/seo-tracking/project/' . $projectId . '/reports');
             }
         } catch (\Exception $e) {
             $_SESSION['_flash']['error'] = 'Errore generazione: ' . $e->getMessage();
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/reports');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/reports');
         }
     }
 
@@ -156,7 +156,7 @@ class AiController
 
         if (!$this->aiService->isConfigured()) {
             $_SESSION['_flash']['error'] = 'API Claude non configurata';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/reports');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/reports');
             return;
         }
 
@@ -166,14 +166,14 @@ class AiController
 
             if ($result) {
                 $_SESSION['_flash']['success'] = 'Analisi revenue generata con successo';
-                Router::redirect('/seo-tracking/projects/' . $projectId . '/reports/' . $result['id']);
+                Router::redirect('/seo-tracking/project/' . $projectId . '/reports/' . $result['id']);
             } else {
                 $_SESSION['_flash']['error'] = 'Crediti insufficienti per generare il report';
-                Router::redirect('/seo-tracking/projects/' . $projectId . '/reports');
+                Router::redirect('/seo-tracking/project/' . $projectId . '/reports');
             }
         } catch (\Exception $e) {
             $_SESSION['_flash']['error'] = 'Errore generazione: ' . $e->getMessage();
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/reports');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/reports');
         }
     }
 
@@ -209,7 +209,7 @@ class AiController
                 return View::json([
                     'success' => true,
                     'report_id' => $result['id'],
-                    'redirect' => url('/seo-tracking/projects/' . $projectId . '/reports/' . $result['id']),
+                    'redirect' => url('/seo-tracking/project/' . $projectId . '/reports/' . $result['id']),
                 ]);
             }
 
@@ -304,7 +304,7 @@ class AiController
 
         if (!$group) {
             $_SESSION['_flash']['error'] = 'Gruppo non trovato';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/groups');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/groups');
             exit;
         }
 

@@ -7,10 +7,7 @@ use Core\Router;
 use Modules\SeoTracking\Models\Project;
 use Modules\SeoTracking\Models\Keyword;
 use Modules\SeoTracking\Models\GscData;
-use Modules\SeoTracking\Models\Ga4Data;
-use Modules\SeoTracking\Models\KeywordRevenue;
 use Modules\SeoTracking\Models\GscDaily;
-use Modules\SeoTracking\Models\Ga4Daily;
 
 /**
  * ExportController
@@ -21,20 +18,14 @@ class ExportController
     private Project $project;
     private Keyword $keyword;
     private GscData $gscData;
-    private Ga4Data $ga4Data;
-    private KeywordRevenue $keywordRevenue;
     private GscDaily $gscDaily;
-    private Ga4Daily $ga4Daily;
 
     public function __construct()
     {
         $this->project = new Project();
         $this->keyword = new Keyword();
         $this->gscData = new GscData();
-        $this->ga4Data = new Ga4Data();
-        $this->keywordRevenue = new KeywordRevenue();
         $this->gscDaily = new GscDaily();
-        $this->ga4Daily = new Ga4Daily();
     }
 
     /**
@@ -106,76 +97,6 @@ class ExportController
     }
 
     /**
-     * Export GA4 data
-     */
-    public function ga4Data(int $projectId): void
-    {
-        $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
-
-        if (!$project) {
-            $_SESSION['_flash']['error'] = 'Progetto non trovato';
-            Router::redirect('/seo-tracking');
-            return;
-        }
-
-        $days = (int) ($_GET['days'] ?? 30);
-        $endDate = date('Y-m-d', strtotime('-1 day'));
-        $startDate = date('Y-m-d', strtotime("-{$days} days"));
-
-        $data = $this->ga4Daily->getByDateRange($projectId, $startDate, $endDate);
-
-        $filename = "ga4_data_{$project['domain']}_" . date('Y-m-d') . ".csv";
-
-        $this->outputCsv($filename, [
-            ['Data', 'Sessioni', 'Utenti', 'Nuovi Utenti', 'Bounce Rate', 'Engagement Rate', 'Add to Cart', 'Acquisti', 'Revenue'],
-        ], array_map(fn($d) => [
-            $d['date'],
-            $d['sessions'],
-            $d['users'],
-            $d['new_users'],
-            round($d['bounce_rate'] * 100, 2) . '%',
-            round($d['engagement_rate'] * 100, 2) . '%',
-            $d['add_to_carts'],
-            $d['purchases'],
-            number_format($d['revenue'], 2),
-        ], $data));
-    }
-
-    /**
-     * Export revenue attribution
-     */
-    public function revenue(int $projectId): void
-    {
-        $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
-
-        if (!$project) {
-            $_SESSION['_flash']['error'] = 'Progetto non trovato';
-            Router::redirect('/seo-tracking');
-            return;
-        }
-
-        $days = (int) ($_GET['days'] ?? 30);
-        $endDate = date('Y-m-d', strtotime('-1 day'));
-        $startDate = date('Y-m-d', strtotime("-{$days} days"));
-
-        $data = $this->keywordRevenue->getTopByRevenue($projectId, $startDate, $endDate, 1000);
-
-        $filename = "revenue_attribution_{$project['domain']}_" . date('Y-m-d') . ".csv";
-
-        $this->outputCsv($filename, [
-            ['Keyword', 'Landing Page', 'Click', 'Acquisti', 'Revenue'],
-        ], array_map(fn($d) => [
-            $d['keyword'],
-            $d['landing_page'] ?? '',
-            $d['total_clicks'],
-            round($d['total_purchases'], 1),
-            number_format($d['total_revenue'], 2),
-        ], $data));
-    }
-
-    /**
      * Export completo progetto
      */
     public function full(int $projectId): void
@@ -215,22 +136,6 @@ class ExportController
             $d['date'], $d['total_clicks'], $d['total_impressions'],
             round($d['avg_ctr'] * 100, 2) . '%', round($d['avg_position'], 1),
         ], $gscData));
-
-        // GA4 Daily
-        $ga4Data = $this->ga4Daily->getByDateRange($projectId, $startDate, $endDate);
-        $this->writeCsvFile($tempDir . '/ga4_daily.csv', [
-            ['Data', 'Sessioni', 'Utenti', 'Acquisti', 'Revenue'],
-        ], array_map(fn($d) => [
-            $d['date'], $d['sessions'], $d['users'], $d['purchases'], number_format($d['revenue'], 2),
-        ], $ga4Data));
-
-        // Revenue
-        $revenueData = $this->keywordRevenue->getTopByRevenue($projectId, $startDate, $endDate, 500);
-        $this->writeCsvFile($tempDir . '/revenue.csv', [
-            ['Keyword', 'Click', 'Acquisti', 'Revenue'],
-        ], array_map(fn($d) => [
-            $d['keyword'], $d['total_clicks'], round($d['total_purchases'], 1), number_format($d['total_revenue'], 2),
-        ], $revenueData));
 
         // Crea ZIP
         $zip = new \ZipArchive();

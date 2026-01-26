@@ -7,9 +7,7 @@ use Core\Auth;
 use Modules\SeoTracking\Models\Project;
 use Modules\SeoTracking\Models\Keyword;
 use Modules\SeoTracking\Models\GscDaily;
-use Modules\SeoTracking\Models\Ga4Daily;
 use Modules\SeoTracking\Models\Alert;
-use Modules\SeoTracking\Models\KeywordRevenue;
 use Modules\SeoTracking\Models\KeywordPosition;
 
 /**
@@ -21,9 +19,7 @@ class ApiController
     private Project $project;
     private Keyword $keyword;
     private GscDaily $gscDaily;
-    private Ga4Daily $ga4Daily;
     private Alert $alert;
-    private KeywordRevenue $keywordRevenue;
     private KeywordPosition $keywordPosition;
 
     public function __construct()
@@ -31,9 +27,7 @@ class ApiController
         $this->project = new Project();
         $this->keyword = new Keyword();
         $this->gscDaily = new GscDaily();
-        $this->ga4Daily = new Ga4Daily();
         $this->alert = new Alert();
-        $this->keywordRevenue = new KeywordRevenue();
         $this->keywordPosition = new KeywordPosition();
     }
 
@@ -47,7 +41,7 @@ class ApiController
     }
 
     /**
-     * Dati grafico traffico
+     * Dati grafico traffico (GSC-based)
      */
     public function trafficChart(int $id): string
     {
@@ -60,24 +54,15 @@ class ApiController
         $startDate = date('Y-m-d', strtotime("-{$days} days"));
 
         $gscData = $this->gscDaily->getByDateRange($id, $startDate, $endDate);
-        $ga4Data = $this->ga4Daily->getByDateRange($id, $startDate, $endDate);
-
-        // Indicizza GA4 per data
-        $ga4ByDate = [];
-        foreach ($ga4Data as $row) {
-            $ga4ByDate[$row['date']] = $row;
-        }
 
         $labels = [];
         $clicks = [];
         $impressions = [];
-        $sessions = [];
 
         foreach ($gscData as $row) {
             $labels[] = date('d/m', strtotime($row['date']));
             $clicks[] = (int) $row['total_clicks'];
             $impressions[] = (int) $row['total_impressions'];
-            $sessions[] = (int) ($ga4ByDate[$row['date']]['sessions'] ?? 0);
         }
 
         return View::json([
@@ -90,56 +75,10 @@ class ApiController
                     'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
                 ],
                 [
-                    'label' => 'Sessioni',
-                    'data' => $sessions,
+                    'label' => 'Impressioni',
+                    'data' => $impressions,
                     'borderColor' => '#10b981',
                     'backgroundColor' => 'rgba(16, 185, 129, 0.1)',
-                ],
-            ],
-        ]);
-    }
-
-    /**
-     * Dati grafico revenue
-     */
-    public function revenueChart(int $id): string
-    {
-        if (!$this->checkProject($id)) {
-            return View::json(['error' => 'Progetto non trovato'], 404);
-        }
-
-        $days = (int) ($_GET['days'] ?? 30);
-        $endDate = date('Y-m-d', strtotime('-1 day'));
-        $startDate = date('Y-m-d', strtotime("-{$days} days"));
-
-        $dailyRevenue = $this->keywordRevenue->getDailyRevenue($id, $startDate, $endDate);
-
-        $labels = [];
-        $revenue = [];
-        $purchases = [];
-
-        foreach ($dailyRevenue as $row) {
-            $labels[] = date('d/m', strtotime($row['date']));
-            $revenue[] = round((float) $row['total_revenue'], 2);
-            $purchases[] = (int) $row['total_purchases'];
-        }
-
-        return View::json([
-            'labels' => $labels,
-            'datasets' => [
-                [
-                    'label' => 'Revenue (€)',
-                    'data' => $revenue,
-                    'borderColor' => '#f59e0b',
-                    'backgroundColor' => 'rgba(245, 158, 11, 0.1)',
-                    'yAxisID' => 'y',
-                ],
-                [
-                    'label' => 'Acquisti',
-                    'data' => $purchases,
-                    'borderColor' => '#8b5cf6',
-                    'backgroundColor' => 'rgba(139, 92, 246, 0.1)',
-                    'yAxisID' => 'y1',
                 ],
             ],
         ]);
@@ -223,7 +162,6 @@ class ApiController
             'sync_status' => $project['sync_status'],
             'last_sync_at' => $project['last_sync_at'],
             'gsc_connected' => (bool) $project['gsc_connected'],
-            'ga4_connected' => (bool) $project['ga4_connected'],
         ]);
     }
 
@@ -251,15 +189,7 @@ class ApiController
         }
 
         $limit = (int) ($_GET['limit'] ?? 10);
-        $orderBy = $_GET['order_by'] ?? 'clicks';
-
-        if ($orderBy === 'revenue') {
-            $endDate = date('Y-m-d', strtotime('-1 day'));
-            $startDate = date('Y-m-d', strtotime('-30 days'));
-            $keywords = $this->keywordRevenue->getTopByRevenue($id, $startDate, $endDate, $limit);
-        } else {
-            $keywords = $this->keyword->getTopByClicks($id, $limit);
-        }
+        $keywords = $this->keyword->getTopByClicks($id, $limit);
 
         return View::json(['keywords' => $keywords]);
     }
@@ -277,5 +207,27 @@ class ApiController
         $alerts = $this->alert->getNew($id, $limit);
 
         return View::json(['alerts' => $alerts]);
+    }
+
+    /**
+     * Keyword tracciate del progetto (per rank-check)
+     */
+    public function trackedKeywords(int $id): string
+    {
+        if (!$this->checkProject($id)) {
+            return View::json(['error' => 'Progetto non trovato'], 404);
+        }
+
+        // Prendi tutte le keyword del progetto (stesso metodo usato in Keywords view)
+        $keywords = $this->keyword->allWithPositions($id, 30);
+
+        // Filtra solo le tracciate (is_tracked = 1)
+        $tracked = array_filter($keywords, fn($k) => !empty($k['is_tracked']));
+
+        return View::json([
+            'success' => true,
+            'keywords' => array_values($tracked),
+            'count' => count($tracked),
+        ]);
     }
 }

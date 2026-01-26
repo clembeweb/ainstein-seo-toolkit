@@ -2,7 +2,7 @@
     <!-- Header -->
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
-            <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/dashboard') ?>" class="inline-flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 mb-2">
+            <a href="<?= url('/seo-tracking/project/' . $project['id']) ?>" class="inline-flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 mb-2">
                 <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                 </svg>
@@ -14,7 +14,7 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Left Column: Connections -->
+        <!-- Left Column: GSC Connection -->
         <div class="lg:col-span-1 space-y-6">
             <!-- GSC Connection -->
             <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
@@ -55,7 +55,7 @@
                             </svg>
                             Sync automatico ogni giorno alle 04:00
                         </div>
-                        <form action="<?= url('/seo-tracking/projects/' . $project['id'] . '/gsc/disconnect') ?>" method="POST">
+                        <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/gsc/disconnect') ?>" method="POST">
                             <?= csrf_field() ?>
                             <button type="submit" class="w-full px-4 py-2 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm">
                                 Disconnetti GSC
@@ -63,7 +63,7 @@
                         </form>
                     </div>
                     <?php else: ?>
-                    <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/gsc/connect') ?>" class="block w-full px-4 py-2 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition-colors text-sm text-center">
+                    <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/gsc/connect') ?>" class="block w-full px-4 py-2 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition-colors text-sm text-center">
                         Connetti Search Console
                     </a>
                     <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">
@@ -72,66 +72,11 @@
                     <?php endif; ?>
                 </div>
             </div>
-
-            <!-- GA4 Connection -->
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-                <div class="p-5 border-b border-slate-200 dark:border-slate-700">
-                    <div class="flex items-center gap-3">
-                        <div class="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-                            <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="font-medium text-slate-900 dark:text-white">Google Analytics 4</h3>
-                            <?php if ($project['ga4_connected']): ?>
-                            <span class="text-xs text-emerald-600 dark:text-emerald-400">Connesso</span>
-                            <?php else: ?>
-                            <span class="text-xs text-slate-500 dark:text-slate-400">Non connesso</span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-                <div class="p-5">
-                    <?php if ($project['ga4_connected']): ?>
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between text-sm">
-                            <span class="text-slate-500 dark:text-slate-400">Property:</span>
-                            <span class="font-medium text-slate-900 dark:text-white"><?= e($ga4Connection['property_name'] ?? $ga4Connection['property_id'] ?? '-') ?></span>
-                        </div>
-                        <div class="flex items-center justify-between text-sm">
-                            <span class="text-slate-500 dark:text-slate-400">Ultimo sync:</span>
-                            <span class="font-medium text-slate-900 dark:text-white"><?= isset($ga4Connection['last_sync_at']) && $ga4Connection['last_sync_at'] ? date('d/m/Y H:i', strtotime($ga4Connection['last_sync_at'])) : 'Mai' ?></span>
-                        </div>
-                        <div class="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-700/50 rounded-lg p-2">
-                            <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            Sync automatico ogni giorno alle 04:00
-                        </div>
-                        <form action="<?= url('/seo-tracking/projects/' . $project['id'] . '/ga4/disconnect') ?>" method="POST">
-                            <?= csrf_field() ?>
-                            <button type="submit" class="w-full px-4 py-2 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm">
-                                Disconnetti GA4
-                            </button>
-                        </form>
-                    </div>
-                    <?php else: ?>
-                    <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/ga4/connect') ?>" class="block w-full px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors text-sm text-center">
-                        Connetti GA4
-                    </a>
-                    <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">
-                        Richiede autorizzazione OAuth2 per accedere ai dati GA4.
-                    </p>
-                    <?php endif; ?>
-                </div>
-            </div>
-
         </div>
 
         <!-- Right Column: Settings Form -->
         <div class="lg:col-span-2">
-            <form action="<?= url('/seo-tracking/projects/' . $project['id'] . '/settings') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+            <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/settings') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
                 <?= csrf_field() ?>
                 <!-- General Settings -->
                 <div class="p-6 space-y-6">
@@ -262,30 +207,16 @@
                                 </div>
                             </div>
 
-                            <!-- Traffic Alerts -->
+                            <!-- Traffic Alerts (GSC-based) -->
                             <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg space-y-3">
                                 <label class="flex items-center gap-3 cursor-pointer">
                                     <input type="checkbox" name="traffic_alert_enabled" value="1" <?= ($project['alert_settings']['traffic_alert_enabled'] ?? 0) ? 'checked' : '' ?>
                                            class="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
-                                    <span class="text-sm font-medium text-slate-900 dark:text-white">Alert calo traffico</span>
+                                    <span class="text-sm font-medium text-slate-900 dark:text-white">Alert calo traffico (GSC)</span>
                                 </label>
                                 <div class="ml-7">
                                     <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Soglia calo (%)</label>
                                     <input type="number" name="traffic_drop_threshold" value="<?= $project['alert_settings']['traffic_drop_threshold'] ?? 20 ?>" min="5" max="90"
-                                           class="w-32 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                </div>
-                            </div>
-
-                            <!-- Revenue Alerts -->
-                            <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg space-y-3">
-                                <label class="flex items-center gap-3 cursor-pointer">
-                                    <input type="checkbox" name="revenue_alert_enabled" value="1" <?= ($project['alert_settings']['revenue_alert_enabled'] ?? 0) ? 'checked' : '' ?>
-                                           class="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
-                                    <span class="text-sm font-medium text-slate-900 dark:text-white">Alert calo revenue</span>
-                                </label>
-                                <div class="ml-7">
-                                    <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Soglia calo (%)</label>
-                                    <input type="number" name="revenue_drop_threshold" value="<?= $project['alert_settings']['revenue_drop_threshold'] ?? 20 ?>" min="5" max="90"
                                            class="w-32 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                                 </div>
                             </div>
@@ -338,9 +269,9 @@
                     <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
                         Eliminando il progetto verranno cancellati tutti i dati storici, keyword, report e connessioni. Questa azione non e reversibile.
                     </p>
-                    <form action="<?= url('/seo-tracking/projects/' . $project['id'] . '/delete') ?>" method="POST" onsubmit="return confirm('Sei sicuro di voler eliminare questo progetto? Tutti i dati verranno persi.');">
+                    <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/delete') ?>" method="POST" onsubmit="return confirm('Sei sicuro di voler eliminare questo progetto? Tutti i dati verranno persi.');">
                         <?= csrf_field() ?>
-                        
+
                         <button type="submit" class="px-4 py-2 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm">
                             Elimina Progetto
                         </button>
@@ -350,4 +281,3 @@
         </div>
     </div>
 </div>
-

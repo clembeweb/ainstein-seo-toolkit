@@ -1,7 +1,7 @@
 <div class="max-w-2xl mx-auto space-y-6">
     <!-- Header -->
     <div>
-        <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/keywords') ?>" class="inline-flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 mb-4">
+        <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords') ?>" class="inline-flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 mb-4">
             <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -14,7 +14,7 @@
     </div>
 
     <!-- Manual Input Form -->
-    <form action="<?= url('/seo-tracking/projects/' . $project['id'] . '/keywords/store') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/store') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
         <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
         <div class="p-6 space-y-6">
             <!-- Keywords Input -->
@@ -26,6 +26,25 @@
                           class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono text-sm"
                           placeholder="scarpe running uomo&#10;migliori scarpe da corsa&#10;scarpe nike running"></textarea>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Una keyword per riga</p>
+            </div>
+
+            <!-- Location -->
+            <div>
+                <label for="location_code" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Location <span class="text-red-500">*</span>
+                </label>
+                <select name="location_code" id="location_code" required
+                        class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    <?php foreach ($locations ?? [] as $loc): ?>
+                    <option value="<?= e($loc['country_code']) ?>" <?= ($loc['country_code'] === 'IT') ? 'selected' : '' ?>>
+                        <?= e($loc['name']) ?> (<?= e($loc['country_code']) ?>)
+                    </option>
+                    <?php endforeach; ?>
+                    <?php if (empty($locations)): ?>
+                    <option value="IT" selected>Italia (IT)</option>
+                    <?php endif; ?>
+                </select>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Paese per verifica posizionamento e volumi di ricerca</p>
             </div>
 
             <!-- Group -->
@@ -61,7 +80,7 @@
 
         <!-- Footer -->
         <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 rounded-b-lg flex items-center justify-between">
-            <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/keywords') ?>" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+            <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords') ?>" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                 Annulla
             </a>
             <button type="submit" class="px-6 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
@@ -75,7 +94,7 @@
         <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <h2 class="font-medium text-slate-900 dark:text-white">Importa da CSV</h2>
         </div>
-        <form action="<?= url('/seo-tracking/projects/' . $project['id'] . '/keywords/import') ?>" method="POST" enctype="multipart/form-data" class="p-6">
+        <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/import') ?>" method="POST" enctype="multipart/form-data" class="p-6">
             <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
             <div class="flex items-center gap-4">
                 <div class="flex-1">

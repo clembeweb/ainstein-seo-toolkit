@@ -38,25 +38,47 @@ class Project
     }
 
     /**
-     * Progetti con statistiche
+     * Progetti con statistiche (basato su rank checker, non GSC)
      */
     public function allWithStats(int $userId): array
     {
         $sql = "
             SELECT
                 p.*,
-                (SELECT COUNT(*) FROM st_keywords WHERE project_id = p.id) as keywords_count,
+                (SELECT COUNT(*) FROM st_keywords WHERE project_id = p.id AND is_tracked = 1) as keyword_count,
+                (SELECT COUNT(DISTINCT keyword) FROM st_rank_checks WHERE project_id = p.id) as checked_count,
                 (SELECT COUNT(*) FROM st_alerts WHERE project_id = p.id AND status = 'new') as alerts_count,
-                gsc.property_url as gsc_property,
-                ga4.property_name as ga4_property
+                gsc.property_url as gsc_property
             FROM {$this->table} p
             LEFT JOIN st_gsc_connections gsc ON p.id = gsc.project_id AND gsc.is_active = 1
-            LEFT JOIN st_ga4_connections ga4 ON p.id = ga4.project_id AND ga4.is_active = 1
             WHERE p.user_id = ?
             ORDER BY p.created_at DESC
         ";
 
-        return Database::fetchAll($sql, [$userId]);
+        $projects = Database::fetchAll($sql, [$userId]);
+
+        // Aggiungi avg_position da ultimo rank check per ogni progetto
+        foreach ($projects as &$project) {
+            $avgPos = Database::fetch("
+                SELECT AVG(latest.serp_position) as avg_position
+                FROM (
+                    SELECT rc1.keyword, rc1.serp_position
+                    FROM st_rank_checks rc1
+                    WHERE rc1.project_id = ?
+                      AND rc1.serp_position IS NOT NULL
+                      AND rc1.checked_at = (
+                          SELECT MAX(rc2.checked_at)
+                          FROM st_rank_checks rc2
+                          WHERE rc2.project_id = rc1.project_id
+                            AND rc2.keyword = rc1.keyword
+                            AND rc2.serp_position IS NOT NULL
+                      )
+                ) latest
+            ", [$project['id']]);
+            $project['avg_position'] = $avgPos ? round((float)$avgPos['avg_position'], 1) : 0;
+        }
+
+        return $projects;
     }
 
     /**
@@ -73,13 +95,6 @@ class Project
         // GSC Connection
         $project['gsc_connection'] = Database::fetch(
             "SELECT * FROM st_gsc_connections WHERE project_id = ?",
-            [$id]
-        );
-
-        // GA4 Connection
-        $project['ga4_connection'] = Database::fetch(
-            "SELECT id, project_id, property_id, property_name, is_active, last_sync_at, last_error, created_at
-             FROM st_ga4_connections WHERE project_id = ?",
             [$id]
         );
 
@@ -114,16 +129,6 @@ class Project
             WHERE project_id = ? AND date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
         ", [$projectId]);
 
-        // Last 7 days GA4 data
-        $ga4Stats = Database::fetch("
-            SELECT
-                SUM(sessions) as total_sessions,
-                SUM(revenue) as total_revenue,
-                SUM(purchases) as total_purchases
-            FROM st_ga4_daily
-            WHERE project_id = ? AND date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-        ", [$projectId]);
-
         // Keywords in top positions
         $topPositions = Database::fetch("
             SELECT
@@ -143,9 +148,6 @@ class Project
             'impressions_7d' => (int) ($gscStats['total_impressions'] ?? 0),
             'avg_position_7d' => round((float) ($gscStats['avg_position'] ?? 0), 1),
             'avg_ctr_7d' => round((float) ($gscStats['avg_ctr'] ?? 0) * 100, 2),
-            'sessions_7d' => (int) ($ga4Stats['total_sessions'] ?? 0),
-            'revenue_7d' => (float) ($ga4Stats['total_revenue'] ?? 0),
-            'purchases_7d' => (int) ($ga4Stats['total_purchases'] ?? 0),
             'top3' => (int) ($topPositions['top3'] ?? 0),
             'top10' => (int) ($topPositions['top10'] ?? 0),
             'top20' => (int) ($topPositions['top20'] ?? 0),
@@ -175,11 +177,105 @@ class Project
     }
 
     /**
-     * Elimina progetto
+     * Elimina progetto e tutti i dati correlati
+     * Elimina in batch per evitare timeout su grandi dataset
      */
     public function delete(int $id, int $userId): bool
     {
-        return Database::delete($this->table, 'id = ? AND user_id = ?', [$id, $userId]) > 0;
+        // Verifica che il progetto appartenga all'utente
+        $project = $this->find($id, $userId);
+        if (!$project) {
+            return false;
+        }
+
+        // Aumenta timeout per operazioni lunghe
+        set_time_limit(300);
+
+        // Riconnetti per evitare timeout connessione
+        Database::reconnect();
+
+        // Elimina tabelle con molti dati in batch (ordine importante)
+        $largeTables = [
+            'st_gsc_data',
+            'st_ga4_data',
+            'st_keyword_positions',
+            'st_keyword_revenue',
+        ];
+
+        foreach ($largeTables as $table) {
+            $this->deleteInBatches($table, $id);
+        }
+
+        // Elimina st_keyword_group_members (FK su keyword_id, non project_id)
+        $keywordIds = Database::fetchAll("SELECT id FROM st_keywords WHERE project_id = ?", [$id]);
+        if (!empty($keywordIds)) {
+            $ids = array_column($keywordIds, 'id');
+            if (!empty($ids)) {
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                try {
+                    Database::execute("DELETE FROM st_keyword_group_members WHERE keyword_id IN ({$placeholders})", $ids);
+                } catch (\Exception $e) {
+                    // Ignora se tabella vuota
+                }
+            }
+        }
+
+        // Elimina altre tabelle correlate (più piccole)
+        $smallerTables = [
+            'st_rank_checks',
+            'st_keywords',
+            'st_keyword_groups',
+            'st_gsc_daily',
+            'st_ga4_daily',
+            'st_gsc_connections',
+            'st_ga4_connections',
+            'st_alerts',
+            'st_alert_settings',
+            'st_ai_reports',
+            'st_sync_log',
+        ];
+
+        foreach ($smallerTables as $table) {
+            try {
+                Database::execute("DELETE FROM {$table} WHERE project_id = ?", [$id]);
+            } catch (\Exception $e) {
+                // Ignora errori se tabella non esiste o già vuota
+                error_log("[SeoTracking] Warning deleting from {$table}: " . $e->getMessage());
+            }
+        }
+
+        // Infine elimina il progetto
+        return Database::delete($this->table, 'id = ?', [$id]) > 0;
+    }
+
+    /**
+     * Elimina record in batch per evitare timeout
+     */
+    private function deleteInBatches(string $table, int $projectId, int $batchSize = 10000): void
+    {
+        $deleted = 0;
+        $maxIterations = 1000; // Safety limit
+        $iteration = 0;
+
+        do {
+            $affectedRows = Database::execute(
+                "DELETE FROM {$table} WHERE project_id = ? LIMIT {$batchSize}",
+                [$projectId]
+            );
+
+            $deleted += $affectedRows;
+            $iteration++;
+
+            // Log progresso per tabelle grandi
+            if ($deleted > 0 && $deleted % 50000 === 0) {
+                error_log("[SeoTracking] Deleted {$deleted} rows from {$table} for project {$projectId}");
+            }
+
+        } while ($affectedRows > 0 && $iteration < $maxIterations);
+
+        if ($deleted > 0) {
+            error_log("[SeoTracking] Total deleted from {$table}: {$deleted} rows for project {$projectId}");
+        }
     }
 
     /**
@@ -205,14 +301,6 @@ class Project
     }
 
     /**
-     * Aggiorna stato connessione GA4
-     */
-    public function setGa4Connected(int $id, bool $connected): void
-    {
-        Database::update($this->table, ['ga4_connected' => $connected ? 1 : 0], 'id = ?', [$id]);
-    }
-
-    /**
      * Progetti con sync abilitato
      */
     public function getWithSyncEnabled(): array
@@ -228,7 +316,7 @@ class Project
     public function getActiveForSync(): array
     {
         return Database::fetchAll(
-            "SELECT * FROM {$this->table} WHERE sync_enabled = 1 AND (gsc_connected = 1 OR ga4_connected = 1) ORDER BY last_sync_at ASC"
+            "SELECT * FROM {$this->table} WHERE sync_enabled = 1 AND gsc_connected = 1 ORDER BY last_sync_at ASC"
         );
     }
 

@@ -1,7 +1,7 @@
 <div class="max-w-2xl mx-auto space-y-6">
     <!-- Header -->
     <div>
-        <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/keywords/' . $keyword['id']) ?>" class="inline-flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 mb-4">
+        <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/' . $keyword['id']) ?>" class="inline-flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 mb-4">
             <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -12,7 +12,7 @@
     </div>
 
     <!-- Form -->
-    <form action="<?= url('/seo-tracking/projects/' . $project['id'] . '/keywords/' . $keyword['id'] . '/update') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/' . $keyword['id'] . '/update') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
         <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
         <input type="hidden" name="_method" value="PUT">
 
@@ -88,7 +88,7 @@
 
         <!-- Footer -->
         <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 rounded-b-lg flex items-center justify-between">
-            <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/keywords/' . $keyword['id']) ?>" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+            <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/' . $keyword['id']) ?>" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                 Annulla
             </a>
             <button type="submit" class="px-6 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
@@ -104,7 +104,7 @@
             <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
                 Eliminando la keyword verranno cancellati anche tutti i dati storici di posizione associati.
             </p>
-            <form action="<?= url('/seo-tracking/projects/' . $project['id'] . '/keywords/' . $keyword['id'] . '/delete') ?>" method="POST" onsubmit="return confirm('Sei sicuro di voler eliminare questa keyword?');">
+            <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/' . $keyword['id'] . '/delete') ?>" method="POST" onsubmit="return confirm('Sei sicuro di voler eliminare questa keyword?');">
                 <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
                 <button type="submit" class="px-4 py-2 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm">
                     Elimina Keyword

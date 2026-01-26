@@ -2,7 +2,7 @@
     <!-- Header -->
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
-            <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/keywords') ?>" class="inline-flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 mb-2">
+            <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords') ?>" class="inline-flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 mb-2">
                 <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                 </svg>
@@ -19,7 +19,7 @@
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400"><?= e($project['name']) ?></p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-3">
-            <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/keywords/' . $keyword['id'] . '/edit') ?>" class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+            <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/' . $keyword['id'] . '/edit') ?>" class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                 </svg>
@@ -63,12 +63,16 @@
             </p>
         </div>
 
-        <!-- Revenue -->
+        <!-- CTR -->
         <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
-            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Revenue Attribuito</p>
-            <?php $totalRevenue = array_sum(array_column($revenue, 'revenue')); ?>
-            <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                €<?= number_format($totalRevenue, 2) ?>
+            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">CTR</p>
+            <?php
+            $clicks = $keyword['last_clicks'] ?? 0;
+            $impressions = $keyword['last_impressions'] ?? 0;
+            $ctr = $impressions > 0 ? ($clicks / $impressions) * 100 : 0;
+            ?>
+            <p class="text-3xl font-bold text-slate-900 dark:text-white mt-1">
+                <?= number_format($ctr, 2) ?>%
             </p>
         </div>
     </div>
@@ -171,54 +175,6 @@
         </div>
     </div>
 
-    <!-- Revenue Attribution -->
-    <?php if (!empty($revenue)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-            <h2 class="font-semibold text-slate-900 dark:text-white">Revenue Attribuito per Landing Page</h2>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-slate-50 dark:bg-slate-800/50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Landing Page</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Revenue</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Acquisti</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Click</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                    <?php
-                    // Raggruppa per landing page
-                    $byPage = [];
-                    foreach ($revenue as $row) {
-                        $page = $row['landing_page'];
-                        if (!isset($byPage[$page])) {
-                            $byPage[$page] = ['revenue' => 0, 'purchases' => 0, 'clicks' => 0];
-                        }
-                        $byPage[$page]['revenue'] += $row['revenue'];
-                        $byPage[$page]['purchases'] += $row['purchases'];
-                        $byPage[$page]['clicks'] += $row['clicks'];
-                    }
-                    arsort($byPage);
-                    foreach ($byPage as $page => $data):
-                    ?>
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                        <td class="px-6 py-4">
-                            <p class="text-sm font-medium text-slate-900 dark:text-white truncate max-w-md"><?= e($page) ?></p>
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            <span class="text-sm font-medium text-emerald-600 dark:text-emerald-400">€<?= number_format($data['revenue'], 2) ?></span>
-                        </td>
-                        <td class="px-6 py-4 text-right text-sm text-slate-500 dark:text-slate-400"><?= number_format($data['purchases'], 1) ?></td>
-                        <td class="px-6 py-4 text-right text-sm text-slate-500 dark:text-slate-400"><?= number_format($data['clicks']) ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <?php endif; ?>
 </div>
 
 <?php if (!empty($positions)): ?>
@@ -236,7 +192,7 @@ Chart.defaults.color = textColor;
 
 async function loadChart() {
     const days = document.getElementById('chartDays').value;
-    const response = await fetch(`<?= url('/seo-tracking/projects/' . $project['id'] . '/keywords/' . $keyword['id'] . '/chart') ?>?days=${days}`);
+    const response = await fetch(`<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/' . $keyword['id'] . '/chart') ?>?days=${days}`);
     const data = await response.json();
 
     if (positionChart) positionChart.destroy();

@@ -4,7 +4,6 @@ namespace Modules\SeoTracking\Controllers;
 
 use Core\Database;
 use Modules\SeoTracking\Services\GscService;
-use Modules\SeoTracking\Services\Ga4Service;
 
 /**
  * CronController
@@ -18,7 +17,6 @@ class CronController
      *
      * Esegue sync degli ultimi 5 giorni per compensare:
      * - GSC: delay di 3 giorni nei dati
-     * - GA4: delay di 1 giorno nei dati
      *
      * Setup cron (ogni giorno alle 4:00):
      * 0 4 * * * curl -s "https://tuodominio.com/seo-tracking/cron/daily-sync?secret=CRON_SECRET"
@@ -42,11 +40,11 @@ class CronController
 
         $db = Database::getInstance();
 
-        // Trova tutti i progetti con GSC o GA4 connessi
+        // Trova tutti i progetti con GSC connesso
         $projects = Database::fetchAll("
-            SELECT p.id, p.name, p.gsc_connected, p.ga4_connected
+            SELECT p.id, p.name, p.gsc_connected
             FROM st_projects p
-            WHERE (p.gsc_connected = 1 OR p.ga4_connected = 1)
+            WHERE p.gsc_connected = 1
             AND p.deleted_at IS NULL
         ");
 
@@ -57,8 +55,7 @@ class CronController
             $result = [
                 'project_id' => $project['id'],
                 'name' => $project['name'],
-                'gsc' => null,
-                'ga4' => null
+                'gsc' => null
             ];
 
             // Sync GSC (ultimi 5 giorni per compensare delay)
@@ -80,28 +77,6 @@ class CronController
                 } catch (\Throwable $e) {
                     $result['gsc'] = ['success' => false, 'error' => $e->getMessage()];
                     error_log("[Cron] GSC sync failed for project {$project['id']}: " . $e->getMessage());
-                }
-            }
-
-            // Sync GA4 (ultimi 3 giorni)
-            if ($project['ga4_connected']) {
-                try {
-                    $ga4Service = new Ga4Service();
-                    $endDate = date('Y-m-d', strtotime('-1 day'));
-                    $startDate = date('Y-m-d', strtotime('-3 days')); // 3 giorni di dati
-
-                    $count = $ga4Service->syncDateRange($project['id'], $startDate, $endDate);
-                    $result['ga4'] = ['success' => true, 'records' => $count];
-
-                    // Aggiorna timestamp
-                    Database::execute(
-                        "UPDATE st_ga4_connections SET last_sync_at = NOW() WHERE project_id = ?",
-                        [$project['id']]
-                    );
-
-                } catch (\Throwable $e) {
-                    $result['ga4'] = ['success' => false, 'error' => $e->getMessage()];
-                    error_log("[Cron] GA4 sync failed for project {$project['id']}: " . $e->getMessage());
                 }
             }
 
@@ -145,8 +120,7 @@ class CronController
         $stats = Database::fetch("
             SELECT
                 COUNT(*) as total_projects,
-                SUM(gsc_connected) as gsc_connected,
-                SUM(ga4_connected) as ga4_connected
+                SUM(gsc_connected) as gsc_connected
             FROM st_projects
             WHERE deleted_at IS NULL
         ");
@@ -158,7 +132,6 @@ class CronController
             'projects' => [
                 'total' => (int) $stats['total_projects'],
                 'gsc_connected' => (int) $stats['gsc_connected'],
-                'ga4_connected' => (int) $stats['ga4_connected'],
             ]
         ], JSON_PRETTY_PRINT);
         exit;
@@ -209,8 +182,7 @@ class CronController
             'project_id' => $projectId,
             'name' => $project['name'],
             'days' => $days,
-            'gsc' => null,
-            'ga4' => null
+            'gsc' => null
         ];
 
         // Sync GSC
@@ -230,26 +202,6 @@ class CronController
 
             } catch (\Throwable $e) {
                 $result['gsc'] = ['success' => false, 'error' => $e->getMessage()];
-            }
-        }
-
-        // Sync GA4
-        if ($project['ga4_connected']) {
-            try {
-                $ga4Service = new Ga4Service();
-                $endDate = date('Y-m-d', strtotime('-1 day'));
-                $startDate = date('Y-m-d', strtotime("-" . ($days + 1) . " days"));
-
-                $count = $ga4Service->syncDateRange($projectId, $startDate, $endDate);
-                $result['ga4'] = ['success' => true, 'records' => $count];
-
-                Database::execute(
-                    "UPDATE st_ga4_connections SET last_sync_at = NOW() WHERE project_id = ?",
-                    [$projectId]
-                );
-
-            } catch (\Throwable $e) {
-                $result['ga4'] = ['success' => false, 'error' => $e->getMessage()];
             }
         }
 

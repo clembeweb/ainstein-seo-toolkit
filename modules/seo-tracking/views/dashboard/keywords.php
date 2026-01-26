@@ -214,7 +214,7 @@ $stats = $stats ?? [];
 <!-- JavaScript -->
 <script>
 const projectId = <?= (int)$project['id'] ?>;
-const baseUrl = '<?= url('/seo-tracking/projects/' . $project['id']) ?>';
+const baseUrl = '<?= url('/seo-tracking/project/' . $project['id']) ?>';
 
 function toggleSelectAll() {
     const checked = document.getElementById('selectAll').checked;

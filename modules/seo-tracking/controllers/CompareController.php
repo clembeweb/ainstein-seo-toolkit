@@ -4,6 +4,7 @@ namespace Modules\SeoTracking\Controllers;
 
 use Core\View;
 use Core\Auth;
+use Core\ModuleLoader;
 use Modules\SeoTracking\Models\Project;
 use Modules\SeoTracking\Services\PositionCompareService;
 
@@ -16,7 +17,7 @@ class CompareController
     /**
      * Vista principale confronto posizioni
      */
-    public function index(int $projectId): void
+    public function index(int $projectId): string
     {
         $user = Auth::user();
         $projectModel = new Project();
@@ -51,7 +52,10 @@ class CompareController
         // Tab attiva
         $activeTab = $_GET['tab'] ?? 'all';
 
-        View::render('seo-tracking::compare/index', [
+        return View::render('seo-tracking/trend/index', [
+            'title' => $project['name'] . ' - Trend',
+            'user' => $user,
+            'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
             'results' => $results,
             'dateRange' => $dateRange,

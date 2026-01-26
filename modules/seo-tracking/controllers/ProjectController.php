@@ -9,7 +9,6 @@ use Core\ModuleLoader;
 use Core\Database;
 use Modules\SeoTracking\Models\Project;
 use Modules\SeoTracking\Models\GscConnection;
-use Modules\SeoTracking\Models\Ga4Connection;
 use Modules\SeoTracking\Models\AlertSettings;
 
 /**
@@ -20,14 +19,12 @@ class ProjectController
 {
     private Project $project;
     private GscConnection $gscConnection;
-    private Ga4Connection $ga4Connection;
     private AlertSettings $alertSettings;
 
     public function __construct()
     {
         $this->project = new Project();
         $this->gscConnection = new GscConnection();
-        $this->ga4Connection = new Ga4Connection();
         $this->alertSettings = new AlertSettings();
     }
 
@@ -97,7 +94,7 @@ class ProjectController
 
         if (!empty($errors)) {
             $_SESSION['_flash']['error'] = implode('. ', $errors);
-            Router::redirect('/seo-tracking/projects/create');
+            Router::redirect('/seo-tracking/project/create');
             return;
         }
 
@@ -113,11 +110,11 @@ class ProjectController
             ]);
 
             $_SESSION['_flash']['success'] = 'Progetto creato con successo! Ora connetti Google Search Console.';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/settings');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/settings');
 
         } catch (\Exception $e) {
             $_SESSION['_flash']['error'] = 'Errore nella creazione: ' . $e->getMessage();
-            Router::redirect('/seo-tracking/projects/create');
+            Router::redirect('/seo-tracking/project/create');
         }
     }
 
@@ -146,7 +143,6 @@ class ProjectController
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
             'gscConnection' => $project['gsc_connection'] ?? null,
-            'ga4Connection' => $project['ga4_connection'] ?? null,
             'gscRedirectUri' => $gscRedirectUri,
         ]);
     }
@@ -189,7 +185,7 @@ class ProjectController
 
         if (!empty($errors)) {
             $_SESSION['_flash']['error'] = implode('. ', $errors);
-            Router::redirect('/seo-tracking/projects/' . $id . '/settings');
+            Router::redirect('/seo-tracking/project/' . $id . '/settings');
             return;
         }
 
@@ -212,19 +208,17 @@ class ProjectController
                 'position_alert_keywords' => $_POST['position_alert_keywords'] ?? 'tracked',
                 'traffic_alert_enabled' => isset($_POST['traffic_alert_enabled']) ? 1 : 0,
                 'traffic_drop_threshold' => (int) ($_POST['traffic_drop_threshold'] ?? 20),
-                'revenue_alert_enabled' => isset($_POST['revenue_alert_enabled']) ? 1 : 0,
-                'revenue_drop_threshold' => (int) ($_POST['revenue_drop_threshold'] ?? 20),
                 'anomaly_alert_enabled' => isset($_POST['anomaly_alert_enabled']) ? 1 : 0,
                 'email_enabled' => isset($_POST['email_enabled']) ? 1 : 0,
                 'email_frequency' => $_POST['email_frequency'] ?? 'daily_digest',
             ]);
 
             $_SESSION['_flash']['success'] = 'Impostazioni salvate con successo';
-            Router::redirect('/seo-tracking/projects/' . $id . '/settings');
+            Router::redirect('/seo-tracking/project/' . $id . '/settings');
 
         } catch (\Exception $e) {
             $_SESSION['_flash']['error'] = 'Errore nel salvataggio: ' . $e->getMessage();
-            Router::redirect('/seo-tracking/projects/' . $id . '/settings');
+            Router::redirect('/seo-tracking/project/' . $id . '/settings');
         }
     }
 
@@ -250,7 +244,7 @@ class ProjectController
 
         } catch (\Exception $e) {
             $_SESSION['_flash']['error'] = 'Errore nell\'eliminazione: ' . $e->getMessage();
-            Router::redirect('/seo-tracking/projects/' . $id . '/settings');
+            Router::redirect('/seo-tracking/project/' . $id . '/settings');
         }
     }
 

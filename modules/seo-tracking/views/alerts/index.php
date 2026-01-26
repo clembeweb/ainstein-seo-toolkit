@@ -3,7 +3,7 @@
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
             <div class="flex items-center gap-3">
-                <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/dashboard') ?>" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/dashboard') ?>" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
@@ -15,7 +15,7 @@
             </p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-3">
-            <form action="<?= url('/seo-tracking/projects/' . $project['id'] . '/alerts/check') ?>" method="POST" class="inline">
+            <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/alerts/check') ?>" method="POST" class="inline">
                 <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
                 <button type="submit" class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                     <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -25,7 +25,7 @@
                 </button>
             </form>
             <?php if (($stats['unread'] ?? 0) > 0): ?>
-            <form action="<?= url('/seo-tracking/projects/' . $project['id'] . '/alerts/read-all') ?>" method="POST" class="inline">
+            <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/alerts/read-all') ?>" method="POST" class="inline">
                 <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
                 <button type="submit" class="inline-flex items-center px-3 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors">
                     Segna tutti come letti
@@ -145,7 +145,7 @@
                         </p>
                     </div>
                     <div class="flex items-center gap-2">
-                        <a href="<?= url('/seo-tracking/projects/' . $project['id'] . '/alerts/' . $alert['id']) ?>" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700" title="Dettaglio">
+                        <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/alerts/' . $alert['id']) ?>" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700" title="Dettaglio">
                             <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                             </svg>

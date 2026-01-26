@@ -105,7 +105,7 @@ class GroupController
 
         if (empty($name)) {
             $_SESSION['_flash']['error'] = 'Il nome del gruppo è obbligatorio';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/groups/create');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/groups/create');
             return;
         }
 
@@ -113,7 +113,7 @@ class GroupController
         $existing = $this->group->findByName($projectId, $name);
         if ($existing) {
             $_SESSION['_flash']['error'] = 'Esiste già un gruppo con questo nome';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/groups/create');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/groups/create');
             return;
         }
 
@@ -131,7 +131,7 @@ class GroupController
         }
 
         $_SESSION['_flash']['success'] = 'Gruppo creato con successo';
-        Router::redirect('/seo-tracking/projects/' . $projectId . '/groups/' . $groupId);
+        Router::redirect('/seo-tracking/project/' . $projectId . '/groups/' . $groupId);
     }
 
     /**
@@ -152,7 +152,7 @@ class GroupController
 
         if (!$group) {
             $_SESSION['_flash']['error'] = 'Gruppo non trovato';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/groups');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/groups');
             exit;
         }
 
@@ -196,7 +196,7 @@ class GroupController
 
         if (!$group) {
             $_SESSION['_flash']['error'] = 'Gruppo non trovato';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/groups');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/groups');
             exit;
         }
 
@@ -233,7 +233,7 @@ class GroupController
 
         if (!$group) {
             $_SESSION['_flash']['error'] = 'Gruppo non trovato';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/groups');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/groups');
             return;
         }
 
@@ -244,7 +244,7 @@ class GroupController
 
         if (empty($name)) {
             $_SESSION['_flash']['error'] = 'Il nome del gruppo è obbligatorio';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/groups/' . $groupId . '/edit');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/groups/' . $groupId . '/edit');
             return;
         }
 
@@ -252,7 +252,7 @@ class GroupController
         $existing = $this->group->findByName($projectId, $name);
         if ($existing && (int)$existing['id'] !== $groupId) {
             $_SESSION['_flash']['error'] = 'Esiste già un gruppo con questo nome';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/groups/' . $groupId . '/edit');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/groups/' . $groupId . '/edit');
             return;
         }
 
@@ -267,7 +267,7 @@ class GroupController
         $this->group->syncKeywords($groupId, $keywordIds);
 
         $_SESSION['_flash']['success'] = 'Gruppo aggiornato con successo';
-        Router::redirect('/seo-tracking/projects/' . $projectId . '/groups/' . $groupId);
+        Router::redirect('/seo-tracking/project/' . $projectId . '/groups/' . $groupId);
     }
 
     /**
@@ -288,14 +288,14 @@ class GroupController
 
         if (!$group) {
             $_SESSION['_flash']['error'] = 'Gruppo non trovato';
-            Router::redirect('/seo-tracking/projects/' . $projectId . '/groups');
+            Router::redirect('/seo-tracking/project/' . $projectId . '/groups');
             return;
         }
 
         $this->group->delete($groupId);
 
         $_SESSION['_flash']['success'] = 'Gruppo eliminato';
-        Router::redirect('/seo-tracking/projects/' . $projectId . '/groups');
+        Router::redirect('/seo-tracking/project/' . $projectId . '/groups');
     }
 
     /**

@@ -6,7 +6,7 @@
 
 use Modules\SeoTracking\Services\PositionCompareService;
 
-$currentPage = 'compare';
+$currentPage = 'trend';
 $presets = PositionCompareService::getPresets();
 $defaultPreset = $presets['28d'];
 $dateRange = $dateRange ?? ['min_date' => date('Y-m-d', strtotime('-16 months')), 'max_date' => date('Y-m-d')];
@@ -15,22 +15,19 @@ $dateRange = $dateRange ?? ['min_date' => date('Y-m-d', strtotime('-16 months'))
     <!-- Header + Navigation -->
     <?php include __DIR__ . '/../partials/project-nav.php'; ?>
 
-    <!-- Page Title -->
-    <div class="sm:flex sm:items-center sm:justify-between">
-        <div>
-            <h2 class="text-xl font-semibold text-slate-900 dark:text-white">Confronto Posizioni</h2>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Analizza le variazioni di ranking tra due periodi</p>
-        </div>
-        <div>
-            <button @click="exportCSV()"
-                    :disabled="loading || !hasData"
-                    class="inline-flex items-center px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                </svg>
-                Export CSV
-            </button>
-        </div>
+    <!-- Page Info + Actions -->
+    <div class="flex justify-between items-center">
+        <p class="text-sm text-slate-500 dark:text-slate-400">
+            Confronta le posizioni delle keyword tra due periodi
+        </p>
+        <button @click="exportCSV()"
+                :disabled="loading || !hasData"
+                class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            Export CSV
+        </button>
     </div>
 
     <!-- Controlli Periodo -->
@@ -264,6 +261,7 @@ function positionCompare(projectId) {
 
     return {
         projectId: projectId,
+        baseUrl: '<?= url('') ?>',
         loading: false,
         hasData: false,
         activeTab: 'all',
@@ -322,7 +320,7 @@ function positionCompare(projectId) {
                 formData.append('keyword', this.filterKeyword);
                 formData.append('url', this.filterUrl);
 
-                const response = await fetch(`/seo-tracking/projects/${this.projectId}/compare/data`, {
+                const response = await fetch(`${this.baseUrl}/seo-tracking/project/${this.projectId}/trend/data`, {
                     method: 'POST',
                     body: formData,
                     headers: {
@@ -364,7 +362,7 @@ function positionCompare(projectId) {
                 tab: this.activeTab
             });
 
-            window.location.href = `/seo-tracking/projects/${this.projectId}/compare/export?${params}`;
+            window.location.href = `${this.baseUrl}/seo-tracking/project/${this.projectId}/trend/export?${params}`;
         },
 
         truncateUrl(url) {
