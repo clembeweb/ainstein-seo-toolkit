@@ -89,7 +89,7 @@ if (preg_match('#^/seo-audit/project/(\d+)#', $currentPath, $matches)) {
 // Check if we're inside a seo-tracking project
 $seoTrackingProjectId = null;
 $seoTrackingProject = null;
-if (preg_match('#^/seo-tracking/projects/(\d+)#', $currentPath, $matches)) {
+if (preg_match('#^/seo-tracking/project/(\d+)#', $currentPath, $matches)) {
     $seoTrackingProjectId = (int) $matches[1];
     // Try to get project info
     try {
@@ -239,6 +239,8 @@ if (preg_match('#^/seo-tracking/projects/(\d+)#', $currentPath, $matches)) {
 
                         <?= navSubLink("/seo-audit/project/{$seoAuditProjectId}/analysis", 'Analisi AI', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>', $currentPath) ?>
 
+                        <?= navSubLink("/seo-audit/project/{$seoAuditProjectId}/action-plan", 'Piano d\'Azione', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>', $currentPath) ?>
+
                         <?= navSubLink("/seo-audit/project/{$seoAuditProjectId}/gsc", 'Search Console', '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="currentColor" opacity="0.8"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="currentColor" opacity="0.6"/></svg>', $currentPath) ?>
 
                         <?= navSubLink("/seo-audit/project/{$seoAuditProjectId}/history", 'Storico', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>', $currentPath) ?>
@@ -272,7 +274,7 @@ if (preg_match('#^/seo-tracking/projects/(\d+)#', $currentPath, $matches)) {
                 </div>
             <?php elseif ($module['slug'] === 'seo-tracking'): ?>
                 <!-- SEO Tracking Module with Accordion -->
-                <div x-data="{ expanded: <?= $seoTrackingProjectId ? 'true' : 'false' ?>, aiToolsOpen: <?= str_contains($currentPath, '/ai/') || str_contains($currentPath, '/reports') ? 'true' : 'false' ?> }">
+                <div x-data="{ expanded: <?= $seoTrackingProjectId ? 'true' : 'false' ?> }">
                     <!-- Module Link -->
                     <div class="flex items-center">
                         <a href="<?= url('/seo-tracking') ?>"
@@ -300,41 +302,21 @@ if (preg_match('#^/seo-tracking/projects/(\d+)#', $currentPath, $matches)) {
                         </div>
 
                         <!-- Main Navigation -->
-                        <?= navSubLink("/seo-tracking/projects/{$seoTrackingProjectId}", 'Dashboard', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>', $currentPath, true) ?>
+                        <?= navSubLink("/seo-tracking/project/{$seoTrackingProjectId}", 'Overview', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>', $currentPath, true) ?>
 
-                        <?= navSubLink("/seo-tracking/projects/{$seoTrackingProjectId}/keywords", 'Keywords', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/></svg>', $currentPath) ?>
+                        <?= navSubLink("/seo-tracking/project/{$seoTrackingProjectId}/keywords", 'Keywords', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/></svg>', $currentPath) ?>
 
-                        <?= navSubLink("/seo-tracking/projects/{$seoTrackingProjectId}/groups", 'Gruppi', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>', $currentPath) ?>
+                        <?= navSubLink("/seo-tracking/project/{$seoTrackingProjectId}/trend", 'Trend', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>', $currentPath) ?>
 
-                        <!-- AI Tools Accordion -->
-                        <div class="mt-1">
-                            <button @click="aiToolsOpen = !aiToolsOpen" class="w-full flex items-center justify-between px-3 py-1.5 rounded-md text-xs font-medium transition-colors <?= str_contains($currentPath, '/ai/') || str_contains($currentPath, '/reports') ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200' ?>">
-                                <span class="flex items-center gap-2">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-                                    <span>AI Tools</span>
-                                </span>
-                                <svg class="w-3 h-3 transition-transform" :class="aiToolsOpen && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                </svg>
-                            </button>
+                        <?= navSubLink("/seo-tracking/project/{$seoTrackingProjectId}/groups", 'Gruppi', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>', $currentPath) ?>
 
-                            <!-- AI Tools Sub-menu -->
-                            <div x-show="aiToolsOpen" x-transition class="ml-3 mt-1 pl-2 border-l border-slate-200 dark:border-slate-700 space-y-0.5">
-                                <?= navSubLink("/seo-tracking/projects/{$seoTrackingProjectId}/ai/quick-wins", 'Quick Wins', '<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>', $currentPath) ?>
+                        <?= navSubLink("/seo-tracking/project/{$seoTrackingProjectId}/rank-check", 'Verifica SERP', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>', $currentPath) ?>
 
-                                <?= navSubLink("/seo-tracking/projects/{$seoTrackingProjectId}/reports/weekly", 'Weekly Digest', '<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>', $currentPath) ?>
-
-                                <?= navSubLink("/seo-tracking/projects/{$seoTrackingProjectId}/reports/monthly", 'Monthly Executive', '<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>', $currentPath) ?>
-
-                                <?= navSubLink("/seo-tracking/projects/{$seoTrackingProjectId}/reports", 'Tutti i Report', '<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>', $currentPath, true) ?>
-                            </div>
-                        </div>
-
-                        <?= navSubLink("/seo-tracking/projects/{$seoTrackingProjectId}/alerts", 'Alert', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>', $currentPath) ?>
+                        <?= navSubLink("/seo-tracking/project/{$seoTrackingProjectId}/ai/quick-wins", 'Quick Wins', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>', $currentPath) ?>
 
                         <!-- Settings -->
                         <div class="pt-1 mt-1 border-t border-slate-200 dark:border-slate-700">
-                            <?= navSubLink("/seo-tracking/projects/{$seoTrackingProjectId}/settings", 'Impostazioni', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>', $currentPath) ?>
+                            <?= navSubLink("/seo-tracking/project/{$seoTrackingProjectId}/settings", 'Impostazioni', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>', $currentPath) ?>
                         </div>
                     </div>
                     <?php endif; ?>

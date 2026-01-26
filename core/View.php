@@ -46,6 +46,15 @@ class View
 
     private static function resolvePath(string $view): string
     {
+        // Supporta sintassi module::view (es. seo-tracking::rank-check/index)
+        if (str_contains($view, '::')) {
+            [$module, $viewName] = explode('::', $view, 2);
+            $modulePath = __DIR__ . '/../modules/' . $module . '/views/' . $viewName . '.php';
+            if (file_exists($modulePath)) {
+                return $modulePath;
+            }
+        }
+
         // Se inizia con 'admin/', cerca in admin/views/ senza il prefisso
         if (str_starts_with($view, 'admin/')) {
             $adminView = substr($view, 6); // Rimuove 'admin/'
