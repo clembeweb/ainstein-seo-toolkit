@@ -17,6 +17,7 @@ use Modules\SeoAudit\Controllers\CrawlController;
 use Modules\SeoAudit\Controllers\AuditController;
 use Modules\SeoAudit\Controllers\GscController;
 use Modules\SeoAudit\Controllers\ReportController;
+use Modules\SeoAudit\Controllers\ActionPlanController;
 
 $moduleSlug = 'seo-audit';
 
@@ -278,6 +279,52 @@ Router::get('/seo-audit/project/{id}/analysis/{category}', function ($id, $categ
     Middleware::auth();
     $controller = new AuditController();
     return $controller->analysisCategory((int) $id, $category);
+});
+
+// ============================================
+// ACTION PLAN AI ROUTES
+// ============================================
+
+// Vista principale Piano d'Azione
+Router::get('/seo-audit/project/{id}/action-plan', function ($id) {
+    Middleware::auth();
+    $controller = new ActionPlanController();
+    return $controller->index((int) $id);
+});
+
+// Genera piano (POST AJAX)
+Router::post('/seo-audit/project/{id}/action-plan/generate', function ($id) {
+    Middleware::auth();
+    $controller = new ActionPlanController();
+    $controller->generate((int) $id);
+});
+
+// Toggle fix completato (POST AJAX)
+Router::post('/seo-audit/project/{id}/fix/{fixId}/toggle', function ($id, $fixId) {
+    Middleware::auth();
+    $controller = new ActionPlanController();
+    $controller->toggleFix((int) $id, (int) $fixId);
+});
+
+// Export To-Do List Markdown
+Router::get('/seo-audit/project/{id}/action-plan/export', function ($id) {
+    Middleware::auth();
+    $controller = new ActionPlanController();
+    $controller->export((int) $id);
+});
+
+// Elimina piano (POST AJAX)
+Router::post('/seo-audit/project/{id}/action-plan/delete', function ($id) {
+    Middleware::auth();
+    $controller = new ActionPlanController();
+    $controller->delete((int) $id);
+});
+
+// API: Ottieni fix per una pagina (GET AJAX)
+Router::get('/seo-audit/project/{id}/action-plan/page/{pageId}/fixes', function ($id, $pageId) {
+    Middleware::auth();
+    $controller = new ActionPlanController();
+    $controller->getPageFixes((int) $id, (int) $pageId);
 });
 
 // ============================================

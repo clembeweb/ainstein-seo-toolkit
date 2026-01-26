@@ -25,6 +25,10 @@
         "ai_category": {
             "cost": 3,
             "description": "Analisi AI singola categoria"
+        },
+        "action_plan_generate": {
+            "cost": 15,
+            "description": "Generazione Piano d'Azione AI completo"
         }
     },
     "settings": {
@@ -63,6 +67,15 @@
             "label": "Costo Sync GSC",
             "description": "Crediti per sincronizzazione Google Search Console",
             "default": 5,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_action_plan_generate": {
+            "type": "number",
+            "label": "Costo Piano d'Azione AI",
+            "description": "Crediti per generazione Piano d'Azione AI",
+            "default": 15,
             "min": 0,
             "step": 0.1,
             "admin_only": true
