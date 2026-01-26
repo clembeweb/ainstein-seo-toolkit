@@ -1,5 +1,28 @@
+<?php if (!empty($projectId) && !empty($project)): ?>
+<?php $currentPage = 'keywords'; ?>
+<?php include __DIR__ . '/../partials/project-nav.php'; ?>
+<?php endif; ?>
+
 <div class="space-y-6" x-data="keywordsManager()">
-    <!-- Header -->
+    <?php if (empty($projectId) || empty($project)): ?>
+    <!-- Breadcrumbs (global view) -->
+    <nav class="flex" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2 text-sm">
+            <li>
+                <a href="<?= url('/ai-content') ?>" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
+                    AI Content
+                </a>
+            </li>
+            <li class="flex items-center">
+                <svg class="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <span class="ml-2 text-slate-900 dark:text-white font-medium">Keywords</span>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Header (global view) -->
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Keywords</h1>
@@ -14,6 +37,7 @@
             </button>
         </div>
     </div>
+    <?php endif; ?>
 
     <?php if (empty($keywords)): ?>
     <!-- Empty State -->

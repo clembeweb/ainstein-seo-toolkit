@@ -36,53 +36,32 @@ class WizardController
      */
     public function generateBrief(int $keywordId): void
     {
-        // Cattura qualsiasi output accidentale (warning, notice)
         ob_start();
-
         header('Content-Type: application/json');
 
-        // ========== DEBUG LOGGING ==========
-        error_log("========================================");
-        error_log("=== WIZARD GENERATE BRIEF START ===");
-        error_log("Keyword ID: " . $keywordId);
-
         $user = Auth::user();
-        error_log("User ID: " . ($user['id'] ?? 'NULL'));
-        error_log("User credits: " . ($user['credits'] ?? 'NULL'));
 
         // Get JSON input
         $rawInput = file_get_contents('php://input');
-        error_log("Raw input length: " . strlen($rawInput));
         $input = json_decode($rawInput, true) ?? [];
-        error_log("Parsed input keys: " . json_encode(array_keys($input)));
 
         // Find keyword
         $keyword = $this->keyword->find($keywordId, $user['id']);
         if (!$keyword) {
-            error_log("ERROR: Keyword not found");
             echo json_encode(['success' => false, 'error' => 'Keyword non trovata']);
             exit;
         }
-        error_log("Keyword found: " . $keyword['keyword']);
 
         // Get sources from input
         $sources = $input['sources'] ?? [];
         $customUrls = $input['customUrls'] ?? [];
         $selectedPaa = $input['paaQuestions'] ?? [];
 
-        error_log("Sources count: " . count($sources));
-        error_log("Sources data: " . json_encode($sources));
-        error_log("Custom URLs: " . json_encode($customUrls));
-        error_log("Selected PAA count: " . count($selectedPaa));
-
         // Build list of URLs to scrape
         $urlsToScrape = array_column($sources, 'url');
         $urlsToScrape = array_merge($urlsToScrape, $customUrls);
 
-        error_log("URLs to scrape: " . json_encode($urlsToScrape));
-
         if (empty($urlsToScrape)) {
-            error_log("ERROR: No URLs to scrape");
             echo json_encode(['success' => false, 'error' => 'Seleziona almeno una fonte da analizzare']);
             exit;
         }
@@ -94,95 +73,67 @@ class WizardController
         $totalCost = $scrapingCost + $briefCost;
 
         $currentBalance = Credits::getBalance($user['id']);
-        error_log("=== CREDIT CHECK ===");
-        error_log("User ID: " . $user['id']);
-        error_log("Current balance (from Credits::getBalance): " . $currentBalance);
-        error_log("Required credits: " . $totalCost);
-        error_log("Has enough: " . (Credits::hasEnough($user['id'], $totalCost) ? 'YES' : 'NO'));
 
         if (!Credits::hasEnough($user['id'], $totalCost)) {
-            error_log("ERROR: Insufficient credits");
             echo json_encode(['success' => false, 'error' => "Crediti insufficienti. Richiesti: {$totalCost}, Disponibili: {$currentBalance}"]);
             exit;
         }
 
         try {
             // Scrape sources
-            error_log("=== STARTING SCRAPING ===");
             $scraper = new ScraperService();
             $scrapedSources = [];
 
-            foreach ($urlsToScrape as $index => $url) {
-                error_log("Scraping [{$index}]: {$url}");
+            foreach ($urlsToScrape as $url) {
                 try {
                     $scraped = $scraper->scrape($url);
-                    error_log("  - Result: " . ($scraped ? 'OK' : 'EMPTY'));
-                    error_log("  - Content length: " . strlen($scraped['content'] ?? ''));
-                    error_log("  - Word count: " . ($scraped['word_count'] ?? 0));
-                    error_log("  - Headings H2 count: " . count($scraped['headings']['h2'] ?? []));
                     if ($scraped && !empty($scraped['content'])) {
                         $scrapedSources[] = $scraped;
-                        error_log("  - Added to sources");
-                    } else {
-                        error_log("  - SKIPPED: empty content");
                     }
                 } catch (\Exception $e) {
-                    error_log("  - EXCEPTION: " . $e->getMessage());
+                    // Skip failed URLs silently
                 }
             }
 
-            error_log("=== SCRAPING COMPLETE ===");
-            error_log("Scraped sources count: " . count($scrapedSources));
-
             if (empty($scrapedSources)) {
-                error_log("ERROR: No sources scraped successfully");
                 echo json_encode(['success' => false, 'error' => 'Impossibile estrarre contenuto dalle fonti selezionate']);
                 exit;
             }
 
-            // Log first scraped content preview
-            if (!empty($scrapedSources[0]['content'])) {
-                error_log("First source content preview: " . substr($scrapedSources[0]['content'], 0, 300));
-            }
-
             // Consume scraping credits
             Credits::consume($user['id'], $scrapingCost, 'source_scraping', 'ai-content', ['urls_count' => count($scrapedSources)]);
-            error_log("Scraping credits consumed: " . $scrapingCost);
 
             // Get SERP results
             $serpResults = $this->serpResult->getByKeyword($keywordId);
-            error_log("SERP results count: " . count($serpResults));
 
             // Get PAA questions
             $paaQuestions = $this->keyword->getPaaQuestions($keywordId);
-            error_log("PAA questions count: " . count($paaQuestions));
 
             // Build brief
-            error_log("=== BUILDING BRIEF ===");
             $briefBuilder = new BriefBuilderService();
             $brief = $briefBuilder->build($keyword, $serpResults, $paaQuestions, $scrapedSources, $user['id']);
-            error_log("Brief built successfully");
-            error_log("Brief recommended_word_count: " . ($brief['recommended_word_count'] ?? 'N/A'));
-            error_log("Brief key_entities phrases count: " . count($brief['key_entities']['phrases'] ?? []));
 
-            // Verifica che il brief sia valido prima di salvare
+            // Reconnect DB after long AI operation (prevents "MySQL server has gone away")
+            Database::reconnect();
+
+            // Verify brief is valid
             if (empty($brief) || empty($brief['recommended_word_count'])) {
                 ob_end_clean();
                 echo json_encode(['success' => false, 'error' => 'Brief generation failed - empty data']);
                 exit;
             }
+
             // Consume brief credits
             Credits::consume($user['id'], $briefCost, 'brief_generation', 'ai-content', ['keyword' => $keyword['keyword']]);
 
             // Create or update article with brief
             $articleId = $this->article->createWithBrief($keywordId, $user['id'], $brief, $sources, $customUrls, $selectedPaa);
-            error_log("Article created/updated with ID: " . $articleId);
 
             // Save scraped sources to aic_sources table
             $sourceModel = new Source();
             $sourceModel->deleteByArticle($articleId); // Clear old sources
 
-            foreach ($scrapedSources as $index => $scraped) {
+            foreach ($scrapedSources as $scraped) {
                 $isCustom = in_array($scraped['url'], $customUrls);
                 $sourceId = $sourceModel->create([
                     'article_id' => $articleId,
@@ -190,14 +141,12 @@ class WizardController
                     'title' => $scraped['title'] ?? null,
                     'is_custom' => $isCustom
                 ]);
-                // Update with scraped content
                 $sourceModel->updateScraped($sourceId, [
                     'content' => $scraped['content'],
                     'headings' => $scraped['headings'],
                     'word_count' => $scraped['word_count']
                 ]);
             }
-            error_log("Saved " . count($scrapedSources) . " sources to aic_sources");
 
             // Format response for wizard
             $wizardBrief = [
@@ -209,11 +158,9 @@ class WizardController
                 'additionalNotes' => '',
             ];
 
-            // Salva brief anche nella tabella aic_keywords per persistenza
+            // Save brief to aic_keywords for persistence
             $this->keyword->saveBrief($keywordId, $wizardBrief);
-            error_log("Brief saved to aic_keywords for keyword ID: " . $keywordId);
 
-            // Pulisci buffer prima di inviare JSON
             ob_end_clean();
 
             echo json_encode([
@@ -224,7 +171,7 @@ class WizardController
             ]);
 
         } catch (\Exception $e) {
-            error_log("Brief generation error: " . $e->getMessage());
+            error_log("WizardController::generateBrief error: " . $e->getMessage());
             ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Errore generazione brief: ' . $e->getMessage()]);
         }
@@ -237,48 +184,28 @@ class WizardController
      */
     public function generateArticle(int $keywordId): void
     {
-        // Cattura qualsiasi output accidentale
         ob_start();
-
         header('Content-Type: application/json');
 
-        // ========== DEBUG LOGGING ==========
-        error_log("========================================");
-        error_log("=== WIZARD GENERATE ARTICLE START ===");
-        error_log("Keyword ID: " . $keywordId);
-
         $user = Auth::user();
-        error_log("User ID: " . ($user['id'] ?? 'NULL'));
-        error_log("User credits from session: " . ($user['credits'] ?? 'NULL'));
 
         // Get JSON input
         $input = json_decode(file_get_contents('php://input'), true) ?? [];
         $articleId = $input['articleId'] ?? null;
         $briefData = $input['briefData'] ?? [];
 
-        error_log("Article ID: " . ($articleId ?? 'NULL'));
-        error_log("Brief data keys: " . json_encode(array_keys($briefData)));
-
         // Find keyword
         $keyword = $this->keyword->find($keywordId, $user['id']);
         if (!$keyword) {
-            error_log("ERROR: Keyword not found");
             echo json_encode(['success' => false, 'error' => 'Keyword non trovata']);
             exit;
         }
-        error_log("Keyword found: " . $keyword['keyword']);
 
         // Check credits for article generation
         $cost = Credits::getCost('article_generation', 'ai-content');
         $currentBalance = Credits::getBalance($user['id']);
-        error_log("=== CREDIT CHECK ===");
-        error_log("User ID: " . $user['id']);
-        error_log("Current balance (from Credits::getBalance): " . $currentBalance);
-        error_log("Required credits: " . $cost);
-        error_log("Has enough: " . (Credits::hasEnough($user['id'], $cost) ? 'YES' : 'NO'));
 
         if (!Credits::hasEnough($user['id'], $cost)) {
-            error_log("ERROR: Insufficient credits");
             echo json_encode(['success' => false, 'error' => "Crediti insufficienti. Richiesti: {$cost}, Disponibili: {$currentBalance}"]);
             exit;
         }
@@ -310,7 +237,6 @@ class WizardController
             // Load scraped sources from database
             $sourceModel = new Source();
             $scrapedSources = $sourceModel->getScrapedByArticle($articleId);
-            error_log("Loaded " . count($scrapedSources) . " scraped sources from DB");
 
             // Add scraped content to brief for AI generation
             $brief['scraped_sources'] = array_map(function($source) {
@@ -327,14 +253,11 @@ class WizardController
             $targetWords = $briefData['targetWordCount'] ?? $brief['recommended_word_count'] ?? 1500;
 
             // Generate article using AI
-            error_log("=== GENERATING ARTICLE ===");
-            error_log("Target words: " . $targetWords);
-            error_log("Sources count: " . count($brief['scraped_sources']));
-
             $generator = new ArticleGeneratorService();
             $result = $generator->generate($brief, (int) $targetWords, $user['id']);
 
-            error_log("Article generation result: " . json_encode($result));
+            // Reconnect DB after long AI operation (prevents "MySQL server has gone away")
+            Database::reconnect();
 
             if (!$result['success']) {
                 echo json_encode(['success' => false, 'error' => $result['error'] ?? 'Errore generazione articolo']);
@@ -347,7 +270,6 @@ class WizardController
             // Consume credits
             Credits::consume($user['id'], $cost, 'article_generation', 'ai-content', ['keyword' => $keyword['keyword']]);
 
-            // Pulisci buffer prima di inviare JSON
             ob_end_clean();
 
             echo json_encode([
@@ -362,7 +284,7 @@ class WizardController
             ]);
 
         } catch (\Exception $e) {
-            error_log("Article generation error: " . $e->getMessage());
+            error_log("WizardController::generateArticle error: " . $e->getMessage());
             ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Errore generazione articolo: ' . $e->getMessage()]);
         }

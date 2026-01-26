@@ -67,6 +67,19 @@ class ProcessJob
     }
 
     /**
+     * Static: Find active job for project (for CRON dispatcher)
+     */
+    public static function findActiveByProject(int $projectId): ?array
+    {
+        return Database::fetch(
+            "SELECT * FROM aic_process_jobs
+             WHERE project_id = ? AND status IN ('pending', 'running')
+             ORDER BY created_at DESC LIMIT 1",
+            [$projectId]
+        );
+    }
+
+    /**
      * Get latest job for project
      */
     public function getLatestForProject(int $projectId): ?array

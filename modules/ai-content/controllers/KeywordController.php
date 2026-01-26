@@ -285,9 +285,9 @@ class KeywordController
             exit;
         }
 
-        // Check duplicate
-        if ($this->keyword->exists($keyword, $user['id'])) {
-            $_SESSION['flash_error'] = 'Questa keyword esiste già';
+        // Check duplicate (within same project)
+        if ($this->keyword->exists($keyword, $user['id'], $projectId)) {
+            $_SESSION['flash_error'] = 'Questa keyword esiste già in questo progetto';
             header('Location: ' . $redirectUrl);
             exit;
         }

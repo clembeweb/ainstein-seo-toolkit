@@ -1,35 +1,7 @@
+<?php $currentPage = 'queue'; ?>
+<?php include __DIR__ . '/../partials/project-nav.php'; ?>
+
 <div class="space-y-6" x-data="queueManager()">
-    <!-- Header -->
-    <div class="sm:flex sm:items-center sm:justify-between">
-        <div>
-            <nav class="flex mb-2" aria-label="Breadcrumb">
-                <ol class="flex items-center space-x-2 text-sm">
-                    <li>
-                        <a href="<?= url('/ai-content') ?>" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
-                            AI Content
-                        </a>
-                    </li>
-                    <li class="flex items-center">
-                        <svg class="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                        </svg>
-                        <a href="<?= url('/ai-content/projects/' . $project['id'] . '/auto') ?>" class="ml-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
-                            <?= e($project['name']) ?>
-                        </a>
-                    </li>
-                </ol>
-            </nav>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Coda di Generazione</h1>
-        </div>
-        <div class="mt-4 sm:mt-0 flex items-center gap-3">
-            <a href="<?= url('/ai-content/projects/' . $project['id'] . '/auto/add') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Aggiungi Keyword
-            </a>
-        </div>
-    </div>
 
     <!-- Stats Summary -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -219,7 +191,7 @@
             <div x-show="showClearModal" x-transition class="relative bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-sm w-full p-6">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Svuota Coda</h3>
                 <p class="text-sm text-slate-500 dark:text-slate-400">
-                    Sei sicuro di voler rimuovere tutte le keyword in attesa dalla coda? Questa azione non puo essere annullata.
+                    Sei sicuro di voler rimuovere tutte le keyword in attesa dalla coda? Questa azione non può essere annullata.
                 </p>
                 <form action="<?= url('/ai-content/projects/' . $project['id'] . '/auto/queue/clear') ?>" method="POST" class="mt-6">
                     <?= csrf_field() ?>

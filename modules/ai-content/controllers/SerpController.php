@@ -31,16 +31,6 @@ class SerpController
      */
     public function extract(int $id): void
     {
-        // DEBUG LOGGING
-        error_log("=== SERP EXTRACT CALLED ===");
-        error_log("ID: " . $id);
-        error_log("POST: " . json_encode($_POST));
-        error_log("RAW INPUT: " . file_get_contents('php://input'));
-        error_log("SESSION user_id: " . ($_SESSION['user_id'] ?? 'NOT SET'));
-        error_log("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
-        error_log("CONTENT_TYPE: " . ($_SERVER['CONTENT_TYPE'] ?? 'NOT SET'));
-        error_log("HTTP_X_REQUESTED_WITH: " . ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? 'NOT SET'));
-
         header('Content-Type: application/json');
 
         $user = Auth::user();

@@ -1,19 +1,52 @@
+<?php
+$baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['project_id'] : '/ai-content';
+?>
 <div class="space-y-6" x-data="keywordWizard(<?= e(json_encode($wizardData)) ?>)">
+    <!-- Breadcrumbs -->
+    <nav class="flex" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2 text-sm">
+            <li>
+                <a href="<?= url('/ai-content') ?>" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
+                    AI Content
+                </a>
+            </li>
+            <?php if (!empty($keyword['project_id']) && !empty($project)): ?>
+            <li class="flex items-center">
+                <svg class="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <a href="<?= url('/ai-content/projects/' . $keyword['project_id']) ?>" class="ml-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
+                    <?= e($project['name'] ?? 'Progetto') ?>
+                </a>
+            </li>
+            <?php endif; ?>
+            <li class="flex items-center">
+                <svg class="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <a href="<?= url($baseUrl . '/keywords') ?>" class="ml-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
+                    Keywords
+                </a>
+            </li>
+            <li class="flex items-center">
+                <svg class="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <span class="ml-2 text-slate-900 dark:text-white font-medium">Wizard</span>
+            </li>
+        </ol>
+    </nav>
+
     <!-- Header with Keyword Info -->
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
-            <nav class="text-sm text-slate-500 dark:text-slate-400 mb-2">
-                <a href="<?= url('/ai-content/keywords') ?>" class="hover:text-primary-600">Keywords</a>
-                <span class="mx-2">/</span>
-                <span>Wizard</span>
-            </nav>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white"><?= e($keyword['keyword']) ?></h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 <?= strtoupper($keyword['language']) ?> - <?= e($keyword['location']) ?>
             </p>
         </div>
         <div class="mt-4 sm:mt-0">
-            <a href="<?= url('/ai-content/keywords') ?>" class="inline-flex items-center px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+            <a href="<?= url($baseUrl . '/keywords') ?>" class="inline-flex items-center px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                 </svg>

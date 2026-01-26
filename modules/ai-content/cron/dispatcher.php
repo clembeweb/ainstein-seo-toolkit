@@ -1,185 +1,375 @@
 <?php
 /**
- * AI Content Dispatcher (Master CRON Scheduler)
+ * AI Content Dispatcher (CRON Scheduler)
  *
- * Checks all active AUTO projects and spawns workers for those
- * that should run based on their publish_times configuration.
+ * Elabora direttamente le keyword senza usare exec/popen
+ * (compatibile con hosting condiviso come SiteGround)
  *
- * Usage:
- *   php dispatcher.php
- *
- * Crontab (run every minute to check publish times):
- *   * * * * * php /path/to/dispatcher.php
+ * Crontab (run every minute):
+ *   * * * * * php /path/to/modules/ai-content/cron/dispatcher.php
  */
 
+// Solo CLI
+if (php_sapi_name() !== 'cli') {
+    die('Solo CLI');
+}
+
+// Bootstrap
 require_once dirname(__DIR__, 3) . '/cron/bootstrap.php';
 
+// Helper functions for CLI context
+if (!function_exists('getModuleSetting')) {
+    function getModuleSetting(string $moduleSlug, string $key, mixed $default = null): mixed
+    {
+        return \Core\ModuleLoader::getSetting($moduleSlug, $key, $default);
+    }
+}
+
+use Core\Database;
+use Core\Credits;
 use Modules\AiContent\Models\AutoConfig;
 use Modules\AiContent\Models\ProcessJob;
 use Modules\AiContent\Models\Queue;
+use Modules\AiContent\Models\Keyword;
+use Modules\AiContent\Models\Article;
+use Modules\AiContent\Models\WpSite;
+use Modules\AiContent\Services\SerpApiService;
+use Modules\AiContent\Services\BriefBuilderService;
+use Modules\AiContent\Services\ArticleGeneratorService;
+use Services\ScraperService;
 
-// Configuration
-define('LOG_FILE', BASE_PATH . '/storage/logs/dispatcher.log');
-define('WORKER_SCRIPT', __DIR__ . '/process_queue.php');
+// Log file giornaliero
+define('LOG_FILE', BASE_PATH . '/storage/logs/dispatcher_' . date('Y-m-d') . '.log');
 
 /**
- * Log message to file and stdout
+ * Log message
  */
-function logMessage(string $message, string $level = 'INFO'): void
+function logDispatcher(string $message, string $level = 'INFO'): void
 {
     $timestamp = date('Y-m-d H:i:s');
     $logLine = "[{$timestamp}] [{$level}] {$message}\n";
 
-    // Log to file
     $logDir = dirname(LOG_FILE);
     if (!is_dir($logDir)) {
         mkdir($logDir, 0755, true);
     }
     file_put_contents(LOG_FILE, $logLine, FILE_APPEND);
 
-    // Echo to stdout (for CLI monitoring)
+    // Echo per monitoraggio CLI
     echo $logLine;
 }
 
 /**
- * Check if there's already a running job for this project
+ * Elabora una singola keyword
  */
-function hasRunningJob(int $projectId): bool
+function processKeyword(array $queueItem, array $config, int $userId): array
 {
-    $processJob = new ProcessJob();
-    $activeJob = $processJob->getActiveForProject($projectId);
-    return $activeJob !== null;
-}
+    $keyword = $queueItem['keyword'];
+    $queueId = $queueItem['id'];
+    $projectId = $queueItem['project_id'];
+    $autoSelectSources = (int) ($config['auto_select_sources'] ?? 3);
 
-/**
- * Get pending keywords count for project
- */
-function getPendingCount(int $projectId): int
-{
-    $queue = new Queue();
-    return $queue->countByProject($projectId, 'pending');
-}
+    $result = [
+        'success' => false,
+        'keyword_id' => null,
+        'article_id' => null,
+        'credits_used' => 0,
+        'error' => null
+    ];
 
-/**
- * Create a new process job for the project
- */
-function createJob(int $projectId, int $userId, int $keywordsCount): int
-{
-    $processJob = new ProcessJob();
-    return $processJob->create([
-        'project_id' => $projectId,
-        'user_id' => $userId,
-        'type' => ProcessJob::TYPE_CRON,
-        'keywords_requested' => $keywordsCount,
-    ]);
-}
+    try {
+        // Step 1: SERP extraction
+        logDispatcher("    [1/5] SERP extraction...");
+        $serpService = new SerpApiService();
+        $serpResults = $serpService->search(
+            $keyword,
+            $queueItem['language'] ?? 'it',
+            $queueItem['location'] ?? 'Italy'
+        );
+        Database::reconnect();
 
-/**
- * Spawn worker process for a job
- */
-function spawnWorker(int $jobId): bool
-{
-    $phpBinary = PHP_BINARY;
-    $workerScript = WORKER_SCRIPT;
+        // Step 2: Scraping
+        logDispatcher("    [2/5] Scraping " . min($autoSelectSources, count($serpResults['organic'])) . " fonti...");
+        $scraperService = new ScraperService();
+        $scrapedSources = [];
+        $urlsToScrape = array_slice(array_column($serpResults['organic'], 'url'), 0, $autoSelectSources);
 
-    // Check if script exists
-    if (!file_exists($workerScript)) {
-        logMessage("Worker script not found: {$workerScript}", 'ERROR');
-        return false;
+        foreach ($urlsToScrape as $url) {
+            try {
+                $scraped = $scraperService->scrape($url);
+                if ($scraped && !empty($scraped['content'])) {
+                    $scrapedSources[] = $scraped;
+                }
+            } catch (\Exception $e) {
+                // Skip failed URLs
+            }
+        }
+
+        if (empty($scrapedSources)) {
+            throw new \Exception('Impossibile estrarre contenuto dalle fonti');
+        }
+        Database::reconnect();
+
+        // Step 3: Brief generation
+        logDispatcher("    [3/5] Generazione brief...");
+        $briefBuilder = new BriefBuilderService();
+        $keywordData = [
+            'keyword' => $keyword,
+            'language' => $queueItem['language'] ?? 'it',
+            'location' => $queueItem['location'] ?? 'Italy'
+        ];
+
+        $brief = $briefBuilder->build(
+            $keywordData,
+            $serpResults['organic'],
+            $serpResults['paa'],
+            $scrapedSources,
+            $userId
+        );
+        Database::reconnect();
+
+        // Step 4: Article generation
+        logDispatcher("    [4/5] Generazione articolo...");
+        $brief['scraped_sources'] = array_map(function($source) {
+            return [
+                'url' => $source['url'],
+                'title' => $source['title'],
+                'content' => $source['content'],
+                'headings' => $source['headings'],
+                'word_count' => $source['word_count']
+            ];
+        }, $scrapedSources);
+
+        $targetWords = $brief['recommended_word_count'] ?? 1500;
+        $articleGenerator = new ArticleGeneratorService();
+        $articleResult = $articleGenerator->generate($brief, (int) $targetWords, $userId);
+
+        if (!$articleResult['success']) {
+            throw new \Exception($articleResult['error'] ?? 'Generazione articolo fallita');
+        }
+        Database::reconnect();
+
+        // Step 5: Save to database
+        logDispatcher("    [5/5] Salvataggio...");
+
+        // Create keyword record
+        $keywordModel = new Keyword();
+        $keywordId = $keywordModel->create([
+            'user_id' => $userId,
+            'project_id' => $projectId,
+            'keyword' => $keyword,
+            'language' => $queueItem['language'] ?? 'it',
+            'location' => $queueItem['location'] ?? 'Italy'
+        ]);
+
+        // Create article record
+        $articleModel = new Article();
+        $articleId = $articleModel->create([
+            'keyword_id' => $keywordId,
+            'user_id' => $userId,
+            'project_id' => $projectId,
+            'status' => 'draft'
+        ]);
+
+        // Update with content
+        $articleModel->updateContent($articleId, [
+            'title' => $articleResult['title'],
+            'meta_description' => $articleResult['meta_description'],
+            'content' => $articleResult['content'],
+            'word_count' => $articleResult['word_count'],
+            'model_used' => $articleResult['model_used'] ?? null
+        ]);
+
+        $result['success'] = true;
+        $result['keyword_id'] = $keywordId;
+        $result['article_id'] = $articleId;
+        $result['credits_used'] = $articleResult['credits_used'] ?? 0;
+
+    } catch (\Exception $e) {
+        $result['error'] = $e->getMessage();
+        Database::reconnect();
     }
 
-    // Build command based on OS
-    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-        // Windows: use start /B for background execution
-        $cmd = "start /B {$phpBinary} {$workerScript} --job_id={$jobId} > NUL 2>&1";
-        pclose(popen($cmd, 'r'));
-    } else {
-        // Unix: use nohup and &
-        $cmd = "nohup {$phpBinary} {$workerScript} --job_id={$jobId} > /dev/null 2>&1 &";
-        exec($cmd);
-    }
-
-    logMessage("Spawned worker for job #{$jobId}");
-    return true;
+    return $result;
 }
 
 /**
- * Main dispatcher function
+ * Pubblica su WordPress
+ */
+function publishToWordPress(int $articleId, int $wpSiteId, int $userId): bool
+{
+    try {
+        $wpSiteModel = new WpSite();
+        $wpSite = $wpSiteModel->find($wpSiteId, $userId);
+
+        if (!$wpSite || !$wpSite['is_active']) {
+            return false;
+        }
+
+        $articleModel = new Article();
+        $article = $articleModel->find($articleId, $userId);
+
+        if (!$article || empty($article['content'])) {
+            return false;
+        }
+
+        $url = rtrim($wpSite['url'], '/') . '/wp-json/seo-toolkit/v1/posts';
+        $scraper = new ScraperService();
+
+        $result = $scraper->postJson($url, [
+            'title' => $article['title'],
+            'content' => $article['content'],
+            'meta_description' => $article['meta_description'],
+            'status' => 'draft'
+        ], [
+            'timeout' => 60,
+            'headers' => [
+                'X-SEO-Toolkit-Key: ' . $wpSite['api_key'],
+                'Content-Type: application/json'
+            ]
+        ]);
+
+        if (isset($result['data']['post_id'])) {
+            $articleModel->markPublished($articleId, $wpSiteId, $result['data']['post_id']);
+            return true;
+        }
+    } catch (\Exception $e) {
+        logDispatcher("      WordPress publish error: " . $e->getMessage(), 'WARN');
+    }
+
+    return false;
+}
+
+/**
+ * Main dispatcher
  */
 function runDispatcher(): void
 {
-    logMessage("=== Dispatcher Started ===");
+    logDispatcher("=== DISPATCHER START ===");
+
+    $currentTime = date('H:i');
+    logDispatcher("Ora corrente: {$currentTime}");
 
     $autoConfig = new AutoConfig();
-
-    // Get all projects that should run now
     $projectsToRun = $autoConfig->getProjectsToRun();
 
     if (empty($projectsToRun)) {
-        logMessage("No projects scheduled to run at this time");
-        logMessage("=== Dispatcher Finished ===");
+        logDispatcher("Nessun progetto da processare a quest'ora");
+        logDispatcher("=== DISPATCHER END ===\n");
         return;
     }
 
-    logMessage("Found " . count($projectsToRun) . " project(s) to process");
+    logDispatcher("Progetti da processare: " . count($projectsToRun));
 
-    $jobsCreated = 0;
+    $totalArticles = 0;
+    $totalErrors = 0;
 
     foreach ($projectsToRun as $config) {
         $projectId = (int) $config['project_id'];
         $userId = (int) $config['user_id'];
         $projectName = $config['project_name'] ?? "Project #{$projectId}";
 
-        logMessage("Checking project: {$projectName} (ID: {$projectId})");
+        logDispatcher("--- Progetto: {$projectName} (ID: {$projectId}) ---");
 
-        // Check if already running
-        if (hasRunningJob($projectId)) {
-            logMessage("  - Skipped: Already has a running job", 'WARN');
-            continue;
-        }
+        // Reset contatore se nuovo giorno
+        $autoConfig->resetDailyCounterIfNeeded($projectId);
 
-        // Check pending keywords
-        $pendingCount = getPendingCount($projectId);
-        if ($pendingCount === 0) {
-            logMessage("  - Skipped: No pending keywords in queue");
-            continue;
-        }
-
-        // Check daily limit
+        // Verifica limite giornaliero
         $remaining = $autoConfig->getRemainingToday($projectId);
         if ($remaining <= 0) {
-            logMessage("  - Skipped: Daily limit reached");
+            logDispatcher("  Limite giornaliero raggiunto, skip");
+            continue;
+        }
+        logDispatcher("  Articoli rimanenti oggi: {$remaining}");
+
+        // Verifica job già in corso
+        $processJob = new ProcessJob();
+        $activeJob = $processJob->getActiveForProject($projectId);
+        if ($activeJob) {
+            logDispatcher("  Job già in corso (ID: {$activeJob['id']}), skip");
             continue;
         }
 
-        // Calculate how many to process (min of pending, remaining daily limit)
-        $toProcess = min($pendingCount, $remaining);
+        // Verifica keyword in coda
+        $queue = new Queue();
+        $pendingItems = $queue->getPending($projectId, 1); // 1 per esecuzione CRON
 
-        logMessage("  - Creating job for {$toProcess} keyword(s)");
+        if (empty($pendingItems)) {
+            logDispatcher("  Nessuna keyword in coda, skip");
+            continue;
+        }
 
-        // Create job
-        $jobId = createJob($projectId, $userId, $toProcess);
+        // Verifica crediti
+        if (!Credits::hasEnough($userId, 10)) {
+            logDispatcher("  Crediti insufficienti, skip");
+            continue;
+        }
 
-        if ($jobId) {
-            logMessage("  - Job #{$jobId} created");
+        $queueItem = $pendingItems[0];
+        $keyword = $queueItem['keyword'];
+        $queueId = $queueItem['id'];
 
-            // Spawn worker
-            if (spawnWorker($jobId)) {
-                $jobsCreated++;
+        logDispatcher("  Processo keyword: {$keyword}");
+
+        // Crea job
+        $jobId = $processJob->create([
+            'project_id' => $projectId,
+            'user_id' => $userId,
+            'type' => ProcessJob::TYPE_CRON,
+            'keywords_requested' => 1
+        ]);
+        $processJob->start($jobId);
+        $processJob->updateProgress($jobId, [
+            'current_queue_id' => $queueId,
+            'current_keyword' => $keyword,
+            'current_step' => 'serp'
+        ]);
+
+        // Aggiorna queue status
+        $queue->updateStatus($queueId, 'processing');
+
+        // Elabora keyword
+        $result = processKeyword($queueItem, $config, $userId);
+
+        if ($result['success']) {
+            // Successo
+            $queue->linkGenerated($queueId, $result['keyword_id'], $result['article_id']);
+            $processJob->incrementCompleted($jobId);
+            $processJob->complete($jobId);
+            $autoConfig->incrementArticlesToday($projectId);
+            $autoConfig->updateLastRun($projectId);
+
+            $totalArticles++;
+            logDispatcher("  ✓ COMPLETATO! Articolo ID: {$result['article_id']}");
+
+            // Auto-publish se configurato
+            if (!empty($config['auto_publish']) && !empty($config['wp_site_id'])) {
+                logDispatcher("  Pubblicazione WordPress...");
+                if (publishToWordPress($result['article_id'], $config['wp_site_id'], $userId)) {
+                    logDispatcher("    ✓ Pubblicato");
+                } else {
+                    logDispatcher("    ✗ Pubblicazione fallita", 'WARN');
+                }
             }
         } else {
-            logMessage("  - Failed to create job", 'ERROR');
+            // Errore
+            $queue->updateStatus($queueId, 'error', $result['error']);
+            $processJob->incrementFailed($jobId);
+            $processJob->markError($jobId, $result['error']);
+
+            $totalErrors++;
+            logDispatcher("  ✗ ERRORE: {$result['error']}", 'ERROR');
         }
     }
 
-    logMessage("=== Dispatcher Finished. Jobs created: {$jobsCreated} ===");
+    logDispatcher("=== DISPATCHER END === Articoli: {$totalArticles}, Errori: {$totalErrors}\n");
 }
 
-// Run the dispatcher
+// Esegui
 try {
     runDispatcher();
 } catch (\Exception $e) {
-    logMessage("FATAL ERROR: " . $e->getMessage(), 'FATAL');
+    logDispatcher("FATAL: " . $e->getMessage(), 'FATAL');
     exit(1);
 }
 

@@ -105,6 +105,30 @@ class Queue
     }
 
     /**
+     * Get pending items for a project (for CRON dispatcher)
+     *
+     * @param int $projectId Project ID
+     * @param int $limit Max items to return
+     * @return array List of pending queue items
+     */
+    public function getPending(int $projectId, int $limit = 10): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT q.*, p.name as project_name, ac.auto_select_sources
+            FROM {$this->table} q
+            JOIN aic_projects p ON q.project_id = p.id
+            LEFT JOIN aic_auto_config ac ON q.project_id = ac.project_id
+            WHERE q.project_id = ?
+            AND q.status = 'pending'
+            AND q.scheduled_at <= NOW()
+            ORDER BY q.scheduled_at ASC
+            LIMIT ?
+        ");
+        $stmt->execute([$projectId, $limit]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    /**
      * Inserisce keyword in coda (bulk)
      */
     public function addBulk(int $userId, int $projectId, array $keywords, array $scheduledTimes): int

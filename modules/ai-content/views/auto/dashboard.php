@@ -1,67 +1,37 @@
+<?php $currentPage = 'dashboard'; ?>
+<?php include __DIR__ . '/../partials/project-nav.php'; ?>
+
 <div class="space-y-6">
-    <!-- Header -->
-    <div class="sm:flex sm:items-center sm:justify-between">
-        <div class="flex items-center gap-4">
-            <div>
-                <div class="flex items-center gap-3">
-                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white"><?= e($project['name']) ?></h1>
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">
-                        <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                        Automatico
-                    </span>
-                </div>
-                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                    Generazione articoli automatica schedulata
-                </p>
-            </div>
-        </div>
-        <div class="mt-4 sm:mt-0 flex items-center gap-3">
-            <!-- Toggle Attivo/Pausa -->
-            <form action="<?= url('/ai-content/projects/' . $project['id'] . '/auto/toggle') ?>" method="POST" class="inline">
-                <?= csrf_field() ?>
-                <?php if ($config['is_active'] ?? true): ?>
-                <button type="submit" class="inline-flex items-center px-3 py-2 rounded-lg border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-400 transition-colors">
-                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    Pausa
-                </button>
-                <?php else: ?>
-                <button type="submit" class="inline-flex items-center px-3 py-2 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 transition-colors">
-                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    Attiva
-                </button>
-                <?php endif; ?>
-            </form>
-
-            <a href="<?= url('/ai-content/projects/' . $project['id'] . '/auto/settings') ?>" class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+    <!-- Page Actions -->
+    <div class="flex items-center justify-end gap-3">
+        <!-- Toggle Attivo/Pausa -->
+        <form action="<?= url('/ai-content/projects/' . $project['id'] . '/auto/toggle') ?>" method="POST" class="inline">
+            <?= csrf_field() ?>
+            <?php if ($config['is_active'] ?? true): ?>
+            <button type="submit" class="inline-flex items-center px-3 py-2 rounded-lg border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-400 transition-colors">
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                Impostazioni
-            </a>
-
-            <a href="<?= url('/ai-content/projects/' . $project['id'] . '/auto/add') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Aggiungi Keyword
-            </a>
-
-            <!-- Processa Ora Button -->
-            <button type="button" id="btn-process-now" onclick="startProcess()" class="inline-flex items-center px-4 py-2 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" <?= ($stats['pending'] ?? 0) == 0 ? 'disabled' : '' ?>>
-                <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                </svg>
-                Processa Ora
+                Pausa
             </button>
-        </div>
+            <?php else: ?>
+            <button type="submit" class="inline-flex items-center px-3 py-2 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Attiva
+            </button>
+            <?php endif; ?>
+        </form>
+
+        <!-- Processa Ora Button -->
+        <button type="button" id="btn-process-now" onclick="startProcess()" class="inline-flex items-center px-4 py-2 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" <?= ($stats['pending'] ?? 0) == 0 ? 'disabled' : '' ?>>
+            <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            Processa Ora
+        </button>
     </div>
 
     <!-- Status Banner -->
@@ -326,24 +296,15 @@
     </div>
     <?php endif; ?>
 
-    <!-- Breadcrumb / Back -->
-    <div class="pt-4">
-        <a href="<?= url('/ai-content') ?>" class="inline-flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
-            <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
-            Torna ai progetti
-        </a>
-    </div>
 </div>
 
 <script>
-// Process Control JavaScript
+// Process Control JavaScript with SSE (Server-Sent Events)
 const projectId = <?= (int) $project['id'] ?>;
 const csrfToken = '<?= csrf_token() ?>';
 const baseUrl = '<?= rtrim(url(''), '/') ?>';
 let currentJobId = null;
-let pollInterval = null;
+let eventSource = null;
 
 // Start process
 async function startProcess() {
@@ -370,10 +331,12 @@ async function startProcess() {
                 progress: 0,
                 keywords_requested: data.keywords_requested,
                 keywords_completed: 0,
+                keywords_failed: 0,
                 current_keyword: null,
                 current_step_label: 'Avvio...'
             });
-            startPolling();
+            // Start SSE connection for real-time updates
+            startSSE();
         } else {
             alert(data.error || 'Errore nell\'avvio del processo');
             resetButton();
@@ -385,8 +348,124 @@ async function startProcess() {
     }
 }
 
-// Poll for status
-async function pollStatus() {
+// Start SSE connection
+function startSSE() {
+    if (eventSource) {
+        eventSource.close();
+    }
+
+    eventSource = new EventSource(`${baseUrl}/ai-content/projects/${projectId}/auto/process/stream`);
+
+    eventSource.addEventListener('started', function(e) {
+        const data = JSON.parse(e.data);
+        console.log('SSE started:', data);
+        currentJobId = data.job_id;
+    });
+
+    eventSource.addEventListener('progress', function(e) {
+        const data = JSON.parse(e.data);
+        console.log('SSE progress:', data);
+
+        const total = data.total || 1;
+        const processed = (data.completed || 0) + (data.failed || 0);
+        const progress = Math.round((processed / total) * 100);
+
+        updateProcessUI({
+            progress: progress,
+            keywords_requested: total,
+            keywords_completed: data.completed || 0,
+            keywords_failed: data.failed || 0,
+            current_keyword: data.keyword,
+            current_step_label: data.step_label || data.step
+        });
+    });
+
+    eventSource.addEventListener('keyword_completed', function(e) {
+        const data = JSON.parse(e.data);
+        console.log('SSE keyword_completed:', data);
+
+        const total = data.total || 1;
+        const processed = (data.completed || 0) + (data.failed || 0);
+        const progress = Math.round((processed / total) * 100);
+
+        updateProcessUI({
+            progress: progress,
+            keywords_requested: total,
+            keywords_completed: data.completed || 0,
+            keywords_failed: data.failed || 0,
+            current_keyword: data.keyword + ' ✓',
+            current_step_label: 'Completato'
+        });
+    });
+
+    eventSource.addEventListener('keyword_error', function(e) {
+        const data = JSON.parse(e.data);
+        console.log('SSE keyword_error:', data);
+
+        const total = data.total || 1;
+        const processed = (data.completed || 0) + (data.failed || 0);
+        const progress = Math.round((processed / total) * 100);
+
+        updateProcessUI({
+            progress: progress,
+            keywords_requested: total,
+            keywords_completed: data.completed || 0,
+            keywords_failed: data.failed || 0,
+            current_keyword: data.keyword + ' ✗',
+            current_step_label: 'Errore: ' + (data.error || 'Sconosciuto')
+        });
+    });
+
+    eventSource.addEventListener('completed', function(e) {
+        const data = JSON.parse(e.data);
+        console.log('SSE completed:', data);
+        stopSSE();
+        showCompleted({
+            keywords_completed: data.completed || 0,
+            keywords_failed: data.failed || 0,
+            articles_generated: data.articles_generated || 0
+        });
+    });
+
+    eventSource.addEventListener('error', function(e) {
+        if (e.data) {
+            const data = JSON.parse(e.data);
+            console.error('SSE error event:', data);
+            stopSSE();
+            showError(data.message || 'Errore sconosciuto');
+        } else if (eventSource.readyState === EventSource.CLOSED) {
+            console.log('SSE connection closed');
+            stopSSE();
+        }
+    });
+
+    eventSource.addEventListener('cancelled', function(e) {
+        const data = JSON.parse(e.data);
+        console.log('SSE cancelled:', data);
+        stopSSE();
+        showCancelled();
+    });
+
+    eventSource.onerror = function(e) {
+        console.error('SSE connection error:', e);
+        // Don't show error immediately - might be normal close
+        if (eventSource.readyState === EventSource.CLOSED) {
+            // Check final status via API
+            checkFinalStatus();
+        }
+    };
+}
+
+// Stop SSE connection
+function stopSSE() {
+    if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+    }
+}
+
+// Check final status after SSE closes
+async function checkFinalStatus() {
     if (!currentJobId) return;
 
     try {
@@ -398,21 +477,16 @@ async function pollStatus() {
 
         if (data.success && data.has_job) {
             const job = data.job;
-            updateProcessUI(job);
-
             if (data.is_completed) {
-                stopPolling();
                 showCompleted(job);
             } else if (data.is_error) {
-                stopPolling();
                 showError(job.error_message || 'Errore sconosciuto');
             } else if (data.is_cancelled) {
-                stopPolling();
                 showCancelled();
             }
         }
     } catch (error) {
-        console.error('Poll status error:', error);
+        console.error('Final status check error:', error);
     }
 }
 
@@ -438,6 +512,7 @@ async function cancelProcess() {
         const data = await response.json();
 
         if (data.success) {
+            stopSSE();
             showCancelled();
         } else {
             alert(data.error || 'Errore nell\'annullamento');
@@ -477,8 +552,8 @@ function showCompleted(job) {
     document.getElementById('process-completed').classList.remove('hidden');
     document.getElementById('process-title').textContent = 'Elaborazione completata';
     document.getElementById('process-completed-stats').textContent =
-        `${job.keywords_completed} articoli generati` +
-        (job.keywords_failed > 0 ? `, ${job.keywords_failed} errori` : '');
+        `${job.keywords_completed || job.articles_generated || 0} articoli generati` +
+        ((job.keywords_failed || 0) > 0 ? `, ${job.keywords_failed} errori` : '');
 
     // Update progress to 100%
     document.getElementById('process-progress-bar').style.width = '100%';
@@ -503,7 +578,7 @@ function showError(errorMessage) {
 }
 
 function showCancelled() {
-    stopPolling();
+    stopSSE();
     document.getElementById('process-spinner').classList.add('hidden');
     document.getElementById('btn-cancel-process').classList.add('hidden');
     document.getElementById('process-title').textContent = 'Elaborazione annullata';
@@ -522,17 +597,6 @@ function resetButton() {
     btn.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>Processa Ora';
 }
 
-function startPolling() {
-    pollInterval = setInterval(pollStatus, 2000);
-}
-
-function stopPolling() {
-    if (pollInterval) {
-        clearInterval(pollInterval);
-        pollInterval = null;
-    }
-}
-
 // Check for existing running job on page load
 document.addEventListener('DOMContentLoaded', async function() {
     try {
@@ -546,7 +610,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             currentJobId = data.job.id;
             showProcessPanel();
             updateProcessUI(data.job);
-            startPolling();
+            // If job is running, start SSE to continue receiving updates
+            startSSE();
         }
     } catch (error) {
         console.error('Initial status check error:', error);

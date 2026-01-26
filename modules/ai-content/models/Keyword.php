@@ -157,12 +157,24 @@ class Keyword
     }
 
     /**
-     * Check if keyword already exists for user
+     * Check if keyword already exists for user in a specific project
+     *
+     * @param string $keyword The keyword to check
+     * @param int $userId The user ID
+     * @param int|null $projectId The project ID (if null, checks globally for user)
+     * @return bool True if keyword exists
      */
-    public function exists(string $keyword, int $userId): bool
+    public function exists(string $keyword, int $userId, ?int $projectId = null): bool
     {
-        $sql = "SELECT COUNT(*) as cnt FROM {$this->table} WHERE keyword = ? AND user_id = ?";
-        $result = Database::fetch($sql, [$keyword, $userId]);
+        if ($projectId !== null) {
+            // Check within specific project
+            $sql = "SELECT COUNT(*) as cnt FROM {$this->table} WHERE keyword = ? AND user_id = ? AND project_id = ?";
+            $result = Database::fetch($sql, [$keyword, $userId, $projectId]);
+        } else {
+            // Legacy: check globally for user (keywords without project)
+            $sql = "SELECT COUNT(*) as cnt FROM {$this->table} WHERE keyword = ? AND user_id = ? AND project_id IS NULL";
+            $result = Database::fetch($sql, [$keyword, $userId]);
+        }
         return (int) $result['cnt'] > 0;
     }
 

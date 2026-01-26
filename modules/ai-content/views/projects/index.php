@@ -1,11 +1,31 @@
 <div class="space-y-6">
+    <!-- Breadcrumbs -->
+    <nav class="flex" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2 text-sm">
+            <li>
+                <span class="text-slate-900 dark:text-white font-medium">AI Content</span>
+            </li>
+        </ol>
+    </nav>
+
     <!-- Header -->
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AI Content Generator</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Genera articoli SEO ottimizzati con intelligenza artificiale</p>
         </div>
-        <div class="mt-4 sm:mt-0">
+        <div class="mt-4 sm:mt-0 flex items-center gap-3">
+            <!-- Quick Links -->
+            <a href="<?= url('/ai-content/jobs') ?>" class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors" title="Gestione Job">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+            </a>
+            <a href="<?= url('/ai-content/wordpress') ?>" class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors" title="Siti WordPress">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/>
+                </svg>
+            </a>
             <a href="<?= url('/ai-content/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>

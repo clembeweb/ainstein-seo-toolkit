@@ -1,30 +1,10 @@
+<?php $currentPage = 'settings'; ?>
+<?php include __DIR__ . '/../partials/project-nav.php'; ?>
+
 <div class="max-w-2xl mx-auto space-y-6">
     <!-- Header -->
     <div>
-        <nav class="flex mb-4" aria-label="Breadcrumb">
-            <ol class="flex items-center space-x-2 text-sm">
-                <li>
-                    <a href="<?= url('/ai-content') ?>" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
-                        AI Content
-                    </a>
-                </li>
-                <li class="flex items-center">
-                    <svg class="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                    <a href="<?= url('/ai-content/projects/' . $project['id']) ?>" class="ml-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
-                        <?= e($project['name']) ?>
-                    </a>
-                </li>
-                <li class="flex items-center">
-                    <svg class="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                    <span class="ml-2 text-slate-900 dark:text-white font-medium">Impostazioni</span>
-                </li>
-            </ol>
-        </nav>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Impostazioni Progetto</h1>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Impostazioni Progetto</h2>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Modifica le impostazioni di "<?= e($project['name']) ?>"
         </p>
@@ -55,7 +35,7 @@
     <?php endif; ?>
 
     <!-- Settings Form -->
-    <form action="<?= url('/ai-content/projects/' . $project['id'] . '/update') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <form action="<?= url('/ai-content/projects/' . $project['id'] . '/update') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700" x-data="{ submitting: false }" @submit="submitting = true">
         <?= csrf_field() ?>
 
         <div class="p-6 space-y-6">
@@ -128,6 +108,36 @@
                     </select>
                 </div>
             </div>
+
+            <!-- WordPress Site -->
+            <div class="pt-6 border-t border-slate-200 dark:border-slate-700">
+                <h3 class="text-md font-semibold text-slate-900 dark:text-white mb-4">Pubblicazione WordPress</h3>
+
+                <div>
+                    <label for="wp_site_id" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        Sito predefinito per pubblicazione
+                    </label>
+                    <select
+                        id="wp_site_id"
+                        name="wp_site_id"
+                        class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    >
+                        <option value="">-- Nessun sito predefinito --</option>
+                        <?php foreach ($wpSites ?? [] as $site): ?>
+                        <option value="<?= $site['id'] ?>" <?= ($project['wp_site_id'] ?? '') == $site['id'] ? 'selected' : '' ?>>
+                            <?= e($site['name']) ?> (<?= e($site['url']) ?>)
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        <?php if (empty($wpSites)): ?>
+                        Nessun sito WordPress collegato. <a href="<?= url('/ai-content/wordpress') ?>" class="text-primary-600 hover:text-primary-700">Aggiungi un sito</a>
+                        <?php else: ?>
+                        Seleziona il sito WordPress predefinito per la pubblicazione degli articoli di questo progetto.
+                        <?php endif; ?>
+                    </p>
+                </div>
+            </div>
         </div>
 
         <!-- Footer -->
@@ -135,8 +145,12 @@
             <a href="<?= url('/ai-content/projects/' . $project['id']) ?>" class="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
                 Torna alla dashboard
             </a>
-            <button type="submit" class="px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
-                Salva modifiche
+            <button type="submit" :disabled="submitting" class="px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center">
+                <svg x-show="submitting" x-cloak class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span x-text="submitting ? 'Salvataggio...' : 'Salva modifiche'"></span>
             </button>
         </div>
     </form>
@@ -146,10 +160,10 @@
         <div class="p-6">
             <h2 class="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">Zona pericolosa</h2>
             <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                Eliminando questo progetto verranno eliminate anche tutte le keywords e gli articoli associati. Questa azione non puo essere annullata.
+                Eliminando questo progetto verranno eliminate anche tutte le keywords e gli articoli associati. Questa azione non può essere annullata.
             </p>
 
-            <form action="<?= url('/ai-content/projects/' . $project['id'] . '/delete') ?>" method="POST" onsubmit="return confirm('Sei sicuro di voler eliminare questo progetto? Verranno eliminate <?= $project['stats']['keywords_count'] ?? 0 ?> keywords e <?= $project['stats']['articles_total'] ?? 0 ?> articoli. Questa azione non puo essere annullata.');">
+            <form action="<?= url('/ai-content/projects/' . $project['id'] . '/delete') ?>" method="POST" onsubmit="return confirm('Sei sicuro di voler eliminare questo progetto? Verranno eliminate <?= $project['stats']['keywords_count'] ?? 0 ?> keywords e <?= $project['stats']['articles_total'] ?? 0 ?> articoli. Questa azione non può essere annullata.');">
                 <?= csrf_field() ?>
                 <button type="submit" class="px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition-colors">
                     Elimina progetto

@@ -252,6 +252,20 @@ class AutoConfig
     }
 
     /**
+     * Reset daily counter if new day (check and reset atomically)
+     */
+    public function resetDailyCounterIfNeeded(int $projectId): bool
+    {
+        $stmt = $this->db->prepare("
+            UPDATE {$this->table}
+            SET articles_today = 0, last_reset_date = CURDATE()
+            WHERE project_id = ? AND (last_reset_date IS NULL OR last_reset_date < CURDATE())
+        ");
+        $stmt->execute([$projectId]);
+        return $stmt->rowCount() > 0;
+    }
+
+    /**
      * Increment articles generated today
      */
     public function incrementArticlesToday(int $projectId, int $count = 1): bool

@@ -1,32 +1,10 @@
-<div class="max-w-2xl mx-auto space-y-6">
-    <!-- Breadcrumb -->
-    <nav class="flex" aria-label="Breadcrumb">
-        <ol class="flex items-center space-x-2 text-sm">
-            <li>
-                <a href="<?= url('/ai-content') ?>" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
-                    AI Content
-                </a>
-            </li>
-            <li class="flex items-center">
-                <svg class="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                </svg>
-                <a href="<?= url('/ai-content/projects/' . $project['id'] . '/auto') ?>" class="ml-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
-                    <?= e($project['name']) ?>
-                </a>
-            </li>
-            <li class="flex items-center">
-                <svg class="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                </svg>
-                <span class="ml-2 text-slate-900 dark:text-white font-medium">Impostazioni</span>
-            </li>
-        </ol>
-    </nav>
+<?php $currentPage = 'settings'; ?>
+<?php include __DIR__ . '/../partials/project-nav.php'; ?>
 
+<div class="max-w-2xl mx-auto space-y-6">
     <!-- Header -->
     <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Impostazioni Automazione</h1>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Impostazioni Automazione</h2>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Configura la generazione automatica degli articoli
         </p>
@@ -186,12 +164,16 @@
             <a href="<?= url('/ai-content/projects/' . $project['id'] . '/auto') ?>" class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
                 Annulla
             </a>
-            <button type="submit" class="px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
+            <button type="submit" :disabled="submitting" class="px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <span class="flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg x-show="!submitting" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
-                    Salva Impostazioni
+                    <svg x-show="submitting" x-cloak class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span x-text="submitting ? 'Salvataggio...' : 'Salva Impostazioni'"></span>
                 </span>
             </button>
         </div>
@@ -217,6 +199,7 @@ function settingsForm() {
         autoPublish: <?= ($config['auto_publish'] ?? false) ? 'true' : 'false' ?>,
         articlesPerDay: initialArticlesPerDay,
         publishTimes: preparedTimes,
+        submitting: false,
 
         get publishTimesString() {
             return this.publishTimes.join(', ');
@@ -241,8 +224,8 @@ function settingsForm() {
         },
 
         prepareSubmit() {
-            // Ensure publish_times is properly formatted before submit
-            // Already handled by the :value binding
+            // Set loading state and submit
+            this.submitting = true;
             return true;
         }
     }

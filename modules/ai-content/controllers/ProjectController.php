@@ -8,6 +8,7 @@ use Core\Router;
 use Core\ModuleLoader;
 use Modules\AiContent\Models\Project;
 use Modules\AiContent\Models\AutoConfig;
+use Modules\AiContent\Models\WpSite;
 
 /**
  * ProjectController
@@ -139,11 +140,16 @@ class ProjectController
             exit;
         }
 
+        // Load user's WP sites for dropdown selection
+        $wpSiteModel = new WpSite();
+        $wpSites = $wpSiteModel->allByUser($user['id']);
+
         return View::render('ai-content/projects/settings', [
             'title' => $project['name'] . ' - Impostazioni',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
+            'wpSites' => $wpSites,
         ]);
     }
 
@@ -165,11 +171,22 @@ class ProjectController
         $description = trim($_POST['description'] ?? '');
         $defaultLanguage = trim($_POST['default_language'] ?? 'it');
         $defaultLocation = trim($_POST['default_location'] ?? 'Italy');
+        $wpSiteId = !empty($_POST['wp_site_id']) ? (int) $_POST['wp_site_id'] : null;
 
         $errors = [];
 
         if (empty($name)) {
             $errors[] = 'Il nome del progetto è obbligatorio';
+        }
+
+        // Validate WP site belongs to user if specified
+        if ($wpSiteId !== null) {
+            $wpSiteModel = new WpSite();
+            $wpSite = $wpSiteModel->find($wpSiteId, $user['id']);
+            if (!$wpSite) {
+                $errors[] = 'Sito WordPress non valido';
+                $wpSiteId = null;
+            }
         }
 
         if (!empty($errors)) {
@@ -184,6 +201,7 @@ class ProjectController
                 'description' => $description ?: null,
                 'default_language' => $defaultLanguage,
                 'default_location' => $defaultLocation,
+                'wp_site_id' => $wpSiteId,
             ], $user['id']);
 
             $_SESSION['_flash']['success'] = 'Impostazioni salvate con successo';

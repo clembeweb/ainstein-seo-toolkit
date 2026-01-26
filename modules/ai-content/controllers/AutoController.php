@@ -506,20 +506,12 @@ class AutoController
         // Make pending items immediately processable (bypass scheduled_at)
         $this->queue->makeImmediatelyProcessable($id, $maxItems);
 
-        // Spawn worker process
-        $spawned = $this->spawnWorker($jobId);
-
-        if (!$spawned) {
-            $this->processJob->markError($jobId, 'Impossibile avviare il worker');
-            echo json_encode(['success' => false, 'error' => 'Impossibile avviare il worker']);
-            return;
-        }
-
+        // Return job info - actual processing will happen via SSE stream
         echo json_encode([
             'success' => true,
             'job_id' => $jobId,
             'keywords_requested' => $maxItems,
-            'message' => "Avviato processo per {$maxItems} keyword"
+            'message' => "Job creato per {$maxItems} keyword"
         ]);
     }
 
@@ -665,49 +657,396 @@ class AutoController
     }
 
     /**
-     * Spawn worker process for a job
+     * Process queue items via SSE (Server-Sent Events)
+     * GET /ai-content/projects/{id}/auto/process/stream
+     *
+     * This replaces the spawnWorker approach that doesn't work on shared hosting
      */
-    private function spawnWorker(int $jobId): bool
+    public function processStream(int $id): void
     {
-        $phpBinary = PHP_BINARY;
-        $workerScript = dirname(__DIR__) . '/cron/process_queue.php';
+        // ===========================================
+        // FASE 1: Operazioni che richiedono la sessione
+        // ===========================================
 
-        if (!file_exists($workerScript)) {
-            error_log("Worker script not found: {$workerScript}");
-            return false;
+        // Auth e salvataggio dati utente in variabili locali
+        $user = Auth::user();
+        $userId = $user['id'];
+
+        // Verifica progetto
+        $project = $this->project->find($id, $userId);
+        if (!$project || $project['type'] !== 'auto') {
+            // Possiamo ancora usare la sessione qui per errori
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
+            return;
         }
 
-        // Log file for worker output
-        $logFile = \ROOT_PATH . '/storage/logs/worker_' . $jobId . '.log';
+        // Get active job
+        $activeJob = $this->processJob->getActiveForProject($id);
+        if (!$activeJob) {
+            $_SESSION['_flash']['error'] = 'Nessun job attivo';
+            return;
+        }
 
-        // Build command based on OS
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            // Windows: Use cmd.exe with /c to properly spawn background process
-            // Escape paths for Windows
-            $phpBinary = str_replace('/', '\\', $phpBinary);
-            $workerScript = str_replace('/', '\\', $workerScript);
-            $logFile = str_replace('/', '\\', $logFile);
+        $jobId = $activeJob['id'];
 
-            // Use WScript or PowerShell for true background execution on Windows
-            // Fallback to simple cmd approach that works in most cases
-            $cmd = "start \"Worker\" /B cmd /c \"\"{$phpBinary}\" \"{$workerScript}\" --job_id={$jobId}\" > \"{$logFile}\" 2>&1";
+        // Get config
+        $config = $this->autoConfig->findByProject($id);
+        $autoSelectSources = (int) ($config['auto_select_sources'] ?? 3);
+        $autoPublish = (bool) ($config['auto_publish'] ?? false);
+        $wpSiteId = $config['wp_site_id'] ?? null;
 
-            // Alternative using PowerShell (more reliable on modern Windows)
-            // $psCmd = "powershell -Command \"Start-Process -NoNewWindow -FilePath '{$phpBinary}' -ArgumentList '{$workerScript}','--job_id={$jobId}'\"";
+        // Load WP site for publishing (richiede userId)
+        $wpSite = null;
+        if ($autoPublish && $wpSiteId) {
+            $wpSite = $this->wpSite->find($wpSiteId, $userId);
+        }
 
-            $handle = popen($cmd, 'r');
-            if ($handle) {
-                pclose($handle);
+        // ===========================================
+        // FASE 2: Rilascio sessione e avvio SSE
+        // ===========================================
+
+        // CRITICAL: Rilascia il lock della sessione per permettere altre richieste
+        // Dopo questo punto NON usare più $_SESSION
+        session_write_close();
+
+        // Disable output buffering
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        // SSE headers
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache');
+        header('Connection: keep-alive');
+        header('X-Accel-Buffering: no');
+
+        // Mark job as running
+        $this->processJob->start($jobId);
+        $this->sendSseEvent('started', ['job_id' => $jobId]);
+
+        // Load services
+        $serpService = null;
+        $scraperService = new \Services\ScraperService();
+        $briefBuilder = new \Modules\AiContent\Services\BriefBuilderService();
+        $articleGenerator = new \Modules\AiContent\Services\ArticleGeneratorService();
+
+        $keywordsCompleted = 0;
+        $keywordsFailed = 0;
+        $articlesGenerated = 0;
+        $creditsUsed = 0;
+        $maxKeywords = (int) $activeJob['keywords_requested'];
+
+        // Process each pending keyword
+        while ($keywordsCompleted + $keywordsFailed < $maxKeywords) {
+            // Check if cancelled
+            if ($this->processJob->isCancelled($jobId)) {
+                $this->sendSseEvent('cancelled', ['message' => 'Processo annullato']);
+                break;
             }
 
-            // Give the process a moment to start
-            usleep(100000); // 100ms
-        } else {
-            // Unix: use nohup and &
-            $cmd = "nohup {$phpBinary} \"{$workerScript}\" --job_id={$jobId} > \"{$logFile}\" 2>&1 &";
-            exec($cmd);
+            // Get next pending item
+            $queueItem = $this->queue->getNextPendingForProject($id);
+            if (!$queueItem) {
+                break;
+            }
+
+            $keyword = $queueItem['keyword'];
+            $queueId = $queueItem['id'];
+
+            // Update status to processing
+            $this->queue->updateStatus($queueId, 'processing');
+            $this->processJob->updateProgress($jobId, [
+                'current_queue_id' => $queueId,
+                'current_keyword' => $keyword,
+                'current_step' => 'serp'
+            ]);
+
+            $this->sendSseEvent('progress', [
+                'keyword' => $keyword,
+                'step' => 'serp',
+                'step_label' => 'Estrazione SERP',
+                'completed' => $keywordsCompleted,
+                'failed' => $keywordsFailed,
+                'total' => $maxKeywords
+            ]);
+
+            try {
+                // Step 1: SERP extraction
+                if ($serpService === null) {
+                    $serpService = new \Modules\AiContent\Services\SerpApiService();
+                }
+
+                $serpResults = $serpService->search(
+                    $keyword,
+                    $queueItem['language'] ?? 'it',
+                    $queueItem['location'] ?? 'Italy'
+                );
+
+                // Reconnect DB after external API call
+                \Core\Database::reconnect();
+
+                // Step 2: Scrape sources
+                $this->processJob->updateProgress($jobId, ['current_step' => 'scraping']);
+                $this->sendSseEvent('progress', [
+                    'keyword' => $keyword,
+                    'step' => 'scraping',
+                    'step_label' => 'Scraping fonti',
+                    'completed' => $keywordsCompleted,
+                    'failed' => $keywordsFailed,
+                    'total' => $maxKeywords
+                ]);
+
+                $scrapedSources = [];
+                $urlsToScrape = array_slice(
+                    array_column($serpResults['organic'], 'url'),
+                    0,
+                    $autoSelectSources
+                );
+
+                foreach ($urlsToScrape as $url) {
+                    try {
+                        $scraped = $scraperService->scrape($url);
+                        if ($scraped && !empty($scraped['content'])) {
+                            $scrapedSources[] = $scraped;
+                        }
+                    } catch (\Exception $e) {
+                        // Skip failed URLs
+                    }
+                }
+
+                if (empty($scrapedSources)) {
+                    throw new \Exception('Impossibile estrarre contenuto dalle fonti');
+                }
+
+                // Reconnect DB
+                \Core\Database::reconnect();
+
+                // Step 3: Generate brief
+                $this->processJob->updateProgress($jobId, ['current_step' => 'brief']);
+                $this->sendSseEvent('progress', [
+                    'keyword' => $keyword,
+                    'step' => 'brief',
+                    'step_label' => 'Generazione brief',
+                    'completed' => $keywordsCompleted,
+                    'failed' => $keywordsFailed,
+                    'total' => $maxKeywords
+                ]);
+
+                $keywordData = [
+                    'keyword' => $keyword,
+                    'language' => $queueItem['language'] ?? 'it',
+                    'location' => $queueItem['location'] ?? 'Italy'
+                ];
+
+                $brief = $briefBuilder->build(
+                    $keywordData,
+                    $serpResults['organic'],
+                    $serpResults['paa'],
+                    $scrapedSources,
+                    $userId
+                );
+
+                // Reconnect DB
+                \Core\Database::reconnect();
+
+                // Step 4: Generate article
+                $this->processJob->updateProgress($jobId, ['current_step' => 'article']);
+                $this->sendSseEvent('progress', [
+                    'keyword' => $keyword,
+                    'step' => 'article',
+                    'step_label' => 'Generazione articolo',
+                    'completed' => $keywordsCompleted,
+                    'failed' => $keywordsFailed,
+                    'total' => $maxKeywords
+                ]);
+
+                // Add scraped sources to brief
+                $brief['scraped_sources'] = array_map(function($source) {
+                    return [
+                        'url' => $source['url'],
+                        'title' => $source['title'],
+                        'content' => $source['content'],
+                        'headings' => $source['headings'],
+                        'word_count' => $source['word_count']
+                    ];
+                }, $scrapedSources);
+
+                $targetWords = $brief['recommended_word_count'] ?? 1500;
+                $articleResult = $articleGenerator->generate($brief, (int) $targetWords, $userId);
+
+                if (!$articleResult['success']) {
+                    throw new \Exception($articleResult['error'] ?? 'Generazione articolo fallita');
+                }
+
+                // Reconnect DB
+                \Core\Database::reconnect();
+
+                // Step 5: Save to database
+                $this->processJob->updateProgress($jobId, ['current_step' => 'saving']);
+                $this->sendSseEvent('progress', [
+                    'keyword' => $keyword,
+                    'step' => 'saving',
+                    'step_label' => 'Salvataggio',
+                    'completed' => $keywordsCompleted,
+                    'failed' => $keywordsFailed,
+                    'total' => $maxKeywords
+                ]);
+
+                // Create keyword record
+                $keywordModel = new \Modules\AiContent\Models\Keyword();
+                $keywordId = $keywordModel->create([
+                    'user_id' => $userId,
+                    'project_id' => $id,
+                    'keyword' => $keyword,
+                    'language' => $queueItem['language'] ?? 'it',
+                    'location' => $queueItem['location'] ?? 'Italy'
+                ]);
+
+                // Create article record (first create, then update with content)
+                $articleModel = new \Modules\AiContent\Models\Article();
+                $articleId = $articleModel->create([
+                    'keyword_id' => $keywordId,
+                    'user_id' => $userId,
+                    'project_id' => $id,
+                    'status' => 'draft'
+                ]);
+
+                // Update with generated content
+                $articleModel->updateContent($articleId, [
+                    'title' => $articleResult['title'],
+                    'meta_description' => $articleResult['meta_description'],
+                    'content' => $articleResult['content'],
+                    'word_count' => $articleResult['word_count'],
+                    'model_used' => $articleResult['model_used'] ?? null,
+                    'generation_time_ms' => $articleResult['generation_time_ms'] ?? null
+                ]);
+
+                // Link queue item
+                $this->queue->linkGenerated($queueId, $keywordId, $articleId);
+
+                // Step 6: Publish to WordPress (optional)
+                if ($autoPublish && $wpSite) {
+                    $this->sendSseEvent('progress', [
+                        'keyword' => $keyword,
+                        'step' => 'publishing',
+                        'step_label' => 'Pubblicazione WordPress',
+                        'completed' => $keywordsCompleted,
+                        'failed' => $keywordsFailed,
+                        'total' => $maxKeywords
+                    ]);
+
+                    try {
+                        $wpResult = $this->publishToWordPress($wpSite, [
+                            'title' => $articleResult['title'],
+                            'content' => $articleResult['content'],
+                            'meta_description' => $articleResult['meta_description'],
+                            'status' => 'draft'
+                        ]);
+
+                        if ($wpResult['success'] && !empty($wpResult['post_id'])) {
+                            $articleModel->markPublished($articleId, $wpSite['id'], $wpResult['post_id']);
+                        }
+                    } catch (\Exception $e) {
+                        // Log but don't fail the whole process
+                    }
+                }
+
+                // Success!
+                $keywordsCompleted++;
+                $articlesGenerated++;
+                $this->processJob->incrementCompleted($jobId);
+
+                $this->sendSseEvent('keyword_completed', [
+                    'keyword' => $keyword,
+                    'article_id' => $articleId,
+                    'completed' => $keywordsCompleted,
+                    'failed' => $keywordsFailed,
+                    'total' => $maxKeywords
+                ]);
+
+            } catch (\Exception $e) {
+                // Handle error
+                $keywordsFailed++;
+                $this->queue->updateStatus($queueId, 'error', $e->getMessage());
+                $this->processJob->incrementFailed($jobId);
+
+                // Reconnect DB in case error was DB-related
+                \Core\Database::reconnect();
+
+                $this->sendSseEvent('keyword_error', [
+                    'keyword' => $keyword,
+                    'error' => $e->getMessage(),
+                    'completed' => $keywordsCompleted,
+                    'failed' => $keywordsFailed,
+                    'total' => $maxKeywords
+                ]);
+            }
+
+            // Small delay between keywords
+            usleep(500000); // 500ms
         }
 
-        return true;
+        // Mark job as completed
+        $this->processJob->complete($jobId);
+
+        $this->sendSseEvent('completed', [
+            'completed' => $keywordsCompleted,
+            'failed' => $keywordsFailed,
+            'articles_generated' => $articlesGenerated,
+            'message' => "Completato: {$keywordsCompleted} articoli generati, {$keywordsFailed} errori"
+        ]);
+    }
+
+    /**
+     * Send SSE event
+     */
+    private function sendSseEvent(string $event, array $data): void
+    {
+        echo "event: {$event}\n";
+        echo "data: " . json_encode($data) . "\n\n";
+
+        if (ob_get_level()) {
+            ob_flush();
+        }
+        flush();
+    }
+
+    /**
+     * Publish article to WordPress site
+     */
+    private function publishToWordPress(array $wpSite, array $postData): array
+    {
+        $url = rtrim($wpSite['url'], '/') . '/wp-json/seo-toolkit/v1/posts';
+        $apiKey = $wpSite['api_key'];
+
+        $scraper = new \Services\ScraperService();
+
+        try {
+            $result = $scraper->postJson($url, $postData, [
+                'timeout' => 60,
+                'headers' => [
+                    'X-SEO-Toolkit-Key: ' . $apiKey,
+                    'Content-Type: application/json'
+                ]
+            ]);
+
+            if (isset($result['error'])) {
+                return [
+                    'success' => false,
+                    'error' => $result['message'] ?? 'API error'
+                ];
+            }
+
+            return [
+                'success' => true,
+                'post_id' => $result['data']['post_id'] ?? null,
+                'post_url' => $result['data']['post_url'] ?? null
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
     }
 }

@@ -21,14 +21,12 @@ class DashboardController
     private Project $project;
     private Keyword $keyword;
     private Article $article;
-    private WpSite $wpSite;
 
     public function __construct()
     {
         $this->project = new Project();
         $this->keyword = new Keyword();
         $this->article = new Article();
-        $this->wpSite = new WpSite();
     }
 
     /**
@@ -65,13 +63,18 @@ class DashboardController
             $keywordsData = $this->keyword->allByUser($user['id']);
         }
 
-        $wpSitesCount = $this->wpSite->countByUser($user['id']);
-
         // Get recent articles (filtrati per progetto se specificato)
         if ($project) {
             $recentArticles = $this->article->getRecentByProject($projectId, 5);
         } else {
             $recentArticles = $this->article->getRecent($user['id'], 5);
+        }
+
+        // Load linked WP site for project (if any)
+        $linkedWpSite = null;
+        if ($project && !empty($project['wp_site_id'])) {
+            $wpSiteModel = new WpSite();
+            $linkedWpSite = $wpSiteModel->find($project['wp_site_id'], $user['id']);
         }
 
         $title = $project ? $project['name'] : 'AI SEO Content Generator';
@@ -81,6 +84,7 @@ class DashboardController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
+            'linkedWpSite' => $linkedWpSite,
             'stats' => [
                 'keywords' => $keywordsCount,
                 'articles' => $stats['total'] ?? 0,
@@ -88,7 +92,6 @@ class DashboardController
                 'ready' => $stats['ready'] ?? 0,
                 'total_words' => $stats['total_words'] ?? 0,
                 'total_credits' => $stats['total_credits'] ?? 0,
-                'wp_sites' => $wpSitesCount
             ],
             'recentArticles' => $recentArticles,
             'keywords' => $keywordsData['data'] ?? []

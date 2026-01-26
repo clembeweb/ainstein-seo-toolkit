@@ -1,3 +1,7 @@
+<?php
+// Base URL for project context
+$baseUrl = !empty($article['project_id']) ? '/ai-content/projects/' . $article['project_id'] : '/ai-content';
+?>
 <div class="space-y-6" x-data="articleEditor(<?= htmlspecialchars(json_encode([
     'id' => $article['id'],
     'title' => $article['title'] ?? '',
@@ -6,10 +10,45 @@
     'status' => $article['status'] ?? 'draft',
 ]), ENT_QUOTES) ?>)">
 
+    <!-- Breadcrumbs -->
+    <nav class="flex" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2 text-sm">
+            <li>
+                <a href="<?= url('/ai-content') ?>" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
+                    AI Content
+                </a>
+            </li>
+            <?php if (!empty($article['project_id']) && !empty($project)): ?>
+            <li class="flex items-center">
+                <svg class="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <a href="<?= url('/ai-content/projects/' . $article['project_id']) ?>" class="ml-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
+                    <?= e($project['name'] ?? 'Progetto') ?>
+                </a>
+            </li>
+            <?php endif; ?>
+            <li class="flex items-center">
+                <svg class="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <a href="<?= url($baseUrl . '/articles') ?>" class="ml-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
+                    Articoli
+                </a>
+            </li>
+            <li class="flex items-center">
+                <svg class="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <span class="ml-2 text-slate-900 dark:text-white font-medium">#<?= $article['id'] ?></span>
+            </li>
+        </ol>
+    </nav>
+
     <!-- Header -->
     <div class="flex items-center justify-between">
         <div class="flex items-center gap-4">
-            <a href="<?= url('/ai-content/articles') ?>" class="p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+            <a href="<?= url($baseUrl . '/articles') ?>" class="p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                 </svg>
@@ -380,7 +419,7 @@
                 <?php endif; ?>
 
                 <!-- Back to List -->
-                <a href="<?= url('/ai-content/articles') ?>"
+                <a href="<?= url($baseUrl . '/articles') ?>"
                    class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>

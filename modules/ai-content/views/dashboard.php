@@ -2,46 +2,19 @@
 // Determina URL base per i link (con o senza progetto)
 $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'] : '/ai-content';
 ?>
-<div class="space-y-6">
-    <!-- Breadcrumb (solo se in un progetto) -->
-    <?php if (isset($project) && $project): ?>
-    <nav class="flex" aria-label="Breadcrumb">
-        <ol class="flex items-center space-x-2 text-sm">
-            <li>
-                <a href="<?= url('/ai-content') ?>" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
-                    AI Content
-                </a>
-            </li>
-            <li class="flex items-center">
-                <svg class="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                </svg>
-                <span class="ml-2 text-slate-900 dark:text-white font-medium"><?= e($project['name']) ?></span>
-            </li>
-        </ol>
-    </nav>
-    <?php endif; ?>
 
-    <!-- Header -->
+<?php if (isset($project) && $project): ?>
+<?php $currentPage = 'dashboard'; ?>
+<?php include __DIR__ . '/partials/project-nav.php'; ?>
+<?php endif; ?>
+
+<div class="space-y-6">
+    <?php if (!isset($project) || !$project): ?>
+    <!-- Header (global view) -->
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
-            <?php if (isset($project) && $project): ?>
-            <div class="flex items-center gap-3">
-                <h1 class="text-2xl font-bold text-slate-900 dark:text-white"><?= e($project['name']) ?></h1>
-                <a href="<?= url('/ai-content/projects/' . $project['id'] . '/settings') ?>" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="Impostazioni progetto">
-                    <svg class="w-5 h-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                </a>
-            </div>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                <?= e($project['description'] ?? 'Dashboard del progetto') ?>
-            </p>
-            <?php else: ?>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AI SEO Content Generator</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Genera articoli SEO-ottimizzati con intelligenza artificiale</p>
-            <?php endif; ?>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-3">
             <a href="<?= url($baseUrl . '/keywords') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
@@ -52,6 +25,7 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
             </a>
         </div>
     </div>
+    <?php endif; ?>
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -100,20 +74,36 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
             </div>
         </a>
 
-        <!-- WP Sites -->
-        <a href="<?= url($baseUrl . '/wordpress') ?>" class="block bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md hover:border-amber-300 dark:hover:border-amber-700 transition-all">
+        <!-- WP Site (linked to project) -->
+        <?php if (isset($project) && $project): ?>
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center gap-3">
                 <div class="h-10 w-10 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
                     <svg class="h-5 w-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
                     </svg>
                 </div>
-                <div>
-                    <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($stats['wp_sites']) ?></p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">Siti WP</p>
+                <div class="flex-1 min-w-0">
+                    <?php if (!empty($linkedWpSite)): ?>
+                    <p class="font-medium text-slate-900 dark:text-white truncate"><?= e($linkedWpSite['name']) ?></p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 truncate"><?= e($linkedWpSite['url']) ?></p>
+                    <?php else: ?>
+                    <p class="font-medium text-slate-500 dark:text-slate-400">Nessun sito collegato</p>
+                    <a href="<?= url('/ai-content/projects/' . $project['id'] . '/settings') ?>" class="text-xs text-primary-600 hover:text-primary-700">Configura nelle impostazioni</a>
+                    <?php endif; ?>
                 </div>
             </div>
-        </a>
+            <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+                <a href="<?= url('/ai-content/wordpress') ?>" class="text-xs text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400 flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Gestisci tutti i siti WP
+                </a>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 
     <!-- Additional Stats Row -->
@@ -179,7 +169,7 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
                     </div>
                 </a>
 
-                <a href="<?= url($baseUrl . '/wordpress') ?>" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
+                <a href="<?= url('/ai-content/wordpress') ?>" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
                     <div class="h-10 w-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center group-hover:scale-105 transition-transform">
                         <svg class="h-5 w-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
@@ -187,9 +177,24 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
                     </div>
                     <div>
                         <p class="font-medium text-slate-900 dark:text-white">Siti WordPress</p>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">Collega i tuoi siti</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Gestisci tutti i siti</p>
                     </div>
                 </a>
+
+                <?php if (isset($project) && $project): ?>
+                <a href="<?= url($baseUrl . '/settings') ?>" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
+                    <div class="h-10 w-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <svg class="h-5 h-5 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="font-medium text-slate-900 dark:text-white">Impostazioni</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Configura il progetto</p>
+                    </div>
+                </a>
+                <?php endif; ?>
             </div>
         </div>
 
