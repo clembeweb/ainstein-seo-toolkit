@@ -11,6 +11,7 @@ use Modules\SeoTracking\Models\Project;
 use Modules\SeoTracking\Models\KeywordGroup;
 use Modules\SeoTracking\Services\AiReportService;
 use Modules\SeoTracking\Services\QuickWinsService;
+use Modules\SeoTracking\Services\SeoPageAnalyzerService;
 
 /**
  * AiController
@@ -21,6 +22,7 @@ class AiController
     private Project $project;
     private AiReportService $aiService;
     private QuickWinsService $quickWinsService;
+    private SeoPageAnalyzerService $pageAnalyzer;
     private KeywordGroup $keywordGroup;
 
     public function __construct()
@@ -28,6 +30,7 @@ class AiController
         $this->project = new Project();
         $this->aiService = new AiReportService();
         $this->quickWinsService = new QuickWinsService();
+        $this->pageAnalyzer = new SeoPageAnalyzerService();
         $this->keywordGroup = new KeywordGroup();
     }
 
@@ -360,6 +363,152 @@ class AiController
             'report_id' => $result['report_id'],
             'keywords_analyzed' => $result['keywords_analyzed'],
             'credits_used' => $result['credits_used'],
+        ]);
+    }
+
+    // =========================================
+    // SEO PAGE ANALYZER
+    // =========================================
+
+    /**
+     * Analizza una pagina specifica per una keyword - POST AJAX
+     *
+     * Parametri POST:
+     * - keyword: string (keyword target)
+     * - url: string (URL della pagina da analizzare)
+     * - position: int (posizione attuale, opzionale)
+     * - location_code: string (default IT)
+     * - force_fresh: bool (forza nuovo check SERP)
+     */
+    public function analyzePage(int $projectId): string
+    {
+        $user = Auth::user();
+        $project = $this->project->find($projectId, $user['id']);
+
+        if (!$project) {
+            return View::json(['error' => 'Progetto non trovato'], 404);
+        }
+
+        // Parametri richiesti
+        $keyword = trim($_POST['keyword'] ?? '');
+        $url = trim($_POST['url'] ?? '');
+
+        if (empty($keyword) || empty($url)) {
+            return View::json(['error' => 'Keyword e URL sono obbligatori'], 400);
+        }
+
+        // Valida URL
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return View::json(['error' => 'URL non valido'], 400);
+        }
+
+        // Parametri opzionali
+        $position = !empty($_POST['position']) ? (int) $_POST['position'] : null;
+        $locationCode = $_POST['location_code'] ?? 'IT';
+        $forceFresh = filter_var($_POST['force_fresh'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+        // Verifica configurazione
+        if (!$this->pageAnalyzer->isConfigured()) {
+            return View::json([
+                'error' => 'Servizio non configurato. Verifica API AI e SERP nelle impostazioni.'
+            ], 400);
+        }
+
+        // Esegui analisi
+        $result = $this->pageAnalyzer->analyze(
+            $projectId,
+            $user['id'],
+            $keyword,
+            $url,
+            $position,
+            [
+                'location_code' => $locationCode,
+                'force_fresh_serp' => $forceFresh,
+            ]
+        );
+
+        if (isset($result['error'])) {
+            $code = str_contains($result['message'] ?? '', 'Crediti') ? 402 : 400;
+            return View::json(['error' => $result['message']], $code);
+        }
+
+        return View::json([
+            'success' => true,
+            'analysis_id' => $result['analysis_id'],
+            'data' => $result['data'],
+            'target_page' => $result['target_page'],
+            'competitors_analyzed' => $result['competitors_analyzed'],
+            'credits_used' => $result['credits_used'],
+        ]);
+    }
+
+    /**
+     * Ottieni analisi pagina per ID - GET AJAX
+     */
+    public function getPageAnalysis(int $projectId, int $analysisId): string
+    {
+        $user = Auth::user();
+        $project = $this->project->find($projectId, $user['id']);
+
+        if (!$project) {
+            return View::json(['error' => 'Progetto non trovato'], 404);
+        }
+
+        $analysis = $this->pageAnalyzer->getAnalysis($analysisId);
+
+        if (!$analysis || $analysis['project_id'] != $projectId) {
+            return View::json(['error' => 'Analisi non trovata'], 404);
+        }
+
+        return View::json([
+            'success' => true,
+            'analysis' => $analysis,
+        ]);
+    }
+
+    /**
+     * Lista analisi pagine recenti - GET AJAX
+     */
+    public function listPageAnalyses(int $projectId): string
+    {
+        $user = Auth::user();
+        $project = $this->project->find($projectId, $user['id']);
+
+        if (!$project) {
+            return View::json(['error' => 'Progetto non trovato'], 404);
+        }
+
+        $limit = min((int) ($_GET['limit'] ?? 10), 50);
+        $analyses = $this->pageAnalyzer->getRecentAnalyses($projectId, $limit);
+
+        return View::json([
+            'success' => true,
+            'analyses' => $analyses,
+        ]);
+    }
+
+    /**
+     * Ottieni costo analisi pagina - GET AJAX
+     */
+    public function getPageAnalysisCost(int $projectId): string
+    {
+        $user = Auth::user();
+        $project = $this->project->find($projectId, $user['id']);
+
+        if (!$project) {
+            return View::json(['error' => 'Progetto non trovato'], 404);
+        }
+
+        $cost = $this->pageAnalyzer->getCreditCost();
+        $balance = Credits::getBalance($user['id']);
+        $isConfigured = $this->pageAnalyzer->isConfigured();
+
+        return View::json([
+            'success' => true,
+            'cost' => $cost,
+            'balance' => $balance,
+            'can_analyze' => $isConfigured && $balance >= $cost,
+            'is_configured' => $isConfigured,
         ]);
     }
 }

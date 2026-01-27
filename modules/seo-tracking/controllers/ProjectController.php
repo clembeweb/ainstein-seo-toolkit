@@ -162,12 +162,17 @@ class ProjectController
         }
 
         $name = trim($_POST['name'] ?? '');
+        $domain = trim($_POST['domain'] ?? '');
         $notificationEmails = trim($_POST['notification_emails'] ?? '');
 
         $errors = [];
 
         if (empty($name)) {
             $errors[] = 'Il nome del progetto è obbligatorio';
+        }
+
+        if (empty($domain)) {
+            $errors[] = 'Il dominio è obbligatorio';
         }
 
         // Valida email notifiche
@@ -192,6 +197,7 @@ class ProjectController
         try {
             $this->project->update($id, [
                 'name' => $name,
+                'domain' => Project::normalizeDomain($domain),
                 'notification_emails' => !empty($emails) ? json_encode($emails) : null,
                 'sync_enabled' => isset($_POST['sync_enabled']) ? 1 : 0,
                 'ai_reports_enabled' => isset($_POST['ai_reports_enabled']) ? 1 : 0,

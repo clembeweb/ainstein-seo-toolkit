@@ -4,7 +4,7 @@
  * Storico completo verifiche SERP
  */
 
-$currentPage = 'rank-check';
+$currentPage = 'history';
 ?>
 <div class="space-y-6">
     <!-- Header + Navigation -->
@@ -17,12 +17,12 @@ $currentPage = 'rank-check';
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Tutte le verifiche posizione effettuate</p>
         </div>
         <div>
-            <a href="<?= url("/seo-tracking/project/{$project['id']}/rank-check") ?>"
+            <a href="<?= url("/seo-tracking/project/{$project['id']}/keywords") ?>"
                class="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
                 </svg>
-                Nuova Verifica
+                Gestisci Keywords
             </a>
         </div>
     </div>
@@ -91,6 +91,19 @@ $currentPage = 'rank-check';
         </div>
     </div>
 
+    <!-- Info risultati -->
+    <?php if (!empty($pagination)): ?>
+    <div class="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
+        <span>
+            <?php
+            $start = ($pagination['current_page'] - 1) * $pagination['per_page'] + 1;
+            $end = min($pagination['current_page'] * $pagination['per_page'], $pagination['total_count']);
+            ?>
+            Mostrati <?= $start ?>-<?= $end ?> di <?= number_format($pagination['total_count']) ?> risultati
+        </span>
+    </div>
+    <?php endif; ?>
+
     <!-- Tabella -->
     <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
         <?php if (empty($checks)): ?>
@@ -99,9 +112,9 @@ $currentPage = 'rank-check';
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
             <p class="mt-4 text-slate-500 dark:text-slate-400">Nessuna verifica trovata</p>
-            <a href="<?= url("/seo-tracking/project/{$project['id']}/rank-check") ?>"
+            <a href="<?= url("/seo-tracking/project/{$project['id']}/keywords") ?>"
                class="mt-4 inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">
-                Effettua Prima Verifica
+                Vai alle Keywords
             </a>
         </div>
         <?php else: ?>
@@ -188,6 +201,80 @@ $currentPage = 'rank-check';
                 </tbody>
             </table>
         </div>
+
+        <!-- Paginazione -->
+        <?php if (!empty($pagination) && $pagination['total_pages'] > 1): ?>
+        <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-700">
+            <?php
+            // Costruisci query string mantenendo i filtri
+            $queryParams = [];
+            if (!empty($filters['keyword'])) $queryParams['keyword'] = $filters['keyword'];
+            if (!empty($filters['device'])) $queryParams['device'] = $filters['device'];
+            if (!empty($filters['date_from'])) $queryParams['date_from'] = $filters['date_from'];
+            if (!empty($filters['date_to'])) $queryParams['date_to'] = $filters['date_to'];
+            if (!empty($filters['found_only'])) $queryParams['found_only'] = '1';
+            if (!empty($filters['not_found_only'])) $queryParams['not_found_only'] = '1';
+
+            $baseUrl = url("/seo-tracking/project/{$project['id']}/rank-check/history");
+
+            function buildPageUrl($baseUrl, $queryParams, $page) {
+                $queryParams['page'] = $page;
+                return $baseUrl . '?' . http_build_query($queryParams);
+            }
+            ?>
+            <nav class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <?php if ($pagination['current_page'] > 1): ?>
+                    <a href="<?= buildPageUrl($baseUrl, $queryParams, $pagination['current_page'] - 1) ?>"
+                       class="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-600">
+                        Precedente
+                    </a>
+                    <?php endif; ?>
+                </div>
+
+                <div class="flex items-center gap-1">
+                    <?php
+                    $startPage = max(1, $pagination['current_page'] - 2);
+                    $endPage = min($pagination['total_pages'], $pagination['current_page'] + 2);
+
+                    if ($startPage > 1): ?>
+                        <a href="<?= buildPageUrl($baseUrl, $queryParams, 1) ?>"
+                           class="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md">1</a>
+                        <?php if ($startPage > 2): ?>
+                            <span class="px-2 text-slate-400">...</span>
+                        <?php endif; ?>
+                    <?php endif; ?>
+
+                    <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
+                        <?php if ($i === $pagination['current_page']): ?>
+                            <span class="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md"><?= $i ?></span>
+                        <?php else: ?>
+                            <a href="<?= buildPageUrl($baseUrl, $queryParams, $i) ?>"
+                               class="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md"><?= $i ?></a>
+                        <?php endif; ?>
+                    <?php endfor; ?>
+
+                    <?php if ($endPage < $pagination['total_pages']): ?>
+                        <?php if ($endPage < $pagination['total_pages'] - 1): ?>
+                            <span class="px-2 text-slate-400">...</span>
+                        <?php endif; ?>
+                        <a href="<?= buildPageUrl($baseUrl, $queryParams, $pagination['total_pages']) ?>"
+                           class="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md"><?= $pagination['total_pages'] ?></a>
+                    <?php endif; ?>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <?php if ($pagination['current_page'] < $pagination['total_pages']): ?>
+                    <a href="<?= buildPageUrl($baseUrl, $queryParams, $pagination['current_page'] + 1) ?>"
+                       class="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-600">
+                        Successivo
+                    </a>
+                    <?php endif; ?>
+                </div>
+            </nav>
+        </div>
+        <?php endif; ?>
+
         <?php endif; ?>
     </div>
 </div>

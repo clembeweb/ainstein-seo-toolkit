@@ -296,6 +296,12 @@ class Keyword
     {
         $total = Database::count($this->table, 'project_id = ?', [$projectId]);
 
+        $tracked = Database::count(
+            $this->table,
+            'project_id = ? AND is_tracked = 1',
+            [$projectId]
+        );
+
         $top10 = Database::count(
             $this->table,
             'project_id = ? AND last_position IS NOT NULL AND last_position <= 10',
@@ -315,7 +321,9 @@ class Keyword
         );
 
         return [
+            'total' => $total,
             'total_keywords' => $total,
+            'tracked' => $tracked,
             'keywords_top3' => $top3,
             'keywords_top10' => $top10,
             'keywords_with_clicks' => $withClicks,
@@ -446,5 +454,110 @@ class Keyword
         $sql .= " ORDER BY search_volume DESC, keyword ASC";
 
         return Database::fetchAll($sql, $params);
+    }
+
+    /**
+     * Aggiorna volumi di ricerca per keyword specifiche (per ID)
+     * Usato per auto-fetch dopo inserimento nuove keyword
+     */
+    public function updateSearchVolumesForIds(array $keywordIds): array
+    {
+        if (empty($keywordIds)) {
+            return ['success' => true, 'updated' => 0, 'message' => 'Nessuna keyword da aggiornare'];
+        }
+
+        $dataForSeo = new \Services\DataForSeoService();
+
+        if (!$dataForSeo->isConfigured()) {
+            return ['success' => false, 'error' => 'DataForSEO non configurato'];
+        }
+
+        // Prendi le keyword per ID
+        $placeholders = implode(',', array_fill(0, count($keywordIds), '?'));
+        $keywords = Database::fetchAll(
+            "SELECT * FROM {$this->table} WHERE id IN ({$placeholders})",
+            $keywordIds
+        );
+
+        if (empty($keywords)) {
+            return ['success' => true, 'updated' => 0, 'message' => 'Nessuna keyword trovata'];
+        }
+
+        // Raggruppa keyword per location_code
+        $keywordsByLocation = [];
+        foreach ($keywords as $kw) {
+            $locCode = $kw['location_code'] ?? 'IT';
+            if (!isset($keywordsByLocation[$locCode])) {
+                $keywordsByLocation[$locCode] = [];
+            }
+            $keywordsByLocation[$locCode][] = $kw;
+        }
+
+        $updated = 0;
+        $totalCached = 0;
+        $totalFetched = 0;
+        $errors = [];
+
+        // Processa ogni gruppo di location
+        foreach ($keywordsByLocation as $locationCode => $locationKeywords) {
+            $keywordTexts = array_column($locationKeywords, 'keyword');
+
+            // Ottieni volumi per questa location
+            $result = $dataForSeo->getSearchVolumes($keywordTexts, $locationCode);
+
+            if (!$result['success']) {
+                $errors[] = "Errore per location {$locationCode}: " . ($result['error'] ?? 'unknown');
+                continue;
+            }
+
+            $totalCached += $result['cached'] ?? 0;
+            $totalFetched += $result['fetched'] ?? 0;
+
+            // Aggiorna keyword nel DB
+            foreach ($locationKeywords as $kw) {
+                $volumeData = $result['data'][$kw['keyword']] ?? null;
+                if ($volumeData) {
+                    // Sanitizza competition: deve essere decimal, non stringa
+                    $competition = $volumeData['competition'] ?? null;
+                    if ($competition !== null && !is_numeric($competition)) {
+                        $competition = null; // Se e' una stringa come 'LOW', usa null
+                    } elseif ($competition !== null) {
+                        $competition = (float) $competition;
+                    }
+
+                    $sql = "UPDATE {$this->table} SET
+                            search_volume = ?,
+                            cpc = ?,
+                            competition = ?,
+                            competition_level = ?,
+                            volume_updated_at = NOW()
+                            WHERE id = ?";
+
+                    Database::execute($sql, [
+                        $volumeData['search_volume'] ?? null,
+                        $volumeData['cpc'] ?? null,
+                        $competition,
+                        $volumeData['competition_level'] ?? null,
+                        $kw['id']
+                    ]);
+                    $updated++;
+                }
+            }
+        }
+
+        $response = [
+            'success' => true,
+            'updated' => $updated,
+            'total' => count($keywords),
+            'cached' => $totalCached,
+            'fetched' => $totalFetched,
+            'message' => "Volumi aggiornati per {$updated} keyword"
+        ];
+
+        if (!empty($errors)) {
+            $response['warnings'] = $errors;
+        }
+
+        return $response;
     }
 }

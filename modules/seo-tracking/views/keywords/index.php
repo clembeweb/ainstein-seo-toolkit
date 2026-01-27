@@ -4,24 +4,71 @@
     <?php include __DIR__ . '/../partials/project-nav.php'; ?>
 
     <!-- Page Info + Actions -->
-    <div class="flex justify-between items-center">
-        <p class="text-sm text-slate-500 dark:text-slate-400">
-            <?= number_format($stats['total'] ?? 0) ?> keyword totali, <?= number_format($stats['tracked'] ?? 0) ?> tracciate
-        </p>
-        <div class="flex items-center gap-3">
-            <button type="button" onclick="updateVolumes()" id="updateVolumesBtn"
-                    class="inline-flex items-center px-4 py-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+    <div class="flex flex-col gap-3">
+        <div class="flex justify-between items-center">
+            <p class="text-sm text-slate-500 dark:text-slate-400">
+                <?= number_format($stats['total'] ?? 0) ?> keyword totali, <?= number_format($stats['tracked'] ?? 0) ?> tracciate
+            </p>
+            <div class="flex items-center gap-2">
+                <!-- Aggiorna Volumi (blu) -->
+                <button type="button" onclick="showRefreshModal('volumes')" id="refreshVolumesBtn"
+                        class="inline-flex items-center px-3 py-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                        title="Aggiorna volumi di ricerca, CPC e competizione">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    Volumi
+                </button>
+
+                <!-- Aggiorna Posizioni (verde) -->
+                <button type="button" onclick="showRefreshModal('positions')" id="refreshPositionsBtn"
+                        class="inline-flex items-center px-3 py-2 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-sm font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors"
+                        title="Aggiorna posizioni SERP delle keyword tracciate">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                    Posizioni
+                </button>
+
+                <!-- Aggiorna Tutto (indigo) -->
+                <button type="button" onclick="showRefreshModal('all')" id="refreshAllBtn"
+                        class="inline-flex items-center px-3 py-2 rounded-lg border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-sm font-medium hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
+                        title="Aggiorna volumi e posizioni insieme">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Tutto
+                </button>
+
+                <div class="w-px h-6 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+
+                <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/add') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Aggiungi Keyword
+                </a>
+            </div>
+        </div>
+
+        <!-- Indicatore costi -->
+        <?php
+        $totalKw = $stats['total'] ?? 0;
+        $trackedKw = $stats['tracked'] ?? 0;
+        $volumeCost = $totalKw >= 10 ? round($totalKw * 0.3, 1) : round($totalKw * 0.5, 1);
+        $positionCost = $trackedKw * 1;
+        $allCost = $volumeCost + $positionCost;
+        ?>
+        <div class="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+            <span class="flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                Aggiorna Volumi
-            </button>
-            <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/add') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Aggiungi Keyword
-            </a>
+                Costi stimati:
+            </span>
+            <span class="text-blue-600 dark:text-blue-400">Volumi: ~<?= $volumeCost ?> crediti</span>
+            <span class="text-emerald-600 dark:text-emerald-400">Posizioni: ~<?= $positionCost ?> crediti</span>
+            <span class="text-indigo-600 dark:text-indigo-400">Tutto: ~<?= $allCost ?> crediti</span>
         </div>
     </div>
 
@@ -115,6 +162,7 @@
                             <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">CPC</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Comp.</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Tracciata</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Aggiornato</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Azioni</th>
                         </tr>
                     </thead>
@@ -193,6 +241,13 @@
                                 </svg>
                                 <?php else: ?>
                                 <span class="text-slate-300 dark:text-slate-600">-</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-4 py-3 text-center text-xs text-slate-500 dark:text-slate-400">
+                                <?php if (!empty($kw['last_updated_at'])): ?>
+                                    <?= date('d/m H:i', strtotime($kw['last_updated_at'])) ?>
+                                <?php else: ?>
+                                    <span class="text-slate-400 dark:text-slate-500">Mai</span>
                                 <?php endif; ?>
                             </td>
                             <td class="px-4 py-3 text-right">
@@ -303,49 +358,319 @@ function deleteKeyword(id, keyword) {
     });
 }
 
-// Update search volumes via DataForSEO
-function updateVolumes() {
-    const btn = document.getElementById('updateVolumesBtn');
-    const originalText = btn.innerHTML;
-    const baseUrl = '<?= url('') ?>';
-    const projectId = <?= $project['id'] ?>;
+// Configurazione refresh
+const refreshConfig = {
+    volumes: {
+        btn: 'refreshVolumesBtn',
+        url: '/keywords/refresh-volumes',
+        label: 'Volumi',
+        loadingLabel: 'Aggiornamento volumi...',
+        cost: <?= $volumeCost ?>,
+        count: <?= $totalKw ?>,
+        description: 'Aggiorna volumi di ricerca, CPC e livello di competizione per tutte le keyword.'
+    },
+    positions: {
+        btn: 'refreshPositionsBtn',
+        url: '/keywords/refresh-positions',
+        label: 'Posizioni',
+        loadingLabel: 'Aggiornamento posizioni...',
+        cost: <?= $positionCost ?>,
+        count: <?= $trackedKw ?>,
+        description: 'Aggiorna le posizioni SERP per le keyword tracciate.'
+    },
+    all: {
+        btn: 'refreshAllBtn',
+        url: '/keywords/refresh-all',
+        label: 'Tutto',
+        loadingLabel: 'Aggiornamento completo...',
+        cost: <?= $allCost ?>,
+        count: <?= $totalKw ?>,
+        description: 'Aggiorna sia volumi che posizioni in un\'unica operazione.'
+    }
+};
+
+const baseUrl = '<?= url('') ?>';
+const projectId = <?= $project['id'] ?>;
+const userCredits = <?= $userCredits ?? 0 ?>;
+
+// Ottieni keyword selezionate
+function getSelectedKeywordIds() {
+    return Array.from(document.querySelectorAll('.keyword-checkbox:checked')).map(cb => cb.value);
+}
+
+// Modal di conferma
+function showRefreshModal(type) {
+    const config = refreshConfig[type];
+    if (!config) return;
+
+    // Per posizioni/tutto: usa selezione se presente, altrimenti tutte le tracciate
+    const selectedIds = getSelectedKeywordIds();
+    const useSelection = selectedIds.length > 0 && (type === 'positions' || type === 'all' || type === 'volumes');
+
+    let keywordCount, cost;
+    if (useSelection) {
+        keywordCount = selectedIds.length;
+        if (type === 'volumes') {
+            cost = keywordCount >= 10 ? Math.round(keywordCount * 0.3 * 10) / 10 : Math.round(keywordCount * 0.5 * 10) / 10;
+        } else if (type === 'positions') {
+            cost = keywordCount * 1;
+        } else {
+            const volCost = keywordCount >= 10 ? keywordCount * 0.3 : keywordCount * 0.5;
+            cost = Math.round((volCost + keywordCount) * 10) / 10;
+        }
+    } else {
+        keywordCount = config.count;
+        cost = config.cost;
+    }
+
+    // Controlla se ci sono keyword da aggiornare
+    if (keywordCount === 0) {
+        alert(type === 'positions' ? 'Nessuna keyword selezionata o tracciata da aggiornare.' : 'Nessuna keyword da aggiornare.');
+        return;
+    }
+
+    // Salva selezione per executeRefresh
+    window.refreshSelectedIds = useSelection ? selectedIds : null;
+
+    const selectionNote = useSelection
+        ? `<p class="text-xs text-amber-600 dark:text-amber-400 mt-1">Verranno elaborate solo le ${keywordCount} keyword selezionate</p>`
+        : '';
+
+    // Crea modal
+    const modal = document.createElement('div');
+    modal.id = 'refreshModal';
+    modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
+    modal.innerHTML = `
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeRefreshModal()"></div>
+        <div class="relative bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6 transform transition-all">
+            <button onclick="closeRefreshModal()" class="absolute top-4 right-4 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
+                <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+
+            <div class="text-center mb-6">
+                <div class="mx-auto h-12 w-12 rounded-full ${type === 'volumes' ? 'bg-blue-100 dark:bg-blue-900/50' : type === 'positions' ? 'bg-emerald-100 dark:bg-emerald-900/50' : 'bg-indigo-100 dark:bg-indigo-900/50'} flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 ${type === 'volumes' ? 'text-blue-600 dark:text-blue-400' : type === 'positions' ? 'text-emerald-600 dark:text-emerald-400' : 'text-indigo-600 dark:text-indigo-400'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Aggiorna ${config.label}</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">${config.description}</p>
+                ${selectionNote}
+            </div>
+
+            <div class="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 mb-6 space-y-3">
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-500 dark:text-slate-400">Keyword da elaborare:</span>
+                    <span class="font-medium text-slate-900 dark:text-white">${keywordCount.toLocaleString()}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-500 dark:text-slate-400">Costo stimato:</span>
+                    <span class="font-medium ${type === 'volumes' ? 'text-blue-600 dark:text-blue-400' : type === 'positions' ? 'text-emerald-600 dark:text-emerald-400' : 'text-indigo-600 dark:text-indigo-400'}">${cost} crediti</span>
+                </div>
+                <div class="border-t border-slate-200 dark:border-slate-700 pt-3 flex justify-between text-sm">
+                    <span class="text-slate-500 dark:text-slate-400">Il tuo saldo:</span>
+                    <span class="font-semibold ${userCredits >= cost ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}">${userCredits.toLocaleString()} crediti</span>
+                </div>
+            </div>
+
+            ${userCredits < cost ? `
+                <div class="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-4">
+                    <p class="text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        Crediti insufficienti. Ricarica per continuare.
+                    </p>
+                </div>
+            ` : ''}
+
+            <div class="flex gap-3">
+                <button onclick="closeRefreshModal()" class="flex-1 px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                    Annulla
+                </button>
+                <button onclick="executeRefresh('${type}')" ${userCredits < cost ? 'disabled' : ''} class="flex-1 px-4 py-2.5 rounded-lg ${type === 'volumes' ? 'bg-blue-600 hover:bg-blue-700' : type === 'positions' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-indigo-600 hover:bg-indigo-700'} text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    Conferma
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+}
+
+function closeRefreshModal() {
+    const modal = document.getElementById('refreshModal');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = '';
+    }
+}
+
+// Esecuzione refresh
+function executeRefresh(type) {
+    closeRefreshModal();
+
+    const config = refreshConfig[type];
+    const btn = document.getElementById(config.btn);
+    const originalHTML = btn.innerHTML;
     const csrfToken = document.querySelector('input[name="_csrf_token"]').value;
 
-    // Disable button and show loading
-    btn.disabled = true;
+    // Recupera gli ID selezionati (se presenti)
+    const selectedIds = window.refreshSelectedIds || null;
+    window.refreshSelectedIds = null; // Reset
+
+    // Disabilita tutti i pulsanti e mostra loading
+    ['refreshVolumesBtn', 'refreshPositionsBtn', 'refreshAllBtn'].forEach(id => {
+        document.getElementById(id).disabled = true;
+    });
+
     btn.innerHTML = `
-        <svg class="w-5 h-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 mr-1.5 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        Aggiornamento...
+        Attendi...
     `;
 
-    fetch(`${baseUrl}/seo-tracking/project/${projectId}/keywords/update-volumes`, {
+    // Costruisci body con keyword_ids se selezionati
+    let bodyData = '_csrf_token=' + encodeURIComponent(csrfToken);
+    if (selectedIds && selectedIds.length > 0) {
+        selectedIds.forEach(id => {
+            bodyData += '&keyword_ids[]=' + encodeURIComponent(id);
+        });
+    }
+
+    fetch(`${baseUrl}/seo-tracking/project/${projectId}${config.url}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: '_csrf_token=' + encodeURIComponent(csrfToken)
+        body: bodyData
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Reload page to show updated volumes
-            const msg = data.message || `Volumi aggiornati: ${data.updated || 0} keyword`;
-            alert(msg);
-            window.location.reload();
+            showResultModal(true, data);
         } else {
-            alert(data.error || 'Errore durante l\'aggiornamento dei volumi');
-            btn.disabled = false;
-            btn.innerHTML = originalText;
+            showResultModal(false, data);
+            restoreButtons(type, originalHTML);
         }
     })
     .catch(err => {
-        console.error('Update volumes failed:', err);
-        alert('Errore durante l\'aggiornamento dei volumi');
-        btn.disabled = false;
-        btn.innerHTML = originalText;
+        console.error('Refresh failed:', err);
+        showResultModal(false, { error: 'Errore di connessione. Riprova.' });
+        restoreButtons(type, originalHTML);
     });
+}
+
+function restoreButtons(type, originalHTML) {
+    const config = refreshConfig[type];
+    document.getElementById(config.btn).innerHTML = originalHTML;
+    ['refreshVolumesBtn', 'refreshPositionsBtn', 'refreshAllBtn'].forEach(id => {
+        document.getElementById(id).disabled = false;
+    });
+}
+
+function showResultModal(success, data) {
+    // Costruisci dettagli posizioni se presenti
+    let detailsHtml = '';
+    if (success && data.details && data.details.length > 0) {
+        detailsHtml = `
+            <div class="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3 mb-4 max-h-48 overflow-y-auto text-left">
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2 uppercase">Dettagli posizioni:</p>
+                <div class="space-y-1.5">
+                    ${data.details.map(d => {
+                        if (d.error) {
+                            return `<div class="flex justify-between items-center text-xs">
+                                <span class="text-slate-700 dark:text-slate-300 truncate mr-2">${d.keyword}</span>
+                                <span class="text-red-500 flex-shrink-0">Errore</span>
+                            </div>`;
+                        }
+                        const posClass = d.found
+                            ? (d.position <= 3 ? 'text-emerald-600 dark:text-emerald-400' :
+                               d.position <= 10 ? 'text-blue-600 dark:text-blue-400' :
+                               d.position <= 20 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-600 dark:text-slate-400')
+                            : 'text-red-500 dark:text-red-400';
+                        const posText = d.found ? '#' + d.position : 'Non trovata';
+                        const prevText = d.previous_position ? ` (era #${d.previous_position})` : '';
+                        return `<div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-700 dark:text-slate-300 truncate mr-2">${d.keyword}</span>
+                            <span class="${posClass} flex-shrink-0 font-medium">${posText}${d.found ? prevText : ''}</span>
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'resultModal';
+    modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
+    modal.innerHTML = `
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="${success ? 'window.location.reload()' : 'closeResultModal()'}"></div>
+        <div class="relative bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6 text-center">
+            <div class="mx-auto h-14 w-14 rounded-full ${success ? 'bg-emerald-100 dark:bg-emerald-900/50' : 'bg-red-100 dark:bg-red-900/50'} flex items-center justify-center mb-4">
+                ${success ? `
+                    <svg class="w-7 h-7 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                ` : `
+                    <svg class="w-7 h-7 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                `}
+            </div>
+
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                ${success ? 'Aggiornamento completato!' : 'Errore'}
+            </h3>
+
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                ${success ? (data.message || 'Dati aggiornati correttamente.') : (data.error || 'Si e\' verificato un errore.')}
+            </p>
+
+            ${detailsHtml}
+
+            ${success && data.credits_used ? `
+                <div class="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3 mb-4">
+                    <p class="text-sm text-slate-600 dark:text-slate-300">
+                        Crediti utilizzati: <span class="font-semibold">${data.credits_used}</span>
+                    </p>
+                </div>
+            ` : ''}
+
+            <button onclick="${success ? 'window.location.reload()' : 'closeResultModal()'}" class="w-full px-4 py-2.5 rounded-lg ${success ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-600 hover:bg-slate-700'} text-white font-medium transition-colors">
+                ${success ? 'Chiudi e aggiorna' : 'Chiudi'}
+            </button>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
+function closeResultModal() {
+    const modal = document.getElementById('resultModal');
+    if (modal) {
+        modal.remove();
+        ['refreshVolumesBtn', 'refreshPositionsBtn', 'refreshAllBtn'].forEach(id => {
+            document.getElementById(id).disabled = false;
+        });
+    }
+}
+
+// Chiusura modal con ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeRefreshModal();
+        closeResultModal();
+    }
+});
+
+// Legacy function per compatibilita
+function updateVolumes() {
+    showRefreshModal('volumes');
 }
 </script>

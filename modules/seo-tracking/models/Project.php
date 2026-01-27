@@ -361,8 +361,8 @@ class Project
         // Rimuovi protocollo se presente
         $domain = preg_replace('#^https?://#i', '', $domain);
 
-        // Rimuovi www se presente
-        $domain = preg_replace('#^www\.#i', '', $domain);
+        // NON rimuoviamo www - l'utente decide se includerlo
+        // Il matching SERP normalizza comunque entrambi i lati
 
         return strtolower($domain);
     }

@@ -76,16 +76,44 @@
                     <span class="block text-xs text-slate-500 dark:text-slate-400">Monitora giornalmente le variazioni di posizione</span>
                 </div>
             </label>
+
+            <!-- Auto-fetch dati -->
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" name="auto_fetch" id="auto_fetch" value="1" checked
+                       class="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500"
+                       onchange="updateCostPreview()">
+                <div>
+                    <span class="block text-sm font-medium text-slate-900 dark:text-white">Recupera dati automaticamente</span>
+                    <span class="block text-xs text-slate-500 dark:text-slate-400">Ottieni volume, CPC e competition per ogni keyword (0.5 crediti/kw)</span>
+                </div>
+            </label>
         </div>
 
         <!-- Footer -->
-        <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 rounded-b-lg flex items-center justify-between">
-            <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords') ?>" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                Annulla
-            </a>
-            <button type="submit" class="px-6 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
-                Aggiungi Keyword
-            </button>
+        <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 rounded-b-lg">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    </svg>
+                    <span id="keywordCount" class="text-sm text-slate-600 dark:text-slate-400">0 keyword</span>
+                    <span id="costPreview" class="text-sm text-slate-500 dark:text-slate-500 ml-1 hidden">
+                        <span class="text-slate-400 dark:text-slate-600">|</span>
+                        <svg class="w-4 h-4 inline-block ml-1 -mt-0.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span id="costValue">0</span> crediti
+                    </span>
+                </div>
+                <div class="flex gap-3">
+                    <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords') ?>" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                        Annulla
+                    </a>
+                    <button type="submit" class="px-6 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
+                        Aggiungi Keyword
+                    </button>
+                </div>
+            </div>
         </div>
     </form>
 
@@ -146,4 +174,53 @@ function updateGroupInput(select) {
         textInput.value = select.value;
     }
 }
+
+function countKeywords() {
+    const textarea = document.getElementById('keywords');
+    const lines = textarea.value.split('\n').filter(line => line.trim() !== '');
+    return lines.length;
+}
+
+function calculateCost(count) {
+    if (count === 0) return 0;
+    // 0.5 crediti/kw, 0.3 se 10+ keyword
+    const costPerKeyword = count >= 10 ? 0.3 : 0.5;
+    return (count * costPerKeyword).toFixed(1);
+}
+
+function updateCostPreview() {
+    const count = countKeywords();
+    const autoFetch = document.getElementById('auto_fetch').checked;
+
+    // Update keyword count
+    const countEl = document.getElementById('keywordCount');
+    countEl.textContent = count + ' keyword' + (count !== 1 ? '' : '');
+
+    // Update cost preview
+    const costPreviewEl = document.getElementById('costPreview');
+    const costValueEl = document.getElementById('costValue');
+
+    if (autoFetch && count > 0) {
+        const cost = calculateCost(count);
+        costValueEl.textContent = cost;
+        costPreviewEl.classList.remove('hidden');
+    } else {
+        costPreviewEl.classList.add('hidden');
+    }
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.getElementById('keywords');
+
+    // Update on input (with debounce for performance)
+    let debounceTimer;
+    textarea.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(updateCostPreview, 150);
+    });
+
+    // Initial update
+    updateCostPreview();
+});
 </script>

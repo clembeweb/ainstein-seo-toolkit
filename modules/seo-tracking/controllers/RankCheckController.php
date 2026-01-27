@@ -338,7 +338,7 @@ class RankCheckController
     }
 
     /**
-     * Storico completo con filtri (GET)
+     * Storico completo con filtri e paginazione (GET)
      */
     public function history(int $projectId): string
     {
@@ -354,6 +354,11 @@ class RankCheckController
 
         $rankCheckModel = new RankCheck();
 
+        // Paginazione
+        $perPage = 25;
+        $page = max(1, (int) ($_GET['page'] ?? 1));
+        $offset = ($page - 1) * $perPage;
+
         // Filtri
         $filters = [
             'keyword' => $_GET['keyword'] ?? '',
@@ -362,8 +367,15 @@ class RankCheckController
             'date_to' => $_GET['date_to'] ?? '',
             'found_only' => isset($_GET['found_only']),
             'not_found_only' => isset($_GET['not_found_only']),
-            'limit' => 100,
         ];
+
+        // Conta totale con filtri
+        $totalCount = $rankCheckModel->countWithFilters($projectId, $filters);
+        $totalPages = ceil($totalCount / $perPage);
+
+        // Aggiungi limit e offset ai filtri per la query
+        $filters['limit'] = $perPage;
+        $filters['offset'] = $offset;
 
         $checks = $rankCheckModel->search($projectId, $filters);
         $stats = $rankCheckModel->getStats($projectId);
@@ -375,6 +387,12 @@ class RankCheckController
             'checks' => $checks,
             'stats' => $stats,
             'filters' => $filters,
+            'pagination' => [
+                'current_page' => $page,
+                'total_pages' => $totalPages,
+                'total_count' => $totalCount,
+                'per_page' => $perPage,
+            ],
         ]);
     }
 

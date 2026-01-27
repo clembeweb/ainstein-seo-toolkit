@@ -24,6 +24,7 @@ use Modules\SeoTracking\Controllers\ApiController;
 use Modules\SeoTracking\Controllers\CronController;
 use Modules\SeoTracking\Controllers\CompareController;
 use Modules\SeoTracking\Controllers\RankCheckController;
+use Modules\SeoTracking\Controllers\UrlController;
 
 // =============================================
 // PROGETTI
@@ -300,7 +301,7 @@ Router::post('/seo-tracking/project/{id}/keywords/bulk', function ($id) {
     return (new KeywordController())->bulkAction((int) $id);
 });
 
-// Aggiorna volumi di ricerca (AJAX - DataForSEO)
+// Aggiorna volumi di ricerca (AJAX - DataForSEO) - DEPRECATO, usa refresh-volumes
 Router::post('/seo-tracking/project/{id}/keywords/update-volumes', function ($id) {
     Middleware::auth();
     return (new KeywordController())->updateVolumes((int) $id);
@@ -310,6 +311,54 @@ Router::post('/seo-tracking/project/{id}/keywords/update-volumes', function ($id
 Router::get('/seo-tracking/project/{id}/keywords/check-volume-service', function ($id) {
     Middleware::auth();
     return (new KeywordController())->checkVolumeService((int) $id);
+});
+
+// =============================================
+// REFRESH DATI KEYWORD (con crediti)
+// =============================================
+
+// Refresh volumi (DataForSEO) - con consumo crediti
+Router::post('/seo-tracking/project/{id}/keywords/refresh-volumes', function ($id) {
+    Middleware::auth();
+    return (new KeywordController())->refreshVolumes((int) $id);
+});
+
+// Refresh posizioni SERP - con consumo crediti
+Router::post('/seo-tracking/project/{id}/keywords/refresh-positions', function ($id) {
+    Middleware::auth();
+    return (new KeywordController())->refreshPositions((int) $id);
+});
+
+// Refresh completo (volumi + posizioni) - con consumo crediti
+Router::post('/seo-tracking/project/{id}/keywords/refresh-all', function ($id) {
+    Middleware::auth();
+    return (new KeywordController())->refreshAll((int) $id);
+});
+
+// Calcola costo refresh (AJAX - per preview)
+Router::get('/seo-tracking/project/{id}/keywords/refresh-cost', function ($id) {
+    Middleware::auth();
+    return (new KeywordController())->getRefreshCost((int) $id);
+});
+
+// Debug SERP check (temporaneo per diagnostica)
+Router::get('/seo-tracking/project/{id}/debug-serp', function ($id) {
+    Middleware::auth();
+
+    $user = \Core\Auth::user();
+    $project = (new \Modules\SeoTracking\Models\Project())->find((int) $id, $user['id']);
+
+    if (!$project) {
+        return \Core\View::json(['error' => 'Progetto non trovato'], 404);
+    }
+
+    $keyword = $_GET['keyword'] ?? 'test';
+    $domain = $project['domain'];
+
+    $rankChecker = new \Modules\SeoTracking\Services\RankCheckerService();
+    $result = $rankChecker->debugSearch($keyword, $domain);
+
+    return \Core\View::json($result);
 });
 
 // =============================================
@@ -380,6 +429,16 @@ Router::get('/seo-tracking/api/project/{id}/groups/{groupId}/chart', function ($
 });
 
 // =============================================
+// URL RANKING (Raggruppamento per URL)
+// =============================================
+
+// Lista URLs con keyword raggruppate
+Router::get('/seo-tracking/project/{id}/urls', function ($id) {
+    Middleware::auth();
+    return (new UrlController())->index((int) $id);
+});
+
+// =============================================
 // ALERT
 // =============================================
 
@@ -445,6 +504,34 @@ Router::get('/seo-tracking/project/{id}/groups/{groupId}/quick-wins', function (
 Router::post('/seo-tracking/project/{id}/groups/{groupId}/quick-wins/analyze', function ($id, $groupId) {
     Middleware::auth();
     return (new AiController())->analyzeQuickWinsGroup((int) $id, (int) $groupId);
+});
+
+// =============================================
+// SEO PAGE ANALYZER
+// =============================================
+
+// Analizza pagina per keyword (POST AJAX)
+Router::post('/seo-tracking/project/{id}/analyze-page', function ($id) {
+    Middleware::auth();
+    return (new AiController())->analyzePage((int) $id);
+});
+
+// Ottieni analisi per ID (GET AJAX)
+Router::get('/seo-tracking/project/{id}/page-analysis/{analysisId}', function ($id, $analysisId) {
+    Middleware::auth();
+    return (new AiController())->getPageAnalysis((int) $id, (int) $analysisId);
+});
+
+// Lista analisi recenti (GET AJAX)
+Router::get('/seo-tracking/project/{id}/page-analyses', function ($id) {
+    Middleware::auth();
+    return (new AiController())->listPageAnalyses((int) $id);
+});
+
+// Costo analisi (GET AJAX)
+Router::get('/seo-tracking/project/{id}/analyze-page/cost', function ($id) {
+    Middleware::auth();
+    return (new AiController())->getPageAnalysisCost((int) $id);
 });
 
 // =============================================

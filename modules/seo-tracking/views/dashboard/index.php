@@ -238,10 +238,10 @@
             </div>
             <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">Nessuna verifica effettuata</h3>
             <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                Vai alla sezione "Verifica SERP" per controllare le posizioni delle tue keyword
+                Vai alla sezione "Keywords" per controllare le posizioni delle tue keyword
             </p>
-            <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/rank-check') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
-                Verifica Posizioni
+            <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
+                Gestisci Keywords
             </a>
         </div>
         <?php else: ?>
@@ -327,7 +327,7 @@
     <div class="bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl p-6 text-white">
         <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
-                <h3 class="text-lg font-semibold">Verifica le Posizioni</h3>
+                <h3 class="text-lg font-semibold">Gestisci Keywords e Posizioni</h3>
                 <?php if ($lastCheck): ?>
                 <p class="text-primary-100 text-sm mt-1">
                     Ultimo check: <?= date('d/m/Y H:i', strtotime($lastCheck['checked_at'])) ?>
@@ -339,12 +339,12 @@
                 </p>
                 <?php endif; ?>
             </div>
-            <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/rank-check') ?>"
+            <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords') ?>"
                class="inline-flex items-center px-6 py-3 rounded-lg bg-white text-primary-600 font-semibold hover:bg-primary-50 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
                 </svg>
-                Verifica Posizioni Ora
+                Vai alle Keywords
             </a>
         </div>
     </div>

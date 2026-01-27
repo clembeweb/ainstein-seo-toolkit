@@ -13,12 +13,13 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '';
 $basePath = "/seo-tracking/project/{$projectId}";
 
 // Definizione tabs
+// Nota: "Verifica SERP" e "Trend" rimosse - funzionalità integrate in Keywords
 $tabs = [
     'overview' => ['path' => '', 'label' => 'Overview', 'icon' => 'chart-bar'],
     'keywords' => ['path' => '/keywords', 'label' => 'Keywords', 'icon' => 'key'],
-    'trend' => ['path' => '/trend', 'label' => 'Trend', 'icon' => 'trending-up'],
+    'urls' => ['path' => '/urls', 'label' => 'URLs', 'icon' => 'link'],
     'groups' => ['path' => '/groups', 'label' => 'Gruppi', 'icon' => 'folder'],
-    'rank-check' => ['path' => '/rank-check', 'label' => 'Verifica SERP', 'icon' => 'search'],
+    'history' => ['path' => '/rank-check/history', 'label' => 'Storico', 'icon' => 'clock'],
     'quick-wins' => ['path' => '/quick-wins', 'label' => 'Quick Wins', 'icon' => 'zap'],
 ];
 
@@ -30,9 +31,9 @@ function isActiveTab($tabKey, $currentPage) {
     $aliases = [
         'overview' => ['overview', 'dashboard'],
         'keywords' => ['keywords', 'keywords-overview'],
-        'trend' => ['trend', 'compare'],
+        'urls' => ['urls', 'url-ranking'],
         'groups' => ['groups'],
-        'rank-check' => ['rank-check', 'rankcheck'],
+        'history' => ['history', 'rank-check'],
         'quick-wins' => ['quick-wins', 'quickwins'],
     ];
     return in_array($currentPage, $aliases[$tabKey] ?? [$tabKey]);
@@ -42,8 +43,9 @@ function isActiveTab($tabKey, $currentPage) {
 $icons = [
     'chart-bar' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>',
     'key' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>',
-    'trending-up' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>',
+    'link' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>',
     'folder' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>',
+    'clock' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
     'search' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>',
     'zap' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>',
 ];

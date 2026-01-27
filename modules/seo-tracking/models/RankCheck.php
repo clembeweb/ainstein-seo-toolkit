@@ -175,6 +175,46 @@ class RankCheck
     }
 
     /**
+     * Conta check con filtri (per paginazione)
+     */
+    public function countWithFilters(int $projectId, array $filters = []): int
+    {
+        $sql = "SELECT COUNT(*) as cnt FROM {$this->table} WHERE project_id = ?";
+        $params = [$projectId];
+
+        if (!empty($filters['keyword'])) {
+            $sql .= " AND keyword LIKE ?";
+            $params[] = '%' . $filters['keyword'] . '%';
+        }
+
+        if (!empty($filters['device'])) {
+            $sql .= " AND device = ?";
+            $params[] = $filters['device'];
+        }
+
+        if (!empty($filters['date_from'])) {
+            $sql .= " AND DATE(checked_at) >= ?";
+            $params[] = $filters['date_from'];
+        }
+
+        if (!empty($filters['date_to'])) {
+            $sql .= " AND DATE(checked_at) <= ?";
+            $params[] = $filters['date_to'];
+        }
+
+        if (isset($filters['found_only']) && $filters['found_only']) {
+            $sql .= " AND serp_position IS NOT NULL";
+        }
+
+        if (isset($filters['not_found_only']) && $filters['not_found_only']) {
+            $sql .= " AND serp_position IS NULL";
+        }
+
+        $result = Database::fetch($sql, $params);
+        return (int) ($result['cnt'] ?? 0);
+    }
+
+    /**
      * Elimina check vecchi (pulizia)
      */
     public function deleteOlderThan(int $projectId, int $days): int
@@ -224,5 +264,157 @@ class RankCheck
              ORDER BY checked_at ASC",
             [$projectId, $keyword, $days]
         );
+    }
+
+    /**
+     * Raggruppa i rank check per URL SERP
+     * Restituisce statistiche aggregate per ogni URL
+     */
+    public function getUrlsGrouped(int $projectId, array $filters = []): array
+    {
+        $sql = "SELECT
+                    serp_url as url,
+                    COUNT(DISTINCT keyword) as keyword_count,
+                    ROUND(AVG(serp_position), 1) as avg_position,
+                    MIN(serp_position) as best_position,
+                    MAX(checked_at) as last_check,
+                    COUNT(*) as total_checks
+                FROM {$this->table}
+                WHERE project_id = ?
+                  AND serp_url IS NOT NULL
+                  AND serp_position IS NOT NULL";
+        $params = [$projectId];
+
+        if (!empty($filters['date_from'])) {
+            $sql .= " AND DATE(checked_at) >= ?";
+            $params[] = $filters['date_from'];
+        }
+
+        if (!empty($filters['date_to'])) {
+            $sql .= " AND DATE(checked_at) <= ?";
+            $params[] = $filters['date_to'];
+        }
+
+        if (!empty($filters['search'])) {
+            $sql .= " AND serp_url LIKE ?";
+            $params[] = '%' . $filters['search'] . '%';
+        }
+
+        $sql .= " GROUP BY serp_url";
+
+        if (!empty($filters['min_keywords'])) {
+            $sql .= " HAVING keyword_count >= ?";
+            $params[] = (int) $filters['min_keywords'];
+        }
+
+        if (!empty($filters['max_position'])) {
+            if (strpos($sql, 'HAVING') !== false) {
+                $sql .= " AND avg_position <= ?";
+            } else {
+                $sql .= " HAVING avg_position <= ?";
+            }
+            $params[] = (float) $filters['max_position'];
+        }
+
+        $sql .= " ORDER BY keyword_count DESC, avg_position ASC";
+
+        if (!empty($filters['limit'])) {
+            $sql .= " LIMIT " . (int) $filters['limit'];
+            if (!empty($filters['offset'])) {
+                $sql .= " OFFSET " . (int) $filters['offset'];
+            }
+        }
+
+        return Database::fetchAll($sql, $params);
+    }
+
+    /**
+     * Ottieni le keyword per una specifica URL
+     * Restituisce l'ultimo check per ogni keyword
+     */
+    public function getKeywordsByUrl(int $projectId, string $url, array $filters = []): array
+    {
+        $sql = "SELECT
+                    rc.keyword,
+                    rc.serp_position,
+                    rc.checked_at,
+                    rc.location,
+                    rc.device
+                FROM {$this->table} rc
+                INNER JOIN (
+                    SELECT keyword, MAX(checked_at) as max_date
+                    FROM {$this->table}
+                    WHERE project_id = ?
+                      AND serp_url = ?
+                    GROUP BY keyword
+                ) latest ON rc.keyword = latest.keyword AND rc.checked_at = latest.max_date
+                WHERE rc.project_id = ?
+                  AND rc.serp_url = ?";
+        $params = [$projectId, $url, $projectId, $url];
+
+        if (!empty($filters['device'])) {
+            $sql .= " AND rc.device = ?";
+            $params[] = $filters['device'];
+        }
+
+        if (!empty($filters['location'])) {
+            $sql .= " AND rc.location = ?";
+            $params[] = $filters['location'];
+        }
+
+        $sql .= " ORDER BY rc.serp_position ASC";
+
+        return Database::fetchAll($sql, $params);
+    }
+
+    /**
+     * Conta le URL distinte raggruppate (per paginazione)
+     */
+    public function countUrlsGrouped(int $projectId, array $filters = []): int
+    {
+        $sql = "SELECT COUNT(*) as cnt FROM (
+                    SELECT serp_url, COUNT(DISTINCT keyword) as keyword_count, AVG(serp_position) as avg_position
+                    FROM {$this->table}
+                    WHERE project_id = ?
+                      AND serp_url IS NOT NULL
+                      AND serp_position IS NOT NULL";
+        $params = [$projectId];
+
+        if (!empty($filters['date_from'])) {
+            $sql .= " AND DATE(checked_at) >= ?";
+            $params[] = $filters['date_from'];
+        }
+
+        if (!empty($filters['date_to'])) {
+            $sql .= " AND DATE(checked_at) <= ?";
+            $params[] = $filters['date_to'];
+        }
+
+        if (!empty($filters['search'])) {
+            $sql .= " AND serp_url LIKE ?";
+            $params[] = '%' . $filters['search'] . '%';
+        }
+
+        $sql .= " GROUP BY serp_url";
+
+        $havingClauses = [];
+        if (!empty($filters['min_keywords'])) {
+            $havingClauses[] = "keyword_count >= ?";
+            $params[] = (int) $filters['min_keywords'];
+        }
+
+        if (!empty($filters['max_position'])) {
+            $havingClauses[] = "avg_position <= ?";
+            $params[] = (float) $filters['max_position'];
+        }
+
+        if (!empty($havingClauses)) {
+            $sql .= " HAVING " . implode(" AND ", $havingClauses);
+        }
+
+        $sql .= ") as url_counts";
+
+        $result = Database::fetch($sql, $params);
+        return (int) ($result['cnt'] ?? 0);
     }
 }

@@ -37,6 +37,10 @@
         "alert_ai_insight": {
             "cost": 1,
             "description": "Insight AI per alert"
+        },
+        "page_analysis": {
+            "cost": 2,
+            "description": "Analisi SEO pagina con competitor comparison"
         }
     },
     "settings": {
@@ -110,6 +114,15 @@
             "label": "Costo Rilevamento Anomalie",
             "description": "Crediti per rilevamento anomalie AI",
             "default": 5,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_page_analysis": {
+            "type": "number",
+            "label": "Costo Analisi Pagina SEO",
+            "description": "Crediti per analisi SEO pagina con competitor comparison (scraping + AI)",
+            "default": 2,
             "min": 0,
             "step": 0.1,
             "admin_only": true

@@ -334,6 +334,7 @@
                         <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Click</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Impressioni</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">CTR</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Azioni</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
@@ -354,6 +355,22 @@
                         <td class="px-6 py-4 text-right text-sm text-slate-900 dark:text-white"><?= number_format($kw['clicks'] ?? 0) ?></td>
                         <td class="px-6 py-4 text-right text-sm text-slate-500 dark:text-slate-400"><?= number_format($kw['impressions'] ?? 0) ?></td>
                         <td class="px-6 py-4 text-right text-sm text-slate-500 dark:text-slate-400"><?= number_format(($kw['ctr'] ?? 0) * 100, 2) ?>%</td>
+                        <td class="px-6 py-4 text-center">
+                            <?php if (!empty($kw['target_url'])): ?>
+                            <button
+                                @click="analyzeKeywordPage('<?= e(addslashes($kw['keyword'])) ?>', '<?= e(addslashes($kw['target_url'])) ?>', <?= number_format($kw['position'] ?? 0, 1, '.', '') ?>)"
+                                :disabled="pageAnalysisLoading"
+                                class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium rounded-md bg-primary-100 text-primary-700 hover:bg-primary-200 dark:bg-primary-900/50 dark:text-primary-300 dark:hover:bg-primary-800/50 disabled:opacity-50 transition-colors"
+                                title="Analizza pagina con AI">
+                                <svg class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                                </svg>
+                                Analizza
+                            </button>
+                            <?php else: ?>
+                            <span class="text-xs text-slate-400" title="Nessun URL target">-</span>
+                            <?php endif; ?>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -366,6 +383,198 @@
         <?php endif; ?>
     </div>
     <?php endif; ?>
+
+    <!-- Page Analysis Modal -->
+    <div x-show="showPageAnalysisModal" x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto"
+         @keydown.escape.window="showPageAnalysisModal = false">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Backdrop -->
+            <div class="fixed inset-0 transition-opacity" @click="showPageAnalysisModal = false">
+                <div class="absolute inset-0 bg-slate-900/75"></div>
+            </div>
+
+            <!-- Modal Panel -->
+            <div class="inline-block w-full max-w-4xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-slate-800 rounded-xl shadow-xl sm:align-middle">
+                <!-- Header -->
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Analisi SEO Pagina</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400" x-text="pageAnalysisKeyword"></p>
+                    </div>
+                    <button @click="showPageAnalysisModal = false" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Loading State -->
+                <div x-show="pageAnalysisLoading" class="p-12 text-center">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/50 mb-4">
+                        <svg class="w-8 h-8 text-primary-600 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                    <p class="text-lg font-medium text-slate-900 dark:text-white">Analisi in corso...</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Scraping pagina e competitor, analisi AI</p>
+                    <p class="text-xs text-slate-400 mt-4">Questo processo richiede 30-90 secondi</p>
+                </div>
+
+                <!-- Error State -->
+                <div x-show="pageAnalysisError && !pageAnalysisLoading" class="p-8 text-center">
+                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/50 mb-4">
+                        <svg class="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <p class="text-lg font-medium text-slate-900 dark:text-white">Errore analisi</p>
+                    <p class="text-sm text-red-600 dark:text-red-400 mt-1" x-text="pageAnalysisError"></p>
+                </div>
+
+                <!-- Results -->
+                <div x-show="pageAnalysisData && !pageAnalysisLoading" class="max-h-[70vh] overflow-y-auto">
+                    <!-- Score & Summary -->
+                    <div class="p-6 border-b border-slate-200 dark:border-slate-700">
+                        <div class="flex items-start gap-6">
+                            <div class="flex-shrink-0">
+                                <div class="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold"
+                                     :class="(pageAnalysisData?.summary?.score || 0) >= 70 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' :
+                                             ((pageAnalysisData?.summary?.score || 0) >= 40 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' :
+                                             'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300')">
+                                    <span x-text="pageAnalysisData?.summary?.score || 0"></span>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-slate-900 dark:text-white mb-2">Problemi Principali</h4>
+                                <ul class="space-y-1">
+                                    <template x-for="issue in pageAnalysisData?.summary?.main_issues || []">
+                                        <li class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+                                            <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                            </svg>
+                                            <span x-text="issue"></span>
+                                        </li>
+                                    </template>
+                                </ul>
+                                <p class="mt-3 text-sm">
+                                    <span class="text-slate-500 dark:text-slate-400">Posizioni guadagnabili: </span>
+                                    <span class="font-bold text-emerald-600 dark:text-emerald-400" x-text="'+' + (pageAnalysisData?.summary?.estimated_position_gain || 0)"></span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Wins Actions -->
+                    <div class="p-6 border-b border-slate-200 dark:border-slate-700" x-show="pageAnalysisData?.quick_wins?.length > 0">
+                        <h4 class="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                            Azioni Rapide
+                        </h4>
+                        <div class="space-y-3">
+                            <template x-for="(action, idx) in pageAnalysisData?.quick_wins || []" :key="idx">
+                                <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                                    <div class="flex items-start justify-between gap-4">
+                                        <div class="flex-1">
+                                            <p class="font-medium text-slate-900 dark:text-white" x-text="action.action"></p>
+                                            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1" x-text="action.details"></p>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <span class="px-2 py-1 rounded text-xs font-medium"
+                                                  :class="action.impact === 'alto' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' :
+                                                          (action.impact === 'medio' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' :
+                                                          'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300')"
+                                                  x-text="'Impatto: ' + action.impact">
+                                            </span>
+                                            <span class="px-2 py-1 rounded text-xs font-medium"
+                                                  :class="action.effort === 'facile' ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' :
+                                                          (action.effort === 'medio' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' :
+                                                          'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300')"
+                                                  x-text="'Effort: ' + action.effort">
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- On-Page SEO -->
+                    <div class="p-6 border-b border-slate-200 dark:border-slate-700" x-show="pageAnalysisData?.on_page_seo">
+                        <h4 class="font-semibold text-slate-900 dark:text-white mb-4">Suggerimenti On-Page SEO</h4>
+
+                        <!-- Title -->
+                        <div class="mb-4" x-show="pageAnalysisData?.on_page_seo?.title?.suggestion">
+                            <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-1">Title Suggerito</p>
+                            <p class="text-sm p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-slate-900 dark:text-white"
+                               x-text="pageAnalysisData?.on_page_seo?.title?.suggestion"></p>
+                        </div>
+
+                        <!-- Meta Description -->
+                        <div class="mb-4" x-show="pageAnalysisData?.on_page_seo?.meta_description?.suggestion">
+                            <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-1">Meta Description Suggerita</p>
+                            <p class="text-sm p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-slate-900 dark:text-white"
+                               x-text="pageAnalysisData?.on_page_seo?.meta_description?.suggestion"></p>
+                        </div>
+
+                        <!-- H1 -->
+                        <div x-show="pageAnalysisData?.on_page_seo?.h1?.suggestion">
+                            <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-1">H1 Suggerito</p>
+                            <p class="text-sm p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-slate-900 dark:text-white"
+                               x-text="pageAnalysisData?.on_page_seo?.h1?.suggestion"></p>
+                        </div>
+                    </div>
+
+                    <!-- Content Recommendations -->
+                    <div class="p-6 border-b border-slate-200 dark:border-slate-700" x-show="pageAnalysisData?.content?.sections_to_add?.length > 0">
+                        <h4 class="font-semibold text-slate-900 dark:text-white mb-4">Sezioni da Aggiungere</h4>
+                        <div class="space-y-3">
+                            <template x-for="section in pageAnalysisData?.content?.sections_to_add || []">
+                                <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border-l-4"
+                                     :class="section.priority === 'alta' ? 'border-red-500' : (section.priority === 'media' ? 'border-amber-500' : 'border-slate-300')">
+                                    <p class="font-medium text-slate-900 dark:text-white" x-text="section.title"></p>
+                                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1" x-text="section.description"></p>
+                                </div>
+                            </template>
+                        </div>
+                        <p class="mt-4 text-sm text-slate-500 dark:text-slate-400">
+                            <span x-text="pageAnalysisData?.content?.word_count_analysis"></span>
+                            <br>Parole consigliate: <strong x-text="pageAnalysisData?.content?.recommended_word_count"></strong>
+                        </p>
+                    </div>
+
+                    <!-- Competitor Insights -->
+                    <div class="p-6" x-show="pageAnalysisData?.competitor_insights?.length > 0">
+                        <h4 class="font-semibold text-slate-900 dark:text-white mb-4">Insights dai Competitor</h4>
+                        <ul class="space-y-2">
+                            <template x-for="insight in pageAnalysisData?.competitor_insights || []">
+                                <li class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+                                    <svg class="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span x-text="insight"></span>
+                                </li>
+                            </template>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" x-show="pageAnalysisCreditsUsed">
+                        Crediti utilizzati: <span class="font-medium" x-text="pageAnalysisCreditsUsed"></span>
+                    </p>
+                    <button @click="showPageAnalysisModal = false"
+                            class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-600">
+                        Chiudi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -375,11 +584,20 @@
 <script>
 function quickWinsApp() {
     return {
+        // Quick Wins Analysis
         loading: false,
         error: null,
         results: null,
         creditsUsed: 0,
         keywordsAnalyzed: 0,
+
+        // Page Analysis
+        showPageAnalysisModal: false,
+        pageAnalysisLoading: false,
+        pageAnalysisError: null,
+        pageAnalysisData: null,
+        pageAnalysisKeyword: '',
+        pageAnalysisCreditsUsed: 0,
 
         async analyze() {
             this.loading = true;
@@ -388,9 +606,9 @@ function quickWinsApp() {
 
             try {
                 <?php if ($group): ?>
-                const url = '<?= url('/seo-tracking/project/' . $project['id'] . '/groups/' . $group['id'] . '/ai/quick-wins/analyze') ?>';
+                const url = '<?= url('/seo-tracking/project/' . $project['id'] . '/groups/' . $group['id'] . '/quick-wins/analyze') ?>';
                 <?php else: ?>
-                const url = '<?= url('/seo-tracking/project/' . $project['id'] . '/ai/quick-wins/analyze') ?>';
+                const url = '<?= url('/seo-tracking/project/' . $project['id'] . '/quick-wins/analyze') ?>';
                 <?php endif; ?>
 
                 const response = await fetch(url, {
@@ -415,6 +633,46 @@ function quickWinsApp() {
                 this.error = err.message;
             } finally {
                 this.loading = false;
+            }
+        },
+
+        async analyzeKeywordPage(keyword, url, position) {
+            this.showPageAnalysisModal = true;
+            this.pageAnalysisLoading = true;
+            this.pageAnalysisError = null;
+            this.pageAnalysisData = null;
+            this.pageAnalysisKeyword = keyword;
+            this.pageAnalysisCreditsUsed = 0;
+
+            try {
+                const apiUrl = '<?= url('/seo-tracking/project/' . $project['id'] . '/analyze-page') ?>';
+
+                const formData = new FormData();
+                formData.append('keyword', keyword);
+                formData.append('url', url);
+                if (position) formData.append('position', position);
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-Token': '<?= csrf_token() ?>'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Errore durante l\'analisi');
+                }
+
+                this.pageAnalysisData = data.data;
+                this.pageAnalysisCreditsUsed = data.credits_used;
+
+            } catch (err) {
+                this.pageAnalysisError = err.message;
+            } finally {
+                this.pageAnalysisLoading = false;
             }
         }
     };

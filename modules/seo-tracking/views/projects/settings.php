@@ -9,7 +9,6 @@
                 Torna alla dashboard
             </a>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white"><?= e($project['name']) ?></h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400"><?= e($project['domain']) ?></p>
         </div>
     </div>
 
@@ -90,6 +89,22 @@
                                 </label>
                                 <input type="text" name="name" id="name" value="<?= e($project['name']) ?>" required
                                        class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            </div>
+
+                            <!-- Dominio -->
+                            <div>
+                                <label for="domain" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                    Dominio <span class="text-red-500">*</span>
+                                </label>
+                                <div class="flex">
+                                    <span class="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-sm">
+                                        https://
+                                    </span>
+                                    <input type="text" name="domain" id="domain" value="<?= e($project['domain']) ?>" required
+                                           class="flex-1 px-3 py-2 rounded-r-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                           placeholder="www.example.com">
+                                </div>
+                                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Dominio del sito da monitorare (con o senza www)</p>
                             </div>
 
                             <div>
