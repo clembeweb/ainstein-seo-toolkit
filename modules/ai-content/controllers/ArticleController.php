@@ -400,9 +400,16 @@ class ArticleController
 
         // Verify ownership
         $article = $this->article->find($id, $user['id']);
+
+        // Get project_id for redirect (before deletion)
+        $projectId = $article['project_id'] ?? null;
+        $redirectUrl = $projectId
+            ? url('/ai-content/projects/' . $projectId . '/articles')
+            : url('/ai-content/articles');
+
         if (!$article) {
             $_SESSION['_flash']['error'] = 'Articolo non trovato';
-            header('Location: ' . url('/ai-content/articles'));
+            header('Location: ' . $redirectUrl);
             exit;
         }
 
@@ -426,7 +433,7 @@ class ArticleController
             $_SESSION['_flash']['error'] = 'Errore durante l\'eliminazione';
         }
 
-        header('Location: ' . url('/ai-content/articles'));
+        header('Location: ' . $redirectUrl);
         exit;
     }
 
