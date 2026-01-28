@@ -510,6 +510,12 @@ Router::post('/seo-tracking/project/{id}/groups/{groupId}/quick-wins/analyze', f
 // SEO PAGE ANALYZER
 // =============================================
 
+// Pagina dedicata Page Analyzer
+Router::get('/seo-tracking/project/{id}/page-analyzer', function ($id) {
+    Middleware::auth();
+    return (new AiController())->pageAnalyzerView((int) $id);
+});
+
 // Analizza pagina per keyword (POST AJAX)
 Router::post('/seo-tracking/project/{id}/analyze-page', function ($id) {
     Middleware::auth();

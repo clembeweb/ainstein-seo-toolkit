@@ -35,59 +35,127 @@ class QuickWinsService
 
     /**
      * Ottieni keyword candidate per Quick Wins (progetto intero)
+     * Combina dati GSC e Rank Checker
      */
     public function getCandidateKeywords(int $projectId, int $limit = 50): array
     {
+        // Query combinata: GSC data + Rank Check data
         $sql = "
             SELECT
                 k.id,
                 k.keyword,
-                k.last_position as position,
-                k.last_clicks as clicks,
-                k.last_impressions as impressions,
-                k.last_ctr as ctr,
-                k.target_url
+                COALESCE(
+                    CASE WHEN k.last_position BETWEEN 4 AND 20 THEN k.last_position ELSE NULL END,
+                    latest_rc.serp_position
+                ) as position,
+                COALESCE(k.last_clicks, 0) as clicks,
+                COALESCE(k.last_impressions, 0) as impressions,
+                COALESCE(k.last_ctr, 0) as ctr,
+                COALESCE(k.target_url, latest_rc.serp_url) as target_url,
+                CASE
+                    WHEN k.last_position BETWEEN 4 AND 20 AND k.last_impressions >= 100 THEN 'gsc'
+                    WHEN latest_rc.serp_position BETWEEN 4 AND 20 THEN 'rank_check'
+                    ELSE 'unknown'
+                END as data_source,
+                latest_rc.checked_at as last_rank_check
             FROM st_keywords k
+            LEFT JOIN (
+                SELECT rc1.keyword, rc1.project_id, rc1.serp_position, rc1.serp_url, rc1.checked_at
+                FROM st_rank_checks rc1
+                INNER JOIN (
+                    SELECT keyword, project_id, MAX(checked_at) as max_date
+                    FROM st_rank_checks
+                    WHERE project_id = ?
+                    GROUP BY keyword, project_id
+                ) rc2 ON rc1.keyword = rc2.keyword
+                    AND rc1.project_id = rc2.project_id
+                    AND rc1.checked_at = rc2.max_date
+            ) latest_rc ON k.keyword = latest_rc.keyword AND k.project_id = latest_rc.project_id
             WHERE k.project_id = ?
-              AND k.last_position >= 4
-              AND k.last_position <= 20
-              AND k.last_impressions >= 100
+              AND (
+                  -- GSC data: posizione 4-20 con impressioni
+                  (k.last_position >= 4 AND k.last_position <= 20 AND k.last_impressions >= 100)
+                  OR
+                  -- Rank Check data: posizione 4-20 (ultimi 30 giorni)
+                  (latest_rc.serp_position >= 4 AND latest_rc.serp_position <= 20
+                   AND latest_rc.checked_at >= DATE_SUB(NOW(), INTERVAL 30 DAY))
+              )
             ORDER BY
-                k.last_impressions DESC,
-                k.last_position ASC
+                COALESCE(k.last_impressions, 0) DESC,
+                COALESCE(
+                    CASE WHEN k.last_position BETWEEN 4 AND 20 THEN k.last_position ELSE NULL END,
+                    latest_rc.serp_position
+                ) ASC
             LIMIT ?
         ";
 
-        return Database::fetchAll($sql, [$projectId, $limit]);
+        return Database::fetchAll($sql, [$projectId, $projectId, $limit]);
     }
 
     /**
      * Ottieni keyword candidate per Quick Wins (gruppo specifico)
+     * Combina dati GSC e Rank Checker
      */
     public function getCandidateKeywordsForGroup(int $groupId, int $limit = 50): array
     {
+        // Prima ottieni il project_id del gruppo
+        $group = Database::fetch("SELECT project_id FROM st_keyword_groups WHERE id = ?", [$groupId]);
+        if (!$group) {
+            return [];
+        }
+        $projectId = $group['project_id'];
+
         $sql = "
             SELECT
                 k.id,
                 k.keyword,
-                k.last_position as position,
-                k.last_clicks as clicks,
-                k.last_impressions as impressions,
-                k.last_ctr as ctr,
-                k.target_url
+                COALESCE(
+                    CASE WHEN k.last_position BETWEEN 4 AND 20 THEN k.last_position ELSE NULL END,
+                    latest_rc.serp_position
+                ) as position,
+                COALESCE(k.last_clicks, 0) as clicks,
+                COALESCE(k.last_impressions, 0) as impressions,
+                COALESCE(k.last_ctr, 0) as ctr,
+                COALESCE(k.target_url, latest_rc.serp_url) as target_url,
+                CASE
+                    WHEN k.last_position BETWEEN 4 AND 20 AND k.last_impressions >= 100 THEN 'gsc'
+                    WHEN latest_rc.serp_position BETWEEN 4 AND 20 THEN 'rank_check'
+                    ELSE 'unknown'
+                END as data_source,
+                latest_rc.checked_at as last_rank_check
             FROM st_keywords k
             JOIN st_keyword_group_members m ON k.id = m.keyword_id
+            LEFT JOIN (
+                SELECT rc1.keyword, rc1.project_id, rc1.serp_position, rc1.serp_url, rc1.checked_at
+                FROM st_rank_checks rc1
+                INNER JOIN (
+                    SELECT keyword, project_id, MAX(checked_at) as max_date
+                    FROM st_rank_checks
+                    WHERE project_id = ?
+                    GROUP BY keyword, project_id
+                ) rc2 ON rc1.keyword = rc2.keyword
+                    AND rc1.project_id = rc2.project_id
+                    AND rc1.checked_at = rc2.max_date
+            ) latest_rc ON k.keyword = latest_rc.keyword AND k.project_id = latest_rc.project_id
             WHERE m.group_id = ?
-              AND k.last_position >= 4
-              AND k.last_position <= 20
-              AND k.last_impressions >= 100
+              AND (
+                  -- GSC data: posizione 4-20 con impressioni
+                  (k.last_position >= 4 AND k.last_position <= 20 AND k.last_impressions >= 100)
+                  OR
+                  -- Rank Check data: posizione 4-20 (ultimi 30 giorni)
+                  (latest_rc.serp_position >= 4 AND latest_rc.serp_position <= 20
+                   AND latest_rc.checked_at >= DATE_SUB(NOW(), INTERVAL 30 DAY))
+              )
             ORDER BY
-                k.last_impressions DESC,
-                k.last_position ASC
+                COALESCE(k.last_impressions, 0) DESC,
+                COALESCE(
+                    CASE WHEN k.last_position BETWEEN 4 AND 20 THEN k.last_position ELSE NULL END,
+                    latest_rc.serp_position
+                ) ASC
             LIMIT ?
         ";
 
-        return Database::fetchAll($sql, [$groupId, $limit]);
+        return Database::fetchAll($sql, [$projectId, $groupId, $limit]);
     }
 
     /**

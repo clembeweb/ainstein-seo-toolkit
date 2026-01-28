@@ -511,4 +511,87 @@ class AiController
             'is_configured' => $isConfigured,
         ]);
     }
+
+    /**
+     * Pagina dedicata SEO Page Analyzer
+     * Mostra tutte le keyword con URL e permette analisi AI
+     */
+    public function pageAnalyzerView(int $projectId): void
+    {
+        $user = Auth::user();
+        $project = $this->project->find($projectId, $user['id']);
+
+        if (!$project) {
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
+            Router::redirect('/seo-tracking');
+            return;
+        }
+
+        // Ottieni keyword con URL (target_url o da rank check)
+        $keywords = $this->getKeywordsWithUrls($projectId);
+
+        // Ottieni analisi recenti
+        $recentAnalyses = $this->pageAnalyzer->getRecentAnalyses($projectId, 10);
+
+        // Costi e crediti
+        $creditCost = $this->pageAnalyzer->getCreditCost();
+        $userCredits = Credits::getBalance($user['id']);
+        $isConfigured = $this->pageAnalyzer->isConfigured();
+
+        View::render('seo-tracking/ai/page-analyzer', [
+            'user' => $user,
+            'modules' => ModuleLoader::getUserModules($user['id']),
+            'project' => $project,
+            'keywords' => $keywords,
+            'recentAnalyses' => $recentAnalyses,
+            'creditCost' => $creditCost,
+            'userCredits' => $userCredits,
+            'isConfigured' => $isConfigured,
+        ]);
+    }
+
+    /**
+     * Ottieni keyword con URL per Page Analyzer
+     * Combina target_url da st_keywords e serp_url da rank checks
+     */
+    private function getKeywordsWithUrls(int $projectId): array
+    {
+        $sql = "
+            SELECT
+                k.id,
+                k.keyword,
+                k.target_url,
+                k.last_position as gsc_position,
+                k.last_impressions as impressions,
+                k.last_clicks as clicks,
+                latest_rc.serp_position as rank_check_position,
+                latest_rc.serp_url as rank_check_url,
+                latest_rc.checked_at as last_check,
+                COALESCE(k.target_url, latest_rc.serp_url) as url,
+                COALESCE(
+                    CASE WHEN k.last_position > 0 THEN k.last_position ELSE NULL END,
+                    latest_rc.serp_position
+                ) as position
+            FROM st_keywords k
+            LEFT JOIN (
+                SELECT rc1.keyword, rc1.project_id, rc1.serp_position, rc1.serp_url, rc1.checked_at
+                FROM st_rank_checks rc1
+                INNER JOIN (
+                    SELECT keyword, project_id, MAX(checked_at) as max_date
+                    FROM st_rank_checks
+                    WHERE project_id = ?
+                    GROUP BY keyword, project_id
+                ) rc2 ON rc1.keyword = rc2.keyword
+                    AND rc1.project_id = rc2.project_id
+                    AND rc1.checked_at = rc2.max_date
+            ) latest_rc ON k.keyword = latest_rc.keyword AND k.project_id = latest_rc.project_id
+            WHERE k.project_id = ?
+              AND (k.target_url IS NOT NULL OR latest_rc.serp_url IS NOT NULL)
+            ORDER BY
+                COALESCE(k.last_impressions, 0) DESC,
+                k.keyword ASC
+        ";
+
+        return \Core\Database::fetchAll($sql, [$projectId, $projectId]);
+    }
 }
