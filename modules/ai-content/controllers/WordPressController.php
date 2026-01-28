@@ -53,7 +53,7 @@ class WordPressController
             $project = $projectModel->find($projectId, $user['id']);
 
             if (!$project) {
-                $_SESSION['flash_error'] = 'Progetto non trovato';
+                $_SESSION['_flash']['error'] = 'Progetto non trovato';
                 header('Location: ' . url('/ai-content'));
                 exit;
             }

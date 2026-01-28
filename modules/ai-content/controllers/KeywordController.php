@@ -49,7 +49,7 @@ class KeywordController
             : url('/ai-content/keywords');
 
         if (!$keyword) {
-            $_SESSION['flash_error'] = 'Keyword non trovata';
+            $_SESSION['_flash']['error'] = 'Keyword non trovata';
             header('Location: ' . $redirectUrl);
             exit;
         }
@@ -280,14 +280,14 @@ class KeywordController
 
         // Validation
         if (empty($keyword)) {
-            $_SESSION['flash_error'] = 'La keyword è obbligatoria';
+            $_SESSION['_flash']['error'] = 'La keyword è obbligatoria';
             header('Location: ' . $redirectUrl);
             exit;
         }
 
         // Check duplicate (within same project)
         if ($this->keyword->exists($keyword, $user['id'], $projectId)) {
-            $_SESSION['flash_error'] = 'Questa keyword esiste già in questo progetto';
+            $_SESSION['_flash']['error'] = 'Questa keyword esiste già in questo progetto';
             header('Location: ' . $redirectUrl);
             exit;
         }
@@ -301,9 +301,9 @@ class KeywordController
                 'location' => $location
             ]);
 
-            $_SESSION['flash_success'] = 'Keyword aggiunta con successo';
+            $_SESSION['_flash']['success'] = 'Keyword aggiunta con successo';
         } catch (\Exception $e) {
-            $_SESSION['flash_error'] = 'Errore durante il salvataggio: ' . $e->getMessage();
+            $_SESSION['_flash']['error'] = 'Errore durante il salvataggio: ' . $e->getMessage();
         }
 
         header('Location: ' . $redirectUrl);
@@ -326,7 +326,7 @@ class KeywordController
             : url('/ai-content/keywords');
 
         if (!$keyword) {
-            $_SESSION['flash_error'] = 'Keyword non trovata';
+            $_SESSION['_flash']['error'] = 'Keyword non trovata';
             header('Location: ' . $redirectUrl);
             exit;
         }
@@ -342,16 +342,16 @@ class KeywordController
         $articles = $articleModel->getByKeyword($id);
 
         if (!empty($articles)) {
-            $_SESSION['flash_error'] = 'Impossibile eliminare: ci sono ' . count($articles) . ' articoli associati a questa keyword';
+            $_SESSION['_flash']['error'] = 'Impossibile eliminare: ci sono ' . count($articles) . ' articoli associati a questa keyword';
             header('Location: ' . $redirectUrl);
             exit;
         }
 
         try {
             $this->keyword->delete($id, $user['id']);
-            $_SESSION['flash_success'] = 'Keyword eliminata';
+            $_SESSION['_flash']['success'] = 'Keyword eliminata';
         } catch (\Exception $e) {
-            $_SESSION['flash_error'] = 'Errore durante l\'eliminazione';
+            $_SESSION['_flash']['error'] = 'Errore durante l\'eliminazione';
         }
 
         header('Location: ' . $redirectUrl);

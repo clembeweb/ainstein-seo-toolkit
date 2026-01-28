@@ -107,7 +107,7 @@ class SerpController
         $keyword = $this->keyword->findWithSerp($id, $user['id']);
 
         if (!$keyword) {
-            $_SESSION['flash_error'] = 'Keyword non trovata';
+            $_SESSION['_flash']['error'] = 'Keyword non trovata';
             header('Location: ' . url('/ai-content/keywords'));
             exit;
         }

@@ -77,7 +77,7 @@ class JobController
             [$userId]
         );
 
-        return View::render('ai-content::jobs/index', [
+        return View::render('ai-content/jobs/index', [
             'jobs' => $jobs,
             'projects' => $projects,
             'stats' => $stats,
