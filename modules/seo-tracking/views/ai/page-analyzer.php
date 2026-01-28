@@ -51,7 +51,7 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="text-3xl font-bold text-slate-900 dark:text-white"><?= count($keywords) ?></p>
+                    <p class="text-3xl font-bold text-slate-900 dark:text-white"><?= $pagination['total_count'] ?? count($keywords) ?></p>
                     <p class="text-sm text-slate-500 dark:text-slate-400">Keyword con URL</p>
                 </div>
             </div>
@@ -103,8 +103,82 @@
     <!-- Keywords Table -->
     <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
         <div class="p-4 border-b border-slate-200 dark:border-slate-700">
-            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Keyword da Analizzare</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Seleziona una keyword per analizzare la pagina e confrontarla con i competitor</p>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Keyword da Analizzare</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Seleziona una keyword per analizzare la pagina e confrontarla con i competitor</p>
+                </div>
+                <?php if (!empty($pagination)): ?>
+                <div class="text-sm text-slate-500 dark:text-slate-400">
+                    <?php
+                    $start = ($pagination['current_page'] - 1) * $pagination['per_page'] + 1;
+                    $end = min($pagination['current_page'] * $pagination['per_page'], $pagination['total_count']);
+                    ?>
+                    <span class="font-medium"><?= $start ?>-<?= $end ?></span> di <span class="font-medium"><?= number_format($pagination['total_count']) ?></span> keyword
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Filtri -->
+        <div class="p-4 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
+            <form method="get" class="flex flex-wrap gap-4 items-end">
+                <!-- Ricerca testuale -->
+                <div class="flex-1 min-w-[200px]">
+                    <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Cerca Keyword</label>
+                    <input type="text" name="search"
+                           value="<?= e($filters['search'] ?? '') ?>"
+                           placeholder="Filtra per keyword..."
+                           class="w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white text-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+
+                <!-- Filtro posizione -->
+                <div class="w-36">
+                    <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Max Posizione</label>
+                    <select name="max_position" class="w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Tutte</option>
+                        <option value="3" <?= ($filters['max_position'] ?? 0) == 3 ? 'selected' : '' ?>>Top 3</option>
+                        <option value="10" <?= ($filters['max_position'] ?? 0) == 10 ? 'selected' : '' ?>>Top 10</option>
+                        <option value="20" <?= ($filters['max_position'] ?? 0) == 20 ? 'selected' : '' ?>>Top 20</option>
+                        <option value="50" <?= ($filters['max_position'] ?? 0) == 50 ? 'selected' : '' ?>>Top 50</option>
+                    </select>
+                </div>
+
+                <!-- Filtro impressioni -->
+                <div class="w-40">
+                    <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Min Impressioni</label>
+                    <select name="min_impressions" class="w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Tutte</option>
+                        <option value="10" <?= ($filters['min_impressions'] ?? 0) == 10 ? 'selected' : '' ?>>10+</option>
+                        <option value="100" <?= ($filters['min_impressions'] ?? 0) == 100 ? 'selected' : '' ?>>100+</option>
+                        <option value="500" <?= ($filters['min_impressions'] ?? 0) == 500 ? 'selected' : '' ?>>500+</option>
+                        <option value="1000" <?= ($filters['min_impressions'] ?? 0) == 1000 ? 'selected' : '' ?>>1.000+</option>
+                    </select>
+                </div>
+
+                <!-- Bottoni -->
+                <div class="flex gap-2">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        Filtra
+                    </button>
+
+                    <?php
+                    $hasFilters = !empty($filters['search']) || !empty($filters['max_position']) || !empty($filters['min_impressions']);
+                    if ($hasFilters):
+                    ?>
+                    <a href="<?= url("/seo-tracking/project/{$project['id']}/page-analyzer") ?>"
+                       class="inline-flex items-center px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-md hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        Reset
+                    </a>
+                    <?php endif; ?>
+                </div>
+            </form>
         </div>
 
         <?php if (empty($keywords)): ?>
@@ -175,6 +249,102 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Paginazione -->
+        <?php if (!empty($pagination) && $pagination['total_pages'] > 1): ?>
+        <?php
+        // Funzione helper per costruire URL con filtri
+        $buildPageUrl = function($page) use ($project, $filters) {
+            $params = array_filter([
+                'page' => $page,
+                'search' => $filters['search'] ?? '',
+                'max_position' => $filters['max_position'] ?? '',
+                'min_impressions' => $filters['min_impressions'] ?? '',
+            ], fn($v) => $v !== '' && $v !== 0);
+            return url("/seo-tracking/project/{$project['id']}/page-analyzer") . '?' . http_build_query($params);
+        };
+        ?>
+        <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-700">
+            <nav class="flex items-center justify-between">
+                <!-- Precedente -->
+                <div class="flex items-center gap-2">
+                    <?php if ($pagination['current_page'] > 1): ?>
+                    <a href="<?= $buildPageUrl($pagination['current_page'] - 1) ?>"
+                       class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                        <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        Precedente
+                    </a>
+                    <?php else: ?>
+                    <span class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-400 dark:text-slate-500 cursor-not-allowed">
+                        <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        Precedente
+                    </span>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Numeri pagina -->
+                <div class="hidden sm:flex items-center gap-1">
+                    <?php
+                    $startPage = max(1, $pagination['current_page'] - 2);
+                    $endPage = min($pagination['total_pages'], $pagination['current_page'] + 2);
+                    ?>
+
+                    <?php if ($startPage > 1): ?>
+                        <a href="<?= $buildPageUrl(1) ?>" class="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors">1</a>
+                        <?php if ($startPage > 2): ?>
+                            <span class="px-2 text-slate-400 dark:text-slate-500">...</span>
+                        <?php endif; ?>
+                    <?php endif; ?>
+
+                    <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
+                        <?php if ($i === $pagination['current_page']): ?>
+                            <span class="px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-md"><?= $i ?></span>
+                        <?php else: ?>
+                            <a href="<?= $buildPageUrl($i) ?>"
+                               class="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"><?= $i ?></a>
+                        <?php endif; ?>
+                    <?php endfor; ?>
+
+                    <?php if ($endPage < $pagination['total_pages']): ?>
+                        <?php if ($endPage < $pagination['total_pages'] - 1): ?>
+                            <span class="px-2 text-slate-400 dark:text-slate-500">...</span>
+                        <?php endif; ?>
+                        <a href="<?= $buildPageUrl($pagination['total_pages']) ?>"
+                           class="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"><?= $pagination['total_pages'] ?></a>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Mobile: indicatore pagina -->
+                <div class="sm:hidden text-sm text-slate-500 dark:text-slate-400">
+                    Pagina <?= $pagination['current_page'] ?> di <?= $pagination['total_pages'] ?>
+                </div>
+
+                <!-- Successivo -->
+                <div class="flex items-center gap-2">
+                    <?php if ($pagination['current_page'] < $pagination['total_pages']): ?>
+                    <a href="<?= $buildPageUrl($pagination['current_page'] + 1) ?>"
+                       class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                        Successivo
+                        <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                    <?php else: ?>
+                    <span class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-400 dark:text-slate-500 cursor-not-allowed">
+                        Successivo
+                        <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </span>
+                    <?php endif; ?>
+                </div>
+            </nav>
+        </div>
+        <?php endif; ?>
         <?php endif; ?>
     </div>
 
@@ -252,124 +422,244 @@
                     <!-- Results -->
                     <div x-show="analysisData && !analyzing && !error" class="space-y-6">
 
-                        <!-- Summary -->
+                        <!-- Summary & Score -->
                         <template x-if="analysisData?.summary">
-                            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                                <h4 class="font-semibold text-blue-800 dark:text-blue-200 mb-2">Riepilogo</h4>
-                                <p class="text-sm text-blue-700 dark:text-blue-300" x-text="analysisData.summary"></p>
-                            </div>
-                        </template>
-
-                        <!-- Score -->
-                        <template x-if="analysisData?.score !== undefined">
-                            <div class="flex items-center gap-4">
-                                <div class="text-center">
-                                    <div class="text-4xl font-bold" :class="analysisData.score >= 70 ? 'text-green-600' : (analysisData.score >= 40 ? 'text-amber-600' : 'text-red-600')" x-text="analysisData.score + '/100'"></div>
-                                    <p class="text-sm text-slate-500">Punteggio SEO</p>
-                                </div>
-                            </div>
-                        </template>
-
-                        <!-- Strengths -->
-                        <template x-if="analysisData?.strengths?.length > 0">
-                            <div>
-                                <h4 class="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                                    <svg class="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    Punti di Forza
-                                </h4>
-                                <ul class="space-y-2">
-                                    <template x-for="strength in analysisData.strengths" :key="strength">
-                                        <li class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
-                                            <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                            </svg>
-                                            <span x-text="strength"></span>
-                                        </li>
-                                    </template>
-                                </ul>
-                            </div>
-                        </template>
-
-                        <!-- Improvements -->
-                        <template x-if="analysisData?.improvements?.length > 0">
-                            <div>
-                                <h4 class="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                                    <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                                    </svg>
-                                    Miglioramenti Suggeriti
-                                </h4>
-                                <ul class="space-y-3">
-                                    <template x-for="(improvement, index) in analysisData.improvements" :key="index">
-                                        <li class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-                                            <p class="font-medium text-amber-800 dark:text-amber-200" x-text="improvement.title || improvement"></p>
-                                            <p x-show="improvement.description" class="text-sm text-amber-700 dark:text-amber-300 mt-1" x-text="improvement.description"></p>
-                                            <p x-show="improvement.priority" class="text-xs text-amber-600 dark:text-amber-400 mt-2">
-                                                Priorita: <span class="font-medium" x-text="improvement.priority"></span>
+                            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-5">
+                                <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                                    <!-- Score -->
+                                    <div class="flex-shrink-0 text-center">
+                                        <div class="text-4xl font-bold" :class="analysisData.summary.score >= 70 ? 'text-green-600' : (analysisData.summary.score >= 40 ? 'text-amber-600' : 'text-red-600')" x-text="analysisData.summary.score + '/100'"></div>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Punteggio SEO</p>
+                                        <template x-if="analysisData.summary.estimated_position_gain">
+                                            <p class="text-xs text-green-600 dark:text-green-400 mt-1">
+                                                +<span x-text="analysisData.summary.estimated_position_gain"></span> posizioni potenziali
                                             </p>
-                                        </li>
-                                    </template>
-                                </ul>
-                            </div>
-                        </template>
-
-                        <!-- Competitor Analysis -->
-                        <template x-if="analysisData?.competitor_analysis">
-                            <div>
-                                <h4 class="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                                    <svg class="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                    </svg>
-                                    Analisi Competitor
-                                </h4>
-                                <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4">
-                                    <p class="text-sm text-slate-600 dark:text-slate-300" x-text="analysisData.competitor_analysis"></p>
+                                        </template>
+                                    </div>
+                                    <!-- Main Issues -->
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-blue-800 dark:text-blue-200 mb-2">Problemi Principali</h4>
+                                        <ul class="space-y-1">
+                                            <template x-for="issue in analysisData.summary.main_issues" :key="issue">
+                                                <li class="flex items-start gap-2 text-sm text-blue-700 dark:text-blue-300">
+                                                    <svg class="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                                    </svg>
+                                                    <span x-text="issue"></span>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         </template>
 
-                        <!-- Content Gaps -->
-                        <template x-if="analysisData?.content_gaps?.length > 0">
+                        <!-- On-Page SEO -->
+                        <template x-if="analysisData?.on_page_seo">
+                            <div class="bg-white dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600">
+                                <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-600">
+                                    <h4 class="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                        <svg class="w-5 h-5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                                        </svg>
+                                        Ottimizzazione On-Page
+                                    </h4>
+                                </div>
+                                <div class="divide-y divide-slate-200 dark:divide-slate-600">
+                                    <!-- Title -->
+                                    <template x-if="analysisData.on_page_seo.title">
+                                        <div class="p-4">
+                                            <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-1">Title Tag</p>
+                                            <p class="text-sm text-slate-600 dark:text-slate-300 mb-2">Attuale: <span class="font-medium" x-text="analysisData.on_page_seo.title.current || '-'"></span></p>
+                                            <template x-if="analysisData.on_page_seo.title.suggestion">
+                                                <p class="text-sm text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 rounded px-2 py-1">
+                                                    Suggerito: <span class="font-medium" x-text="analysisData.on_page_seo.title.suggestion"></span>
+                                                </p>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <!-- Meta Description -->
+                                    <template x-if="analysisData.on_page_seo.meta_description">
+                                        <div class="p-4">
+                                            <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-1">Meta Description</p>
+                                            <p class="text-sm text-slate-600 dark:text-slate-300 mb-2">Attuale: <span class="font-medium" x-text="analysisData.on_page_seo.meta_description.current || '-'"></span></p>
+                                            <template x-if="analysisData.on_page_seo.meta_description.suggestion">
+                                                <p class="text-sm text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 rounded px-2 py-1">
+                                                    Suggerito: <span class="font-medium" x-text="analysisData.on_page_seo.meta_description.suggestion"></span>
+                                                </p>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <!-- H1 -->
+                                    <template x-if="analysisData.on_page_seo.h1">
+                                        <div class="p-4">
+                                            <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-1">H1</p>
+                                            <p class="text-sm text-slate-600 dark:text-slate-300 mb-2">Attuale: <span class="font-medium" x-text="analysisData.on_page_seo.h1.current || '-'"></span></p>
+                                            <template x-if="analysisData.on_page_seo.h1.suggestion">
+                                                <p class="text-sm text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 rounded px-2 py-1">
+                                                    Suggerito: <span class="font-medium" x-text="analysisData.on_page_seo.h1.suggestion"></span>
+                                                </p>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <!-- Heading Structure -->
+                                    <template x-if="analysisData.on_page_seo.heading_structure?.suggestions?.length > 0">
+                                        <div class="p-4">
+                                            <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-2">Struttura Heading Suggerita</p>
+                                            <ul class="space-y-1">
+                                                <template x-for="h in analysisData.on_page_seo.heading_structure.suggestions" :key="h">
+                                                    <li class="text-sm text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                                                        <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                                        </svg>
+                                                        <span x-text="h"></span>
+                                                    </li>
+                                                </template>
+                                            </ul>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Gap Analysis -->
+                        <template x-if="analysisData?.gap_analysis">
                             <div>
                                 <h4 class="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                                     <svg class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                                     </svg>
-                                    Gap di Contenuto
+                                    Gap Analysis vs Competitor
                                 </h4>
-                                <p class="text-sm text-slate-500 dark:text-slate-400 mb-2">Argomenti trattati dai competitor ma mancanti nella tua pagina:</p>
-                                <ul class="space-y-1">
-                                    <template x-for="gap in analysisData.content_gaps" :key="gap">
-                                        <li class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                                            <svg class="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                            </svg>
-                                            <span x-text="gap"></span>
-                                        </li>
+                                <div class="grid gap-4 sm:grid-cols-2">
+                                    <!-- Missing Topics -->
+                                    <template x-if="analysisData.gap_analysis.missing_topics?.length > 0">
+                                        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                                            <p class="text-xs font-medium text-red-800 dark:text-red-300 uppercase mb-2">Topic Mancanti</p>
+                                            <ul class="space-y-1">
+                                                <template x-for="topic in analysisData.gap_analysis.missing_topics" :key="topic">
+                                                    <li class="text-sm text-red-700 dark:text-red-300 flex items-start gap-2">
+                                                        <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                                        </svg>
+                                                        <span x-text="topic"></span>
+                                                    </li>
+                                                </template>
+                                            </ul>
+                                        </div>
                                     </template>
-                                </ul>
+                                    <!-- Missing Sections -->
+                                    <template x-if="analysisData.gap_analysis.missing_sections?.length > 0">
+                                        <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                                            <p class="text-xs font-medium text-amber-800 dark:text-amber-300 uppercase mb-2">Sezioni Mancanti</p>
+                                            <ul class="space-y-1">
+                                                <template x-for="section in analysisData.gap_analysis.missing_sections" :key="section">
+                                                    <li class="text-sm text-amber-700 dark:text-amber-300 flex items-start gap-2">
+                                                        <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                                        </svg>
+                                                        <span x-text="section"></span>
+                                                    </li>
+                                                </template>
+                                            </ul>
+                                        </div>
+                                    </template>
+                                </div>
+                                <!-- Content Depth -->
+                                <template x-if="analysisData.gap_analysis.content_depth">
+                                    <p class="mt-3 text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3" x-text="analysisData.gap_analysis.content_depth"></p>
+                                </template>
                             </div>
                         </template>
 
-                        <!-- Action Plan -->
-                        <template x-if="analysisData?.action_plan?.length > 0">
+                        <!-- Content Recommendations -->
+                        <template x-if="analysisData?.content">
                             <div>
                                 <h4 class="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                                    <svg class="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                                    <svg class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                     </svg>
-                                    Piano d'Azione
+                                    Contenuto
                                 </h4>
-                                <ol class="space-y-2">
-                                    <template x-for="(action, index) in analysisData.action_plan" :key="index">
-                                        <li class="flex items-start gap-3">
-                                            <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm font-medium" x-text="index + 1"></span>
-                                            <span class="text-sm text-slate-600 dark:text-slate-300" x-text="action"></span>
+                                <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4 mb-3">
+                                    <p class="text-sm text-emerald-700 dark:text-emerald-300" x-text="analysisData.content.word_count_analysis"></p>
+                                    <template x-if="analysisData.content.recommended_word_count">
+                                        <p class="text-sm text-emerald-800 dark:text-emerald-200 font-medium mt-2">
+                                            Parole consigliate: <span x-text="analysisData.content.recommended_word_count"></span>
+                                        </p>
+                                    </template>
+                                </div>
+                                <!-- Sections to Add -->
+                                <template x-if="analysisData.content.sections_to_add?.length > 0">
+                                    <div class="space-y-2">
+                                        <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Sezioni da Aggiungere</p>
+                                        <template x-for="(section, index) in analysisData.content.sections_to_add" :key="index">
+                                            <div class="bg-white dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-lg p-3">
+                                                <div class="flex items-start justify-between">
+                                                    <p class="font-medium text-slate-900 dark:text-white" x-text="section.title"></p>
+                                                    <span class="text-xs px-2 py-0.5 rounded-full"
+                                                          :class="section.priority === 'alta' ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' : (section.priority === 'media' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-600 dark:text-slate-300')"
+                                                          x-text="section.priority"></span>
+                                                </div>
+                                                <p class="text-sm text-slate-600 dark:text-slate-300 mt-1" x-text="section.description"></p>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- Quick Wins -->
+                        <template x-if="analysisData?.quick_wins?.length > 0">
+                            <div>
+                                <h4 class="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                    Quick Wins
+                                </h4>
+                                <div class="space-y-3">
+                                    <template x-for="(win, index) in analysisData.quick_wins" :key="index">
+                                        <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                                            <div class="flex items-start justify-between gap-4">
+                                                <div class="flex-1">
+                                                    <p class="font-medium text-yellow-800 dark:text-yellow-200" x-text="win.action"></p>
+                                                    <p class="text-sm text-yellow-700 dark:text-yellow-300 mt-1" x-text="win.details"></p>
+                                                </div>
+                                                <div class="flex gap-2 flex-shrink-0">
+                                                    <span class="text-xs px-2 py-0.5 rounded-full"
+                                                          :class="win.impact === 'alto' ? 'bg-green-100 text-green-700' : (win.impact === 'medio' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700')"
+                                                          x-text="'Impatto: ' + win.impact"></span>
+                                                    <span class="text-xs px-2 py-0.5 rounded-full"
+                                                          :class="win.effort === 'facile' ? 'bg-green-100 text-green-700' : (win.effort === 'medio' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700')"
+                                                          x-text="'Sforzo: ' + win.effort"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Competitor Insights -->
+                        <template x-if="analysisData?.competitor_insights?.length > 0">
+                            <div>
+                                <h4 class="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                    </svg>
+                                    Insight dai Competitor
+                                </h4>
+                                <ul class="space-y-2">
+                                    <template x-for="insight in analysisData.competitor_insights" :key="insight">
+                                        <li class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3">
+                                            <svg class="w-4 h-4 text-indigo-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                            <span x-text="insight"></span>
                                         </li>
                                     </template>
-                                </ol>
+                                </ul>
                             </div>
                         </template>
 

@@ -414,32 +414,37 @@ class AiController
             ], 400);
         }
 
-        // Esegui analisi
-        $result = $this->pageAnalyzer->analyze(
-            $projectId,
-            $user['id'],
-            $keyword,
-            $url,
-            $position,
-            [
-                'location_code' => $locationCode,
-                'force_fresh_serp' => $forceFresh,
-            ]
-        );
+        try {
+            // Esegui analisi
+            $result = $this->pageAnalyzer->analyze(
+                $projectId,
+                $user['id'],
+                $keyword,
+                $url,
+                $position,
+                [
+                    'location_code' => $locationCode,
+                    'force_fresh_serp' => $forceFresh,
+                ]
+            );
 
-        if (isset($result['error'])) {
-            $code = str_contains($result['message'] ?? '', 'Crediti') ? 402 : 400;
-            return View::json(['error' => $result['message']], $code);
+            if (isset($result['error'])) {
+                $code = str_contains($result['message'] ?? '', 'Crediti') ? 402 : 400;
+                return View::json(['error' => $result['message']], $code);
+            }
+
+            return View::json([
+                'success' => true,
+                'analysis_id' => $result['analysis_id'],
+                'data' => $result['data'],
+                'target_page' => $result['target_page'],
+                'competitors_analyzed' => $result['competitors_analyzed'],
+                'credits_used' => $result['credits_used'],
+            ]);
+        } catch (\Exception $e) {
+            error_log("Page Analyzer Error: " . $e->getMessage());
+            return View::json(['error' => 'Errore durante l\'analisi: ' . $e->getMessage()], 500);
         }
-
-        return View::json([
-            'success' => true,
-            'analysis_id' => $result['analysis_id'],
-            'data' => $result['data'],
-            'target_page' => $result['target_page'],
-            'competitors_analyzed' => $result['competitors_analyzed'],
-            'credits_used' => $result['credits_used'],
-        ]);
     }
 
     /**
@@ -527,8 +532,30 @@ class AiController
             exit;
         }
 
+        // Paginazione
+        $perPage = 20;
+        $page = max(1, (int) ($_GET['page'] ?? 1));
+
+        // Filtri
+        $filters = [
+            'search' => trim($_GET['search'] ?? ''),
+            'max_position' => !empty($_GET['max_position']) ? (int) $_GET['max_position'] : 0,
+            'min_impressions' => !empty($_GET['min_impressions']) ? (int) $_GET['min_impressions'] : 0,
+        ];
+
+        // Conta totale con filtri
+        $totalCount = $this->countKeywordsWithUrls($projectId, $filters);
+        $totalPages = max(1, (int) ceil($totalCount / $perPage));
+
+        // Assicurati che la pagina corrente non superi il totale
+        if ($page > $totalPages) {
+            $page = $totalPages;
+        }
+
+        $offset = ($page - 1) * $perPage;
+
         // Ottieni keyword con URL (target_url o da rank check)
-        $keywords = $this->getKeywordsWithUrls($projectId);
+        $keywords = $this->getKeywordsWithUrls($projectId, $filters, $perPage, $offset);
 
         // Ottieni analisi recenti
         $recentAnalyses = $this->pageAnalyzer->getRecentAnalyses($projectId, 10);
@@ -547,15 +574,102 @@ class AiController
             'creditCost' => $creditCost,
             'userCredits' => $userCredits,
             'isConfigured' => $isConfigured,
+            'filters' => $filters,
+            'pagination' => [
+                'current_page' => $page,
+                'total_pages' => $totalPages,
+                'total_count' => $totalCount,
+                'per_page' => $perPage,
+            ],
         ]);
+    }
+
+    /**
+     * Conta keyword con URL per paginazione
+     */
+    private function countKeywordsWithUrls(int $projectId, array $filters = []): int
+    {
+        $params = [$projectId, $projectId];
+        $whereExtra = '';
+
+        // Filtro ricerca
+        if (!empty($filters['search'])) {
+            $whereExtra .= " AND k.keyword LIKE ?";
+            $params[] = '%' . $filters['search'] . '%';
+        }
+
+        // Filtro posizione massima
+        if (!empty($filters['max_position'])) {
+            $whereExtra .= " AND COALESCE(
+                CASE WHEN k.last_position > 0 THEN k.last_position ELSE NULL END,
+                latest_rc.serp_position
+            ) <= ?";
+            $params[] = $filters['max_position'];
+        }
+
+        // Filtro impressioni minime
+        if (!empty($filters['min_impressions'])) {
+            $whereExtra .= " AND COALESCE(k.last_impressions, 0) >= ?";
+            $params[] = $filters['min_impressions'];
+        }
+
+        $sql = "
+            SELECT COUNT(*) as cnt
+            FROM st_keywords k
+            LEFT JOIN (
+                SELECT rc1.keyword, rc1.project_id, rc1.serp_position, rc1.serp_url, rc1.checked_at
+                FROM st_rank_checks rc1
+                INNER JOIN (
+                    SELECT keyword, project_id, MAX(checked_at) as max_date
+                    FROM st_rank_checks
+                    WHERE project_id = ?
+                    GROUP BY keyword, project_id
+                ) rc2 ON rc1.keyword = rc2.keyword
+                    AND rc1.project_id = rc2.project_id
+                    AND rc1.checked_at = rc2.max_date
+            ) latest_rc ON k.keyword = latest_rc.keyword AND k.project_id = latest_rc.project_id
+            WHERE k.project_id = ?
+              AND (k.target_url IS NOT NULL OR latest_rc.serp_url IS NOT NULL)
+              {$whereExtra}
+        ";
+
+        $result = \Core\Database::fetch($sql, $params);
+        return (int) ($result['cnt'] ?? 0);
     }
 
     /**
      * Ottieni keyword con URL per Page Analyzer
      * Combina target_url da st_keywords e serp_url da rank checks
      */
-    private function getKeywordsWithUrls(int $projectId): array
+    private function getKeywordsWithUrls(int $projectId, array $filters = [], int $limit = 20, int $offset = 0): array
     {
+        $params = [$projectId, $projectId];
+        $whereExtra = '';
+
+        // Filtro ricerca
+        if (!empty($filters['search'])) {
+            $whereExtra .= " AND k.keyword LIKE ?";
+            $params[] = '%' . $filters['search'] . '%';
+        }
+
+        // Filtro posizione massima
+        if (!empty($filters['max_position'])) {
+            $whereExtra .= " AND COALESCE(
+                CASE WHEN k.last_position > 0 THEN k.last_position ELSE NULL END,
+                latest_rc.serp_position
+            ) <= ?";
+            $params[] = $filters['max_position'];
+        }
+
+        // Filtro impressioni minime
+        if (!empty($filters['min_impressions'])) {
+            $whereExtra .= " AND COALESCE(k.last_impressions, 0) >= ?";
+            $params[] = $filters['min_impressions'];
+        }
+
+        $params[] = $limit;
+        $params[] = $offset;
+
         $sql = "
             SELECT
                 k.id,
@@ -587,11 +701,13 @@ class AiController
             ) latest_rc ON k.keyword = latest_rc.keyword AND k.project_id = latest_rc.project_id
             WHERE k.project_id = ?
               AND (k.target_url IS NOT NULL OR latest_rc.serp_url IS NOT NULL)
+              {$whereExtra}
             ORDER BY
                 COALESCE(k.last_impressions, 0) DESC,
                 k.keyword ASC
+            LIMIT ? OFFSET ?
         ";
 
-        return \Core\Database::fetchAll($sql, [$projectId, $projectId]);
+        return \Core\Database::fetchAll($sql, $params);
     }
 }

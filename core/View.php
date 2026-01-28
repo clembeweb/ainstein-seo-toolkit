@@ -124,6 +124,12 @@ class View
     public static function json(mixed $data, int $statusCode = 200): string
     {
         self::noLayout();
+
+        // Pulisce eventuali output/warning PHP precedenti
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+
         http_response_code($statusCode);
         header('Content-Type: application/json');
         return json_encode($data);
