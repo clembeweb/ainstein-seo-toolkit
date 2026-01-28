@@ -516,7 +516,7 @@ class AiController
      * Pagina dedicata SEO Page Analyzer
      * Mostra tutte le keyword con URL e permette analisi AI
      */
-    public function pageAnalyzerView(int $projectId): void
+    public function pageAnalyzerView(int $projectId): string
     {
         $user = Auth::user();
         $project = $this->project->find($projectId, $user['id']);
@@ -524,7 +524,7 @@ class AiController
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
             Router::redirect('/seo-tracking');
-            return;
+            exit;
         }
 
         // Ottieni keyword con URL (target_url o da rank check)
@@ -538,7 +538,7 @@ class AiController
         $userCredits = Credits::getBalance($user['id']);
         $isConfigured = $this->pageAnalyzer->isConfigured();
 
-        View::render('seo-tracking/ai/page-analyzer', [
+        return View::render('seo-tracking/ai/page-analyzer', [
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
