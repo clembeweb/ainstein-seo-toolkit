@@ -6,6 +6,7 @@ use Core\View;
 use Core\Auth;
 use Core\Router;
 use Core\Database;
+use Core\ModuleLoader;
 use Modules\AiContent\Models\Project;
 use Modules\AiContent\Models\ProcessJob;
 
@@ -78,6 +79,9 @@ class JobController
         );
 
         return View::render('ai-content/jobs/index', [
+            'title' => 'Gestione Job - AI Content',
+            'user' => $user,
+            'modules' => ModuleLoader::getUserModules($user['id']),
             'jobs' => $jobs,
             'projects' => $projects,
             'stats' => $stats,
