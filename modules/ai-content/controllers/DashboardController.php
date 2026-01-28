@@ -84,6 +84,7 @@ class DashboardController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
+            'projectId' => $projectId,
             'linkedWpSite' => $linkedWpSite,
             'stats' => [
                 'keywords' => $keywordsCount,

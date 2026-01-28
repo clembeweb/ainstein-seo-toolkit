@@ -60,6 +60,13 @@ class KeywordController
             $projectId = (int) $keyword['project_id'];
         }
 
+        // Load project for navigation tabs
+        $project = null;
+        if ($projectId !== null) {
+            $projectModel = new Project();
+            $project = $projectModel->find($projectId, $user['id']);
+        }
+
         // Load SERP results
         $serpResults = $this->serpResult->getByKeyword($id);
         $serpExtracted = !empty($serpResults);
@@ -171,7 +178,9 @@ class KeywordController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'keyword' => $keyword,
-            'wizardData' => $wizardData
+            'wizardData' => $wizardData,
+            'project' => $project,
+            'projectId' => $projectId
         ]);
     }
 

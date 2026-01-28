@@ -1,8 +1,15 @@
 <?php
 $baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['project_id'] : '/ai-content';
 ?>
+
+<?php if (!empty($projectId) && !empty($project)): ?>
+<?php $currentPage = 'keywords'; ?>
+<?php include __DIR__ . '/../partials/project-nav.php'; ?>
+<?php endif; ?>
+
 <div class="space-y-6" x-data="keywordWizard(<?= e(json_encode($wizardData)) ?>)">
-    <!-- Breadcrumbs -->
+    <?php if (empty($projectId) || empty($project)): ?>
+    <!-- Breadcrumbs (solo se non c'è il project-nav) -->
     <nav class="flex" aria-label="Breadcrumb">
         <ol class="flex items-center space-x-2 text-sm">
             <li>
@@ -54,6 +61,7 @@ $baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['
             </a>
         </div>
     </div>
+    <?php endif; ?>
 
     <!-- Progress Bar -->
     <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
