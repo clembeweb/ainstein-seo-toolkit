@@ -4,8 +4,8 @@
 
 CREATE TABLE IF NOT EXISTS st_serp_results (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    rank_check_id INT UNSIGNED NULL COMMENT 'FK a st_rank_checks (NULL se check standalone)',
-    project_id INT UNSIGNED NOT NULL,
+    rank_check_id INT NULL COMMENT 'FK a st_rank_checks (NULL se check standalone)',
+    project_id INT NOT NULL,
     keyword VARCHAR(500) NOT NULL,
 
     -- Dati risultato SERP
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS st_serp_results (
 -- Tabella per salvare analisi pagina (cache scraping)
 CREATE TABLE IF NOT EXISTS st_page_analysis (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    project_id INT UNSIGNED NOT NULL,
+    project_id INT NOT NULL,
     url VARCHAR(2000) NOT NULL,
     url_hash VARCHAR(64) NOT NULL COMMENT 'SHA256 dell URL per lookup veloce',
 
@@ -66,8 +66,8 @@ CREATE TABLE IF NOT EXISTS st_page_analysis (
 -- Tabella per salvare analisi AI delle pagine
 CREATE TABLE IF NOT EXISTS st_page_ai_analysis (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    project_id INT UNSIGNED NOT NULL,
-    keyword_id INT UNSIGNED NULL COMMENT 'FK a st_keywords se analisi per keyword specifica',
+    project_id INT NOT NULL,
+    keyword_id INT NULL COMMENT 'FK a st_keywords se analisi per keyword specifica',
     keyword VARCHAR(500) NOT NULL,
 
     -- URL analizzata
