@@ -1,7 +1,7 @@
 # AINSTEIN - Istruzioni Claude Code
 
 > Questo file viene caricato automaticamente ad ogni sessione.
-> Ultimo aggiornamento: 2026-01-26
+> Ultimo aggiornamento: 2026-01-28
 
 ---
 
@@ -45,7 +45,7 @@
 | SEO Audit | `seo-audit` | `sa_` | 100% | Action Plan AI completato |
 | Google Ads Analyzer | `ads-analyzer` | `ga_` | 100% | Completo |
 | Internal Links | `internal-links` | `il_` | 85% | Manca AI Suggester |
-| SEO Tracking | `seo-tracking` | `st_` | 85% | GA4 rimosso, Rank Check + Locations OK |
+| SEO Tracking | `seo-tracking` | `st_` | 90% | GA4 rimosso, Rank Check, Page Analyzer, Position Compare |
 | Content Creator | `content-creator` | `cc_` | 0% | Da implementare |
 
 ---
@@ -76,7 +76,8 @@ seo-toolkit/
 │   ├── ScraperService.php   # HTTP + DOM
 │   ├── GoogleOAuthService.php
 │   ├── SitemapService.php
-│   └── CsvImportService.php
+│   ├── CsvImportService.php
+│   └── DataForSeoService.php # Rank check API
 ├── modules/
 │   ├── ai-content/          # REFERENCE per nuovi moduli
 │   ├── seo-audit/

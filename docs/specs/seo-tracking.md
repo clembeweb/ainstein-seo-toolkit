@@ -7,10 +7,12 @@
 | **Slug** | `seo-tracking` |
 | **Prefisso DB** | `st_` |
 | **Files** | 57 |
-| **Stato** | 🔄 In corso (98%) |
-| **Ultimo update** | 2026-01-19 |
+| **Stato** | ✅ Attivo (90%) |
+| **Ultimo update** | 2026-01-28 |
 
-Modulo per monitoraggio posizionamento keyword, traffico organico e revenue con dati GSC + GA4 e report AI.
+Modulo per monitoraggio posizionamento keyword con dati GSC, Rank Check API (DataForSEO), Page Analyzer e report AI.
+
+> **Nota:** GA4 è stato rimosso per semplificazione. Il modulo si concentra su GSC + Rank Check.
 
 ---
 
@@ -27,7 +29,9 @@ modules/seo-tracking/
 │   ├── GroupController.php        # Keyword Groups
 │   ├── CompareController.php      # Position Compare
 │   ├── GscController.php          # OAuth GSC
-│   ├── Ga4Controller.php          # Service Account GA4
+│   ├── RankCheckController.php    # DataForSEO Rank Check
+│   ├── PageAnalyzerController.php # SEO Page Analyzer
+│   ├── QuickWinsController.php    # Quick Wins Finder
 │   ├── AlertController.php
 │   ├── ReportController.php
 │   └── AiController.php
@@ -38,25 +42,25 @@ modules/seo-tracking/
 │   ├── KeywordTracking.php
 │   ├── GscConnection.php
 │   ├── GscData.php
-│   ├── Ga4Connection.php
-│   ├── Ga4Data.php
+│   ├── Location.php               # Locations per rank check
 │   ├── Alert.php
 │   └── AiReport.php
 ├── services/
 │   ├── GscService.php
-│   ├── Ga4Service.php
 │   ├── GroupStatsService.php      # Statistiche gruppi
 │   ├── PositionCompareService.php # Confronto posizioni
 │   ├── KeywordMatcher.php
-│   ├── RevenueAttributor.php
 │   ├── AlertService.php
 │   └── AiReportService.php
+# In /services/ (root - condiviso)
+│   └── DataForSeoService.php      # Rank Check API
 └── views/
     ├── projects/
     ├── dashboard/
     ├── keywords/
     ├── groups/                    # Keyword Groups views
     ├── compare/                   # Position Compare views
+    ├── ai/                        # Page Analyzer, Quick Wins
     ├── alerts/
     ├── reports/
     └── connections/
@@ -70,21 +74,14 @@ modules/seo-tracking/
 -- Progetti e connessioni
 st_projects              -- Progetti tracking
 st_gsc_connections       -- Token OAuth GSC
-st_ga4_connections       -- Service Account GA4
+st_locations             -- Locations per rank check (es: Italy, Milan)
 
 -- Keyword tracking
 st_keywords              -- Keyword monitorate
 st_keyword_groups        -- Gruppi di keyword
 st_keyword_group_members -- Relazione M:N keyword-gruppo
-st_keyword_positions     -- Snapshot giornalieri
+st_keyword_positions     -- Snapshot giornalieri (da Rank Check)
 st_gsc_data              -- Dati storici GSC
-
--- GA4 data
-st_ga4_data              -- Dati per landing page
-st_ga4_daily             -- Aggregati giornalieri
-
--- Revenue attribution
-st_keyword_revenue       -- Attribuzione revenue
 
 -- Alert system
 st_alert_settings        -- Config alert
@@ -104,6 +101,10 @@ st_sync_log              -- Log sync
 - [x] CRUD keyword tracking
 - [x] **Keyword Groups** (raggruppamento M:N con statistiche)
 - [x] **Position Compare** (confronto posizioni tra periodi - stile SEMrush)
+- [x] **SEO Page Analyzer** (analisi AI singola pagina con suggerimenti)
+- [x] **Quick Wins Finder** (keyword pos 11-20 facili da spingere)
+- [x] **Rank Check** via DataForSEO API
+- [x] **Locations** gestione location per rank check
 - [x] OAuth GSC completo e funzionante
 - [x] Redirect URI dinamico (multi-dominio)
 - [x] Token refresh automatico
@@ -114,14 +115,15 @@ st_sync_log              -- Log sync
 - [x] Schema DB allineato al codice
 
 ### 🔄 In Corso
-- [ ] GA4 Service Account upload
 - [ ] Sync dati automatico (cron)
+- [ ] Weekly AI Digest
 
 ### ❌ Da Implementare
 - [ ] Sistema alert
 - [ ] Report AI automatici
-- [ ] Revenue attribution
 - [ ] Email notifiche
+
+> **Nota:** GA4 è stato rimosso. Revenue attribution non più in scope.
 
 ---
 
@@ -161,28 +163,45 @@ GET  /seo-tracking/projects/{id}/compare              # Vista principale
 POST /seo-tracking/projects/{id}/compare/data         # AJAX dati confronto
 GET  /seo-tracking/projects/{id}/compare/export       # Export CSV
 
-// Connessioni
+// SEO Page Analyzer (NEW)
+GET  /seo-tracking/projects/{id}/ai/page-analyzer     # Vista analisi pagina
+POST /seo-tracking/projects/{id}/ai/analyze-page      # AJAX analisi AI
+
+// Quick Wins (NEW)
+GET  /seo-tracking/projects/{id}/ai/quick-wins        # Lista opportunità
+
+// Rank Check (NEW)
+POST /seo-tracking/projects/{id}/keywords/{kwId}/check # Check posizione via DataForSEO
+
+// Locations (NEW)
+GET  /seo-tracking/projects/{id}/locations            # Gestione locations
+POST /seo-tracking/projects/{id}/locations            # Aggiungi location
+
+// Connessioni GSC
 GET  /seo-tracking/projects/{id}/gsc/connect          # OAuth start
 GET  /oauth/google/callback                           # OAuth callback (centralizzato)
 POST /seo-tracking/projects/{id}/gsc/save-property    # Salva proprietà
 POST /seo-tracking/projects/{id}/gsc/sync             # Sync dati
-
-// GA4
-GET  /seo-tracking/projects/{id}/ga4/connect          # Form upload JSON
-POST /seo-tracking/projects/{id}/ga4/upload           # Upload Service Account
 ```
 
 ---
 
-## Bug Risolti (2026-01-07)
+## Bug Risolti
 
+### 2026-01-28
+| Bug | Severity | File | Status |
+|-----|----------|------|--------|
+| Quick Wins URL navigation | MEDIUM | QuickWinsController | ✅ Fixato |
+| Page Analyzer return statement | MEDIUM | PageAnalyzerController | ✅ Fixato |
+| INT type compatibility migration | LOW | migrations/ | ✅ Fixato |
+
+### 2026-01-07
 | Bug | Severity | File | Status |
 |-----|----------|------|--------|
 | OAuth callback | HIGH | GscController | ✅ Fixato |
 | Redirect URI dinamico | HIGH | GoogleOAuthService | ✅ Fixato |
 | Token refresh | HIGH | GscService | ✅ Fixato |
 | Schema DB mismatch | HIGH | migrations/ | ✅ Fixato |
-| GA4 upload JSON | MEDIUM | Ga4Controller | 🔄 Da testare |
 
 ### Migration Scripts
 
@@ -190,7 +209,8 @@ POST /seo-tracking/projects/{id}/ga4/upload           # Upload Service Account
 |------|-------------|
 | `migrations/full_schema_fix.sql` | Fix schema allineamento DB/codice |
 | `migrations/001_keyword_groups.sql` | ✅ Tabelle Keyword Groups |
-| `migrations/003_add_search_volume.sql` | ✅ NEW - Colonna search_volume + indici per Position Compare |
+| `migrations/003_add_search_volume.sql` | ✅ Colonna search_volume + indici |
+| `migrations/004_locations.sql` | ✅ Tabella st_locations per rank check |
 
 ---
 
@@ -239,11 +259,12 @@ Vedi: `docs/GOLDEN-RULES.md` - Regola #11
 ## GAP AI - Da Implementare (FASE 2)
 
 ### Stato Attuale AI
+- ✅ SEO Page Analyzer - Implementato e funzionante
+- ✅ Quick Wins Finder - Implementato
 - ⚠️ AiReportService presente ma non completamente funzionante
-- ❌ Weekly Digest non attivo
-- ❌ Quick Wins Finder non implementato
+- ❌ Weekly Digest non attivo (cron da configurare)
 
-### Feature Mancante 1: Weekly AI Digest
+### Feature Mancante: Weekly AI Digest
 
 **Obiettivo:** Report settimanale automatico con insight azionabili.
 
@@ -274,24 +295,39 @@ Vedi: `docs/GOLDEN-RULES.md` - Regola #11
 4. Email notifica (opzionale)
 5. Vista dashboard con ultimo digest
 
-### Feature Mancante 2: Quick Wins Finder
-
-**Obiettivo:** Identificare keyword facili da spingere in top 10.
-
-**Criteri:**
-- Posizione 11-20 (quasi in top 10)
-- Volume ricerca > soglia
-- Bassa competizione stimata
-
-**Output:**
-- Lista keyword con potenziale
-- Azioni suggerite per ogni keyword
-- Priorità basata su impatto/effort
-
 **Priorità:** 🟡 MEDIA - FASE 2 Roadmap
 
 📄 Vedi: [ROADMAP.md](../ROADMAP.md)
 
 ---
 
-*Spec aggiornata - 2026-01-19*
+## Nuove Feature Implementate (2026-01-28)
+
+### SEO Page Analyzer
+Analisi AI di una singola pagina con:
+- Analisi on-page SEO (title, meta, headings, content)
+- Suggerimenti di miglioramento
+- Score qualità
+- Azioni prioritarie
+
+**Route:** `/seo-tracking/projects/{id}/ai/page-analyzer`
+
+### Quick Wins Finder
+Identificazione automatica keyword in posizione 11-20 facilmente ottimizzabili:
+- Lista keyword con potenziale
+- Azioni suggerite per ogni keyword
+- Filtri per volume, posizione, CTR
+
+**Route:** `/seo-tracking/projects/{id}/ai/quick-wins`
+
+### DataForSEO Rank Check
+Verifica posizioni keyword in tempo reale via API DataForSEO:
+- Check singola keyword
+- Bulk check
+- Supporto multi-location (es: Italy, Milan, Rome)
+
+**Service:** `/services/DataForSeoService.php`
+
+---
+
+*Spec aggiornata - 2026-01-28*
