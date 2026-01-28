@@ -7,6 +7,7 @@ use Core\Auth;
 use Core\ModuleLoader;
 use Modules\AiContent\Models\Keyword;
 use Modules\AiContent\Models\Article;
+use Modules\AiContent\Models\Project;
 use Modules\AiContent\Models\SerpResult;
 use Modules\AiContent\Models\Source;
 use Modules\AiContent\Models\WpSite;
@@ -226,16 +227,26 @@ class KeywordController
     {
         $user = Auth::user();
         $page = (int) ($_GET['page'] ?? 1);
+        $project = null;
 
         // Leggi project_id anche da query string se non passato come parametro
         if ($projectId === null && !empty($_GET['project_id'])) {
             $projectId = (int) $_GET['project_id'];
         }
 
-        // Se projectId specificato, filtra per progetto
+        // Se projectId specificato, verifica ownership e filtra per progetto
         if ($projectId !== null) {
+            $projectModel = new Project();
+            $project = $projectModel->find($projectId, $user['id']);
+
+            if (!$project) {
+                $_SESSION['_flash']['error'] = 'Progetto non trovato';
+                header('Location: ' . url('/ai-content'));
+                exit;
+            }
+
             $keywordsData = $this->keyword->allByProject($projectId, $page, 20);
-            $title = 'Keywords Progetto';
+            $title = 'Keywords - ' . $project['name'];
         } else {
             // Lista globale utente (fallback)
             $keywordsData = $this->keyword->allByUser($user['id'], $page, 20);
@@ -253,7 +264,8 @@ class KeywordController
                 'total' => $keywordsData['total'],
                 'per_page' => $keywordsData['per_page']
             ],
-            'projectId' => $projectId
+            'projectId' => $projectId,
+            'project' => $project
         ]);
     }
 
