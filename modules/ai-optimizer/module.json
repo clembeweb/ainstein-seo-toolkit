@@ -1,0 +1,66 @@
+{
+    "name": "AI Article Optimizer",
+    "slug": "ai-optimizer",
+    "version": "1.0.0",
+    "description": "Ottimizza articoli esistenti confrontandoli con i top competitor in SERP",
+    "icon": "sparkles",
+    "color": "amber",
+    "menu_order": 25,
+    "requires": {
+        "php": ">=8.0",
+        "credits": true,
+        "services": ["ai", "scraper"]
+    },
+    "credits": {
+        "gap_analysis": 5,
+        "content_refactor": 10,
+        "full_optimization": 12
+    },
+    "settings": {
+        "default_language": {
+            "type": "select",
+            "label": "Lingua default",
+            "options": ["it", "en", "es", "de", "fr"],
+            "default": "it"
+        },
+        "max_competitors": {
+            "type": "number",
+            "label": "Max competitor da analizzare",
+            "default": 3,
+            "min": 1,
+            "max": 5
+        },
+        "default_word_count_target": {
+            "type": "number",
+            "label": "Target parole articolo",
+            "default": 1500
+        },
+        "cost_gap_analysis": {
+            "type": "number",
+            "label": "Costo Gap Analysis",
+            "description": "Crediti per analisi gap vs competitor",
+            "default": 5,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_content_refactor": {
+            "type": "number",
+            "label": "Costo Riscrittura Contenuto",
+            "description": "Crediti per riscrittura AI dell'articolo",
+            "default": 10,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_full_optimization": {
+            "type": "number",
+            "label": "Costo Ottimizzazione Completa",
+            "description": "Crediti per analisi + riscrittura in un unico step",
+            "default": 12,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        }
+    }
+}
