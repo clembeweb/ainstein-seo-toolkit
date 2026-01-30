@@ -19,6 +19,9 @@ if (php_sapi_name() !== 'cli') {
     die('Solo CLI');
 }
 
+// Timezone Italia
+date_default_timezone_set('Europe/Rome');
+
 // Bootstrap
 require_once dirname(__DIR__, 3) . '/cron/bootstrap.php';
 
