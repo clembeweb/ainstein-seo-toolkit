@@ -58,6 +58,107 @@ class Project
     }
 
     /**
+     * Get all projects grouped by type with type-specific stats
+     */
+    public function allGroupedByType(int $userId): array
+    {
+        // Check which tables exist
+        $queueExists = $this->tableExists('aic_queue');
+        $metaTagsExists = $this->tableExists('aic_meta_tags');
+
+        // Progetti Manual: stats articoli senza queue
+        $sqlManual = "
+            SELECT
+                p.*,
+                (SELECT COUNT(*) FROM aic_keywords WHERE project_id = p.id) as keywords_count,
+                (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id) as articles_count,
+                (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id AND status = 'ready') as articles_ready,
+                (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id AND status = 'published') as articles_published
+            FROM {$this->table} p
+            WHERE p.user_id = ? AND p.type = 'manual'
+            ORDER BY p.updated_at DESC
+        ";
+        $manualProjects = Database::fetchAll($sqlManual, [$userId]);
+
+        // Progetti Auto: stats articoli + queue (se esiste)
+        if ($queueExists) {
+            $sqlAuto = "
+                SELECT
+                    p.*,
+                    (SELECT COUNT(*) FROM aic_keywords WHERE project_id = p.id) as keywords_count,
+                    (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id) as articles_count,
+                    (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id AND status = 'ready') as articles_ready,
+                    (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id AND status = 'published') as articles_published,
+                    (SELECT COUNT(*) FROM aic_queue WHERE project_id = p.id AND status = 'pending') as queue_pending,
+                    (SELECT COUNT(*) FROM aic_queue WHERE project_id = p.id AND status = 'processing') as queue_processing
+                FROM {$this->table} p
+                WHERE p.user_id = ? AND p.type = 'auto'
+                ORDER BY p.updated_at DESC
+            ";
+        } else {
+            $sqlAuto = "
+                SELECT
+                    p.*,
+                    (SELECT COUNT(*) FROM aic_keywords WHERE project_id = p.id) as keywords_count,
+                    (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id) as articles_count,
+                    (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id AND status = 'ready') as articles_ready,
+                    (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id AND status = 'published') as articles_published,
+                    0 as queue_pending,
+                    0 as queue_processing
+                FROM {$this->table} p
+                WHERE p.user_id = ? AND p.type = 'auto'
+                ORDER BY p.updated_at DESC
+            ";
+        }
+        $autoProjects = Database::fetchAll($sqlAuto, [$userId]);
+
+        // Progetti Meta-Tag: stats meta tags (se tabella esiste)
+        $metaTagProjects = [];
+        if ($metaTagsExists) {
+            $sqlMetaTags = "
+                SELECT
+                    p.*,
+                    (SELECT COUNT(*) FROM aic_meta_tags WHERE project_id = p.id) as urls_count,
+                    (SELECT COUNT(*) FROM aic_meta_tags WHERE project_id = p.id AND status = 'scraped') as urls_scraped,
+                    (SELECT COUNT(*) FROM aic_meta_tags WHERE project_id = p.id AND status = 'generated') as urls_generated,
+                    (SELECT COUNT(*) FROM aic_meta_tags WHERE project_id = p.id AND status = 'approved') as urls_approved,
+                    (SELECT COUNT(*) FROM aic_meta_tags WHERE project_id = p.id AND status = 'published') as urls_published
+                FROM {$this->table} p
+                WHERE p.user_id = ? AND p.type = 'meta-tag'
+                ORDER BY p.updated_at DESC
+            ";
+            $metaTagProjects = Database::fetchAll($sqlMetaTags, [$userId]);
+        } else {
+            // Se tabella non esiste, prendi comunque i progetti meta-tag senza stats
+            $sqlMetaTags = "
+                SELECT p.*, 0 as urls_count, 0 as urls_scraped, 0 as urls_generated, 0 as urls_approved, 0 as urls_published
+                FROM {$this->table} p
+                WHERE p.user_id = ? AND p.type = 'meta-tag'
+                ORDER BY p.updated_at DESC
+            ";
+            $metaTagProjects = Database::fetchAll($sqlMetaTags, [$userId]);
+        }
+
+        return [
+            'manual' => $manualProjects,
+            'auto' => $autoProjects,
+            'meta-tag' => $metaTagProjects,
+        ];
+    }
+
+    /**
+     * Check if a table exists in the database
+     */
+    private function tableExists(string $tableName): bool
+    {
+        $result = Database::fetch(
+            "SELECT COUNT(*) as cnt FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?",
+            [$tableName]
+        );
+        return ($result['cnt'] ?? 0) > 0;
+    }
+
+    /**
      * Get project with full details
      */
     public function findWithStats(int $id, int $userId): ?array

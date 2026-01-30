@@ -22,6 +22,7 @@ use Modules\AiContent\Controllers\WizardController;
 use Modules\AiContent\Controllers\AutoController;
 use Modules\AiContent\Controllers\JobController;
 use Modules\AiContent\Controllers\InternalLinksController;
+use Modules\AiContent\Controllers\MetaTagController;
 
 $moduleSlug = 'ai-content';
 
@@ -77,6 +78,12 @@ Router::get('/ai-content/projects/{id}', function ($id) {
     // Se progetto AUTO, redirect alla dashboard auto
     if ($project['type'] === 'auto') {
         Router::redirect('/ai-content/projects/' . $id . '/auto');
+        return;
+    }
+
+    // Se progetto META-TAG, redirect alla dashboard meta-tags
+    if ($project['type'] === 'meta-tag') {
+        Router::redirect('/ai-content/projects/' . $id . '/meta-tags');
         return;
     }
 
@@ -704,4 +711,164 @@ Router::post('/ai-content/projects/{id}/internal-links/store-manual', function (
     Middleware::csrf();
     $controller = new InternalLinksController();
     return $controller->storeManual((int) $id);
+});
+
+// ============================================
+// META TAGS ROUTES (progetti type='meta-tag')
+// ============================================
+
+// Dashboard meta tags
+Router::get('/ai-content/projects/{id}/meta-tags', function ($id) {
+    Middleware::auth();
+    $controller = new MetaTagController();
+    return $controller->dashboard((int) $id);
+});
+
+// Lista meta tags con filtri
+Router::get('/ai-content/projects/{id}/meta-tags/list', function ($id) {
+    Middleware::auth();
+    $controller = new MetaTagController();
+    return $controller->list((int) $id);
+});
+
+// Wizard import
+Router::get('/ai-content/projects/{id}/meta-tags/import', function ($id) {
+    Middleware::auth();
+    $controller = new MetaTagController();
+    return $controller->import((int) $id);
+});
+
+// Import da WordPress (AJAX)
+Router::post('/ai-content/projects/{id}/meta-tags/import/wp', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->storeFromWp((int) $id);
+});
+
+// Discover sitemap (AJAX)
+Router::post('/ai-content/projects/{id}/meta-tags/discover', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->discover((int) $id);
+});
+
+// Import da sitemap (AJAX)
+Router::post('/ai-content/projects/{id}/meta-tags/import/sitemap', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->storeFromSitemap((int) $id);
+});
+
+// Import da CSV (AJAX)
+Router::post('/ai-content/projects/{id}/meta-tags/import/csv', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->storeFromCsv((int) $id);
+});
+
+// Import manuale (AJAX)
+Router::post('/ai-content/projects/{id}/meta-tags/import/manual', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->storeManual((int) $id);
+});
+
+// Scrape batch (AJAX)
+Router::post('/ai-content/projects/{id}/meta-tags/scrape', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->scrape((int) $id);
+});
+
+// Generate batch (AJAX)
+Router::post('/ai-content/projects/{id}/meta-tags/generate', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->generate((int) $id);
+});
+
+// Bulk approve (AJAX)
+Router::post('/ai-content/projects/{id}/meta-tags/bulk-approve', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->bulkApprove((int) $id);
+});
+
+// Bulk publish (AJAX)
+Router::post('/ai-content/projects/{id}/meta-tags/bulk-publish', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->bulkPublish((int) $id);
+});
+
+// Bulk delete (AJAX)
+Router::post('/ai-content/projects/{id}/meta-tags/bulk-delete', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->bulkDelete((int) $id);
+});
+
+// Preview/Edit singolo meta tag
+Router::get('/ai-content/projects/{id}/meta-tags/{tagId}', function ($id, $tagId) {
+    Middleware::auth();
+    $controller = new MetaTagController();
+    return $controller->preview((int) $id, (int) $tagId);
+});
+
+// Update singolo meta tag (AJAX)
+Router::post('/ai-content/projects/{id}/meta-tags/{tagId}/update', function ($id, $tagId) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->update((int) $id, (int) $tagId);
+});
+
+// Approve singolo (AJAX)
+Router::post('/ai-content/projects/{id}/meta-tags/{tagId}/approve', function ($id, $tagId) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->approve((int) $id, (int) $tagId);
+});
+
+// Publish singolo (AJAX)
+Router::post('/ai-content/projects/{id}/meta-tags/{tagId}/publish', function ($id, $tagId) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->publish((int) $id, (int) $tagId);
+});
+
+// Delete singolo
+Router::post('/ai-content/projects/{id}/meta-tags/{tagId}/delete', function ($id, $tagId) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->delete((int) $id, (int) $tagId);
+});
+
+// Reset errori scraping
+Router::post('/ai-content/projects/{id}/meta-tags/reset-scrape-errors', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->resetScrapeErrors((int) $id);
+});
+
+// Reset errori generazione
+Router::post('/ai-content/projects/{id}/meta-tags/reset-generation-errors', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->resetGenerationErrors((int) $id);
 });

@@ -29,13 +29,37 @@ class ProjectController
     public function index(): string
     {
         $user = Auth::user();
-        $projects = $this->project->allWithStats($user['id']);
+
+        // Progetti raggruppati per tipo con stats specifiche
+        $projectsByType = $this->project->allGroupedByType($user['id']);
+
+        // Tab attivo da query string (default: primo tab con progetti)
+        $activeTab = $_GET['tab'] ?? null;
+        if (!$activeTab || !in_array($activeTab, ['manual', 'auto', 'meta-tag'])) {
+            // Seleziona il primo tab con progetti
+            if (!empty($projectsByType['manual'])) {
+                $activeTab = 'manual';
+            } elseif (!empty($projectsByType['auto'])) {
+                $activeTab = 'auto';
+            } elseif (!empty($projectsByType['meta-tag'])) {
+                $activeTab = 'meta-tag';
+            } else {
+                $activeTab = 'manual'; // Default
+            }
+        }
 
         return View::render('ai-content/projects/index', [
             'title' => 'AI Content Generator',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
-            'projects' => $projects,
+            'projectsByType' => $projectsByType,
+            'activeTab' => $activeTab,
+            // Legacy: tutti i progetti per retrocompatibilità
+            'projects' => array_merge(
+                $projectsByType['manual'],
+                $projectsByType['auto'],
+                $projectsByType['meta-tag']
+            ),
         ]);
     }
 
@@ -65,9 +89,9 @@ class ProjectController
         $defaultLanguage = trim($_POST['default_language'] ?? 'it');
         $defaultLocation = trim($_POST['default_location'] ?? 'Italy');
 
-        // Tipo progetto (manual o auto)
+        // Tipo progetto (manual, auto, meta-tag)
         $type = trim($_POST['type'] ?? 'manual');
-        if (!in_array($type, ['manual', 'auto'])) {
+        if (!in_array($type, ['manual', 'auto', 'meta-tag'])) {
             $type = 'manual';
         }
 
@@ -106,6 +130,8 @@ class ProjectController
                 $autoConfig->create($projectId);
 
                 Router::redirect('/ai-content/projects/' . $projectId . '/auto');
+            } elseif ($type === 'meta-tag') {
+                Router::redirect('/ai-content/projects/' . $projectId . '/meta-tags');
             } else {
                 Router::redirect('/ai-content/projects/' . $projectId);
             }

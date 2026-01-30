@@ -220,6 +220,20 @@ class SEOToolkitConnector {
             'callback' => [$this, 'uploadMedia'],
             'permission_callback' => [$this, 'verifyApiKey']
         ]);
+
+        // All content with SEO meta (for meta tag generator)
+        register_rest_route('seo-toolkit/v1', '/all-content', [
+            'methods' => 'GET',
+            'callback' => [$this, 'getAllContent'],
+            'permission_callback' => [$this, 'verifyApiKey']
+        ]);
+
+        // Update SEO meta only (for meta tag publishing)
+        register_rest_route('seo-toolkit/v1', '/posts/(?P<id>\d+)/seo-meta', [
+            'methods' => ['PATCH', 'POST'],
+            'callback' => [$this, 'updateSeoMeta'],
+            'permission_callback' => [$this, 'verifyApiKey']
+        ]);
     }
 
     public function verifyApiKey($request): bool {
@@ -482,6 +496,153 @@ class SEOToolkitConnector {
             'success' => true,
             'attachment_id' => $attachment_id,
             'url' => wp_get_attachment_url($attachment_id)
+        ]);
+    }
+
+    /**
+     * Get all content with SEO meta data
+     * Used for importing pages into meta tag generator
+     */
+    public function getAllContent($request): \WP_REST_Response {
+        $per_page = min((int) ($request->get_param('per_page') ?? 100), 500);
+        $page = max((int) ($request->get_param('page') ?? 1), 1);
+        $post_types_param = $request->get_param('post_types') ?? 'post,page';
+        $status = $request->get_param('status') ?? 'publish';
+
+        // Parse post types
+        $post_types = array_filter(array_map('trim', explode(',', $post_types_param)));
+        if (empty($post_types)) {
+            $post_types = ['post', 'page'];
+        }
+
+        $args = [
+            'post_type' => $post_types,
+            'post_status' => $status,
+            'posts_per_page' => $per_page,
+            'paged' => $page,
+            'orderby' => 'date',
+            'order' => 'DESC',
+        ];
+
+        $query = new \WP_Query($args);
+
+        $posts = [];
+        foreach ($query->posts as $post) {
+            // Get SEO title and description from various plugins
+            $seo_title = '';
+            $seo_description = '';
+
+            // Try Yoast SEO
+            $yoast_title = get_post_meta($post->ID, '_yoast_wpseo_title', true);
+            $yoast_desc = get_post_meta($post->ID, '_yoast_wpseo_metadesc', true);
+            if ($yoast_title) $seo_title = $yoast_title;
+            if ($yoast_desc) $seo_description = $yoast_desc;
+
+            // Try RankMath
+            if (empty($seo_title)) {
+                $rm_title = get_post_meta($post->ID, 'rank_math_title', true);
+                if ($rm_title) $seo_title = $rm_title;
+            }
+            if (empty($seo_description)) {
+                $rm_desc = get_post_meta($post->ID, 'rank_math_description', true);
+                if ($rm_desc) $seo_description = $rm_desc;
+            }
+
+            // Try All In One SEO
+            if (empty($seo_title)) {
+                $aioseo_title = get_post_meta($post->ID, '_aioseo_title', true);
+                if ($aioseo_title) $seo_title = $aioseo_title;
+            }
+            if (empty($seo_description)) {
+                $aioseo_desc = get_post_meta($post->ID, '_aioseo_description', true);
+                if ($aioseo_desc) $seo_description = $aioseo_desc;
+            }
+
+            $posts[] = [
+                'id' => $post->ID,
+                'title' => $post->post_title,
+                'url' => get_permalink($post->ID),
+                'post_type' => $post->post_type,
+                'status' => $post->post_status,
+                'date' => $post->post_date,
+                'seo_title' => $seo_title,
+                'seo_description' => $seo_description,
+                'has_seo_meta' => !empty($seo_title) || !empty($seo_description),
+            ];
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'posts' => $posts,
+            'total' => $query->found_posts,
+            'pages' => $query->max_num_pages,
+            'current_page' => $page,
+        ]);
+    }
+
+    /**
+     * Update only SEO meta (title and description) for a post
+     * Writes to Yoast, RankMath, and AIOSEO meta keys
+     */
+    public function updateSeoMeta($request): \WP_REST_Response {
+        $post_id = (int) $request['id'];
+        $params = $request->get_json_params();
+
+        // Verify post exists
+        $post = get_post($post_id);
+        if (!$post) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'Post non trovato'
+            ], 404);
+        }
+
+        $updated = false;
+
+        // Update SEO title
+        if (isset($params['seo_title'])) {
+            $seo_title = sanitize_text_field($params['seo_title']);
+
+            // Yoast SEO
+            update_post_meta($post_id, '_yoast_wpseo_title', $seo_title);
+
+            // RankMath
+            update_post_meta($post_id, 'rank_math_title', $seo_title);
+
+            // All In One SEO
+            update_post_meta($post_id, '_aioseo_title', $seo_title);
+
+            $updated = true;
+        }
+
+        // Update SEO description
+        if (isset($params['seo_description'])) {
+            $seo_desc = sanitize_text_field($params['seo_description']);
+
+            // Yoast SEO
+            update_post_meta($post_id, '_yoast_wpseo_metadesc', $seo_desc);
+
+            // RankMath
+            update_post_meta($post_id, 'rank_math_description', $seo_desc);
+
+            // All In One SEO
+            update_post_meta($post_id, '_aioseo_description', $seo_desc);
+
+            $updated = true;
+        }
+
+        if (!$updated) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'Nessun dato da aggiornare. Invia seo_title o seo_description.'
+            ], 400);
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'post_id' => $post_id,
+            'message' => 'Meta SEO aggiornati',
+            'post_url' => get_permalink($post_id)
         ]);
     }
 }

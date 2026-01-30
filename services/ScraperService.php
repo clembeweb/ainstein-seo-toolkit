@@ -3,6 +3,9 @@
 namespace Services;
 
 use Core\Credits;
+use fivefilters\Readability\Readability;
+use fivefilters\Readability\Configuration;
+use fivefilters\Readability\ParseException;
 
 class ScraperService
 {
@@ -448,9 +451,10 @@ class ScraperService
 
     /**
      * Scrape a URL and extract structured content for AI analysis
+     * Uses Mozilla Readability algorithm for robust content extraction
      *
      * @param string $url URL to scrape
-     * @return array Structured content with headings, text, word count
+     * @return array Structured content with headings, text, word count, internal links
      */
     public function scrape(string $url): array
     {
@@ -474,108 +478,186 @@ class ScraperService
             throw new \Exception('Empty response from URL');
         }
 
-        // Ensure HTML is valid UTF-8 (external sites may use different encodings)
+        // Ensure HTML is valid UTF-8
         $html = $this->ensureUtf8($html);
 
-        // Extract meta
+        // Extract meta from original HTML
         $meta = $this->extractMeta($html);
 
-        // Extract headings
+        // Extract headings from original HTML
         $headings = $this->extractHeadings($html);
 
-        // Extract main content text
-        $content = $this->extractMainContent($html);
+        // Extract main content using Mozilla Readability algorithm
+        $readabilityResult = $this->extractWithReadability($html, $finalUrl);
+
+        // Extract internal links from the article content
+        $internalLinks = [];
+        if (!empty($readabilityResult['html'])) {
+            $internalLinks = $this->extractInternalLinksFromContent(
+                $readabilityResult['html'],
+                $finalUrl
+            );
+        }
+
+        // Use Readability content or fallback to regex extraction
+        $content = $readabilityResult['content'] ?? '';
+        if (empty($content) || strlen($content) < 100) {
+            $content = $this->extractMainContentFallback($html);
+        }
 
         // Count words
-        $wordCount = str_word_count(strip_tags($content));
+        $wordCount = str_word_count($content);
 
         return [
             'url' => $finalUrl,
-            'title' => $meta['title'] ?? '',
+            'title' => $readabilityResult['title'] ?? $meta['title'] ?? '',
             'description' => $meta['description'] ?? '',
             'headings' => $headings,
             'content' => $content,
+            'content_html' => $readabilityResult['html'] ?? '',
             'word_count' => $wordCount,
+            'internal_links' => $internalLinks,
+            'author' => $readabilityResult['author'] ?? '',
+            'excerpt' => $readabilityResult['excerpt'] ?? '',
         ];
     }
 
     /**
-     * Extract main content text from HTML
+     * Extract content using Mozilla Readability algorithm
      */
-    private function extractMainContent(string $html): string
+    private function extractWithReadability(string $html, string $url): array
     {
-        // Remove scripts, styles, and comments
+        try {
+            $configuration = new Configuration([
+                'FixRelativeURLs' => true,
+                'OriginalURL' => $url,
+                'SummonCthulhu' => true, // Enable article extraction even if confidence is low
+            ]);
+
+            $readability = new Readability($configuration);
+            $readability->parse($html);
+
+            return [
+                'title' => $readability->getTitle(),
+                'author' => $readability->getAuthor(),
+                'content' => $readability->getContent() ? strip_tags($readability->getContent()) : '',
+                'html' => $readability->getContent(),
+                'excerpt' => $readability->getExcerpt(),
+                'image' => $readability->getImage(),
+            ];
+
+        } catch (ParseException $e) {
+            // Readability failed - return empty, will use fallback
+            return [
+                'title' => '',
+                'content' => '',
+                'html' => '',
+            ];
+        }
+    }
+
+    /**
+     * Extract internal links from article content HTML
+     * Returns links that point to the same domain
+     */
+    private function extractInternalLinksFromContent(string $contentHtml, string $baseUrl): array
+    {
+        $baseDomain = parse_url($baseUrl, PHP_URL_HOST);
+        $baseDomain = preg_replace('/^www\./', '', $baseDomain);
+
+        $internalLinks = [];
+
+        preg_match_all('/<a[^>]+href=["\']([^"\']+)["\'][^>]*>(.*?)<\/a>/is', $contentHtml, $matches, PREG_SET_ORDER);
+
+        foreach ($matches as $match) {
+            $href = $match[1];
+            $anchorText = trim(strip_tags($match[2]));
+
+            // Skip empty anchors, anchors, javascript, mailto
+            if (empty($href) || str_starts_with($href, '#') ||
+                str_starts_with($href, 'javascript:') ||
+                str_starts_with($href, 'mailto:')) {
+                continue;
+            }
+
+            // Normalize relative URLs
+            if (str_starts_with($href, '/')) {
+                $scheme = parse_url($baseUrl, PHP_URL_SCHEME) ?? 'https';
+                $host = parse_url($baseUrl, PHP_URL_HOST);
+                $href = "{$scheme}://{$host}{$href}";
+            }
+
+            // Check if it's an internal link
+            $linkDomain = parse_url($href, PHP_URL_HOST) ?? '';
+            $linkDomain = preg_replace('/^www\./', '', $linkDomain);
+
+            if ($linkDomain === $baseDomain && !empty($anchorText)) {
+                $internalLinks[] = [
+                    'url' => $href,
+                    'anchor' => $anchorText,
+                    'context' => $this->getContextAroundLink($contentHtml, $match[0]),
+                ];
+            }
+        }
+
+        return $internalLinks;
+    }
+
+    /**
+     * Get text context around a link for better understanding
+     */
+    private function getContextAroundLink(string $html, string $linkHtml): string
+    {
+        $pos = strpos($html, $linkHtml);
+        if ($pos === false) {
+            return '';
+        }
+
+        $start = max(0, $pos - 100);
+        $end = min(strlen($html), $pos + strlen($linkHtml) + 100);
+
+        $context = substr($html, $start, $end - $start);
+        $context = strip_tags($context);
+        $context = preg_replace('/\s+/', ' ', $context);
+        return trim($context);
+    }
+
+    /**
+     * Fallback content extraction when Readability fails
+     * Uses simple paragraph extraction
+     */
+    private function extractMainContentFallback(string $html): string
+    {
+        // Remove scripts, styles, nav elements
         $html = preg_replace('/<script[^>]*>.*?<\/script>/is', '', $html);
         $html = preg_replace('/<style[^>]*>.*?<\/style>/is', '', $html);
-        $html = preg_replace('/<!--.*?-->/s', '', $html);
-
-        // Remove navigation, header, footer, sidebar
         $html = preg_replace('/<nav[^>]*>.*?<\/nav>/is', '', $html);
         $html = preg_replace('/<header[^>]*>.*?<\/header>/is', '', $html);
         $html = preg_replace('/<footer[^>]*>.*?<\/footer>/is', '', $html);
         $html = preg_replace('/<aside[^>]*>.*?<\/aside>/is', '', $html);
 
-        // Try to find main content area
-        $mainContent = '';
+        $content = [];
 
-        // Look for article or main tags
-        if (preg_match('/<article[^>]*>(.*?)<\/article>/is', $html, $matches)) {
-            $mainContent = $matches[1];
-        } elseif (preg_match('/<main[^>]*>(.*?)<\/main>/is', $html, $matches)) {
-            $mainContent = $matches[1];
-        } elseif (preg_match('/<div[^>]*class=["\'][^"\']*(?:content|post|entry|article)[^"\']*["\'][^>]*>(.*?)<\/div>/is', $html, $matches)) {
-            $mainContent = $matches[1];
-        } else {
-            // Fallback: use body
-            if (preg_match('/<body[^>]*>(.*?)<\/body>/is', $html, $matches)) {
-                $mainContent = $matches[1];
-            } else {
-                $mainContent = $html;
+        // Extract paragraphs
+        preg_match_all('/<p[^>]*>(.*?)<\/p>/is', $html, $paragraphs);
+        foreach ($paragraphs[1] as $para) {
+            $text = trim(strip_tags($para));
+            if (strlen($text) > 50) {
+                $content[] = $text;
             }
         }
 
-        // Extract paragraphs and headings text
-        $text = '';
-
-        // Get heading text
-        if (preg_match_all('/<h[1-6][^>]*>(.*?)<\/h[1-6]>/is', $mainContent, $matches)) {
-            foreach ($matches[1] as $heading) {
-                $text .= strip_tags($heading) . "\n\n";
+        // Extract list items
+        preg_match_all('/<li[^>]*>(.*?)<\/li>/is', $html, $listItems);
+        foreach ($listItems[1] as $item) {
+            $text = trim(strip_tags($item));
+            if (strlen($text) > 20) {
+                $content[] = "- " . $text;
             }
         }
 
-        // Get paragraph text
-        if (preg_match_all('/<p[^>]*>(.*?)<\/p>/is', $mainContent, $matches)) {
-            foreach ($matches[1] as $para) {
-                $cleanPara = trim(strip_tags($para));
-                if (strlen($cleanPara) > 20) {
-                    $text .= $cleanPara . "\n\n";
-                }
-            }
-        }
-
-        // Get list items
-        if (preg_match_all('/<li[^>]*>(.*?)<\/li>/is', $mainContent, $matches)) {
-            foreach ($matches[1] as $item) {
-                $cleanItem = trim(strip_tags($item));
-                if (strlen($cleanItem) > 10) {
-                    $text .= "- " . $cleanItem . "\n";
-                }
-            }
-        }
-
-        // Clean up
+        $text = implode("\n\n", $content);
         $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
-        $text = $this->sanitizeUtf8($text);
-        $text = preg_replace('/\s+/', ' ', $text);
-        $text = trim($text);
-
-        // If still empty, just strip all tags
-        if (empty($text)) {
-            $text = strip_tags($mainContent);
-            $text = preg_replace('/\s+/', ' ', $text);
-            $text = trim($text);
-        }
 
         return $text;
     }

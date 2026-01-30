@@ -11,10 +11,18 @@
 $projectId = $project['id'] ?? 0;
 $projectType = $project['type'] ?? 'manual';
 $isAuto = $projectType === 'auto';
+$isMetaTag = $projectType === 'meta-tag';
 $basePath = "/ai-content/projects/{$projectId}";
 
 // Definizione tabs in base al tipo progetto
-if ($isAuto) {
+if ($isMetaTag) {
+    $tabs = [
+        'dashboard' => ['path' => '/meta-tags', 'label' => 'Dashboard', 'icon' => 'chart-bar'],
+        'list' => ['path' => '/meta-tags/list', 'label' => 'Meta Tags', 'icon' => 'tag'],
+        'import' => ['path' => '/meta-tags/import', 'label' => 'Import', 'icon' => 'cloud-upload'],
+        'settings' => ['path' => '/settings', 'label' => 'Impostazioni', 'icon' => 'cog'],
+    ];
+} elseif ($isAuto) {
     $tabs = [
         'dashboard' => ['path' => '/auto', 'label' => 'Dashboard', 'icon' => 'chart-bar'],
         'queue' => ['path' => '/auto/queue', 'label' => 'Coda', 'icon' => 'queue-list'],
@@ -36,13 +44,15 @@ if ($isAuto) {
 function isActiveTabAic($tabKey, $currentPage) {
     $currentPage = $currentPage ?? 'dashboard';
     $aliases = [
-        'dashboard' => ['dashboard', 'overview', 'auto'],
+        'dashboard' => ['dashboard', 'overview', 'auto', 'meta-tags'],
         'keywords' => ['keywords'],
         'articles' => ['articles', 'article'],
         'settings' => ['settings'],
         'queue' => ['queue'],
         'add-keywords' => ['add-keywords', 'add'],
         'internal-links' => ['internal-links'],
+        'list' => ['list', 'meta-tags-list'],
+        'import' => ['import', 'meta-tags-import'],
     ];
     return in_array($currentPage, $aliases[$tabKey] ?? [$tabKey]);
 }
@@ -57,6 +67,8 @@ $icons = [
     'link' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>',
     'clipboard-list' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>',
     'wordpress' => '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/></svg>',
+    'tag' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>',
+    'cloud-upload' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>',
 ];
 
 $currentPage = $currentPage ?? 'dashboard';
@@ -72,7 +84,9 @@ $currentPage = $currentPage ?? 'dashboard';
                 </svg>
             </a>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white"><?= e($project['name']) ?></h1>
-            <?php if ($isAuto): ?>
+            <?php if ($isMetaTag): ?>
+            <span class="px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">META TAG</span>
+            <?php elseif ($isAuto): ?>
             <span class="px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">AUTO</span>
             <?php else: ?>
             <span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400">MANUAL</span>
@@ -98,7 +112,15 @@ $currentPage = $currentPage ?? 'dashboard';
            title="Siti WordPress">
             <?= $icons['wordpress'] ?>
         </a>
-        <?php if ($isAuto): ?>
+        <?php if ($isMetaTag): ?>
+        <a href="<?= url($basePath . '/meta-tags/import') ?>"
+           class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors">
+            <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Importa URL
+        </a>
+        <?php elseif ($isAuto): ?>
         <a href="<?= url($basePath . '/auto/add') ?>"
            class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors">
             <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

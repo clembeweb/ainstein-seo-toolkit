@@ -63,7 +63,7 @@
                 <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                     Tipo di progetto <span class="text-red-500">*</span>
                 </label>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-3 gap-4">
                     <!-- Card Manuale -->
                     <label class="relative cursor-pointer">
                         <input type="radio" name="type_radio" value="manual" x-model="projectType" class="sr-only peer">
@@ -101,6 +101,29 @@
                                 <div>
                                     <p class="font-medium text-slate-900 dark:text-white">Automatico</p>
                                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Inserisci lista keyword e lascia fare al sistema</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="absolute top-3 right-3 hidden peer-checked:block">
+                            <svg class="w-5 h-5 text-primary-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                    </label>
+
+                    <!-- Card SEO Meta Tag -->
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="type_radio" value="meta-tag" x-model="projectType" class="sr-only peer">
+                        <div class="p-4 rounded-lg border-2 transition-all peer-checked:border-primary-500 peer-checked:bg-primary-50 dark:peer-checked:bg-primary-900/20 border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500">
+                            <div class="flex items-start gap-3">
+                                <div class="h-10 w-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center flex-shrink-0 peer-checked:bg-primary-100 dark:peer-checked:bg-primary-900/50">
+                                    <svg class="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-slate-900 dark:text-white">SEO Meta Tag</p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Genera title e description ottimizzati per le tue pagine</p>
                                 </div>
                             </div>
                         </div>

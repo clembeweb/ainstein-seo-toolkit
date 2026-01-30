@@ -117,6 +117,22 @@ if (preg_match('#^/ai-optimizer/project/(\d+)#', $currentPath, $matches)) {
         // Silently fail - project info not critical for navigation
     }
 }
+
+// Check if we're inside an ai-content project
+$aiContentProjectId = null;
+$aiContentProject = null;
+if (preg_match('#^/ai-content/projects/(\d+)#', $currentPath, $matches)) {
+    $aiContentProjectId = (int) $matches[1];
+    // Try to get project info
+    try {
+        if (class_exists('\\Modules\\AiContent\\Models\\Project')) {
+            $projectModel = new \Modules\AiContent\Models\Project();
+            $aiContentProject = $projectModel->find($aiContentProjectId);
+        }
+    } catch (\Exception $e) {
+        // Silently fail - project info not critical for navigation
+    }
+}
 ?>
 
 <div class="space-y-1">
@@ -379,6 +395,78 @@ if (preg_match('#^/ai-optimizer/project/(\d+)#', $currentPath, $matches)) {
                         </div>
                     </div>
                     <?php endif; ?>
+                </div>
+            <?php elseif ($module['slug'] === 'ai-content'): ?>
+                <!-- AI Content Module with Accordion -->
+                <?php $aiContentExpanded = $aiContentProjectId || str_starts_with($currentPath, '/ai-content/wordpress'); ?>
+                <div x-data="{ expanded: <?= $aiContentExpanded ? 'true' : 'false' ?> }">
+                    <!-- Module Link -->
+                    <div class="flex items-center">
+                        <a href="<?= url('/ai-content') ?>"
+                           class="flex-1 flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors <?= str_starts_with($currentPath, '/ai-content') ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white' ?>">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            <span class="flex-1"><?= e($module['name']) ?></span>
+                        </a>
+                        <button @click="expanded = !expanded" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                            <svg class="w-4 h-4 transition-transform" :class="expanded && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Sub-navigation (sempre visibile quando espanso) -->
+                    <div x-show="expanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="ml-3 mt-1 pl-3 border-l-2 border-slate-200 dark:border-slate-700 space-y-0.5">
+
+                    <?php if ($aiContentProjectId && $aiContentProject): ?>
+                        <!-- Project Name Header -->
+                        <div class="px-2 py-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 truncate" title="<?= e($aiContentProject['name']) ?>">
+                            <?= e(mb_substr($aiContentProject['name'], 0, 20)) ?><?= mb_strlen($aiContentProject['name']) > 20 ? '...' : '' ?>
+                        </div>
+
+                        <!-- Dashboard -->
+                        <?= navSubLink("/ai-content/projects/{$aiContentProjectId}", 'Dashboard', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>', $currentPath, true) ?>
+
+                        <?php if (($aiContentProject['type'] ?? 'manual') === 'manual'): ?>
+                        <!-- Manual Mode Navigation -->
+                        <?= navSubLink("/ai-content/projects/{$aiContentProjectId}/keywords", 'Keywords', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>', $currentPath) ?>
+
+                        <?= navSubLink("/ai-content/projects/{$aiContentProjectId}/articles", 'Articoli', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>', $currentPath) ?>
+
+                        <?= navSubLink("/ai-content/projects/{$aiContentProjectId}/internal-links", 'Internal Links', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>', $currentPath) ?>
+
+                        <?php elseif (($aiContentProject['type'] ?? 'manual') === 'auto'): ?>
+                        <!-- Auto Mode Navigation -->
+                        <?= navSubLink("/ai-content/projects/{$aiContentProjectId}/auto/add", 'Aggiungi Keywords', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>', $currentPath) ?>
+
+                        <?= navSubLink("/ai-content/projects/{$aiContentProjectId}/auto/queue", 'Coda', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>', $currentPath) ?>
+
+                        <?= navSubLink("/ai-content/projects/{$aiContentProjectId}/articles", 'Articoli', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>', $currentPath) ?>
+
+                        <?= navSubLink("/ai-content/projects/{$aiContentProjectId}/internal-links", 'Internal Links', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>', $currentPath) ?>
+
+                        <?php elseif (($aiContentProject['type'] ?? 'manual') === 'meta-tag'): ?>
+                        <!-- Meta-Tag Mode Navigation -->
+                        <?= navSubLink("/ai-content/projects/{$aiContentProjectId}/meta-tags/import", 'Importa URL', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>', $currentPath) ?>
+
+                        <?= navSubLink("/ai-content/projects/{$aiContentProjectId}/meta-tags/list", 'Lista URL', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>', $currentPath) ?>
+
+                        <?php endif; ?>
+
+                        <!-- Settings -->
+                        <div class="pt-1 mt-1 border-t border-slate-200 dark:border-slate-700">
+                            <?= navSubLink("/ai-content/projects/{$aiContentProjectId}/settings", 'Impostazioni', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>', $currentPath) ?>
+                        </div>
+                    <?php endif; ?>
+
+                        <!-- Global Links (sempre visibili) -->
+                        <div class="<?= $aiContentProjectId ? 'pt-1 mt-1 border-t border-slate-200 dark:border-slate-700' : '' ?>">
+                            <div class="px-2 py-1 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Globale</div>
+                            <?= navSubLink("/ai-content/wordpress", 'Siti WordPress', '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/></svg>', $currentPath) ?>
+                            <?= navSubLink("/ai-content/jobs", 'Gestione Job', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>', $currentPath) ?>
+                        </div>
+                    </div>
                 </div>
             <?php else: ?>
                 <!-- Other Modules (standard link) -->
