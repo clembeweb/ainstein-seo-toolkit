@@ -225,8 +225,6 @@ function populateRankQueue(): array
          WHERE p.sync_enabled = 1"
     );
 
-    $scheduledAt = date('Y-m-d H:i:s'); // Immediatamente processabili
-
     foreach ($projects as $project) {
         // Prendi keyword tracciate del progetto
         $keywords = $keywordModel->allByProject($project['id'], ['is_tracked' => 1]);
@@ -245,16 +243,19 @@ function populateRankQueue(): array
             );
 
             if (!$existing) {
-                Database::insert('st_rank_queue', [
-                    'project_id' => $project['id'],
-                    'keyword_id' => $kw['id'],
-                    'keyword' => $kw['keyword'],
-                    'target_domain' => $project['domain'],
-                    'location_code' => $kw['location_code'] ?? 'IT',
-                    'device' => 'mobile', // Default mobile per rank check automatici
-                    'status' => 'pending',
-                    'scheduled_at' => $scheduledAt,
-                ]);
+                // Usa NOW() di MySQL per coerenza con le query
+                Database::execute(
+                    "INSERT INTO st_rank_queue
+                     (project_id, keyword_id, keyword, target_domain, location_code, device, status, scheduled_at)
+                     VALUES (?, ?, ?, ?, ?, 'mobile', 'pending', NOW())",
+                    [
+                        $project['id'],
+                        $kw['id'],
+                        $kw['keyword'],
+                        $project['domain'],
+                        $kw['location_code'] ?? 'IT'
+                    ]
+                );
                 $count++;
             }
         }
@@ -277,16 +278,14 @@ function populateRankQueue(): array
  */
 function getNextPendingItem(): ?array
 {
-    $now = date('Y-m-d H:i:s'); // Usa timezone PHP (Europe/Rome)
     return Database::fetch(
         "SELECT q.*, p.name as project_name, p.user_id
          FROM st_rank_queue q
          JOIN st_projects p ON q.project_id = p.id
          WHERE q.status = 'pending'
-         AND q.scheduled_at <= ?
+         AND q.scheduled_at <= NOW()
          ORDER BY q.scheduled_at ASC, q.created_at ASC
-         LIMIT 1",
-        [$now]
+         LIMIT 1"
     );
 }
 
