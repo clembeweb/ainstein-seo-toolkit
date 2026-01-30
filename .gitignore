@@ -58,3 +58,15 @@ database_full_dump.sql
 # Temp files
 tmpclaude-*
 file-grafici/
+
+# Test files in root
+/test_*.php
+/test-*.php
+/test_*.ps1
+/*.html
+/cookies*.txt
+/*cookies*.txt
+/headers.txt
+/composer.json
+/composer.lock
+/3.0
