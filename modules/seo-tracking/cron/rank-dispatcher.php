@@ -496,6 +496,7 @@ function runDispatcher(): void
             'position_diff' => $positionDiff,
             'total_organic_results' => $result['total_organic_results'] ?? null,
             'credits_used' => 0, // Automatico, gratuito
+            'checked_at' => date('Y-m-d H:i:s'), // Usa timezone PHP (Europe/Rome)
         ]);
 
         // Aggiorna last_position nella tabella keywords
