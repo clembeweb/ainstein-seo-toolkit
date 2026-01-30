@@ -277,14 +277,16 @@ function populateRankQueue(): array
  */
 function getNextPendingItem(): ?array
 {
+    $now = date('Y-m-d H:i:s'); // Usa timezone PHP (Europe/Rome)
     return Database::fetch(
         "SELECT q.*, p.name as project_name, p.user_id
          FROM st_rank_queue q
          JOIN st_projects p ON q.project_id = p.id
          WHERE q.status = 'pending'
-         AND q.scheduled_at <= NOW()
+         AND q.scheduled_at <= ?
          ORDER BY q.scheduled_at ASC, q.created_at ASC
-         LIMIT 1"
+         LIMIT 1",
+        [$now]
     );
 }
 
