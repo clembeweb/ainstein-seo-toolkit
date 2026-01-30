@@ -129,6 +129,13 @@ class AutoController
     /**
      * Salva keyword in coda
      * POST /ai-content/projects/{id}/auto/add
+     *
+     * Riceve dal form:
+     * - keywords: testo con keyword (una per riga)
+     *
+     * Valori di default (non più inviati dal form):
+     * - scheduled_at: domani ore 09:00
+     * - sources_count: 3
      */
     public function storeKeywords(int $id): void
     {
@@ -142,6 +149,10 @@ class AutoController
 
         $keywordsText = trim($_POST['keywords'] ?? '');
 
+        // Valori di default - scheduled_at NULL (da pianificare dalla coda)
+        $scheduledAt = null;
+        $sourcesCount = 3;
+
         if (empty($keywordsText)) {
             $_SESSION['_flash']['error'] = 'Inserisci almeno una keyword';
             Router::redirect('/ai-content/projects/' . $id . '/auto/add');
@@ -150,34 +161,36 @@ class AutoController
 
         // Parse keywords (una per riga)
         $lines = explode("\n", $keywordsText);
-        $keywords = [];
+        $keywordsData = [];
         foreach ($lines as $line) {
             $kw = trim($line);
             if (!empty($kw)) {
-                $keywords[] = $kw;
+                $keywordsData[] = [
+                    'keyword' => $kw,
+                    'scheduled_at' => $scheduledAt,
+                    'sources_count' => $sourcesCount
+                ];
             }
         }
 
-        if (empty($keywords)) {
+        if (empty($keywordsData)) {
             $_SESSION['_flash']['error'] = 'Nessuna keyword valida trovata';
             Router::redirect('/ai-content/projects/' . $id . '/auto/add');
             return;
         }
 
-        // Rimuovi duplicati
-        $keywords = array_unique($keywords);
-
-        // Calcola slot di scheduling
-        $slots = $this->autoConfig->calculateScheduleSlots($id, count($keywords));
-
-        if (empty($slots)) {
-            $_SESSION['_flash']['error'] = 'Impossibile calcolare gli slot di scheduling. Verifica la configurazione.';
-            Router::redirect('/ai-content/projects/' . $id . '/auto/add');
-            return;
+        // Rimuovi duplicati basandosi sulla keyword
+        $seen = [];
+        $uniqueKeywordsData = [];
+        foreach ($keywordsData as $item) {
+            if (!isset($seen[$item['keyword']])) {
+                $seen[$item['keyword']] = true;
+                $uniqueKeywordsData[] = $item;
+            }
         }
 
         try {
-            $inserted = $this->queue->addBulk($user['id'], $id, $keywords, $slots);
+            $inserted = $this->queue->addBulk($user['id'], $id, $uniqueKeywordsData);
 
             $_SESSION['_flash']['success'] = "Aggiunte {$inserted} keyword alla coda di generazione";
             Router::redirect('/ai-content/projects/' . $id . '/auto/queue');
@@ -259,6 +272,9 @@ class AutoController
     /**
      * Salva impostazioni automazione
      * POST /ai-content/projects/{id}/auto/settings
+     *
+     * Salva solo: auto_publish, wp_site_id (e is_active se presente)
+     * Il numero di fonti e la schedulazione sono ora per-keyword
      */
     public function updateSettings(int $id): void
     {
@@ -270,28 +286,9 @@ class AutoController
             return;
         }
 
-        // Parse input
-        $articlesPerDay = (int) ($_POST['articles_per_day'] ?? 1);
-        $articlesPerDay = max(1, min(10, $articlesPerDay)); // Limita 1-10
-
-        // Parse orari pubblicazione
-        $publishTimesRaw = trim($_POST['publish_times'] ?? '09:00');
-        $publishTimes = [];
-        foreach (explode(',', $publishTimesRaw) as $time) {
-            $time = trim($time);
-            if (preg_match('/^\d{2}:\d{2}$/', $time)) {
-                $publishTimes[] = $time;
-            }
-        }
-        if (empty($publishTimes)) {
-            $publishTimes = ['09:00'];
-        }
-
-        $autoSelectSources = (int) ($_POST['auto_select_sources'] ?? 3);
-        $autoSelectSources = max(1, min(10, $autoSelectSources)); // Limita 1-10
-
         $autoPublish = isset($_POST['auto_publish']) && $_POST['auto_publish'] === '1';
         $wpSiteId = !empty($_POST['wp_site_id']) ? (int) $_POST['wp_site_id'] : null;
+        $isActive = isset($_POST['is_active']) ? ($_POST['is_active'] === '1') : null;
 
         // Se auto_publish ma nessun sito selezionato
         if ($autoPublish && !$wpSiteId) {
@@ -301,13 +298,17 @@ class AutoController
         }
 
         try {
-            $this->autoConfig->upsert($id, [
-                'articles_per_day' => $articlesPerDay,
-                'publish_times' => $publishTimes,
-                'auto_select_sources' => $autoSelectSources,
+            $data = [
                 'auto_publish' => $autoPublish,
                 'wp_site_id' => $wpSiteId,
-            ]);
+            ];
+
+            // Includi is_active solo se presente nel form
+            if ($isActive !== null) {
+                $data['is_active'] = $isActive;
+            }
+
+            $this->autoConfig->upsert($id, $data);
 
             $_SESSION['_flash']['success'] = 'Impostazioni salvate con successo';
             Router::redirect('/ai-content/projects/' . $id . '/auto/settings');
@@ -431,20 +432,63 @@ class AutoController
         }
 
         try {
-            // Calcola nuovo slot
-            $slots = $this->autoConfig->calculateScheduleSlots($id, 1);
-            $newSchedule = $slots[0] ?? date('Y-m-d H:i:s', strtotime('+1 hour'));
-
-            // Reset status a pending con nuovo schedule
+            // Reset status a pending con scheduled_at impostato a NOW()
             $this->queue->updateStatus($queueId, 'pending');
+            $this->queue->updateScheduledAt($queueId, date('Y-m-d H:i:s'));
 
-            $_SESSION['_flash']['success'] = 'Keyword rimessa in coda per elaborazione';
+            $_SESSION['_flash']['success'] = 'Keyword rimessa in coda per elaborazione immediata';
 
         } catch (\Exception $e) {
             $_SESSION['_flash']['error'] = 'Errore nel retry: ' . $e->getMessage();
         }
 
         Router::redirect('/ai-content/projects/' . $id . '/auto/queue');
+    }
+
+    /**
+     * Aggiorna singolo item in coda (AJAX)
+     * POST /ai-content/projects/{id}/auto/queue/{queueId}/update
+     */
+    public function updateQueueItem(int $id, int $queueId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->getAutoProject($id, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        // Verifica che l'item appartenga al progetto e sia pending
+        $item = $this->queue->findById($queueId);
+
+        if (!$item || $item['project_id'] !== $id || $item['user_id'] !== $user['id']) {
+            echo json_encode(['success' => false, 'error' => 'Item non trovato']);
+            return;
+        }
+
+        if ($item['status'] !== 'pending') {
+            echo json_encode(['success' => false, 'error' => 'Solo item in attesa possono essere modificati']);
+            return;
+        }
+
+        $data = [];
+        if (isset($_POST['scheduled_at']) && !empty($_POST['scheduled_at'])) {
+            $data['scheduled_at'] = date('Y-m-d H:i:s', strtotime($_POST['scheduled_at']));
+        }
+        if (isset($_POST['sources_count'])) {
+            $data['sources_count'] = max(1, min(10, (int)$_POST['sources_count']));
+        }
+
+        if (empty($data)) {
+            echo json_encode(['success' => false, 'error' => 'Nessun dato da aggiornare']);
+            return;
+        }
+
+        $success = $this->queue->update($queueId, $data);
+        echo json_encode(['success' => $success]);
     }
 
     // ========================================
@@ -689,9 +733,8 @@ class AutoController
 
         $jobId = $activeJob['id'];
 
-        // Get config
+        // Get config (solo per auto_publish e wp_site_id)
         $config = $this->autoConfig->findByProject($id);
-        $autoSelectSources = (int) ($config['auto_select_sources'] ?? 3);
         $autoPublish = (bool) ($config['auto_publish'] ?? false);
         $wpSiteId = $config['wp_site_id'] ?? null;
 
@@ -797,10 +840,12 @@ class AutoController
                 ]);
 
                 $scrapedSources = [];
+                // Usa sources_count dalla queue item (default 3 se non presente)
+                $sourcesCount = (int) ($queueItem['sources_count'] ?? 3);
                 $urlsToScrape = array_slice(
                     array_column($serpResults['organic'], 'url'),
                     0,
-                    $autoSelectSources
+                    $sourcesCount
                 );
 
                 foreach ($urlsToScrape as $url) {
@@ -870,6 +915,13 @@ class AutoController
                         'word_count' => $source['word_count']
                     ];
                 }, $scrapedSources);
+
+                // Add internal links pool if available
+                $internalLinksPool = new \Modules\AiContent\Models\InternalLinksPool();
+                $internalLinks = $internalLinksPool->getActiveByProject($id, 50);
+                if (!empty($internalLinks)) {
+                    $brief['internal_links_pool'] = $internalLinks;
+                }
 
                 $targetWords = $brief['recommended_word_count'] ?? 1500;
                 $articleResult = $articleGenerator->generate($brief, (int) $targetWords, $userId);

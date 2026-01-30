@@ -1,6 +1,6 @@
 # AINSTEIN - Stato Progetto
 
-**Ultimo aggiornamento:** 2026-01-28
+**Ultimo aggiornamento:** 2026-01-29
 **Ambiente produzione:** https://ainstein.it
 **Repository:** https://github.com/clembeweb/ainstein-seo-toolkit.git
 
@@ -32,11 +32,11 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 
 ---
 
-## STATO MODULI (Aggiornato 28 Gen 2026)
+## STATO MODULI (Aggiornato 29 Gen 2026)
 
 | Modulo | Slug | Stato Base | Stato AI | % Totale |
 |--------|------|------------|----------|----------|
-| AI SEO Content Generator | `ai-content` | ✅ 98% | ✅ Completa | **98%** |
+| AI SEO Content Generator | `ai-content` | ✅ 100% | ✅ Completa | **100%** |
 | SEO Audit | `seo-audit` | ✅ 100% | ✅ Completa | **100%** |
 | Google Ads Analyzer | `ads-analyzer` | ✅ 100% | ✅ Completa | **100%** |
 | Internal Links Analyzer | `internal-links` | ✅ 85% | ❌ Mancante | **75%** |
@@ -72,6 +72,18 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 ---
 
 ## COMPLETATI RECENTEMENTE
+
+### 2026-01-29
+- [x] Refactoring sistema scheduling AUTO mode: da globale a per-keyword (ai-content)
+- [x] Nuova UI inline editing per data/ora e fonti in vista Coda (ai-content)
+- [x] Rimossi settings globali scheduling (publish_times, articles_per_day, auto_select_sources)
+- [x] Ogni keyword in coda ha ora `scheduled_at` e `sources_count` individuali
+- [x] Pulsante "Pianifica" per keyword non ancora schedulate (ai-content)
+- [x] Update real-time con Alpine.js computed properties (ai-content)
+- [x] Fix CSRF token validation per AJAX calls (`_csrf_token` field)
+- [x] Semplificato AutoConfig.php (solo auto_publish e wp_site_id)
+- [x] Aggiornato dispatcher CRON per nuovo sistema per-keyword
+- [x] Aggiornata documentazione AGENT-AI-CONTENT.md
 
 ### 2026-01-28
 - [x] Fix redirect project-aware dopo eliminazione articolo (ai-content)
@@ -152,9 +164,9 @@ ainstein-seo-toolkit/
 
 | Aspetto | Dettaglio |
 |---------|-----------|
-| **Data** | 2026-01-28 |
-| **Modifiche principali** | Fix navigation e redirect ai-content, SEO Page Analyzer, Position Compare, audit completo ai-content |
-| **Bug fix** | Session flash keys, view path syntax, sidebar Jobs, project-aware redirects |
+| **Data** | 2026-01-29 |
+| **Modifiche principali** | Refactoring scheduling AUTO mode da globale a per-keyword, inline editing coda, UI real-time |
+| **Bug fix** | CSRF token validation AJAX, Alpine.js reactive display |
 
 ---
 
@@ -212,4 +224,4 @@ ssh -i ~/.ssh/siteground_key -p 18765 u1608-ykgnd3z1twn4@ssh.ainstein.it
 
 ---
 
-*Documento aggiornato - 2026-01-26*
+*Documento aggiornato - 2026-01-29*

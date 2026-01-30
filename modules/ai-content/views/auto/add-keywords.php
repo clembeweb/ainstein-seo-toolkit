@@ -62,32 +62,20 @@
 
             <!-- Preview Counter -->
             <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="h-10 w-10 rounded-lg bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center">
-                            <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-slate-900 dark:text-white">
-                                <span x-text="keywordCount">0</span> keyword da aggiungere
-                            </p>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">
-                                Verranno schedulate automaticamente
-                            </p>
-                        </div>
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-lg bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
                     </div>
-                    <?php if ($config): ?>
-                    <div class="text-right">
+                    <div>
                         <p class="text-sm font-medium text-slate-900 dark:text-white">
-                            <?= $config['articles_per_day'] ?? 1 ?> articoli/giorno
+                            <span x-text="keywordCount">0</span> keyword da aggiungere
                         </p>
                         <p class="text-xs text-slate-500 dark:text-slate-400">
-                            Orari: <?= implode(', ', $config['publish_times'] ?? ['09:00']) ?>
+                            Le keyword verranno aggiunte alla coda. Potrai impostare data/ora dalla vista Coda.
                         </p>
                     </div>
-                    <?php endif; ?>
                 </div>
             </div>
 

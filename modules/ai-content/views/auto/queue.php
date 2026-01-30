@@ -1,7 +1,7 @@
 <?php $currentPage = 'queue'; ?>
 <?php include __DIR__ . '/../partials/project-nav.php'; ?>
 
-<div class="space-y-6" x-data="queueManager()">
+<div class="space-y-6" x-data="queueManager()" @update-item.window="updateItem($event.detail)">
 
     <!-- Stats Summary -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -62,6 +62,7 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Keyword</th>
                         <th class="px-6 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stato</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Fonti</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Schedulato</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Azioni</th>
                     </tr>
@@ -96,10 +97,127 @@
                                 <?= $statusLabel ?>
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
-                            <?= date('d/m/Y H:i', strtotime($item['scheduled_at'])) ?>
+                        <td class="px-6 py-4 text-center">
+                            <?php if ($item['status'] === 'pending'): ?>
+                            <div x-data="{ editing: false, value: '<?= $item['sources_count'] ?? 3 ?>', originalValue: '<?= $item['sources_count'] ?? 3 ?>' }">
+                                <span x-show="!editing"
+                                      @click="editing = true"
+                                      class="cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 text-sm text-slate-700 dark:text-slate-300">
+                                    <span x-text="value"></span> fonti
+                                </span>
+                                <select x-show="editing"
+                                        x-model="value"
+                                        @change="if(value !== originalValue) { $dispatch('update-item', { id: <?= $item['id'] ?>, field: 'sources_count', value: value }); originalValue = value; } editing = false"
+                                        @blur="editing = false"
+                                        class="text-sm border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded px-2 py-1 w-20">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                </select>
+                            </div>
+                            <?php else: ?>
+                            <span class="text-sm text-slate-400 dark:text-slate-500"><?= $item['sources_count'] ?? 3 ?> fonti</span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="px-6 py-4">
+                            <?php if ($item['status'] === 'pending'): ?>
+                                <?php if (empty($item['scheduled_at'])): ?>
+                                <!-- Non pianificato: mostra bottone Pianifica -->
+                                <div x-data="{
+                                    editing: false,
+                                    value: '',
+                                    saved: false,
+                                    get displayDate() {
+                                        if (!this.value) return '';
+                                        const d = new Date(this.value);
+                                        return d.toLocaleDateString('it-IT', {day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' + d.toLocaleTimeString('it-IT', {hour:'2-digit',minute:'2-digit'});
+                                    }
+                                }">
+                                    <!-- Bottone Pianifica (se non ancora salvato) -->
+                                    <button x-show="!editing && !saved"
+                                            @click="editing = true; $nextTick(() => $refs.dateInput<?= $item['id'] ?>.focus())"
+                                            class="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400">
+                                        <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                        Pianifica
+                                    </button>
+                                    <!-- Data salvata (mostra dopo primo salvataggio) -->
+                                    <span x-show="!editing && saved"
+                                          @click="editing = true; $nextTick(() => $refs.dateInput<?= $item['id'] ?>.focus())"
+                                          class="cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 text-sm text-slate-700 dark:text-slate-300 inline-flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                        <span x-text="displayDate"></span>
+                                    </span>
+                                    <!-- Form editing -->
+                                    <div x-show="editing" class="flex items-center gap-1">
+                                        <input x-ref="dateInput<?= $item['id'] ?>"
+                                               type="datetime-local"
+                                               x-model="value"
+                                               class="text-sm border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded px-2 py-1">
+                                        <button @click="if(value) { $dispatch('update-item', { id: <?= $item['id'] ?>, field: 'scheduled_at', value: value }); saved = true; } editing = false"
+                                                class="p-1 text-emerald-600 hover:text-emerald-700">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                        </button>
+                                        <button @click="editing = false; if(!saved) value = ''"
+                                                class="p-1 text-slate-400 hover:text-slate-600">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <?php else: ?>
+                                <!-- Già pianificato: mostra data editabile -->
+                                <div x-data="{
+                                    editing: false,
+                                    value: '<?= date('Y-m-d\TH:i', strtotime($item['scheduled_at'])) ?>',
+                                    originalValue: '<?= date('Y-m-d\TH:i', strtotime($item['scheduled_at'])) ?>',
+                                    get displayDate() {
+                                        if (!this.value) return '';
+                                        const d = new Date(this.value);
+                                        return d.toLocaleDateString('it-IT', {day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' + d.toLocaleTimeString('it-IT', {hour:'2-digit',minute:'2-digit'});
+                                    }
+                                }">
+                                    <span x-show="!editing"
+                                          @click="editing = true; $nextTick(() => $refs.editInput<?= $item['id'] ?>.focus())"
+                                          class="cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 text-sm text-slate-700 dark:text-slate-300 inline-flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                        <span x-text="displayDate"></span>
+                                    </span>
+                                    <div x-show="editing" class="flex items-center gap-1">
+                                        <input x-ref="editInput<?= $item['id'] ?>"
+                                               type="datetime-local"
+                                               x-model="value"
+                                               class="text-sm border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded px-2 py-1">
+                                        <button @click="if(value && value !== originalValue) { $dispatch('update-item', { id: <?= $item['id'] ?>, field: 'scheduled_at', value: value }); originalValue = value; } editing = false"
+                                                class="p-1 text-emerald-600 hover:text-emerald-700">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                        </button>
+                                        <button @click="editing = false; value = originalValue"
+                                                class="p-1 text-slate-400 hover:text-slate-600">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+                            <?php else: ?>
+                            <span class="text-sm text-slate-400 dark:text-slate-500"><?= $item['scheduled_at'] ? date('d/m/Y H:i', strtotime($item['scheduled_at'])) : '-' ?></span>
                             <?php if ($item['completed_at']): ?>
                             <br><span class="text-xs text-emerald-600 dark:text-emerald-400">Completato: <?= date('H:i', strtotime($item['completed_at'])) ?></span>
+                            <?php endif; ?>
                             <?php endif; ?>
                         </td>
                         <td class="px-6 py-4 text-right">
@@ -227,6 +345,32 @@ function queueManager() {
 
         confirmClearAll() {
             this.showClearModal = true;
+        },
+
+        async updateItem(detail) {
+            const formData = new FormData();
+            formData.append('_csrf_token', '<?= csrf_token() ?>');
+            formData.append(detail.field, detail.value);
+
+            try {
+                const response = await fetch(
+                    '<?= url("/ai-content/projects/{$project['id']}/auto/queue") ?>/' + detail.id + '/update',
+                    { method: 'POST', body: formData }
+                );
+                const data = await response.json();
+
+                if (data.success) {
+                    if (window.dispatchEvent) {
+                        window.dispatchEvent(new CustomEvent('toast', {
+                            detail: { message: 'Aggiornato!', type: 'success' }
+                        }));
+                    }
+                } else {
+                    alert(data.error || 'Errore durante l\'aggiornamento');
+                }
+            } catch (e) {
+                alert('Errore di connessione');
+            }
         }
     }
 }

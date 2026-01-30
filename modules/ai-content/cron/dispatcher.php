@@ -62,12 +62,12 @@ function logDispatcher(string $message, string $level = 'INFO'): void
 /**
  * Elabora una singola keyword
  */
-function processKeyword(array $queueItem, array $config, int $userId): array
+function processKeyword(array $queueItem, int $userId): array
 {
     $keyword = $queueItem['keyword'];
     $queueId = $queueItem['id'];
     $projectId = $queueItem['project_id'];
-    $autoSelectSources = (int) ($config['auto_select_sources'] ?? 3);
+    $autoSelectSources = (int) ($queueItem['sources_count'] ?? 3);
 
     $result = [
         'success' => false,
@@ -140,6 +140,17 @@ function processKeyword(array $queueItem, array $config, int $userId): array
             ];
         }, $scrapedSources);
 
+        // Add internal links pool if available
+        $projectId = $queueItem['project_id'] ?? null;
+        if ($projectId) {
+            $internalLinksPool = new \Modules\AiContent\Models\InternalLinksPool();
+            $internalLinks = $internalLinksPool->getActiveByProject($projectId, 50);
+            if (!empty($internalLinks)) {
+                $brief['internal_links_pool'] = $internalLinks;
+                logDispatcher("    Pool link interni: " . count($internalLinks) . " link attivi");
+            }
+        }
+
         $targetWords = $brief['recommended_word_count'] ?? 1500;
         $articleGenerator = new ArticleGeneratorService();
         $articleResult = $articleGenerator->generate($brief, (int) $targetWords, $userId);
@@ -147,12 +158,30 @@ function processKeyword(array $queueItem, array $config, int $userId): array
         if (!$articleResult['success']) {
             throw new \Exception($articleResult['error'] ?? 'Generazione articolo fallita');
         }
-        Database::reconnect();
+
+        // Reconnect robusto con retry (MySQL timeout dopo chiamata AI lunga)
+        $maxReconnectAttempts = 3;
+        for ($attempt = 1; $attempt <= $maxReconnectAttempts; $attempt++) {
+            Database::reconnect();
+            usleep(100000); // 100ms delay per permettere a MySQL di accettare la connessione
+            if (Database::ping()) {
+                break;
+            }
+            logDispatcher("    Reconnect attempt {$attempt}/{$maxReconnectAttempts}...", 'WARN');
+            if ($attempt < $maxReconnectAttempts) {
+                sleep(1); // 1 secondo tra i tentativi
+            }
+        }
+
+        if (!Database::ping()) {
+            throw new \Exception('Impossibile ristabilire connessione al database dopo ' . $maxReconnectAttempts . ' tentativi');
+        }
 
         // Step 5: Save to database
         logDispatcher("    [5/5] Salvataggio...");
 
         // Create keyword record
+        logDispatcher("      Creating keyword...");
         $keywordModel = new Keyword();
         $keywordId = $keywordModel->create([
             'user_id' => $userId,
@@ -161,8 +190,13 @@ function processKeyword(array $queueItem, array $config, int $userId): array
             'language' => $queueItem['language'] ?? 'it',
             'location' => $queueItem['location'] ?? 'Italy'
         ]);
+        logDispatcher("      Keyword created: ID {$keywordId}");
+
+        // Force reconnect before article creation
+        Database::reconnect();
 
         // Create article record
+        logDispatcher("      Creating article...");
         $articleModel = new Article();
         $articleId = $articleModel->create([
             'keyword_id' => $keywordId,
@@ -170,8 +204,13 @@ function processKeyword(array $queueItem, array $config, int $userId): array
             'project_id' => $projectId,
             'status' => 'draft'
         ]);
+        logDispatcher("      Article created: ID {$articleId}");
+
+        // Force reconnect before content update
+        Database::reconnect();
 
         // Update with content
+        logDispatcher("      Updating article content...");
         $articleModel->updateContent($articleId, [
             'title' => $articleResult['title'],
             'meta_description' => $articleResult['meta_description'],
@@ -179,6 +218,7 @@ function processKeyword(array $queueItem, array $config, int $userId): array
             'word_count' => $articleResult['word_count'],
             'model_used' => $articleResult['model_used'] ?? null
         ]);
+        logDispatcher("      Article content updated");
 
         $result['success'] = true;
         $result['keyword_id'] = $keywordId;
@@ -242,24 +282,26 @@ function publishToWordPress(int $articleId, int $wpSiteId, int $userId): bool
 
 /**
  * Main dispatcher
+ *
+ * Logica semplificata:
+ * - Trova progetti attivi (is_active=1, type='auto') con item pending schedulati
+ * - Processa un item alla volta per esecuzione cron
+ * - Nessun limite giornaliero, nessun orario fisso
  */
 function runDispatcher(): void
 {
     logDispatcher("=== DISPATCHER START ===");
 
-    $currentTime = date('H:i');
-    logDispatcher("Ora corrente: {$currentTime}");
-
     $autoConfig = new AutoConfig();
     $projectsToRun = $autoConfig->getProjectsToRun();
 
     if (empty($projectsToRun)) {
-        logDispatcher("Nessun progetto da processare a quest'ora");
+        logDispatcher("Nessun progetto con item pronti da processare");
         logDispatcher("=== DISPATCHER END ===\n");
         return;
     }
 
-    logDispatcher("Progetti da processare: " . count($projectsToRun));
+    logDispatcher("Progetti con item pronti: " . count($projectsToRun));
 
     $totalArticles = 0;
     $totalErrors = 0;
@@ -271,17 +313,6 @@ function runDispatcher(): void
 
         logDispatcher("--- Progetto: {$projectName} (ID: {$projectId}) ---");
 
-        // Reset contatore se nuovo giorno
-        $autoConfig->resetDailyCounterIfNeeded($projectId);
-
-        // Verifica limite giornaliero
-        $remaining = $autoConfig->getRemainingToday($projectId);
-        if ($remaining <= 0) {
-            logDispatcher("  Limite giornaliero raggiunto, skip");
-            continue;
-        }
-        logDispatcher("  Articoli rimanenti oggi: {$remaining}");
-
         // Verifica job già in corso
         $processJob = new ProcessJob();
         $activeJob = $processJob->getActiveForProject($projectId);
@@ -290,12 +321,12 @@ function runDispatcher(): void
             continue;
         }
 
-        // Verifica keyword in coda
+        // Prendi il prossimo item pending con scheduled_at <= NOW()
         $queue = new Queue();
-        $pendingItems = $queue->getPending($projectId, 1); // 1 per esecuzione CRON
+        $queueItem = $queue->getNextPendingForProject($projectId);
 
-        if (empty($pendingItems)) {
-            logDispatcher("  Nessuna keyword in coda, skip");
+        if (!$queueItem) {
+            logDispatcher("  Nessun item pronto, skip");
             continue;
         }
 
@@ -305,11 +336,10 @@ function runDispatcher(): void
             continue;
         }
 
-        $queueItem = $pendingItems[0];
         $keyword = $queueItem['keyword'];
         $queueId = $queueItem['id'];
 
-        logDispatcher("  Processo keyword: {$keyword}");
+        logDispatcher("  Processo keyword: {$keyword} (sources: " . ($queueItem['sources_count'] ?? 3) . ")");
 
         // Crea job
         $jobId = $processJob->create([
@@ -328,27 +358,33 @@ function runDispatcher(): void
         // Aggiorna queue status
         $queue->updateStatus($queueId, 'processing');
 
-        // Elabora keyword
-        $result = processKeyword($queueItem, $config, $userId);
+        // Elabora keyword (usa sources_count dal queue item)
+        $result = processKeyword($queueItem, $userId);
+
+        // Force reconnect after long AI processing
+        // Recreate models with fresh connection
+        Database::reconnect();
+        $queue = new Queue();
+        $processJob = new ProcessJob();
+        $autoConfig = new AutoConfig();
 
         if ($result['success']) {
             // Successo
             $queue->linkGenerated($queueId, $result['keyword_id'], $result['article_id']);
             $processJob->incrementCompleted($jobId);
             $processJob->complete($jobId);
-            $autoConfig->incrementArticlesToday($projectId);
             $autoConfig->updateLastRun($projectId);
 
             $totalArticles++;
-            logDispatcher("  ✓ COMPLETATO! Articolo ID: {$result['article_id']}");
+            logDispatcher("  COMPLETATO! Articolo ID: {$result['article_id']}");
 
             // Auto-publish se configurato
             if (!empty($config['auto_publish']) && !empty($config['wp_site_id'])) {
                 logDispatcher("  Pubblicazione WordPress...");
                 if (publishToWordPress($result['article_id'], $config['wp_site_id'], $userId)) {
-                    logDispatcher("    ✓ Pubblicato");
+                    logDispatcher("    Pubblicato");
                 } else {
-                    logDispatcher("    ✗ Pubblicazione fallita", 'WARN');
+                    logDispatcher("    Pubblicazione fallita", 'WARN');
                 }
             }
         } else {
@@ -358,7 +394,7 @@ function runDispatcher(): void
             $processJob->markError($jobId, $result['error']);
 
             $totalErrors++;
-            logDispatcher("  ✗ ERRORE: {$result['error']}", 'ERROR');
+            logDispatcher("  ERRORE: {$result['error']}", 'ERROR');
         }
     }
 

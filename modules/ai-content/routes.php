@@ -21,6 +21,7 @@ use Modules\AiContent\Controllers\WordPressController;
 use Modules\AiContent\Controllers\WizardController;
 use Modules\AiContent\Controllers\AutoController;
 use Modules\AiContent\Controllers\JobController;
+use Modules\AiContent\Controllers\InternalLinksController;
 
 $moduleSlug = 'ai-content';
 
@@ -491,6 +492,14 @@ Router::post('/ai-content/projects/{id}/auto/queue/{queueId}/retry', function ($
     return $controller->retryQueueItem((int) $id, (int) $queueId);
 });
 
+// AJAX: Update singolo item coda
+Router::post('/ai-content/projects/{id}/auto/queue/{queueId}/update', function ($id, $queueId) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new \Modules\AiContent\Controllers\AutoController();
+    return $controller->updateQueueItem((int) $id, (int) $queueId);
+});
+
 // Svuota coda pending
 Router::post('/ai-content/projects/{id}/auto/queue/clear', function ($id) {
     Middleware::auth();
@@ -574,4 +583,125 @@ Router::post('/ai-content/jobs/cancel-stuck', function () {
     Middleware::csrf();
     $controller = new JobController();
     return $controller->cancelStuck();
+});
+
+// ============================================
+// INTERNAL LINKS ROUTES
+// ============================================
+
+// Lista pool link interni
+Router::get('/ai-content/projects/{id}/internal-links', function ($id) {
+    Middleware::auth();
+    $controller = new InternalLinksController();
+    return $controller->index((int) $id);
+});
+
+// Wizard import
+Router::get('/ai-content/projects/{id}/internal-links/import', function ($id) {
+    Middleware::auth();
+    $controller = new InternalLinksController();
+    return $controller->import((int) $id);
+});
+
+// Discover sitemap (AJAX)
+Router::post('/ai-content/projects/{id}/internal-links/discover', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new InternalLinksController();
+    return $controller->discover((int) $id);
+});
+
+// Preview URL dalle sitemap (AJAX)
+Router::post('/ai-content/projects/{id}/internal-links/preview', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new InternalLinksController();
+    return $controller->preview((int) $id);
+});
+
+// Salva URL nel pool (AJAX)
+Router::post('/ai-content/projects/{id}/internal-links/store', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new InternalLinksController();
+    return $controller->store((int) $id);
+});
+
+// Scrape batch (AJAX)
+Router::post('/ai-content/projects/{id}/internal-links/scrape', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new InternalLinksController();
+    return $controller->scrape((int) $id);
+});
+
+// Edit singolo link
+Router::get('/ai-content/projects/{id}/internal-links/{linkId}/edit', function ($id, $linkId) {
+    Middleware::auth();
+    $controller = new InternalLinksController();
+    return $controller->edit((int) $id, (int) $linkId);
+});
+
+// Update singolo link
+Router::post('/ai-content/projects/{id}/internal-links/{linkId}/update', function ($id, $linkId) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new InternalLinksController();
+    return $controller->update((int) $id, (int) $linkId);
+});
+
+// Delete singolo link
+Router::post('/ai-content/projects/{id}/internal-links/{linkId}/delete', function ($id, $linkId) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new InternalLinksController();
+    return $controller->delete((int) $id, (int) $linkId);
+});
+
+// Toggle attivo (AJAX)
+Router::post('/ai-content/projects/{id}/internal-links/{linkId}/toggle', function ($id, $linkId) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new InternalLinksController();
+    return $controller->toggle((int) $id, (int) $linkId);
+});
+
+// Azioni bulk
+Router::post('/ai-content/projects/{id}/internal-links/bulk', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new InternalLinksController();
+    return $controller->bulk((int) $id);
+});
+
+// Reset errori
+Router::post('/ai-content/projects/{id}/internal-links/reset-errors', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new InternalLinksController();
+    return $controller->resetErrors((int) $id);
+});
+
+// Svuota pool
+Router::post('/ai-content/projects/{id}/internal-links/clear', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new InternalLinksController();
+    return $controller->clear((int) $id);
+});
+
+// Store da CSV
+Router::post('/ai-content/projects/{id}/internal-links/store-csv', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new InternalLinksController();
+    return $controller->storeCsv((int) $id);
+});
+
+// Store manuale
+Router::post('/ai-content/projects/{id}/internal-links/store-manual', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new InternalLinksController();
+    return $controller->storeManual((int) $id);
 });

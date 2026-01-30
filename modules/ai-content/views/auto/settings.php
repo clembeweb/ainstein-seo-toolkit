@@ -6,7 +6,7 @@
     <div>
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Impostazioni Automazione</h2>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Configura la generazione automatica degli articoli
+            Configura la pubblicazione automatica degli articoli
         </p>
     </div>
 
@@ -18,72 +18,6 @@
         <?= csrf_field() ?>
 
         <div class="p-6 space-y-6">
-            <!-- Scheduling Section -->
-            <div>
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider mb-4">Scheduling</h3>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Articoli per giorno -->
-                    <div>
-                        <label for="articles_per_day" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                            Articoli per giorno
-                        </label>
-                        <select id="articles_per_day" name="articles_per_day"
-                                x-model="articlesPerDay"
-                                @change="updateTimeInputs()"
-                                class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                            <?php for ($i = 1; $i <= 10; $i++): ?>
-                            <option value="<?= $i ?>" <?= ($config['articles_per_day'] ?? 1) == $i ? 'selected' : '' ?>><?= $i ?></option>
-                            <?php endfor; ?>
-                        </select>
-                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            Quanti articoli generare al giorno
-                        </p>
-                    </div>
-
-                    <!-- Fonti SERP -->
-                    <div>
-                        <label for="auto_select_sources" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                            Fonti da analizzare
-                        </label>
-                        <select id="auto_select_sources" name="auto_select_sources"
-                                class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                            <?php for ($i = 1; $i <= 10; $i++): ?>
-                            <option value="<?= $i ?>" <?= ($config['auto_select_sources'] ?? 3) == $i ? 'selected' : '' ?>><?= $i ?></option>
-                            <?php endfor; ?>
-                        </select>
-                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            Quante fonti SERP analizzare per ogni articolo
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Orari pubblicazione - Dynamic Time Inputs -->
-                <div class="mt-6">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        Orari di generazione
-                    </label>
-                    <input type="hidden" name="publish_times" :value="publishTimesString">
-
-                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                        <template x-for="(time, index) in publishTimes" :key="index">
-                            <div class="relative">
-                                <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1" x-text="'Articolo ' + (index + 1)"></label>
-                                <input type="time"
-                                       x-model="publishTimes[index]"
-                                       class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm">
-                            </div>
-                        </template>
-                    </div>
-
-                    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                        Imposta l'orario di generazione per ogni articolo giornaliero
-                    </p>
-                </div>
-            </div>
-
-            <hr class="border-slate-200 dark:border-slate-700">
-
             <!-- WordPress Section -->
             <div>
                 <h3 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider mb-4">Pubblicazione WordPress</h3>
@@ -182,49 +116,11 @@
 
 <script>
 function settingsForm() {
-    // Default time slots spread throughout the day
-    const defaultTimes = ['09:00', '11:00', '13:00', '15:00', '17:00', '19:00', '21:00', '08:00', '10:00', '12:00'];
-
-    // Initial config values
-    const initialTimes = <?= json_encode($config['publish_times'] ?? ['09:00']) ?>;
-    const initialArticlesPerDay = <?= (int) ($config['articles_per_day'] ?? 1) ?>;
-
-    // Prepare publish times array matching articles_per_day
-    const preparedTimes = [];
-    for (let i = 0; i < initialArticlesPerDay; i++) {
-        preparedTimes.push(initialTimes[i] || defaultTimes[i] || '09:00');
-    }
-
     return {
         autoPublish: <?= ($config['auto_publish'] ?? false) ? 'true' : 'false' ?>,
-        articlesPerDay: initialArticlesPerDay,
-        publishTimes: preparedTimes,
         submitting: false,
 
-        get publishTimesString() {
-            return this.publishTimes.join(', ');
-        },
-
-        updateTimeInputs() {
-            const count = parseInt(this.articlesPerDay);
-            const currentTimes = [...this.publishTimes];
-
-            // Resize array to match articles_per_day
-            if (count > currentTimes.length) {
-                // Add more times
-                for (let i = currentTimes.length; i < count; i++) {
-                    currentTimes.push(defaultTimes[i] || '09:00');
-                }
-            } else if (count < currentTimes.length) {
-                // Remove excess times
-                currentTimes.length = count;
-            }
-
-            this.publishTimes = currentTimes;
-        },
-
         prepareSubmit() {
-            // Set loading state and submit
             this.submitting = true;
             return true;
         }

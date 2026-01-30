@@ -1,7 +1,7 @@
 # AINSTEIN - Istruzioni Claude Code
 
 > Questo file viene caricato automaticamente ad ogni sessione.
-> Ultimo aggiornamento: 2026-01-28
+> Ultimo aggiornamento: 2026-01-29
 
 ---
 
@@ -41,7 +41,7 @@
 
 | Modulo | Slug | Prefisso DB | Stato | Note |
 |--------|------|-------------|-------|------|
-| AI Content Generator | `ai-content` | `aic_` | 98% | Reference pattern |
+| AI Content Generator | `ai-content` | `aic_` | 100% | Reference pattern, scheduling per-keyword |
 | SEO Audit | `seo-audit` | `sa_` | 100% | Action Plan AI completato |
 | Google Ads Analyzer | `ads-analyzer` | `ga_` | 100% | Completo |
 | Internal Links | `internal-links` | `il_` | 85% | Manca AI Suggester |

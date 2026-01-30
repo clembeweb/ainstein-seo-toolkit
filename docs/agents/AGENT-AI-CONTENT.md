@@ -1,18 +1,26 @@
 # AGENTE: AI SEO Content Generator
 
-> **Ultimo aggiornamento:** 2026-01-12
+> **Ultimo aggiornamento:** 2026-01-29
 
 ## CONTESTO
 
 **Modulo:** `ai-content`
-**Stato:** 98% Completato
+**Stato:** 100% Completato
 **Prefisso DB:** `aic_`
 
-Modulo per generare articoli SEO-ottimizzati con workflow wizard 4 step:
+Modulo per generare articoli SEO-ottimizzati con due modalità:
+
+### Modalità MANUAL (Wizard 4 step)
 1. **Keyword** - Inserimento keyword target
 2. **SERP** - Estrazione risultati Google via SerpAPI
 3. **Fonti** - Selezione competitor da scrappare
 4. **Generazione** - Creazione articolo AI con brief
+
+### Modalità AUTO (Scheduling per-keyword)
+1. **Aggiungi Keyword** - Lista keyword senza data (bulk insert)
+2. **Coda** - Inline edit per data/ora e numero fonti per ogni keyword
+3. **Dispatcher CRON** - Processa automaticamente keyword con `scheduled_at <= NOW()`
+4. **Auto-publish** - Opzionale su WordPress collegato
 
 Include integrazione WordPress per pubblicazione diretta.
 
@@ -26,22 +34,34 @@ modules/ai-content/
 ├── controllers/
 │   ├── DashboardController.php             # Home modulo
 │   ├── KeywordController.php               # CRUD keyword
-│   ├── WizardController.php                # Flow 4 step
+│   ├── WizardController.php                # Flow 4 step (MANUAL mode)
 │   ├── ArticleController.php               # Gestione articoli
+│   ├── AutoController.php                  # AUTO mode (dashboard, queue, settings)
+│   ├── JobController.php                   # Background jobs
 │   └── WordPressController.php             # Integrazione WP
 ├── models/
 │   ├── Keyword.php
 │   ├── Article.php
+│   ├── Queue.php                           # Coda keyword AUTO mode
+│   ├── AutoConfig.php                      # Config automazione (semplificata)
+│   ├── ProcessJob.php                      # Job processing
 │   └── WpSite.php
 ├── services/
 │   ├── SerpApiService.php                  # Chiamate SerpAPI
 │   ├── ContentScraperService.php           # Scraping competitor
 │   ├── BriefBuilderService.php             # Costruzione brief
 │   └── ArticleGeneratorService.php         # Generazione AI
+├── cron/
+│   └── dispatcher.php                      # CRON job per AUTO mode
 └── views/
     ├── dashboard.php
     ├── keywords/wizard.php                 # Wizard principale
-    └── articles/show.php                   # Preview articolo
+    ├── articles/show.php                   # Preview articolo
+    └── auto/
+        ├── dashboard.php                   # Dashboard AUTO mode
+        ├── add-keywords.php                # Form aggiunta keyword (solo lista)
+        ├── queue.php                       # Coda con inline edit data/fonti
+        └── settings.php                    # Solo auto-publish e WP site
 ```
 
 ---

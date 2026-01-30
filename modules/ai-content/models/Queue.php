@@ -14,7 +14,7 @@ class Queue
     }
 
     /**
-     * Trova item per ID
+     * Trova item per ID e user_id
      */
     public function find(int $id, int $userId): ?array
     {
@@ -23,6 +23,19 @@ class Queue
             WHERE id = ? AND user_id = ?
         ");
         $stmt->execute([$id, $userId]);
+        return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+    }
+
+    /**
+     * Trova item per ID (senza verifica user_id)
+     */
+    public function findById(int $id): ?array
+    {
+        $stmt = $this->db->prepare("
+            SELECT * FROM {$this->table}
+            WHERE id = ?
+        ");
+        $stmt->execute([$id]);
         return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
     }
 
@@ -67,14 +80,14 @@ class Queue
 
     /**
      * Prossimo item da processare (per cron)
+     * sources_count viene letto direttamente dalla tabella aic_queue
      */
     public function getNextPending(): ?array
     {
         $stmt = $this->db->prepare("
-            SELECT q.*, p.name as project_name, ac.auto_select_sources
+            SELECT q.*, p.name as project_name
             FROM {$this->table} q
             JOIN aic_projects p ON q.project_id = p.id
-            LEFT JOIN aic_auto_config ac ON q.project_id = ac.project_id
             WHERE q.status = 'pending'
             AND q.scheduled_at <= NOW()
             ORDER BY q.scheduled_at ASC
@@ -86,14 +99,14 @@ class Queue
 
     /**
      * Prossimo item da processare per un progetto specifico
+     * sources_count viene letto direttamente dalla tabella aic_queue
      */
     public function getNextPendingForProject(int $projectId): ?array
     {
         $stmt = $this->db->prepare("
-            SELECT q.*, p.name as project_name, ac.auto_select_sources
+            SELECT q.*, p.name as project_name
             FROM {$this->table} q
             JOIN aic_projects p ON q.project_id = p.id
-            LEFT JOIN aic_auto_config ac ON q.project_id = ac.project_id
             WHERE q.project_id = ?
             AND q.status = 'pending'
             AND q.scheduled_at <= NOW()
@@ -106,6 +119,7 @@ class Queue
 
     /**
      * Get pending items for a project (for CRON dispatcher)
+     * sources_count viene letto direttamente dalla tabella aic_queue
      *
      * @param int $projectId Project ID
      * @param int $limit Max items to return
@@ -114,10 +128,9 @@ class Queue
     public function getPending(int $projectId, int $limit = 10): array
     {
         $stmt = $this->db->prepare("
-            SELECT q.*, p.name as project_name, ac.auto_select_sources
+            SELECT q.*, p.name as project_name
             FROM {$this->table} q
             JOIN aic_projects p ON q.project_id = p.id
-            LEFT JOIN aic_auto_config ac ON q.project_id = ac.project_id
             WHERE q.project_id = ?
             AND q.status = 'pending'
             AND q.scheduled_at <= NOW()
@@ -130,29 +143,64 @@ class Queue
 
     /**
      * Inserisce keyword in coda (bulk)
+     *
+     * @param int $userId User ID
+     * @param int $projectId Project ID
+     * @param array $keywordData Array di oggetti con chiavi: keyword, scheduled_at, sources_count
+     *                           Esempio: [['keyword' => 'test', 'scheduled_at' => '2024-01-01 10:00:00', 'sources_count' => 3], ...]
+     *                           Per retrocompatibilità accetta anche array di stringhe (keywords) con $scheduledTimes opzionale
+     * @param array|null $scheduledTimes (Deprecato) Array di date/time - usare $keywordData con oggetti
+     * @return int Numero di keyword inserite
      */
-    public function addBulk(int $userId, int $projectId, array $keywords, array $scheduledTimes): int
+    public function addBulk(int $userId, int $projectId, array $keywordData, ?array $scheduledTimes = null): int
     {
         $sql = "INSERT INTO {$this->table}
-                (user_id, project_id, keyword, language, location, scheduled_at)
-                VALUES (?, ?, ?, ?, ?, ?)";
+                (user_id, project_id, keyword, language, location, sources_count, scheduled_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);
 
         $inserted = 0;
-        foreach ($keywords as $i => $kw) {
-            $keyword = trim($kw);
-            if (empty($keyword)) continue;
 
-            $scheduledAt = $scheduledTimes[$i] ?? end($scheduledTimes);
-            $stmt->execute([
-                $userId,
-                $projectId,
-                $keyword,
-                'it',
-                'Italy',
-                $scheduledAt
-            ]);
-            $inserted++;
+        // Retrocompatibilità: se $keywordData contiene stringhe, usa il vecchio formato
+        if (!empty($keywordData) && is_string(reset($keywordData))) {
+            // Vecchio formato: array di stringhe + array di scheduled times
+            foreach ($keywordData as $i => $kw) {
+                $keyword = trim($kw);
+                if (empty($keyword)) continue;
+
+                $scheduledAt = $scheduledTimes[$i] ?? ($scheduledTimes ? end($scheduledTimes) : date('Y-m-d H:i:s'));
+                $stmt->execute([
+                    $userId,
+                    $projectId,
+                    $keyword,
+                    'it',
+                    'Italy',
+                    3, // default sources_count per retrocompatibilità
+                    $scheduledAt
+                ]);
+                $inserted++;
+            }
+        } else {
+            // Nuovo formato: array di oggetti con keyword, scheduled_at, sources_count
+            foreach ($keywordData as $item) {
+                $keyword = trim($item['keyword'] ?? '');
+                if (empty($keyword)) continue;
+
+                // scheduled_at può essere NULL (da pianificare dalla coda)
+                $scheduledAt = $item['scheduled_at'] ?? null;
+                $sourcesCount = $item['sources_count'] ?? 3;
+
+                $stmt->execute([
+                    $userId,
+                    $projectId,
+                    $keyword,
+                    'it',
+                    'Italy',
+                    $sourcesCount,
+                    $scheduledAt
+                ]);
+                $inserted++;
+            }
         }
 
         return $inserted;
@@ -181,6 +229,19 @@ class Queue
     }
 
     /**
+     * Aggiorna scheduled_at di un item
+     */
+    public function updateScheduledAt(int $id, string $scheduledAt): bool
+    {
+        $stmt = $this->db->prepare("
+            UPDATE {$this->table}
+            SET scheduled_at = ?
+            WHERE id = ?
+        ");
+        return $stmt->execute([$scheduledAt, $id]);
+    }
+
+    /**
      * Aggiorna status
      */
     public function updateStatus(int $id, string $status, ?string $error = null): bool
@@ -204,6 +265,34 @@ class Queue
 
         $stmt = $this->db->prepare($sql);
         return $stmt->execute($params);
+    }
+
+    /**
+     * Aggiorna un item nella coda (solo pending)
+     */
+    public function update(int $id, array $data): bool
+    {
+        $allowed = ['scheduled_at', 'sources_count'];
+        $updates = [];
+        $params = [];
+
+        foreach ($allowed as $field) {
+            if (isset($data[$field])) {
+                $updates[] = "{$field} = ?";
+                $params[] = $data[$field];
+            }
+        }
+
+        if (empty($updates)) {
+            return false;
+        }
+
+        $params[] = $id;
+        $sql = "UPDATE {$this->table} SET " . implode(', ', $updates) . " WHERE id = ? AND status = 'pending'";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->rowCount() > 0;
     }
 
     /**
