@@ -19,6 +19,7 @@ if ($isAuto) {
         'dashboard' => ['path' => '/auto', 'label' => 'Dashboard', 'icon' => 'chart-bar'],
         'queue' => ['path' => '/auto/queue', 'label' => 'Coda', 'icon' => 'queue-list'],
         'articles' => ['path' => '/articles', 'label' => 'Articoli', 'icon' => 'document-text'],
+        'internal-links' => ['path' => '/internal-links', 'label' => 'Link Interni', 'icon' => 'link'],
         'settings' => ['path' => '/auto/settings', 'label' => 'Impostazioni', 'icon' => 'cog'],
     ];
 } else {
@@ -26,6 +27,7 @@ if ($isAuto) {
         'dashboard' => ['path' => '', 'label' => 'Dashboard', 'icon' => 'chart-bar'],
         'keywords' => ['path' => '/keywords', 'label' => 'Keywords', 'icon' => 'key'],
         'articles' => ['path' => '/articles', 'label' => 'Articoli', 'icon' => 'document-text'],
+        'internal-links' => ['path' => '/internal-links', 'label' => 'Link Interni', 'icon' => 'link'],
         'settings' => ['path' => '/settings', 'label' => 'Impostazioni', 'icon' => 'cog'],
     ];
 }
@@ -40,6 +42,7 @@ function isActiveTabAic($tabKey, $currentPage) {
         'settings' => ['settings'],
         'queue' => ['queue'],
         'add-keywords' => ['add-keywords', 'add'],
+        'internal-links' => ['internal-links'],
     ];
     return in_array($currentPage, $aliases[$tabKey] ?? [$tabKey]);
 }
@@ -51,6 +54,7 @@ $icons = [
     'document-text' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>',
     'cog' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>',
     'queue-list' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>',
+    'link' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>',
     'clipboard-list' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>',
     'wordpress' => '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/></svg>',
 ];

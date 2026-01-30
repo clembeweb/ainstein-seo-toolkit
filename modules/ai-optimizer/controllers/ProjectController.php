@@ -26,14 +26,16 @@ class ProjectController
     /**
      * Lista progetti (homepage modulo)
      */
-    public function index(): void
+    public function index()
     {
         Middleware::auth();
         $user = Auth::user();
 
         $projects = $this->projectModel->findByUser($user['id']);
 
-        View::render('ai-optimizer::projects/index', [
+        return View::render('ai-optimizer::projects/index', [
+            'title' => 'AI Optimizer',
+            'user' => $user,
             'projects' => $projects,
             'modules' => ModuleLoader::getUserModules($user['id']),
         ]);
@@ -42,12 +44,14 @@ class ProjectController
     /**
      * Form creazione progetto
      */
-    public function create(): void
+    public function create()
     {
         Middleware::auth();
         $user = Auth::user();
 
-        View::render('ai-optimizer::projects/create', [
+        return View::render('ai-optimizer::projects/create', [
+            'title' => 'Nuovo Progetto - AI Optimizer',
+            'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
         ]);
     }
@@ -68,7 +72,7 @@ class ProjectController
         $locationCode = $_POST['location_code'] ?? 'IT';
 
         if (empty($name)) {
-            $_SESSION['flash_error'] = 'Il nome del progetto è obbligatorio';
+            $_SESSION['_flash']['error'] = 'Il nome del progetto è obbligatorio';
             header('Location: ' . url('/ai-optimizer/projects/create'));
             exit;
         }
@@ -89,7 +93,7 @@ class ProjectController
             'location_code' => $locationCode,
         ]);
 
-        $_SESSION['flash_success'] = 'Progetto creato con successo';
+        $_SESSION['_flash']['success'] = 'Progetto creato con successo';
         header('Location: ' . url('/ai-optimizer/project/' . $projectId));
         exit;
     }
@@ -97,7 +101,7 @@ class ProjectController
     /**
      * Dashboard progetto
      */
-    public function show(int $id): void
+    public function show(int $id)
     {
         Middleware::auth();
         $user = Auth::user();
@@ -105,7 +109,7 @@ class ProjectController
         $project = $this->projectModel->find($id, $user['id']);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/ai-optimizer'));
             exit;
         }
@@ -113,7 +117,9 @@ class ProjectController
         $optimizations = $this->optimizationModel->findByProject($id, $user['id']);
         $stats = $this->optimizationModel->countByStatus($user['id'], $id);
 
-        View::render('ai-optimizer::projects/dashboard', [
+        return View::render('ai-optimizer::projects/dashboard', [
+            'title' => $project['name'] . ' - AI Optimizer',
+            'user' => $user,
             'project' => $project,
             'projectId' => $id,
             'optimizations' => $optimizations,
@@ -125,7 +131,7 @@ class ProjectController
     /**
      * Impostazioni progetto
      */
-    public function settings(int $id): void
+    public function settings(int $id)
     {
         Middleware::auth();
         $user = Auth::user();
@@ -133,12 +139,14 @@ class ProjectController
         $project = $this->projectModel->find($id, $user['id']);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/ai-optimizer'));
             exit;
         }
 
-        View::render('ai-optimizer::projects/settings', [
+        return View::render('ai-optimizer::projects/settings', [
+            'title' => $project['name'] . ' - Impostazioni',
+            'user' => $user,
             'project' => $project,
             'projectId' => $id,
             'modules' => ModuleLoader::getUserModules($user['id']),
@@ -157,7 +165,7 @@ class ProjectController
         $project = $this->projectModel->find($id, $user['id']);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/ai-optimizer'));
             exit;
         }
@@ -169,7 +177,7 @@ class ProjectController
         $locationCode = $_POST['location_code'] ?? 'IT';
 
         if (empty($name)) {
-            $_SESSION['flash_error'] = 'Il nome del progetto è obbligatorio';
+            $_SESSION['_flash']['error'] = 'Il nome del progetto è obbligatorio';
             header('Location: ' . url('/ai-optimizer/project/' . $id . '/settings'));
             exit;
         }
@@ -189,7 +197,7 @@ class ProjectController
             'location_code' => $locationCode,
         ]);
 
-        $_SESSION['flash_success'] = 'Progetto aggiornato con successo';
+        $_SESSION['_flash']['success'] = 'Progetto aggiornato con successo';
         header('Location: ' . url('/ai-optimizer/project/' . $id . '/settings'));
         exit;
     }
@@ -206,14 +214,14 @@ class ProjectController
         $project = $this->projectModel->find($id, $user['id']);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/ai-optimizer'));
             exit;
         }
 
         $this->projectModel->delete($id, $user['id']);
 
-        $_SESSION['flash_success'] = 'Progetto eliminato con successo';
+        $_SESSION['_flash']['success'] = 'Progetto eliminato con successo';
         header('Location: ' . url('/ai-optimizer'));
         exit;
     }

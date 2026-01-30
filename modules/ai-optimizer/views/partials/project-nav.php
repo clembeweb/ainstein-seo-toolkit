@@ -54,7 +54,7 @@ $tabs = [
     <nav class="-mb-px flex gap-4" aria-label="Tabs">
         <?php foreach ($tabs as $key => $tab): ?>
         <a href="<?= $tab['url'] ?>"
-           class="group inline-flex items-center gap-2 px-1 py-3 border-b-2 text-sm font-medium transition-colors <?= $currentPage === $key ? 'border-amber-500 text-amber-600 dark:text-amber-400' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200' ?>">
+           class="group inline-flex items-center gap-2 px-1 py-3 border-b-2 text-sm font-medium transition-colors <?= $currentPage === $key ? 'border-primary-500 text-primary-600 dark:text-amber-400' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200' ?>">
             <?= $tab['icon'] ?>
             <?= $tab['label'] ?>
         </a>

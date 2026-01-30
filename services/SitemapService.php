@@ -146,7 +146,7 @@ class SitemapService
     }
 
     /**
-     * Get approximate URL count from sitemap
+     * Get URL count from sitemap (counts real URLs, not estimates)
      */
     protected function getSitemapUrlCount(string $url): ?int
     {
@@ -157,12 +157,22 @@ class SitemapService
 
         // Check if it's a sitemap index
         if (strpos($content, '<sitemapindex') !== false) {
-            // Count child sitemaps and estimate
-            preg_match_all('/<sitemap>/i', $content, $matches);
-            return count($matches[0]) * 1000; // Rough estimate
+            // Extract child sitemap URLs and count their URLs
+            preg_match_all('/<loc>\s*([^<]+)\s*<\/loc>/i', $content, $matches);
+            $totalUrls = 0;
+
+            foreach ($matches[1] as $childSitemapUrl) {
+                $childContent = $this->fetchUrl(trim($childSitemapUrl));
+                if ($childContent !== false) {
+                    preg_match_all('/<url>/i', $childContent, $urlMatches);
+                    $totalUrls += count($urlMatches[0]);
+                }
+            }
+
+            return $totalUrls;
         }
 
-        // Count URLs
+        // Count URLs directly
         preg_match_all('/<url>/i', $content, $matches);
         return count($matches[0]);
     }

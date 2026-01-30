@@ -21,7 +21,7 @@
 
     <!-- Form -->
     <form action="<?= url('/ai-optimizer/projects') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6 space-y-5">
-        <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+        <?= csrf_field() ?>
 
         <!-- Nome -->
         <div>
@@ -29,7 +29,7 @@
                 Nome Progetto <span class="text-red-500">*</span>
             </label>
             <input type="text" id="name" name="name" required
-                   class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-amber-500 focus:ring-amber-500"
+                   class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-primary-500 focus:ring-primary-500"
                    placeholder="Es: Blog Aziendale, Sito E-commerce...">
         </div>
 
@@ -39,7 +39,7 @@
                 Dominio
             </label>
             <input type="text" id="domain" name="domain"
-                   class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-amber-500 focus:ring-amber-500"
+                   class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-primary-500 focus:ring-primary-500"
                    placeholder="Es: miosito.it">
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Opzionale. Utile per identificare il tuo sito vs competitor.</p>
         </div>
@@ -50,7 +50,7 @@
                 Descrizione
             </label>
             <textarea id="description" name="description" rows="2"
-                      class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-amber-500 focus:ring-amber-500"
+                      class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-primary-500 focus:ring-primary-500"
                       placeholder="Breve descrizione del progetto..."></textarea>
         </div>
 
@@ -61,7 +61,7 @@
                     Lingua contenuti
                 </label>
                 <select id="language" name="language"
-                        class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-amber-500 focus:ring-amber-500">
+                        class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-primary-500 focus:ring-primary-500">
                     <option value="it" selected>Italiano</option>
                     <option value="en">English</option>
                     <option value="es">Español</option>
@@ -75,7 +75,7 @@
                     SERP Location
                 </label>
                 <select id="location_code" name="location_code"
-                        class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-amber-500 focus:ring-amber-500">
+                        class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-primary-500 focus:ring-primary-500">
                     <option value="IT" selected>Italia</option>
                     <option value="US">USA</option>
                     <option value="UK">UK</option>
@@ -93,7 +93,7 @@
                 Annulla
             </a>
             <button type="submit"
-                    class="px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-colors">
+                    class="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
                 Crea Progetto
             </button>
         </div>

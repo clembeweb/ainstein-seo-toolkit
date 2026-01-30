@@ -129,6 +129,9 @@ class ArticleGeneratorService
         // Get brief text
         $briefText = $this->briefBuilder->generatePromptBrief($brief);
 
+        // Build internal links section if available
+        $internalLinksSection = $this->buildInternalLinksSection($brief['internal_links_pool'] ?? []);
+
         $prompt = <<<PROMPT
 Sei un esperto SEO copywriter. Il tuo obiettivo è creare un articolo che sia MIGLIORE di tutte le fonti analizzate, combinando il meglio di ognuna.
 
@@ -145,7 +148,7 @@ Sei un esperto SEO copywriter. Il tuo obiettivo è creare un articolo che sia MI
 
 ## CONTENUTO ESTRATTO DALLE FONTI
 {$sourcesContent}
-
+{$internalLinksSection}
 ## ISTRUZIONI DI GENERAZIONE
 
 1. **Lingua**: Scrivi INTERAMENTE in {$languageName}
@@ -270,6 +273,70 @@ PROMPT;
         }
 
         return $content;
+    }
+
+    /**
+     * Build internal links section for the prompt
+     * SEO-optimized instructions for natural, strategic internal linking
+     */
+    private function buildInternalLinksSection(array $internalLinks): string
+    {
+        if (empty($internalLinks)) {
+            return "";
+        }
+
+        $section = "\n## LINK INTERNI (SEO STRATEGICI)\n\n";
+
+        $section .= "### REGOLE DI INSERIMENTO (OBBLIGATORIE)\n\n";
+
+        $section .= "**PERTINENZA SEMANTICA (PRIORITA' ASSOLUTA)**\n";
+        $section .= "- Inserisci SOLO link che sono SEMANTICAMENTE CORRELATI al paragrafo in cui li metti\n";
+        $section .= "- Il link deve AGGIUNGERE VALORE al lettore, approfondendo un concetto menzionato\n";
+        $section .= "- Se l'articolo parla di 'SEO', linka solo pagine su SEO, non su 'web design' o argomenti non correlati\n";
+        $section .= "- SE NESSUN LINK E' PERTINENTE ALL'ARGOMENTO DELL'ARTICOLO, NON INSERIRNE NESSUNO\n\n";
+
+        $section .= "**ANCHOR TEXT SEO-FRIENDLY**\n";
+        $section .= "- USA anchor text DESCRITTIVI che indicano il contenuto della pagina di destinazione\n";
+        $section .= "- VIETATO: 'clicca qui', 'leggi di piu', 'questo articolo', URL nude\n";
+        $section .= "- CORRETTO: 'strategie SEO avanzate', 'guida al content marketing', 'ottimizzazione Core Web Vitals'\n";
+        $section .= "- L'anchor text deve essere una frase NATURALE che si integra nel discorso\n";
+        $section .= "- NON ripetere lo stesso anchor text per link diversi\n\n";
+
+        $section .= "**POSIZIONAMENTO STRATEGICO**\n";
+        $section .= "- Distribuisci i link in SEZIONI DIVERSE dell'articolo (non tutti nello stesso paragrafo)\n";
+        $section .= "- Preferisci inserire almeno 1 link nei primi 2-3 paragrafi (valore SEO maggiore)\n";
+        $section .= "- Inserisci i link dove il contesto NATURALMENTE richiede un approfondimento\n";
+        $section .= "- Massimo 2-4 link interni totali, NON di piu'\n\n";
+
+        $section .= "**FORMATO HTML**\n";
+        $section .= "- Usa il formato: <a href=\"URL_COMPLETO\">anchor text naturale</a>\n";
+        $section .= "- Il link deve essere INLINE nel testo, non in elenchi puntati separati\n\n";
+
+        $section .= "### POOL DI LINK DISPONIBILI\n";
+        $section .= "Scegli SOLO quelli pertinenti all'argomento dell'articolo:\n\n";
+
+        foreach ($internalLinks as $link) {
+            $title = $this->sanitizeUtf8($link['title'] ?? 'Pagina');
+            // Rimuovi suffisso sito dal titolo per renderlo più leggibile
+            $title = preg_replace('/\s*[-|]\s*[^-|]+$/', '', $title);
+            $url = $link['url'] ?? '';
+            $desc = !empty($link['description'])
+                ? $this->sanitizeUtf8(mb_substr($link['description'], 0, 150))
+                : '';
+
+            $section .= "- **{$title}**\n";
+            $section .= "  URL: {$url}\n";
+            if ($desc) {
+                $section .= "  Tema: {$desc}\n";
+            }
+            $section .= "\n";
+        }
+
+        $section .= "---\n";
+        $section .= "RICORDA: E' MEGLIO NON INSERIRE LINK che inserire link non pertinenti. ";
+        $section .= "La qualita' e pertinenza sono piu' importanti della quantita'.\n\n";
+
+        return $section;
     }
 
     /**

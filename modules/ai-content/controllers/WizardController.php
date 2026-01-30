@@ -249,6 +249,15 @@ class WizardController
                 ];
             }, $scrapedSources);
 
+            // Add internal links pool if project has them
+            if (!empty($keyword['project_id'])) {
+                $internalLinksPool = new \Modules\AiContent\Models\InternalLinksPool();
+                $internalLinks = $internalLinksPool->getActiveByProject($keyword['project_id'], 50);
+                if (!empty($internalLinks)) {
+                    $brief['internal_links_pool'] = $internalLinks;
+                }
+            }
+
             // Determine target word count
             $targetWords = $briefData['targetWordCount'] ?? $brief['recommended_word_count'] ?? 1500;
 

@@ -17,21 +17,14 @@ if (!ModuleLoader::isModuleActive('ai-optimizer')) {
 Router::get('/ai-optimizer', function () {
     Middleware::auth();
     $controller = new \Modules\AiOptimizer\Controllers\ProjectController();
-    $controller->index();
-});
-
-// Alias per lista progetti
-Router::get('/ai-optimizer/projects', function () {
-    Middleware::auth();
-    header('Location: ' . url('/ai-optimizer'));
-    exit;
+    return $controller->index();
 });
 
 // Form creazione progetto
 Router::get('/ai-optimizer/projects/create', function () {
     Middleware::auth();
     $controller = new \Modules\AiOptimizer\Controllers\ProjectController();
-    $controller->create();
+    return $controller->create();
 });
 
 // Salva nuovo progetto
@@ -46,14 +39,14 @@ Router::post('/ai-optimizer/projects', function () {
 Router::get('/ai-optimizer/project/{id}', function ($id) {
     Middleware::auth();
     $controller = new \Modules\AiOptimizer\Controllers\ProjectController();
-    $controller->show((int)$id);
+    return $controller->show((int)$id);
 });
 
 // Impostazioni progetto
 Router::get('/ai-optimizer/project/{id}/settings', function ($id) {
     Middleware::auth();
     $controller = new \Modules\AiOptimizer\Controllers\ProjectController();
-    $controller->settings((int)$id);
+    return $controller->settings((int)$id);
 });
 
 // Aggiorna progetto
@@ -80,7 +73,7 @@ Router::post('/ai-optimizer/project/{id}/delete', function ($id) {
 Router::get('/ai-optimizer/project/{id}/optimize', function ($id) {
     Middleware::auth();
     $controller = new \Modules\AiOptimizer\Controllers\OptimizationController();
-    $controller->import((int)$id);
+    return $controller->import((int)$id);
 });
 
 // Step 1: Salva import
@@ -95,7 +88,7 @@ Router::post('/ai-optimizer/project/{id}/optimize', function ($id) {
 Router::get('/ai-optimizer/project/{id}/optimize/{optId}/analyze', function ($id, $optId) {
     Middleware::auth();
     $controller = new \Modules\AiOptimizer\Controllers\OptimizationController();
-    $controller->analyze((int)$id, (int)$optId);
+    return $controller->analyze((int)$id, (int)$optId);
 });
 
 // Step 2: Esegui analisi (AJAX)
@@ -109,7 +102,7 @@ Router::post('/ai-optimizer/project/{id}/optimize/{optId}/analyze', function ($i
 Router::get('/ai-optimizer/project/{id}/optimize/{optId}/refactor', function ($id, $optId) {
     Middleware::auth();
     $controller = new \Modules\AiOptimizer\Controllers\OptimizationController();
-    $controller->refactor((int)$id, (int)$optId);
+    return $controller->refactor((int)$id, (int)$optId);
 });
 
 // Step 3: Esegui riscrittura (AJAX)
@@ -123,7 +116,7 @@ Router::post('/ai-optimizer/project/{id}/optimize/{optId}/refactor', function ($
 Router::get('/ai-optimizer/project/{id}/optimize/{optId}/export', function ($id, $optId) {
     Middleware::auth();
     $controller = new \Modules\AiOptimizer\Controllers\OptimizationController();
-    $controller->export((int)$id, (int)$optId);
+    return $controller->export((int)$id, (int)$optId);
 });
 
 // ============================================

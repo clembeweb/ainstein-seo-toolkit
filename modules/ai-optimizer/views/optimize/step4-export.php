@@ -20,7 +20,7 @@ $currentPage = 'optimize';
         foreach ($steps as $i => $step):
         ?>
         <div class="flex items-center">
-            <div class="flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium <?= !empty($step['done']) ? 'bg-emerald-500 text-white' : (!empty($step['active']) ? 'bg-amber-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500') ?>">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium <?= !empty($step['done']) ? 'bg-emerald-500 text-white' : (!empty($step['active']) ? 'bg-primary-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500') ?>">
                 <?php if (!empty($step['done'])): ?>
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 <?php else: ?><?= $step['num'] ?><?php endif; ?>
@@ -54,11 +54,11 @@ $currentPage = 'optimize';
         <div class="lg:col-span-2 space-y-4">
             <!-- Title & Meta -->
             <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
-                <h3 class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase mb-3">Title & Meta</h3>
+                <h3 class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase mb-3">Titolo & Meta</h3>
 
                 <div class="space-y-3">
                     <div>
-                        <label class="text-xs text-slate-500">Title</label>
+                        <label class="text-xs text-slate-500">Titolo</label>
                         <p class="font-medium text-slate-900 dark:text-white"><?= e($optimization['optimized_title']) ?></p>
                     </div>
                     <div>
@@ -76,7 +76,7 @@ $currentPage = 'optimize';
             <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase">Contenuto</h3>
-                    <button onclick="copyContent()" class="text-sm text-amber-600 hover:text-amber-700 font-medium">
+                    <button onclick="copyContent()" class="text-sm text-primary-600 hover:text-primary-700 font-medium">
                         Copia HTML
                     </button>
                 </div>
@@ -127,7 +127,7 @@ $currentPage = 'optimize';
                     </div>
                     <div class="flex justify-between">
                         <dt class="text-slate-500">Score SEO</dt>
-                        <dd class="font-medium <?= ($optimization['seo_score'] ?? 0) >= 70 ? 'text-green-600' : 'text-amber-600' ?>"><?= $optimization['seo_score'] ?? 'N/A' ?>/100</dd>
+                        <dd class="font-medium <?= ($optimization['seo_score'] ?? 0) >= 70 ? 'text-green-600' : 'text-primary-600' ?>"><?= $optimization['seo_score'] ?? 'N/A' ?>/100</dd>
                     </div>
                     <div class="flex justify-between">
                         <dt class="text-slate-500">Crediti usati</dt>
@@ -139,7 +139,7 @@ $currentPage = 'optimize';
             <!-- Actions -->
             <div class="space-y-2">
                 <a href="<?= url('/ai-optimizer/project/' . $projectId . '/optimize') ?>"
-                   class="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition-colors">
+                   class="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>

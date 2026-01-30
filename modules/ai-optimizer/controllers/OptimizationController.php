@@ -33,7 +33,7 @@ class OptimizationController
     /**
      * Step 1: Form import articolo
      */
-    public function import(int $projectId): void
+    public function import(int $projectId)
     {
         Middleware::auth();
         $user = Auth::user();
@@ -41,12 +41,14 @@ class OptimizationController
         $project = $this->projectModel->find($projectId, $user['id']);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/ai-optimizer'));
             exit;
         }
 
-        View::render('ai-optimizer::optimize/step1-import', [
+        return View::render('ai-optimizer::optimize/step1-import', [
+            'title' => 'Importa Articolo - ' . $project['name'],
+            'user' => $user,
             'project' => $project,
             'projectId' => $projectId,
             'isConfigured' => $this->analyzerService->isConfigured(),
@@ -66,7 +68,7 @@ class OptimizationController
         $project = $this->projectModel->find($projectId, $user['id']);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/ai-optimizer'));
             exit;
         }
@@ -75,14 +77,14 @@ class OptimizationController
         $keyword = trim($_POST['keyword'] ?? '');
 
         if (empty($url) || empty($keyword)) {
-            $_SESSION['flash_error'] = 'URL e keyword sono obbligatori';
+            $_SESSION['_flash']['error'] = 'URL e keyword sono obbligatori';
             header('Location: ' . url('/ai-optimizer/project/' . $projectId . '/optimize'));
             exit;
         }
 
         // Valida URL
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            $_SESSION['flash_error'] = 'URL non valido';
+            $_SESSION['_flash']['error'] = 'URL non valido';
             header('Location: ' . url('/ai-optimizer/project/' . $projectId . '/optimize'));
             exit;
         }
@@ -92,7 +94,7 @@ class OptimizationController
         try {
             $scraped = $scraper->scrape($url);
         } catch (\Exception $e) {
-            $_SESSION['flash_error'] = 'Impossibile scaricare la pagina: ' . $e->getMessage();
+            $_SESSION['_flash']['error'] = 'Impossibile scaricare la pagina: ' . $e->getMessage();
             header('Location: ' . url('/ai-optimizer/project/' . $projectId . '/optimize'));
             exit;
         }
@@ -119,7 +121,7 @@ class OptimizationController
             'original_headings' => $scraped['headings'] ?? [],
         ]);
 
-        $_SESSION['flash_success'] = 'Articolo importato. Procedi con l\'analisi.';
+        $_SESSION['_flash']['success'] = 'Articolo importato. Procedi con l\'analisi.';
         header('Location: ' . url('/ai-optimizer/project/' . $projectId . '/optimize/' . $optimizationId . '/analyze'));
         exit;
     }
@@ -127,7 +129,7 @@ class OptimizationController
     /**
      * Step 2: Pagina analisi gap
      */
-    public function analyze(int $projectId, int $id): void
+    public function analyze(int $projectId, int $id)
     {
         Middleware::auth();
         $user = Auth::user();
@@ -136,7 +138,7 @@ class OptimizationController
         $optimization = $this->optimizationModel->find($id, $user['id']);
 
         if (!$project || !$optimization) {
-            $_SESSION['flash_error'] = 'Ottimizzazione non trovata';
+            $_SESSION['_flash']['error'] = 'Ottimizzazione non trovata';
             header('Location: ' . url('/ai-optimizer'));
             exit;
         }
@@ -144,7 +146,9 @@ class OptimizationController
         $creditCost = $this->analyzerService->getCreditCost();
         $userCredits = Credits::getBalance($user['id']);
 
-        View::render('ai-optimizer::optimize/step2-analyze', [
+        return View::render('ai-optimizer::optimize/step2-analyze', [
+            'title' => 'Analisi Gap - ' . $optimization['keyword'],
+            'user' => $user,
             'project' => $project,
             'projectId' => $projectId,
             'optimization' => $optimization,
@@ -217,7 +221,7 @@ class OptimizationController
     /**
      * Step 3: Pagina riscrittura
      */
-    public function refactor(int $projectId, int $id): void
+    public function refactor(int $projectId, int $id)
     {
         Middleware::auth();
         $user = Auth::user();
@@ -226,14 +230,14 @@ class OptimizationController
         $optimization = $this->optimizationModel->find($id, $user['id']);
 
         if (!$project || !$optimization) {
-            $_SESSION['flash_error'] = 'Ottimizzazione non trovata';
+            $_SESSION['_flash']['error'] = 'Ottimizzazione non trovata';
             header('Location: ' . url('/ai-optimizer'));
             exit;
         }
 
         // Deve essere almeno analizzato
         if (!in_array($optimization['status'], ['analyzed', 'refactored'])) {
-            $_SESSION['flash_error'] = 'Devi prima completare l\'analisi';
+            $_SESSION['_flash']['error'] = 'Devi prima completare l\'analisi';
             header('Location: ' . url('/ai-optimizer/project/' . $projectId . '/optimize/' . $id . '/analyze'));
             exit;
         }
@@ -241,7 +245,9 @@ class OptimizationController
         $creditCost = $this->refactorService->getCreditCost();
         $userCredits = Credits::getBalance($user['id']);
 
-        View::render('ai-optimizer::optimize/step3-refactor', [
+        return View::render('ai-optimizer::optimize/step3-refactor', [
+            'title' => 'Riscrittura - ' . $optimization['keyword'],
+            'user' => $user,
             'project' => $project,
             'projectId' => $projectId,
             'optimization' => $optimization,
@@ -327,7 +333,7 @@ class OptimizationController
     /**
      * Step 4: Pagina export/risultato
      */
-    public function export(int $projectId, int $id): void
+    public function export(int $projectId, int $id)
     {
         Middleware::auth();
         $user = Auth::user();
@@ -336,12 +342,14 @@ class OptimizationController
         $optimization = $this->optimizationModel->find($id, $user['id']);
 
         if (!$project || !$optimization) {
-            $_SESSION['flash_error'] = 'Ottimizzazione non trovata';
+            $_SESSION['_flash']['error'] = 'Ottimizzazione non trovata';
             header('Location: ' . url('/ai-optimizer'));
             exit;
         }
 
-        View::render('ai-optimizer::optimize/step4-export', [
+        return View::render('ai-optimizer::optimize/step4-export', [
+            'title' => 'Export - ' . $optimization['keyword'],
+            'user' => $user,
             'project' => $project,
             'projectId' => $projectId,
             'optimization' => $optimization,
@@ -361,7 +369,7 @@ class OptimizationController
         $optimization = $this->optimizationModel->find($id, $user['id']);
 
         if (!$project || !$optimization) {
-            $_SESSION['flash_error'] = 'Ottimizzazione non trovata';
+            $_SESSION['_flash']['error'] = 'Ottimizzazione non trovata';
             header('Location: ' . url('/ai-optimizer'));
             exit;
         }
@@ -398,14 +406,14 @@ class OptimizationController
         $optimization = $this->optimizationModel->find($id, $user['id']);
 
         if (!$optimization) {
-            $_SESSION['flash_error'] = 'Ottimizzazione non trovata';
+            $_SESSION['_flash']['error'] = 'Ottimizzazione non trovata';
             header('Location: ' . url('/ai-optimizer/project/' . $projectId));
             exit;
         }
 
         $this->optimizationModel->delete($id, $user['id']);
 
-        $_SESSION['flash_success'] = 'Ottimizzazione eliminata';
+        $_SESSION['_flash']['success'] = 'Ottimizzazione eliminata';
         header('Location: ' . url('/ai-optimizer/project/' . $projectId));
         exit;
     }
@@ -421,7 +429,7 @@ class OptimizationController
         $optimization = $this->optimizationModel->find($id, $user['id']);
 
         if (!$optimization || empty($optimization['optimized_content'])) {
-            $_SESSION['flash_error'] = 'Contenuto non disponibile';
+            $_SESSION['_flash']['error'] = 'Contenuto non disponibile';
             header('Location: ' . url('/ai-optimizer/project/' . $projectId . '/optimize/' . $id . '/export'));
             exit;
         }

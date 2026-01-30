@@ -11,14 +11,14 @@ $currentPage = 'settings';
     <div class="max-w-2xl">
         <!-- Form Impostazioni -->
         <form action="<?= url('/ai-optimizer/project/' . $projectId . '/settings') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6 space-y-5">
-            <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+            <?= csrf_field() ?>
 
             <div>
                 <label for="name" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Nome Progetto <span class="text-red-500">*</span>
                 </label>
                 <input type="text" id="name" name="name" required value="<?= e($project['name']) ?>"
-                       class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-amber-500 focus:ring-amber-500">
+                       class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-primary-500 focus:ring-primary-500">
             </div>
 
             <div>
@@ -26,7 +26,7 @@ $currentPage = 'settings';
                     Dominio
                 </label>
                 <input type="text" id="domain" name="domain" value="<?= e($project['domain'] ?? '') ?>"
-                       class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-amber-500 focus:ring-amber-500">
+                       class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-primary-500 focus:ring-primary-500">
             </div>
 
             <div>
@@ -34,7 +34,7 @@ $currentPage = 'settings';
                     Descrizione
                 </label>
                 <textarea id="description" name="description" rows="2"
-                          class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-amber-500 focus:ring-amber-500"><?= e($project['description'] ?? '') ?></textarea>
+                          class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-primary-500 focus:ring-primary-500"><?= e($project['description'] ?? '') ?></textarea>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
@@ -43,7 +43,7 @@ $currentPage = 'settings';
                         Lingua contenuti
                     </label>
                     <select id="language" name="language"
-                            class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-amber-500 focus:ring-amber-500">
+                            class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-primary-500 focus:ring-primary-500">
                         <option value="it" <?= ($project['language'] ?? 'it') === 'it' ? 'selected' : '' ?>>Italiano</option>
                         <option value="en" <?= ($project['language'] ?? '') === 'en' ? 'selected' : '' ?>>English</option>
                         <option value="es" <?= ($project['language'] ?? '') === 'es' ? 'selected' : '' ?>>Español</option>
@@ -57,7 +57,7 @@ $currentPage = 'settings';
                         SERP Location
                     </label>
                     <select id="location_code" name="location_code"
-                            class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-amber-500 focus:ring-amber-500">
+                            class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-primary-500 focus:ring-primary-500">
                         <option value="IT" <?= ($project['location_code'] ?? 'IT') === 'IT' ? 'selected' : '' ?>>Italia</option>
                         <option value="US" <?= ($project['location_code'] ?? '') === 'US' ? 'selected' : '' ?>>USA</option>
                         <option value="UK" <?= ($project['location_code'] ?? '') === 'UK' ? 'selected' : '' ?>>UK</option>
@@ -70,7 +70,7 @@ $currentPage = 'settings';
 
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
                 <button type="submit"
-                        class="px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-colors">
+                        class="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
                     Salva Modifiche
                 </button>
             </div>
@@ -84,7 +84,7 @@ $currentPage = 'settings';
             </p>
             <form action="<?= url('/ai-optimizer/project/' . $projectId . '/delete') ?>" method="POST"
                   onsubmit="return confirm('Sei sicuro di voler eliminare questo progetto? Questa azione non può essere annullata.');">
-                <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+                <?= csrf_field() ?>
                 <button type="submit"
                         class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors">
                     Elimina Progetto

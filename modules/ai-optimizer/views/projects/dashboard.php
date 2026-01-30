@@ -27,7 +27,7 @@ $currentPage = 'dashboard';
         <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <div class="flex items-center gap-3">
                 <div class="p-2 bg-amber-100 dark:bg-amber-900/50 rounded-lg">
-                    <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg class="w-5 h-5 text-primary-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                 </div>
@@ -72,7 +72,7 @@ $currentPage = 'dashboard';
         <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Articoli Ottimizzati</h3>
             <a href="<?= url('/ai-optimizer/project/' . $projectId . '/optimize') ?>"
-               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition-colors">
+               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -90,7 +90,7 @@ $currentPage = 'dashboard';
             <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">Nessun articolo</h3>
             <p class="text-slate-500 dark:text-slate-400 mb-4">Inizia ottimizzando il tuo primo articolo.</p>
             <a href="<?= url('/ai-optimizer/project/' . $projectId . '/optimize') ?>"
-               class="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors">
+               class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>

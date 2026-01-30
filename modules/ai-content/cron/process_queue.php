@@ -381,6 +381,17 @@ function processQueueItem(array $item, ?int $jobId = null): array
     );
 
     $brief['scraped_sources'] = $scrapedSources;
+
+    // Add internal links pool if available
+    if ($projectId) {
+        $internalLinksPool = new \Modules\AiContent\Models\InternalLinksPool();
+        $internalLinks = $internalLinksPool->getActiveByProject($projectId, 50);
+        if (!empty($internalLinks)) {
+            $brief['internal_links_pool'] = $internalLinks;
+            logMessage("  - Internal links pool: " . count($internalLinks) . " links");
+        }
+    }
+
     $targetWords = $brief['recommended_word_count'] ?? 1500;
     logMessage("  - Brief generated. Target words: {$targetWords}");
 

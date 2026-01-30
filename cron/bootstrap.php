@@ -11,6 +11,9 @@ if (php_sapi_name() !== 'cli') {
     die('Questo script puo essere eseguito solo da CLI');
 }
 
+// Timezone Italia
+date_default_timezone_set('Europe/Rome');
+
 // Definizioni
 define('BASE_PATH', dirname(__DIR__));
 define('ROOT_PATH', BASE_PATH);

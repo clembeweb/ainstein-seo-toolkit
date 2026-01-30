@@ -12,7 +12,7 @@
             <p class="text-slate-500 dark:text-slate-400 mt-1">Ottimizza i tuoi articoli esistenti con l'intelligenza artificiale</p>
         </div>
         <a href="<?= url('/ai-optimizer/projects/create') ?>"
-           class="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-colors">
+           class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -54,7 +54,7 @@
         <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">Nessun progetto</h3>
         <p class="text-slate-500 dark:text-slate-400 mb-6">Crea il tuo primo progetto per iniziare a ottimizzare i tuoi articoli.</p>
         <a href="<?= url('/ai-optimizer/projects/create') ?>"
-           class="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors">
+           class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -65,7 +65,7 @@
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <?php foreach ($projects as $project): ?>
         <a href="<?= url('/ai-optimizer/project/' . $project['id']) ?>"
-           class="block bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md hover:border-amber-300 dark:hover:border-amber-700 transition-all">
+           class="block bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md hover:border-primary-300 dark:hover:border-primary-700 transition-all">
             <div class="flex items-start justify-between mb-3">
                 <div class="flex-1 min-w-0">
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white truncate"><?= e($project['name']) ?></h3>

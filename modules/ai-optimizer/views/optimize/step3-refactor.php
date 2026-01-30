@@ -21,7 +21,7 @@ $analysis = $optimization['analysis_data'] ?? [];
         foreach ($steps as $i => $step):
         ?>
         <div class="flex items-center">
-            <div class="flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium <?= !empty($step['done']) ? 'bg-emerald-500 text-white' : (!empty($step['active']) ? 'bg-amber-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500') ?>">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium <?= !empty($step['done']) ? 'bg-emerald-500 text-white' : (!empty($step['active']) ? 'bg-primary-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500') ?>">
                 <?php if (!empty($step['done'])): ?>
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 <?php else: ?><?= $step['num'] ?><?php endif; ?>
@@ -39,7 +39,7 @@ $analysis = $optimization['analysis_data'] ?? [];
     <div class="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-5">
         <div class="flex items-center gap-6">
             <div class="text-center">
-                <div class="text-4xl font-bold <?= ($optimization['seo_score'] ?? 0) >= 70 ? 'text-green-600' : (($optimization['seo_score'] ?? 0) >= 40 ? 'text-amber-600' : 'text-red-600') ?>">
+                <div class="text-4xl font-bold <?= ($optimization['seo_score'] ?? 0) >= 70 ? 'text-green-600' : (($optimization['seo_score'] ?? 0) >= 40 ? 'text-primary-600' : 'text-red-600') ?>">
                     <?= $optimization['seo_score'] ?? 0 ?>/100
                 </div>
                 <p class="text-xs text-slate-500 mt-1">Score SEO</p>
@@ -83,13 +83,13 @@ $analysis = $optimization['analysis_data'] ?? [];
             <div>
                 <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Target Parole</label>
                 <input type="number" x-model="targetWordCount"
-                       class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-amber-500 focus:ring-amber-500"
+                       class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-primary-500 focus:ring-primary-500"
                        placeholder="<?= $analysis['content']['recommended_word_count'] ?? 1500 ?>">
                 <p class="text-xs text-slate-500 mt-1">Consigliato: <?= $analysis['content']['recommended_word_count'] ?? 1500 ?></p>
             </div>
             <div>
                 <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tono</label>
-                <select x-model="tone" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-amber-500 focus:ring-amber-500">
+                <select x-model="tone" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-primary-500 focus:ring-primary-500">
                     <option value="professionale">Professionale</option>
                     <option value="informale">Informale</option>
                     <option value="tecnico">Tecnico</option>
@@ -99,17 +99,17 @@ $analysis = $optimization['analysis_data'] ?? [];
         </div>
 
         <div class="flex items-center gap-2 mb-6">
-            <input type="checkbox" id="keepStructure" x-model="keepStructure" class="rounded border-slate-300 text-amber-600 focus:ring-amber-500">
+            <input type="checkbox" id="keepStructure" x-model="keepStructure" class="rounded border-slate-300 text-primary-600 focus:ring-primary-500">
             <label for="keepStructure" class="text-sm text-slate-700 dark:text-slate-300">Mantieni struttura originale (espandi ma non riorganizzare)</label>
         </div>
 
         <div class="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-700">
             <div class="text-sm text-slate-500">
-                Costo: <span class="font-semibold text-amber-600"><?= $creditCost ?></span> crediti
+                Costo: <span class="font-semibold text-primary-600"><?= $creditCost ?></span> crediti
                 (hai <?= $userCredits ?>)
             </div>
             <button @click="runRefactor()" :disabled="refactoring || <?= $userCredits < $creditCost ? 'true' : 'false' ?>"
-                    class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                 </svg>
