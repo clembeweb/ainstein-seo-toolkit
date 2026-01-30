@@ -39,19 +39,33 @@ class Database
             self::$config['charset'] ?? 'utf8mb4'
         );
 
+        // Determina timezone per MySQL (sincronizza con PHP)
+        $phpTimezone = date_default_timezone_get();
+        $mysqlTimezone = '+00:00'; // Default UTC
+        if ($phpTimezone === 'Europe/Rome') {
+            // Italia: +01:00 (inverno) o +02:00 (estate/DST)
+            $mysqlTimezone = date('P'); // Ritorna offset corrente es. "+01:00"
+        }
+
         $options = [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => false,
-            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
+            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci, time_zone = '{$mysqlTimezone}'"
         ];
 
-        self::$pdo = new PDO(
-            $dsn,
-            self::$config['username'],
-            self::$config['password'],
-            $options
-        );
+        try {
+            self::$pdo = new PDO(
+                $dsn,
+                self::$config['username'],
+                self::$config['password'],
+                $options
+            );
+            error_log("Database::connect() PDO created successfully");
+        } catch (\Exception $e) {
+            error_log("Database::connect() PDO FAILED: " . $e->getMessage());
+            throw $e;
+        }
     }
 
     /**
@@ -59,8 +73,15 @@ class Database
      */
     public static function reconnect(): void
     {
+        error_log("Database::reconnect() called");
         self::$pdo = null;
-        self::connect();
+        try {
+            self::connect();
+            error_log("Database::reconnect() successful");
+        } catch (\Exception $e) {
+            error_log("Database::reconnect() FAILED: " . $e->getMessage());
+            throw $e;
+        }
     }
 
     /**
@@ -89,10 +110,22 @@ class Database
 
         // Error 2006: MySQL server has gone away
         // Error 2013: Lost connection to MySQL server
-        // HY000: General error
-        return ($code == 2006 || $code == 2013 ||
-                strpos($msg, 'server has gone away') !== false ||
-                strpos($msg, 'Lost connection') !== false);
+        // HY000: General error (with gone away in message)
+        $isGoneAway = (
+            $code === 2006 || $code === '2006' ||
+            $code === 2013 || $code === '2013' ||
+            $code === 'HY000' ||
+            stripos($msg, 'server has gone away') !== false ||
+            stripos($msg, 'Lost connection') !== false ||
+            stripos($msg, 'gone away') !== false
+        );
+
+        // Log per debug
+        if ($isGoneAway) {
+            error_log("Database isGoneAway detected: code={$code}, msg={$msg}");
+        }
+
+        return $isGoneAway;
     }
 
     /**
@@ -180,11 +213,23 @@ class Database
                 return (int) $pdo->lastInsertId();
             } catch (PDOException $e) {
                 $lastException = $e;
+                error_log("Database INSERT failed attempt " . ($attempt + 1) . ": " . $e->getMessage());
                 if (self::isGoneAway($e) && $attempt < self::$maxRetries) {
-                    error_log("Database reconnect on INSERT attempt " . ($attempt + 1));
-                    self::reconnect();
+                    error_log("Database reconnect on INSERT attempt " . ($attempt + 1) . " - sleeping 1s before retry");
+                    sleep(1); // 1 secondo delay before reconnect
+                    try {
+                        self::reconnect();
+                        // Warm up the connection
+                        self::$pdo->query('SELECT 1');
+                        error_log("Database reconnect successful, connection verified");
+                    } catch (\Exception $reconnectError) {
+                        error_log("Database reconnect FAILED: " . $reconnectError->getMessage());
+                        sleep(2); // Wait longer and try again
+                        self::reconnect();
+                    }
                     continue;
                 }
+                error_log("Database INSERT giving up after attempt " . ($attempt + 1));
                 throw $e;
             }
         }
