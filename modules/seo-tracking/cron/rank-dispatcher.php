@@ -6,8 +6,7 @@
  * Elabora direttamente le keyword senza usare exec/popen
  * (compatibile con hosting condiviso come SiteGround)
  *
- * Crontab (run every 5 minutes):
- *   */5 * * * * php /path/to/modules/seo-tracking/cron/rank-dispatcher.php
+ * Crontab: ogni 5 minuti
  *
  * Settings (da /admin/modules/{id}/settings - modules.settings JSON):
  * - rank_auto_enabled: true/false per attivare
