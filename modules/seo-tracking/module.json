@@ -126,6 +126,33 @@
             "min": 0,
             "step": 0.1,
             "admin_only": true
+        },
+        "rank_auto_enabled": {
+            "type": "checkbox",
+            "label": "Abilita Auto Rank Check",
+            "description": "Verifica automatica posizioni SERP per tutte le keyword tracciate",
+            "default": false,
+            "admin_only": true
+        },
+        "rank_auto_days": {
+            "type": "select",
+            "label": "Frequenza Aggiornamento",
+            "description": "Giorni della settimana per la verifica automatica",
+            "default": "mon_thu",
+            "admin_only": true,
+            "options": [
+                {"value": "mon_thu", "label": "2 volte/settimana (Lun e Gio)"},
+                {"value": "mon_wed_fri", "label": "3 volte/settimana (Lun, Mer, Ven)"},
+                {"value": "daily", "label": "Ogni giorno"},
+                {"value": "weekly", "label": "1 volta/settimana (Lunedi)"}
+            ]
+        },
+        "rank_auto_time": {
+            "type": "text",
+            "label": "Orario Esecuzione",
+            "description": "Orario di esecuzione (formato HH:MM, es. 04:00)",
+            "default": "04:00",
+            "admin_only": true
         }
     },
     "routes_prefix": "/seo-tracking"

@@ -678,3 +678,4 @@ Router::get('/seo-tracking/cron/status', function () {
 Router::get('/seo-tracking/cron/sync-project', function () {
     return (new CronController())->syncProject();
 });
+
