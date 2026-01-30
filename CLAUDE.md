@@ -1,7 +1,7 @@
 # AINSTEIN - Istruzioni Claude Code
 
 > Questo file viene caricato automaticamente ad ogni sessione.
-> Ultimo aggiornamento: 2026-01-29
+> Ultimo aggiornamento: 2026-01-30
 
 ---
 
@@ -33,6 +33,7 @@
 9. ai-content è il reference         → Copia pattern da lì
 10. Database::reconnect()            → Prima di salvare dopo AI call
 11. OAuth GSC pattern seo-tracking   → GoogleOAuthService centralizzato
+12. Scraping SEMPRE con Readability  → ScraperService::scrape() per tutto
 ```
 
 ---
@@ -73,7 +74,7 @@ seo-toolkit/
 ├── core/                    # Framework (Router, Database, Auth, Credits)
 ├── services/                # Servizi CONDIVISI
 │   ├── AiService.php        # Claude API - USARE SEMPRE
-│   ├── ScraperService.php   # HTTP + DOM
+│   ├── ScraperService.php   # Scraping con Readability - USARE SEMPRE
 │   ├── GoogleOAuthService.php
 │   ├── SitemapService.php
 │   ├── CsvImportService.php
@@ -122,6 +123,34 @@ php -l path/to/file.php
 ```bash
 mysql -u root seo_toolkit -e "SHOW TABLES;"
 ```
+
+---
+
+## TEST LOCALE
+
+### Credenziali Test
+```
+URL Base: http://localhost/seo-toolkit
+Email: admin@seo-toolkit.local
+Password: admin123
+```
+
+### Test con cURL (da terminale)
+```bash
+# 1. Login e salva cookie
+curl -c cookies.txt -b cookies.txt "http://localhost/seo-toolkit/login" -s | grep -oP 'name="csrf_token"\s+value="\K[^"]+'
+# Usa il token ottenuto:
+curl -c cookies.txt -b cookies.txt -X POST "http://localhost/seo-toolkit/login" -d "email=admin@seo-toolkit.local&password=admin123&csrf_token=TOKEN_QUI"
+
+# 2. Test pagine autenticate
+curl -b cookies.txt "http://localhost/seo-toolkit/ai-content" -s -o /dev/null -w "%{http_code}"
+```
+
+### Pagine da Testare (Meta Tags)
+- Dashboard: `/ai-content/projects/{id}/meta-tags`
+- Import: `/ai-content/projects/{id}/meta-tags/import`
+- Lista: `/ai-content/projects/{id}/meta-tags/list`
+- Preview: `/ai-content/projects/{id}/meta-tags/{tagId}/preview`
 
 ---
 
@@ -184,6 +213,25 @@ if (!Credits::hasEnough($userId, $cost)) {
 Credits::consume($userId, $cost, 'operazione', 'nome-modulo');
 ```
 
+### Scraping Contenuti Web
+```php
+use Services\ScraperService;
+
+$scraper = new ScraperService();
+$result = $scraper->scrape($url);  // USA SEMPRE scrape()
+
+if ($result['success']) {
+    $title = $result['title'];
+    $content = $result['content'];          // Testo pulito via Readability
+    $headings = $result['headings'];        // Array struttura H1-H6
+    $wordCount = $result['word_count'];
+    $internalLinks = $result['internal_links']; // Link interni estratti
+}
+
+// MAI usare DOMDocument/XPath diretto per estrarre contenuti!
+// MAI creare servizi di scraping custom per modulo!
+```
+
 ---
 
 ## ICONE HEROICONS (più usate)
@@ -231,13 +279,14 @@ Credits::consume($userId, $cost, 'operazione', 'nome-modulo');
 
 ```
 [ ] Nessun curl diretto per API AI
-[ ] Nessuna icona Lucide/FontAwesome  
+[ ] Nessuna icona Lucide/FontAwesome
 [ ] Tutti i testi UI in italiano
 [ ] Tabelle con prefisso modulo corretto
 [ ] Nessuna API key in file
 [ ] Query SQL con prepared statements
 [ ] CSRF token su form POST
 [ ] Database::reconnect() dopo chiamate lunghe
+[ ] Scraping usa ScraperService::scrape()
 [ ] php -l su file modificati
 ```
 
@@ -263,6 +312,7 @@ Credits::consume($userId, $cost, 'operazione', 'nome-modulo');
 | Icone non visibili | Lucide invece di Heroicons | Sostituisci con SVG |
 | Crediti non scalano | `Credits::consume()` mancante | Aggiungi dopo operazione |
 | "Database is limited" | Limite SiteGround temporaneo | Attendi qualche minuto e riprova |
+| Scraping poche parole | CSS selectors invece di Readability | Usa `ScraperService::scrape()` |
 
 ---
 

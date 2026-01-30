@@ -16,6 +16,11 @@ define('BASE_PATH', dirname(__DIR__));
 define('ROOT_PATH', BASE_PATH);  // Alias per compatibilità
 define('DEBUG', true);
 
+// Carica Composer autoloader (per librerie esterne come Readability)
+if (file_exists(BASE_PATH . '/vendor/autoload.php')) {
+    require_once BASE_PATH . '/vendor/autoload.php';
+}
+
 // Autoloader semplice
 spl_autoload_register(function ($class) {
     $paths = [

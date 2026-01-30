@@ -1,6 +1,6 @@
 # AINSTEIN - Stato Progetto
 
-**Ultimo aggiornamento:** 2026-01-29
+**Ultimo aggiornamento:** 2026-01-30
 **Ambiente produzione:** https://ainstein.it
 **Repository:** https://github.com/clembeweb/ainstein-seo-toolkit.git
 
@@ -73,6 +73,14 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 
 ## COMPLETATI RECENTEMENTE
 
+### 2026-01-30
+- [x] Integrazione Mozilla Readability in ScraperService per estrazione contenuti intelligente
+- [x] Migrato ai-content CRON (process_queue.php) a ScraperService::scrape() con Readability
+- [x] Aggiunta estrazione link interni automatica in ScraperService
+- [x] Nuova Golden Rule #12: "Scraping SEMPRE con Readability"
+- [x] Aggiornata documentazione (CLAUDE.md, GOLDEN-RULES.md)
+- [x] Fix scraping contenuti: da ~10 parole a centinaia (siti Elementor e strutture complesse)
+
 ### 2026-01-29
 - [x] Refactoring sistema scheduling AUTO mode: da globale a per-keyword (ai-content)
 - [x] Nuova UI inline editing per data/ora e fonti in vista Coda (ai-content)
@@ -126,7 +134,7 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 | Servizio | Descrizione | Usato da |
 |----------|-------------|----------|
 | `AiService.php` | Multi-provider AI + logging | Tutti |
-| `ScraperService.php` | HTTP client + DOM parser | ai-content, seo-audit, internal-links |
+| `ScraperService.php` | HTTP client + Readability (estrazione contenuti intelligente) | ai-content, ai-optimizer, seo-audit, internal-links |
 | `GoogleOAuthService.php` | OAuth2 centralizzato | seo-audit, seo-tracking |
 | `SitemapService.php` | Parser sitemap/robots.txt | seo-audit, internal-links |
 | `ExportService.php` | Export CSV/PDF | seo-audit, ads-analyzer |
@@ -164,9 +172,9 @@ ainstein-seo-toolkit/
 
 | Aspetto | Dettaglio |
 |---------|-----------|
-| **Data** | 2026-01-29 |
-| **Modifiche principali** | Refactoring scheduling AUTO mode da globale a per-keyword, inline editing coda, UI real-time |
-| **Bug fix** | CSRF token validation AJAX, Alpine.js reactive display |
+| **Data** | 2026-01-30 |
+| **Modifiche principali** | Integrazione Mozilla Readability per scraping intelligente, Golden Rule #12 |
+| **Bug fix** | Scraping contenuti siti Elementor e strutture HTML complesse |
 
 ---
 
@@ -224,4 +232,4 @@ ssh -i ~/.ssh/siteground_key -p 18765 u1608-ykgnd3z1twn4@ssh.ainstein.it
 
 ---
 
-*Documento aggiornato - 2026-01-29*
+*Documento aggiornato - 2026-01-30*

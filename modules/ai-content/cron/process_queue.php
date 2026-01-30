@@ -33,9 +33,9 @@ use Modules\AiContent\Models\Source;
 use Modules\AiContent\Models\AutoConfig;
 use Modules\AiContent\Models\ProcessJob;
 use Modules\AiContent\Services\SerpApiService;
-use Modules\AiContent\Services\ContentScraperService;
 use Modules\AiContent\Services\BriefBuilderService;
 use Modules\AiContent\Services\ArticleGeneratorService;
+use Services\ScraperService;
 
 // Configuration
 define('DEFAULT_MAX_ITEMS', 3);
@@ -333,24 +333,25 @@ function processQueueItem(array $item, ?int $jobId = null): array
     $selectedSources = array_slice($serpData['organic'], 0, $sourcesCount);
     $scrapedSources = [];
 
-    logMessage("  - Scraping top {$sourcesCount} sources");
+    logMessage("  - Scraping top {$sourcesCount} sources (using Readability)");
 
-    $scraperService = new ContentScraperService();
+    $scraperService = new ScraperService();
     foreach ($selectedSources as $source) {
         // Check cancellation
         if ($jobId && isJobCancelled($jobId)) {
             return ['success' => false, 'error' => 'Job cancelled'];
         }
 
-        $scrapeResult = $scraperService->extractContent($source['url'], $userId);
+        $scrapeResult = $scraperService->scrape($source['url']);
 
         if ($scrapeResult['success']) {
             $scrapedSources[] = [
                 'url' => $source['url'],
                 'title' => $scrapeResult['title'] ?? $source['title'],
                 'content' => $scrapeResult['content'],
-                'headings' => $scrapeResult['headings'],
-                'word_count' => $scrapeResult['word_count']
+                'headings' => $scrapeResult['headings'] ?? [],
+                'word_count' => $scrapeResult['word_count'],
+                'internal_links' => $scrapeResult['internal_links'] ?? []
             ];
             logMessage("    - Scraped: {$source['url']} ({$scrapeResult['word_count']} words)");
         } else {

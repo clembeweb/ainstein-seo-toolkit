@@ -236,6 +236,63 @@ CREATE TABLE st_gsc_connections (
 
 ---
 
+## 1️⃣2️⃣ Scraping: SEMPRE ScraperService + Readability
+
+**Per qualsiasi operazione di scraping contenuti web, usare SEMPRE `ScraperService::scrape()`:**
+
+```php
+// ✅ CORRETTO - Usa ScraperService con Readability
+use Services\ScraperService;
+
+$scraper = new ScraperService();
+$result = $scraper->scrape($url);
+
+if ($result['success']) {
+    $title = $result['title'];
+    $content = $result['content'];      // Testo pulito (Readability)
+    $headings = $result['headings'];    // Array H1-H6
+    $wordCount = $result['word_count'];
+    $internalLinks = $result['internal_links']; // Link interni con anchor text
+}
+
+// ❌ VIETATO - Scraping custom o CSS selectors manuali
+$dom = new DOMDocument();
+$dom->loadHTML($html);
+$content = $xpath->query('//article')->item(0)->textContent;
+```
+
+**Perché:**
+- Mozilla Readability estrae intelligentemente il contenuto principale
+- Gestisce siti Elementor, WordPress, e qualsiasi struttura HTML
+- Include estrazione automatica di heading e link interni
+- Fallback robusto se Readability fallisce
+- Risultati consistenti su tutti i moduli
+
+**Moduli che usano ScraperService:**
+| Modulo | Controller/Script | Metodo |
+|--------|-------------------|--------|
+| ai-content | WizardController | `scrape()` |
+| ai-content | AutoController | `scrape()` |
+| ai-content | process_queue.php | `scrape()` |
+| ai-content | dispatcher.php | `scrape()` |
+| ai-optimizer | ArticleAnalyzerService | `scrape()` |
+| seo-audit | Crawler | `scrape()` |
+
+**Output standard ScraperService::scrape():**
+```php
+[
+    'success' => bool,
+    'title' => string,
+    'content' => string,        // Testo pulito senza HTML
+    'html' => string,           // HTML del contenuto principale
+    'headings' => array,        // ['h1' => [...], 'h2' => [...], ...]
+    'word_count' => int,
+    'internal_links' => array   // [['url' => ..., 'anchor' => ..., 'context' => ...], ...]
+]
+```
+
+---
+
 ## 📋 CHECKLIST PRE-COMMIT
 
 Prima di ogni commit, verifica:
@@ -249,6 +306,7 @@ Prima di ogni commit, verifica:
 - [ ] Query SQL con prepared statements
 - [ ] CSRF token su form POST
 - [ ] `Database::reconnect()` dopo chiamate lunghe
+- [ ] Scraping usa `ScraperService::scrape()` con Readability
 
 ---
 
@@ -260,6 +318,7 @@ Prima di ogni commit, verifica:
 | Curl diretto | `grep -r "curl_init.*anthropic" modules/` | Usare AiService |
 | Testi inglese | Review manuale views | Tradurre in italiano |
 | SQL injection | `grep -r "query\(.*\$" modules/` | Usare prepare() |
+| Scraping custom | `grep -r "DOMDocument\|loadHTML" modules/` | Usare ScraperService::scrape() |
 
 ---
 
