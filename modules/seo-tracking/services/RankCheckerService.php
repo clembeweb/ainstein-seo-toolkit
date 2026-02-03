@@ -302,14 +302,11 @@ class RankCheckerService
 
             $data = json_decode($response, true);
 
-            // Log API call (solo prima pagina o in caso di errore)
-            if ($page === 1 || $error || $httpCode !== 200) {
-                ApiLoggerService::log('serper', '/search', $payload, $data, $httpCode, $startTime, [
-                    'module' => 'seo-tracking',
-                    'context' => "keyword={$keyword}, page={$page}",
-                    'error' => $error ?: null,
-                ]);
-            }
+            // Log API call (prima pagina, errori, o quando troviamo il target)
+            $shouldLog = ($page === 1 || $error || $httpCode !== 200);
+
+            // Log anche quando troviamo il target (aggiungeremo dopo il check)
+            $foundOnThisPage = false;
 
             if ($error) {
                 throw new \Exception('Errore Serper.dev: ' . $error);
@@ -338,10 +335,28 @@ class RankCheckerService
                 $resultDomain = $this->normalizeDomain(parse_url($result['link'] ?? '', PHP_URL_HOST) ?? '');
                 if ($resultDomain === $targetDomain ||
                     str_ends_with(strtolower($resultDomain), '.' . strtolower($targetDomain))) {
-                    // Trovato! Aggiungi i risultati e esci
+                    // Trovato! Log questo evento importante
+                    $foundOnThisPage = true;
+                    $foundPosition = $result['position'];
+
+                    // Log quando troviamo il target (anche se non è prima pagina)
+                    ApiLoggerService::log('serper', '/search', $payload, $data, $httpCode, $startTime, [
+                        'module' => 'seo-tracking',
+                        'context' => "keyword={$keyword}, page={$page}, FOUND at position {$foundPosition}, target={$targetDomain}",
+                    ]);
+
                     $allOrganicResults = array_merge($allOrganicResults, $pageResults);
                     break 2; // Esci da entrambi i loop
                 }
+            }
+
+            // Log prima pagina o errori (se non già loggato per target trovato)
+            if ($shouldLog && !$foundOnThisPage) {
+                ApiLoggerService::log('serper', '/search', $payload, $data, $httpCode, $startTime, [
+                    'module' => 'seo-tracking',
+                    'context' => "keyword={$keyword}, page={$page}, searching for {$targetDomain}",
+                    'error' => $error ?: null,
+                ]);
             }
 
             $allOrganicResults = array_merge($allOrganicResults, $pageResults);
@@ -394,7 +409,11 @@ class RankCheckerService
 
         // Cerca il dominio target nei risultati
         $result = $this->findDomainInResults($normalizedResults, $targetDomain);
-        error_log("[RankChecker DEBUG] findDomainInResults returned found: " . ($result['found'] ? 'YES' : 'NO'));
+
+        // Log riepilogativo (solo se non trovato durante paginazione - altrimenti già loggato)
+        if (!$result['found']) {
+            error_log("[RankChecker Serper] NOT FOUND: keyword='{$keyword}', target='{$targetDomain}', searched {$totalApiCalls} pages ({$totalApiCalls}0 results)");
+        }
 
         return [
             'found' => $result['found'],
@@ -409,6 +428,7 @@ class RankCheckerService
             'location_code' => $location['country_code'],
             'language' => $location['language_code'],
             'device' => $device,
+            'pages_searched' => $totalApiCalls,
         ];
     }
 
@@ -460,15 +480,19 @@ class RankCheckerService
 
             $data = $response['data'] ?? [];
 
-            // Log API call (solo prima pagina o in caso di errore)
-            if ($page === 0 || isset($response['error']) || isset($data['error'])) {
-                // Rimuovi api_key dal log per sicurezza
-                $logParams = $params;
-                $logParams['api_key'] = '[REDACTED]';
+            // Prepara params per logging (senza API key)
+            $logParams = $params;
+            $logParams['api_key'] = '[REDACTED]';
 
+            // Flag per tracking se troviamo il target
+            $shouldLog = ($page === 0 || isset($response['error']) || isset($data['error']));
+            $foundOnThisPage = false;
+
+            // Log prima pagina o errori
+            if ($shouldLog) {
                 ApiLoggerService::log('serpapi', '/search.json', $logParams, $data, $response['http_code'] ?? 200, $startTime, [
                     'module' => 'seo-tracking',
-                    'context' => "keyword={$keyword}, page={$page}",
+                    'context' => "keyword={$keyword}, page={$page}, searching for {$targetDomain}",
                     'error' => $response['error'] ?? ($data['error'] ?? null),
                 ]);
             }
@@ -500,7 +524,16 @@ class RankCheckerService
                 $resultDomain = $this->normalizeDomain(parse_url($result['link'] ?? '', PHP_URL_HOST) ?? '');
                 if ($resultDomain === $targetDomain ||
                     str_ends_with(strtolower($resultDomain), '.' . strtolower($targetDomain))) {
-                    // Trovato! Aggiungi i risultati e esci
+                    // Trovato! Log questo evento importante (se non già loggato)
+                    $foundPosition = $result['position'];
+
+                    if (!$shouldLog) {
+                        ApiLoggerService::log('serpapi', '/search.json', $logParams, $data, $response['http_code'] ?? 200, $startTime, [
+                            'module' => 'seo-tracking',
+                            'context' => "keyword={$keyword}, page={$page}, FOUND at position {$foundPosition}, target={$targetDomain}",
+                        ]);
+                    }
+
                     $allOrganicResults = array_merge($allOrganicResults, $pageResults);
                     break 2; // Esci da entrambi i loop
                 }
