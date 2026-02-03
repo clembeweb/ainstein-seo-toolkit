@@ -47,7 +47,7 @@
 | SEO Audit | `seo-audit` | `sa_` | 100% | Action Plan AI completato |
 | Google Ads Analyzer | `ads-analyzer` | `ga_` | 100% | Completo |
 | Internal Links | `internal-links` | `il_` | 85% | Manca AI Suggester |
-| SEO Tracking | `seo-tracking` | `st_` | 90% | GA4 rimosso, Rank Check, Page Analyzer, Position Compare |
+| SEO Tracking | `seo-tracking` | `st_` | 95% | Rank Check (SSE jobs), Page Analyzer, Quick Wins, Weekly AI Digest |
 | Content Creator | `content-creator` | `cc_` | 0% | Da implementare |
 
 ---

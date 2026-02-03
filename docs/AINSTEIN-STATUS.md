@@ -1,6 +1,6 @@
 # AINSTEIN - Stato Progetto
 
-**Ultimo aggiornamento:** 2026-01-30
+**Ultimo aggiornamento:** 2026-02-03
 **Ambiente produzione:** https://ainstein.it
 **Repository:** https://github.com/clembeweb/ainstein-seo-toolkit.git
 
@@ -32,7 +32,7 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 
 ---
 
-## STATO MODULI (Aggiornato 29 Gen 2026)
+## STATO MODULI (Aggiornato 03 Feb 2026)
 
 | Modulo | Slug | Stato Base | Stato AI | % Totale |
 |--------|------|------------|----------|----------|
@@ -40,7 +40,7 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 | SEO Audit | `seo-audit` | ✅ 100% | ✅ Completa | **100%** |
 | Google Ads Analyzer | `ads-analyzer` | ✅ 100% | ✅ Completa | **100%** |
 | Internal Links Analyzer | `internal-links` | ✅ 85% | ❌ Mancante | **75%** |
-| SEO Position Tracking | `seo-tracking` | ✅ 90% | ⚠️ Parziale | **90%** |
+| SEO Position Tracking | `seo-tracking` | ✅ 95% | ✅ Completa | **95%** |
 | AI Content Bulk Creator | `content-creator` | ❌ 0% | ❌ | **0%** |
 
 ### Legenda Stato AI
@@ -62,16 +62,29 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 
 | Modulo | Feature Mancante | Impatto |
 |--------|------------------|---------|
-| **seo-tracking** | Weekly AI Digest | Alto |
+| **seo-tracking** | Alert backend + Email notifiche | Medio |
+| **seo-tracking** | Monthly executive report | Basso |
 | **content-creator** | MVP completo | Medio |
 
-> **Nota:** Quick Wins Finder è stato implementato (2026-01-28)
+> **Nota:** Quick Wins Finder ✅ (2026-01-28), Weekly AI Digest ✅ (2026-02-03)
 
 📄 Dettagli: [ROADMAP.md](./ROADMAP.md)
 
 ---
 
 ## COMPLETATI RECENTEMENTE
+
+### 2026-02-03
+- [x] **Rank Check con Job in Background** (SSE streaming real-time)
+- [x] **DataForSeoService** integrato per verifica posizioni SERP
+- [x] **RankJob + RankQueue models** per gestione job asincroni
+- [x] **RankCheckController** con pattern SSE (start/stream/status/cancel)
+- [x] **Import keyword da GSC** con selezione e assegnazione gruppi
+- [x] **Cron dispatchers** per GSC sync e AI reports automatici
+- [x] **Admin settings** per configurazione cron rank/gsc/ai
+- [x] **Weekly AI Digest** completamente funzionante (cron admin-configured)
+- [x] Migrazione `012_rank_jobs.sql` deployata in produzione
+- [x] Documentazione CLAUDE.md aggiornata con pattern Background Jobs
 
 ### 2026-01-30
 - [x] Integrazione Mozilla Readability in ScraperService per estrazione contenuti intelligente
@@ -172,9 +185,10 @@ ainstein-seo-toolkit/
 
 | Aspetto | Dettaglio |
 |---------|-----------|
-| **Data** | 2026-01-30 |
-| **Modifiche principali** | Integrazione Mozilla Readability per scraping intelligente, Golden Rule #12 |
-| **Bug fix** | Scraping contenuti siti Elementor e strutture HTML complesse |
+| **Data** | 2026-02-03 |
+| **Modifiche principali** | Rank Check con job in background (SSE), DataForSeoService, cron dispatchers, admin settings |
+| **Migration** | `012_rank_jobs.sql` - tabelle st_rank_jobs, st_rank_queue, st_rank_checks |
+| **File nuovi** | RankJob.php, RankQueue.php, gsc-sync-dispatcher.php, ai-report-dispatcher.php |
 
 ---
 
@@ -183,12 +197,12 @@ ainstein-seo-toolkit/
 ### Immediati (questa settimana)
 1. Definire prompt per AI Link Suggester
 2. Test beta con 2-3 utenti
-3. Ottimizzare Rank Check con bulk requests
+3. Completare Alert backend (seo-tracking)
 
 ### Breve termine (2-3 settimane)
 1. Rilascio AI Link Suggester (internal-links)
-2. Weekly AI Digest (seo-tracking)
-3. Quick Wins Finder
+2. Email notifiche per alert (seo-tracking)
+3. Monthly executive report (seo-tracking)
 
 ### Medio termine (1 mese)
 1. Content Creator MVP
@@ -232,4 +246,4 @@ ssh -i ~/.ssh/siteground_key -p 18765 u1608-ykgnd3z1twn4@ssh.ainstein.it
 
 ---
 
-*Documento aggiornato - 2026-01-30*
+*Documento aggiornato - 2026-02-03*

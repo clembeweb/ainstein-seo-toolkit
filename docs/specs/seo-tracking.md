@@ -6,7 +6,7 @@
 |---------|-----------|
 | **Slug** | `seo-tracking` |
 | **Prefisso DB** | `st_` |
-| **Files** | 57 |
+| **Files** | 62 |
 | **Stato** | ✅ Attivo (95%) |
 | **Ultimo update** | 2026-02-03 |
 
@@ -43,12 +43,15 @@ modules/seo-tracking/
 │   ├── GscConnection.php
 │   ├── GscData.php
 │   ├── Location.php               # Locations per rank check
+│   ├── RankJob.php                # Job tracking per rank check (SSE)
+│   ├── RankQueue.php              # Queue keyword per rank check
 │   ├── Alert.php
 │   └── AiReport.php
 ├── services/
 │   ├── GscService.php             # OAuth GSC + sync metriche
 │   ├── GroupStatsService.php      # Statistiche gruppi
 │   ├── PositionCompareService.php # Confronto posizioni
+│   ├── RankCheckerService.php     # Orchestratore rank check con SSE
 │   ├── KeywordMatcher.php
 │   ├── AlertService.php
 │   └── AiReportService.php        # Report AI (weekly, monthly)
@@ -88,6 +91,11 @@ st_keyword_group_members -- Relazione M:N keyword-gruppo
 st_keyword_positions     -- Snapshot giornalieri (da Rank Check)
 st_gsc_data              -- Dati storici GSC
 
+-- Rank Check (Background Jobs)
+st_rank_jobs             -- Job tracking (pending/running/completed/cancelled)
+st_rank_queue            -- Queue keyword per job
+st_rank_checks           -- Risultati rank check
+
 -- Alert system
 st_alert_settings        -- Config alert
 st_alerts                -- Log alert
@@ -108,7 +116,8 @@ st_sync_log              -- Log sync
 - [x] **Position Compare** (confronto posizioni tra periodi - stile SEMrush)
 - [x] **SEO Page Analyzer** (analisi AI singola pagina con suggerimenti)
 - [x] **Quick Wins Finder** (keyword pos 11-20 facili da spingere)
-- [x] **Rank Check** via DataForSEO API (cron automatico admin-configured)
+- [x] **Rank Check manuale** via DataForSEO API con job in background (SSE streaming)
+- [x] **Rank Check automatico** (cron admin-configured)
 - [x] **Locations** gestione location per rank check
 - [x] OAuth GSC completo e funzionante
 - [x] Redirect URI dinamico (multi-dominio)
@@ -119,6 +128,7 @@ st_sync_log              -- Log sync
 - [x] Views dashboard
 - [x] Views keyword detail
 - [x] Schema DB allineato al codice
+- [x] **Import keyword da GSC** con selezione e assegnazione gruppi
 
 ### 🔄 In Corso
 - [ ] Alert UI funzionante (UI presente, backend da completare)
@@ -175,8 +185,12 @@ POST /seo-tracking/projects/{id}/ai/analyze-page      # AJAX analisi AI
 // Quick Wins (NEW)
 GET  /seo-tracking/projects/{id}/ai/quick-wins        # Lista opportunità
 
-// Rank Check (NEW)
-POST /seo-tracking/projects/{id}/keywords/{kwId}/check # Check posizione via DataForSEO
+// Rank Check (Background Jobs + SSE)
+GET  /seo-tracking/projects/{id}/rank-check            # Vista rank check
+POST /seo-tracking/projects/{id}/rank-check/start      # Avvia job rank check
+GET  /seo-tracking/projects/{id}/rank-check/stream     # SSE streaming progress
+GET  /seo-tracking/projects/{id}/rank-check/status     # Polling fallback status
+POST /seo-tracking/projects/{id}/rank-check/cancel     # Annulla job
 
 // Locations (NEW)
 GET  /seo-tracking/projects/{id}/locations            # Gestione locations
@@ -216,23 +230,95 @@ POST /seo-tracking/projects/{id}/gsc/sync             # Sync dati
 | `migrations/001_keyword_groups.sql` | ✅ Tabelle Keyword Groups |
 | `migrations/003_add_search_volume.sql` | ✅ Colonna search_volume + indici |
 | `migrations/004_locations.sql` | ✅ Tabella st_locations per rank check |
+| `migrations/012_rank_jobs.sql` | ✅ Tabelle st_rank_jobs, st_rank_queue, st_rank_checks |
 
 ---
 
-## Prossimi Step
+## Prossimi Step / TODO
 
-1. **Configurare redirect URI** in Google Cloud Console:
-   `https://ainstein.it/oauth/google/callback`
+### 🔄 Alert Backend (Priorità: MEDIA)
 
-2. **Test OAuth GSC**:
-   - Login → Nuovo progetto → Connetti GSC
-   - Verificare callback e salvataggio token
-   - Verificare lista proprietà
+**Stato attuale:** UI presente in `views/alerts/`, backend parziale in `AlertController.php` e `AlertService.php`.
 
-3. **Test GA4**:
-   - Upload JSON Service Account
-   - Verificare connessione
-   - Test sync dati
+**Da completare:**
+1. **AlertService.php** - Implementare metodi:
+   ```php
+   public function checkAlerts(int $projectId): array    // Verifica condizioni alert
+   public function triggerAlert(int $alertId, array $data): void  // Scatta alert
+   public function getActiveAlerts(int $projectId): array  // Lista alert attivi
+   ```
+
+2. **AlertController.php** - Completare endpoints:
+   - `POST /projects/{id}/alerts` - Crea alert
+   - `PUT /projects/{id}/alerts/{alertId}` - Modifica alert
+   - `DELETE /projects/{id}/alerts/{alertId}` - Elimina alert
+   - `POST /projects/{id}/alerts/{alertId}/test` - Test alert
+
+3. **Tipi di alert da supportare:**
+   - Posizione scende sotto soglia (es: keyword esce da top 10)
+   - Posizione sale sopra soglia (es: keyword entra in top 3)
+   - Variazione percentuale (es: -20% click settimana)
+   - Keyword perde/guadagna posizioni
+
+4. **Tabelle DB già presenti:**
+   - `st_alert_settings` - Configurazione alert
+   - `st_alerts` - Log alert scattati
+
+---
+
+### ❌ Email Notifiche Alert (Priorità: MEDIA)
+
+**Dipende da:** Alert Backend completato
+
+**Da implementare:**
+1. Creare `services/EmailService.php` (se non esiste) o usare esistente
+2. Template email in `views/emails/alert-notification.php`
+3. Integrare in `AlertService::triggerAlert()`:
+   ```php
+   if ($alert['notify_email']) {
+       $emailService->sendAlertNotification($project, $alert, $data);
+   }
+   ```
+4. Configurare SMTP in `.env` (già documentato in DEPLOY.md)
+
+---
+
+### ❌ Monthly Executive Report (Priorità: BASSA)
+
+**Da implementare:**
+1. **AiReportService.php** - Aggiungere metodo:
+   ```php
+   public function generateMonthlyExecutive(int $projectId, int $userId): array
+   ```
+
+2. **Prompt AI** per report mensile (più dettagliato del weekly):
+   - Trend mensili vs mese precedente
+   - Top 10 keyword performance
+   - Opportunità identificate
+   - Raccomandazioni strategiche
+
+3. **Cron dispatcher** - Aggiungere in `ai-report-dispatcher.php`:
+   ```php
+   // Check se è il primo del mese
+   if (date('j') === '1' && $this->shouldRunMonthly()) {
+       $this->generateMonthlyReports();
+   }
+   ```
+
+4. **Admin settings** in `module.json`:
+   ```json
+   "monthly_report_enabled": { ... },
+   "monthly_report_day": { ... },
+   "monthly_report_time": { ... }
+   ```
+
+---
+
+### ✅ Completato (Reference)
+
+1. **Redirect URI** già configurato: `https://ainstein.it/oauth/google/callback`
+2. **OAuth GSC** funzionante e testato
+3. **GA4 rimosso** - non più in scope
 
 ---
 
@@ -333,6 +419,43 @@ Verifica posizioni keyword in tempo reale via API DataForSEO:
 - Supporto multi-location (es: Italy, Milan, Rome)
 
 **Service:** `/services/DataForSeoService.php`
+
+### Rank Check con Job in Background (2026-02-03)
+Sistema completo per rank check massivo con progress real-time:
+
+**Componenti:**
+- `RankCheckController.php` - Controller con SSE streaming
+- `RankCheckerService.php` - Orchestratore elaborazione
+- `RankJob.php` - Model job tracking
+- `RankQueue.php` - Model queue keyword
+- `DataForSeoService.php` - API wrapper (condiviso)
+
+**Flusso:**
+1. Utente seleziona keyword e avvia rank check
+2. Controller crea job in `st_rank_jobs` (status: pending)
+3. Keyword aggiunte a `st_rank_queue` con job_id
+4. SSE stream elabora queue e invia eventi real-time
+5. Risultati salvati in `st_rank_checks`
+6. Job marcato completed/error
+
+**Eventi SSE:**
+- `started` - Job avviato con totale items
+- `progress` - Aggiornamento % completamento
+- `item_completed` - Singola keyword completata
+- `item_error` - Errore su keyword
+- `completed` - Job terminato
+- `cancelled` - Job annullato
+
+**Pattern implementato:** Vedi CLAUDE.md sezione "Background Processing"
+
+**Routes:**
+```
+GET  /projects/{id}/rank-check         # Vista
+POST /projects/{id}/rank-check/start   # Avvia job
+GET  /projects/{id}/rank-check/stream  # SSE streaming
+GET  /projects/{id}/rank-check/status  # Polling fallback
+POST /projects/{id}/rank-check/cancel  # Annulla
+```
 
 ---
 
