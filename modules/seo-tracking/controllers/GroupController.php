@@ -44,6 +44,21 @@ class GroupController
             exit;
         }
 
+        // Auto-sync: se non ci sono gruppi ma ci sono group_name in keywords, sincronizza
+        $groupCount = $this->group->countByProject($projectId);
+        if ($groupCount === 0) {
+            // Verifica se ci sono keywords con group_name
+            $hasGroupNames = \Core\Database::fetch(
+                "SELECT COUNT(*) as cnt FROM st_keywords WHERE project_id = ? AND group_name IS NOT NULL AND group_name != ''",
+                [$projectId]
+            );
+
+            if ($hasGroupNames && (int)$hasGroupNames['cnt'] > 0) {
+                // Sincronizza automaticamente
+                $this->group->syncAllFromKeywords($projectId);
+            }
+        }
+
         $groups = $this->group->allWithStats($projectId);
         $comparison = $this->statsService->compareGroups($projectId);
 
