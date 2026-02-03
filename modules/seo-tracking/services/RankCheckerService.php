@@ -4,6 +4,7 @@ namespace Modules\SeoTracking\Services;
 
 use Services\ScraperService;
 use Services\DataForSeoService;
+use Services\ApiLoggerService;
 use Modules\SeoTracking\Models\Location;
 
 /**
@@ -246,7 +247,7 @@ class RankCheckerService
     }
 
     /**
-     * Check con Serper.dev (primario)
+     * Check con Serper.dev
      */
     private function checkWithSerper(
         string $keyword,
@@ -266,13 +267,15 @@ class RankCheckerService
             : $this->serperBaseUrl;
 
         // Serper.dev potrebbe limitare i risultati per pagina
-        // Facciamo più chiamate con paginazione per coprire le prime 30-50 posizioni
+        // Facciamo più chiamate con paginazione per coprire le prime 100 posizioni
         $allOrganicResults = [];
         $maxPages = 10; // Cerca nelle prime 10 pagine (100 risultati)
+        $totalApiCalls = 0;
 
         for ($page = 1; $page <= $maxPages; $page++) {
+            $startTime = microtime(true);
+
             // Serper.dev usa solo gl (country) e hl (language)
-            // NON supporta 'location' testuale come SerpApi
             $payload = [
                 'q' => $keyword,
                 'gl' => $location['serper_gl'] ?? 'it',
@@ -280,12 +283,6 @@ class RankCheckerService
                 'num' => 10,
                 'page' => $page,
             ];
-
-            // DEBUG: Log parametri location
-            if ($page === 1) {
-                error_log("[RankChecker Serper] Location params: gl=" . ($location['serper_gl'] ?? 'NULL') . ", hl=" . ($location['serper_hl'] ?? 'NULL'));
-                error_log("[RankChecker Serper] Payload: " . json_encode($payload));
-            }
 
             $ch = curl_init();
             curl_setopt_array($ch, [
@@ -301,6 +298,18 @@ class RankCheckerService
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $error = curl_error($ch);
             curl_close($ch);
+            $totalApiCalls++;
+
+            $data = json_decode($response, true);
+
+            // Log API call (solo prima pagina o in caso di errore)
+            if ($page === 1 || $error || $httpCode !== 200) {
+                ApiLoggerService::log('serper', '/search', $payload, $data, $httpCode, $startTime, [
+                    'module' => 'seo-tracking',
+                    'context' => "keyword={$keyword}, page={$page}",
+                    'error' => $error ?: null,
+                ]);
+            }
 
             if ($error) {
                 throw new \Exception('Errore Serper.dev: ' . $error);
@@ -310,19 +319,11 @@ class RankCheckerService
                 throw new \Exception('Errore Serper.dev HTTP ' . $httpCode);
             }
 
-            $data = json_decode($response, true);
-
             if (isset($data['message'])) {
                 throw new \Exception('Errore Serper.dev: ' . $data['message']);
             }
 
             $pageResults = $data['organic'] ?? [];
-
-            // DEBUG
-            error_log("[RankChecker] Page {$page}: received " . count($pageResults) . " organic results");
-            if (!empty($pageResults[0])) {
-                error_log("[RankChecker] First result: " . ($pageResults[0]['link'] ?? 'no link'));
-            }
 
             // Aggiorna le posizioni per renderle assolute (non relative alla pagina)
             $basePosition = ($page - 1) * 10;
@@ -415,6 +416,9 @@ class RankCheckerService
      * Check con SERP API (fallback)
      * Implementa paginazione per coprire le prime 50 posizioni
      */
+    /**
+     * Check con SERP API
+     */
     private function checkWithSerpApi(
         string $keyword,
         string $targetDomain,
@@ -427,6 +431,8 @@ class RankCheckerService
         $totalResults = null;
 
         for ($page = 0; $page < $maxPages; $page++) {
+            $startTime = microtime(true);
+
             // Parametri base per SerpAPI - seguendo documentazione ufficiale
             // gl = country, hl = language, google_domain = quale Google usare
             // NON usiamo 'location' (è per city-level targeting, non necessario per country-level)
@@ -445,11 +451,6 @@ class RankCheckerService
                 $params['device'] = 'mobile';
             }
 
-            // DEBUG: Log parametri (solo prima pagina)
-            if ($page === 0) {
-                error_log("[RankChecker SerpAPI] Params: gl=" . $params['gl'] . ", hl=" . $params['hl'] . ", google_domain=" . $params['google_domain']);
-            }
-
             $url = $this->serpApiBaseUrl . '?' . http_build_query($params);
 
             $response = $this->scraper->fetchJson($url, [
@@ -457,11 +458,24 @@ class RankCheckerService
                 'api_mode' => true,
             ]);
 
+            $data = $response['data'] ?? [];
+
+            // Log API call (solo prima pagina o in caso di errore)
+            if ($page === 0 || isset($response['error']) || isset($data['error'])) {
+                // Rimuovi api_key dal log per sicurezza
+                $logParams = $params;
+                $logParams['api_key'] = '[REDACTED]';
+
+                ApiLoggerService::log('serpapi', '/search.json', $logParams, $data, $response['http_code'] ?? 200, $startTime, [
+                    'module' => 'seo-tracking',
+                    'context' => "keyword={$keyword}, page={$page}",
+                    'error' => $response['error'] ?? ($data['error'] ?? null),
+                ]);
+            }
+
             if (isset($response['error'])) {
                 throw new \Exception('Errore SERP API: ' . ($response['message'] ?? 'Unknown error'));
             }
-
-            $data = $response['data'] ?? [];
 
             if (isset($data['error'])) {
                 throw new \Exception('SERP API Error: ' . $data['error']);

@@ -3,6 +3,7 @@
 use Core\Router;
 use Admin\Controllers\AdminController;
 use Admin\Controllers\AiLogsController;
+use Admin\Controllers\ApiLogsController;
 
 // Admin routes
 Router::get('/admin', [AdminController::class, 'dashboard']);
@@ -23,3 +24,8 @@ Router::post('/admin/plans/{id}', [AdminController::class, 'planUpdate']);
 Router::get('/admin/ai-logs', [AiLogsController::class, 'index']);
 Router::get('/admin/ai-logs/{id}', [AiLogsController::class, 'show']);
 Router::post('/admin/ai-logs/cleanup', [AiLogsController::class, 'cleanup']);
+
+// API Logs
+Router::get('/admin/api-logs', [ApiLogsController::class, 'index']);
+Router::get('/admin/api-logs/{id}', [ApiLogsController::class, 'show']);
+Router::post('/admin/api-logs/cleanup', [ApiLogsController::class, 'cleanup']);
