@@ -107,6 +107,56 @@ st_sync_log              -- Log sync
 
 ---
 
+## Provider Rank Check
+
+Il sistema supporta 3 provider in cascata per il rank checking:
+
+| Priorità | Provider | Endpoint | Costo |
+|----------|----------|----------|-------|
+| 1 (Primary) | DataForSEO | `/serp/google/organic/live/regular` | ~$0.002/ricerca |
+| 2 (Fallback) | SerpAPI | `/search.json` | ~$0.005/ricerca |
+| 3 (Fallback) | Serper.dev | `/search` | ~$0.001/ricerca |
+
+### Logica Cascata
+```php
+// RankCheckerService::checkPosition()
+1. Prova DataForSEO se configurato
+2. Se fallisce (errore/no crediti) → prova SerpAPI
+3. Se fallisce → prova Serper.dev
+4. Se tutti falliscono → ritorna errore
+```
+
+### Configurazione Provider
+- **DataForSEO**: API key in Settings → Moduli → SEO Tracking
+- **SerpAPI**: API key separata
+- **Serper.dev**: API key separata
+
+### Depth Ricerca
+Tutti i provider cercano fino a **100 risultati** (10 pagine x 10 risultati).
+
+---
+
+## API Logging Integration
+
+Tutte le chiamate API del modulo sono loggate in `api_logs` via `ApiLoggerService`.
+
+### File Integrati
+- `services/DataForSeoService.php` - Log chiamate SERP e keyword volumes
+- `modules/seo-tracking/services/RankCheckerService.php` - Log per tutti i provider
+
+### Dati Loggati
+- Request/response payload completi
+- Durata chiamata in ms
+- Costo API (se disponibile)
+- Context con keyword e target domain
+
+### Visualizzazione
+Admin → API Logs (`/admin/api-logs`)
+- Filtro per provider: `dataforseo`, `serpapi`, `serper`
+- Filtro per modulo: `seo-tracking`
+
+---
+
 ## Funzionalità
 
 ### ✅ Implementate
@@ -129,6 +179,10 @@ st_sync_log              -- Log sync
 - [x] Views keyword detail
 - [x] Schema DB allineato al codice
 - [x] **Import keyword da GSC** con selezione e assegnazione gruppi
+- [x] **DataForSEO come provider SERP primario**
+- [x] **Cascata automatica provider** (DataForSEO → SerpAPI → Serper)
+- [x] **Ricerca fino a 100 posizioni**
+- [x] **API Logging per tutte le chiamate**
 
 ### 🔄 In Corso
 - [ ] Alert UI funzionante (UI presente, backend da completare)
@@ -206,6 +260,13 @@ POST /seo-tracking/projects/{id}/gsc/sync             # Sync dati
 ---
 
 ## Bug Risolti
+
+### 2026-02-03
+- Aggiunto DataForSEO come provider SERP primario
+- Implementata cascata provider per rank checking
+- Estesa ricerca SERP a 100 posizioni (era 50)
+- Integrato ApiLoggerService per logging chiamate API
+- Aggiunto pannello admin API Logs
 
 ### 2026-01-28
 | Bug | Severity | File | Status |

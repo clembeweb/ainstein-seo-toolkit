@@ -1,6 +1,6 @@
 # AINSTEIN - Golden Rules
 
-**10 regole INVIOLABILI per lo sviluppo**
+**13 regole INVIOLABILI per lo sviluppo**
 
 Queste regole garantiscono consistenza, manutenibilità e qualità del codice.
 
@@ -293,6 +293,74 @@ $content = $xpath->query('//article')->item(0)->textContent;
 
 ---
 
+## 1️⃣3️⃣ API Logging Centralizzato
+
+**SEMPRE** loggare tutte le chiamate API esterne con `ApiLoggerService`.
+
+### Provider Supportati
+- `dataforseo` - DataForSEO (SERP, keyword volumes)
+- `serpapi` - SerpAPI (SERP fallback)
+- `serper` - Serper.dev (SERP fallback)
+- `google_gsc` - Google Search Console
+- `google_oauth` - Google OAuth refresh
+- `google_ga4` - Google Analytics 4
+
+### Pattern Obbligatorio
+
+```php
+use Services\ApiLoggerService;
+
+// 1. Cattura timestamp PRIMA della chiamata
+$startTime = microtime(true);
+
+// 2. Esegui chiamata API
+$response = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$data = json_decode($response, true);
+
+// 3. Log DOPO la chiamata
+ApiLoggerService::log('provider', '/endpoint', $request, $data, $httpCode, $startTime, [
+    'module' => 'modulo-slug',
+    'cost' => $data['cost'] ?? 0,
+    'context' => 'info diagnostica',
+]);
+```
+
+### Regole Specifiche
+- **Redact API keys**: Rimuovi sempre le chiavi API dal payload prima del log
+- **Paginazione**: Logga solo prima pagina + errori (evita spam)
+- **Context**: Includi info utili per debug (keyword, page, target)
+- **Cost tracking**: Estrai il costo dalla risposta se disponibile
+
+### ❌ MAI fare
+```php
+// MAI chiamare API senza logging
+$response = file_get_contents($apiUrl);
+
+// MAI loggare API keys
+ApiLoggerService::log('serpapi', '/search', ['api_key' => $key], ...);
+
+// MAI loggare ogni pagina di paginazione
+for ($i = 0; $i < 10; $i++) {
+    ApiLoggerService::log(...); // 10 log inutili!
+}
+```
+
+### ✅ SEMPRE fare
+```php
+// Redact API key
+$logParams = $params;
+$logParams['api_key'] = '[REDACTED]';
+ApiLoggerService::log('serpapi', '/search', $logParams, $data, $httpCode, $startTime, [...]);
+
+// Log condizionale per paginazione
+if ($page === 1 || $error) {
+    ApiLoggerService::log(...);
+}
+```
+
+---
+
 ## 📋 CHECKLIST PRE-COMMIT
 
 Prima di ogni commit, verifica:
@@ -307,6 +375,7 @@ Prima di ogni commit, verifica:
 - [ ] CSRF token su form POST
 - [ ] `Database::reconnect()` dopo chiamate lunghe
 - [ ] Scraping usa `ScraperService::scrape()` con Readability
+- [ ] Chiamate API esterne loggano con `ApiLoggerService::log()`
 
 ---
 
@@ -319,6 +388,7 @@ Prima di ogni commit, verifica:
 | Testi inglese | Review manuale views | Tradurre in italiano |
 | SQL injection | `grep -r "query\(.*\$" modules/` | Usare prepare() |
 | Scraping custom | `grep -r "DOMDocument\|loadHTML" modules/` | Usare ScraperService::scrape() |
+| Chiamata API senza log | `grep -r "curl_exec\|file_get_contents.*api" services/` | Aggiungere ApiLoggerService::log() |
 
 ---
 

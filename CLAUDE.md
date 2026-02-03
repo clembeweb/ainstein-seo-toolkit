@@ -35,6 +35,7 @@
 11. OAuth GSC pattern seo-tracking   → GoogleOAuthService centralizzato
 12. Scraping SEMPRE con Readability  → ScraperService::scrape() per tutto
 13. Background jobs per operazioni lunghe → SSE + job queue (vedi sezione dedicata)
+14. ApiLoggerService per API     → Tutte le chiamate API esterne loggano
 ```
 
 ---
@@ -47,7 +48,7 @@
 | SEO Audit | `seo-audit` | `sa_` | 100% | Action Plan AI completato |
 | Google Ads Analyzer | `ads-analyzer` | `ga_` | 100% | Completo |
 | Internal Links | `internal-links` | `il_` | 85% | Manca AI Suggester |
-| SEO Tracking | `seo-tracking` | `st_` | 95% | Rank Check (SSE jobs), Page Analyzer, Quick Wins, Weekly AI Digest |
+| SEO Tracking | `seo-tracking` | `st_` | 95% | Rank Check con DataForSEO/SerpAPI/Serper, API Logs integrato |
 | Content Creator | `content-creator` | `cc_` | 0% | Da implementare |
 
 ---
@@ -64,6 +65,7 @@
 | Integrazione AI | `AI_SERVICE_STANDARDS.md` |
 | Sistema crediti | `CREDITS-SYSTEM.md` |
 | Modulo specifico | `specs/[modulo].md` o `AGENT-[MODULO].md` |
+| API esterne | `API-LOGS.md` |
 | Deploy | `DEPLOY.md`, `DEPLOY-VERIFY-AINSTEIN.md` |
 
 ---
@@ -79,7 +81,8 @@ seo-toolkit/
 │   ├── GoogleOAuthService.php
 │   ├── SitemapService.php
 │   ├── CsvImportService.php
-│   └── DataForSeoService.php # Rank check API
+│   ├── DataForSeoService.php # Rank check API
+│   └── ApiLoggerService.php # Logging chiamate API - USARE SEMPRE
 ├── modules/
 │   ├── ai-content/          # REFERENCE per nuovi moduli
 │   ├── seo-audit/
@@ -231,6 +234,28 @@ if ($result['success']) {
 
 // MAI usare DOMDocument/XPath diretto per estrarre contenuti!
 // MAI creare servizi di scraping custom per modulo!
+```
+
+### Logging Chiamate API Esterne
+```php
+use Services\ApiLoggerService;
+
+$startTime = microtime(true);  // PRIMA della chiamata
+
+// Esegui chiamata API...
+$response = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$data = json_decode($response, true);
+
+// Log DOPO la chiamata
+ApiLoggerService::log('provider-name', '/endpoint', $requestPayload, $data, $httpCode, $startTime, [
+    'module' => 'nome-modulo',
+    'cost' => $data['cost'] ?? 0,
+    'context' => "keyword={$keyword}",
+]);
+
+// Provider validi: dataforseo, serpapi, serper, google_gsc, google_oauth, google_ga4
+// IMPORTANTE: Redact API keys prima del log!
 ```
 
 ### Background Processing (Operazioni Lunghe)
@@ -438,6 +463,7 @@ async startPolling() {
 [ ] CSRF token su form POST
 [ ] Database::reconnect() dopo chiamate lunghe
 [ ] Scraping usa ScraperService::scrape()
+[ ] Chiamate API esterne loggano con ApiLoggerService
 [ ] php -l su file modificati
 [ ] Operazioni lunghe usano job in background (SSE)
 [ ] session_write_close() prima di loop SSE
@@ -469,6 +495,7 @@ async startPolling() {
 | SSE blocca altre request | Sessione non chiusa | `session_write_close()` prima del loop |
 | SSE non invia eventi | Output buffering | `ob_flush(); flush();` dopo ogni evento |
 | Job bloccato in processing | Processo crashato | `resetStuckProcessing(30)` nel model queue |
+| API call non loggata | ApiLoggerService mancante | Aggiungi log dopo ogni chiamata API |
 
 ---
 
