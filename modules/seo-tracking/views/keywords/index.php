@@ -642,6 +642,9 @@ function executeRefreshWithSSE(type) {
 }
 
 // Connetti a SSE per progress in tempo reale
+let sseTimeout = null;
+let lastEventTime = null;
+
 function connectSSE(type) {
     if (eventSource) {
         eventSource.close();
@@ -649,8 +652,25 @@ function connectSSE(type) {
 
     const streamUrl = `${baseUrl}/seo-tracking/project/${projectId}/keywords/positions-stream?job_id=${currentJobId}`;
     eventSource = new EventSource(streamUrl);
+    lastEventTime = Date.now();
+
+    // Timeout: se non riceviamo eventi per 60 secondi, passa a polling
+    function resetSSETimeout() {
+        lastEventTime = Date.now();
+        if (sseTimeout) clearTimeout(sseTimeout);
+        sseTimeout = setTimeout(() => {
+            console.warn('SSE timeout - switching to polling');
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+            startPolling(type);
+        }, 60000); // 60 secondi timeout
+    }
+    resetSSETimeout();
 
     eventSource.addEventListener('started', function(e) {
+        resetSSETimeout();
         const data = JSON.parse(e.data);
         updateProgressModal({
             status: 'running',
@@ -661,7 +681,14 @@ function connectSSE(type) {
         });
     });
 
+    // Heartbeat per mantenere la connessione viva
+    eventSource.addEventListener('heartbeat', function(e) {
+        resetSSETimeout();
+        console.log('SSE heartbeat received');
+    });
+
     eventSource.addEventListener('progress', function(e) {
+        resetSSETimeout();
         const data = JSON.parse(e.data);
         updateProgressModal({
             status: 'running',
@@ -673,6 +700,7 @@ function connectSSE(type) {
     });
 
     eventSource.addEventListener('keyword_completed', function(e) {
+        resetSSETimeout();
         const data = JSON.parse(e.data);
         jobResults.push({
             keyword: data.keyword,
@@ -684,6 +712,7 @@ function connectSSE(type) {
     });
 
     eventSource.addEventListener('keyword_error', function(e) {
+        resetSSETimeout();
         const data = JSON.parse(e.data);
         jobResults.push({
             keyword: data.keyword,
@@ -693,6 +722,7 @@ function connectSSE(type) {
     });
 
     eventSource.addEventListener('completed', function(e) {
+        if (sseTimeout) clearTimeout(sseTimeout);
         const data = JSON.parse(e.data);
         eventSource.close();
         eventSource = null;
@@ -710,6 +740,7 @@ function connectSSE(type) {
     });
 
     eventSource.addEventListener('cancelled', function(e) {
+        if (sseTimeout) clearTimeout(sseTimeout);
         const data = JSON.parse(e.data);
         eventSource.close();
         eventSource = null;
@@ -723,6 +754,7 @@ function connectSSE(type) {
 
     eventSource.onerror = function(e) {
         console.error('SSE error:', e);
+        if (sseTimeout) clearTimeout(sseTimeout);
         // Fallback a polling se SSE fallisce
         if (eventSource) {
             eventSource.close();
@@ -733,12 +765,31 @@ function connectSSE(type) {
 }
 
 // Polling fallback
+let pollingStartTime = null;
+const maxPollingMinutes = 5; // Max 5 minuti di polling
+
 function startPolling(type) {
     if (pollingInterval) {
         clearInterval(pollingInterval);
     }
 
+    pollingStartTime = Date.now();
+
     pollingInterval = setInterval(() => {
+        // Timeout massimo per polling
+        const minutesPolling = (Date.now() - pollingStartTime) / 60000;
+        if (minutesPolling > maxPollingMinutes) {
+            console.error('Polling timeout - exceeded max time');
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+            closeProgressModal();
+            showResultModal(false, {
+                error: 'Timeout: il job sta impiegando troppo tempo. Controlla lo stato nella pagina Keywords.'
+            });
+            restoreAllButtons();
+            return;
+        }
+
         fetch(`${baseUrl}/seo-tracking/project/${projectId}/keywords/positions-job-status?job_id=${currentJobId}`)
         .then(response => response.json())
         .then(data => {

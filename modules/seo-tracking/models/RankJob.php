@@ -247,6 +247,24 @@ class RankJob
     }
 
     /**
+     * Reset stuck jobs (running for too long) for a project
+     *
+     * @param int $projectId Project ID
+     * @param int $maxMinutes Maximum minutes a job should run
+     * @return int Number of jobs reset
+     */
+    public function resetStuckJobs(int $projectId, int $maxMinutes = 60): int
+    {
+        $cutoffTime = date('Y-m-d H:i:s', time() - ($maxMinutes * 60));
+
+        return Database::update($this->table, [
+            'status' => self::STATUS_ERROR,
+            'error_message' => "Timeout - job rimasto in esecuzione per più di {$maxMinutes} minuti",
+            'completed_at' => date('Y-m-d H:i:s'),
+        ], "project_id = ? AND status = 'running' AND started_at < ?", [$projectId, $cutoffTime]);
+    }
+
+    /**
      * Check if job is still running
      */
     public function isRunning(int $id): bool

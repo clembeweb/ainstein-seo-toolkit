@@ -1254,14 +1254,28 @@ class KeywordController
 
         // Verifica che non ci sia già un job attivo per questo progetto
         $jobModel = new RankJob();
+
+        // Prima, resetta eventuali job "stuck" (running da più di 1 ora)
+        $jobModel->resetStuckJobs($projectId, 60);
+
         $activeJob = $jobModel->getActiveForProject($projectId);
         if ($activeJob) {
-            echo json_encode([
-                'success' => false,
-                'error' => 'Esiste già un job in esecuzione per questo progetto',
-                'active_job_id' => $activeJob['id']
-            ]);
-            exit;
+            // Verifica se il job è effettivamente stuck (running ma vecchio)
+            $startedAt = strtotime($activeJob['started_at'] ?? $activeJob['created_at']);
+            $minutesRunning = (time() - $startedAt) / 60;
+
+            if ($minutesRunning > 30) {
+                // Job stuck - marcalo come errore
+                $jobModel->markError($activeJob['id'], 'Timeout - job rimasto in sospeso per troppo tempo');
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Esiste già un job in esecuzione per questo progetto. Attendi il completamento o annullalo.',
+                    'active_job_id' => $activeJob['id'],
+                    'minutes_running' => round($minutesRunning, 1)
+                ]);
+                exit;
+            }
         }
 
         // Verifica service configurato
@@ -1360,9 +1374,16 @@ class KeywordController
         $failed = 0;
         $found = 0;
         $creditsUsed = 0;
+        $lastHeartbeat = time();
+        $heartbeatInterval = 10; // Invia heartbeat ogni 10 secondi
 
         // Loop di elaborazione
         while (true) {
+            // Invia heartbeat periodico per mantenere la connessione
+            if (time() - $lastHeartbeat >= $heartbeatInterval) {
+                $sendEvent('heartbeat', ['time' => time()]);
+                $lastHeartbeat = time();
+            }
             // Riconnetti DB per evitare timeout
             Database::reconnect();
 
