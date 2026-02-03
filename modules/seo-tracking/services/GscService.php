@@ -527,6 +527,133 @@ class GscService
     }
 
     /**
+     * Sync metriche GSC SOLO per keyword tracciate (is_tracked=1)
+     * Usato dal cron job automatico - nessuna auto-discovery
+     *
+     * @param int $projectId ID del progetto
+     * @return array Risultato sync con count aggiornamenti
+     */
+    public function syncTrackedKeywordsOnly(int $projectId): array
+    {
+        $connection = $this->gscConnection->getByProject($projectId);
+
+        if (!$connection || !$connection['property_url']) {
+            throw new \Exception('Connessione GSC non configurata');
+        }
+
+        $token = $this->getValidToken($projectId);
+
+        if (!$token) {
+            throw new \Exception('Token non valido');
+        }
+
+        // Date: ultimi 7 giorni (GSC ha delay 2-3 giorni)
+        $endDate = date('Y-m-d', strtotime('-3 days'));
+        $startDate = date('Y-m-d', strtotime('-10 days'));
+
+        // Ottieni keyword tracciate del progetto
+        $trackedKeywords = $this->keyword->allByProject($projectId, ['is_tracked' => 1]);
+
+        if (empty($trackedKeywords)) {
+            return [
+                'keywords_processed' => 0,
+                'keywords_updated' => 0,
+                'message' => 'Nessuna keyword tracciata nel progetto'
+            ];
+        }
+
+        $keywordsUpdated = 0;
+
+        // Fetch dati GSC per tutte le query del progetto
+        $queryData = $this->fetchSearchAnalytics(
+            $token,
+            $connection['property_url'],
+            $startDate,
+            $endDate,
+            ['query', 'date']
+        );
+
+        // Indicizza i dati GSC per keyword
+        $gscDataByKeyword = [];
+        foreach ($queryData as $row) {
+            $query = $row['keys'][0];
+            if (!isset($gscDataByKeyword[$query])) {
+                $gscDataByKeyword[$query] = [];
+            }
+            $gscDataByKeyword[$query][] = [
+                'date' => $row['keys'][1],
+                'clicks' => $row['clicks'] ?? 0,
+                'impressions' => $row['impressions'] ?? 0,
+                'ctr' => $row['ctr'] ?? 0,
+                'position' => $row['position'] ?? 0,
+            ];
+        }
+
+        // Aggiorna solo le keyword tracciate
+        foreach ($trackedKeywords as $kw) {
+            $keywordText = $kw['keyword'];
+
+            // Cerca i dati GSC per questa keyword
+            $matchingData = $gscDataByKeyword[$keywordText] ?? [];
+
+            if (empty($matchingData)) {
+                continue;
+            }
+
+            // Calcola metriche aggregate (media ultimi 7 giorni)
+            $totalClicks = 0;
+            $totalImpressions = 0;
+            $positionSum = 0;
+            $daysWithData = 0;
+
+            foreach ($matchingData as $dayData) {
+                $totalClicks += $dayData['clicks'];
+                $totalImpressions += $dayData['impressions'];
+                if ($dayData['impressions'] > 0) {
+                    $positionSum += $dayData['position'];
+                    $daysWithData++;
+                }
+            }
+
+            $avgPosition = $daysWithData > 0 ? round($positionSum / $daysWithData, 1) : null;
+            $avgCtr = $totalImpressions > 0 ? round($totalClicks / $totalImpressions, 4) : 0;
+
+            // Aggiorna i dati cached nella keyword
+            $this->keyword->update($kw['id'], [
+                'last_position' => $avgPosition,
+                'last_clicks' => $totalClicks,
+                'last_impressions' => $totalImpressions,
+                'last_ctr' => $avgCtr,
+                'last_updated_at' => date('Y-m-d H:i:s'),
+            ]);
+
+            $keywordsUpdated++;
+
+            // Salva anche in st_keyword_positions per lo storico giornaliero
+            foreach ($matchingData as $dayData) {
+                $this->keywordPosition->upsert([
+                    'project_id' => $projectId,
+                    'keyword_id' => $kw['id'],
+                    'date' => $dayData['date'],
+                    'avg_position' => $dayData['position'],
+                    'total_clicks' => $dayData['clicks'],
+                    'total_impressions' => $dayData['impressions'],
+                    'avg_ctr' => $dayData['impressions'] > 0 ? $dayData['clicks'] / $dayData['impressions'] : 0,
+                ]);
+            }
+        }
+
+        // Aggiorna last_sync_at nella connessione GSC
+        $this->gscConnection->updateLastSync($projectId);
+
+        return [
+            'keywords_processed' => count($trackedKeywords),
+            'keywords_updated' => $keywordsUpdated,
+            'date_range' => "{$startDate} - {$endDate}",
+        ];
+    }
+
+    /**
      * Full sync storico (16 mesi)
      */
     public function fullHistoricalSync(int $projectId): array

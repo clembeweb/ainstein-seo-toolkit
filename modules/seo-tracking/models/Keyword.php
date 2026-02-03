@@ -560,4 +560,21 @@ class Keyword
 
         return $response;
     }
+
+    /**
+     * Ottieni tutte le keyword tracciate di un progetto (per job di rank check)
+     *
+     * @param int $projectId ID del progetto
+     * @return array Lista keyword con id, keyword, location_code
+     */
+    public function getTrackedByProject(int $projectId): array
+    {
+        return Database::fetchAll(
+            "SELECT id, keyword, location_code, group_name, last_position, last_updated_at
+             FROM {$this->table}
+             WHERE project_id = ? AND is_tracked = 1
+             ORDER BY keyword ASC",
+            [$projectId]
+        );
+    }
 }

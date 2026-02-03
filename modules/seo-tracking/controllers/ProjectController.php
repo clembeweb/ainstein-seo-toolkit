@@ -67,7 +67,6 @@ class ProjectController
 
         $name = trim($_POST['name'] ?? '');
         $domain = trim($_POST['domain'] ?? '');
-        $notificationEmails = trim($_POST['notification_emails'] ?? '');
 
         $errors = [];
 
@@ -77,19 +76,6 @@ class ProjectController
 
         if (empty($domain)) {
             $errors[] = 'Il dominio è obbligatorio';
-        }
-
-        // Valida email notifiche
-        $emails = [];
-        if (!empty($notificationEmails)) {
-            $emailList = array_map('trim', explode(',', $notificationEmails));
-            foreach ($emailList as $email) {
-                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                    $errors[] = "Email non valida: {$email}";
-                } else {
-                    $emails[] = $email;
-                }
-            }
         }
 
         if (!empty($errors)) {
@@ -103,10 +89,6 @@ class ProjectController
                 'user_id' => $user['id'],
                 'name' => $name,
                 'domain' => Project::normalizeDomain($domain),
-                'notification_emails' => !empty($emails) ? json_encode($emails) : null,
-                'ai_reports_enabled' => isset($_POST['ai_reports_enabled']) ? 1 : 0,
-                'weekly_report_day' => (int) ($_POST['weekly_report_day'] ?? 1),
-                'monthly_report_day' => (int) ($_POST['monthly_report_day'] ?? 1),
             ]);
 
             $_SESSION['_flash']['success'] = 'Progetto creato con successo! Ora connetti Google Search Console.';
@@ -199,12 +181,6 @@ class ProjectController
                 'name' => $name,
                 'domain' => Project::normalizeDomain($domain),
                 'notification_emails' => !empty($emails) ? json_encode($emails) : null,
-                'sync_enabled' => isset($_POST['sync_enabled']) ? 1 : 0,
-                'ai_reports_enabled' => isset($_POST['ai_reports_enabled']) ? 1 : 0,
-                'weekly_report_day' => (int) ($_POST['weekly_report_day'] ?? 1),
-                'weekly_report_time' => $_POST['weekly_report_time'] ?? '08:00:00',
-                'monthly_report_day' => (int) ($_POST['monthly_report_day'] ?? 1),
-                'data_retention_months' => (int) ($_POST['data_retention_months'] ?? 16),
             ], $user['id']);
 
             // Aggiorna alert settings

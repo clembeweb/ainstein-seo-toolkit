@@ -11,9 +11,12 @@ use Core\Database;
 use Modules\SeoTracking\Models\Project;
 use Modules\SeoTracking\Models\Keyword;
 use Modules\SeoTracking\Models\KeywordPosition;
+use Modules\SeoTracking\Models\KeywordGroup;
 use Modules\SeoTracking\Models\GscData;
 use Modules\SeoTracking\Models\Location;
 use Modules\SeoTracking\Models\RankCheck;
+use Modules\SeoTracking\Models\RankJob;
+use Modules\SeoTracking\Models\RankQueue;
 use Modules\SeoTracking\Services\RankCheckerService;
 
 /**
@@ -25,6 +28,7 @@ class KeywordController
     private Project $project;
     private Keyword $keyword;
     private KeywordPosition $keywordPosition;
+    private KeywordGroup $keywordGroup;
     private GscData $gscData;
     private Location $location;
 
@@ -33,6 +37,7 @@ class KeywordController
         $this->project = new Project();
         $this->keyword = new Keyword();
         $this->keywordPosition = new KeywordPosition();
+        $this->keywordGroup = new KeywordGroup();
         $this->gscData = new GscData();
         $this->location = new Location();
     }
@@ -162,6 +167,10 @@ class KeywordController
 
             if ($newId) {
                 $keywordIds[] = $newId;
+                // Sincronizza keyword con gruppo in st_keyword_groups
+                if (!empty($groupName)) {
+                    $this->keywordGroup->syncKeywordToGroup($projectId, $newId, $groupName);
+                }
             }
             $added++;
         }
@@ -317,6 +326,9 @@ class KeywordController
             'is_tracked' => isset($_POST['is_tracked']) ? 1 : 0,
         ]);
 
+        // Sincronizza keyword con gruppo in st_keyword_groups
+        $this->keywordGroup->syncKeywordToGroup($projectId, $keywordId, $groupName ?: null);
+
         $_SESSION['_flash']['success'] = 'Keyword aggiornata';
         Router::redirect('/seo-tracking/project/' . $projectId . '/keywords/' . $keywordId);
     }
@@ -443,6 +455,8 @@ class KeywordController
                 $groupName = trim($_POST['group_name'] ?? '');
                 foreach ($keywordIds as $id) {
                     $this->keyword->update((int) $id, ['group_name' => $groupName ?: null]);
+                    // Sincronizza keyword con gruppo in st_keyword_groups
+                    $this->keywordGroup->syncKeywordToGroup($projectId, (int) $id, $groupName ?: null);
                     $count++;
                 }
                 $_SESSION['_flash']['success'] = "{$count} keyword spostate nel gruppo";
@@ -538,14 +552,21 @@ class KeywordController
                 continue;
             }
 
-            $this->keyword->create([
+            $groupName = trim($row[1] ?? '') ?: null;
+
+            $newId = $this->keyword->create([
                 'project_id' => $projectId,
                 'keyword' => $keyword,
-                'group_name' => trim($row[1] ?? '') ?: null,
+                'group_name' => $groupName,
                 'target_url' => trim($row[2] ?? '') ?: null,
                 'is_tracked' => 1,
                 'source' => 'csv_import',
             ]);
+
+            // Sincronizza keyword con gruppo in st_keyword_groups
+            if ($newId && !empty($groupName)) {
+                $this->keywordGroup->syncKeywordToGroup($projectId, $newId, $groupName);
+            }
 
             $added++;
         }
@@ -979,7 +1000,7 @@ class KeywordController
             'total' => $keywordCount,
             'credits_used' => $cost,
             'new_balance' => Credits::getBalance($user['id']),
-            'message' => "Posizioni aggiornate: {$updated} trovate" . ($notFound > 0 ? ", {$notFound} non in top 50" : ''),
+            'message' => "Posizioni aggiornate: {$updated} trovate" . ($notFound > 0 ? ", {$notFound} non in top 100" : ''),
             'details' => $details,
             'errors' => $errors,
         ]);
@@ -1178,5 +1199,418 @@ class KeywordController
         }
 
         return implode(' | ', $parts);
+    }
+
+    // =========================================
+    // BACKGROUND JOB PROCESSING PER POSIZIONI
+    // =========================================
+
+    private const POSITION_CREDIT_COST = 1;
+
+    /**
+     * Avvia un job di refresh posizioni in background
+     * POST /seo-tracking/project/{id}/keywords/start-positions-job
+     */
+    public function startPositionsJob(int $projectId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->find($projectId, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            exit;
+        }
+
+        // Input - keyword_ids[] opzionale, altrimenti tutte le tracciate
+        $keywordIds = $_POST['keyword_ids'] ?? [];
+
+        // Se passate come stringa comma-separated
+        if (is_string($keywordIds)) {
+            $keywordIds = array_filter(array_map('intval', explode(',', $keywordIds)));
+        }
+
+        // Se nessun ID specificato, prendi tutte le tracciate
+        if (empty($keywordIds)) {
+            $trackedKeywords = $this->keyword->allByProject($projectId, ['is_tracked' => 1]);
+            $keywordIds = array_column($trackedKeywords, 'id');
+        }
+
+        if (empty($keywordIds)) {
+            echo json_encode(['success' => false, 'error' => 'Nessuna keyword da aggiornare']);
+            exit;
+        }
+
+        // Verifica crediti
+        $totalCost = count($keywordIds) * self::POSITION_CREDIT_COST;
+        if (!Credits::hasEnough($user['id'], $totalCost)) {
+            echo json_encode([
+                'success' => false,
+                'error' => "Crediti insufficienti. Necessari: {$totalCost}, disponibili: " . Credits::getBalance($user['id'])
+            ]);
+            exit;
+        }
+
+        // Verifica che non ci sia già un job attivo per questo progetto
+        $jobModel = new RankJob();
+        $activeJob = $jobModel->getActiveForProject($projectId);
+        if ($activeJob) {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Esiste già un job in esecuzione per questo progetto',
+                'active_job_id' => $activeJob['id']
+            ]);
+            exit;
+        }
+
+        // Verifica service configurato
+        $service = new RankCheckerService();
+        if (!$service->isConfigured()) {
+            echo json_encode(['success' => false, 'error' => 'Nessun provider SERP configurato. Vai in Admin > Impostazioni.']);
+            exit;
+        }
+
+        // Crea il job
+        $jobId = $jobModel->create([
+            'project_id' => $projectId,
+            'user_id' => $user['id'],
+            'type' => RankJob::TYPE_MANUAL,
+            'keywords_requested' => count($keywordIds),
+        ]);
+
+        // Aggiungi keywords alla coda
+        $queueModel = new RankQueue();
+        $device = $_POST['device'] ?? 'desktop';
+        $inserted = $queueModel->addBulkForJob($projectId, $jobId, $keywordIds, $device);
+
+        echo json_encode([
+            'success' => true,
+            'job_id' => $jobId,
+            'keywords_queued' => $inserted,
+            'estimated_credits' => $inserted * self::POSITION_CREDIT_COST,
+        ]);
+        exit;
+    }
+
+    /**
+     * SSE Stream per progress posizioni in tempo reale
+     * GET /seo-tracking/project/{id}/keywords/positions-stream?job_id=X
+     */
+    public function processPositionsStream(int $projectId): void
+    {
+        // Verifica auth manualmente per evitare redirect su SSE
+        $user = Auth::user();
+        if (!$user) {
+            header('HTTP/1.1 401 Unauthorized');
+            exit('Unauthorized');
+        }
+
+        $project = $this->project->find($projectId, $user['id']);
+        if (!$project) {
+            header('HTTP/1.1 404 Not Found');
+            exit('Progetto non trovato');
+        }
+
+        $jobId = (int) ($_GET['job_id'] ?? 0);
+        if (!$jobId) {
+            header('HTTP/1.1 400 Bad Request');
+            exit('job_id richiesto');
+        }
+
+        $jobModel = new RankJob();
+        $job = $jobModel->findByUser($jobId, $user['id']);
+        if (!$job || $job['project_id'] != $projectId) {
+            header('HTTP/1.1 404 Not Found');
+            exit('Job non trovato');
+        }
+
+        // Setup SSE headers
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache');
+        header('Connection: keep-alive');
+        header('X-Accel-Buffering: no');
+
+        // Chiudi la sessione PRIMA del loop per non bloccare altre richieste
+        session_write_close();
+
+        // Funzione helper per inviare eventi SSE
+        $sendEvent = function (string $event, array $data) {
+            echo "event: {$event}\n";
+            echo "data: " . json_encode($data) . "\n\n";
+            ob_flush();
+            flush();
+        };
+
+        // Avvia il job se pending
+        if ($job['status'] === RankJob::STATUS_PENDING) {
+            $jobModel->start($jobId);
+            $sendEvent('started', [
+                'job_id' => $jobId,
+                'total_keywords' => $job['keywords_requested'],
+            ]);
+        }
+
+        // Setup services
+        $service = new RankCheckerService();
+        $queueModel = new RankQueue();
+        $rankCheckModel = new RankCheck();
+
+        $completed = 0;
+        $failed = 0;
+        $found = 0;
+        $creditsUsed = 0;
+
+        // Loop di elaborazione
+        while (true) {
+            // Riconnetti DB per evitare timeout
+            Database::reconnect();
+
+            // Verifica cancellazione
+            if ($jobModel->isCancelled($jobId)) {
+                $sendEvent('cancelled', [
+                    'job_id' => $jobId,
+                    'completed' => $completed,
+                    'message' => 'Job annullato dall\'utente',
+                ]);
+                break;
+            }
+
+            // Ottieni prossimo item dalla coda
+            $item = $queueModel->getNextPendingForJob($jobId);
+
+            if (!$item) {
+                // Coda vuota - job completato
+                $jobModel->complete($jobId);
+                $sendEvent('completed', [
+                    'job_id' => $jobId,
+                    'total_completed' => $completed,
+                    'total_failed' => $failed,
+                    'total_found' => $found,
+                    'credits_used' => $creditsUsed,
+                ]);
+                break;
+            }
+
+            // Marca come in elaborazione
+            $queueModel->updateStatus($item['id'], 'processing');
+
+            // Aggiorna job con keyword corrente
+            $jobModel->updateProgress($jobId, [
+                'current_keyword_id' => $item['keyword_id'],
+                'current_keyword' => $item['keyword'],
+            ]);
+
+            // Invia evento progress
+            $sendEvent('progress', [
+                'job_id' => $jobId,
+                'current_keyword' => $item['keyword'],
+                'completed' => $completed,
+                'total' => $job['keywords_requested'],
+                'percent' => round(($completed / $job['keywords_requested']) * 100),
+            ]);
+
+            try {
+                // Esegui check SERP
+                $result = $service->checkPosition($item['keyword'], $item['target_domain'], [
+                    'location_code' => $item['location_code'] ?? 'IT',
+                    'device' => $item['device'] ?? 'desktop',
+                ]);
+
+                Database::reconnect();
+
+                // Recupera posizione GSC per confronto
+                $gscPosition = $this->getGscPosition($projectId, $item['keyword']);
+                $positionDiff = null;
+                if ($result['found'] && $gscPosition !== null) {
+                    $positionDiff = $result['position'] - $gscPosition;
+                }
+
+                // Salva in st_rank_checks
+                $checkId = $rankCheckModel->create([
+                    'project_id' => $projectId,
+                    'user_id' => $user['id'],
+                    'keyword' => $item['keyword'],
+                    'target_domain' => $item['target_domain'],
+                    'location' => $result['location'] ?? $item['location_code'],
+                    'language' => $result['language'] ?? 'it',
+                    'device' => $item['device'],
+                    'serp_position' => $result['found'] ? $result['position'] : null,
+                    'serp_url' => $result['url'],
+                    'serp_title' => $result['title'],
+                    'serp_snippet' => $result['snippet'],
+                    'gsc_position' => $gscPosition,
+                    'position_diff' => $positionDiff,
+                    'total_organic_results' => $result['total_organic_results'] ?? null,
+                    'credits_used' => self::POSITION_CREDIT_COST,
+                ]);
+
+                // Aggiorna last_position nella tabella keywords
+                if ($item['keyword_id']) {
+                    $updateData = [
+                        'last_updated_at' => date('Y-m-d H:i:s'),
+                    ];
+                    if ($result['found'] && $result['position'] !== null) {
+                        $updateData['last_position'] = $result['position'];
+                    } else {
+                        $updateData['last_position'] = null;
+                    }
+                    $this->keyword->update($item['keyword_id'], $updateData);
+                }
+
+                // Marca coda come completata
+                $queueModel->markCompleted($item['id'], $result['position'], $result['url'], $checkId);
+
+                // Scala crediti
+                Credits::consume($user['id'], self::POSITION_CREDIT_COST, 'refresh_positions', 'seo-tracking', [
+                    'keyword' => $item['keyword'],
+                    'project_id' => $projectId,
+                    'job_id' => $jobId,
+                ]);
+
+                $completed++;
+                $creditsUsed += self::POSITION_CREDIT_COST;
+                if ($result['found']) {
+                    $found++;
+                }
+
+                // Aggiorna job
+                $jobModel->incrementCompleted($jobId, $result['found']);
+                $jobModel->addCreditsUsed($jobId, self::POSITION_CREDIT_COST);
+
+                // Invia evento keyword completata
+                $sendEvent('keyword_completed', [
+                    'keyword' => $item['keyword'],
+                    'found' => $result['found'],
+                    'position' => $result['position'],
+                    'url' => $result['url'],
+                    'gsc_position' => $gscPosition,
+                    'position_diff' => $positionDiff,
+                    'provider' => $result['provider'] ?? $service->getLastProvider(),
+                    'credits_remaining' => Credits::getBalance($user['id']),
+                ]);
+
+            } catch (\Exception $e) {
+                Database::reconnect();
+
+                // Marca come errore
+                $queueModel->markError($item['id'], $e->getMessage());
+                $jobModel->incrementFailed($jobId);
+                $failed++;
+
+                $sendEvent('keyword_error', [
+                    'keyword' => $item['keyword'],
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            // Pausa tra le chiamate per rate limiting
+            usleep(500000); // 500ms
+        }
+
+        exit;
+    }
+
+    /**
+     * Polling fallback per status job posizioni
+     * GET /seo-tracking/project/{id}/keywords/positions-job-status?job_id=X
+     */
+    public function positionsJobStatus(int $projectId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->find($projectId, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            exit;
+        }
+
+        $jobId = (int) ($_GET['job_id'] ?? 0);
+        if (!$jobId) {
+            echo json_encode(['success' => false, 'error' => 'job_id richiesto']);
+            exit;
+        }
+
+        $jobModel = new RankJob();
+        $job = $jobModel->findByUser($jobId, $user['id']);
+
+        if (!$job || $job['project_id'] != $projectId) {
+            echo json_encode(['success' => false, 'error' => 'Job non trovato']);
+            exit;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'job' => $jobModel->getJobResponse($jobId),
+        ]);
+        exit;
+    }
+
+    /**
+     * Annulla un job di refresh posizioni
+     * POST /seo-tracking/project/{id}/keywords/cancel-positions-job
+     */
+    public function cancelPositionsJob(int $projectId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->find($projectId, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            exit;
+        }
+
+        $jobId = (int) ($_POST['job_id'] ?? 0);
+        if (!$jobId) {
+            echo json_encode(['success' => false, 'error' => 'job_id richiesto']);
+            exit;
+        }
+
+        $jobModel = new RankJob();
+        $job = $jobModel->findByUser($jobId, $user['id']);
+
+        if (!$job || $job['project_id'] != $projectId) {
+            echo json_encode(['success' => false, 'error' => 'Job non trovato']);
+            exit;
+        }
+
+        if (!in_array($job['status'], [RankJob::STATUS_PENDING, RankJob::STATUS_RUNNING])) {
+            echo json_encode(['success' => false, 'error' => 'Il job non può essere annullato']);
+            exit;
+        }
+
+        $cancelled = $jobModel->cancel($jobId);
+
+        echo json_encode([
+            'success' => $cancelled,
+            'message' => $cancelled ? 'Job annullato' : 'Impossibile annullare il job',
+        ]);
+        exit;
+    }
+
+    /**
+     * Ottieni posizione media GSC per una keyword
+     */
+    private function getGscPosition(int $projectId, string $keyword): ?float
+    {
+        $result = Database::fetch(
+            "SELECT AVG(position) as avg_position
+             FROM st_gsc_data
+             WHERE project_id = ?
+               AND query = ?
+               AND date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+               AND impressions > 0",
+            [$projectId, $keyword]
+        );
+
+        if ($result && $result['avg_position'] !== null) {
+            return round((float) $result['avg_position'], 2);
+        }
+
+        return null;
     }
 }

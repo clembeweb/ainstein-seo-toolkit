@@ -74,15 +74,18 @@ $targetDomain = $defaultDomain ?: '';
                 <span class="text-sm text-slate-500 dark:text-slate-400" x-show="keywords.length > 0">
                     <span x-text="selectedCount"></span> selezionate
                 </span>
-                <button @click="checkSelected()"
-                        :disabled="selectedCount === 0 || checking"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors text-sm font-medium">
-                    <svg x-show="!checking" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                <button x-show="checking" @click="cancelJob()"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
-                    <svg x-show="checking" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    Annulla
+                </button>
+                <button x-show="!checking" @click="checkSelectedWithSSE()"
+                        :disabled="selectedCount === 0"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors text-sm font-medium">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
                     Verifica (<span x-text="selectedCount"></span> crediti)
                 </button>
@@ -93,13 +96,20 @@ $targetDomain = $defaultDomain ?: '';
         <div x-show="checking" class="px-6 py-3 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
             <div class="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400 mb-1">
                 <span>
-                    Verifica in corso...
-                    <span x-show="lastProvider" class="text-xs text-slate-500" x-text="'via ' + lastProvider"></span>
+                    <span x-show="currentKeyword" x-text="'Verifica: ' + currentKeyword"></span>
+                    <span x-show="!currentKeyword">Verifica in corso...</span>
+                    <span x-show="lastProvider" class="text-xs text-slate-500 ml-2" x-text="'via ' + lastProvider"></span>
                 </span>
-                <span x-text="checkProgress + '%'"></span>
+                <span>
+                    <span x-text="completedCount + '/' + totalToCheck"></span>
+                    (<span x-text="checkProgress + '%'"></span>)
+                </span>
             </div>
             <div class="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2">
                 <div class="bg-primary-600 h-2 rounded-full transition-all" :style="'width: ' + checkProgress + '%'"></div>
+            </div>
+            <div x-show="jobId" class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Job #<span x-text="jobId"></span> - L'elaborazione continua anche se navighi altrove
             </div>
         </div>
 
@@ -222,6 +232,11 @@ function rankChecker() {
         checkProgress: 0,
         device: 'desktop',
         lastProvider: '',
+        currentKeyword: '',
+        completedCount: 0,
+        totalToCheck: 0,
+        jobId: null,
+        eventSource: null,
 
         projectId: <?= $projectId ?>,
         targetDomain: '<?= addslashes($targetDomain) ?>',
@@ -265,16 +280,229 @@ function rankChecker() {
             });
         },
 
+        /**
+         * Nuovo metodo con SSE per elaborazione in background
+         */
+        async checkSelectedWithSSE() {
+            const toCheck = this.keywords.filter(k => k.selected && !k.checked);
+            if (toCheck.length === 0) return;
+
+            this.checking = true;
+            this.checkProgress = 0;
+            this.completedCount = 0;
+            this.totalToCheck = toCheck.length;
+            this.currentKeyword = '';
+
+            // Marca le keyword selezionate come "in elaborazione"
+            toCheck.forEach(k => k.checking = true);
+
+            try {
+                // 1. Avvia il job
+                const keywordIds = toCheck.map(k => k.id).join(',');
+                const formData = new FormData();
+                formData.append('keyword_ids', keywordIds);
+                formData.append('device', this.device);
+
+                const startResp = await fetch(`${this.baseUrl}/seo-tracking/project/${this.projectId}/rank-check/start-job`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const startData = await startResp.json();
+
+                if (!startData.success) {
+                    throw new Error(startData.error || 'Errore avvio job');
+                }
+
+                this.jobId = startData.job_id;
+                console.log('Job avviato:', this.jobId);
+
+                // 2. Connetti allo stream SSE
+                this.connectSSE();
+
+            } catch (e) {
+                console.error('Errore:', e);
+                alert('Errore: ' + e.message);
+                this.resetCheckingState();
+            }
+        },
+
+        connectSSE() {
+            const url = `${this.baseUrl}/seo-tracking/project/${this.projectId}/rank-check/stream?job_id=${this.jobId}`;
+            this.eventSource = new EventSource(url);
+
+            this.eventSource.addEventListener('started', (e) => {
+                const data = JSON.parse(e.data);
+                console.log('Job started:', data);
+                this.totalToCheck = data.total_keywords || this.totalToCheck;
+            });
+
+            this.eventSource.addEventListener('progress', (e) => {
+                const data = JSON.parse(e.data);
+                this.currentKeyword = data.current_keyword;
+                this.completedCount = data.completed;
+                this.checkProgress = data.percent;
+            });
+
+            this.eventSource.addEventListener('keyword_completed', (e) => {
+                const data = JSON.parse(e.data);
+                console.log('Keyword completed:', data);
+
+                // Trova e aggiorna la keyword nella lista
+                const kw = this.keywords.find(k => k.keyword === data.keyword);
+                if (kw) {
+                    kw.serp_position = data.position;
+                    kw.position_diff = data.position_diff;
+                    kw.provider = data.provider;
+                    kw.checking = false;
+                    kw.checked = true;
+                    kw.selected = false;
+                }
+
+                this.lastProvider = data.provider || '';
+                this.completedCount++;
+                this.checkProgress = Math.round((this.completedCount / this.totalToCheck) * 100);
+            });
+
+            this.eventSource.addEventListener('keyword_error', (e) => {
+                const data = JSON.parse(e.data);
+                console.error('Keyword error:', data);
+
+                const kw = this.keywords.find(k => k.keyword === data.keyword);
+                if (kw) {
+                    kw.checking = false;
+                    kw.checked = true;
+                    kw.selected = false;
+                    kw.error = data.error;
+                }
+            });
+
+            this.eventSource.addEventListener('completed', (e) => {
+                const data = JSON.parse(e.data);
+                console.log('Job completed:', data);
+                this.finishJob('Verifica completata');
+            });
+
+            this.eventSource.addEventListener('cancelled', (e) => {
+                const data = JSON.parse(e.data);
+                console.log('Job cancelled:', data);
+                this.finishJob('Verifica annullata');
+            });
+
+            this.eventSource.onerror = (e) => {
+                console.error('SSE error:', e);
+                // Fallback a polling se SSE fallisce
+                if (this.eventSource) {
+                    this.eventSource.close();
+                    this.eventSource = null;
+                }
+                this.startPolling();
+            };
+        },
+
+        /**
+         * Polling fallback se SSE non funziona
+         */
+        async startPolling() {
+            if (!this.jobId || !this.checking) return;
+
+            try {
+                const resp = await fetch(`${this.baseUrl}/seo-tracking/project/${this.projectId}/rank-check/job-status?job_id=${this.jobId}`);
+                const data = await resp.json();
+
+                if (data.success && data.job) {
+                    const job = data.job;
+                    this.completedCount = job.keywords_completed + job.keywords_failed;
+                    this.checkProgress = job.progress;
+                    this.currentKeyword = job.current_keyword || '';
+
+                    if (job.status === 'completed' || job.status === 'error' || job.status === 'cancelled') {
+                        this.finishJob(job.status === 'completed' ? 'Verifica completata' : 'Job terminato');
+                        return;
+                    }
+                }
+
+                // Continua polling
+                if (this.checking) {
+                    setTimeout(() => this.startPolling(), 2000);
+                }
+            } catch (e) {
+                console.error('Polling error:', e);
+                if (this.checking) {
+                    setTimeout(() => this.startPolling(), 3000);
+                }
+            }
+        },
+
+        async cancelJob() {
+            if (!this.jobId) return;
+
+            try {
+                const formData = new FormData();
+                formData.append('job_id', this.jobId);
+
+                const resp = await fetch(`${this.baseUrl}/seo-tracking/project/${this.projectId}/rank-check/cancel-job`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await resp.json();
+
+                if (!data.success) {
+                    console.error('Cancel failed:', data.error);
+                }
+                // L'evento 'cancelled' arriverà via SSE
+            } catch (e) {
+                console.error('Cancel error:', e);
+            }
+        },
+
+        finishJob(message) {
+            if (this.eventSource) {
+                this.eventSource.close();
+                this.eventSource = null;
+            }
+
+            // Reset stato checking per keyword non completate
+            this.keywords.forEach(k => {
+                if (k.checking) {
+                    k.checking = false;
+                    k.selected = false;
+                }
+            });
+
+            this.checking = false;
+            this.jobId = null;
+            this.currentKeyword = '';
+
+            console.log(message);
+        },
+
+        resetCheckingState() {
+            this.keywords.forEach(k => {
+                if (k.checking) {
+                    k.checking = false;
+                }
+            });
+            this.checking = false;
+            this.jobId = null;
+            this.currentKeyword = '';
+        },
+
+        /**
+         * Metodo legacy per check singolo (fallback)
+         */
         async checkSelected() {
             const toCheck = this.keywords.filter(k => k.selected && !k.checked);
             if (toCheck.length === 0) return;
 
             this.checking = true;
             this.checkProgress = 0;
+            this.totalToCheck = toCheck.length;
+            this.completedCount = 0;
 
             for (let i = 0; i < toCheck.length; i++) {
                 const kw = toCheck[i];
                 kw.checking = true;
+                this.currentKeyword = kw.keyword;
 
                 try {
                     const formData = new FormData();
@@ -306,6 +534,7 @@ function rankChecker() {
                 kw.checking = false;
                 kw.checked = true;
                 kw.selected = false;
+                this.completedCount = i + 1;
                 this.checkProgress = Math.round(((i + 1) / toCheck.length) * 100);
 
                 // Rate limit: 1 secondo tra richieste
@@ -315,6 +544,7 @@ function rankChecker() {
             }
 
             this.checking = false;
+            this.currentKeyword = '';
         },
 
         getPositionClass(pos) {

@@ -429,4 +429,26 @@ class GroupController
             ],
         ]);
     }
+
+    /**
+     * Sincronizza gruppi da st_keywords.group_name a st_keyword_groups
+     * Utility per migrare dati esistenti
+     */
+    public function syncFromKeywords(int $projectId): string
+    {
+        $user = Auth::user();
+        $project = $this->project->find($projectId, $user['id']);
+
+        if (!$project) {
+            return View::json(['error' => 'Progetto non trovato'], 404);
+        }
+
+        $stats = $this->group->syncAllFromKeywords($projectId);
+
+        return View::json([
+            'success' => true,
+            'message' => "Sincronizzazione completata: {$stats['groups_created']} gruppi, {$stats['keywords_linked']} keyword collegate",
+            'stats' => $stats,
+        ]);
+    }
 }

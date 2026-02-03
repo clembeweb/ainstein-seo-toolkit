@@ -7,8 +7,8 @@
 | **Slug** | `seo-tracking` |
 | **Prefisso DB** | `st_` |
 | **Files** | 57 |
-| **Stato** | ✅ Attivo (90%) |
-| **Ultimo update** | 2026-01-28 |
+| **Stato** | ✅ Attivo (95%) |
+| **Ultimo update** | 2026-02-03 |
 
 Modulo per monitoraggio posizionamento keyword con dati GSC, Rank Check API (DataForSEO), Page Analyzer e report AI.
 
@@ -46,12 +46,17 @@ modules/seo-tracking/
 │   ├── Alert.php
 │   └── AiReport.php
 ├── services/
-│   ├── GscService.php
+│   ├── GscService.php             # OAuth GSC + sync metriche
 │   ├── GroupStatsService.php      # Statistiche gruppi
 │   ├── PositionCompareService.php # Confronto posizioni
 │   ├── KeywordMatcher.php
 │   ├── AlertService.php
-│   └── AiReportService.php
+│   └── AiReportService.php        # Report AI (weekly, monthly)
+├── cron/
+│   ├── rank-dispatcher.php        # Auto rank check (admin scheduled)
+│   ├── gsc-sync-dispatcher.php    # Auto GSC sync (admin scheduled)
+│   ├── ai-report-dispatcher.php   # Auto AI reports (admin scheduled)
+│   └── daily-sync.php             # (Legacy) Sync manuale
 # In /services/ (root - condiviso)
 │   └── DataForSeoService.php      # Rank Check API
 └── views/
@@ -97,33 +102,33 @@ st_sync_log              -- Log sync
 ## Funzionalità
 
 ### ✅ Implementate
-- [x] CRUD progetti
-- [x] CRUD keyword tracking
+- [x] CRUD progetti (semplificato: solo nome + dominio)
+- [x] CRUD keyword tracking (solo keyword manuali, no auto-discovery)
 - [x] **Keyword Groups** (raggruppamento M:N con statistiche)
 - [x] **Position Compare** (confronto posizioni tra periodi - stile SEMrush)
 - [x] **SEO Page Analyzer** (analisi AI singola pagina con suggerimenti)
 - [x] **Quick Wins Finder** (keyword pos 11-20 facili da spingere)
-- [x] **Rank Check** via DataForSEO API
+- [x] **Rank Check** via DataForSEO API (cron automatico admin-configured)
 - [x] **Locations** gestione location per rank check
 - [x] OAuth GSC completo e funzionante
 - [x] Redirect URI dinamico (multi-dominio)
 - [x] Token refresh automatico
 - [x] Selezione property GSC
-- [x] Sync dati GSC
+- [x] **GSC Auto Sync** (cron admin-configured, solo keyword tracciate)
+- [x] **AI Reports automatici** (cron admin-configured, weekly digest)
 - [x] Views dashboard
 - [x] Views keyword detail
 - [x] Schema DB allineato al codice
 
 ### 🔄 In Corso
-- [ ] Sync dati automatico (cron)
-- [ ] Weekly AI Digest
+- [ ] Alert UI funzionante (UI presente, backend da completare)
 
 ### ❌ Da Implementare
-- [ ] Sistema alert
-- [ ] Report AI automatici
-- [ ] Email notifiche
+- [ ] Email notifiche alert
+- [ ] Monthly executive report (cron)
 
-> **Nota:** GA4 è stato rimosso. Revenue attribution non più in scope.
+> **Nota:** GA4 è stato rimosso. Le impostazioni per-progetto utente (Report AI, sync_enabled) sono state rimosse.
+> La configurazione cron è ora centralizzata nelle impostazioni modulo admin.
 
 ---
 
@@ -235,9 +240,14 @@ POST /seo-tracking/projects/{id}/gsc/sync             # Sync dati
 
 1. **OAuth GSC** condiviso con seo-audit via `GoogleOAuthService`
 2. **Redirect URI dinamico** - supporta localhost, vhost e produzione senza config manuale
-3. **GA4** usa Service Account (non OAuth utente)
-4. **AiReportService** deve usare AiService centralizzato (verificare)
-5. **Cron jobs** per sync giornaliero (da implementare)
+3. **GA4** rimosso - non più in scope
+4. **AiReportService** usa `AiService('seo-tracking')` centralizzato ✅
+5. **Cron jobs** implementati con scheduler admin-configured:
+   - `rank-dispatcher.php` - rank check automatico
+   - `gsc-sync-dispatcher.php` - sync GSC metriche keyword tracciate
+   - `ai-report-dispatcher.php` - weekly AI digest
+6. **Creazione progetto** semplificata: solo nome + dominio
+7. **Impostazioni progetto** ridotte: nome, dominio, email notifiche, alert UI, GSC connection
 
 ---
 
@@ -256,48 +266,44 @@ Vedi: `docs/GOLDEN-RULES.md` - Regola #11
 
 ---
 
-## GAP AI - Da Implementare (FASE 2)
+## Architettura Cron Jobs (Admin-Configured)
 
-### Stato Attuale AI
-- ✅ SEO Page Analyzer - Implementato e funzionante
-- ✅ Quick Wins Finder - Implementato
-- ⚠️ AiReportService presente ma non completamente funzionante
-- ❌ Weekly Digest non attivo (cron da configurare)
+### Gestione Centralizzata
+Tutti i cron job automatici sono configurati dall'admin nelle impostazioni del modulo (`/admin/modules/{id}/settings`).
+L'utente NON ha impostazioni per-progetto relative a scheduling/sync.
 
-### Feature Mancante: Weekly AI Digest
+### Cron Jobs Disponibili
 
-**Obiettivo:** Report settimanale automatico con insight azionabili.
+| Cron | File | Descrizione | Settings |
+|------|------|-------------|----------|
+| **Rank Check** | `rank-dispatcher.php` | Verifica posizioni SERP via API | `rank_auto_enabled`, `rank_auto_days`, `rank_auto_time` |
+| **GSC Sync** | `gsc-sync-dispatcher.php` | Sync metriche GSC per keyword tracciate | `gsc_sync_enabled`, `gsc_sync_frequency`, `gsc_sync_time` |
+| **AI Reports** | `ai-report-dispatcher.php` | Genera weekly digest AI | `ai_reports_enabled`, `ai_reports_day`, `ai_reports_time` |
 
-**Cron settimanale che genera:**
-- Riepilogo performance vs settimana precedente
-- Top 3 azioni prioritarie
-- Keyword in crescita/calo
-- Opportunità identificate
+### Crontab Esempio (Produzione)
+```bash
+# Rank Check - ogni 5 minuti
+*/5 * * * * php /path/to/modules/seo-tracking/cron/rank-dispatcher.php
 
-**Output esempio:**
-```markdown
-## Weekly SEO Digest - 13-19 Gennaio 2026
+# GSC Sync - ogni ora
+0 * * * * php /path/to/modules/seo-tracking/cron/gsc-sync-dispatcher.php
 
-### Performance
-- Traffico organico: +12% vs settimana precedente
-- Impression totali: 45.000 (+8%)
-
-### Top 3 Azioni Prioritarie
-1. "consulenza seo milano" - Posizione 11 → Ottimizza H1
-2. "audit seo gratuito" - CTR 1.2% → Riscrivi meta description
-3. "tool seo italiano" - 500 impression, 0 click → Verifica intent
+# AI Reports - ogni ora (scheduler interno)
+0 * * * * php /path/to/modules/seo-tracking/cron/ai-report-dispatcher.php
 ```
 
-**Implementazione:**
-1. Cron job settimanale (lunedi mattina)
-2. `AiReportService::generateWeeklyDigest($projectId)`
-3. Salvataggio in `st_ai_reports`
-4. Email notifica (opzionale)
-5. Vista dashboard con ultimo digest
+### Flusso GSC Semplificato
+1. Utente crea progetto (solo nome + dominio)
+2. Utente connette GSC (OAuth)
+3. Utente aggiunge keyword manualmente
+4. Cron admin sincronizza metriche GSC solo per keyword tracciate
+5. Nessuna auto-discovery keyword
 
-**Priorità:** 🟡 MEDIA - FASE 2 Roadmap
-
-📄 Vedi: [ROADMAP.md](../ROADMAP.md)
+### Weekly AI Digest ✅ Implementato
+- Cron job: `ai-report-dispatcher.php`
+- Metodo: `AiReportService::generateWeeklyDigest($projectId, $userId)`
+- Salvataggio: `st_ai_reports`
+- Configurazione: admin module settings
 
 ---
 
@@ -330,4 +336,31 @@ Verifica posizioni keyword in tempo reale via API DataForSEO:
 
 ---
 
-*Spec aggiornata - 2026-01-28*
+*Spec aggiornata - 2026-02-03*
+
+---
+
+## Refactoring 2026-02-03
+
+### Modifiche UI
+- **Creazione progetto**: rimossi campi Notifications, Report AI, Info cards GA4
+- **Impostazioni progetto**: rimossi sync_enabled, data_retention, Report AI section
+- Mantenuti: Nome, Dominio, Email notifiche, Alert UI, GSC connection, Delete zone
+
+### Nuove Impostazioni Admin (module.json)
+```json
+{
+  "gsc_sync_enabled": "Abilita sync GSC automatico",
+  "gsc_sync_frequency": "Frequenza (daily, mon_thu, mon_wed_fri, weekly)",
+  "gsc_sync_time": "Orario sync (HH:MM)",
+  "ai_reports_enabled": "Abilita report AI automatici",
+  "ai_reports_day": "Giorno settimana (0-6)",
+  "ai_reports_time": "Orario generazione (HH:MM)"
+}
+```
+
+### Nuovi Metodi GscService
+- `syncTrackedKeywordsOnly(int $projectId)`: sync metriche GSC solo per keyword tracciate (is_tracked=1)
+
+### File Rimossi/Obsoleti
+- `daily-sync.php` - legacy, sostituito dai dispatcher

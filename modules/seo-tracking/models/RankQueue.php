@@ -534,4 +534,117 @@ class RankQueue
     {
         return Database::delete($this->table, 'id = ?', [$id]) > 0;
     }
+
+    // =========================================
+    // METODI PER JOB MANUALI (Background Processing)
+    // =========================================
+
+    /**
+     * Aggiunge keywords alla coda collegandole a un job
+     *
+     * @param int $projectId ID del progetto
+     * @param int $jobId ID del job
+     * @param array $keywordIds Array di keyword IDs
+     * @param string $device 'desktop' o 'mobile'
+     * @return int Numero di items inseriti
+     */
+    public function addBulkForJob(int $projectId, int $jobId, array $keywordIds, string $device = 'desktop'): int
+    {
+        // Ottieni il dominio dal progetto
+        $project = Database::fetch("SELECT domain FROM st_projects WHERE id = ?", [$projectId]);
+
+        if (!$project) {
+            return 0;
+        }
+
+        $targetDomain = $project['domain'];
+        $inserted = 0;
+
+        foreach ($keywordIds as $keywordId) {
+            // Ottieni dati keyword
+            $keyword = Database::fetch(
+                "SELECT id, keyword, location_code FROM st_keywords WHERE id = ? AND project_id = ?",
+                [$keywordId, $projectId]
+            );
+
+            if (!$keyword) {
+                continue;
+            }
+
+            Database::insert($this->table, [
+                'project_id' => $projectId,
+                'job_id' => $jobId,
+                'keyword_id' => $keyword['id'],
+                'keyword' => $keyword['keyword'],
+                'target_domain' => $targetDomain,
+                'location_code' => $keyword['location_code'] ?? 'IT',
+                'device' => $device,
+                'status' => 'pending',
+                'scheduled_at' => date('Y-m-d H:i:s'),
+            ]);
+
+            $inserted++;
+        }
+
+        return $inserted;
+    }
+
+    /**
+     * Ottiene il prossimo item pending per un job specifico
+     *
+     * @param int $jobId ID del job
+     * @return array|null Item o null se coda vuota
+     */
+    public function getNextPendingForJob(int $jobId): ?array
+    {
+        $sql = "
+            SELECT q.*, p.name as project_name, p.user_id
+            FROM {$this->table} q
+            JOIN st_projects p ON q.project_id = p.id
+            WHERE q.job_id = ?
+            AND q.status = 'pending'
+            ORDER BY q.id ASC
+            LIMIT 1
+        ";
+
+        return Database::fetch($sql, [$jobId]);
+    }
+
+    /**
+     * Conta items pending per un job
+     *
+     * @param int $jobId ID del job
+     * @return int Numero di items pending
+     */
+    public function countPendingForJob(int $jobId): int
+    {
+        return Database::count($this->table, "job_id = ? AND status = 'pending'", [$jobId]);
+    }
+
+    /**
+     * Conta items completati per un job
+     *
+     * @param int $jobId ID del job
+     * @return int Numero di items completati
+     */
+    public function countCompletedForJob(int $jobId): int
+    {
+        return Database::count($this->table, "job_id = ? AND status = 'completed'", [$jobId]);
+    }
+
+    /**
+     * Ottiene tutti i risultati di un job
+     *
+     * @param int $jobId ID del job
+     * @return array Lista risultati
+     */
+    public function getResultsForJob(int $jobId): array
+    {
+        return Database::fetchAll(
+            "SELECT * FROM {$this->table}
+             WHERE job_id = ?
+             ORDER BY completed_at ASC",
+            [$jobId]
+        );
+    }
 }

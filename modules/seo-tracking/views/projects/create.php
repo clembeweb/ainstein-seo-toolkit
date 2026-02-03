@@ -48,66 +48,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Notifications -->
-            <div class="pt-6 border-t border-slate-200 dark:border-slate-700">
-                <h2 class="text-lg font-medium text-slate-900 dark:text-white mb-4">Notifiche</h2>
-
-                <div>
-                    <label for="notification_emails" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                        Email per notifiche
-                    </label>
-                    <input type="text" name="notification_emails" id="notification_emails"
-                           class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                           placeholder="email1@example.com, email2@example.com">
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Email separate da virgola per ricevere alert e report</p>
-                </div>
-            </div>
-
-            <!-- AI Reports -->
-            <div class="pt-6 border-t border-slate-200 dark:border-slate-700">
-                <h2 class="text-lg font-medium text-slate-900 dark:text-white mb-4">Report AI</h2>
-
-                <div class="space-y-4">
-                    <label class="flex items-start gap-3 cursor-pointer">
-                        <input type="checkbox" name="ai_reports_enabled" value="1" checked
-                               class="mt-1 h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
-                        <div>
-                            <span class="block text-sm font-medium text-slate-900 dark:text-white">Abilita report AI</span>
-                            <span class="block text-xs text-slate-500 dark:text-slate-400">Genera automaticamente analisi settimanali e mensili con Claude AI</span>
-                        </div>
-                    </label>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label for="weekly_report_day" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                Giorno report settimanale
-                            </label>
-                            <select name="weekly_report_day" id="weekly_report_day"
-                                    class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                <option value="1">Lunedi</option>
-                                <option value="2">Martedi</option>
-                                <option value="3">Mercoledi</option>
-                                <option value="4">Giovedi</option>
-                                <option value="5">Venerdi</option>
-                                <option value="6">Sabato</option>
-                                <option value="0">Domenica</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="monthly_report_day" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                Giorno report mensile
-                            </label>
-                            <select name="monthly_report_day" id="monthly_report_day"
-                                    class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                <?php for ($i = 1; $i <= 28; $i++): ?>
-                                <option value="<?= $i ?>"><?= $i ?></option>
-                                <?php endfor; ?>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- Footer -->
@@ -126,33 +66,20 @@
         </div>
     </form>
 
-    <!-- Info Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
-            <div class="flex items-start gap-3">
-                <div class="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/50 flex items-center justify-center flex-shrink-0">
-                    <svg class="h-5 w-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                    </svg>
-                </div>
-                <div>
-                    <h4 class="font-medium text-slate-900 dark:text-white">Google Search Console</h4>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Monitora posizioni keyword, click e impressioni dalla ricerca Google</p>
-                </div>
+    <!-- Info Card -->
+    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="flex items-start gap-3">
+            <div class="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/50 flex items-center justify-center flex-shrink-0">
+                <svg class="h-5 w-5 text-green-600 dark:text-green-400" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
             </div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
-            <div class="flex items-start gap-3">
-                <div class="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
-                    <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                </div>
-                <div>
-                    <h4 class="font-medium text-slate-900 dark:text-white">Google Analytics 4</h4>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Traccia sessioni, conversioni e revenue attribuito al traffico organico</p>
-                </div>
+            <div>
+                <h4 class="font-medium text-slate-900 dark:text-white">Google Search Console</h4>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Monitora posizioni keyword, click e impressioni dalla ricerca Google</p>
             </div>
         </div>
     </div>

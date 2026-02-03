@@ -43,103 +43,49 @@
             "description": "Analisi SEO pagina con competitor comparison"
         }
     },
+    "settings_groups": {
+        "cron_rank": {
+            "label": "Rank Check Automatico",
+            "icon": "chart-bar",
+            "description": "Verifica automatica posizioni SERP via API",
+            "order": 1
+        },
+        "cron_gsc": {
+            "label": "Sync GSC Automatico",
+            "icon": "refresh",
+            "description": "Sincronizzazione metriche da Google Search Console",
+            "order": 2
+        },
+        "cron_ai": {
+            "label": "Report AI Automatici",
+            "icon": "sparkles",
+            "description": "Generazione automatica report settimanali AI",
+            "order": 3
+        },
+        "costs": {
+            "label": "Costi Operazioni",
+            "icon": "currency-euro",
+            "description": "Crediti consumati per ogni operazione",
+            "order": 4,
+            "collapsed": true
+        }
+    },
     "settings": {
-        "gsc_client_id": {
-            "label": "Google OAuth Client ID",
-            "type": "text",
-            "description": "Client ID dalla Google Cloud Console",
-            "admin_only": true
-        },
-        "gsc_client_secret": {
-            "label": "Google OAuth Client Secret",
-            "type": "password",
-            "description": "Client Secret dalla Google Cloud Console",
-            "admin_only": true
-        },
-        "gsc_redirect_uri": {
-            "label": "Google OAuth Redirect URI",
-            "type": "text",
-            "description": "Copia questo URL nella Google Cloud Console",
-            "admin_only": true,
-            "readonly": true,
-            "default": "/seo-tracking/gsc/callback"
-        },
-        "cost_gsc_full_sync": {
-            "type": "number",
-            "label": "Costo Sync Completa GSC",
-            "description": "Crediti per sincronizzazione completa GSC",
-            "default": 10,
-            "min": 0,
-            "step": 0.1,
-            "admin_only": true
-        },
-        "cost_quick_wins": {
-            "type": "number",
-            "label": "Costo Analisi Quick Wins",
-            "description": "Crediti per analisi Quick Wins AI",
-            "default": 2,
-            "min": 0,
-            "step": 0.1,
-            "admin_only": true
-        },
-        "cost_weekly_digest": {
-            "type": "number",
-            "label": "Costo Report Settimanale",
-            "description": "Crediti per report settimanale AI",
-            "default": 5,
-            "min": 0,
-            "step": 0.1,
-            "admin_only": true
-        },
-        "cost_monthly_executive": {
-            "type": "number",
-            "label": "Costo Report Mensile",
-            "description": "Crediti per report mensile executive",
-            "default": 15,
-            "min": 0,
-            "step": 0.1,
-            "admin_only": true
-        },
-        "cost_keyword_analysis": {
-            "type": "number",
-            "label": "Costo Analisi Keyword",
-            "description": "Crediti per analisi keyword AI on-demand",
-            "default": 5,
-            "min": 0,
-            "step": 0.1,
-            "admin_only": true
-        },
-        "cost_anomaly_detection": {
-            "type": "number",
-            "label": "Costo Rilevamento Anomalie",
-            "description": "Crediti per rilevamento anomalie AI",
-            "default": 5,
-            "min": 0,
-            "step": 0.1,
-            "admin_only": true
-        },
-        "cost_page_analysis": {
-            "type": "number",
-            "label": "Costo Analisi Pagina SEO",
-            "description": "Crediti per analisi SEO pagina con competitor comparison (scraping + AI)",
-            "default": 2,
-            "min": 0,
-            "step": 0.1,
-            "admin_only": true
-        },
         "rank_auto_enabled": {
             "type": "checkbox",
             "label": "Abilita Auto Rank Check",
             "description": "Verifica automatica posizioni SERP per tutte le keyword tracciate",
             "default": false,
-            "admin_only": true
+            "admin_only": true,
+            "group": "cron_rank"
         },
         "rank_auto_days": {
             "type": "select",
-            "label": "Frequenza Aggiornamento",
+            "label": "Frequenza",
             "description": "Giorni della settimana per la verifica automatica",
             "default": "mon_thu",
             "admin_only": true,
+            "group": "cron_rank",
             "options": [
                 {"value": "mon_thu", "label": "2 volte/settimana (Lun e Gio)"},
                 {"value": "mon_wed_fri", "label": "3 volte/settimana (Lun, Mer, Ven)"},
@@ -149,10 +95,144 @@
         },
         "rank_auto_time": {
             "type": "text",
-            "label": "Orario Esecuzione",
-            "description": "Orario di esecuzione (formato HH:MM, es. 04:00)",
+            "label": "Orario",
+            "description": "Orario di esecuzione (formato HH:MM)",
             "default": "04:00",
-            "admin_only": true
+            "admin_only": true,
+            "group": "cron_rank"
+        },
+        "gsc_sync_enabled": {
+            "type": "checkbox",
+            "label": "Abilita Sync GSC Automatico",
+            "description": "Sincronizza automaticamente le metriche GSC per le keyword tracciate",
+            "default": false,
+            "admin_only": true,
+            "group": "cron_gsc"
+        },
+        "gsc_sync_frequency": {
+            "type": "select",
+            "label": "Frequenza",
+            "description": "Frequenza di sincronizzazione metriche",
+            "default": "daily",
+            "admin_only": true,
+            "group": "cron_gsc",
+            "options": [
+                {"value": "daily", "label": "Ogni giorno"},
+                {"value": "mon_thu", "label": "2 volte/settimana (Lun e Gio)"},
+                {"value": "mon_wed_fri", "label": "3 volte/settimana (Lun, Mer, Ven)"},
+                {"value": "weekly", "label": "1 volta/settimana (Lunedi)"}
+            ]
+        },
+        "gsc_sync_time": {
+            "type": "text",
+            "label": "Orario",
+            "description": "Orario di sincronizzazione (formato HH:MM)",
+            "default": "05:00",
+            "admin_only": true,
+            "group": "cron_gsc"
+        },
+        "ai_reports_enabled": {
+            "type": "checkbox",
+            "label": "Abilita Report AI Automatici",
+            "description": "Genera automaticamente report AI settimanali per tutti i progetti",
+            "default": false,
+            "admin_only": true,
+            "group": "cron_ai"
+        },
+        "ai_reports_day": {
+            "type": "select",
+            "label": "Giorno",
+            "description": "Giorno della settimana per la generazione",
+            "default": "1",
+            "admin_only": true,
+            "group": "cron_ai",
+            "options": [
+                {"value": "1", "label": "Lunedi"},
+                {"value": "2", "label": "Martedi"},
+                {"value": "3", "label": "Mercoledi"},
+                {"value": "4", "label": "Giovedi"},
+                {"value": "5", "label": "Venerdi"},
+                {"value": "6", "label": "Sabato"},
+                {"value": "0", "label": "Domenica"}
+            ]
+        },
+        "ai_reports_time": {
+            "type": "text",
+            "label": "Orario",
+            "description": "Orario di generazione (formato HH:MM)",
+            "default": "07:00",
+            "admin_only": true,
+            "group": "cron_ai"
+        },
+        "cost_gsc_full_sync": {
+            "type": "number",
+            "label": "Sync Completa GSC",
+            "description": "Crediti per sincronizzazione completa GSC (16 mesi)",
+            "default": 10,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_quick_wins": {
+            "type": "number",
+            "label": "Analisi Quick Wins",
+            "description": "Crediti per analisi Quick Wins AI",
+            "default": 2,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_weekly_digest": {
+            "type": "number",
+            "label": "Report Settimanale",
+            "description": "Crediti per report settimanale AI",
+            "default": 5,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_monthly_executive": {
+            "type": "number",
+            "label": "Report Mensile",
+            "description": "Crediti per report mensile executive",
+            "default": 15,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_keyword_analysis": {
+            "type": "number",
+            "label": "Analisi Keyword",
+            "description": "Crediti per analisi keyword AI on-demand",
+            "default": 5,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_anomaly_detection": {
+            "type": "number",
+            "label": "Rilevamento Anomalie",
+            "description": "Crediti per rilevamento anomalie AI",
+            "default": 5,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_page_analysis": {
+            "type": "number",
+            "label": "Analisi Pagina SEO",
+            "description": "Crediti per analisi SEO pagina",
+            "default": 2,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
         }
     },
     "routes_prefix": "/seo-tracking"

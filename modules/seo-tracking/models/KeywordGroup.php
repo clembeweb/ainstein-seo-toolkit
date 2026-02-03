@@ -105,6 +105,88 @@ class KeywordGroup
     }
 
     /**
+     * Trova o crea gruppo per nome
+     * Usato per sincronizzare group_name di st_keywords con st_keyword_groups
+     */
+    public function findOrCreate(int $projectId, string $name): int
+    {
+        $name = trim($name);
+        if (empty($name)) {
+            return 0;
+        }
+
+        // Cerca gruppo esistente
+        $existing = $this->findByName($projectId, $name);
+        if ($existing) {
+            return (int) $existing['id'];
+        }
+
+        // Crea nuovo gruppo
+        $colors = self::getDefaultColors();
+        $colorIndex = Database::count($this->table, 'project_id = ?', [$projectId]) % count($colors);
+
+        return $this->create([
+            'project_id' => $projectId,
+            'name' => $name,
+            'color' => $colors[$colorIndex],
+            'is_active' => 1,
+            'sort_order' => 0,
+        ]);
+    }
+
+    /**
+     * Sincronizza keyword con gruppo
+     * Chiamato quando si salva una keyword con group_name
+     */
+    public function syncKeywordToGroup(int $projectId, int $keywordId, ?string $groupName): void
+    {
+        // Rimuovi keyword da tutti i gruppi del progetto
+        $groups = $this->allByProject($projectId, false);
+        foreach ($groups as $group) {
+            $this->removeKeyword($group['id'], $keywordId);
+        }
+
+        // Se c'è un nome gruppo, trova/crea e aggiungi
+        if (!empty($groupName)) {
+            $groupId = $this->findOrCreate($projectId, $groupName);
+            if ($groupId > 0) {
+                $this->addKeyword($groupId, $keywordId);
+            }
+        }
+    }
+
+    /**
+     * Sincronizza tutti i gruppi da st_keywords.group_name a st_keyword_groups
+     * Utility per migrare dati esistenti
+     */
+    public function syncAllFromKeywords(int $projectId): array
+    {
+        $stats = ['groups_created' => 0, 'keywords_linked' => 0];
+
+        // Trova tutti i group_name distinti dalle keywords
+        $keywordsWithGroups = Database::fetchAll(
+            "SELECT id, group_name FROM st_keywords
+             WHERE project_id = ? AND group_name IS NOT NULL AND group_name != ''",
+            [$projectId]
+        );
+
+        foreach ($keywordsWithGroups as $kw) {
+            $groupId = $this->findOrCreate($projectId, $kw['group_name']);
+            if ($groupId > 0) {
+                if (!$this->hasKeyword($groupId, $kw['id'])) {
+                    $this->addKeyword($groupId, $kw['id']);
+                    $stats['keywords_linked']++;
+                }
+            }
+        }
+
+        // Conta gruppi creati
+        $stats['groups_created'] = $this->countByProject($projectId);
+
+        return $stats;
+    }
+
+    /**
      * Aggiorna gruppo
      */
     public function update(int $id, array $data): bool

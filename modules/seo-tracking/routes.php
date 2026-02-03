@@ -239,6 +239,39 @@ Router::post('/seo-tracking/project/{id}/rank-check/import-keywords', function (
 });
 
 // =============================================
+// RANK CHECK - BACKGROUND JOB PROCESSING
+// =============================================
+
+// Avvia job in background
+Router::post('/seo-tracking/project/{id}/rank-check/start-job', function ($id) {
+    Middleware::auth();
+    return (new RankCheckController())->startJob((int) $id);
+});
+
+// SSE Stream per progress in tempo reale (NO auth middleware - gestito internamente)
+Router::get('/seo-tracking/project/{id}/rank-check/stream', function ($id) {
+    return (new RankCheckController())->processStream((int) $id);
+});
+
+// Polling fallback per status job
+Router::get('/seo-tracking/project/{id}/rank-check/job-status', function ($id) {
+    Middleware::auth();
+    return (new RankCheckController())->jobStatus((int) $id);
+});
+
+// Annulla job in esecuzione
+Router::post('/seo-tracking/project/{id}/rank-check/cancel-job', function ($id) {
+    Middleware::auth();
+    return (new RankCheckController())->cancelJob((int) $id);
+});
+
+// Lista keyword tracciate per job
+Router::get('/seo-tracking/project/{id}/rank-check/tracked-keywords', function ($id) {
+    Middleware::auth();
+    return (new RankCheckController())->getTrackedKeywords((int) $id);
+});
+
+// =============================================
 // KEYWORD TRACKING
 // =============================================
 
@@ -341,6 +374,33 @@ Router::get('/seo-tracking/project/{id}/keywords/refresh-cost', function ($id) {
     return (new KeywordController())->getRefreshCost((int) $id);
 });
 
+// =============================================
+// KEYWORDS - BACKGROUND JOB PROCESSING
+// =============================================
+
+// Avvia job posizioni in background
+Router::post('/seo-tracking/project/{id}/keywords/start-positions-job', function ($id) {
+    Middleware::auth();
+    return (new KeywordController())->startPositionsJob((int) $id);
+});
+
+// SSE Stream per progress posizioni (NO auth middleware - gestito internamente)
+Router::get('/seo-tracking/project/{id}/keywords/positions-stream', function ($id) {
+    return (new KeywordController())->processPositionsStream((int) $id);
+});
+
+// Polling fallback per status job posizioni
+Router::get('/seo-tracking/project/{id}/keywords/positions-job-status', function ($id) {
+    Middleware::auth();
+    return (new KeywordController())->positionsJobStatus((int) $id);
+});
+
+// Annulla job posizioni in esecuzione
+Router::post('/seo-tracking/project/{id}/keywords/cancel-positions-job', function ($id) {
+    Middleware::auth();
+    return (new KeywordController())->cancelPositionsJob((int) $id);
+});
+
 // Debug SERP check (temporaneo per diagnostica)
 Router::get('/seo-tracking/project/{id}/debug-serp', function ($id) {
     Middleware::auth();
@@ -420,6 +480,12 @@ Router::post('/seo-tracking/project/{id}/groups/{groupId}/add-keyword', function
 Router::post('/seo-tracking/project/{id}/groups/{groupId}/remove-keyword', function ($id, $groupId) {
     Middleware::auth();
     return (new GroupController())->removeKeyword((int) $id, (int) $groupId);
+});
+
+// API: Sincronizza gruppi da st_keywords.group_name
+Router::post('/seo-tracking/project/{id}/groups/sync-from-keywords', function ($id) {
+    Middleware::auth();
+    return (new GroupController())->syncFromKeywords((int) $id);
 });
 
 // API: Dati grafico trend gruppo

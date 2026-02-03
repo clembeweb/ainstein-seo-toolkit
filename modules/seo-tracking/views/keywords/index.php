@@ -252,6 +252,13 @@
                             </td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-1">
+                                    <button onclick="checkSingleKeyword(<?= $kw['id'] ?>, '<?= e(addslashes($kw['keyword'])) ?>', '<?= e($kw['location_code'] ?? 'IT') ?>', this)"
+                                            class="p-1 rounded hover:bg-emerald-100 dark:hover:bg-emerald-900/30 single-check-btn"
+                                            title="Verifica posizione SERP (1 credito)">
+                                        <svg class="w-4 h-4 text-emerald-500 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                        </svg>
+                                    </button>
                                     <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/' . $kw['id']) ?>" class="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700" title="Dettaglio">
                                         <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -509,10 +516,28 @@ function closeRefreshModal() {
     }
 }
 
+// Stato job in background
+let currentJobId = null;
+let eventSource = null;
+let pollingInterval = null;
+let jobResults = [];
+
 // Esecuzione refresh
 function executeRefresh(type) {
     closeRefreshModal();
 
+    // Per posizioni e "tutto", usa background processing con SSE
+    if (type === 'positions' || type === 'all') {
+        executeRefreshWithSSE(type);
+        return;
+    }
+
+    // Per volumi, usa il metodo sincrono (più veloce per batch DataForSEO)
+    executeRefreshSync(type);
+}
+
+// Refresh sincrono (per volumi)
+function executeRefreshSync(type) {
     const config = refreshConfig[type];
     const btn = document.getElementById(config.btn);
     const originalHTML = btn.innerHTML;
@@ -563,6 +588,298 @@ function executeRefresh(type) {
         console.error('Refresh failed:', err);
         showResultModal(false, { error: 'Errore di connessione. Riprova.' });
         restoreButtons(type, originalHTML);
+    });
+}
+
+// Refresh con SSE (per posizioni - non bloccante)
+function executeRefreshWithSSE(type) {
+    const csrfToken = document.querySelector('input[name="_csrf_token"]').value;
+    const selectedIds = window.refreshSelectedIds || null;
+    window.refreshSelectedIds = null;
+
+    // Disabilita pulsanti
+    ['refreshVolumesBtn', 'refreshPositionsBtn', 'refreshAllBtn'].forEach(id => {
+        document.getElementById(id).disabled = true;
+    });
+
+    // Mostra modal di progress
+    showProgressModal(type);
+
+    // Costruisci body per start-job
+    let bodyData = '_csrf_token=' + encodeURIComponent(csrfToken);
+    if (selectedIds && selectedIds.length > 0) {
+        selectedIds.forEach(id => {
+            bodyData += '&keyword_ids[]=' + encodeURIComponent(id);
+        });
+    }
+
+    // Avvia job in background
+    fetch(`${baseUrl}/seo-tracking/project/${projectId}/keywords/start-positions-job`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: bodyData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            currentJobId = data.job_id;
+            jobResults = [];
+            connectSSE(type);
+        } else {
+            closeProgressModal();
+            showResultModal(false, data);
+            restoreAllButtons();
+        }
+    })
+    .catch(err => {
+        console.error('Start job failed:', err);
+        closeProgressModal();
+        showResultModal(false, { error: 'Errore di connessione. Riprova.' });
+        restoreAllButtons();
+    });
+}
+
+// Connetti a SSE per progress in tempo reale
+function connectSSE(type) {
+    if (eventSource) {
+        eventSource.close();
+    }
+
+    const streamUrl = `${baseUrl}/seo-tracking/project/${projectId}/keywords/positions-stream?job_id=${currentJobId}`;
+    eventSource = new EventSource(streamUrl);
+
+    eventSource.addEventListener('started', function(e) {
+        const data = JSON.parse(e.data);
+        updateProgressModal({
+            status: 'running',
+            message: 'Avvio elaborazione...',
+            total: data.total_keywords,
+            completed: 0,
+            percent: 0
+        });
+    });
+
+    eventSource.addEventListener('progress', function(e) {
+        const data = JSON.parse(e.data);
+        updateProgressModal({
+            status: 'running',
+            message: `Verifico: ${data.current_keyword}`,
+            total: data.total,
+            completed: data.completed,
+            percent: data.percent
+        });
+    });
+
+    eventSource.addEventListener('keyword_completed', function(e) {
+        const data = JSON.parse(e.data);
+        jobResults.push({
+            keyword: data.keyword,
+            found: data.found,
+            position: data.position,
+            url: data.url,
+            previous_position: data.gsc_position
+        });
+    });
+
+    eventSource.addEventListener('keyword_error', function(e) {
+        const data = JSON.parse(e.data);
+        jobResults.push({
+            keyword: data.keyword,
+            found: false,
+            error: data.error
+        });
+    });
+
+    eventSource.addEventListener('completed', function(e) {
+        const data = JSON.parse(e.data);
+        eventSource.close();
+        eventSource = null;
+        currentJobId = null;
+        closeProgressModal();
+        showResultModal(true, {
+            success: true,
+            updated: data.total_found,
+            not_found: data.total_completed - data.total_found,
+            total: data.total_completed,
+            credits_used: data.credits_used,
+            message: `Posizioni aggiornate: ${data.total_found} trovate, ${data.total_completed - data.total_found} non in top 100`,
+            details: jobResults
+        });
+    });
+
+    eventSource.addEventListener('cancelled', function(e) {
+        const data = JSON.parse(e.data);
+        eventSource.close();
+        eventSource = null;
+        currentJobId = null;
+        closeProgressModal();
+        showResultModal(false, {
+            error: 'Job annullato. Keyword elaborate: ' + data.completed
+        });
+        restoreAllButtons();
+    });
+
+    eventSource.onerror = function(e) {
+        console.error('SSE error:', e);
+        // Fallback a polling se SSE fallisce
+        if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+        }
+        startPolling(type);
+    };
+}
+
+// Polling fallback
+function startPolling(type) {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+    }
+
+    pollingInterval = setInterval(() => {
+        fetch(`${baseUrl}/seo-tracking/project/${projectId}/keywords/positions-job-status?job_id=${currentJobId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+                closeProgressModal();
+                showResultModal(false, { error: data.error });
+                restoreAllButtons();
+                return;
+            }
+
+            const job = data.job;
+            updateProgressModal({
+                status: job.status,
+                message: job.current_keyword ? `Verifico: ${job.current_keyword}` : 'Elaborazione...',
+                total: job.keywords_requested,
+                completed: job.keywords_completed,
+                percent: job.keywords_requested > 0
+                    ? Math.round((job.keywords_completed / job.keywords_requested) * 100)
+                    : 0
+            });
+
+            if (job.status === 'completed' || job.status === 'error' || job.status === 'cancelled') {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+                currentJobId = null;
+                closeProgressModal();
+
+                if (job.status === 'completed') {
+                    showResultModal(true, {
+                        success: true,
+                        updated: job.keywords_found,
+                        not_found: job.keywords_completed - job.keywords_found,
+                        total: job.keywords_completed,
+                        credits_used: job.credits_used,
+                        message: `Posizioni aggiornate: ${job.keywords_found} trovate`
+                    });
+                } else {
+                    showResultModal(false, {
+                        error: job.error_message || 'Job terminato con errore'
+                    });
+                    restoreAllButtons();
+                }
+            }
+        })
+        .catch(err => {
+            console.error('Polling error:', err);
+        });
+    }, 2000);
+}
+
+// Annulla job
+function cancelJob() {
+    if (!currentJobId) return;
+
+    const csrfToken = document.querySelector('input[name="_csrf_token"]').value;
+
+    fetch(`${baseUrl}/seo-tracking/project/${projectId}/keywords/cancel-positions-job`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `_csrf_token=${encodeURIComponent(csrfToken)}&job_id=${currentJobId}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Il messaggio di cancellazione arriverà via SSE o polling
+        console.log('Cancel request:', data);
+    })
+    .catch(err => {
+        console.error('Cancel failed:', err);
+    });
+}
+
+// Modal di progress
+function showProgressModal(type) {
+    const config = refreshConfig[type];
+    const modal = document.createElement('div');
+    modal.id = 'progressModal';
+    modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
+    modal.innerHTML = `
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <div class="relative bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div class="text-center mb-6">
+                <div class="mx-auto h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Aggiornamento ${config.label}</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-2" id="progressMessage">Avvio elaborazione...</p>
+            </div>
+
+            <div class="mb-6">
+                <div class="flex justify-between text-sm text-slate-500 dark:text-slate-400 mb-2">
+                    <span id="progressCount">0 / 0</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3">
+                    <div id="progressBar" class="bg-emerald-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <button onclick="cancelJob()" class="w-full px-4 py-2.5 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 font-medium hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
+                <svg class="w-4 h-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                Annulla
+            </button>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+}
+
+function updateProgressModal(data) {
+    const message = document.getElementById('progressMessage');
+    const count = document.getElementById('progressCount');
+    const percent = document.getElementById('progressPercent');
+    const bar = document.getElementById('progressBar');
+
+    if (message) message.textContent = data.message || 'Elaborazione...';
+    if (count) count.textContent = `${data.completed || 0} / ${data.total || 0}`;
+    if (percent) percent.textContent = `${data.percent || 0}%`;
+    if (bar) bar.style.width = `${data.percent || 0}%`;
+}
+
+function closeProgressModal() {
+    const modal = document.getElementById('progressModal');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = '';
+    }
+}
+
+function restoreAllButtons() {
+    ['refreshVolumesBtn', 'refreshPositionsBtn', 'refreshAllBtn'].forEach(id => {
+        document.getElementById(id).disabled = false;
     });
 }
 
@@ -672,5 +989,138 @@ document.addEventListener('keydown', function(e) {
 // Legacy function per compatibilita
 function updateVolumes() {
     showRefreshModal('volumes');
+}
+
+// Check singola keyword
+function checkSingleKeyword(keywordId, keyword, locationCode, btnElement) {
+    // Verifica crediti
+    if (userCredits < 1) {
+        alert('Crediti insufficienti per verificare la posizione.');
+        return;
+    }
+
+    // Mostra loading sul bottone
+    const originalHTML = btnElement.innerHTML;
+    btnElement.disabled = true;
+    btnElement.innerHTML = `
+        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    `;
+
+    const csrfToken = document.querySelector('input[name="_csrf_token"]').value;
+
+    fetch(`${baseUrl}/seo-tracking/project/${projectId}/rank-check/single`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `_csrf_token=${encodeURIComponent(csrfToken)}&keyword=${encodeURIComponent(keyword)}&location=${encodeURIComponent(locationCode)}&device=desktop`
+    })
+    .then(response => response.json())
+    .then(data => {
+        btnElement.disabled = false;
+        btnElement.innerHTML = originalHTML;
+
+        if (data.error) {
+            showSingleCheckResult(keyword, false, null, data.error);
+            return;
+        }
+
+        // Aggiorna la cella posizione nella riga
+        const row = btnElement.closest('tr');
+        const positionCell = row.querySelector('td:nth-child(4) span');
+        if (positionCell && data.serp_position) {
+            const pos = data.serp_position;
+            let posClass = 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
+            if (pos <= 3) posClass = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300';
+            else if (pos <= 10) posClass = 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300';
+            else if (pos <= 20) posClass = 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300';
+
+            positionCell.className = `inline-flex px-2 py-0.5 rounded text-xs font-medium ${posClass}`;
+            positionCell.textContent = pos.toFixed(1);
+        } else if (positionCell && !data.found) {
+            positionCell.className = 'inline-flex px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
+            positionCell.textContent = '-';
+        }
+
+        // Aggiorna la cella "Aggiornato"
+        const updatedCell = row.querySelector('td:nth-child(9)');
+        if (updatedCell) {
+            const now = new Date();
+            const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            updatedCell.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400">${timeStr}</span>`;
+        }
+
+        showSingleCheckResult(keyword, data.found, data.serp_position, null, data.serp_url);
+    })
+    .catch(err => {
+        console.error('Check failed:', err);
+        btnElement.disabled = false;
+        btnElement.innerHTML = originalHTML;
+        showSingleCheckResult(keyword, false, null, 'Errore di connessione');
+    });
+}
+
+function showSingleCheckResult(keyword, found, position, error, url) {
+    // Toast notification in basso a destra
+    const toast = document.createElement('div');
+    toast.className = 'fixed bottom-4 right-4 z-50 max-w-sm bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 p-4 transform transition-all duration-300';
+
+    if (error) {
+        toast.innerHTML = `
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-slate-900 dark:text-white truncate">${keyword}</p>
+                    <p class="text-xs text-red-500">${error}</p>
+                </div>
+            </div>
+        `;
+    } else if (found) {
+        const posClass = position <= 3 ? 'text-emerald-600' : position <= 10 ? 'text-blue-600' : position <= 20 ? 'text-amber-600' : 'text-slate-600';
+        toast.innerHTML = `
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-slate-900 dark:text-white truncate">${keyword}</p>
+                    <p class="text-xs ${posClass} font-semibold">Posizione #${position}</p>
+                    ${url ? `<p class="text-xs text-slate-400 truncate mt-0.5">${url}</p>` : ''}
+                </div>
+            </div>
+        `;
+    } else {
+        toast.innerHTML = `
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-slate-900 dark:text-white truncate">${keyword}</p>
+                    <p class="text-xs text-amber-600">Non trovata in top 100</p>
+                </div>
+            </div>
+        `;
+    }
+
+    document.body.appendChild(toast);
+
+    // Auto-remove dopo 4 secondi
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
 }
 </script>

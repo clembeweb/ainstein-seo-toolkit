@@ -3,14 +3,16 @@
 namespace Modules\SeoTracking\Services;
 
 use Services\ScraperService;
+use Services\DataForSeoService;
 use Modules\SeoTracking\Models\Location;
 
 /**
  * RankCheckerService
  *
- * Verifica posizioni SERP reali tramite:
- * - Serper.dev (primario - 2.500 query/mese gratis)
- * - SERP API (fallback - 100 query/mese gratis)
+ * Verifica posizioni SERP reali tramite (in ordine di priorità):
+ * 1. DataForSEO (primario - usa stesse credenziali dei volumi, economico)
+ * 2. SERP API (secondario - più affidabile, 100 query/mese gratis)
+ * 3. Serper.dev (fallback - 2.500 query/mese gratis ma risultati inconsistenti)
  *
  * Supporta locations dinamiche dal database.
  */
@@ -22,6 +24,7 @@ class RankCheckerService
     private string $serpApiBaseUrl = 'https://serpapi.com/search.json';
     private ScraperService $scraper;
     private Location $locationModel;
+    private ?DataForSeoService $dataForSeo = null;
     private string $lastProvider = '';
 
     public function __construct(?string $serperKey = null, ?string $serpKey = null)
@@ -31,6 +34,9 @@ class RankCheckerService
         $this->serpApiKey = $serpKey ?? \Core\Settings::get('serp_api_key', '');
         $this->scraper = new ScraperService();
         $this->locationModel = new Location();
+
+        // Inizializza DataForSEO (usa stesse credenziali dei volumi)
+        $this->dataForSeo = new DataForSeoService();
     }
 
     /**
@@ -38,7 +44,15 @@ class RankCheckerService
      */
     public function isConfigured(): bool
     {
-        return !empty($this->serperApiKey) || !empty($this->serpApiKey);
+        return $this->hasDataForSeo() || !empty($this->serperApiKey) || !empty($this->serpApiKey);
+    }
+
+    /**
+     * Verifica se DataForSEO è configurato
+     */
+    public function hasDataForSeo(): bool
+    {
+        return $this->dataForSeo && $this->dataForSeo->isConfigured();
     }
 
     /**
@@ -71,14 +85,19 @@ class RankCheckerService
     public function getProvidersInfo(): array
     {
         return [
-            'serper' => [
-                'configured' => $this->hasSerper(),
-                'name' => 'Serper.dev',
+            'dataforseo' => [
+                'configured' => $this->hasDataForSeo(),
+                'name' => 'DataForSEO',
                 'type' => 'primary',
             ],
             'serpapi' => [
                 'configured' => $this->hasSerpApi(),
                 'name' => 'SERP API',
+                'type' => 'secondary',
+            ],
+            'serper' => [
+                'configured' => $this->hasSerper(),
+                'name' => 'Serper.dev',
                 'type' => 'fallback',
             ],
         ];
@@ -86,7 +105,7 @@ class RankCheckerService
 
     /**
      * Verifica posizione SERP per una keyword e dominio target
-     * Usa Serper.dev come primario, SERP API come fallback
+     * Ordine provider: DataForSEO (primario) → SERP API (secondario) → Serper.dev (fallback)
      *
      * @param string $keyword La keyword da cercare
      * @param string $targetDomain Il dominio da trovare (es: example.com)
@@ -115,29 +134,112 @@ class RankCheckerService
         // Normalizza il dominio (rimuovi protocollo e www se presenti)
         $targetDomain = $this->normalizeDomain($targetDomain);
 
-        // Prova prima Serper.dev (primario)
-        if ($this->hasSerper()) {
+        // Variabili per tracking risultati
+        $primaryResult = null;
+        $lastError = null;
+
+        // =====================================================================
+        // 1. PROVA DataForSEO (PRIMARIO - economico, usa stesse credenziali volumi)
+        // =====================================================================
+        if ($this->hasDataForSeo()) {
             try {
-                $result = $this->checkWithSerper($keyword, $targetDomain, $location, $device);
-                $this->lastProvider = 'serper';
-                $result['provider'] = 'Serper.dev';
-                return $result;
-            } catch (\Exception $e) {
-                // Se fallisce e abbiamo SERP API, prova quello
-                if ($this->hasSerpApi()) {
-                    error_log("Serper.dev fallito, uso SERP API fallback: " . $e->getMessage());
+                $dataForSeoResult = $this->dataForSeo->checkSerpPosition(
+                    $keyword,
+                    $targetDomain,
+                    $locationCode,
+                    $device,
+                    100 // max 100 risultati
+                );
+
+                if ($dataForSeoResult['success']) {
+                    $this->lastProvider = 'dataforseo';
+                    $primaryResult = [
+                        'found' => $dataForSeoResult['found'],
+                        'position' => $dataForSeoResult['position'],
+                        'url' => $dataForSeoResult['url'],
+                        'title' => $dataForSeoResult['title'],
+                        'snippet' => $dataForSeoResult['snippet'],
+                        'total_organic_results' => $dataForSeoResult['total_organic_results'],
+                        'keyword' => $keyword,
+                        'target_domain' => $targetDomain,
+                        'location' => $dataForSeoResult['location'],
+                        'location_code' => $locationCode,
+                        'language' => $dataForSeoResult['language'],
+                        'device' => $device,
+                        'provider' => 'DataForSEO',
+                        'cost' => $dataForSeoResult['cost'] ?? 0,
+                    ];
+
+                    // Se trovato, ritorna subito
+                    if ($primaryResult['found']) {
+                        return $primaryResult;
+                    }
+
+                    error_log("[RankChecker] DataForSEO: keyword '{$keyword}' non trovata nelle prime 100 posizioni, provo fallback");
                 } else {
-                    throw $e; // Nessun fallback disponibile
+                    $lastError = $dataForSeoResult['error'] ?? 'Unknown DataForSEO error';
+                    error_log("[RankChecker] DataForSEO error: {$lastError}");
                 }
+            } catch (\Exception $e) {
+                $lastError = $e->getMessage();
+                error_log("[RankChecker] DataForSEO exception: {$lastError}");
             }
         }
 
-        // Fallback a SERP API
+        // =====================================================================
+        // 2. PROVA SERP API (SECONDARIO)
+        // =====================================================================
         if ($this->hasSerpApi()) {
-            $result = $this->checkWithSerpApi($keyword, $targetDomain, $location, $device);
-            $this->lastProvider = 'serpapi';
-            $result['provider'] = 'SERP API';
-            return $result;
+            try {
+                $serpApiResult = $this->checkWithSerpApi($keyword, $targetDomain, $location, $device);
+                $this->lastProvider = 'serpapi';
+                $serpApiResult['provider'] = 'SERP API';
+
+                // Se trovato, ritorna subito
+                if ($serpApiResult['found']) {
+                    return $serpApiResult;
+                }
+
+                // Se non abbiamo ancora un risultato primario, usa questo
+                if ($primaryResult === null) {
+                    $primaryResult = $serpApiResult;
+                }
+
+                error_log("[RankChecker] SERP API: keyword '{$keyword}' non trovata, provo fallback Serper.dev");
+            } catch (\Exception $e) {
+                $lastError = $e->getMessage();
+                error_log("[RankChecker] SERP API fallito: {$lastError}");
+            }
+        }
+
+        // =====================================================================
+        // 3. FALLBACK Serper.dev
+        // =====================================================================
+        if ($this->hasSerper()) {
+            try {
+                $serperResult = $this->checkWithSerper($keyword, $targetDomain, $location, $device);
+                $this->lastProvider = 'serper';
+                $serperResult['provider'] = 'Serper.dev';
+
+                // Se trovato con fallback, ritorna questo risultato
+                if ($serperResult['found']) {
+                    error_log("[RankChecker] Serper.dev: keyword '{$keyword}' trovata in posizione " . $serperResult['position']);
+                    return $serperResult;
+                }
+
+                // Se non abbiamo ancora un risultato primario, usa questo
+                if ($primaryResult === null) {
+                    $primaryResult = $serperResult;
+                }
+            } catch (\Exception $e) {
+                $lastError = $e->getMessage();
+                error_log("[RankChecker] Serper.dev fallback fallito: {$lastError}");
+            }
+        }
+
+        // Se abbiamo un risultato primario (anche se non trovato), ritornalo
+        if ($primaryResult !== null) {
+            return $primaryResult;
         }
 
         throw new \Exception('Nessun provider SERP disponibile');
@@ -166,16 +268,24 @@ class RankCheckerService
         // Serper.dev potrebbe limitare i risultati per pagina
         // Facciamo più chiamate con paginazione per coprire le prime 30-50 posizioni
         $allOrganicResults = [];
-        $maxPages = 5; // Cerca nelle prime 5 pagine (50 risultati)
+        $maxPages = 10; // Cerca nelle prime 10 pagine (100 risultati)
 
         for ($page = 1; $page <= $maxPages; $page++) {
+            // Serper.dev usa solo gl (country) e hl (language)
+            // NON supporta 'location' testuale come SerpApi
             $payload = [
                 'q' => $keyword,
-                'gl' => $location['serper_gl'],
-                'hl' => $location['serper_hl'],
+                'gl' => $location['serper_gl'] ?? 'it',
+                'hl' => $location['serper_hl'] ?? 'it',
                 'num' => 10,
                 'page' => $page,
             ];
+
+            // DEBUG: Log parametri location
+            if ($page === 1) {
+                error_log("[RankChecker Serper] Location params: gl=" . ($location['serper_gl'] ?? 'NULL') . ", hl=" . ($location['serper_hl'] ?? 'NULL'));
+                error_log("[RankChecker Serper] Payload: " . json_encode($payload));
+            }
 
             $ch = curl_init();
             curl_setopt_array($ch, [
@@ -208,12 +318,19 @@ class RankCheckerService
 
             $pageResults = $data['organic'] ?? [];
 
+            // DEBUG
+            error_log("[RankChecker] Page {$page}: received " . count($pageResults) . " organic results");
+            if (!empty($pageResults[0])) {
+                error_log("[RankChecker] First result: " . ($pageResults[0]['link'] ?? 'no link'));
+            }
+
             // Aggiorna le posizioni per renderle assolute (non relative alla pagina)
             $basePosition = ($page - 1) * 10;
             foreach ($pageResults as $index => &$result) {
                 // Calcola sempre la posizione assoluta
                 $result['position'] = $basePosition + $index + 1;
             }
+            unset($result); // IMPORTANTE: evita problemi con reference
 
             // Se il dominio target è già stato trovato, restituisci subito
             foreach ($pageResults as $result) {
@@ -238,6 +355,15 @@ class RankCheckerService
         }
 
         $organicResults = $allOrganicResults;
+
+        // DEBUG: Log per diagnostica
+        error_log("[RankChecker DEBUG] Total organic results: " . count($organicResults));
+        error_log("[RankChecker DEBUG] Target domain: " . $targetDomain);
+        if (!empty($organicResults)) {
+            error_log("[RankChecker DEBUG] First result link: " . ($organicResults[0]['link'] ?? 'N/A'));
+            $firstDomain = $this->normalizeDomain(parse_url($organicResults[0]['link'] ?? '', PHP_URL_HOST) ?? '');
+            error_log("[RankChecker DEBUG] First result domain normalized: " . $firstDomain);
+        }
 
         // Converti formato Serper al formato standard
         $normalizedResults = [];
@@ -267,6 +393,7 @@ class RankCheckerService
 
         // Cerca il dominio target nei risultati
         $result = $this->findDomainInResults($normalizedResults, $targetDomain);
+        error_log("[RankChecker DEBUG] findDomainInResults returned found: " . ($result['found'] ? 'YES' : 'NO'));
 
         return [
             'found' => $result['found'],
@@ -295,25 +422,32 @@ class RankCheckerService
         string $device
     ): array {
         $allOrganicResults = [];
-        $maxPages = 5; // Cerca nelle prime 5 pagine (50 risultati)
+        $maxPages = 10; // Cerca nelle prime 10 pagine (100 risultati)
         $resultsPerPage = 10;
         $totalResults = null;
 
         for ($page = 0; $page < $maxPages; $page++) {
+            // Parametri base per SerpAPI - seguendo documentazione ufficiale
+            // gl = country, hl = language, google_domain = quale Google usare
+            // NON usiamo 'location' (è per city-level targeting, non necessario per country-level)
             $params = [
                 'engine' => 'google',
                 'q' => $keyword,
-                'location' => $location['serpapi_location'] ?? $location['name'],
-                'hl' => $location['language_code'],
-                'gl' => strtolower($location['country_code']),
-                'google_domain' => $location['serpapi_google_domain'] ?? 'google.com',
+                'hl' => $location['language_code'] ?? 'it',
+                'gl' => strtolower($location['country_code'] ?? 'it'),
+                'google_domain' => $location['serpapi_google_domain'] ?? 'google.it',
                 'num' => $resultsPerPage,
-                'start' => $page * $resultsPerPage, // Paginazione SERP API
+                'start' => $page * $resultsPerPage,
                 'api_key' => $this->serpApiKey
             ];
 
             if ($device === 'mobile') {
                 $params['device'] = 'mobile';
+            }
+
+            // DEBUG: Log parametri (solo prima pagina)
+            if ($page === 0) {
+                error_log("[RankChecker SerpAPI] Params: gl=" . $params['gl'] . ", hl=" . $params['hl'] . ", google_domain=" . $params['google_domain']);
             }
 
             $url = $this->serpApiBaseUrl . '?' . http_build_query($params);
@@ -427,6 +561,8 @@ class RankCheckerService
      */
     private function findDomainInResults(array $organicResults, string $targetDomain): array
     {
+        error_log("[RankChecker findDomain] Looking for target: '{$targetDomain}' in " . count($organicResults) . " results");
+
         foreach ($organicResults as $index => $result) {
             $resultUrl = $result['link'] ?? '';
 
@@ -434,11 +570,24 @@ class RankCheckerService
                 continue;
             }
 
-            $resultDomain = $this->normalizeDomain(parse_url($resultUrl, PHP_URL_HOST) ?? '');
+            // parse_url può restituire false per URL malformati
+            $parsedHost = parse_url($resultUrl, PHP_URL_HOST);
+            if ($parsedHost === false || $parsedHost === null) {
+                error_log("[RankChecker findDomain] Invalid URL at index {$index}: {$resultUrl}");
+                continue;
+            }
+
+            $resultDomain = $this->normalizeDomain($parsedHost);
+
+            // DEBUG: Log per i primi 3 risultati
+            if ($index < 3) {
+                error_log("[RankChecker findDomain] Result {$index}: '{$resultDomain}' vs target '{$targetDomain}'");
+            }
 
             // Match esatto o sottodominio (case-insensitive)
             if ($resultDomain === $targetDomain ||
                 str_ends_with(strtolower($resultDomain), '.' . strtolower($targetDomain))) {
+                error_log("[RankChecker findDomain] MATCH FOUND at position " . ($result['position'] ?? $index + 1));
                 return [
                     'found' => true,
                     'position' => ($result['position'] ?? $index + 1),
@@ -449,6 +598,7 @@ class RankCheckerService
             }
         }
 
+        error_log("[RankChecker findDomain] NO MATCH found for '{$targetDomain}'");
         return [
             'found' => false,
             'position' => null,
@@ -483,7 +633,7 @@ class RankCheckerService
     {
         $locationCode = $options['location_code'] ?? 'IT';
         $device = $options['device'] ?? 'desktop';
-        $maxPages = $options['max_pages'] ?? 5;
+        $maxPages = $options['max_pages'] ?? 10;
 
         $location = $this->locationModel->findByCountryCode($locationCode);
         if (!$location) {
@@ -505,6 +655,7 @@ class RankCheckerService
 
         // Paginazione: cerca fino a trovare il dominio
         for ($page = 1; $page <= $maxPages; $page++) {
+            // Serper.dev usa solo gl e hl, non 'location'
             $payload = [
                 'q' => $keyword,
                 'gl' => $location['serper_gl'],
@@ -609,26 +760,50 @@ class RankCheckerService
 
         $targetDomain = $this->normalizeDomain($targetDomain);
 
-        // Usa Serper.dev (primario)
-        if ($this->hasSerper()) {
+        // Usa SERP API (primario - più affidabile)
+        $primaryResult = null;
+
+        if ($this->hasSerpApi()) {
             try {
-                $result = $this->checkWithSerperFullResults($keyword, $targetDomain, $location, $device, $maxResults);
-                $this->lastProvider = 'serper';
-                $result['provider'] = 'Serper.dev';
-                return $result;
+                $primaryResult = $this->checkWithSerpApiFullResults($keyword, $targetDomain, $location, $device, $maxResults);
+                $this->lastProvider = 'serpapi';
+                $primaryResult['provider'] = 'SERP API';
+
+                // Se trovato, ritorna subito
+                if ($primaryResult['found']) {
+                    return $primaryResult;
+                }
+
+                // Non trovato - prova fallback se disponibile
+                error_log("[RankChecker FullResults] SERP API: keyword '{$keyword}' non trovata, provo fallback Serper.dev");
             } catch (\Exception $e) {
-                if (!$this->hasSerpApi()) {
+                if (!$this->hasSerper()) {
                     throw $e;
                 }
+                error_log("SERP API fallito, uso Serper.dev fallback: " . $e->getMessage());
             }
         }
 
-        // Fallback a SERP API
-        if ($this->hasSerpApi()) {
-            $result = $this->checkWithSerpApiFullResults($keyword, $targetDomain, $location, $device, $maxResults);
-            $this->lastProvider = 'serpapi';
-            $result['provider'] = 'SERP API';
-            return $result;
+        // Fallback a Serper.dev (anche se SERP API ha restituito "non trovata")
+        if ($this->hasSerper()) {
+            try {
+                $fallbackResult = $this->checkWithSerperFullResults($keyword, $targetDomain, $location, $device, $maxResults);
+                $this->lastProvider = 'serper';
+                $fallbackResult['provider'] = 'Serper.dev';
+
+                // Se trovato con fallback, ritorna questo risultato
+                if ($fallbackResult['found']) {
+                    error_log("[RankChecker FullResults] Serper.dev fallback: keyword '{$keyword}' trovata in posizione " . $fallbackResult['position']);
+                    return $fallbackResult;
+                }
+            } catch (\Exception $e) {
+                error_log("[RankChecker FullResults] Serper.dev fallback fallito: " . $e->getMessage());
+            }
+        }
+
+        // Se abbiamo un risultato primario (anche se non trovato), ritornalo
+        if ($primaryResult !== null) {
+            return $primaryResult;
         }
 
         throw new \Exception('Nessun provider SERP disponibile');
@@ -653,55 +828,109 @@ class RankCheckerService
             ? 'https://google.serper.dev/search'
             : $this->serperBaseUrl;
 
-        // Una sola chiamata per ottenere i primi 10 risultati (competitor)
-        $payload = [
-            'q' => $keyword,
-            'gl' => $location['serper_gl'],
-            'hl' => $location['serper_hl'],
-            'num' => min($maxResults, 10),
-        ];
+        // Paginazione per coprire fino a 100 posizioni
+        $allOrganicResults = [];
+        $resultsPerPage = 10;
+        $maxPages = min(10, ceil($maxResults / $resultsPerPage)); // Max 10 pagine = 100 risultati
 
-        $ch = curl_init();
-        curl_setopt_array($ch, [
-            CURLOPT_URL => $url,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode($payload),
-            CURLOPT_HTTPHEADER => $headers,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 30,
-        ]);
+        for ($page = 1; $page <= $maxPages; $page++) {
+            $payload = [
+                'q' => $keyword,
+                'gl' => $location['serper_gl'] ?? 'it',
+                'hl' => $location['serper_hl'] ?? 'it',
+                'num' => $resultsPerPage,
+                'page' => $page,
+            ];
 
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        curl_close($ch);
+            $ch = curl_init();
+            curl_setopt_array($ch, [
+                CURLOPT_URL => $url,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => json_encode($payload),
+                CURLOPT_HTTPHEADER => $headers,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT => 30,
+            ]);
 
-        if ($error) {
-            throw new \Exception('Errore Serper.dev: ' . $error);
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
+            curl_close($ch);
+
+            if ($error) {
+                throw new \Exception('Errore Serper.dev: ' . $error);
+            }
+
+            if ($httpCode !== 200) {
+                throw new \Exception('Errore Serper.dev HTTP ' . $httpCode);
+            }
+
+            $data = json_decode($response, true);
+
+            if (isset($data['message'])) {
+                throw new \Exception('Errore Serper.dev: ' . $data['message']);
+            }
+
+            $pageResults = $data['organic'] ?? [];
+
+            if (empty($pageResults)) {
+                break; // Nessun altro risultato
+            }
+
+            // Calcola posizioni assolute
+            $basePosition = ($page - 1) * $resultsPerPage;
+            foreach ($pageResults as $index => &$result) {
+                $result['position'] = $basePosition + $index + 1;
+            }
+            unset($result);
+
+            // Cerca il dominio target
+            foreach ($pageResults as $result) {
+                $resultDomain = $this->normalizeDomain(parse_url($result['link'] ?? '', PHP_URL_HOST) ?? '');
+
+                if ($resultDomain === $targetDomain ||
+                    str_ends_with(strtolower($resultDomain), '.' . strtolower($targetDomain))) {
+                    // Trovato! Aggiungi e esci
+                    $allOrganicResults = array_merge($allOrganicResults, $pageResults);
+                    break 2;
+                }
+            }
+
+            $allOrganicResults = array_merge($allOrganicResults, $pageResults);
+
+            // Limita ai primi maxResults
+            if (count($allOrganicResults) >= $maxResults) {
+                $allOrganicResults = array_slice($allOrganicResults, 0, $maxResults);
+                break;
+            }
+
+            // Pausa tra chiamate per rate limit (aumentata per evitare limitazioni)
+            if ($page < $maxPages) {
+                usleep(500000); // 500ms tra le chiamate
+            }
         }
 
-        if ($httpCode !== 200) {
-            throw new \Exception('Errore Serper.dev HTTP ' . $httpCode);
-        }
-
-        $data = json_decode($response, true);
-
-        if (isset($data['message'])) {
-            throw new \Exception('Errore Serper.dev: ' . $data['message']);
-        }
-
-        $organicResults = $data['organic'] ?? [];
+        // Costruisci array risultati formattato
         $allResults = [];
+        foreach ($allOrganicResults as $result) {
+            $resultUrl = $result['link'] ?? '';
+            $parsedHost = parse_url($resultUrl, PHP_URL_HOST);
 
-        foreach ($organicResults as $index => $result) {
-            $resultDomain = $this->normalizeDomain(parse_url($result['link'] ?? '', PHP_URL_HOST) ?? '');
-            $isTarget = ($resultDomain === $targetDomain ||
-                str_ends_with(strtolower($resultDomain), '.' . strtolower($targetDomain)));
+            if ($parsedHost === false || $parsedHost === null) {
+                $resultDomain = '';
+            } else {
+                $resultDomain = $this->normalizeDomain($parsedHost);
+            }
+
+            $isTarget = !empty($resultDomain) && (
+                $resultDomain === $targetDomain ||
+                str_ends_with(strtolower($resultDomain), '.' . strtolower($targetDomain))
+            );
 
             $allResults[] = [
-                'position' => $index + 1,
+                'position' => $result['position'] ?? 0,
                 'domain' => $resultDomain,
-                'url' => $result['link'] ?? '',
+                'url' => $resultUrl,
                 'title' => $result['title'] ?? '',
                 'snippet' => $result['snippet'] ?? '',
                 'is_target' => $isTarget,
@@ -709,7 +938,7 @@ class RankCheckerService
         }
 
         // Trova posizione target
-        $targetResult = $this->findDomainInResults($organicResults, $targetDomain);
+        $targetResult = $this->findDomainInResults($allOrganicResults, $targetDomain);
 
         return [
             'found' => $targetResult['found'],
@@ -728,6 +957,7 @@ class RankCheckerService
 
     /**
      * Check con SERP API restituendo TUTTI i risultati
+     * Implementa paginazione per coprire fino a 100 posizioni
      */
     private function checkWithSerpApiFullResults(
         string $keyword,
@@ -736,43 +966,94 @@ class RankCheckerService
         string $device,
         int $maxResults
     ): array {
-        $params = [
-            'engine' => 'google',
-            'q' => $keyword,
-            'location' => $location['serpapi_location'] ?? $location['name'],
-            'hl' => $location['language_code'],
-            'gl' => strtolower($location['country_code']),
-            'google_domain' => $location['serpapi_google_domain'] ?? 'google.com',
-            'num' => min($maxResults, 10),
-            'api_key' => $this->serpApiKey
-        ];
+        $allOrganicResults = [];
+        $resultsPerPage = 10;
+        $maxPages = min(10, ceil($maxResults / $resultsPerPage)); // Max 10 pagine = 100 risultati
+        $foundPosition = null;
+        $foundUrl = null;
 
-        if ($device === 'mobile') {
-            $params['device'] = 'mobile';
+        for ($page = 0; $page < $maxPages; $page++) {
+            // Parametri base per SerpAPI - seguendo documentazione ufficiale
+            // gl = country, hl = language, google_domain = quale Google usare
+            // NON usiamo 'location' (è per city-level targeting)
+            $params = [
+                'engine' => 'google',
+                'q' => $keyword,
+                'hl' => $location['language_code'] ?? 'it',
+                'gl' => strtolower($location['country_code'] ?? 'it'),
+                'google_domain' => $location['serpapi_google_domain'] ?? 'google.it',
+                'num' => $resultsPerPage,
+                'start' => $page * $resultsPerPage,
+                'api_key' => $this->serpApiKey
+            ];
+
+            if ($device === 'mobile') {
+                $params['device'] = 'mobile';
+            }
+
+            $url = $this->serpApiBaseUrl . '?' . http_build_query($params);
+
+            $response = $this->scraper->fetchJson($url, [
+                'timeout' => 30,
+                'api_mode' => true,
+            ]);
+
+            if (isset($response['error'])) {
+                throw new \Exception('Errore SERP API: ' . ($response['message'] ?? 'Unknown error'));
+            }
+
+            $data = $response['data'] ?? [];
+            $pageResults = $data['organic_results'] ?? [];
+
+            if (empty($pageResults)) {
+                break; // Nessun altro risultato
+            }
+
+            // Calcola posizioni assolute
+            $basePosition = $page * $resultsPerPage;
+            foreach ($pageResults as $index => &$result) {
+                $result['position'] = $basePosition + $index + 1;
+            }
+            unset($result);
+
+            // Cerca il dominio target
+            foreach ($pageResults as $result) {
+                $resultDomain = $this->normalizeDomain(parse_url($result['link'] ?? '', PHP_URL_HOST) ?? '');
+                if ($resultDomain === $targetDomain ||
+                    str_ends_with(strtolower($resultDomain), '.' . strtolower($targetDomain))) {
+                    $foundPosition = $result['position'];
+                    $foundUrl = $result['link'] ?? null;
+                    $allOrganicResults = array_merge($allOrganicResults, $pageResults);
+                    break 2; // Trovato! Esci dai loop
+                }
+            }
+
+            $allOrganicResults = array_merge($allOrganicResults, $pageResults);
+
+            // Limita ai primi maxResults
+            if (count($allOrganicResults) >= $maxResults) {
+                $allOrganicResults = array_slice($allOrganicResults, 0, $maxResults);
+                break;
+            }
+
+            // Pausa tra chiamate per rate limit
+            if ($page < $maxPages - 1) {
+                usleep(200000); // 200ms
+            }
         }
 
-        $url = $this->serpApiBaseUrl . '?' . http_build_query($params);
-
-        $response = $this->scraper->fetchJson($url, [
-            'timeout' => 30,
-            'api_mode' => true,
-        ]);
-
-        if (isset($response['error'])) {
-            throw new \Exception('Errore SERP API: ' . ($response['message'] ?? 'Unknown error'));
-        }
-
-        $data = $response['data'] ?? [];
-        $organicResults = $data['organic_results'] ?? [];
+        // Costruisci array risultati formattato
         $allResults = [];
-
-        foreach ($organicResults as $index => $result) {
-            $resultDomain = $this->normalizeDomain(parse_url($result['link'] ?? '', PHP_URL_HOST) ?? '');
-            $isTarget = ($resultDomain === $targetDomain ||
-                str_ends_with(strtolower($resultDomain), '.' . strtolower($targetDomain)));
+        foreach ($allOrganicResults as $result) {
+            $parsedHost = parse_url($result['link'] ?? '', PHP_URL_HOST);
+            $resultDomain = $parsedHost ? $this->normalizeDomain($parsedHost) : '';
+            $isTarget = !empty($resultDomain) && (
+                $resultDomain === $targetDomain ||
+                str_ends_with(strtolower($resultDomain), '.' . strtolower($targetDomain))
+            );
 
             $allResults[] = [
-                'position' => $index + 1,
+                'position' => $result['position'] ?? 0,
                 'domain' => $resultDomain,
                 'url' => $result['link'] ?? '',
                 'title' => $result['title'] ?? '',
@@ -781,8 +1062,8 @@ class RankCheckerService
             ];
         }
 
-        // Trova posizione target
-        $targetResult = $this->findDomainInResults($organicResults, $targetDomain);
+        // Trova posizione target dai risultati raccolti
+        $targetResult = $this->findDomainInResults($allOrganicResults, $targetDomain);
 
         return [
             'found' => $targetResult['found'],
@@ -882,23 +1163,16 @@ class RankCheckerService
         // Usa location di default per test
         $testLocation = $this->locationModel->getDefault();
 
-        // Test Serper.dev
-        if ($this->hasSerper()) {
-            try {
-                $this->checkWithSerper('test', 'google.com', $testLocation, 'desktop');
-                $results['serper'] = [
-                    'success' => true,
-                    'message' => 'Serper.dev funzionante',
-                ];
-            } catch (\Exception $e) {
-                $results['serper'] = [
-                    'success' => false,
-                    'error' => $e->getMessage(),
-                ];
-            }
+        // Test DataForSEO (primario)
+        if ($this->hasDataForSeo()) {
+            $testResult = $this->dataForSeo->testSerpConnection();
+            $results['dataforseo'] = [
+                'success' => $testResult['success'],
+                'message' => $testResult['success'] ? 'DataForSEO SERP funzionante' : ($testResult['error'] ?? 'Errore'),
+            ];
         }
 
-        // Test SERP API
+        // Test SERP API (secondario)
         if ($this->hasSerpApi()) {
             try {
                 $this->checkWithSerpApi('test', 'google.com', $testLocation, 'desktop');
@@ -908,6 +1182,22 @@ class RankCheckerService
                 ];
             } catch (\Exception $e) {
                 $results['serpapi'] = [
+                    'success' => false,
+                    'error' => $e->getMessage(),
+                ];
+            }
+        }
+
+        // Test Serper.dev (fallback)
+        if ($this->hasSerper()) {
+            try {
+                $this->checkWithSerper('test', 'google.com', $testLocation, 'desktop');
+                $results['serper'] = [
+                    'success' => true,
+                    'message' => 'Serper.dev funzionante',
+                ];
+            } catch (\Exception $e) {
+                $results['serper'] = [
                     'success' => false,
                     'error' => $e->getMessage(),
                 ];

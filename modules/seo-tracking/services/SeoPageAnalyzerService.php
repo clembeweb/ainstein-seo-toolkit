@@ -377,7 +377,7 @@ class SeoPageAnalyzerService
         array $targetPage,
         array $competitorPages
     ): string {
-        $positionText = $currentPosition ? "Posizione attuale: {$currentPosition}" : "Posizione: non in top 50";
+        $positionText = $currentPosition ? "Posizione attuale: {$currentPosition}" : "Posizione: non in top 100";
 
         // Prepara heading structure per la pagina target
         $targetHeadings = $this->formatHeadingsForPrompt($targetPage['headings'] ?? []);

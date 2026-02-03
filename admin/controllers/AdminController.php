@@ -251,10 +251,12 @@ class AdminController
         // Load module.json for settings schema
         $moduleJsonPath = \ROOT_PATH . '/modules/' . $module['slug'] . '/module.json';
         $settingsSchema = [];
+        $settingsGroups = [];
 
         if (file_exists($moduleJsonPath)) {
             $moduleJson = json_decode(file_get_contents($moduleJsonPath), true);
             $settingsSchema = $moduleJson['settings'] ?? [];
+            $settingsGroups = $moduleJson['settings_groups'] ?? [];
         }
 
         // Get current settings values
@@ -266,6 +268,7 @@ class AdminController
             'modules' => ModuleLoader::getActiveModules(),
             'module' => $module,
             'settingsSchema' => $settingsSchema,
+            'settingsGroups' => $settingsGroups,
             'currentSettings' => $currentSettings,
         ]);
     }

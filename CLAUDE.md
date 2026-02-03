@@ -1,7 +1,7 @@
 # AINSTEIN - Istruzioni Claude Code
 
 > Questo file viene caricato automaticamente ad ogni sessione.
-> Ultimo aggiornamento: 2026-01-30
+> Ultimo aggiornamento: 2026-02-03
 
 ---
 
@@ -34,6 +34,7 @@
 10. Database::reconnect()            → Prima di salvare dopo AI call
 11. OAuth GSC pattern seo-tracking   → GoogleOAuthService centralizzato
 12. Scraping SEMPRE con Readability  → ScraperService::scrape() per tutto
+13. Background jobs per operazioni lunghe → SSE + job queue (vedi sezione dedicata)
 ```
 
 ---
@@ -232,6 +233,156 @@ if ($result['success']) {
 // MAI creare servizi di scraping custom per modulo!
 ```
 
+### Background Processing (Operazioni Lunghe)
+
+**Quando usare job in background:**
+- Operazioni > 5 secondi
+- Elaborazione batch (3+ items)
+- Chiamate API esterne con rate limits
+- Operazioni che devono essere cancellabili dall'utente
+
+**Pattern Database:**
+```sql
+-- Tabella job tracking (esempio: st_rank_jobs)
+CREATE TABLE {prefix}_jobs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    project_id INT NOT NULL,
+    user_id INT NOT NULL,
+    type ENUM('cron', 'manual') DEFAULT 'manual',
+    status ENUM('pending', 'running', 'completed', 'error', 'cancelled') DEFAULT 'pending',
+
+    -- Progress
+    items_requested INT DEFAULT 0,
+    items_completed INT DEFAULT 0,
+    items_failed INT DEFAULT 0,
+    current_item VARCHAR(500) DEFAULT NULL,
+
+    -- Timestamps
+    started_at TIMESTAMP NULL,
+    completed_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_status (status),
+    INDEX idx_project (project_id)
+);
+
+-- Aggiungi job_id alla tabella queue esistente
+ALTER TABLE {prefix}_queue ADD COLUMN job_id INT DEFAULT NULL;
+```
+
+**Pattern Backend (Controller):**
+```php
+// 1. POST /start-job - Crea job e ritorna job_id
+public function startJob(int $projectId): void {
+    // Verifica auth, crediti, progetto
+    // Crea record in {prefix}_jobs
+    // Popola {prefix}_queue con job_id
+    echo json_encode(['success' => true, 'job_id' => $jobId]);
+}
+
+// 2. GET /stream - SSE per progress real-time
+public function processStream(int $projectId): void {
+    // Headers SSE
+    header('Content-Type: text/event-stream');
+    header('Cache-Control: no-cache');
+    header('X-Accel-Buffering: no');
+
+    // IMPORTANTE: Chiudi sessione PRIMA del loop
+    session_write_close();
+
+    // Loop elaborazione
+    while ($item = $queue->getNextPendingForJob($jobId)) {
+        // IMPORTANTE: Riconnetti DB dopo ogni chiamata API
+        Database::reconnect();
+
+        // Check cancellazione
+        if ($jobModel->isCancelled($jobId)) {
+            $this->sendEvent('cancelled', [...]);
+            break;
+        }
+
+        // Elabora item
+        // ...
+
+        // Invia evento SSE
+        $this->sendEvent('item_completed', [...]);
+    }
+
+    $this->sendEvent('completed', [...]);
+}
+
+// Helper per SSE
+private function sendEvent(string $event, array $data): void {
+    echo "event: {$event}\n";
+    echo "data: " . json_encode($data) . "\n\n";
+    ob_flush();
+    flush();
+}
+
+// 3. GET /job-status - Polling fallback
+public function jobStatus(int $projectId): void {
+    echo json_encode(['success' => true, 'job' => $jobModel->getJobResponse($jobId)]);
+}
+
+// 4. POST /cancel-job - Annulla job
+public function cancelJob(int $projectId): void {
+    $jobModel->cancel($jobId);
+    echo json_encode(['success' => true]);
+}
+```
+
+**Pattern Frontend (Alpine.js):**
+```javascript
+// Avvia job
+async startJob() {
+    const resp = await fetch('/start-job', { method: 'POST', body: formData });
+    const data = await resp.json();
+    this.jobId = data.job_id;
+    this.connectSSE();
+}
+
+// Connetti SSE
+connectSSE() {
+    this.eventSource = new EventSource(`/stream?job_id=${this.jobId}`);
+
+    this.eventSource.addEventListener('item_completed', (e) => {
+        const data = JSON.parse(e.data);
+        // Aggiorna UI
+    });
+
+    this.eventSource.addEventListener('completed', (e) => {
+        this.eventSource.close();
+        // Finalizza
+    });
+
+    // Fallback a polling se SSE fallisce
+    this.eventSource.onerror = () => {
+        this.eventSource.close();
+        this.startPolling();
+    };
+}
+
+// Polling fallback
+async startPolling() {
+    const resp = await fetch(`/job-status?job_id=${this.jobId}`);
+    const data = await resp.json();
+    // Aggiorna UI
+    if (data.job.status === 'running') {
+        setTimeout(() => this.startPolling(), 2000);
+    }
+}
+```
+
+**Eventi SSE standard:**
+- `started` - Job avviato con totale items
+- `progress` - Aggiornamento progresso (current_item, percent)
+- `item_completed` - Singolo item completato con risultati
+- `item_error` - Errore su singolo item
+- `completed` - Job terminato con successo
+- `cancelled` - Job annullato dall'utente
+
+**Reference Implementation:** `modules/seo-tracking/controllers/RankCheckController.php`
+
 ---
 
 ## ICONE HEROICONS (più usate)
@@ -288,6 +439,8 @@ if ($result['success']) {
 [ ] Database::reconnect() dopo chiamate lunghe
 [ ] Scraping usa ScraperService::scrape()
 [ ] php -l su file modificati
+[ ] Operazioni lunghe usano job in background (SSE)
+[ ] session_write_close() prima di loop SSE
 ```
 
 ---
@@ -313,6 +466,9 @@ if ($result['success']) {
 | Crediti non scalano | `Credits::consume()` mancante | Aggiungi dopo operazione |
 | "Database is limited" | Limite SiteGround temporaneo | Attendi qualche minuto e riprova |
 | Scraping poche parole | CSS selectors invece di Readability | Usa `ScraperService::scrape()` |
+| SSE blocca altre request | Sessione non chiusa | `session_write_close()` prima del loop |
+| SSE non invia eventi | Output buffering | `ob_flush(); flush();` dopo ogni evento |
+| Job bloccato in processing | Processo crashato | `resetStuckProcessing(30)` nel model queue |
 
 ---
 
