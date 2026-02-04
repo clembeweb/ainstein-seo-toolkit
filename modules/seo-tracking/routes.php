@@ -334,6 +334,34 @@ Router::post('/seo-tracking/project/{id}/keywords/bulk', function ($id) {
     return (new KeywordController())->bulkAction((int) $id);
 });
 
+// =============================================
+// KEYWORDS - BACKGROUND JOB PROCESSING
+// (MUST be BEFORE {keywordId} wildcard route!)
+// =============================================
+
+// Avvia job posizioni in background
+Router::post('/seo-tracking/project/{id}/keywords/start-positions-job', function ($id) {
+    Middleware::auth();
+    return (new KeywordController())->startPositionsJob((int) $id);
+});
+
+// SSE Stream per progress posizioni (NO auth middleware - gestito internamente)
+Router::get('/seo-tracking/project/{id}/keywords/positions-stream', function ($id) {
+    return (new KeywordController())->processPositionsStream((int) $id);
+});
+
+// Polling fallback per status job posizioni
+Router::get('/seo-tracking/project/{id}/keywords/positions-job-status', function ($id) {
+    Middleware::auth();
+    return (new KeywordController())->positionsJobStatus((int) $id);
+});
+
+// Annulla job posizioni in esecuzione
+Router::post('/seo-tracking/project/{id}/keywords/cancel-positions-job', function ($id) {
+    Middleware::auth();
+    return (new KeywordController())->cancelPositionsJob((int) $id);
+});
+
 // Aggiorna volumi di ricerca (AJAX - DataForSEO) - DEPRECATO, usa refresh-volumes
 Router::post('/seo-tracking/project/{id}/keywords/update-volumes', function ($id) {
     Middleware::auth();
@@ -372,33 +400,6 @@ Router::post('/seo-tracking/project/{id}/keywords/refresh-all', function ($id) {
 Router::get('/seo-tracking/project/{id}/keywords/refresh-cost', function ($id) {
     Middleware::auth();
     return (new KeywordController())->getRefreshCost((int) $id);
-});
-
-// =============================================
-// KEYWORDS - BACKGROUND JOB PROCESSING
-// =============================================
-
-// Avvia job posizioni in background
-Router::post('/seo-tracking/project/{id}/keywords/start-positions-job', function ($id) {
-    Middleware::auth();
-    return (new KeywordController())->startPositionsJob((int) $id);
-});
-
-// SSE Stream per progress posizioni (NO auth middleware - gestito internamente)
-Router::get('/seo-tracking/project/{id}/keywords/positions-stream', function ($id) {
-    return (new KeywordController())->processPositionsStream((int) $id);
-});
-
-// Polling fallback per status job posizioni
-Router::get('/seo-tracking/project/{id}/keywords/positions-job-status', function ($id) {
-    Middleware::auth();
-    return (new KeywordController())->positionsJobStatus((int) $id);
-});
-
-// Annulla job posizioni in esecuzione
-Router::post('/seo-tracking/project/{id}/keywords/cancel-positions-job', function ($id) {
-    Middleware::auth();
-    return (new KeywordController())->cancelPositionsJob((int) $id);
 });
 
 // Debug SERP check (temporaneo per diagnostica)
