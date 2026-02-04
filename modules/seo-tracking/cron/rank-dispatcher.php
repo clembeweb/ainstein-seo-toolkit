@@ -373,18 +373,40 @@ function updateJobProgress(int $jobId, bool $success, bool $found): void
 
 /**
  * Verifica se il job è completato e aggiorna lo status
+ * Usa count diretto dalla coda per evitare problemi con contatori incrementali
  */
 function checkJobCompletion(int $jobId): void
 {
     $job = Database::fetch(
-        "SELECT keywords_requested, keywords_completed, keywords_failed FROM st_rank_jobs WHERE id = ?",
+        "SELECT keywords_requested FROM st_rank_jobs WHERE id = ?",
         [$jobId]
     );
 
     if (!$job) return;
 
-    $processed = (int)$job['keywords_completed'] + (int)$job['keywords_failed'];
+    // Conta direttamente dalla coda (più affidabile dei contatori)
+    $queueStats = Database::fetch(
+        "SELECT
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+            SUM(CASE WHEN status = 'error' THEN 1 ELSE 0 END) as failed,
+            SUM(CASE WHEN result_position IS NOT NULL THEN 1 ELSE 0 END) as found
+         FROM st_rank_queue WHERE job_id = ?",
+        [$jobId]
+    );
+
+    $completed = (int)($queueStats['completed'] ?? 0);
+    $failed = (int)($queueStats['failed'] ?? 0);
+    $found = (int)($queueStats['found'] ?? 0);
+    $processed = $completed + $failed;
     $requested = (int)$job['keywords_requested'];
+
+    // Sincronizza sempre i contatori del job con i valori reali della coda
+    Database::update('st_rank_jobs', [
+        'keywords_completed' => $completed,
+        'keywords_failed' => $failed,
+        'keywords_found' => $found,
+    ], 'id = ?', [$jobId]);
 
     if ($processed >= $requested) {
         // Calcola posizione media
