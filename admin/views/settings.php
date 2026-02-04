@@ -489,6 +489,50 @@ $fallbackEnabled = ($settings['ai_fallback_enabled']['value'] ?? '1') === '1';
             </div>
         </div>
 
+        <!-- Keywords Everywhere -->
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+                    Keywords Everywhere
+                    <span class="text-xs font-normal text-slate-500 dark:text-slate-400">(Provider alternativo volumi)</span>
+                </h3>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="text-sm text-slate-600 dark:text-slate-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                    <p class="flex items-start gap-2">
+                        <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Keywords Everywhere viene usato come provider alternativo per i volumi di ricerca quando DataForSEO non è configurato. Entrambi i provider condividono la stessa cache.</span>
+                    </p>
+                </div>
+
+                <div>
+                    <label for="keywordseverywhere_api_key" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        API Key
+                        <?php if (!empty($settings['keywordseverywhere_api_key']['value'])): ?>
+                            <span class="text-green-600 dark:text-green-400 text-xs ml-2">Configurata</span>
+                        <?php endif; ?>
+                    </label>
+                    <div class="relative">
+                        <input type="password" name="keywordseverywhere_api_key" id="keywordseverywhere_api_key"
+                               value="<?= e($settings['keywordseverywhere_api_key']['value'] ?? '') ?>"
+                               placeholder="La tua API key Keywords Everywhere"
+                               class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <button type="button" onclick="togglePassword('keywordseverywhere_api_key')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        </button>
+                    </div>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        <a href="https://keywordseverywhere.com/api-documentation.html" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">
+                            Ottieni la tua API key da Keywords Everywhere
+                        </a>
+                        <span class="mx-1">|</span>
+                        Costo: ~$10 per 100.000 crediti
+                    </p>
+                </div>
+            </div>
+        </div>
+
         <!-- SMTP -->
         <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
             <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">

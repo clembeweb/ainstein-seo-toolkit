@@ -332,14 +332,17 @@ class Keyword
 
     /**
      * Aggiorna volumi di ricerca per keyword del progetto
-     * Raggruppa le keyword per location_code e chiama DataForSEO per ogni gruppo
+     * Raggruppa le keyword per location_code e chiama il provider volumi.
+     *
+     * Cascade: DataForSEO (primario) -> Keywords Everywhere (fallback)
      */
     public function updateSearchVolumes(int $projectId): array
     {
-        $dataForSeo = new \Services\DataForSeoService();
+        // Determina quale service usare
+        $service = $this->getVolumeService();
 
-        if (!$dataForSeo->isConfigured()) {
-            return ['success' => false, 'error' => 'DataForSEO non configurato. Vai in Admin > Impostazioni'];
+        if ($service === null) {
+            return ['success' => false, 'error' => 'Nessun provider volumi configurato. Vai in Admin > Impostazioni per configurare DataForSEO o Keywords Everywhere'];
         }
 
         // Prendi tutte le keyword del progetto
@@ -363,13 +366,14 @@ class Keyword
         $totalCached = 0;
         $totalFetched = 0;
         $errors = [];
+        $provider = $service instanceof \Services\DataForSeoService ? 'DataForSEO' : 'Keywords Everywhere';
 
         // Processa ogni gruppo di location
         foreach ($keywordsByLocation as $locationCode => $locationKeywords) {
             $keywordTexts = array_column($locationKeywords, 'keyword');
 
             // Ottieni volumi per questa location
-            $result = $dataForSeo->getSearchVolumes($keywordTexts, $locationCode);
+            $result = $service->getSearchVolumes($keywordTexts, $locationCode);
 
             if (!$result['success']) {
                 $errors[] = "Errore per location {$locationCode}: " . ($result['error'] ?? 'unknown');
@@ -417,7 +421,8 @@ class Keyword
             'total' => count($keywords),
             'cached' => $totalCached,
             'fetched' => $totalFetched,
-            'message' => "Volumi aggiornati per {$updated} keyword"
+            'provider' => $provider,
+            'message' => "Volumi aggiornati per {$updated} keyword (provider: {$provider})"
         ];
 
         if (!empty($errors)) {
@@ -425,6 +430,29 @@ class Keyword
         }
 
         return $response;
+    }
+
+    /**
+     * Ottieni il service per i volumi di ricerca
+     * Cascade: DataForSEO (primario) -> Keywords Everywhere (fallback)
+     *
+     * @return \Services\DataForSeoService|\Services\KeywordsEverywhereService|null
+     */
+    private function getVolumeService()
+    {
+        // Prova DataForSEO (primario)
+        $dataForSeo = new \Services\DataForSeoService();
+        if ($dataForSeo->isConfigured()) {
+            return $dataForSeo;
+        }
+
+        // Fallback: Keywords Everywhere
+        $kwEverywhere = new \Services\KeywordsEverywhereService();
+        if ($kwEverywhere->isConfigured()) {
+            return $kwEverywhere;
+        }
+
+        return null;
     }
 
     /**
@@ -459,6 +487,8 @@ class Keyword
     /**
      * Aggiorna volumi di ricerca per keyword specifiche (per ID)
      * Usato per auto-fetch dopo inserimento nuove keyword
+     *
+     * Cascade: DataForSEO (primario) -> Keywords Everywhere (fallback)
      */
     public function updateSearchVolumesForIds(array $keywordIds): array
     {
@@ -466,10 +496,11 @@ class Keyword
             return ['success' => true, 'updated' => 0, 'message' => 'Nessuna keyword da aggiornare'];
         }
 
-        $dataForSeo = new \Services\DataForSeoService();
+        // Determina quale service usare
+        $service = $this->getVolumeService();
 
-        if (!$dataForSeo->isConfigured()) {
-            return ['success' => false, 'error' => 'DataForSEO non configurato'];
+        if ($service === null) {
+            return ['success' => false, 'error' => 'Nessun provider volumi configurato'];
         }
 
         // Prendi le keyword per ID
@@ -497,13 +528,14 @@ class Keyword
         $totalCached = 0;
         $totalFetched = 0;
         $errors = [];
+        $provider = $service instanceof \Services\DataForSeoService ? 'DataForSEO' : 'Keywords Everywhere';
 
         // Processa ogni gruppo di location
         foreach ($keywordsByLocation as $locationCode => $locationKeywords) {
             $keywordTexts = array_column($locationKeywords, 'keyword');
 
             // Ottieni volumi per questa location
-            $result = $dataForSeo->getSearchVolumes($keywordTexts, $locationCode);
+            $result = $service->getSearchVolumes($keywordTexts, $locationCode);
 
             if (!$result['success']) {
                 $errors[] = "Errore per location {$locationCode}: " . ($result['error'] ?? 'unknown');
@@ -551,7 +583,8 @@ class Keyword
             'total' => count($keywords),
             'cached' => $totalCached,
             'fetched' => $totalFetched,
-            'message' => "Volumi aggiornati per {$updated} keyword"
+            'provider' => $provider,
+            'message' => "Volumi aggiornati per {$updated} keyword (provider: {$provider})"
         ];
 
         if (!empty($errors)) {

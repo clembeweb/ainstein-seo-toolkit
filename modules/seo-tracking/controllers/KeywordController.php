@@ -694,7 +694,7 @@ class KeywordController
     }
 
     /**
-     * Verifica configurazione DataForSEO
+     * Verifica configurazione provider volumi (DataForSEO o Keywords Everywhere)
      */
     public function checkVolumeService(int $projectId): string
     {
@@ -706,9 +706,18 @@ class KeywordController
         }
 
         $dataForSeo = new \Services\DataForSeoService();
+        $kwEverywhere = new \Services\KeywordsEverywhereService();
+
+        $dataForSeoConfigured = $dataForSeo->isConfigured();
+        $kwEverywhereConfigured = $kwEverywhere->isConfigured();
 
         return View::json([
-            'configured' => $dataForSeo->isConfigured(),
+            'configured' => $dataForSeoConfigured || $kwEverywhereConfigured,
+            'providers' => [
+                'dataforseo' => $dataForSeoConfigured,
+                'keywordseverywhere' => $kwEverywhereConfigured,
+            ],
+            'active_provider' => $dataForSeoConfigured ? 'DataForSEO' : ($kwEverywhereConfigured ? 'Keywords Everywhere' : null),
         ]);
     }
 

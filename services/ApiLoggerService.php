@@ -35,6 +35,7 @@ class ApiLoggerService
         'google_gsc' => 'Google Search Console',
         'google_oauth' => 'Google OAuth',
         'google_ga4' => 'Google Analytics 4',
+        'keywordseverywhere' => 'Keywords Everywhere',
     ];
 
     /**
