@@ -67,6 +67,10 @@ class KeywordController
         $groups = $this->keyword->getGroups($projectId);
         $stats = $this->keyword->getStats($projectId);
 
+        // Check for active rank check job
+        $rankJob = new RankJob();
+        $activeJob = $rankJob->getActiveForProject($projectId);
+
         return View::render('seo-tracking/keywords/index', [
             'title' => $project['name'] . ' - Keywords',
             'user' => $user,
@@ -77,6 +81,7 @@ class KeywordController
             'stats' => $stats,
             'filters' => $filters,
             'userCredits' => Credits::getBalance($user['id']),
+            'activeJob' => $activeJob,
         ]);
     }
 

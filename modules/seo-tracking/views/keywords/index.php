@@ -3,6 +3,51 @@
     <!-- Header + Navigation -->
     <?php include __DIR__ . '/../partials/project-nav.php'; ?>
 
+    <!-- Active Job Banner (se c'è un job in corso) -->
+    <?php if (!empty($activeJob)): ?>
+    <div id="jobStatusBanner" class="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="flex-shrink-0">
+                    <svg class="w-5 h-5 text-emerald-500 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-emerald-800 dark:text-emerald-200">
+                        Aggiornamento posizioni in corso
+                    </p>
+                    <p class="text-xs text-emerald-600 dark:text-emerald-400" id="jobProgress">
+                        <?= (int)$activeJob['keywords_completed'] ?> / <?= (int)$activeJob['keywords_requested'] ?> keyword elaborate
+                        <?php if ($activeJob['current_keyword']): ?>
+                            - Attuale: <?= e($activeJob['current_keyword']) ?>
+                        <?php endif; ?>
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="cancelActiveJob()" class="text-xs px-2 py-1 rounded bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900">
+                    Annulla
+                </button>
+                <button onclick="refreshJobStatus()" class="text-xs px-2 py-1 rounded bg-emerald-100 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-700">
+                    Aggiorna stato
+                </button>
+            </div>
+        </div>
+        <div class="mt-2">
+            <div class="w-full bg-emerald-200 dark:bg-emerald-800 rounded-full h-1.5">
+                <?php
+                $progress = $activeJob['keywords_requested'] > 0
+                    ? round(($activeJob['keywords_completed'] / $activeJob['keywords_requested']) * 100)
+                    : 0;
+                ?>
+                <div id="jobProgressBar" class="bg-emerald-500 h-1.5 rounded-full transition-all" style="width: <?= $progress ?>%"></div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Page Info + Actions -->
     <div class="flex flex-col gap-3">
         <div class="flex justify-between items-center">
@@ -288,6 +333,49 @@
 </div>
 
 <script>
+// ============================================================
+// CONFIGURAZIONE E VARIABILI GLOBALI
+// ============================================================
+const baseUrl = '<?= url('') ?>';
+const projectId = <?= $project['id'] ?>;
+const userCredits = <?= $userCredits ?? 0 ?>;
+const hasActiveJob = <?= !empty($activeJob) ? 'true' : 'false' ?>;
+const activeJobId = <?= !empty($activeJob) ? (int)$activeJob['id'] : 'null' ?>;
+
+// Configurazione refresh
+const refreshConfig = {
+    volumes: {
+        btn: 'refreshVolumesBtn',
+        url: '/keywords/refresh-volumes',
+        label: 'Volumi',
+        cost: <?= $volumeCost ?? 0 ?>,
+        count: <?= $totalKw ?? 0 ?>,
+        description: 'Aggiorna volumi di ricerca, CPC e livello di competizione per tutte le keyword.',
+        isBackground: false
+    },
+    positions: {
+        btn: 'refreshPositionsBtn',
+        url: '/keywords/start-positions-job',
+        label: 'Posizioni',
+        cost: <?= $positionCost ?? 0 ?>,
+        count: <?= $trackedKw ?? 0 ?>,
+        description: 'Aggiorna le posizioni SERP per le keyword tracciate. Il processo avviene in background.',
+        isBackground: true
+    },
+    all: {
+        btn: 'refreshAllBtn',
+        url: '/keywords/start-positions-job',
+        label: 'Tutto',
+        cost: <?= $allCost ?? 0 ?>,
+        count: <?= $totalKw ?? 0 ?>,
+        description: 'Aggiorna sia volumi che posizioni. Le posizioni vengono elaborate in background.',
+        isBackground: true
+    }
+};
+
+// ============================================================
+// SELEZIONE KEYWORD
+// ============================================================
 function toggleAll(checkbox) {
     document.querySelectorAll('.keyword-checkbox').forEach(cb => {
         cb.checked = checkbox.checked;
@@ -298,6 +386,10 @@ function toggleAll(checkbox) {
 function updateSelectedCount() {
     const count = document.querySelectorAll('.keyword-checkbox:checked').length;
     document.getElementById('selectedCount').textContent = count + ' selezionate';
+}
+
+function getSelectedKeywordIds() {
+    return Array.from(document.querySelectorAll('.keyword-checkbox:checked')).map(cb => cb.value);
 }
 
 // Show group input when group action selected
@@ -322,14 +414,14 @@ document.getElementById('bulkForm').addEventListener('submit', function(e) {
     }
 });
 
-// Single keyword delete
+// ============================================================
+// ELIMINAZIONE SINGOLA KEYWORD
+// ============================================================
 function deleteKeyword(id, keyword) {
     if (!confirm(`Sei sicuro di voler eliminare la keyword "${keyword}"?`)) {
         return;
     }
 
-    const baseUrl = '<?= url('') ?>';
-    const projectId = <?= $project['id'] ?>;
     const csrfToken = document.querySelector('input[name="_csrf_token"]').value;
 
     fetch(`${baseUrl}/seo-tracking/project/${projectId}/keywords/${id}/delete`, {
@@ -342,77 +434,68 @@ function deleteKeyword(id, keyword) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Remove row from table
             const row = document.querySelector(`input[value="${id}"]`).closest('tr');
             row.remove();
-            // Update count
-            const countEl = document.querySelector('.text-sm.text-slate-500');
-            if (countEl) {
-                const text = countEl.textContent;
-                const match = text.match(/(\d+)/);
-                if (match) {
-                    const newCount = parseInt(match[1]) - 1;
-                    countEl.textContent = text.replace(/\d+/, newCount);
-                }
-            }
+            showToast('Keyword eliminata', 'success');
         } else {
-            alert(data.error || 'Errore durante l\'eliminazione');
+            showToast(data.error || 'Errore durante l\'eliminazione', 'error');
         }
     })
     .catch(err => {
         console.error('Delete failed:', err);
-        alert('Errore durante l\'eliminazione');
+        showToast('Errore durante l\'eliminazione', 'error');
     });
 }
 
-// Configurazione refresh
-const refreshConfig = {
-    volumes: {
-        btn: 'refreshVolumesBtn',
-        url: '/keywords/refresh-volumes',
-        label: 'Volumi',
-        loadingLabel: 'Aggiornamento volumi...',
-        cost: <?= $volumeCost ?>,
-        count: <?= $totalKw ?>,
-        description: 'Aggiorna volumi di ricerca, CPC e livello di competizione per tutte le keyword.'
-    },
-    positions: {
-        btn: 'refreshPositionsBtn',
-        url: '/keywords/refresh-positions',
-        label: 'Posizioni',
-        loadingLabel: 'Aggiornamento posizioni...',
-        cost: <?= $positionCost ?>,
-        count: <?= $trackedKw ?>,
-        description: 'Aggiorna le posizioni SERP per le keyword tracciate.'
-    },
-    all: {
-        btn: 'refreshAllBtn',
-        url: '/keywords/refresh-all',
-        label: 'Tutto',
-        loadingLabel: 'Aggiornamento completo...',
-        cost: <?= $allCost ?>,
-        count: <?= $totalKw ?>,
-        description: 'Aggiorna sia volumi che posizioni in un\'unica operazione.'
-    }
-};
+// ============================================================
+// TOAST NOTIFICATIONS
+// ============================================================
+function showToast(message, type = 'info', duration = 4000) {
+    const toast = document.createElement('div');
+    toast.className = 'fixed bottom-4 right-4 z-50 max-w-sm transform transition-all duration-300';
 
-const baseUrl = '<?= url('') ?>';
-const projectId = <?= $project['id'] ?>;
-const userCredits = <?= $userCredits ?? 0 ?>;
+    const bgColor = type === 'success' ? 'bg-emerald-100 dark:bg-emerald-900/50 border-emerald-200 dark:border-emerald-800' :
+                    type === 'error' ? 'bg-red-100 dark:bg-red-900/50 border-red-200 dark:border-red-800' :
+                    'bg-blue-100 dark:bg-blue-900/50 border-blue-200 dark:border-blue-800';
+    const iconColor = type === 'success' ? 'text-emerald-500' :
+                      type === 'error' ? 'text-red-500' : 'text-blue-500';
+    const icon = type === 'success' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>' :
+                 type === 'error' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>' :
+                 '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>';
 
-// Ottieni keyword selezionate
-function getSelectedKeywordIds() {
-    return Array.from(document.querySelectorAll('.keyword-checkbox:checked')).map(cb => cb.value);
+    toast.innerHTML = `
+        <div class="${bgColor} border rounded-lg shadow-lg p-4 flex items-center gap-3">
+            <svg class="w-5 h-5 ${iconColor} flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                ${icon}
+            </svg>
+            <p class="text-sm text-slate-700 dark:text-slate-200">${message}</p>
+        </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
 }
 
-// Modal di conferma
+// ============================================================
+// MODAL DI CONFERMA REFRESH
+// ============================================================
 function showRefreshModal(type) {
     const config = refreshConfig[type];
     if (!config) return;
 
-    // Per posizioni/tutto: usa selezione se presente, altrimenti tutte le tracciate
+    // Check if there's already an active job
+    if (hasActiveJob) {
+        showToast('C\'è già un job in esecuzione. Attendi il completamento.', 'error');
+        return;
+    }
+
     const selectedIds = getSelectedKeywordIds();
-    const useSelection = selectedIds.length > 0 && (type === 'positions' || type === 'all' || type === 'volumes');
+    const useSelection = selectedIds.length > 0;
 
     let keywordCount, cost;
     if (useSelection) {
@@ -430,26 +513,33 @@ function showRefreshModal(type) {
         cost = config.cost;
     }
 
-    // Controlla se ci sono keyword da aggiornare
     if (keywordCount === 0) {
-        alert(type === 'positions' ? 'Nessuna keyword selezionata o tracciata da aggiornare.' : 'Nessuna keyword da aggiornare.');
+        showToast(type === 'positions' ? 'Nessuna keyword selezionata o tracciata.' : 'Nessuna keyword da aggiornare.', 'error');
         return;
     }
 
-    // Salva selezione per executeRefresh
     window.refreshSelectedIds = useSelection ? selectedIds : null;
 
     const selectionNote = useSelection
         ? `<p class="text-xs text-amber-600 dark:text-amber-400 mt-1">Verranno elaborate solo le ${keywordCount} keyword selezionate</p>`
         : '';
 
-    // Crea modal
+    const isBackground = config.isBackground;
+    const backgroundNote = isBackground
+        ? `<p class="text-xs text-emerald-600 dark:text-emerald-400 mt-2 flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            Il processo avverrà in background. Potrai continuare a navigare.
+           </p>`
+        : '';
+
     const modal = document.createElement('div');
     modal.id = 'refreshModal';
     modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
     modal.innerHTML = `
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeRefreshModal()"></div>
-        <div class="relative bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6 transform transition-all">
+        <div class="relative bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6">
             <button onclick="closeRefreshModal()" class="absolute top-4 right-4 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
                 <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -465,6 +555,7 @@ function showRefreshModal(type) {
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Aggiorna ${config.label}</h3>
                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">${config.description}</p>
                 ${selectionNote}
+                ${backgroundNote}
             </div>
 
             <div class="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 mb-6 space-y-3">
@@ -488,7 +579,7 @@ function showRefreshModal(type) {
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                         </svg>
-                        Crediti insufficienti. Ricarica per continuare.
+                        Crediti insufficienti.
                     </p>
                 </div>
             ` : ''}
@@ -516,38 +607,33 @@ function closeRefreshModal() {
     }
 }
 
-// Stato job in background
-let currentJobId = null;
-let eventSource = null;
-let pollingInterval = null;
-let jobResults = [];
-
-// Esecuzione refresh
+// ============================================================
+// ESECUZIONE REFRESH
+// ============================================================
 function executeRefresh(type) {
     closeRefreshModal();
 
-    // Per posizioni e "tutto", usa background processing con SSE
-    if (type === 'positions' || type === 'all') {
-        executeRefreshWithSSE(type);
+    const config = refreshConfig[type];
+
+    // Volumi: esecuzione sincrona (batch veloce)
+    if (type === 'volumes') {
+        executeRefreshSync(type);
         return;
     }
 
-    // Per volumi, usa il metodo sincrono (più veloce per batch DataForSEO)
-    executeRefreshSync(type);
+    // Posizioni/Tutto: avvia job in background (NON BLOCCANTE)
+    executeBackgroundJob(type);
 }
 
-// Refresh sincrono (per volumi)
+// Refresh sincrono per volumi
 function executeRefreshSync(type) {
     const config = refreshConfig[type];
     const btn = document.getElementById(config.btn);
     const originalHTML = btn.innerHTML;
     const csrfToken = document.querySelector('input[name="_csrf_token"]').value;
-
-    // Recupera gli ID selezionati (se presenti)
     const selectedIds = window.refreshSelectedIds || null;
-    window.refreshSelectedIds = null; // Reset
+    window.refreshSelectedIds = null;
 
-    // Disabilita tutti i pulsanti e mostra loading
     ['refreshVolumesBtn', 'refreshPositionsBtn', 'refreshAllBtn'].forEach(id => {
         document.getElementById(id).disabled = true;
     });
@@ -560,7 +646,6 @@ function executeRefreshSync(type) {
         Attendi...
     `;
 
-    // Costruisci body con keyword_ids se selezionati
     let bodyData = '_csrf_token=' + encodeURIComponent(csrfToken);
     if (selectedIds && selectedIds.length > 0) {
         selectedIds.forEach(id => {
@@ -568,44 +653,53 @@ function executeRefreshSync(type) {
         });
     }
 
-    fetch(`${baseUrl}/seo-tracking/project/${projectId}${config.url}`, {
+    fetch(`${baseUrl}/seo-tracking/project/${projectId}/keywords/refresh-volumes`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: bodyData
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showResultModal(true, data);
+            showToast(data.message || 'Volumi aggiornati!', 'success');
+            setTimeout(() => window.location.reload(), 1500);
         } else {
-            showResultModal(false, data);
-            restoreButtons(type, originalHTML);
+            showToast(data.error || 'Errore durante l\'aggiornamento', 'error');
+            btn.innerHTML = originalHTML;
+            ['refreshVolumesBtn', 'refreshPositionsBtn', 'refreshAllBtn'].forEach(id => {
+                document.getElementById(id).disabled = false;
+            });
         }
     })
     .catch(err => {
         console.error('Refresh failed:', err);
-        showResultModal(false, { error: 'Errore di connessione. Riprova.' });
-        restoreButtons(type, originalHTML);
+        showToast('Errore di connessione', 'error');
+        btn.innerHTML = originalHTML;
+        ['refreshVolumesBtn', 'refreshPositionsBtn', 'refreshAllBtn'].forEach(id => {
+            document.getElementById(id).disabled = false;
+        });
     });
 }
 
-// Refresh con SSE (per posizioni - non bloccante)
-function executeRefreshWithSSE(type) {
+// Avvia job in background (NON BLOCCANTE - nessuna modal)
+function executeBackgroundJob(type) {
     const csrfToken = document.querySelector('input[name="_csrf_token"]').value;
     const selectedIds = window.refreshSelectedIds || null;
     window.refreshSelectedIds = null;
 
-    // Disabilita pulsanti
-    ['refreshVolumesBtn', 'refreshPositionsBtn', 'refreshAllBtn'].forEach(id => {
-        document.getElementById(id).disabled = true;
-    });
+    // Solo mostra loading sul bottone
+    const config = refreshConfig[type];
+    const btn = document.getElementById(config.btn);
+    const originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `
+        <svg class="w-4 h-4 mr-1.5 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Avvio...
+    `;
 
-    // Mostra modal di progress
-    showProgressModal(type);
-
-    // Costruisci body per start-job
     let bodyData = '_csrf_token=' + encodeURIComponent(csrfToken);
     if (selectedIds && selectedIds.length > 0) {
         selectedIds.forEach(id => {
@@ -613,434 +707,123 @@ function executeRefreshWithSSE(type) {
         });
     }
 
-    // Avvia job in background
+    // Per "tutto", prima aggiorna volumi sincronamente
+    if (type === 'all') {
+        bodyData += '&include_volumes=1';
+    }
+
     fetch(`${baseUrl}/seo-tracking/project/${projectId}/keywords/start-positions-job`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: bodyData
     })
     .then(response => response.json())
     .then(data => {
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+
         if (data.success) {
-            currentJobId = data.job_id;
-            jobResults = [];
-            connectSSE(type);
+            // Mostra toast e ricarica pagina per vedere il banner
+            showToast('Job avviato in background! Puoi continuare a navigare.', 'success', 5000);
+            setTimeout(() => window.location.reload(), 1500);
         } else {
-            closeProgressModal();
-            showResultModal(false, data);
-            restoreAllButtons();
+            showToast(data.error || 'Errore nell\'avvio del job', 'error');
         }
     })
     .catch(err => {
         console.error('Start job failed:', err);
-        closeProgressModal();
-        showResultModal(false, { error: 'Errore di connessione. Riprova.' });
-        restoreAllButtons();
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+        showToast('Errore di connessione', 'error');
     });
 }
 
-// Connetti a SSE per progress in tempo reale
-let sseTimeout = null;
-let lastEventTime = null;
+// ============================================================
+// GESTIONE JOB ATTIVO (BANNER)
+// ============================================================
+function refreshJobStatus() {
+    if (!activeJobId) return;
 
-function connectSSE(type) {
-    if (eventSource) {
-        eventSource.close();
-    }
-
-    const streamUrl = `${baseUrl}/seo-tracking/project/${projectId}/keywords/positions-stream?job_id=${currentJobId}`;
-    eventSource = new EventSource(streamUrl);
-    lastEventTime = Date.now();
-
-    // Timeout: se non riceviamo eventi per 60 secondi, passa a polling
-    function resetSSETimeout() {
-        lastEventTime = Date.now();
-        if (sseTimeout) clearTimeout(sseTimeout);
-        sseTimeout = setTimeout(() => {
-            console.warn('SSE timeout - switching to polling');
-            if (eventSource) {
-                eventSource.close();
-                eventSource = null;
-            }
-            startPolling(type);
-        }, 60000); // 60 secondi timeout
-    }
-    resetSSETimeout();
-
-    eventSource.addEventListener('started', function(e) {
-        resetSSETimeout();
-        const data = JSON.parse(e.data);
-        updateProgressModal({
-            status: 'running',
-            message: 'Avvio elaborazione...',
-            total: data.total_keywords,
-            completed: 0,
-            percent: 0
-        });
-    });
-
-    // Heartbeat per mantenere la connessione viva
-    eventSource.addEventListener('heartbeat', function(e) {
-        resetSSETimeout();
-        console.log('SSE heartbeat received');
-    });
-
-    eventSource.addEventListener('progress', function(e) {
-        resetSSETimeout();
-        const data = JSON.parse(e.data);
-        updateProgressModal({
-            status: 'running',
-            message: `Verifico: ${data.current_keyword}`,
-            total: data.total,
-            completed: data.completed,
-            percent: data.percent
-        });
-    });
-
-    eventSource.addEventListener('keyword_completed', function(e) {
-        resetSSETimeout();
-        const data = JSON.parse(e.data);
-        jobResults.push({
-            keyword: data.keyword,
-            found: data.found,
-            position: data.position,
-            url: data.url,
-            previous_position: data.gsc_position
-        });
-    });
-
-    eventSource.addEventListener('keyword_error', function(e) {
-        resetSSETimeout();
-        const data = JSON.parse(e.data);
-        jobResults.push({
-            keyword: data.keyword,
-            found: false,
-            error: data.error
-        });
-    });
-
-    eventSource.addEventListener('completed', function(e) {
-        if (sseTimeout) clearTimeout(sseTimeout);
-        const data = JSON.parse(e.data);
-        eventSource.close();
-        eventSource = null;
-        currentJobId = null;
-        closeProgressModal();
-        showResultModal(true, {
-            success: true,
-            updated: data.total_found,
-            not_found: data.total_completed - data.total_found,
-            total: data.total_completed,
-            credits_used: data.credits_used,
-            message: `Posizioni aggiornate: ${data.total_found} trovate, ${data.total_completed - data.total_found} non in top 100`,
-            details: jobResults
-        });
-    });
-
-    eventSource.addEventListener('cancelled', function(e) {
-        if (sseTimeout) clearTimeout(sseTimeout);
-        const data = JSON.parse(e.data);
-        eventSource.close();
-        eventSource = null;
-        currentJobId = null;
-        closeProgressModal();
-        showResultModal(false, {
-            error: 'Job annullato. Keyword elaborate: ' + data.completed
-        });
-        restoreAllButtons();
-    });
-
-    eventSource.onerror = function(e) {
-        console.error('SSE error:', e);
-        if (sseTimeout) clearTimeout(sseTimeout);
-        // Fallback a polling se SSE fallisce
-        if (eventSource) {
-            eventSource.close();
-            eventSource = null;
-        }
-        startPolling(type);
-    };
-}
-
-// Polling fallback
-let pollingStartTime = null;
-const maxPollingMinutes = 5; // Max 5 minuti di polling
-
-function startPolling(type) {
-    if (pollingInterval) {
-        clearInterval(pollingInterval);
-    }
-
-    pollingStartTime = Date.now();
-
-    pollingInterval = setInterval(() => {
-        // Timeout massimo per polling
-        const minutesPolling = (Date.now() - pollingStartTime) / 60000;
-        if (minutesPolling > maxPollingMinutes) {
-            console.error('Polling timeout - exceeded max time');
-            clearInterval(pollingInterval);
-            pollingInterval = null;
-            closeProgressModal();
-            showResultModal(false, {
-                error: 'Timeout: il job sta impiegando troppo tempo. Controlla lo stato nella pagina Keywords.'
-            });
-            restoreAllButtons();
+    fetch(`${baseUrl}/seo-tracking/project/${projectId}/keywords/positions-job-status?job_id=${activeJobId}`)
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            showToast(data.error || 'Errore nel recupero stato', 'error');
             return;
         }
 
-        fetch(`${baseUrl}/seo-tracking/project/${projectId}/keywords/positions-job-status?job_id=${currentJobId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (!data.success) {
-                clearInterval(pollingInterval);
-                pollingInterval = null;
-                closeProgressModal();
-                showResultModal(false, { error: data.error });
-                restoreAllButtons();
-                return;
-            }
+        const job = data.job;
 
-            const job = data.job;
-            updateProgressModal({
-                status: job.status,
-                message: job.current_keyword ? `Verifico: ${job.current_keyword}` : 'Elaborazione...',
-                total: job.keywords_requested,
-                completed: job.keywords_completed,
-                percent: job.keywords_requested > 0
-                    ? Math.round((job.keywords_completed / job.keywords_requested) * 100)
-                    : 0
-            });
+        // Se completato/errore/annullato, ricarica pagina
+        if (job.status === 'completed' || job.status === 'error' || job.status === 'cancelled') {
+            showToast(job.status === 'completed' ? 'Job completato!' : 'Job terminato', job.status === 'completed' ? 'success' : 'info');
+            setTimeout(() => window.location.reload(), 1000);
+            return;
+        }
 
-            if (job.status === 'completed' || job.status === 'error' || job.status === 'cancelled') {
-                clearInterval(pollingInterval);
-                pollingInterval = null;
-                currentJobId = null;
-                closeProgressModal();
+        // Aggiorna banner
+        const progressEl = document.getElementById('jobProgress');
+        const barEl = document.getElementById('jobProgressBar');
+        if (progressEl) {
+            progressEl.textContent = `${job.keywords_completed} / ${job.keywords_requested} keyword elaborate` +
+                (job.current_keyword ? ` - Attuale: ${job.current_keyword}` : '');
+        }
+        if (barEl && job.keywords_requested > 0) {
+            const percent = Math.round((job.keywords_completed / job.keywords_requested) * 100);
+            barEl.style.width = percent + '%';
+        }
 
-                if (job.status === 'completed') {
-                    showResultModal(true, {
-                        success: true,
-                        updated: job.keywords_found,
-                        not_found: job.keywords_completed - job.keywords_found,
-                        total: job.keywords_completed,
-                        credits_used: job.credits_used,
-                        message: `Posizioni aggiornate: ${job.keywords_found} trovate`
-                    });
-                } else {
-                    showResultModal(false, {
-                        error: job.error_message || 'Job terminato con errore'
-                    });
-                    restoreAllButtons();
-                }
-            }
-        })
-        .catch(err => {
-            console.error('Polling error:', err);
-        });
-    }, 2000);
+        showToast('Stato aggiornato', 'info', 2000);
+    })
+    .catch(err => {
+        console.error('Status check failed:', err);
+        showToast('Errore di connessione', 'error');
+    });
 }
 
-// Annulla job
-function cancelJob() {
-    if (!currentJobId) return;
+function cancelActiveJob() {
+    if (!activeJobId) return;
+
+    if (!confirm('Sei sicuro di voler annullare il job in corso?')) return;
 
     const csrfToken = document.querySelector('input[name="_csrf_token"]').value;
 
     fetch(`${baseUrl}/seo-tracking/project/${projectId}/keywords/cancel-positions-job`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `_csrf_token=${encodeURIComponent(csrfToken)}&job_id=${currentJobId}`
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `_csrf_token=${encodeURIComponent(csrfToken)}&job_id=${activeJobId}`
     })
     .then(response => response.json())
     .then(data => {
-        // Il messaggio di cancellazione arriverà via SSE o polling
-        console.log('Cancel request:', data);
+        if (data.success) {
+            showToast('Job annullato', 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showToast(data.error || 'Errore durante l\'annullamento', 'error');
+        }
     })
     .catch(err => {
         console.error('Cancel failed:', err);
+        showToast('Errore di connessione', 'error');
     });
 }
 
-// Modal di progress
-function showProgressModal(type) {
-    const config = refreshConfig[type];
-    const modal = document.createElement('div');
-    modal.id = 'progressModal';
-    modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
-    modal.innerHTML = `
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
-        <div class="relative bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6">
-            <div class="text-center mb-6">
-                <div class="mx-auto h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Aggiornamento ${config.label}</h3>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-2" id="progressMessage">Avvio elaborazione...</p>
-            </div>
-
-            <div class="mb-6">
-                <div class="flex justify-between text-sm text-slate-500 dark:text-slate-400 mb-2">
-                    <span id="progressCount">0 / 0</span>
-                    <span id="progressPercent">0%</span>
-                </div>
-                <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3">
-                    <div id="progressBar" class="bg-emerald-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <button onclick="cancelJob()" class="w-full px-4 py-2.5 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 font-medium hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
-                <svg class="w-4 h-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-                Annulla
-            </button>
-        </div>
-    `;
-
-    document.body.appendChild(modal);
-    document.body.style.overflow = 'hidden';
+// Auto-refresh banner se c'è un job attivo (ogni 10 secondi)
+if (hasActiveJob) {
+    setInterval(refreshJobStatus, 10000);
 }
 
-function updateProgressModal(data) {
-    const message = document.getElementById('progressMessage');
-    const count = document.getElementById('progressCount');
-    const percent = document.getElementById('progressPercent');
-    const bar = document.getElementById('progressBar');
-
-    if (message) message.textContent = data.message || 'Elaborazione...';
-    if (count) count.textContent = `${data.completed || 0} / ${data.total || 0}`;
-    if (percent) percent.textContent = `${data.percent || 0}%`;
-    if (bar) bar.style.width = `${data.percent || 0}%`;
-}
-
-function closeProgressModal() {
-    const modal = document.getElementById('progressModal');
-    if (modal) {
-        modal.remove();
-        document.body.style.overflow = '';
-    }
-}
-
-function restoreAllButtons() {
-    ['refreshVolumesBtn', 'refreshPositionsBtn', 'refreshAllBtn'].forEach(id => {
-        document.getElementById(id).disabled = false;
-    });
-}
-
-function restoreButtons(type, originalHTML) {
-    const config = refreshConfig[type];
-    document.getElementById(config.btn).innerHTML = originalHTML;
-    ['refreshVolumesBtn', 'refreshPositionsBtn', 'refreshAllBtn'].forEach(id => {
-        document.getElementById(id).disabled = false;
-    });
-}
-
-function showResultModal(success, data) {
-    // Costruisci dettagli posizioni se presenti
-    let detailsHtml = '';
-    if (success && data.details && data.details.length > 0) {
-        detailsHtml = `
-            <div class="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3 mb-4 max-h-48 overflow-y-auto text-left">
-                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2 uppercase">Dettagli posizioni:</p>
-                <div class="space-y-1.5">
-                    ${data.details.map(d => {
-                        if (d.error) {
-                            return `<div class="flex justify-between items-center text-xs">
-                                <span class="text-slate-700 dark:text-slate-300 truncate mr-2">${d.keyword}</span>
-                                <span class="text-red-500 flex-shrink-0">Errore</span>
-                            </div>`;
-                        }
-                        const posClass = d.found
-                            ? (d.position <= 3 ? 'text-emerald-600 dark:text-emerald-400' :
-                               d.position <= 10 ? 'text-blue-600 dark:text-blue-400' :
-                               d.position <= 20 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-600 dark:text-slate-400')
-                            : 'text-red-500 dark:text-red-400';
-                        const posText = d.found ? '#' + d.position : 'Non trovata';
-                        const prevText = d.previous_position ? ` (era #${d.previous_position})` : '';
-                        return `<div class="flex justify-between items-center text-xs">
-                            <span class="text-slate-700 dark:text-slate-300 truncate mr-2">${d.keyword}</span>
-                            <span class="${posClass} flex-shrink-0 font-medium">${posText}${d.found ? prevText : ''}</span>
-                        </div>`;
-                    }).join('')}
-                </div>
-            </div>
-        `;
-    }
-
-    const modal = document.createElement('div');
-    modal.id = 'resultModal';
-    modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
-    modal.innerHTML = `
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="${success ? 'window.location.reload()' : 'closeResultModal()'}"></div>
-        <div class="relative bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6 text-center">
-            <div class="mx-auto h-14 w-14 rounded-full ${success ? 'bg-emerald-100 dark:bg-emerald-900/50' : 'bg-red-100 dark:bg-red-900/50'} flex items-center justify-center mb-4">
-                ${success ? `
-                    <svg class="w-7 h-7 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                    </svg>
-                ` : `
-                    <svg class="w-7 h-7 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                `}
-            </div>
-
-            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                ${success ? 'Aggiornamento completato!' : 'Errore'}
-            </h3>
-
-            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                ${success ? (data.message || 'Dati aggiornati correttamente.') : (data.error || 'Si e\' verificato un errore.')}
-            </p>
-
-            ${detailsHtml}
-
-            ${success && data.credits_used ? `
-                <div class="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3 mb-4">
-                    <p class="text-sm text-slate-600 dark:text-slate-300">
-                        Crediti utilizzati: <span class="font-semibold">${data.credits_used}</span>
-                    </p>
-                </div>
-            ` : ''}
-
-            <button onclick="${success ? 'window.location.reload()' : 'closeResultModal()'}" class="w-full px-4 py-2.5 rounded-lg ${success ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-600 hover:bg-slate-700'} text-white font-medium transition-colors">
-                ${success ? 'Chiudi e aggiorna' : 'Chiudi'}
-            </button>
-        </div>
-    `;
-
-    document.body.appendChild(modal);
-}
-
-function closeResultModal() {
-    const modal = document.getElementById('resultModal');
-    if (modal) {
-        modal.remove();
-        ['refreshVolumesBtn', 'refreshPositionsBtn', 'refreshAllBtn'].forEach(id => {
-            document.getElementById(id).disabled = false;
-        });
-    }
+// Legacy function
+function updateVolumes() {
+    showRefreshModal('volumes');
 }
 
 // Chiusura modal con ESC
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeRefreshModal();
-        closeResultModal();
     }
 });
-
-// Legacy function per compatibilita
-function updateVolumes() {
-    showRefreshModal('volumes');
-}
 
 // Check singola keyword
 function checkSingleKeyword(keywordId, keyword, locationCode, btnElement) {
