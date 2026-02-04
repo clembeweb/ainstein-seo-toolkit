@@ -307,26 +307,6 @@ Router::post('/seo-tracking/project/{id}/keywords/import', function ($id) {
     return (new KeywordController())->import((int) $id);
 });
 
-// Dettaglio keyword
-Router::get('/seo-tracking/project/{id}/keywords/{keywordId}', function ($id, $keywordId) {
-    Middleware::auth();
-    return (new KeywordController())->detail((int) $id, (int) $keywordId);
-});
-
-// Aggiorna keyword
-Router::post('/seo-tracking/project/{id}/keywords/{keywordId}/update', function ($id, $keywordId) {
-    Middleware::auth();
-    Middleware::csrf();
-    return (new KeywordController())->update((int) $id, (int) $keywordId);
-});
-
-// Elimina keyword
-Router::post('/seo-tracking/project/{id}/keywords/{keywordId}/delete', function ($id, $keywordId) {
-    Middleware::auth();
-    Middleware::csrf();
-    return (new KeywordController())->destroy((int) $id, (int) $keywordId);
-});
-
 // Azioni bulk su keyword
 Router::post('/seo-tracking/project/{id}/keywords/bulk', function ($id) {
     Middleware::auth();
@@ -360,6 +340,30 @@ Router::get('/seo-tracking/project/{id}/keywords/positions-job-status', function
 Router::post('/seo-tracking/project/{id}/keywords/cancel-positions-job', function ($id) {
     Middleware::auth();
     return (new KeywordController())->cancelPositionsJob((int) $id);
+});
+
+// =============================================
+// KEYWORD DETAIL - WILDCARD ROUTES (must be LAST)
+// =============================================
+
+// Dettaglio keyword
+Router::get('/seo-tracking/project/{id}/keywords/{keywordId}', function ($id, $keywordId) {
+    Middleware::auth();
+    return (new KeywordController())->detail((int) $id, (int) $keywordId);
+});
+
+// Aggiorna keyword
+Router::post('/seo-tracking/project/{id}/keywords/{keywordId}/update', function ($id, $keywordId) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new KeywordController())->update((int) $id, (int) $keywordId);
+});
+
+// Elimina keyword
+Router::post('/seo-tracking/project/{id}/keywords/{keywordId}/delete', function ($id, $keywordId) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new KeywordController())->destroy((int) $id, (int) $keywordId);
 });
 
 // Aggiorna volumi di ricerca (AJAX - DataForSEO) - DEPRECATO, usa refresh-volumes
