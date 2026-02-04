@@ -279,7 +279,7 @@ function populateRankQueue(): array
 function getNextPendingItem(): ?array
 {
     return Database::fetch(
-        "SELECT q.*, p.name as project_name, p.user_id
+        "SELECT q.*, q.job_id, p.name as project_name, p.user_id
          FROM st_rank_queue q
          JOIN st_projects p ON q.project_id = p.id
          WHERE q.status = 'pending'
@@ -296,8 +296,9 @@ function getNextPendingItem(): ?array
  * @param int $rankCheckId ID del rank check creato
  * @param int|null $position Posizione trovata (null se non in top 100)
  * @param string|null $url URL trovato in SERP
+ * @param int|null $jobId ID del job associato (se presente)
  */
-function markItemCompleted(int $queueId, int $rankCheckId, ?int $position = null, ?string $url = null): void
+function markItemCompleted(int $queueId, int $rankCheckId, ?int $position = null, ?string $url = null, ?int $jobId = null): void
 {
     Database::update('st_rank_queue', [
         'status' => 'completed',
@@ -306,18 +307,100 @@ function markItemCompleted(int $queueId, int $rankCheckId, ?int $position = null
         'result_url' => $url ? substr($url, 0, 2000) : null,
         'completed_at' => date('Y-m-d H:i:s'),
     ], 'id = ?', [$queueId]);
+
+    // Aggiorna il job se presente
+    if ($jobId) {
+        updateJobProgress($jobId, true, $position !== null);
+    }
 }
 
 /**
  * Marca item con errore
+ *
+ * @param int $queueId ID item in coda
+ * @param string $error Messaggio errore
+ * @param int|null $jobId ID del job associato (se presente)
  */
-function markItemError(int $queueId, string $error): void
+function markItemError(int $queueId, string $error, ?int $jobId = null): void
 {
     Database::update('st_rank_queue', [
         'status' => 'error',
         'error_message' => substr($error, 0, 500),
         'completed_at' => date('Y-m-d H:i:s'),
     ], 'id = ?', [$queueId]);
+
+    // Aggiorna il job se presente
+    if ($jobId) {
+        updateJobProgress($jobId, false, false);
+    }
+}
+
+/**
+ * Aggiorna progresso del job
+ *
+ * @param int $jobId ID del job
+ * @param bool $success Se la keyword è stata processata con successo
+ * @param bool $found Se la keyword è stata trovata in SERP
+ */
+function updateJobProgress(int $jobId, bool $success, bool $found): void
+{
+    // Avvia il job se non ancora avviato
+    $job = Database::fetch("SELECT status, started_at FROM st_rank_jobs WHERE id = ?", [$jobId]);
+    if ($job && $job['status'] === 'pending') {
+        Database::update('st_rank_jobs', [
+            'status' => 'running',
+            'started_at' => date('Y-m-d H:i:s'),
+        ], 'id = ?', [$jobId]);
+    }
+
+    // Incrementa contatori
+    if ($success) {
+        $foundIncrement = $found ? ', keywords_found = keywords_found + 1' : '';
+        Database::query(
+            "UPDATE st_rank_jobs SET keywords_completed = keywords_completed + 1{$foundIncrement} WHERE id = ?",
+            [$jobId]
+        );
+    } else {
+        Database::query(
+            "UPDATE st_rank_jobs SET keywords_failed = keywords_failed + 1 WHERE id = ?",
+            [$jobId]
+        );
+    }
+
+    // Verifica se il job è completato
+    checkJobCompletion($jobId);
+}
+
+/**
+ * Verifica se il job è completato e aggiorna lo status
+ */
+function checkJobCompletion(int $jobId): void
+{
+    $job = Database::fetch(
+        "SELECT keywords_requested, keywords_completed, keywords_failed FROM st_rank_jobs WHERE id = ?",
+        [$jobId]
+    );
+
+    if (!$job) return;
+
+    $processed = (int)$job['keywords_completed'] + (int)$job['keywords_failed'];
+    $requested = (int)$job['keywords_requested'];
+
+    if ($processed >= $requested) {
+        // Calcola posizione media
+        $avgPos = Database::fetch(
+            "SELECT AVG(result_position) as avg_pos FROM st_rank_queue WHERE job_id = ? AND result_position IS NOT NULL",
+            [$jobId]
+        );
+
+        Database::update('st_rank_jobs', [
+            'status' => 'completed',
+            'avg_position' => $avgPos['avg_pos'] ? round((float)$avgPos['avg_pos'], 2) : null,
+            'completed_at' => date('Y-m-d H:i:s'),
+        ], 'id = ?', [$jobId]);
+
+        logRankDispatcher("Job #{$jobId} completato!");
+    }
 }
 
 /**
@@ -438,6 +521,7 @@ function runDispatcher(): void
     $userId = (int) $queueItem['user_id'];
     $queueId = (int) $queueItem['id'];
     $keywordId = $queueItem['keyword_id'] ? (int) $queueItem['keyword_id'] : null;
+    $jobId = $queueItem['job_id'] ? (int) $queueItem['job_id'] : null;
     $targetDomain = $queueItem['target_domain'];
     $locationCode = $queueItem['location_code'] ?? 'IT';
     $device = $queueItem['device'] ?? 'mobile';
@@ -508,7 +592,7 @@ function runDispatcher(): void
         }
 
         // Marca item come completato con posizione e URL
-        markItemCompleted($queueId, $checkId, $serpPosition, $serpUrl);
+        markItemCompleted($queueId, $checkId, $serpPosition, $serpUrl, $jobId);
 
         $positionStr = $result['found'] ? "#{$serpPosition}" : 'NON TROVATO';
         logRankDispatcher("  OK: posizione {$positionStr}");
@@ -518,7 +602,7 @@ function runDispatcher(): void
         Database::reconnect();
 
         // Marca errore
-        markItemError($queueId, $e->getMessage());
+        markItemError($queueId, $e->getMessage(), $jobId);
         logRankDispatcher("  ERRORE: " . $e->getMessage(), 'ERROR');
     }
 
