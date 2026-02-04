@@ -656,6 +656,7 @@ function executeRefreshSync(type) {
     fetch(`${baseUrl}/seo-tracking/project/${projectId}/keywords/refresh-volumes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        credentials: 'same-origin',
         body: bodyData
     })
     .then(response => response.json())
@@ -715,6 +716,7 @@ function executeBackgroundJob(type) {
     fetch(`${baseUrl}/seo-tracking/project/${projectId}/keywords/start-positions-job`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        credentials: 'same-origin',
         body: bodyData
     })
     .then(response => response.json())
@@ -742,10 +744,20 @@ function executeBackgroundJob(type) {
 // GESTIONE JOB ATTIVO (BANNER)
 // ============================================================
 function refreshJobStatus() {
-    if (!activeJobId) return;
+    if (!activeJobId) {
+        showToast('Nessun job attivo', 'info');
+        return;
+    }
 
-    fetch(`${baseUrl}/seo-tracking/project/${projectId}/keywords/positions-job-status?job_id=${activeJobId}`)
-    .then(response => response.json())
+    fetch(`${baseUrl}/seo-tracking/project/${projectId}/keywords/positions-job-status?job_id=${activeJobId}`, {
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (!data.success) {
             showToast(data.error || 'Errore nel recupero stato', 'error');
@@ -777,23 +789,37 @@ function refreshJobStatus() {
     })
     .catch(err => {
         console.error('Status check failed:', err);
-        showToast('Errore di connessione', 'error');
+        showToast('Errore: ' + err.message, 'error');
     });
 }
 
 function cancelActiveJob() {
-    if (!activeJobId) return;
+    if (!activeJobId) {
+        showToast('Nessun job attivo', 'info');
+        return;
+    }
 
     if (!confirm('Sei sicuro di voler annullare il job in corso?')) return;
 
-    const csrfToken = document.querySelector('input[name="_csrf_token"]').value;
+    const csrfInput = document.querySelector('input[name="_csrf_token"]');
+    if (!csrfInput) {
+        showToast('Errore: token CSRF non trovato. Ricarica la pagina.', 'error');
+        return;
+    }
+    const csrfToken = csrfInput.value;
 
     fetch(`${baseUrl}/seo-tracking/project/${projectId}/keywords/cancel-positions-job`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        credentials: 'same-origin',
         body: `_csrf_token=${encodeURIComponent(csrfToken)}&job_id=${activeJobId}`
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             showToast('Job annullato', 'success');
@@ -804,14 +830,15 @@ function cancelActiveJob() {
     })
     .catch(err => {
         console.error('Cancel failed:', err);
-        showToast('Errore di connessione', 'error');
+        showToast('Errore: ' + err.message, 'error');
     });
 }
 
-// Auto-refresh banner se c'è un job attivo (ogni 10 secondi)
-if (hasActiveJob) {
-    setInterval(refreshJobStatus, 10000);
-}
+// Auto-refresh banner se c'è un job attivo (ogni 30 secondi - non troppo frequente)
+// Disabilitato temporaneamente per debug - riattivare quando stabile
+// if (hasActiveJob) {
+//     setInterval(refreshJobStatus, 30000);
+// }
 
 // Legacy function
 function updateVolumes() {
