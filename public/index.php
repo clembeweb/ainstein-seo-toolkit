@@ -11,6 +11,9 @@ ini_set('display_errors', 1);
 // Sessione
 session_start();
 
+// Timezone Italia
+date_default_timezone_set('Europe/Rome');
+
 // Definizioni
 define('BASE_PATH', dirname(__DIR__));
 define('ROOT_PATH', BASE_PATH);  // Alias per compatibilità

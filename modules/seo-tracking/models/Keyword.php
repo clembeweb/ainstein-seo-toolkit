@@ -91,7 +91,7 @@ class Keyword
                 kp.total_clicks as period_clicks,
                 kp.total_impressions as period_impressions,
                 kp.position_change,
-                JSON_UNQUOTE(JSON_EXTRACT(kv.data, '$.keyword_intent')) as keyword_intent
+                COALESCE(k.keyword_intent, JSON_UNQUOTE(JSON_EXTRACT(kv.data, '$.keyword_intent'))) as keyword_intent
             FROM {$this->table} k
             LEFT JOIN (
                 SELECT
@@ -406,11 +406,18 @@ class Keyword
                         $competition = (float) $competition;
                     }
 
+                    // Normalizza keyword_intent: se array, converti in stringa
+                    $intent = $volumeData['keyword_intent'] ?? null;
+                    if (is_array($intent)) {
+                        $intent = implode(', ', $intent);
+                    }
+
                     $sql = "UPDATE {$this->table} SET
                             search_volume = ?,
                             cpc = ?,
                             competition = ?,
                             competition_level = ?,
+                            keyword_intent = ?,
                             volume_updated_at = NOW()
                             WHERE id = ?";
 
@@ -419,6 +426,7 @@ class Keyword
                         $volumeData['cpc'] ?? null,
                         $competition,
                         $volumeData['competition_level'] ?? null,
+                        $intent,
                         $kw['id']
                     ]);
                     $updated++;
@@ -591,11 +599,18 @@ class Keyword
                         $competition = (float) $competition;
                     }
 
+                    // Normalizza keyword_intent: se array, converti in stringa
+                    $intent = $volumeData['keyword_intent'] ?? null;
+                    if (is_array($intent)) {
+                        $intent = implode(', ', $intent);
+                    }
+
                     $sql = "UPDATE {$this->table} SET
                             search_volume = ?,
                             cpc = ?,
                             competition = ?,
                             competition_level = ?,
+                            keyword_intent = ?,
                             volume_updated_at = NOW()
                             WHERE id = ?";
 
@@ -604,6 +619,7 @@ class Keyword
                         $volumeData['cpc'] ?? null,
                         $competition,
                         $volumeData['competition_level'] ?? null,
+                        $intent,
                         $kw['id']
                     ]);
                     $updated++;
