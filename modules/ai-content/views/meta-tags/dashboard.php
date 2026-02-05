@@ -261,13 +261,62 @@
     </div>
 </div>
 
-<!-- Progress Modal -->
+<!-- Progress Modal con SSE -->
 <div id="progressModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50" style="display: none;">
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-        <div class="text-center">
-            <div class="animate-spin h-12 w-12 border-4 border-primary-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <h3 id="progressTitle" class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Elaborazione in corso...</h3>
-            <p id="progressMessage" class="text-sm text-slate-500 dark:text-slate-400"></p>
+    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-lg w-full mx-4 p-6">
+        <div class="space-y-4">
+            <!-- Header -->
+            <div class="flex items-center justify-between">
+                <h3 id="progressTitle" class="text-lg font-semibold text-slate-900 dark:text-white">Elaborazione in corso...</h3>
+                <button id="cancelBtn" onclick="cancelJob()" class="text-slate-400 hover:text-red-500 transition-colors hidden">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="space-y-2">
+                <div class="flex justify-between text-sm">
+                    <span id="progressCount" class="text-slate-600 dark:text-slate-400">0 / 0</span>
+                    <span id="progressPercent" class="font-medium text-primary-600">0%</span>
+                </div>
+                <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                    <div id="progressBar" class="h-full bg-primary-500 transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Current Item -->
+            <div id="currentItemContainer" class="hidden">
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">URL corrente:</p>
+                <p id="currentItem" class="text-sm text-slate-700 dark:text-slate-300 truncate font-mono bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded"></p>
+            </div>
+
+            <!-- Status Message -->
+            <p id="progressMessage" class="text-sm text-slate-500 dark:text-slate-400 text-center"></p>
+
+            <!-- Results (shown on completion) -->
+            <div id="resultsContainer" class="hidden bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4">
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                        <div id="resultCompleted" class="text-xl font-bold text-emerald-600">0</div>
+                        <div class="text-xs text-slate-500">Completati</div>
+                    </div>
+                    <div>
+                        <div id="resultFailed" class="text-xl font-bold text-red-500">0</div>
+                        <div class="text-xs text-slate-500">Errori</div>
+                    </div>
+                    <div>
+                        <div id="resultCredits" class="text-xl font-bold text-amber-600">0</div>
+                        <div class="text-xs text-slate-500">Crediti</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Close Button (shown on completion) -->
+            <button id="closeBtn" onclick="closeAndReload()" class="hidden w-full py-2 px-4 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
+                Chiudi e aggiorna
+            </button>
         </div>
     </div>
 </div>
@@ -275,70 +324,267 @@
 <script>
 const projectId = <?= $project['id'] ?>;
 const csrfToken = '<?= csrf_token() ?>';
+const baseUrl = '<?= url("/ai-content/projects/{$project['id']}/meta-tags") ?>';
+
+let currentJobId = null;
+let eventSource = null;
+let pollingInterval = null;
 
 function showProgress(title, message) {
     document.getElementById('progressTitle').textContent = title;
     document.getElementById('progressMessage').textContent = message;
     document.getElementById('progressModal').style.display = 'flex';
+    document.getElementById('cancelBtn').classList.remove('hidden');
+    document.getElementById('closeBtn').classList.add('hidden');
+    document.getElementById('resultsContainer').classList.add('hidden');
+    document.getElementById('currentItemContainer').classList.add('hidden');
+    document.getElementById('progressBar').style.width = '0%';
+    document.getElementById('progressPercent').textContent = '0%';
+    document.getElementById('progressCount').textContent = '0 / 0';
 }
 
 function hideProgress() {
     document.getElementById('progressModal').style.display = 'none';
+    if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+    }
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+    }
+    currentJobId = null;
 }
 
-async function runScrape() {
-    showProgress('Scraping pagine...', 'Analisi contenuto in corso');
+function updateProgress(completed, total, percent) {
+    document.getElementById('progressBar').style.width = percent + '%';
+    document.getElementById('progressPercent').textContent = percent + '%';
+    document.getElementById('progressCount').textContent = completed + ' / ' + total;
+}
+
+function showCurrentItem(url) {
+    document.getElementById('currentItemContainer').classList.remove('hidden');
+    document.getElementById('currentItem').textContent = url;
+}
+
+function showResults(completed, failed, credits) {
+    document.getElementById('cancelBtn').classList.add('hidden');
+    document.getElementById('closeBtn').classList.remove('hidden');
+    document.getElementById('resultsContainer').classList.remove('hidden');
+    document.getElementById('resultCompleted').textContent = completed;
+    document.getElementById('resultFailed').textContent = failed;
+    document.getElementById('resultCredits').textContent = credits;
+    document.getElementById('currentItemContainer').classList.add('hidden');
+}
+
+function closeAndReload() {
+    hideProgress();
+    location.reload();
+}
+
+async function cancelJob() {
+    if (!currentJobId) return;
+
+    if (!confirm('Vuoi annullare il job? Le pagine gia scrappate verranno salvate.')) {
+        return;
+    }
 
     try {
         const formData = new FormData();
         formData.append('_csrf_token', csrfToken);
-        formData.append('batch_size', '10');
+        formData.append('job_id', currentJobId);
 
-        const response = await fetch('<?= url("/ai-content/projects/{$project['id']}/meta-tags/scrape") ?>', {
+        const response = await fetch(baseUrl + '/cancel-scrape-job', {
             method: 'POST',
             body: formData
         });
 
         const data = await response.json();
-        hideProgress();
-
-        if (data.success) {
-            alert(data.message);
-            location.reload();
-        } else {
-            alert('Errore: ' + data.error);
+        if (!data.success) {
+            console.error('Cancel failed:', data.error);
         }
     } catch (error) {
-        hideProgress();
-        alert('Errore di connessione');
+        console.error('Cancel error:', error);
     }
+}
+
+async function runScrape() {
+    showProgress('Avvio scraping...', 'Preparazione del job in corso');
+
+    try {
+        // 1. Avvia il job
+        const formData = new FormData();
+        formData.append('_csrf_token', csrfToken);
+
+        const response = await fetch(baseUrl + '/start-scrape-job', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            document.getElementById('progressMessage').textContent = 'Errore: ' + data.error;
+            document.getElementById('cancelBtn').classList.add('hidden');
+            document.getElementById('closeBtn').classList.remove('hidden');
+            document.getElementById('closeBtn').textContent = 'Chiudi';
+            document.getElementById('closeBtn').onclick = hideProgress;
+            return;
+        }
+
+        currentJobId = data.job_id;
+        document.getElementById('progressTitle').textContent = 'Scraping pagine...';
+        document.getElementById('progressMessage').textContent = data.items_queued + ' pagine da elaborare';
+        updateProgress(0, data.items_queued, 0);
+
+        // 2. Connetti SSE
+        connectSSE(data.job_id, data.items_queued);
+
+    } catch (error) {
+        console.error('Start job error:', error);
+        document.getElementById('progressMessage').textContent = 'Errore di connessione. Riprova.';
+        document.getElementById('cancelBtn').classList.add('hidden');
+        document.getElementById('closeBtn').classList.remove('hidden');
+        document.getElementById('closeBtn').textContent = 'Chiudi';
+        document.getElementById('closeBtn').onclick = hideProgress;
+    }
+}
+
+function connectSSE(jobId, totalItems) {
+    const streamUrl = baseUrl + '/scrape-stream?job_id=' + jobId;
+    eventSource = new EventSource(streamUrl);
+
+    eventSource.addEventListener('started', (e) => {
+        const data = JSON.parse(e.data);
+        document.getElementById('progressMessage').textContent = 'Elaborazione avviata';
+    });
+
+    eventSource.addEventListener('progress', (e) => {
+        const data = JSON.parse(e.data);
+        updateProgress(data.completed, data.total, data.percent);
+        showCurrentItem(data.current_url);
+        document.getElementById('progressMessage').textContent = 'Analisi contenuto...';
+    });
+
+    eventSource.addEventListener('item_completed', (e) => {
+        const data = JSON.parse(e.data);
+        document.getElementById('progressMessage').textContent = 'Completato: ' + (data.title || data.url);
+    });
+
+    eventSource.addEventListener('item_error', (e) => {
+        const data = JSON.parse(e.data);
+        document.getElementById('progressMessage').textContent = 'Errore: ' + data.error;
+    });
+
+    eventSource.addEventListener('completed', (e) => {
+        const data = JSON.parse(e.data);
+        eventSource.close();
+        eventSource = null;
+        document.getElementById('progressTitle').textContent = 'Scraping completato';
+        document.getElementById('progressMessage').textContent = '';
+        updateProgress(data.total_completed, data.total_completed + data.total_failed, 100);
+        showResults(data.total_completed, data.total_failed, data.credits_used);
+    });
+
+    eventSource.addEventListener('cancelled', (e) => {
+        const data = JSON.parse(e.data);
+        eventSource.close();
+        eventSource = null;
+        document.getElementById('progressTitle').textContent = 'Job annullato';
+        document.getElementById('progressMessage').textContent = data.message;
+        showResults(data.completed, 0, 0);
+    });
+
+    eventSource.onerror = (e) => {
+        console.warn('SSE error, switching to polling');
+        eventSource.close();
+        eventSource = null;
+        startPolling(jobId);
+    };
+}
+
+function startPolling(jobId) {
+    document.getElementById('progressMessage').textContent = 'Verifica stato...';
+
+    pollingInterval = setInterval(async () => {
+        try {
+            const response = await fetch(baseUrl + '/scrape-job-status?job_id=' + jobId);
+            const data = await response.json();
+
+            if (!data.success) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+                document.getElementById('progressMessage').textContent = 'Errore: ' + data.error;
+                return;
+            }
+
+            const job = data.job;
+            const total = job.items_requested;
+            const completed = job.items_completed + job.items_failed;
+
+            updateProgress(completed, total, job.progress);
+
+            if (job.current_item) {
+                showCurrentItem(job.current_item);
+            }
+
+            if (job.status === 'completed') {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+                document.getElementById('progressTitle').textContent = 'Scraping completato';
+                document.getElementById('progressMessage').textContent = '';
+                showResults(job.items_completed, job.items_failed, job.credits_used);
+            } else if (job.status === 'cancelled') {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+                document.getElementById('progressTitle').textContent = 'Job annullato';
+                showResults(job.items_completed, job.items_failed, job.credits_used);
+            } else if (job.status === 'error') {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+                document.getElementById('progressTitle').textContent = 'Errore';
+                document.getElementById('progressMessage').textContent = job.error_message || 'Errore sconosciuto';
+                showResults(job.items_completed, job.items_failed, job.credits_used);
+            }
+        } catch (error) {
+            console.error('Polling error:', error);
+        }
+    }, 2000);
 }
 
 async function runGenerate() {
     showProgress('Generazione meta tag...', 'AI sta elaborando i contenuti');
+    document.getElementById('cancelBtn').classList.add('hidden');
 
     try {
         const formData = new FormData();
         formData.append('_csrf_token', csrfToken);
         formData.append('batch_size', '10');
 
-        const response = await fetch('<?= url("/ai-content/projects/{$project['id']}/meta-tags/generate") ?>', {
+        const response = await fetch(baseUrl + '/generate', {
             method: 'POST',
             body: formData
         });
 
         const data = await response.json();
-        hideProgress();
 
         if (data.success) {
-            alert(data.message);
-            location.reload();
+            document.getElementById('progressTitle').textContent = 'Generazione completata';
+            document.getElementById('progressMessage').textContent = data.message;
+            showResults(data.generated, data.errors, data.generated * 2);
         } else {
-            alert('Errore: ' + data.error);
+            document.getElementById('progressTitle').textContent = 'Errore';
+            document.getElementById('progressMessage').textContent = data.error;
+            document.getElementById('closeBtn').classList.remove('hidden');
+            document.getElementById('closeBtn').textContent = 'Chiudi';
+            document.getElementById('closeBtn').onclick = hideProgress;
         }
     } catch (error) {
-        hideProgress();
-        alert('Errore di connessione');
+        document.getElementById('progressTitle').textContent = 'Errore';
+        document.getElementById('progressMessage').textContent = 'Errore di connessione';
+        document.getElementById('closeBtn').classList.remove('hidden');
+        document.getElementById('closeBtn').textContent = 'Chiudi';
+        document.getElementById('closeBtn').onclick = hideProgress;
     }
 }
 </script>

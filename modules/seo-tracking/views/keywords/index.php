@@ -206,7 +206,8 @@
                             <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Volume</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">CPC</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Comp.</th>
-                            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Tracciata</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase" title="Intento di ricerca">Intento</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase" title="Stagionalit&agrave;">Stagion.</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Aggiornato</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Azioni</th>
                         </tr>
@@ -280,13 +281,42 @@
                                 <?php endif; ?>
                             </td>
                             <td class="px-4 py-3 text-center">
-                                <?php if ($kw['is_tracked']): ?>
-                                <svg class="w-5 h-5 text-amber-500 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                </svg>
-                                <?php else: ?>
-                                <span class="text-slate-300 dark:text-slate-600">-</span>
+                                <?php
+                                $intent = $kw['keyword_intent'] ?? null;
+                                if ($intent):
+                                    // Parse intent - puo' essere singolo o multiplo (separato da virgola)
+                                    $intents = array_map('trim', explode(',', strtolower($intent)));
+                                    $intentBadges = [];
+                                    foreach ($intents as $i) {
+                                        $badge = match($i) {
+                                            'commercial' => ['C', 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300', 'Commercial'],
+                                            'informational' => ['I', 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300', 'Informational'],
+                                            'navigational' => ['N', 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300', 'Navigational'],
+                                            'transactional' => ['T', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300', 'Transactional'],
+                                            default => null
+                                        };
+                                        if ($badge) $intentBadges[] = $badge;
+                                    }
+                                    foreach ($intentBadges as $badge):
+                                ?>
+                                    <span class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold <?= $badge[1] ?>" title="<?= e($badge[2]) ?>">
+                                        <?= $badge[0] ?>
+                                    </span>
+                                <?php
+                                    endforeach;
+                                else:
+                                ?>
+                                    <span class="text-slate-400 dark:text-slate-500">-</span>
                                 <?php endif; ?>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <button onclick="showSeasonalityModal(<?= $kw['id'] ?>, '<?= e(addslashes($kw['keyword'])) ?>', '<?= e($kw['location_code'] ?? 'IT') ?>')"
+                                        class="p-1 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900/30"
+                                        title="Visualizza stagionalit&agrave;">
+                                    <svg class="w-4 h-4 text-indigo-500 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                    </svg>
+                                </button>
                             </td>
                             <td class="px-4 py-3 text-center text-xs text-slate-500 dark:text-slate-400">
                                 <?php if (!empty($kw['last_updated_at'])): ?>
@@ -906,8 +936,8 @@ function checkSingleKeyword(keywordId, keyword, locationCode, btnElement) {
             positionCell.textContent = '-';
         }
 
-        // Aggiorna la cella "Aggiornato"
-        const updatedCell = row.querySelector('td:nth-child(9)');
+        // Aggiorna la cella "Aggiornato" (colonna 10: checkbox, keyword, loc, pos, vol, cpc, comp, intento, stagion, aggiornato)
+        const updatedCell = row.querySelector('td:nth-child(10)');
         if (updatedCell) {
             const now = new Date();
             const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -984,4 +1014,200 @@ function showSingleCheckResult(keyword, found, position, error, url) {
         setTimeout(() => toast.remove(), 300);
     }, 4000);
 }
+
+// ============================================================
+// SEASONALITY MODAL
+// ============================================================
+let seasonalityChart = null;
+
+function showSeasonalityModal(keywordId, keyword, locationCode) {
+    // Crea modal
+    const modal = document.createElement('div');
+    modal.id = 'seasonalityModal';
+    modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
+    modal.innerHTML = `
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeSeasonalityModal()"></div>
+        <div class="relative bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-2xl w-full p-6">
+            <button onclick="closeSeasonalityModal()" class="absolute top-4 right-4 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
+                <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Stagionalit&agrave;</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1" id="seasonalityKeyword">${keyword}</p>
+            </div>
+
+            <div id="seasonalityContent" class="min-h-[300px] flex items-center justify-center">
+                <div class="text-center">
+                    <svg class="w-8 h-8 text-indigo-500 animate-spin mx-auto mb-2" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Caricamento dati...</p>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+
+    // Carica dati
+    loadSeasonalityData(keywordId, locationCode);
+}
+
+function closeSeasonalityModal() {
+    const modal = document.getElementById('seasonalityModal');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = '';
+    }
+    if (seasonalityChart) {
+        seasonalityChart.destroy();
+        seasonalityChart = null;
+    }
+}
+
+function loadSeasonalityData(keywordId, locationCode) {
+    fetch(`${baseUrl}/seo-tracking/project/${projectId}/keywords/${keywordId}/seasonality?location=${encodeURIComponent(locationCode)}`, {
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        const container = document.getElementById('seasonalityContent');
+        if (!container) return;
+
+        if (!data.success) {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <svg class="w-12 h-12 text-red-300 dark:text-red-700 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">${data.error || 'Errore nel caricamento'}</p>
+                </div>
+            `;
+            return;
+        }
+
+        if (!data.has_data) {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <svg class="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Nessun dato di stagionalit&agrave; disponibile</p>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Aggiorna i volumi per ottenere i dati mensili</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Mostra grafico
+        container.innerHTML = `
+            <div class="w-full">
+                <canvas id="seasonalityChart" height="250"></canvas>
+            </div>
+        `;
+
+        renderSeasonalityChart(data.labels, data.data);
+    })
+    .catch(err => {
+        console.error('Seasonality load failed:', err);
+        const container = document.getElementById('seasonalityContent');
+        if (container) {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <svg class="w-12 h-12 text-red-300 dark:text-red-700 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Errore di connessione</p>
+                </div>
+            `;
+        }
+    });
+}
+
+function renderSeasonalityChart(labels, data) {
+    const ctx = document.getElementById('seasonalityChart');
+    if (!ctx) return;
+
+    // Detect dark mode
+    const isDark = document.documentElement.classList.contains('dark');
+    const textColor = isDark ? '#94a3b8' : '#64748b';
+    const gridColor = isDark ? '#334155' : '#e2e8f0';
+
+    seasonalityChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Volume ricerche',
+                data: data,
+                backgroundColor: isDark ? 'rgba(129, 140, 248, 0.7)' : 'rgba(99, 102, 241, 0.7)',
+                borderColor: isDark ? 'rgb(129, 140, 248)' : 'rgb(99, 102, 241)',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: isDark ? '#1e293b' : '#fff',
+                    titleColor: isDark ? '#f1f5f9' : '#1e293b',
+                    bodyColor: isDark ? '#cbd5e1' : '#475569',
+                    borderColor: isDark ? '#334155' : '#e2e8f0',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y.toLocaleString() + ' ricerche';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: textColor,
+                        font: { size: 11 }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: gridColor
+                    },
+                    ticks: {
+                        color: textColor,
+                        font: { size: 11 },
+                        callback: function(value) {
+                            if (value >= 1000) {
+                                return (value / 1000).toFixed(0) + 'k';
+                            }
+                            return value;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Chiudi modal con ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeSeasonalityModal();
+    }
+});
 </script>

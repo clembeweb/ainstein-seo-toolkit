@@ -818,6 +818,46 @@ Router::post('/ai-content/projects/{id}/meta-tags/bulk-delete', function ($id) {
     return $controller->bulkDelete((int) $id);
 });
 
+// ============================================
+// META TAGS - BACKGROUND JOB PROCESSING (SSE)
+// IMPORTANTE: Queste routes devono stare PRIMA di {tagId} wildcard!
+// ============================================
+
+// Avvia job di scraping in background
+Router::post('/ai-content/projects/{id}/meta-tags/start-scrape-job', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->startScrapeJob((int) $id);
+});
+
+// SSE Stream per progress scraping real-time
+Router::get('/ai-content/projects/{id}/meta-tags/scrape-stream', function ($id) {
+    // Auth verificata nel controller per evitare redirect su SSE
+    $controller = new MetaTagController();
+    return $controller->scrapeStream((int) $id);
+});
+
+// Polling fallback per status job
+Router::get('/ai-content/projects/{id}/meta-tags/scrape-job-status', function ($id) {
+    Middleware::auth();
+    $controller = new MetaTagController();
+    return $controller->scrapeJobStatus((int) $id);
+});
+
+// Annulla job in esecuzione
+Router::post('/ai-content/projects/{id}/meta-tags/cancel-scrape-job', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->cancelScrapeJob((int) $id);
+});
+
+// ============================================
+// META TAGS - ROUTES CON WILDCARD {tagId}
+// IMPORTANTE: Queste routes devono stare DOPO le routes specifiche!
+// ============================================
+
 // Preview/Edit singolo meta tag
 Router::get('/ai-content/projects/{id}/meta-tags/{tagId}', function ($id, $tagId) {
     Middleware::auth();

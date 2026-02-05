@@ -228,7 +228,7 @@ class AdminController
             return View::json(['error' => 'Modulo non trovato']);
         }
 
-        $newStatus = !$module['is_active'];
+        $newStatus = $module['is_active'] ? 0 : 1;
         Database::update('modules', ['is_active' => $newStatus], 'id = ?', [$id]);
 
         $_SESSION['_flash']['success'] = $newStatus ? 'Modulo attivato' : 'Modulo disattivato';

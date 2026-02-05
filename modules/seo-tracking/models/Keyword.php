@@ -90,7 +90,8 @@ class Keyword
                 kp.avg_position as current_position,
                 kp.total_clicks as period_clicks,
                 kp.total_impressions as period_impressions,
-                kp.position_change
+                kp.position_change,
+                JSON_UNQUOTE(JSON_EXTRACT(kv.data, '$.keyword_intent')) as keyword_intent
             FROM {$this->table} k
             LEFT JOIN (
                 SELECT
@@ -109,6 +110,15 @@ class Keyword
                 WHERE date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
                 GROUP BY keyword_id
             ) kp ON k.id = kp.keyword_id
+            LEFT JOIN st_keyword_volumes kv ON k.keyword = kv.keyword
+                AND kv.location_code = (
+                    CASE UPPER(k.location_code)
+                        WHEN 'IT' THEN 2380 WHEN 'US' THEN 2840 WHEN 'GB' THEN 2826 WHEN 'UK' THEN 2826
+                        WHEN 'DE' THEN 2276 WHEN 'FR' THEN 2250 WHEN 'ES' THEN 2724 WHEN 'NL' THEN 2528
+                        WHEN 'BE' THEN 2056 WHEN 'AT' THEN 2040 WHEN 'CH' THEN 2756 WHEN 'PT' THEN 2620
+                        ELSE 2380
+                    END
+                )
             WHERE k.project_id = ?
         ";
 
@@ -366,7 +376,8 @@ class Keyword
         $totalCached = 0;
         $totalFetched = 0;
         $errors = [];
-        $provider = $service instanceof \Services\DataForSeoService ? 'DataForSEO' : 'Keywords Everywhere';
+        $provider = $service instanceof \Services\RapidApiKeywordService ? 'RapidAPI' :
+                   ($service instanceof \Services\DataForSeoService ? 'DataForSEO' : 'Keywords Everywhere');
 
         // Processa ogni gruppo di location
         foreach ($keywordsByLocation as $locationCode => $locationKeywords) {
@@ -434,13 +445,19 @@ class Keyword
 
     /**
      * Ottieni il service per i volumi di ricerca
-     * Cascade: DataForSEO (primario) -> Keywords Everywhere (fallback)
+     * Cascade: RapidAPI (primario) -> DataForSEO -> Keywords Everywhere (fallback)
      *
-     * @return \Services\DataForSeoService|\Services\KeywordsEverywhereService|null
+     * @return \Services\RapidApiKeywordService|\Services\DataForSeoService|\Services\KeywordsEverywhereService|null
      */
     private function getVolumeService()
     {
-        // Prova DataForSEO (primario)
+        // Prova RapidAPI (primario)
+        $rapidApi = new \Services\RapidApiKeywordService();
+        if ($rapidApi->isConfigured()) {
+            return $rapidApi;
+        }
+
+        // Fallback: DataForSEO
         $dataForSeo = new \Services\DataForSeoService();
         if ($dataForSeo->isConfigured()) {
             return $dataForSeo;
@@ -496,10 +513,10 @@ class Keyword
             return ['success' => true, 'updated' => 0, 'message' => 'Nessuna keyword da aggiornare'];
         }
 
-        // Determina quale service usare
-        $service = $this->getVolumeService();
+        // Ottieni tutti i provider disponibili per fallback automatico
+        $providers = $this->getAllVolumeServices();
 
-        if ($service === null) {
+        if (empty($providers)) {
             return ['success' => false, 'error' => 'Nessun provider volumi configurato'];
         }
 
@@ -528,17 +545,34 @@ class Keyword
         $totalCached = 0;
         $totalFetched = 0;
         $errors = [];
-        $provider = $service instanceof \Services\DataForSeoService ? 'DataForSEO' : 'Keywords Everywhere';
+        $usedProvider = null;
 
         // Processa ogni gruppo di location
         foreach ($keywordsByLocation as $locationCode => $locationKeywords) {
             $keywordTexts = array_column($locationKeywords, 'keyword');
 
-            // Ottieni volumi per questa location
-            $result = $service->getSearchVolumes($keywordTexts, $locationCode);
+            // Prova ogni provider in sequenza (fallback automatico)
+            $result = null;
+            foreach ($providers as $providerName => $service) {
+                $result = $service->getSearchVolumes($keywordTexts, $locationCode);
 
-            if (!$result['success']) {
-                $errors[] = "Errore per location {$locationCode}: " . ($result['error'] ?? 'unknown');
+                if ($result['success'] && !empty($result['data'])) {
+                    $usedProvider = $providerName;
+                    break; // Provider ha funzionato, esci dal loop
+                }
+
+                // Log del fallback
+                $errorMsg = $result['error'] ?? 'Nessun dato';
+                error_log("[Keyword] Provider {$providerName} fallito per location {$locationCode}: {$errorMsg}. Provo il successivo...");
+            }
+
+            if (!$result || !$result['success']) {
+                $errors[] = "Errore per location {$locationCode}: tutti i provider hanno fallito";
+                continue;
+            }
+
+            if (empty($result['data'])) {
+                $errors[] = "Location {$locationCode}: nessun dato trovato per le keyword";
                 continue;
             }
 
@@ -583,8 +617,8 @@ class Keyword
             'total' => count($keywords),
             'cached' => $totalCached,
             'fetched' => $totalFetched,
-            'provider' => $provider,
-            'message' => "Volumi aggiornati per {$updated} keyword (provider: {$provider})"
+            'provider' => $usedProvider ?? 'unknown',
+            'message' => "Volumi aggiornati per {$updated} keyword (provider: {$usedProvider})"
         ];
 
         if (!empty($errors)) {
@@ -592,6 +626,34 @@ class Keyword
         }
 
         return $response;
+    }
+
+    /**
+     * Ottieni tutti i provider volumi configurati (per fallback automatico)
+     * Ordine: RapidAPI -> DataForSEO -> Keywords Everywhere
+     *
+     * @return array Array associativo [nome => service]
+     */
+    private function getAllVolumeServices(): array
+    {
+        $providers = [];
+
+        $rapidApi = new \Services\RapidApiKeywordService();
+        if ($rapidApi->isConfigured()) {
+            $providers['RapidAPI'] = $rapidApi;
+        }
+
+        $dataForSeo = new \Services\DataForSeoService();
+        if ($dataForSeo->isConfigured()) {
+            $providers['DataForSEO'] = $dataForSeo;
+        }
+
+        $kwEverywhere = new \Services\KeywordsEverywhereService();
+        if ($kwEverywhere->isConfigured()) {
+            $providers['KeywordsEverywhere'] = $kwEverywhere;
+        }
+
+        return $providers;
     }
 
     /**
@@ -609,5 +671,44 @@ class Keyword
              ORDER BY keyword ASC",
             [$projectId]
         );
+    }
+
+    /**
+     * Ottieni dati stagionalita (monthly_searches) per una keyword dalla cache
+     *
+     * @param string $keyword La keyword
+     * @param string $locationCode Codice paese (es. 'IT')
+     * @return array|null Array con monthly_searches e keyword_intent, o null se non in cache
+     */
+    public function getSeasonalityData(string $keyword, string $locationCode = 'IT'): ?array
+    {
+        // Mapping country code -> location code numerico (compatibile DataForSEO)
+        $locationCodes = [
+            'IT' => 2380, 'US' => 2840, 'GB' => 2826, 'UK' => 2826,
+            'DE' => 2276, 'FR' => 2250, 'ES' => 2724, 'NL' => 2528,
+            'BE' => 2056, 'AT' => 2040, 'CH' => 2756, 'PT' => 2620,
+            'PL' => 2616, 'SE' => 2752, 'NO' => 2578, 'DK' => 2208,
+            'FI' => 2246, 'IE' => 2372, 'AU' => 2036, 'NZ' => 2554,
+            'CA' => 2124, 'BR' => 2076, 'MX' => 2484, 'IN' => 2356,
+            'JP' => 2392,
+        ];
+
+        $locCode = $locationCodes[strtoupper($locationCode)] ?? 2380;
+
+        $row = Database::fetch(
+            "SELECT data FROM st_keyword_volumes WHERE keyword = ? AND location_code = ?",
+            [$keyword, $locCode]
+        );
+
+        if (!$row || empty($row['data'])) {
+            return null;
+        }
+
+        $data = json_decode($row['data'], true);
+
+        return [
+            'monthly_searches' => $data['monthly_searches'] ?? [],
+            'keyword_intent' => $data['keyword_intent'] ?? null,
+        ];
     }
 }

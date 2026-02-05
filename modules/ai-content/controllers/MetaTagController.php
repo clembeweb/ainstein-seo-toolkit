@@ -14,6 +14,7 @@ use Modules\AiContent\Models\WpSite;
 use Services\SitemapService;
 use Services\ScraperService;
 use Services\AiService;
+use Modules\AiContent\Models\ScrapeJob;
 
 /**
  * MetaTagController
@@ -25,6 +26,7 @@ class MetaTagController
 {
     private Project $project;
     private MetaTag $metaTag;
+    private const SCRAPE_CREDIT_COST = 1;
 
     public function __construct()
     {
@@ -1241,5 +1243,336 @@ PROMPT;
         } catch (\Exception $e) {
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }
+    }
+
+    // =========================================
+    // BACKGROUND JOB PROCESSING (SSE)
+    // =========================================
+
+    /**
+     * Avvia un job di scraping in background
+     * POST /ai-content/projects/{id}/meta-tags/start-scrape-job
+     */
+    public function startScrapeJob(int $projectId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->find($projectId, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        // Verifica che non ci sia gia un job attivo per questo progetto
+        $jobModel = new ScrapeJob();
+        $activeJob = $jobModel->getActiveForProject($projectId, ScrapeJob::TYPE_SCRAPE);
+        if ($activeJob) {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Esiste gia un job in esecuzione per questo progetto',
+                'active_job_id' => $activeJob['id']
+            ]);
+            return;
+        }
+
+        // Conta URL pending
+        $stats = $this->metaTag->getStats($projectId);
+        $pendingCount = $stats['pending'];
+
+        if ($pendingCount === 0) {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Nessuna URL da elaborare'
+            ]);
+            return;
+        }
+
+        // Verifica crediti
+        $totalCost = $pendingCount * self::SCRAPE_CREDIT_COST;
+        if (!Credits::hasEnough($user['id'], $totalCost)) {
+            echo json_encode([
+                'success' => false,
+                'error' => "Crediti insufficienti. Necessari: {$totalCost}, disponibili: " . Credits::getBalance($user['id'])
+            ]);
+            return;
+        }
+
+        // Crea il job
+        $jobId = $jobModel->create([
+            'project_id' => $projectId,
+            'user_id' => $user['id'],
+            'type' => ScrapeJob::TYPE_SCRAPE,
+            'items_requested' => $pendingCount,
+        ]);
+
+        echo json_encode([
+            'success' => true,
+            'job_id' => $jobId,
+            'items_queued' => $pendingCount,
+            'estimated_credits' => $totalCost,
+        ]);
+    }
+
+    /**
+     * SSE Stream per progress scraping in tempo reale
+     * GET /ai-content/projects/{id}/meta-tags/scrape-stream?job_id=X
+     *
+     * Elabora le URL pending e invia eventi SSE
+     */
+    public function scrapeStream(int $projectId): void
+    {
+        // Verifica auth manualmente per evitare redirect su SSE
+        $user = Auth::user();
+        if (!$user) {
+            header('HTTP/1.1 401 Unauthorized');
+            exit('Unauthorized');
+        }
+
+        $project = $this->project->find($projectId, $user['id']);
+        if (!$project) {
+            header('HTTP/1.1 404 Not Found');
+            exit('Progetto non trovato');
+        }
+
+        $jobId = (int) ($_GET['job_id'] ?? 0);
+        if (!$jobId) {
+            header('HTTP/1.1 400 Bad Request');
+            exit('job_id richiesto');
+        }
+
+        $jobModel = new ScrapeJob();
+        $job = $jobModel->findByUser($jobId, $user['id']);
+        if (!$job || $job['project_id'] != $projectId) {
+            header('HTTP/1.1 404 Not Found');
+            exit('Job non trovato');
+        }
+
+        // Setup SSE headers
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache');
+        header('Connection: keep-alive');
+        header('X-Accel-Buffering: no');
+
+        // Chiudi la sessione PRIMA del loop per non bloccare altre richieste
+        session_write_close();
+
+        // Funzione helper per inviare eventi SSE
+        $sendEvent = function (string $event, array $data) {
+            echo "event: {$event}\n";
+            echo "data: " . json_encode($data) . "\n\n";
+            if (ob_get_level() > 0) {
+                ob_flush();
+            }
+            flush();
+        };
+
+        // Avvia il job se pending
+        if ($job['status'] === ScrapeJob::STATUS_PENDING) {
+            $jobModel->start($jobId);
+            $sendEvent('started', [
+                'job_id' => $jobId,
+                'total_items' => $job['items_requested'],
+            ]);
+        }
+
+        // Setup scraper
+        $scraper = new ScraperService();
+
+        $completed = 0;
+        $failed = 0;
+        $creditsUsed = 0;
+
+        // Loop di elaborazione
+        while (true) {
+            // Riconnetti DB per evitare timeout
+            Database::reconnect();
+
+            // Verifica cancellazione
+            if ($jobModel->isCancelled($jobId)) {
+                $sendEvent('cancelled', [
+                    'job_id' => $jobId,
+                    'completed' => $completed,
+                    'message' => 'Job annullato dall\'utente',
+                ]);
+                break;
+            }
+
+            // Ottieni prossimo item pending
+            $pending = $this->metaTag->getNextPending($projectId, 1);
+
+            if (empty($pending)) {
+                // Nessun altro item - job completato
+                $jobModel->complete($jobId);
+                $sendEvent('completed', [
+                    'job_id' => $jobId,
+                    'total_completed' => $completed,
+                    'total_failed' => $failed,
+                    'credits_used' => $creditsUsed,
+                ]);
+                break;
+            }
+
+            $item = $pending[0];
+
+            // Aggiorna job con URL corrente
+            $jobModel->updateProgress($jobId, [
+                'current_item_id' => $item['id'],
+                'current_item' => $item['url'],
+            ]);
+
+            // Invia evento progress
+            $sendEvent('progress', [
+                'job_id' => $jobId,
+                'current_url' => $item['url'],
+                'current_id' => $item['id'],
+                'completed' => $completed,
+                'total' => $job['items_requested'],
+                'percent' => $job['items_requested'] > 0 ? round(($completed / $job['items_requested']) * 100) : 0,
+            ]);
+
+            try {
+                // Esegui scraping
+                $result = $scraper->scrape($item['url']);
+
+                Database::reconnect();
+
+                // Estrai dati
+                $content = $result['content'] ?? '';
+                $wordCount = $result['word_count'] ?? str_word_count($content);
+
+                // Aggiorna meta tag con dati scraping
+                $this->metaTag->updateScrapeData($item['id'], [
+                    'original_title' => $result['title'] ?? null,
+                    'original_h1' => $result['headings']['h1'][0] ?? null,
+                    'current_meta_title' => $result['title'] ?? null,
+                    'current_meta_desc' => $result['description'] ?? null,
+                    'scraped_content' => mb_substr($content, 0, 50000),
+                    'scraped_word_count' => $wordCount,
+                ]);
+
+                // Scala crediti
+                Credits::consume($user['id'], self::SCRAPE_CREDIT_COST, 'meta_scrape', 'ai-content', [
+                    'project_id' => $projectId,
+                    'meta_tag_id' => $item['id'],
+                    'job_id' => $jobId,
+                ]);
+
+                $completed++;
+                $creditsUsed += self::SCRAPE_CREDIT_COST;
+
+                // Aggiorna job
+                $jobModel->incrementCompleted($jobId);
+                $jobModel->addCreditsUsed($jobId, self::SCRAPE_CREDIT_COST);
+
+                // Invia evento item completato
+                $sendEvent('item_completed', [
+                    'id' => $item['id'],
+                    'url' => $item['url'],
+                    'title' => $result['title'] ?? '',
+                    'word_count' => $wordCount,
+                    'credits_remaining' => Credits::getBalance($user['id']),
+                ]);
+
+            } catch (\Exception $e) {
+                Database::reconnect();
+
+                // Marca come errore
+                $this->metaTag->markScrapeError($item['id'], $e->getMessage());
+                $jobModel->incrementFailed($jobId);
+                $failed++;
+
+                $sendEvent('item_error', [
+                    'id' => $item['id'],
+                    'url' => $item['url'],
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            // Pausa tra le chiamate per non sovraccaricare
+            usleep(300000); // 300ms
+        }
+
+        exit;
+    }
+
+    /**
+     * Polling fallback per status job
+     * GET /ai-content/projects/{id}/meta-tags/scrape-job-status?job_id=X
+     */
+    public function scrapeJobStatus(int $projectId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->find($projectId, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        $jobId = (int) ($_GET['job_id'] ?? 0);
+        if (!$jobId) {
+            echo json_encode(['success' => false, 'error' => 'job_id richiesto']);
+            return;
+        }
+
+        $jobModel = new ScrapeJob();
+        $job = $jobModel->findByUser($jobId, $user['id']);
+
+        if (!$job || $job['project_id'] != $projectId) {
+            echo json_encode(['success' => false, 'error' => 'Job non trovato']);
+            return;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'job' => $jobModel->getJobResponse($jobId),
+        ]);
+    }
+
+    /**
+     * Annulla un job in esecuzione
+     * POST /ai-content/projects/{id}/meta-tags/cancel-scrape-job
+     */
+    public function cancelScrapeJob(int $projectId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->find($projectId, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        $jobId = (int) ($_POST['job_id'] ?? 0);
+        if (!$jobId) {
+            echo json_encode(['success' => false, 'error' => 'job_id richiesto']);
+            return;
+        }
+
+        $jobModel = new ScrapeJob();
+        $job = $jobModel->findByUser($jobId, $user['id']);
+
+        if (!$job || $job['project_id'] != $projectId) {
+            echo json_encode(['success' => false, 'error' => 'Job non trovato']);
+            return;
+        }
+
+        if (!in_array($job['status'], [ScrapeJob::STATUS_PENDING, ScrapeJob::STATUS_RUNNING])) {
+            echo json_encode(['success' => false, 'error' => 'Il job non puo essere annullato']);
+            return;
+        }
+
+        $cancelled = $jobModel->cancel($jobId);
+
+        echo json_encode([
+            'success' => $cancelled,
+            'message' => $cancelled ? 'Job annullato' : 'Impossibile annullare il job',
+        ]);
     }
 }

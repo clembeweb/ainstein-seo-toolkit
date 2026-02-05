@@ -802,10 +802,13 @@ class KeywordController
             return View::json(['success' => false, 'error' => 'Progetto non trovato'], 404);
         }
 
-        // Verifica DataForSEO configurato
+        // Verifica che almeno un provider volumi sia configurato (cascade: RapidAPI -> DataForSEO -> KeywordsEverywhere)
+        $rapidApi = new \Services\RapidApiKeywordService();
         $dataForSeo = new \Services\DataForSeoService();
-        if (!$dataForSeo->isConfigured()) {
-            return View::json(['success' => false, 'error' => 'DataForSEO non configurato. Vai in Admin > Impostazioni']);
+        $kwEverywhere = new \Services\KeywordsEverywhereService();
+
+        if (!$rapidApi->isConfigured() && !$dataForSeo->isConfigured() && !$kwEverywhere->isConfigured()) {
+            return View::json(['success' => false, 'error' => 'Nessun provider volumi configurato. Vai in Admin > Impostazioni per configurare RapidAPI, DataForSEO o Keywords Everywhere']);
         }
 
         // Verifica se sono stati passati ID specifici
@@ -1647,5 +1650,75 @@ class KeywordController
         }
 
         return null;
+    }
+
+    /**
+     * API: Ottieni dati stagionalita per una keyword
+     * GET /seo-tracking/project/{id}/keywords/{keywordId}/seasonality
+     */
+    public function getSeasonality(int $projectId, int $keywordId): string
+    {
+        $user = Auth::user();
+        $project = $this->project->find($projectId, $user['id']);
+
+        if (!$project) {
+            return View::json(['success' => false, 'error' => 'Progetto non trovato'], 404);
+        }
+
+        $keyword = $this->keyword->findByProject($keywordId, $projectId);
+
+        if (!$keyword) {
+            return View::json(['success' => false, 'error' => 'Keyword non trovata'], 404);
+        }
+
+        $locationCode = $keyword['location_code'] ?? 'IT';
+        $data = $this->keyword->getSeasonalityData($keyword['keyword'], $locationCode);
+
+        if (!$data || empty($data['monthly_searches'])) {
+            return View::json([
+                'success' => true,
+                'has_data' => false,
+                'message' => 'Dati stagionalita non disponibili. Aggiorna i volumi.'
+            ]);
+        }
+
+        // Ordina per data (dal piu vecchio al piu recente)
+        $monthlySearches = $data['monthly_searches'];
+        usort($monthlySearches, function ($a, $b) {
+            $dateA = strtotime(($a['month'] ?? 'January') . ' ' . ($a['year'] ?? date('Y')));
+            $dateB = strtotime(($b['month'] ?? 'January') . ' ' . ($b['year'] ?? date('Y')));
+            return $dateA - $dateB;
+        });
+
+        // Prendi ultimi 12 mesi
+        $monthlySearches = array_slice($monthlySearches, -12);
+
+        // Mappa nomi mesi inglese -> italiano abbreviato
+        $monthNames = [
+            'January' => 'Gen', 'February' => 'Feb', 'March' => 'Mar',
+            'April' => 'Apr', 'May' => 'Mag', 'June' => 'Giu',
+            'July' => 'Lug', 'August' => 'Ago', 'September' => 'Set',
+            'October' => 'Ott', 'November' => 'Nov', 'December' => 'Dic'
+        ];
+
+        $labels = [];
+        $volumes = [];
+
+        foreach ($monthlySearches as $item) {
+            $month = $item['month'] ?? '';
+            $year = $item['year'] ?? date('Y');
+            $monthLabel = $monthNames[$month] ?? substr($month, 0, 3);
+            $labels[] = $monthLabel . ' ' . substr((string) $year, -2);
+            $volumes[] = (int) ($item['search_volume'] ?? 0);
+        }
+
+        return View::json([
+            'success' => true,
+            'has_data' => true,
+            'keyword' => $keyword['keyword'],
+            'labels' => $labels,
+            'data' => $volumes,
+            'intent' => $data['keyword_intent'],
+        ]);
     }
 }

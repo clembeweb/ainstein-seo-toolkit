@@ -343,6 +343,16 @@ Router::post('/seo-tracking/project/{id}/keywords/cancel-positions-job', functio
 });
 
 // =============================================
+// KEYWORD SEASONALITY API
+// =============================================
+
+// API: Ottieni dati stagionalità per una keyword (grafico 12 mesi)
+Router::get('/seo-tracking/project/{id}/keywords/{keywordId}/seasonality', function ($id, $keywordId) {
+    Middleware::auth();
+    return (new KeywordController())->getSeasonality((int) $id, (int) $keywordId);
+});
+
+// =============================================
 // KEYWORD DETAIL - WILDCARD ROUTES (must be LAST)
 // =============================================
 
