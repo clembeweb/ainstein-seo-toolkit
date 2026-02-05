@@ -61,6 +61,7 @@ class Router
         $uri = $uri ?: '/';
         $uri = rtrim($uri, '/') ?: '/';
 
+
         // Cerca route corrispondente
         if (isset(self::$routes[$method])) {
             foreach (self::$routes[$method] as $pattern => $route) {

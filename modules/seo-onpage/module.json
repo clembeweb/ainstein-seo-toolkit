@@ -1,0 +1,54 @@
+{
+    "name": "AI SEO Onpage Optimizer",
+    "slug": "seo-onpage",
+    "version": "1.0.0",
+    "description": "Analisi on-page SEO completa con 100+ check DataForSEO e suggerimenti AI per ottimizzazione",
+    "icon": "document-magnifying-glass",
+    "color": "emerald",
+    "menu_order": 25,
+    "requires": {
+        "php": ">=8.0",
+        "credits": true,
+        "services": ["ai", "dataforseo"]
+    },
+    "credits": {
+        "audit_page": 2,
+        "ai_suggestions": 3
+    },
+    "settings": {
+        "enable_js_rendering": {
+            "type": "checkbox",
+            "label": "Abilita JS Rendering",
+            "description": "Renderizza JavaScript per analisi accurate (costo API maggiore)",
+            "default": true,
+            "admin_only": true
+        },
+        "default_device": {
+            "type": "select",
+            "label": "Device Default",
+            "options": [
+                {"value": "desktop", "label": "Desktop"},
+                {"value": "mobile", "label": "Mobile"}
+            ],
+            "default": "desktop"
+        },
+        "cost_audit_page": {
+            "type": "number",
+            "label": "Costo Audit (per pagina)",
+            "description": "Crediti per analisi singola pagina con DataForSEO",
+            "default": 2,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_ai_suggestions": {
+            "type": "number",
+            "label": "Costo Suggerimenti AI",
+            "description": "Crediti per generazione suggerimenti AI ottimizzazione",
+            "default": 3,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        }
+    }
+}
