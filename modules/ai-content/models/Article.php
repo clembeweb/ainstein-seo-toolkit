@@ -230,6 +230,28 @@ class Article
     }
 
     /**
+     * Aggiorna path immagine di copertina
+     */
+    public function updateCoverImage(int $id, string $path): bool
+    {
+        return Database::update($this->table, [
+            'cover_image_path' => $path,
+            'updated_at' => date('Y-m-d H:i:s')
+        ], 'id = ?', [$id]) > 0;
+    }
+
+    /**
+     * Rimuovi immagine di copertina
+     */
+    public function removeCoverImage(int $id): bool
+    {
+        return Database::update($this->table, [
+            'cover_image_path' => null,
+            'updated_at' => date('Y-m-d H:i:s')
+        ], 'id = ?', [$id]) > 0;
+    }
+
+    /**
      * Delete article
      */
     public function delete(int $id, int $userId): bool

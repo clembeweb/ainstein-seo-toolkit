@@ -279,6 +279,42 @@ class WizardController
             // Consume credits
             Credits::consume($user['id'], $cost, 'article_generation', 'ai-content', ['keyword' => $keyword['keyword']]);
 
+            // Generate cover image (optional)
+            $coverPath = null;
+            $generateCover = (bool) ($input['generateCover'] ?? ($briefData['generateCover'] ?? true));
+
+            if ($generateCover) {
+                try {
+                    $coverCost = Credits::getCost('cover_image_generation', 'ai-content');
+
+                    if (Credits::hasEnough($user['id'], $coverCost)) {
+                        $coverService = new \Modules\AiContent\Services\CoverImageService();
+                        $coverResult = $coverService->generate(
+                            $articleId,
+                            $result['title'],
+                            $keyword['keyword'],
+                            mb_substr(strip_tags($result['content']), 0, 500),
+                            $user['id']
+                        );
+
+                        Database::reconnect();
+
+                        if ($coverResult['success']) {
+                            $this->article->updateCoverImage($articleId, $coverResult['path']);
+                            $coverPath = $coverResult['path'];
+
+                            Credits::consume($user['id'], $coverCost, 'cover_image_generation', 'ai-content', [
+                                'keyword' => $keyword['keyword'],
+                                'article_id' => $articleId
+                            ]);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Non blocca: l'immagine è opzionale
+                    Database::reconnect();
+                }
+            }
+
             ob_end_clean();
 
             echo json_encode([
@@ -288,6 +324,7 @@ class WizardController
                     'metaDescription' => $result['meta_description'],
                     'content' => $result['content'],
                     'wordCount' => $result['word_count'],
+                    'coverImagePath' => $coverPath,
                 ],
                 'message' => 'Articolo generato con successo',
             ]);

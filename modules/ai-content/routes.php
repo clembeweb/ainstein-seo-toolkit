@@ -336,6 +336,29 @@ Router::post('/ai-content/articles/{id}/reset', function ($id) {
     return $controller->resetStatus((int) $id);
 });
 
+// Serve immagine di copertina articolo
+Router::get('/ai-content/cover/{id}', function ($id) {
+    Middleware::auth();
+    $controller = new ArticleController();
+    return $controller->serveCover((int) $id);
+});
+
+// Genera/rigenera immagine di copertina
+Router::post('/ai-content/articles/{id}/regenerate-cover', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new ArticleController();
+    return $controller->regenerateCover((int) $id);
+});
+
+// Rimuovi immagine di copertina
+Router::post('/ai-content/articles/{id}/remove-cover', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new ArticleController();
+    return $controller->removeCover((int) $id);
+});
+
 // ============================================
 // WORDPRESS ROUTES (dentro progetto)
 // ============================================

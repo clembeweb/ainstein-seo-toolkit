@@ -289,6 +289,7 @@ class AutoController
         $autoPublish = isset($_POST['auto_publish']) && $_POST['auto_publish'] === '1';
         $wpSiteId = !empty($_POST['wp_site_id']) ? (int) $_POST['wp_site_id'] : null;
         $isActive = isset($_POST['is_active']) ? ($_POST['is_active'] === '1') : null;
+        $generateCover = isset($_POST['generate_cover']) && $_POST['generate_cover'] === '1';
 
         // Se auto_publish ma nessun sito selezionato
         if ($autoPublish && !$wpSiteId) {
@@ -301,6 +302,7 @@ class AutoController
             $data = [
                 'auto_publish' => $autoPublish,
                 'wp_site_id' => $wpSiteId,
+                'generate_cover' => $generateCover,
             ];
 
             // Includi is_active solo se presente nel form
@@ -609,6 +611,7 @@ class AutoController
             ProcessJob::STEP_BRIEF => 'Generazione brief',
             ProcessJob::STEP_ARTICLE => 'Generazione articolo',
             ProcessJob::STEP_SAVING => 'Salvataggio',
+            ProcessJob::STEP_COVER => 'Generazione copertina',
             ProcessJob::STEP_DONE => 'Completato',
         ];
 
@@ -733,10 +736,11 @@ class AutoController
 
         $jobId = $activeJob['id'];
 
-        // Get config (solo per auto_publish e wp_site_id)
+        // Get config (auto_publish, wp_site_id, generate_cover)
         $config = $this->autoConfig->findByProject($id);
         $autoPublish = (bool) ($config['auto_publish'] ?? false);
         $wpSiteId = $config['wp_site_id'] ?? null;
+        $generateCover = (bool) ($config['generate_cover'] ?? true);
 
         // Load WP site for publishing (richiede userId)
         $wpSite = null;
@@ -975,6 +979,39 @@ class AutoController
 
                 // Link queue item
                 $this->queue->linkGenerated($queueId, $keywordId, $articleId);
+
+                // Step 5b: Generate cover image (optional)
+                if ($generateCover) {
+                    $this->processJob->updateProgress($jobId, ['current_step' => 'cover']);
+                    $this->sendSseEvent('progress', [
+                        'keyword' => $keyword,
+                        'step' => 'cover',
+                        'step_label' => 'Generazione copertina',
+                        'completed' => $keywordsCompleted,
+                        'failed' => $keywordsFailed,
+                        'total' => $maxKeywords
+                    ]);
+
+                    try {
+                        $coverService = new \Modules\AiContent\Services\CoverImageService();
+                        $coverResult = $coverService->generate(
+                            $articleId,
+                            $articleResult['title'],
+                            $keyword,
+                            mb_substr(strip_tags($articleResult['content']), 0, 500),
+                            $userId
+                        );
+
+                        \Core\Database::reconnect();
+
+                        if ($coverResult['success']) {
+                            $articleModel->updateCoverImage($articleId, $coverResult['path']);
+                        }
+                    } catch (\Exception $e) {
+                        // Non blocca: l'immagine è opzionale
+                        \Core\Database::reconnect();
+                    }
+                }
 
                 // Step 6: Publish to WordPress (optional)
                 if ($autoPublish && $wpSite) {

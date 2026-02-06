@@ -34,14 +34,15 @@ class AutoConfig
     {
         $stmt = $this->db->prepare("
             INSERT INTO {$this->table}
-            (project_id, is_active, auto_publish, wp_site_id)
-            VALUES (?, ?, ?, ?)
+            (project_id, is_active, auto_publish, wp_site_id, generate_cover)
+            VALUES (?, ?, ?, ?, ?)
         ");
         $stmt->execute([
             $projectId,
             (int) ($data['is_active'] ?? 1),
             (int) ($data['auto_publish'] ?? 0),
-            $data['wp_site_id'] ?? null
+            $data['wp_site_id'] ?? null,
+            (int) ($data['generate_cover'] ?? 1)
         ]);
         return (int) $this->db->lastInsertId();
     }
@@ -56,6 +57,7 @@ class AutoConfig
                 is_active = ?,
                 auto_publish = ?,
                 wp_site_id = ?,
+                generate_cover = ?,
                 updated_at = NOW()
             WHERE project_id = ?
         ");
@@ -63,6 +65,7 @@ class AutoConfig
             (int) ($data['is_active'] ?? 1),
             (int) ($data['auto_publish'] ?? 0),
             $data['wp_site_id'] ?? null,
+            (int) ($data['generate_cover'] ?? 1),
             $projectId
         ]);
     }

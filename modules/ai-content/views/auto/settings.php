@@ -71,6 +71,27 @@
                 </div>
             </div>
 
+            <!-- Cover Image Section -->
+            <div>
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider mb-4">Immagine di Copertina</h3>
+
+                <div class="flex items-start">
+                    <div class="flex items-center h-5">
+                        <input type="checkbox" id="generate_cover" name="generate_cover" value="1"
+                               <?= ($config['generate_cover'] ?? true) ? 'checked' : '' ?>
+                               class="h-4 w-4 text-primary-600 border-slate-300 dark:border-slate-600 rounded focus:ring-primary-500">
+                    </div>
+                    <div class="ml-3">
+                        <label for="generate_cover" class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Genera immagine di copertina
+                        </label>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">
+                            Genera automaticamente un'immagine di copertina per ogni articolo tramite DALL-E 3 (3 crediti extra per articolo)
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Info Box -->
             <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                 <div class="flex">
@@ -84,9 +105,10 @@
                             <li>Scraping fonti: 1 credito per fonte</li>
                             <li>Generazione brief: 5 crediti</li>
                             <li>Generazione articolo: 10 crediti</li>
+                            <li>Immagine di copertina: 3 crediti (opzionale)</li>
                         </ul>
                         <p class="mt-2 text-xs">
-                            Totale stimato per articolo (3 fonti): ~21 crediti
+                            Totale stimato per articolo (3 fonti): ~21 crediti (+ 3 con copertina)
                         </p>
                     </div>
                 </div>

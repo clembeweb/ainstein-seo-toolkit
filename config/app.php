@@ -23,6 +23,7 @@ return [
         'serp_extraction' => 3,
         'content_scrape' => 1,
         'article_generation' => 10,
+        'cover_image_generation' => 3,
     ],
 
     // Stripe (predisposizione)

@@ -462,7 +462,16 @@ $baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['
                             <p class="text-sm text-slate-600 dark:text-slate-400" x-text="articleProgressText"></p>
                         </div>
 
-                        <div x-show="!generatingArticle" class="mt-6">
+                        <div x-show="!generatingArticle" class="mt-6 space-y-4">
+                            <!-- Cover Image Toggle -->
+                            <div class="flex items-center justify-center">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" x-model="generateCover" class="h-4 w-4 text-primary-600 border-slate-300 dark:border-slate-600 rounded focus:ring-primary-500">
+                                    <span class="ml-2 text-sm text-slate-700 dark:text-slate-300">Genera immagine di copertina</span>
+                                    <span class="ml-1 text-xs text-slate-400 dark:text-slate-500">(+3 crediti)</span>
+                                </label>
+                            </div>
+
                             <button @click="generateArticle()" class="inline-flex items-center px-6 py-3 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
                                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
@@ -474,7 +483,7 @@ $baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['
                             <svg class="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            Costo: 10 crediti
+                            Costo: <span x-text="generateCover ? '13' : '10'">10</span> crediti
                         </p>
                     </div>
                 </div>
@@ -751,6 +760,7 @@ function keywordWizard(initialData) {
         // Step 3 - Article
         articleGenerated: initialData.articleGenerated || false,
         generatingArticle: false,
+        generateCover: true,
         articleProgress: 0,
         articleProgressText: '',
         contentView: 'editor',
@@ -977,7 +987,8 @@ function keywordWizard(initialData) {
                             'Generazione introduzione...',
                             'Sviluppo contenuto...',
                             'Ottimizzazione SEO...',
-                            'Finalizzazione...'
+                            'Finalizzazione...',
+                            ...(this.generateCover ? ['Generazione copertina...'] : [])
                         ];
                         this.articleProgressText = messages[Math.floor(Math.random() * messages.length)];
                     }
@@ -992,7 +1003,8 @@ function keywordWizard(initialData) {
                     body: JSON.stringify({
                         _token: '<?= csrf_token() ?>',
                         articleId: this.articleId,
-                        briefData: this.briefData
+                        briefData: this.briefData,
+                        generateCover: this.generateCover
                     })
                 });
 

@@ -32,6 +32,7 @@ class ProcessJob
     public const STEP_BRIEF = 'brief';
     public const STEP_ARTICLE = 'article';
     public const STEP_SAVING = 'saving';
+    public const STEP_COVER = 'cover';
     public const STEP_DONE = 'done';
 
     /**

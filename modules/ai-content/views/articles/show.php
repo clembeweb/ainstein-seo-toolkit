@@ -177,6 +177,71 @@ $baseUrl = !empty($article['project_id']) ? '/ai-content/projects/' . $article['
     </script>
     <?php endif; ?>
 
+    <?php if (in_array($article['status'], ['ready', 'published'])): ?>
+    <!-- Cover Image Section -->
+    <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4"
+         x-data="coverImageManager({
+            articleId: <?= $article['id'] ?>,
+            hasCover: <?= !empty($article['cover_image_path']) ? 'true' : 'false' ?>,
+            coverUrl: '<?= !empty($article['cover_image_path']) ? url('/ai-content/cover/' . $article['id']) . '?t=' . time() : '' ?>'
+         })">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                Immagine di Copertina
+            </h3>
+            <div class="flex items-center gap-2">
+                <button @click="regenerateCover()"
+                        :disabled="loading"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                        :class="hasCover
+                            ? 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                            : 'bg-indigo-600 text-white hover:bg-indigo-700'"
+                        >
+                    <svg x-show="!loading" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <svg x-show="loading" x-cloak class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span x-text="loading ? 'Generazione...' : (hasCover ? 'Rigenera' : 'Genera copertina')"></span>
+                </button>
+                <template x-if="hasCover">
+                    <button @click="removeCover()"
+                            :disabled="loading"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-medium hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors disabled:opacity-50">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Rimuovi
+                    </button>
+                </template>
+            </div>
+        </div>
+
+        <!-- Cover Preview -->
+        <template x-if="hasCover">
+            <div class="rounded-lg overflow-hidden border border-slate-200 dark:border-slate-600">
+                <img :src="coverUrl" alt="Immagine di copertina" class="w-full h-auto max-h-80 object-cover">
+            </div>
+        </template>
+
+        <template x-if="!hasCover && !loading">
+            <div class="flex items-center justify-center h-32 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600">
+                <p class="text-sm text-slate-500 dark:text-slate-400">Nessuna immagine di copertina. Clicca "Genera copertina" per crearne una.</p>
+            </div>
+        </template>
+
+        <!-- Error message -->
+        <template x-if="errorMsg">
+            <p class="mt-2 text-sm text-red-600 dark:text-red-400" x-text="errorMsg"></p>
+        </template>
+    </div>
+    <?php endif; ?>
+
     <!-- Main Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-10 gap-6">
         <!-- Left Column: Content Preview/Editor (70%) -->
@@ -537,6 +602,76 @@ $baseUrl = !empty($article['project_id']) ? '/ai-content/projects/' . $article['
 </div>
 
 <script>
+function coverImageManager(config) {
+    return {
+        articleId: config.articleId,
+        hasCover: config.hasCover,
+        coverUrl: config.coverUrl,
+        loading: false,
+        errorMsg: '',
+
+        async regenerateCover() {
+            this.loading = true;
+            this.errorMsg = '';
+
+            try {
+                const formData = new FormData();
+                formData.append('_token', '<?= csrf_token() ?>');
+
+                const resp = await fetch(`<?= url('/ai-content/articles') ?>/${this.articleId}/regenerate-cover`, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                });
+
+                const data = await resp.json();
+
+                if (data.success) {
+                    this.hasCover = true;
+                    this.coverUrl = data.cover_url + '?t=' + Date.now();
+                } else {
+                    this.errorMsg = data.error || 'Errore generazione immagine';
+                }
+            } catch (e) {
+                this.errorMsg = 'Errore di connessione';
+            }
+
+            this.loading = false;
+        },
+
+        async removeCover() {
+            if (!confirm('Rimuovere l\'immagine di copertina?')) return;
+
+            this.loading = true;
+            this.errorMsg = '';
+
+            try {
+                const formData = new FormData();
+                formData.append('_token', '<?= csrf_token() ?>');
+
+                const resp = await fetch(`<?= url('/ai-content/articles') ?>/${this.articleId}/remove-cover`, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                });
+
+                const data = await resp.json();
+
+                if (data.success) {
+                    this.hasCover = false;
+                    this.coverUrl = '';
+                } else {
+                    this.errorMsg = data.error || 'Errore rimozione immagine';
+                }
+            } catch (e) {
+                this.errorMsg = 'Errore di connessione';
+            }
+
+            this.loading = false;
+        }
+    };
+}
+
 function articleEditor(initialData) {
     return {
         // Data

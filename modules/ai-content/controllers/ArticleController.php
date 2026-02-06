@@ -685,6 +685,154 @@ class ArticleController
     }
 
     /**
+     * Genera o rigenera immagine di copertina per un articolo
+     */
+    public function regenerateCover(int $id): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+
+        $article = $this->article->findWithRelations($id, $user['id']);
+        if (!$article) {
+            echo json_encode(['success' => false, 'error' => 'Articolo non trovato']);
+            exit;
+        }
+
+        if (empty($article['content'])) {
+            echo json_encode(['success' => false, 'error' => 'L\'articolo non ha contenuto. Genera prima l\'articolo.']);
+            exit;
+        }
+
+        // Check credits
+        $coverCost = Credits::getCost('cover_image_generation', 'ai-content');
+        if (!Credits::hasEnough($user['id'], $coverCost)) {
+            echo json_encode([
+                'success' => false,
+                'error' => "Crediti insufficienti. Richiesti: {$coverCost}"
+            ]);
+            exit;
+        }
+
+        try {
+            // Se esiste già una cover, elimina il file
+            if (!empty($article['cover_image_path'])) {
+                $coverService = new \Modules\AiContent\Services\CoverImageService();
+                $coverService->deleteImage($article['cover_image_path']);
+            }
+
+            $coverService = $coverService ?? new \Modules\AiContent\Services\CoverImageService();
+            $coverResult = $coverService->generate(
+                $id,
+                $article['title'],
+                $article['keyword'] ?? '',
+                mb_substr(strip_tags($article['content']), 0, 500),
+                $user['id']
+            );
+
+            \Core\Database::reconnect();
+
+            if (!$coverResult['success']) {
+                echo json_encode([
+                    'success' => false,
+                    'error' => $coverResult['error'] ?? 'Errore generazione immagine'
+                ]);
+                exit;
+            }
+
+            $this->article->updateCoverImage($id, $coverResult['path']);
+
+            Credits::consume($user['id'], $coverCost, 'cover_image_generation', 'ai-content', [
+                'article_id' => $id
+            ]);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Immagine di copertina generata',
+                'cover_path' => $coverResult['path'],
+                'cover_url' => url('/ai-content/cover/' . $id)
+            ]);
+
+        } catch (\Exception $e) {
+            \Core\Database::reconnect();
+            echo json_encode([
+                'success' => false,
+                'error' => 'Errore: ' . $e->getMessage()
+            ]);
+        }
+
+        exit;
+    }
+
+    /**
+     * Rimuovi immagine di copertina
+     */
+    public function removeCover(int $id): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+
+        $article = $this->article->find($id, $user['id']);
+        if (!$article) {
+            echo json_encode(['success' => false, 'error' => 'Articolo non trovato']);
+            exit;
+        }
+
+        if (!empty($article['cover_image_path'])) {
+            $coverService = new \Modules\AiContent\Services\CoverImageService();
+            $coverService->deleteImage($article['cover_image_path']);
+        }
+
+        $this->article->removeCoverImage($id);
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Immagine di copertina rimossa'
+        ]);
+
+        exit;
+    }
+
+    /**
+     * Serve immagine di copertina
+     */
+    public function serveCover(int $id): void
+    {
+        $user = Auth::user();
+
+        $article = $this->article->find($id, $user['id']);
+        if (!$article || empty($article['cover_image_path'])) {
+            http_response_code(404);
+            exit;
+        }
+
+        $fullPath = \ROOT_PATH . '/' . $article['cover_image_path'];
+
+        if (!file_exists($fullPath)) {
+            http_response_code(404);
+            exit;
+        }
+
+        $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+        $mimeTypes = [
+            'png' => 'image/png',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'webp' => 'image/webp',
+        ];
+
+        $contentType = $mimeTypes[$extension] ?? 'image/png';
+
+        header('Content-Type: ' . $contentType);
+        header('Content-Length: ' . filesize($fullPath));
+        header('Cache-Control: public, max-age=86400');
+
+        readfile($fullPath);
+        exit;
+    }
+
+    /**
      * Check if request is AJAX
      */
     private function isAjax(): bool
