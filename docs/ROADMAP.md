@@ -1,6 +1,6 @@
 # AINSTEIN - Roadmap Sviluppo AI
 
-**Ultimo aggiornamento:** 2026-01-19
+**Ultimo aggiornamento:** 2026-02-06
 **Tipo:** Roadmap tecnica
 **Stato:** Attivo
 
@@ -12,11 +12,12 @@
 
 | Modulo | Base | AI Attuale | Gap AI |
 |--------|------|------------|--------|
-| **ai-content** | 98% | ✅ Completa | Ottimizzazione esistente |
-| **seo-audit** | 100% | ⚠️ Parziale | Fix specifici + priorità |
+| **ai-content** | 100% | ✅ Completa | Ottimizzazione esistente |
+| **seo-audit** | 100% | ✅ Completa | — |
 | **ads-analyzer** | 100% | ✅ Completa | — |
 | **internal-links** | 85% | ❌ Mancante | Suggerimenti link |
-| **seo-tracking** | 80% | ⚠️ Da completare | Report AI settimanali |
+| **seo-tracking** | 95% | ✅ Completa | Alert backend |
+| **keyword-research** | 100% | ✅ Completa | — |
 | **content-creator** | 0% | ❌ | Tutto |
 
 ---
@@ -50,7 +51,10 @@
 - Anomaly Detection: alert AI su drop anomali
 
 ### AI Content
-**Attuale:** Generazione articoli completa
+**Attuale:** Generazione articoli completa + immagine copertina DALL-E 3
+
+**Completato (Feb 2026):**
+- ✅ Generazione immagine di copertina via DALL-E 3 (opzionale, 3 crediti)
 
 **Aggiungere:**
 - Analizza contenuto ESISTENTE vs SERP
@@ -208,19 +212,19 @@
 ## AZIONI IMMEDIATE
 
 ### Questa Settimana
-- [ ] Completare AI Fix Generator (seo-audit)
+- [x] ~~AI Keyword Research completo~~ (2026-02-06)
+- [ ] Test e deploy keyword-research in produzione
 - [ ] Definire prompt AI per Link Suggester
-- [ ] Verificare AiReportService in seo-tracking
 
 ### Prossime 2 Settimane
-- [ ] Rilascio AI Fix Generator
-- [ ] Rilascio AI Link Suggester
+- [ ] Rilascio AI Link Suggester (internal-links)
+- [ ] Alert backend + email notifiche (seo-tracking)
 - [ ] Test con 2-3 utenti beta
 
 ### Prossimo Mese
-- [ ] Weekly AI Digest attivo
 - [ ] Content Creator MVP
 - [ ] Landing page + pricing page
+- [ ] Onboarding utenti beta
 
 ---
 
@@ -245,4 +249,4 @@ FASE 3 (Ongoing)
 ---
 
 *Roadmap Sviluppo - Ainstein SEO Toolkit*
-*Aggiornato: 2026-01-19*
+*Aggiornato: 2026-02-06*

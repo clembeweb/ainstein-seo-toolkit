@@ -1,6 +1,6 @@
 # AGENTE: AI SEO Content Generator
 
-> **Ultimo aggiornamento:** 2026-01-30
+> **Ultimo aggiornamento:** 2026-02-06
 
 ## CONTESTO
 
@@ -8,7 +8,7 @@
 **Stato:** 100% Completato
 **Prefisso DB:** `aic_`
 
-Modulo per generare contenuti SEO-ottimizzati con **3 tipologie di progetto**:
+Modulo per generare contenuti SEO-ottimizzati con **3 tipologie di progetto** e **generazione immagine di copertina** via DALL-E 3:
 
 ---
 
@@ -73,17 +73,19 @@ File: `views/partials/project-nav.php`
 
 ## TIPOLOGIE DI PROGETTO
 
-### 1. Modalita MANUAL (Wizard 4 step)
+### 1. Modalita MANUAL (Wizard 4 step + cover opzionale)
 1. **Keyword** - Inserimento keyword target
 2. **SERP** - Estrazione risultati Google via SerpAPI
 3. **Fonti** - Selezione competitor da scrappare
 4. **Generazione** - Creazione articolo AI con brief
+5. **Copertina** (opzionale) - Generazione immagine di copertina via DALL-E 3
 
-### 2. Modalita AUTO (Scheduling per-keyword)
+### 2. Modalita AUTO (Scheduling per-keyword + cover opzionale)
 1. **Aggiungi Keyword** - Lista keyword senza data (bulk insert)
 2. **Coda** - Inline edit per data/ora e numero fonti per ogni keyword
 3. **Dispatcher CRON** - Processa automaticamente keyword con `scheduled_at <= NOW()`
-4. **Auto-publish** - Opzionale su WordPress collegato
+4. **Copertina** (opzionale) - Generazione immagine di copertina via DALL-E 3 (toggle in settings)
+5. **Auto-publish** - Opzionale su WordPress collegato
 
 ### 3. Modalita META-TAG (Bulk meta generation)
 1. **Import URL** - Da CSV, sitemap o manuale
@@ -126,7 +128,8 @@ modules/ai-content/
 │   ├── SerpApiService.php                  # Chiamate SerpAPI
 │   ├── ContentScraperService.php           # DEPRECATO - usa ScraperService
 │   ├── BriefBuilderService.php             # Costruzione brief
-│   └── ArticleGeneratorService.php         # Generazione AI (usa pool link)
+│   ├── ArticleGeneratorService.php         # Generazione AI (usa pool link)
+│   └── CoverImageService.php              # Generazione immagine copertina (DALL-E 3)
 ├── cron/
 │   ├── dispatcher.php                      # CRON job per AUTO mode
 │   └── process_queue.php                   # Processore coda
@@ -176,7 +179,7 @@ modules/ai-content/
 | `aic_serp_results` | Risultati SERP estratti |
 | `aic_paa_questions` | People Also Ask |
 | `aic_sources` | Fonti scrappate per articolo |
-| `aic_articles` | Articoli generati |
+| `aic_articles` | Articoli generati (include `cover_image_path`) |
 | `aic_queue` | Coda keyword per AUTO mode |
 | `aic_internal_links_pool` | Pool link interni per progetto |
 | `aic_meta_urls` | URL per META-TAG mode |
@@ -214,6 +217,11 @@ GET  /ai-content/projects/{id}/meta-tags/import → MetaTagController@import
 # Link Interni (condiviso MANUAL/AUTO)
 GET  /ai-content/projects/{id}/internal-links → InternalLinksController@index
 
+# Immagine di Copertina
+GET  /ai-content/cover/{id}               → ArticleController@serveCover
+POST /ai-content/articles/{id}/regenerate-cover → ArticleController@regenerateCover
+POST /ai-content/articles/{id}/remove-cover → ArticleController@removeCover
+
 # Globali (non legati a progetto)
 GET  /ai-content/wordpress                 → WordPressController@index
 GET  /ai-content/jobs                      → JobController@index
@@ -227,11 +235,17 @@ GET  /ai-content/jobs                      → JobController@index
 |-----|----------|--------|
 | Nessun bug critico | - | OK |
 
-**Fix recenti (Gen 2026):**
+**Fix recenti (Gen-Feb 2026):**
 - Fix "MySQL server has gone away" con Database::reconnect()
 - Fix UI preview articolo (classe `prose` Tailwind)
 - Card Keywords cliccabile in dashboard
 - Refactoring completo UI con dashboard tabbed per tipo progetto
+
+**Feature recenti (Feb 2026):**
+- Generazione immagine di copertina via DALL-E 3 (opzionale, 3 crediti)
+- Toggle copertina in settings AUTO e wizard MANUAL
+- Rigenera/Rimuovi copertina dalla vista articolo
+- Step SSE 'cover' nella pipeline AUTO
 
 ---
 
@@ -248,8 +262,11 @@ GET  /ai-content/jobs                      → JobController@index
    $cost = Credits::getCost('content_scrape', 'ai-content');
    $cost = Credits::getCost('brief_generation', 'ai-content');
    $cost = Credits::getCost('article_generation', 'ai-content');
+   $cost = Credits::getCost('cover_image_generation', 'ai-content');
    ```
    Vedi: `docs/core/CREDITS-SYSTEM.md`
+6. **Immagine copertina** - CoverImageService usa OpenAI DALL-E 3 direttamente (non via AiService), API key da `Settings::get('openai_api_key')`
+7. **Storage immagini** - `storage/images/covers/{year}/{month}/` con path relativo in DB, servite via controller (no accesso diretto)
 
 ---
 

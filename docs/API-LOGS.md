@@ -1,7 +1,7 @@
 # API Logs - Sistema di Logging Chiamate API
 
 > Documentazione per il sistema centralizzato di logging delle chiamate API esterne.
-> Ultimo aggiornamento: 2026-02-03
+> Ultimo aggiornamento: 2026-02-06
 
 ---
 
@@ -59,6 +59,7 @@ Il sistema API Logs traccia tutte le chiamate verso API esterne (DataForSEO, Ser
 | Google Search Console | `google_gsc` | Performance data, coverage |
 | Google OAuth | `google_oauth` | Token refresh |
 | Google Analytics 4 | `google_ga4` | Traffic data |
+| Google Keyword Insight | `rapidapi_keyword_insight` | Keyword suggestions, volumes, CPC |
 
 ---
 
@@ -230,6 +231,7 @@ ApiLoggerService::log('serpapi', '/search', $logParams, $data, $httpCode, $start
 |--------|------|------------------|
 | seo-tracking | RankCheckerService.php | dataforseo, serpapi, serper |
 | seo-tracking | DataForSeoService.php | dataforseo |
+| keyword-research | KeywordInsightService.php | rapidapi_keyword_insight |
 
 ### Checklist Integrazione Nuovo Modulo
 

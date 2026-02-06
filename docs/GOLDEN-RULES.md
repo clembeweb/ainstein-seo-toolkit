@@ -66,6 +66,7 @@ Ogni modulo usa un prefisso univoco di 2-3 lettere:
 | seo-tracking | `st_` |
 | internal-links | `il_` |
 | ads-analyzer | `ga_` |
+| keyword-research | `kr_` |
 | content-creator | `cc_` |
 
 ```sql
@@ -301,6 +302,7 @@ $content = $xpath->query('//article')->item(0)->textContent;
 - `dataforseo` - DataForSEO (SERP, keyword volumes)
 - `serpapi` - SerpAPI (SERP fallback)
 - `serper` - Serper.dev (SERP fallback)
+- `rapidapi_keyword_insight` - Google Keyword Insight (keyword research)
 - `google_gsc` - Google Search Console
 - `google_oauth` - Google OAuth refresh
 - `google_ga4` - Google Analytics 4

@@ -1,7 +1,7 @@
 # AINSTEIN - Istruzioni Claude Code
 
 > Questo file viene caricato automaticamente ad ogni sessione.
-> Ultimo aggiornamento: 2026-02-03
+> Ultimo aggiornamento: 2026-02-06
 
 ---
 
@@ -25,7 +25,7 @@
 1. AiService SEMPRE centralizzato    → new AiService('modulo-slug')
 2. Icone SOLO Heroicons SVG          → MAI Lucide, MAI FontAwesome
 3. Lingua UI ITALIANO                → Tutti i testi visibili
-4. Prefisso DB per modulo            → aic_, sa_, st_, il_, ga_, cc_
+4. Prefisso DB per modulo            → aic_, sa_, st_, il_, ga_, cc_, kr_
 5. API Keys in Database              → MAI in .env, MAI hardcoded
 6. Routes pattern standard           → /modulo/projects/{id}/sezione
 7. Prepared statements SEMPRE        → MAI concatenare SQL
@@ -44,11 +44,12 @@
 
 | Modulo | Slug | Prefisso DB | Stato | Note |
 |--------|------|-------------|-------|------|
-| AI Content Generator | `ai-content` | `aic_` | 100% | Reference pattern, scheduling per-keyword |
+| AI Content Generator | `ai-content` | `aic_` | 100% | Reference pattern, scheduling per-keyword, cover image DALL-E 3 |
 | SEO Audit | `seo-audit` | `sa_` | 100% | Action Plan AI completato |
 | Google Ads Analyzer | `ads-analyzer` | `ga_` | 100% | Completo |
 | Internal Links | `internal-links` | `il_` | 85% | Manca AI Suggester |
 | SEO Tracking | `seo-tracking` | `st_` | 95% | Rank Check con DataForSEO/SerpAPI/Serper, API Logs integrato |
+| AI Keyword Research | `keyword-research` | `kr_` | 100% | Research Guidata, Architettura Sito, Quick Check |
 | Content Creator | `content-creator` | `cc_` | 0% | Da implementare |
 
 ---
@@ -82,13 +83,15 @@ seo-toolkit/
 │   ├── SitemapService.php
 │   ├── CsvImportService.php
 │   ├── DataForSeoService.php # Rank check API
-│   └── ApiLoggerService.php # Logging chiamate API - USARE SEMPRE
+│   ├── ApiLoggerService.php # Logging chiamate API - USARE SEMPRE
+│   └── RapidApiKeywordService.php # Keyword volumes (seo-tracking)
 ├── modules/
 │   ├── ai-content/          # REFERENCE per nuovi moduli
 │   ├── seo-audit/
 │   ├── ads-analyzer/
 │   ├── internal-links/
-│   └── seo-tracking/
+│   ├── seo-tracking/
+│   └── keyword-research/    # AI Keyword Research
 ├── shared/views/
 │   ├── layout.php
 │   └── components/

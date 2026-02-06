@@ -276,8 +276,24 @@ x-data="{ expanded: <?= $entityId ? 'true' : 'false' ?> }"
 
 ---
 
+## Esempio: Keyword Research Module
+
+```
+Keyword Research ▼
+  └── "My Project" ▼
+        ├── Research Guidata
+        ├── Architettura Sito
+        ├── ─── separator ───
+        └── Impostazioni
+  Quick Check (sempre visibile, no progetto)
+```
+
+**Nota:** Quick Check non richiede un progetto ed è sempre visibile nell'accordion, anche fuori dal contesto progetto.
+
+---
+
 ## File di Riferimento
 
 - **Sidebar principale:** `shared/views/components/nav-items.php`
-- **Esempio modulo:** `modules/internal-links/`
+- **Esempio modulo con progetto:** `modules/internal-links/`, `modules/keyword-research/`
 - **Template modulo:** `modules/_template/`

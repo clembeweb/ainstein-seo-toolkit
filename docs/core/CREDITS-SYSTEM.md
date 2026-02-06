@@ -197,6 +197,7 @@ Ogni modulo definisce i costi di default nel suo `module.json`:
 | Scraping fonte | `cost_content_scrape` | 1 | Per ogni URL scrappato |
 | Generazione brief | `cost_brief_generation` | 5 | Costruzione brief AI |
 | Generazione articolo | `cost_article_generation` | 10 | Creazione articolo completo |
+| Immagine di copertina | `cost_cover_image_generation` | 3 | Generazione cover image via DALL-E 3 (opzionale) |
 
 ### SEO Tracking (`seo-tracking`)
 
@@ -229,6 +230,15 @@ Ogni modulo definisce i costi di default nel suo `module.json`:
 |------------|--------|---------|-------------|
 | Analisi link | `cost_link_analysis` | 0.5 | Analisi struttura link |
 | Suggerimenti AI | `cost_ai_suggestions` | 1 | Suggerimenti AI per link |
+
+### AI Keyword Research (`keyword-research`)
+
+| Operazione | Chiave | Default | Descrizione |
+|------------|--------|---------|-------------|
+| AI Clustering (< 100 kw) | `cost_kr_ai_clustering` | 2 | Clustering semantico AI |
+| AI Clustering (> 100 kw) | `cost_kr_ai_clustering_large` | 5 | Clustering semantico AI (large) |
+| Architettura sito AI | `cost_kr_ai_architecture` | 5 | Struttura sito con URL/H1 |
+| Quick Check | — | 0 | Gratis (solo API, no AI) |
 
 ---
 

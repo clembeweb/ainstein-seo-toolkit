@@ -37,6 +37,7 @@ Checklist di requisiti estratti dalla documentazione ufficiale per verificare la
 - [ ] ai-content: `aic_`
 - [ ] seo-audit: `sa_`
 - [ ] seo-tracking: `st_`
+- [ ] keyword-research: `kr_`
 - [ ] content-creator: `cc_`
 
 ### Struttura Tabelle
@@ -236,6 +237,11 @@ Checklist di requisiti estratti dalla documentazione ufficiale per verificare la
 - [ ] Generazione articoli via AiService
 - [ ] Modello: claude-sonnet-4-20250514
 - [ ] WordPress connector
+- [ ] Cover image via OpenAI DALL-E 3 (CoverImageService)
+- [ ] Toggle copertina in settings AUTO e wizard MANUAL
+- [ ] Crediti copertina: 3 (cover_image_generation)
+- [ ] Storage immagini: `storage/images/covers/` con .htaccess deny
+- [ ] API logging: ApiLoggerService con provider `openai_dalle`
 
 ### SEO Audit (seo-audit)
 - [ ] Prefisso DB: sa_
@@ -250,6 +256,17 @@ Checklist di requisiti estratti dalla documentazione ufficiale per verificare la
 - [ ] GA4 via Service Account
 - [ ] Report AI via AiService
 - [ ] Alert system
+
+### AI Keyword Research (keyword-research)
+- [ ] Prefisso DB: kr_
+- [ ] Tabelle: kr_projects, kr_researches, kr_clusters, kr_keywords
+- [ ] API: KeywordInsightService con ApiLoggerService (provider: rapidapi_keyword_insight)
+- [ ] AI clustering via AiService('keyword-research')
+- [ ] SSE con session_write_close() per raccolta keyword
+- [ ] Database::reconnect() dopo API/AI calls
+- [ ] Crediti: kr_ai_clustering (2), kr_ai_clustering_large (5), kr_ai_architecture (5)
+- [ ] Quick Check gratuito (solo API, no crediti)
+- [ ] Export CSV con BOM UTF-8
 
 ### Content Creator (content-creator)
 - [ ] Prefisso DB: cc_

@@ -20,6 +20,12 @@ seo-toolkit/
 │   ├── ScraperService.php    # Scraping (consuma crediti)
 │   └── ExportService.php
 ├── modules/
+│   ├── ai-content/
+│   ├── seo-audit/
+│   ├── ads-analyzer/
+│   ├── internal-links/
+│   ├── seo-tracking/
+│   ├── keyword-research/
 │   └── _template/
 ├── admin/                    # Area admin
 │   ├── controllers/

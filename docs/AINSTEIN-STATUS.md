@@ -1,6 +1,6 @@
 # AINSTEIN - Stato Progetto
 
-**Ultimo aggiornamento:** 2026-02-03
+**Ultimo aggiornamento:** 2026-02-06
 **Ambiente produzione:** https://ainstein.it
 **Repository:** https://github.com/clembeweb/ainstein-seo-toolkit.git
 
@@ -32,7 +32,7 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 
 ---
 
-## STATO MODULI (Aggiornato 03 Feb 2026)
+## STATO MODULI (Aggiornato 06 Feb 2026)
 
 | Modulo | Slug | Stato Base | Stato AI | % Totale |
 |--------|------|------------|----------|----------|
@@ -41,6 +41,7 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 | Google Ads Analyzer | `ads-analyzer` | ✅ 100% | ✅ Completa | **100%** |
 | Internal Links Analyzer | `internal-links` | ✅ 85% | ❌ Mancante | **75%** |
 | SEO Position Tracking | `seo-tracking` | ✅ 95% | ✅ Completa | **95%** |
+| AI Keyword Research | `keyword-research` | ✅ 100% | ✅ Completa | **100%** |
 | AI Content Bulk Creator | `content-creator` | ❌ 0% | ❌ | **0%** |
 
 ### Legenda Stato AI
@@ -73,6 +74,27 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 ---
 
 ## COMPLETATI RECENTEMENTE
+
+### 2026-02-06
+- [x] **Cover Image Generation** - Generazione immagine di copertina via DALL-E 3 per articoli (`ai-content`)
+- [x] CoverImageService: prompt AI (Claude Haiku) + DALL-E 3 API (1792x1024, natural style)
+- [x] Toggle opzionale in settings AUTO e wizard MANUAL (default ON, 3 crediti)
+- [x] Step SSE 'cover' nella pipeline AUTO (tra saving e publishing)
+- [x] Rigenera/Rimuovi copertina dalla vista articolo
+- [x] Storage locale `storage/images/covers/` servite via controller (no accesso diretto)
+- [x] Migration `007_add_cover_image.sql` (cover_image_path, generate_cover, step ENUM)
+- [x] API logging via ApiLoggerService (provider: openai_dalle)
+- [x] **AI Keyword Research** - Nuovo modulo completo (`keyword-research`, prefisso `kr_`)
+- [x] Research Guidata: wizard 4-step (Brief → API collection SSE → AI clustering → Results)
+- [x] Architettura Sito: wizard 3-step (Brief → Collection+AI → Struttura pagine con URL/H1)
+- [x] Quick Check: ricerca keyword istantanea senza progetto (gratis)
+- [x] KeywordInsightService: wrapper Google Keyword Insight API (RapidAPI) con ApiLoggerService
+- [x] 5 controller, 3 model, 1 service, 10 view, dashboard con 3 modalità
+- [x] Sistema crediti integrato (2-5 crediti clustering AI, 5 crediti architettura)
+- [x] SSE real-time per raccolta keyword con session_write_close()
+- [x] Sidebar accordion con navigazione progetto
+- [x] Export CSV con BOM UTF-8
+- [x] Documentazione completa aggiornata
 
 ### 2026-02-03
 - [x] **Rank Check con Job in Background** (SSE streaming real-time)
@@ -153,6 +175,7 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 | `ExportService.php` | Export CSV/PDF | seo-audit, ads-analyzer |
 | `CsvImportService.php` | Parser CSV | ads-analyzer |
 | `DataForSeoService.php` | API DataForSEO per rank check | seo-tracking |
+| `KeywordInsightService.php` | Google Keyword Insight API (RapidAPI) | keyword-research (modulo-locale) |
 
 ---
 
@@ -167,7 +190,8 @@ ainstein-seo-toolkit/
 │   ├── seo-audit/          # Audit Tecnico
 │   ├── ads-analyzer/       # Google Ads Analyzer
 │   ├── internal-links/     # Link Analysis
-│   └── seo-tracking/       # Position Tracking
+│   ├── seo-tracking/       # Position Tracking
+│   └── keyword-research/   # AI Keyword Research
 ├── admin/                   # Admin panel
 ├── shared/views/            # Layout, sidebar, components
 ├── config/                  # Configurazione
@@ -185,23 +209,23 @@ ainstein-seo-toolkit/
 
 | Aspetto | Dettaglio |
 |---------|-----------|
-| **Data** | 2026-02-03 |
-| **Modifiche principali** | Rank Check con job in background (SSE), DataForSeoService, cron dispatchers, admin settings |
-| **Migration** | `012_rank_jobs.sql` - tabelle st_rank_jobs, st_rank_queue, st_rank_checks |
-| **File nuovi** | RankJob.php, RankQueue.php, gsc-sync-dispatcher.php, ai-report-dispatcher.php |
+| **Data** | 2026-02-06 |
+| **Modifiche principali** | Cover image DALL-E 3 per ai-content (auto + manual), AI Keyword Research module |
+| **Migration** | `007_add_cover_image.sql` - cover_image_path, generate_cover, step ENUM 'cover' |
+| **File nuovi** | CoverImageService.php, storage/images/covers/.htaccess + keyword-research (20 file) |
 
 ---
 
 ## PROSSIMI STEP
 
 ### Immediati (questa settimana)
-1. Definire prompt per AI Link Suggester
-2. Test beta con 2-3 utenti
-3. Completare Alert backend (seo-tracking)
+1. Test browser completo modulo keyword-research
+2. Deploy keyword-research in produzione
+3. Definire prompt per AI Link Suggester
 
 ### Breve termine (2-3 settimane)
 1. Rilascio AI Link Suggester (internal-links)
-2. Email notifiche per alert (seo-tracking)
+2. Completare Alert backend + email notifiche (seo-tracking)
 3. Monthly executive report (seo-tracking)
 
 ### Medio termine (1 mese)
@@ -246,4 +270,4 @@ ssh -i ~/.ssh/siteground_key -p 18765 u1608-ykgnd3z1twn4@ssh.ainstein.it
 
 ---
 
-*Documento aggiornato - 2026-02-03*
+*Documento aggiornato - 2026-02-06*

@@ -139,7 +139,14 @@ class MioAnalysisService
 |--------|------|--------------|------|
 | AI SEO Content Generator | `ai-content` | `services/ArticleGeneratorService.php` | 35 |
 | AI SEO Content Generator | `ai-content` | `services/BriefBuilderService.php` | costruttore |
+| AI SEO Content Generator | `ai-content` | `services/CoverImageService.php` | buildImagePrompt() (Claude Haiku per prompt DALL-E) |
 | SEO Audit | `seo-audit` | `services/AiAnalysisService.php` | 34 |
+| AI Keyword Research | `keyword-research` | `controllers/ResearchController.php` | aiAnalyze() |
+| AI Keyword Research | `keyword-research` | `controllers/ArchitectureController.php` | aiAnalyze() |
+
+> **Nota:** CoverImageService usa anche OpenAI DALL-E 3 direttamente (`/v1/images/generations`) per generazione immagini.
+> La chiamata DALL-E non passa da AiService ma usa l'API key da `Settings::get('openai_api_key')`.
+> Il logging avviene tramite `ApiLoggerService::log('openai_dalle', ...)`.
 
 ---
 

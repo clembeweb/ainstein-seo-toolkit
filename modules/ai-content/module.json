@@ -15,6 +15,7 @@
         "serp_extraction": 3,
         "scrape_per_url": 1,
         "article_generation": 10,
+        "cover_image_generation": 3,
         "wp_publish": 0
     },
     "settings": {
@@ -71,6 +72,15 @@
             "label": "Costo Generazione Articolo",
             "description": "Crediti per generazione articolo completo",
             "default": 10,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true
+        },
+        "cost_cover_image_generation": {
+            "type": "number",
+            "label": "Costo Generazione Copertina",
+            "description": "Crediti per generazione immagine di copertina via DALL-E 3",
+            "default": 3,
             "min": 0,
             "step": 0.1,
             "admin_only": true
