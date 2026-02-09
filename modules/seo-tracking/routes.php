@@ -353,6 +353,16 @@ Router::get('/seo-tracking/project/{id}/keywords/{keywordId}/seasonality', funct
 });
 
 // =============================================
+// KEYWORD POSITION CHART API
+// =============================================
+
+// API: Dati grafico storico posizioni per keyword
+Router::get('/seo-tracking/project/{id}/keywords/{keywordId}/chart', function ($id, $keywordId) {
+    Middleware::auth();
+    return (new KeywordController())->positionChart((int) $keywordId);
+});
+
+// =============================================
 // KEYWORD DETAIL - WILDCARD ROUTES (must be LAST)
 // =============================================
 
