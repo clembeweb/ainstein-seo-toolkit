@@ -21,7 +21,6 @@ use Modules\SeoTracking\Controllers\ReportController;
 use Modules\SeoTracking\Controllers\AiController;
 use Modules\SeoTracking\Controllers\ExportController;
 use Modules\SeoTracking\Controllers\ApiController;
-use Modules\SeoTracking\Controllers\CronController;
 use Modules\SeoTracking\Controllers\CompareController;
 use Modules\SeoTracking\Controllers\RankCheckController;
 use Modules\SeoTracking\Controllers\UrlController;
@@ -751,22 +750,8 @@ Router::get('/seo-tracking/project/{id}/api/tracked-keywords', function ($id) {
 });
 
 // =============================================
-// CRON (Sync automatici - NO AUTH)
+// CRON: Gestiti da CLI dispatcher (non serve HTTP)
+// Vedi: cron/gsc-sync-dispatcher.php
+// Vedi: cron/rank-dispatcher.php
 // =============================================
-
-// Sync giornaliero automatico
-// URL: /seo-tracking/cron/daily-sync?secret=CRON_SECRET
-Router::get('/seo-tracking/cron/daily-sync', function () {
-    return (new CronController())->dailySync();
-});
-
-// Status cron (per monitoring)
-Router::get('/seo-tracking/cron/status', function () {
-    return (new CronController())->status();
-});
-
-// Sync singolo progetto (per test/debug)
-Router::get('/seo-tracking/cron/sync-project', function () {
-    return (new CronController())->syncProject();
-});
 
