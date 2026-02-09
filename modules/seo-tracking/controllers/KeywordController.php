@@ -623,7 +623,9 @@ class KeywordController
             exit;
         }
 
-        $keywords = $this->gscData->getUniqueQueriesByProject($projectId);
+        $endDate = date('Y-m-d');
+        $startDate = date('Y-m-d', strtotime('-90 days'));
+        $keywords = $this->gscData->getTopQueries($projectId, $startDate, $endDate, 500, 0);
 
         return View::render('seo-tracking/keywords/all', [
             'title' => 'Tutte le Query GSC - ' . $project['name'],
@@ -664,6 +666,10 @@ class KeywordController
         // Dati GSC recenti
         $gscData = $this->gscData->getKeywordPositions($projectId, $keyword['keyword'], $startDate, $endDate);
 
+        // Dati GSC dettagliati (top pages e country)
+        $gscTopPages = $this->gscData->getKeywordTopPages($projectId, $keyword['keyword'], $startDate, $endDate);
+        $gscCountries = $this->gscData->getKeywordCountries($projectId, $keyword['keyword'], $startDate, $endDate);
+
         return View::render('seo-tracking/keywords/show', [
             'title' => $keyword['keyword'] . ' - ' . $project['name'],
             'user' => $user,
@@ -672,6 +678,8 @@ class KeywordController
             'keyword' => $keyword,
             'positions' => $positions,
             'gscData' => $gscData,
+            'gscTopPages' => $gscTopPages,
+            'gscCountries' => $gscCountries,
             'dateRange' => ['start' => $startDate, 'end' => $endDate],
         ]);
     }

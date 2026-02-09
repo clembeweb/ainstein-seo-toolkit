@@ -228,9 +228,9 @@ class GscService
                 'records_updated' => 0,
             ];
 
-            // 1. Fetch dati per query + page (keyword con URL associato)
-            // Dimensions: query[0], page[1], date[2]
-            $queryPageData = $this->fetchSearchAnalytics($token, $connection['property_url'], $startDate, $endDate, ['query', 'page', 'date']);
+            // 1. Fetch dati per query + page + country
+            // Dimensions: query[0], page[1], date[2], country[3]
+            $queryPageData = $this->fetchSearchAnalytics($token, $connection['property_url'], $startDate, $endDate, ['query', 'page', 'date', 'country']);
             $result['records_fetched'] += count($queryPageData);
 
             foreach ($queryPageData as $row) {
@@ -239,6 +239,7 @@ class GscService
                     'query' => $row['keys'][0],
                     'page' => $row['keys'][1],
                     'date' => $row['keys'][2],
+                    'country' => strtoupper($row['keys'][3] ?? ''),
                     'clicks' => $row['clicks'] ?? 0,
                     'impressions' => $row['impressions'] ?? 0,
                     'ctr' => $row['ctr'] ?? 0,
@@ -255,6 +256,9 @@ class GscService
 
             // 5. Auto-discovery nuove keyword
             $this->autoDiscoverKeywords($projectId, $startDate, $endDate);
+
+            // 6. Link keyword_id per keyword tracciate
+            $this->linkKeywordIds($projectId);
 
             $this->syncLog->complete($logId, [
                 'status' => 'completed',
@@ -438,7 +442,7 @@ class GscService
             $body = [
                 'startDate' => $startDate,
                 'endDate' => $endDate,
-                'dimensions' => ['query', 'page', 'date'],
+                'dimensions' => ['query', 'page', 'date', 'country'],
                 'rowLimit' => $rowLimit,
                 'startRow' => $startRow,
             ];
@@ -464,7 +468,7 @@ class GscService
                         'impressions' => (int)($row['impressions'] ?? 0),
                         'ctr' => (float)($row['ctr'] ?? 0),
                         'position' => (float)($row['position'] ?? 0),
-                        'country' => '',
+                        'country' => strtoupper($row['keys'][3] ?? ''),
                         'device' => null,
                     ];
                 }
@@ -701,6 +705,18 @@ class GscService
             $this->syncLog->fail($logId, $e->getMessage());
             $this->project->updateSyncStatus($projectId, 'failed');
             throw $e;
+        }
+    }
+
+    /**
+     * Collega keyword_id in st_gsc_data per tutte le keyword tracciate del progetto
+     */
+    private function linkKeywordIds(int $projectId): void
+    {
+        $trackedKeywords = $this->keyword->allByProject($projectId, ['is_tracked' => 1]);
+
+        foreach ($trackedKeywords as $kw) {
+            $this->gscData->updateKeywordMatch($projectId, $kw['id'], $kw['keyword']);
         }
     }
 

@@ -235,6 +235,80 @@ class GscData
     }
 
     /**
+     * Dati GSC dettagliati per keyword con page e country
+     */
+    public function getKeywordDetailData(int $projectId, string $keyword, string $startDate, string $endDate, int $limit = 30): array
+    {
+        $sql = "
+            SELECT
+                date,
+                page,
+                country,
+                clicks,
+                impressions,
+                ctr,
+                position
+            FROM {$this->table}
+            WHERE project_id = ?
+              AND LOWER(query) = LOWER(?)
+              AND date BETWEEN ? AND ?
+            ORDER BY date DESC, clicks DESC
+            LIMIT ?
+        ";
+
+        return Database::fetchAll($sql, [$projectId, $keyword, $startDate, $endDate, $limit]);
+    }
+
+    /**
+     * Top landing pages per una keyword specifica
+     */
+    public function getKeywordTopPages(int $projectId, string $keyword, string $startDate, string $endDate): array
+    {
+        $sql = "
+            SELECT
+                page,
+                SUM(clicks) as total_clicks,
+                SUM(impressions) as total_impressions,
+                AVG(position) as avg_position,
+                AVG(ctr) as avg_ctr
+            FROM {$this->table}
+            WHERE project_id = ?
+              AND LOWER(query) = LOWER(?)
+              AND date BETWEEN ? AND ?
+              AND page != ''
+            GROUP BY page
+            ORDER BY total_clicks DESC
+            LIMIT 10
+        ";
+
+        return Database::fetchAll($sql, [$projectId, $keyword, $startDate, $endDate]);
+    }
+
+    /**
+     * Dati per country per una keyword specifica
+     */
+    public function getKeywordCountries(int $projectId, string $keyword, string $startDate, string $endDate): array
+    {
+        $sql = "
+            SELECT
+                country,
+                SUM(clicks) as total_clicks,
+                SUM(impressions) as total_impressions,
+                AVG(position) as avg_position
+            FROM {$this->table}
+            WHERE project_id = ?
+              AND LOWER(query) = LOWER(?)
+              AND date BETWEEN ? AND ?
+              AND country != '' AND country != 'all'
+            GROUP BY country
+            ORDER BY total_clicks DESC
+            LIMIT 10
+        ";
+
+        return Database::fetchAll($sql, [$projectId, $keyword, $startDate, $endDate]);
+    }
+
+    /**
      * Ottiene posizioni per una specifica keyword nel date range
      */
     public function getKeywordPositions(int $projectId, string $keyword, string $startDate, string $endDate): array

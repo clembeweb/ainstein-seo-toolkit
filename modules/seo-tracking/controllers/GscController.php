@@ -9,6 +9,7 @@ use Core\Credits;
 use Core\ModuleLoader;
 use Modules\SeoTracking\Models\Project;
 use Modules\SeoTracking\Models\GscConnection;
+use Modules\SeoTracking\Models\GscData;
 use Modules\SeoTracking\Services\GscService;
 
 /**
@@ -551,6 +552,67 @@ class GscController
         } else {
             error_log("[GscController] fireAndForget failed: {$errno} {$errstr} - {$url}");
         }
+    }
+
+    /**
+     * Vista dedicata dati GSC - Top Queries, Top Pagine, Performance
+     */
+    public function data(int $projectId): string
+    {
+        $user = Auth::user();
+        $project = $this->project->find($projectId, $user['id']);
+
+        if (!$project) {
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
+            Router::redirect('/seo-tracking');
+            exit;
+        }
+
+        $connection = $this->gscConnection->getByProject($projectId);
+        $gscData = new GscData();
+
+        // Date range da parametro (default 30gg)
+        $days = (int)($_GET['days'] ?? 30);
+        $endDate = date('Y-m-d');
+        $startDate = date('Y-m-d', strtotime("-{$days} days"));
+
+        // Filtri
+        $search = trim($_GET['q'] ?? '');
+        $posFilter = $_GET['pos'] ?? '';
+
+        // Top queries
+        $topQueries = $gscData->getTopQueries($projectId, $startDate, $endDate, 200, 0);
+
+        // Filtra per ricerca
+        if ($search !== '') {
+            $topQueries = array_filter($topQueries, fn($q) => stripos($q['query'], $search) !== false);
+        }
+
+        // Filtra per posizione
+        if ($posFilter !== '') {
+            $maxPos = (int)$posFilter;
+            $topQueries = array_filter($topQueries, fn($q) => $q['avg_position'] > 0 && $q['avg_position'] <= $maxPos);
+        }
+
+        // Top pagine
+        $topPages = $gscData->getTopPages($projectId, $startDate, $endDate, 100);
+
+        // Aggregati giornalieri per grafico performance
+        $dailyData = $gscData->getDailyAggregates($projectId, $startDate, $endDate);
+
+        return View::render('seo-tracking/gsc/data', [
+            'title' => 'Search Console - ' . $project['name'],
+            'user' => $user,
+            'modules' => ModuleLoader::getActiveModules(),
+            'project' => $project,
+            'connection' => $connection,
+            'topQueries' => array_values($topQueries),
+            'topPages' => $topPages,
+            'dailyData' => $dailyData,
+            'days' => $days,
+            'search' => $search,
+            'posFilter' => $posFilter,
+        ]);
     }
 
     /**

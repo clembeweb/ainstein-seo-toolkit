@@ -84,6 +84,12 @@ Router::post('/seo-tracking/project/{id}/sync/stop', function ($id) {
 // GOOGLE SEARCH CONSOLE
 // =============================================
 
+// Vista dati GSC (Top Queries, Top Pagine, Performance)
+Router::get('/seo-tracking/project/{id}/gsc', function ($id) {
+    Middleware::auth();
+    return (new GscController())->data((int) $id);
+});
+
 // Avvia connessione OAuth
 Router::get('/seo-tracking/project/{id}/gsc/connect', function ($id) {
     Middleware::auth();
@@ -94,12 +100,6 @@ Router::get('/seo-tracking/project/{id}/gsc/connect', function ($id) {
 Router::get('/seo-tracking/gsc/connected', function () {
     Middleware::auth();
     return (new GscController())->connected();
-});
-
-// Lista proprietà GSC disponibili
-Router::get('/seo-tracking/project/{id}/gsc/properties', function ($id) {
-    Middleware::auth();
-    return (new GscController())->properties((int) $id);
 });
 
 // Pagina selezione proprietà GSC (GET)
