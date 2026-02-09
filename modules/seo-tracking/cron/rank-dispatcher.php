@@ -30,6 +30,7 @@ use Core\ModuleLoader;
 use Modules\SeoTracking\Models\Project;
 use Modules\SeoTracking\Models\Keyword;
 use Modules\SeoTracking\Models\RankCheck;
+use Modules\SeoTracking\Models\KeywordPosition;
 use Modules\SeoTracking\Services\RankCheckerService;
 
 // Log file giornaliero
@@ -611,6 +612,15 @@ function runDispatcher(): void
                 'last_position' => $serpPosition,
                 'last_updated_at' => date('Y-m-d H:i:s'),
             ], 'id = ?', [$keywordId]);
+
+            // Upsert snapshot giornaliero per storico posizioni
+            $kpModel = new KeywordPosition();
+            $kpModel->upsert([
+                'project_id' => $projectId,
+                'keyword_id' => $keywordId,
+                'date' => date('Y-m-d'),
+                'avg_position' => $serpPosition,
+            ]);
         }
 
         // Marca item come completato con posizione e URL

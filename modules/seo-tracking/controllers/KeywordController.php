@@ -978,6 +978,15 @@ class KeywordController
                         'last_position' => $result['position'],
                         'last_updated_at' => date('Y-m-d H:i:s'),
                     ]);
+
+                    // Upsert snapshot giornaliero per storico posizioni
+                    $this->keywordPosition->upsert([
+                        'project_id' => $projectId,
+                        'keyword_id' => $kw['id'],
+                        'date' => date('Y-m-d'),
+                        'avg_position' => $result['position'],
+                    ]);
+
                     $updated++;
                 } else {
                     // Keyword non trovata: imposta posizione a NULL per indicare "non in SERP"
@@ -1152,6 +1161,15 @@ class KeywordController
                                 'last_position' => $result['position'],
                                 'last_updated_at' => date('Y-m-d H:i:s'),
                             ]);
+
+                            // Upsert snapshot giornaliero per storico posizioni
+                            $this->keywordPosition->upsert([
+                                'project_id' => $projectId,
+                                'keyword_id' => $kw['id'],
+                                'date' => date('Y-m-d'),
+                                'avg_position' => $result['position'],
+                            ]);
+
                             $updated++;
                         } else {
                             $this->keyword->update($kw['id'], [
@@ -1490,6 +1508,14 @@ class KeywordController
                     ];
                     if ($result['found'] && $result['position'] !== null) {
                         $updateData['last_position'] = $result['position'];
+
+                        // Upsert snapshot giornaliero per storico posizioni
+                        $this->keywordPosition->upsert([
+                            'project_id' => $projectId,
+                            'keyword_id' => $item['keyword_id'],
+                            'date' => date('Y-m-d'),
+                            'avg_position' => $result['position'],
+                        ]);
                     } else {
                         $updateData['last_position'] = null;
                     }

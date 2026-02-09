@@ -12,6 +12,7 @@ use Modules\SeoTracking\Models\RankCheck;
 use Modules\SeoTracking\Models\RankJob;
 use Modules\SeoTracking\Models\RankQueue;
 use Modules\SeoTracking\Models\Keyword;
+use Modules\SeoTracking\Models\KeywordPosition;
 use Modules\SeoTracking\Services\RankCheckerService;
 
 /**
@@ -165,6 +166,15 @@ class RankCheckController
                         'last_position' => $result['position'],
                         'last_updated_at' => date('Y-m-d H:i:s'),
                     ]);
+
+                    // Upsert snapshot giornaliero per storico posizioni
+                    $kpModel = new KeywordPosition();
+                    $kpModel->upsert([
+                        'project_id' => $projectId,
+                        'keyword_id' => $existingKeyword['id'],
+                        'date' => date('Y-m-d'),
+                        'avg_position' => $result['position'],
+                    ]);
                 }
             }
 
@@ -310,6 +320,15 @@ class RankCheckController
                             $keywordModel->update($existingKeyword['id'], [
                                 'last_position' => $result['position'],
                                 'last_updated_at' => date('Y-m-d H:i:s'),
+                            ]);
+
+                            // Upsert snapshot giornaliero per storico posizioni
+                            $kpModel = new KeywordPosition();
+                            $kpModel->upsert([
+                                'project_id' => $projectId,
+                                'keyword_id' => $existingKeyword['id'],
+                                'date' => date('Y-m-d'),
+                                'avg_position' => $result['position'],
                             ]);
                         }
                     }
@@ -964,6 +983,15 @@ class RankCheckController
                     $keywordModel->update($item['keyword_id'], [
                         'last_position' => $result['position'],
                         'last_updated_at' => date('Y-m-d H:i:s'),
+                    ]);
+
+                    // Upsert snapshot giornaliero per storico posizioni
+                    $kpModel = new KeywordPosition();
+                    $kpModel->upsert([
+                        'project_id' => $projectId,
+                        'keyword_id' => $item['keyword_id'],
+                        'date' => date('Y-m-d'),
+                        'avg_position' => $result['position'],
                     ]);
                 }
 
