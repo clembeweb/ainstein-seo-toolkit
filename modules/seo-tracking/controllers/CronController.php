@@ -45,7 +45,6 @@ class CronController
             SELECT p.id, p.name, p.gsc_connected
             FROM st_projects p
             WHERE p.gsc_connected = 1
-            AND p.deleted_at IS NULL
         ");
 
         $results = [];
@@ -125,7 +124,6 @@ class CronController
                 COUNT(*) as total_projects,
                 SUM(gsc_connected) as gsc_connected
             FROM st_projects
-            WHERE deleted_at IS NULL
         ");
 
         header('Content-Type: application/json');
@@ -170,7 +168,7 @@ class CronController
         ini_set('memory_limit', '512M');
 
         $project = Database::fetch(
-            "SELECT * FROM st_projects WHERE id = ? AND deleted_at IS NULL",
+            "SELECT * FROM st_projects WHERE id = ?",
             [$projectId]
         );
 
