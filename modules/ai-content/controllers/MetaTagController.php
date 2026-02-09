@@ -27,6 +27,7 @@ class MetaTagController
     private Project $project;
     private MetaTag $metaTag;
     private const SCRAPE_CREDIT_COST = 1;
+    private const GENERATE_CREDIT_COST = 2;
 
     public function __construct()
     {
@@ -111,6 +112,8 @@ class MetaTagController
         $filters = [
             'status' => $_GET['status'] ?? null,
             'search' => $_GET['q'] ?? null,
+            'sort' => $_GET['sort'] ?? null,
+            'dir' => $_GET['dir'] ?? null,
         ];
 
         $result = $this->metaTag->getPaginated($projectId, $page, $perPage, $filters);
@@ -747,41 +750,45 @@ class MetaTagController
         $currentTitle = $item['current_meta_title'] ?? '';
         $currentDesc = $item['current_meta_desc'] ?? '';
 
+        // Tronca contenuto per non eccedere limiti token (max ~4000 chars)
+        $contentExcerpt = mb_substr($content, 0, 4000);
+
         return <<<PROMPT
-Sei un esperto SEO specializzato nell'ottimizzazione dei meta tag.
+You are an expert SEO specialist in meta tag optimization.
 
-Analizza questa pagina e genera meta title e meta description ottimizzati per i motori di ricerca.
+## CRITICAL RULES
+1. DETECT the language of the page content below and write BOTH title and description in THAT SAME LANGUAGE.
+2. You MUST always provide both TITLE and DESCRIPTION. Never skip either one.
+3. If the content is in Italian, write in Italian. If in English, write in English. If in French, write in French. Etc.
 
-## PAGINA
+## PAGE DATA
 - URL: {$item['url']}
-- Titolo originale: {$title}
-- Meta title attuale: {$currentTitle}
-- Meta description attuale: {$currentDesc}
+- Original title: {$title}
+- Current meta title: {$currentTitle}
+- Current meta description: {$currentDesc}
 
-## CONTENUTO (estratto)
-{$content}
+## PAGE CONTENT (excerpt)
+{$contentExcerpt}
 
-## REQUISITI
+## REQUIREMENTS
 
-### META TITLE (max 60 caratteri)
-- Deve essere accattivante e includere la keyword principale
-- Deve invogliare il click sulla SERP
-- NON superare 60 caratteri (ideale 50-60)
-- Includi il brand/sito solo se necessario
+### META TITLE (max 60 characters)
+- Must be compelling and include the main keyword
+- Must encourage clicks on the SERP
+- Do NOT exceed 60 characters (ideal 50-60)
+- Include brand/site name only if relevant
 
-### META DESCRIPTION (max 155 caratteri)
-- Deve descrivere accuratamente il contenuto
-- Deve includere una call-to-action implicita
-- NON superare 155 caratteri (ideale 140-155)
-- Includi le keyword principali in modo naturale
+### META DESCRIPTION (max 155 characters)
+- Must accurately describe the content
+- Must include an implicit call-to-action
+- Do NOT exceed 155 characters (ideal 140-155)
+- Include main keywords naturally
 
-## FORMATO RISPOSTA
-Rispondi SOLO con questo formato esatto:
+## RESPONSE FORMAT
+Reply ONLY with this exact format, nothing else:
 
-TITLE: [il meta title ottimizzato]
-DESCRIPTION: [la meta description ottimizzata]
-
-Non aggiungere spiegazioni o altro testo.
+TITLE: [the optimized meta title in the page language]
+DESCRIPTION: [the optimized meta description in the page language]
 PROMPT;
     }
 
@@ -1538,6 +1545,354 @@ PROMPT;
      * POST /ai-content/projects/{id}/meta-tags/cancel-scrape-job
      */
     public function cancelScrapeJob(int $projectId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->find($projectId, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        $jobId = (int) ($_POST['job_id'] ?? 0);
+        if (!$jobId) {
+            echo json_encode(['success' => false, 'error' => 'job_id richiesto']);
+            return;
+        }
+
+        $jobModel = new ScrapeJob();
+        $job = $jobModel->findByUser($jobId, $user['id']);
+
+        if (!$job || $job['project_id'] != $projectId) {
+            echo json_encode(['success' => false, 'error' => 'Job non trovato']);
+            return;
+        }
+
+        if (!in_array($job['status'], [ScrapeJob::STATUS_PENDING, ScrapeJob::STATUS_RUNNING])) {
+            echo json_encode(['success' => false, 'error' => 'Il job non puo essere annullato']);
+            return;
+        }
+
+        $cancelled = $jobModel->cancel($jobId);
+
+        echo json_encode([
+            'success' => $cancelled,
+            'message' => $cancelled ? 'Job annullato' : 'Impossibile annullare il job',
+        ]);
+    }
+
+    // =========================================
+    // GENERATE BACKGROUND JOB PROCESSING (SSE)
+    // =========================================
+
+    /**
+     * Avvia un job di generazione AI in background
+     * POST /ai-content/projects/{id}/meta-tags/start-generate-job
+     */
+    public function startGenerateJob(int $projectId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->find($projectId, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        // Verifica che non ci sia gia un job attivo
+        $jobModel = new ScrapeJob();
+        $activeJob = $jobModel->getActiveForProject($projectId, ScrapeJob::TYPE_GENERATE);
+        if ($activeJob) {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Esiste gia un job di generazione in esecuzione',
+                'active_job_id' => $activeJob['id']
+            ]);
+            return;
+        }
+
+        // Conta URL scraped pronte per generazione
+        $stats = $this->metaTag->getStats($projectId);
+        $scrapedCount = $stats['scraped'];
+
+        if ($scrapedCount === 0) {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Nessuna URL pronta per la generazione. Esegui prima lo scraping.'
+            ]);
+            return;
+        }
+
+        // Verifica AI configurata
+        $ai = new AiService('ai-content');
+        if (!$ai->isConfigured()) {
+            echo json_encode(['success' => false, 'error' => 'AI non configurata']);
+            return;
+        }
+
+        // Verifica crediti
+        $totalCost = $scrapedCount * self::GENERATE_CREDIT_COST;
+        if (!Credits::hasEnough($user['id'], $totalCost)) {
+            echo json_encode([
+                'success' => false,
+                'error' => "Crediti insufficienti. Necessari: {$totalCost}, disponibili: " . Credits::getBalance($user['id'])
+            ]);
+            return;
+        }
+
+        // Recupera gli ID delle righe che verranno elaborate
+        $scrapedItems = $this->metaTag->getNextScraped($projectId, 500);
+        $itemIds = array_column($scrapedItems, 'id');
+
+        // Crea il job
+        $jobId = $jobModel->create([
+            'project_id' => $projectId,
+            'user_id' => $user['id'],
+            'type' => ScrapeJob::TYPE_GENERATE,
+            'items_requested' => $scrapedCount,
+        ]);
+
+        echo json_encode([
+            'success' => true,
+            'job_id' => $jobId,
+            'items_queued' => $scrapedCount,
+            'item_ids' => $itemIds,
+            'estimated_credits' => $totalCost,
+        ]);
+    }
+
+    /**
+     * SSE Stream per progress generazione AI in tempo reale
+     * GET /ai-content/projects/{id}/meta-tags/generate-stream?job_id=X
+     */
+    public function generateStream(int $projectId): void
+    {
+        $user = Auth::user();
+        if (!$user) {
+            header('HTTP/1.1 401 Unauthorized');
+            exit('Unauthorized');
+        }
+
+        $project = $this->project->find($projectId, $user['id']);
+        if (!$project) {
+            header('HTTP/1.1 404 Not Found');
+            exit('Progetto non trovato');
+        }
+
+        $jobId = (int) ($_GET['job_id'] ?? 0);
+        if (!$jobId) {
+            header('HTTP/1.1 400 Bad Request');
+            exit('job_id richiesto');
+        }
+
+        $jobModel = new ScrapeJob();
+        $job = $jobModel->findByUser($jobId, $user['id']);
+        if (!$job || $job['project_id'] != $projectId) {
+            header('HTTP/1.1 404 Not Found');
+            exit('Job non trovato');
+        }
+
+        // Setup SSE headers
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache');
+        header('Connection: keep-alive');
+        header('X-Accel-Buffering: no');
+
+        session_write_close();
+
+        $sendEvent = function (string $event, array $data) {
+            echo "event: {$event}\n";
+            echo "data: " . json_encode($data) . "\n\n";
+            if (ob_get_level() > 0) {
+                ob_flush();
+            }
+            flush();
+        };
+
+        // Avvia il job se pending
+        if ($job['status'] === ScrapeJob::STATUS_PENDING) {
+            $jobModel->start($jobId);
+            $sendEvent('started', [
+                'job_id' => $jobId,
+                'total_items' => $job['items_requested'],
+            ]);
+        }
+
+        // Setup AI
+        $ai = new AiService('ai-content');
+        $completed = 0;
+        $failed = 0;
+        $creditsUsed = 0;
+
+        while (true) {
+            Database::reconnect();
+
+            // Verifica cancellazione
+            if ($jobModel->isCancelled($jobId)) {
+                $sendEvent('cancelled', [
+                    'job_id' => $jobId,
+                    'completed' => $completed,
+                    'message' => 'Job annullato dall\'utente',
+                ]);
+                break;
+            }
+
+            // Prossimo item scraped
+            $scraped = $this->metaTag->getNextScraped($projectId, 1);
+
+            if (empty($scraped)) {
+                $jobModel->complete($jobId);
+                $sendEvent('completed', [
+                    'job_id' => $jobId,
+                    'total_completed' => $completed,
+                    'total_failed' => $failed,
+                    'credits_used' => $creditsUsed,
+                ]);
+                break;
+            }
+
+            $item = $scraped[0];
+
+            $jobModel->updateProgress($jobId, [
+                'current_item_id' => $item['id'],
+                'current_item' => $item['url'],
+            ]);
+
+            $sendEvent('progress', [
+                'job_id' => $jobId,
+                'current_url' => $item['url'],
+                'current_id' => $item['id'],
+                'completed' => $completed,
+                'total' => $job['items_requested'],
+                'percent' => $job['items_requested'] > 0 ? round(($completed / $job['items_requested']) * 100) : 0,
+            ]);
+
+            try {
+                $prompt = $this->buildMetaTagPrompt($item);
+
+                $result = $ai->analyze($user['id'], $prompt, '', 'ai-content', [
+                    'skip_credits' => true,
+                ]);
+
+                Database::reconnect();
+
+                if (isset($result['error'])) {
+                    $this->metaTag->markGenerationError($item['id'], $result['message'] ?? 'AI error');
+                    $jobModel->incrementFailed($jobId);
+                    $failed++;
+
+                    $sendEvent('item_error', [
+                        'id' => $item['id'],
+                        'url' => $item['url'],
+                        'error' => $result['message'] ?? 'AI error',
+                    ]);
+                    continue;
+                }
+
+                $parsed = $this->parseMetaTagResponse($result['result'] ?? '');
+
+                if (empty($parsed['title']) && empty($parsed['description'])) {
+                    $this->metaTag->markGenerationError($item['id'], 'Risposta AI non valida');
+                    $jobModel->incrementFailed($jobId);
+                    $failed++;
+
+                    $sendEvent('item_error', [
+                        'id' => $item['id'],
+                        'url' => $item['url'],
+                        'error' => 'Risposta AI non valida',
+                    ]);
+                    continue;
+                }
+
+                $this->metaTag->updateGeneratedData($item['id'], $parsed['title'], $parsed['description']);
+
+                Credits::consume($user['id'], self::GENERATE_CREDIT_COST, 'meta_generate', 'ai-content', [
+                    'project_id' => $projectId,
+                    'meta_tag_id' => $item['id'],
+                    'job_id' => $jobId,
+                ]);
+
+                $completed++;
+                $creditsUsed += self::GENERATE_CREDIT_COST;
+                $jobModel->incrementCompleted($jobId);
+                $jobModel->addCreditsUsed($jobId, self::GENERATE_CREDIT_COST);
+
+                $sendEvent('item_completed', [
+                    'id' => $item['id'],
+                    'url' => $item['url'],
+                    'generated_title' => $parsed['title'],
+                    'generated_desc' => $parsed['description'],
+                    'title_length' => mb_strlen($parsed['title']),
+                    'desc_length' => mb_strlen($parsed['description']),
+                    'credits_remaining' => Credits::getBalance($user['id']),
+                ]);
+
+            } catch (\Exception $e) {
+                Database::reconnect();
+
+                $this->metaTag->markGenerationError($item['id'], $e->getMessage());
+                $jobModel->incrementFailed($jobId);
+                $failed++;
+
+                $sendEvent('item_error', [
+                    'id' => $item['id'],
+                    'url' => $item['url'],
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            // Pausa tra le chiamate AI
+            usleep(500000); // 500ms
+        }
+
+        exit;
+    }
+
+    /**
+     * Polling fallback per status job generazione
+     * GET /ai-content/projects/{id}/meta-tags/generate-job-status?job_id=X
+     */
+    public function generateJobStatus(int $projectId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->find($projectId, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        $jobId = (int) ($_GET['job_id'] ?? 0);
+        if (!$jobId) {
+            echo json_encode(['success' => false, 'error' => 'job_id richiesto']);
+            return;
+        }
+
+        $jobModel = new ScrapeJob();
+        $job = $jobModel->findByUser($jobId, $user['id']);
+
+        if (!$job || $job['project_id'] != $projectId) {
+            echo json_encode(['success' => false, 'error' => 'Job non trovato']);
+            return;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'job' => $jobModel->getJobResponse($jobId),
+        ]);
+    }
+
+    /**
+     * Annulla job di generazione
+     * POST /ai-content/projects/{id}/meta-tags/cancel-generate-job
+     */
+    public function cancelGenerateJob(int $projectId): void
     {
         header('Content-Type: application/json');
 

@@ -1,6 +1,6 @@
 # AINSTEIN - Stato Progetto
 
-**Ultimo aggiornamento:** 2026-02-06
+**Ultimo aggiornamento:** 2026-02-10
 **Ambiente produzione:** https://ainstein.it
 **Repository:** https://github.com/clembeweb/ainstein-seo-toolkit.git
 
@@ -32,7 +32,7 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 
 ---
 
-## STATO MODULI (Aggiornato 06 Feb 2026)
+## STATO MODULI (Aggiornato 10 Feb 2026)
 
 | Modulo | Slug | Stato Base | Stato AI | % Totale |
 |--------|------|------------|----------|----------|
@@ -74,6 +74,14 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 ---
 
 ## COMPLETATI RECENTEMENTE
+
+### 2026-02-10
+- [x] **Meta Tag Generation SSE** - Generazione meta tag con streaming SSE e feedback inline row-by-row (`ai-content`)
+- [x] Rilevamento automatico lingua pagina: meta tag generati nella lingua del contenuto
+- [x] Fix descrizioni mancanti: prompt AI rinforzato per generare sempre title + description
+- [x] Colonne ordinabili nella tabella meta tags (URL, Meta Title, Meta Description, Stato)
+- [x] Barra progresso real-time con pulsante annulla (no modal bloccante)
+- [x] 4 nuovi endpoint: startGenerateJob, generateStream, generateJobStatus, cancelGenerateJob
 
 ### 2026-02-06
 - [x] **Cover Image Generation** - Generazione immagine di copertina via DALL-E 3 per articoli (`ai-content`)
@@ -209,10 +217,10 @@ ainstein-seo-toolkit/
 
 | Aspetto | Dettaglio |
 |---------|-----------|
-| **Data** | 2026-02-06 |
-| **Modifiche principali** | Cover image DALL-E 3 per ai-content (auto + manual), AI Keyword Research module |
-| **Migration** | `007_add_cover_image.sql` - cover_image_path, generate_cover, step ENUM 'cover' |
-| **File nuovi** | CoverImageService.php, storage/images/covers/.htaccess + keyword-research (20 file) |
+| **Data** | 2026-02-10 |
+| **Modifiche principali** | Meta tag generation SSE inline, language detection, sortable columns |
+| **Migration** | Nessuna (riusa tabella `aic_scrape_jobs` con type='generate') |
+| **File modificati** | MetaTagController.php, MetaTag.php, routes.php, list.php |
 
 ---
 

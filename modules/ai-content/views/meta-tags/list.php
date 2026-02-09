@@ -1,7 +1,31 @@
 <?php
 /**
- * Lista Meta Tags con filtri e azioni bulk
+ * Lista Meta Tags con filtri, colonne ordinabili e generazione inline SSE
  */
+
+$currentSort = $filters['sort'] ?? 'created_at';
+$currentDir = $filters['dir'] ?? 'desc';
+
+// Helper per generare URL di ordinamento
+$sortUrl = function(string $column) use ($currentSort, $currentDir, $filters, $project, $pagination) {
+    $newDir = ($currentSort === $column && $currentDir === 'asc') ? 'desc' : 'asc';
+    $params = ['sort' => $column, 'dir' => $newDir];
+    if (!empty($filters['status'])) $params['status'] = $filters['status'];
+    if (!empty($filters['search'])) $params['q'] = $filters['search'];
+    if (($pagination['current_page'] ?? 1) > 1) $params['page'] = $pagination['current_page'];
+    return url("/ai-content/projects/{$project['id']}/meta-tags/list") . '?' . http_build_query($params);
+};
+
+// Helper per icona freccia ordinamento
+$sortIcon = function(string $column) use ($currentSort, $currentDir) {
+    if ($currentSort !== $column) {
+        return '<svg class="w-3 h-3 ml-1 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>';
+    }
+    if ($currentDir === 'asc') {
+        return '<svg class="w-3 h-3 ml-1 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>';
+    }
+    return '<svg class="w-3 h-3 ml-1 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
+};
 ?>
 
 <?php include __DIR__ . '/../partials/project-nav.php'; ?>
@@ -18,7 +42,7 @@
         <div class="flex items-center gap-2">
             <button type="button"
                     @click="runScrape()"
-                    :disabled="loading"
+                    :disabled="loading || generating"
                     class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50">
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -26,15 +50,53 @@
                 Scrape (<?= $stats['pending'] ?>)
             </button>
             <button type="button"
-                    @click="runGenerate()"
-                    :disabled="loading"
-                    class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50">
+                    @click="startGenerate()"
+                    :disabled="loading || generating"
+                    x-show="!generating"
+                    class="inline-flex items-center px-3 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors disabled:opacity-50">
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                 </svg>
-                Genera (<?= $stats['scraped'] ?>)
+                Genera AI (<?= $stats['scraped'] ?>)
+            </button>
+            <!-- Pulsante annulla durante generazione -->
+            <button type="button"
+                    @click="cancelGenerate()"
+                    x-show="generating" x-cloak
+                    class="inline-flex items-center px-3 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                Annulla generazione
             </button>
         </div>
+    </div>
+
+    <!-- Progress bar generazione inline (non modal) -->
+    <div x-show="generating" x-cloak x-transition
+         class="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-primary-600 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-sm font-medium text-primary-700 dark:text-primary-300">
+                    Generazione AI in corso...
+                </span>
+            </div>
+            <span class="text-sm text-primary-600 dark:text-primary-400">
+                <span x-text="genCompleted"></span>/<span x-text="genTotal"></span>
+                <template x-if="genFailed > 0">
+                    <span class="text-red-500 ml-2">(<span x-text="genFailed"></span> errori)</span>
+                </template>
+            </span>
+        </div>
+        <div class="w-full bg-primary-200 dark:bg-primary-800 rounded-full h-2">
+            <div class="bg-primary-600 h-2 rounded-full transition-all duration-300"
+                 :style="'width: ' + genPercent + '%'"></div>
+        </div>
+        <p class="text-xs text-primary-500 dark:text-primary-400 mt-1 truncate" x-text="genCurrentUrl"></p>
     </div>
 
     <!-- Filtri -->
@@ -58,6 +120,10 @@
                     <option value="error" <?= ($filters['status'] ?? '') === 'error' ? 'selected' : '' ?>>Errori</option>
                 </select>
             </div>
+            <?php if (!empty($filters['sort'])): ?>
+            <input type="hidden" name="sort" value="<?= e($filters['sort']) ?>">
+            <input type="hidden" name="dir" value="<?= e($filters['dir'] ?? 'desc') ?>">
+            <?php endif; ?>
             <button type="submit" class="px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors">
                 Filtra
             </button>
@@ -118,16 +184,40 @@
                         <th class="w-10 px-4 py-3">
                             <input type="checkbox" @change="toggleAll($event)" class="rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
                         </th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">URL / Titolo</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Meta Title</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Meta Description</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stato</th>
+                        <th class="px-4 py-3 text-left">
+                            <a href="<?= $sortUrl('url') ?>" class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200">
+                                URL / Titolo <?= $sortIcon('url') ?>
+                            </a>
+                        </th>
+                        <th class="px-4 py-3 text-left">
+                            <a href="<?= $sortUrl('generated_title') ?>" class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200">
+                                Meta Title <?= $sortIcon('generated_title') ?>
+                            </a>
+                        </th>
+                        <th class="px-4 py-3 text-left">
+                            <a href="<?= $sortUrl('generated_desc') ?>" class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200">
+                                Meta Description <?= $sortIcon('generated_desc') ?>
+                            </a>
+                        </th>
+                        <th class="px-4 py-3 text-left">
+                            <a href="<?= $sortUrl('status') ?>" class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200">
+                                Stato <?= $sortIcon('status') ?>
+                            </a>
+                        </th>
                         <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Azioni</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <?php foreach ($metaTags as $item): ?>
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                    <tr class="transition-colors duration-300"
+                        :class="{
+                            'bg-amber-50/50 dark:bg-amber-900/10': rowStates[<?= $item['id'] ?>] === 'queued',
+                            'bg-primary-50/50 dark:bg-primary-900/10': rowStates[<?= $item['id'] ?>] === 'processing',
+                            'bg-emerald-50/50 dark:bg-emerald-900/10': rowStates[<?= $item['id'] ?>] === 'done',
+                            'bg-red-50/50 dark:bg-red-900/10': rowStates[<?= $item['id'] ?>] === 'error',
+                            'hover:bg-slate-50 dark:hover:bg-slate-700/50': !rowStates[<?= $item['id'] ?>]
+                        }"
+                        id="row-<?= $item['id'] ?>">
                         <td class="px-4 py-3">
                             <input type="checkbox" value="<?= $item['id'] ?>" x-model="selectedIds" class="rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
                         </td>
@@ -143,56 +233,105 @@
                                 </a>
                             </div>
                         </td>
-                        <td class="px-4 py-3">
-                            <?php if ($item['generated_title']): ?>
-                            <div class="max-w-xs">
-                                <p class="text-sm text-slate-900 dark:text-white truncate"><?= e($item['generated_title']) ?></p>
-                                <p class="text-xs text-slate-500 dark:text-slate-400"><?= strlen($item['generated_title']) ?> caratteri</p>
-                            </div>
-                            <?php else: ?>
-                            <span class="text-sm text-slate-400 dark:text-slate-500">-</span>
-                            <?php endif; ?>
+                        <!-- Meta Title - aggiornato inline via SSE -->
+                        <td class="px-4 py-3" id="title-<?= $item['id'] ?>">
+                            <template x-if="rowStates[<?= $item['id'] ?>] === 'processing'">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-primary-500 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span class="text-sm text-primary-600 dark:text-primary-400 italic">Generazione in corso...</span>
+                                </div>
+                            </template>
+                            <template x-if="rowStates[<?= $item['id'] ?>] === 'queued'">
+                                <span class="text-sm text-amber-600 dark:text-amber-400 italic">In coda...</span>
+                            </template>
+                            <template x-if="generatedData[<?= $item['id'] ?>]?.title">
+                                <div class="max-w-xs">
+                                    <p class="text-sm text-slate-900 dark:text-white truncate" x-text="generatedData[<?= $item['id'] ?>].title"></p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400"><span x-text="generatedData[<?= $item['id'] ?>].title_length"></span> caratteri</p>
+                                </div>
+                            </template>
+                            <template x-if="!rowStates[<?= $item['id'] ?>] && !generatedData[<?= $item['id'] ?>]?.title">
+                                <?php if ($item['generated_title']): ?>
+                                <div class="max-w-xs">
+                                    <p class="text-sm text-slate-900 dark:text-white truncate"><?= e($item['generated_title']) ?></p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400"><?= mb_strlen($item['generated_title']) ?> caratteri</p>
+                                </div>
+                                <?php else: ?>
+                                <span class="text-sm text-slate-400 dark:text-slate-500">-</span>
+                                <?php endif; ?>
+                            </template>
                         </td>
-                        <td class="px-4 py-3">
-                            <?php if ($item['generated_desc']): ?>
-                            <div class="max-w-sm">
-                                <p class="text-sm text-slate-900 dark:text-white line-clamp-2"><?= e($item['generated_desc']) ?></p>
-                                <p class="text-xs text-slate-500 dark:text-slate-400"><?= strlen($item['generated_desc']) ?> caratteri</p>
-                            </div>
-                            <?php else: ?>
-                            <span class="text-sm text-slate-400 dark:text-slate-500">-</span>
-                            <?php endif; ?>
+                        <!-- Meta Description - aggiornato inline via SSE -->
+                        <td class="px-4 py-3" id="desc-<?= $item['id'] ?>">
+                            <template x-if="rowStates[<?= $item['id'] ?>] === 'processing'">
+                                <span class="text-sm text-primary-400 italic">...</span>
+                            </template>
+                            <template x-if="rowStates[<?= $item['id'] ?>] === 'queued'">
+                                <span class="text-sm text-amber-400 italic">...</span>
+                            </template>
+                            <template x-if="rowStates[<?= $item['id'] ?>] === 'error'">
+                                <span class="text-sm text-red-500" x-text="rowErrors[<?= $item['id'] ?>] || 'Errore'"></span>
+                            </template>
+                            <template x-if="generatedData[<?= $item['id'] ?>]?.desc">
+                                <div class="max-w-sm">
+                                    <p class="text-sm text-slate-900 dark:text-white line-clamp-2" x-text="generatedData[<?= $item['id'] ?>].desc"></p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400"><span x-text="generatedData[<?= $item['id'] ?>].desc_length"></span> caratteri</p>
+                                </div>
+                            </template>
+                            <template x-if="!rowStates[<?= $item['id'] ?>] && !generatedData[<?= $item['id'] ?>]?.desc">
+                                <?php if ($item['generated_desc']): ?>
+                                <div class="max-w-sm">
+                                    <p class="text-sm text-slate-900 dark:text-white line-clamp-2"><?= e($item['generated_desc']) ?></p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400"><?= mb_strlen($item['generated_desc']) ?> caratteri</p>
+                                </div>
+                                <?php else: ?>
+                                <span class="text-sm text-slate-400 dark:text-slate-500">-</span>
+                                <?php endif; ?>
+                            </template>
                         </td>
-                        <td class="px-4 py-3">
-                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
-                                <?php
-                                switch ($item['status']) {
-                                    case 'pending':
-                                        echo 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400';
-                                        break;
-                                    case 'scraped':
-                                        echo 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300';
-                                        break;
-                                    case 'generated':
-                                        echo 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300';
-                                        break;
-                                    case 'approved':
-                                        echo 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300';
-                                        break;
-                                    case 'published':
-                                        echo 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300';
-                                        break;
-                                    case 'error':
-                                        echo 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300';
-                                        break;
-                                }
-                                ?>">
-                                <?= ucfirst($item['status']) ?>
-                            </span>
+                        <!-- Stato -->
+                        <td class="px-4 py-3" id="status-<?= $item['id'] ?>">
+                            <template x-if="generatedData[<?= $item['id'] ?>]?.status">
+                                <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full"
+                                      :class="{
+                                          'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300': generatedData[<?= $item['id'] ?>].status === 'generated',
+                                          'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300': generatedData[<?= $item['id'] ?>].status === 'error'
+                                      }"
+                                      x-text="generatedData[<?= $item['id'] ?>].status === 'generated' ? 'Generated' : 'Error'"></span>
+                            </template>
+                            <template x-if="!generatedData[<?= $item['id'] ?>]?.status">
+                                <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
+                                    <?php
+                                    switch ($item['status']) {
+                                        case 'pending':
+                                            echo 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400';
+                                            break;
+                                        case 'scraped':
+                                            echo 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300';
+                                            break;
+                                        case 'generated':
+                                            echo 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300';
+                                            break;
+                                        case 'approved':
+                                            echo 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300';
+                                            break;
+                                        case 'published':
+                                            echo 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300';
+                                            break;
+                                        case 'error':
+                                            echo 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300';
+                                            break;
+                                    }
+                                    ?>">
+                                    <?= ucfirst($item['status']) ?>
+                                </span>
+                            </template>
                         </td>
                         <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-1">
-                                <!-- Edit/Preview -->
                                 <a href="<?= url("/ai-content/projects/{$project['id']}/meta-tags/{$item['id']}") ?>"
                                    class="p-2 rounded-lg text-slate-500 hover:text-primary-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                                    title="Modifica">
@@ -200,7 +339,6 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                 </a>
-                                <!-- View URL -->
                                 <a href="<?= e($item['url']) ?>" target="_blank" rel="noopener"
                                    class="p-2 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                                    title="Apri URL">
@@ -209,7 +347,6 @@
                                     </svg>
                                 </a>
                                 <?php if ($item['status'] === 'generated' || $item['status'] === 'error'): ?>
-                                <!-- Approve -->
                                 <button type="button"
                                         @click="approveOne(<?= $item['id'] ?>)"
                                         class="p-2 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
@@ -220,7 +357,6 @@
                                 </button>
                                 <?php endif; ?>
                                 <?php if ($item['status'] === 'approved' && $item['wp_post_id']): ?>
-                                <!-- Publish -->
                                 <button type="button"
                                         @click="publishOne(<?= $item['id'] ?>)"
                                         class="p-2 rounded-lg text-slate-500 hover:text-green-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
@@ -230,7 +366,6 @@
                                     </svg>
                                 </button>
                                 <?php endif; ?>
-                                <!-- Delete -->
                                 <button type="button"
                                         @click="confirmDelete(<?= $item['id'] ?>, '<?= e(addslashes($item['url'])) ?>')"
                                         class="p-2 rounded-lg text-slate-500 hover:text-red-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
@@ -254,14 +389,22 @@
                 Mostrando <?= $pagination['from'] ?> - <?= $pagination['to'] ?> di <?= $pagination['total'] ?>
             </p>
             <div class="flex items-center gap-2">
+                <?php
+                $paginationParams = [];
+                if (!empty($filters['status'])) $paginationParams['status'] = $filters['status'];
+                if (!empty($filters['search'])) $paginationParams['q'] = $filters['search'];
+                if (!empty($filters['sort'])) $paginationParams['sort'] = $filters['sort'];
+                if (!empty($filters['dir'])) $paginationParams['dir'] = $filters['dir'];
+                $paginationQuery = $paginationParams ? '&' . http_build_query($paginationParams) : '';
+                ?>
                 <?php if ($pagination['current_page'] > 1): ?>
-                <a href="?page=<?= $pagination['current_page'] - 1 ?><?= !empty($filters['status']) ? '&status=' . e($filters['status']) : '' ?><?= !empty($filters['search']) ? '&q=' . e($filters['search']) : '' ?>"
+                <a href="?page=<?= $pagination['current_page'] - 1 ?><?= $paginationQuery ?>"
                    class="px-3 py-1 rounded border border-slate-300 dark:border-slate-600 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700">
                     Precedente
                 </a>
                 <?php endif; ?>
                 <?php if ($pagination['current_page'] < $pagination['last_page']): ?>
-                <a href="?page=<?= $pagination['current_page'] + 1 ?><?= !empty($filters['status']) ? '&status=' . e($filters['status']) : '' ?><?= !empty($filters['search']) ? '&q=' . e($filters['search']) : '' ?>"
+                <a href="?page=<?= $pagination['current_page'] + 1 ?><?= $paginationQuery ?>"
                    class="px-3 py-1 rounded border border-slate-300 dark:border-slate-600 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700">
                     Successivo
                 </a>
@@ -322,6 +465,19 @@ function metaTagsList() {
         deleteUrl: '',
         deleting: false,
 
+        // Generazione SSE
+        generating: false,
+        generateJobId: null,
+        genTotal: 0,
+        genCompleted: 0,
+        genFailed: 0,
+        genPercent: 0,
+        genCurrentUrl: '',
+        eventSource: null,
+        rowStates: {},      // {id: 'queued'|'processing'|'done'|'error'}
+        rowErrors: {},      // {id: 'error message'}
+        generatedData: {},  // {id: {title, desc, title_length, desc_length, status}}
+
         toggleAll(event) {
             if (event.target.checked) {
                 this.selectedIds = <?= json_encode(array_map(fn($i) => (string)$i['id'], $metaTags)) ?>;
@@ -329,6 +485,186 @@ function metaTagsList() {
                 this.selectedIds = [];
             }
         },
+
+        // =====================
+        // GENERAZIONE SSE
+        // =====================
+
+        async startGenerate() {
+            this.generating = true;
+            this.genCompleted = 0;
+            this.genFailed = 0;
+            this.genPercent = 0;
+            this.genCurrentUrl = 'Avvio...';
+            this.rowStates = {};
+            this.rowErrors = {};
+            this.generatedData = {};
+
+            try {
+                const formData = new FormData();
+                formData.append('_csrf_token', '<?= csrf_token() ?>');
+
+                const resp = await fetch('<?= url("/ai-content/projects/{$project['id']}/meta-tags/start-generate-job") ?>', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await resp.json();
+
+                if (!data.success) {
+                    alert(data.error || 'Errore avvio generazione');
+                    this.generating = false;
+                    return;
+                }
+
+                this.generateJobId = data.job_id;
+                this.genTotal = data.items_queued;
+
+                // Marca le righe in coda
+                if (data.item_ids) {
+                    data.item_ids.forEach(id => {
+                        this.rowStates[id] = 'queued';
+                    });
+                }
+
+                this.connectGenerateSSE();
+
+            } catch (error) {
+                alert('Errore di connessione');
+                this.generating = false;
+            }
+        },
+
+        connectGenerateSSE() {
+            const url = `<?= url("/ai-content/projects/{$project['id']}/meta-tags/generate-stream") ?>?job_id=${this.generateJobId}`;
+            this.eventSource = new EventSource(url);
+
+            this.eventSource.addEventListener('started', (e) => {
+                const data = JSON.parse(e.data);
+                this.genTotal = data.total_items;
+            });
+
+            this.eventSource.addEventListener('progress', (e) => {
+                const data = JSON.parse(e.data);
+                this.genCurrentUrl = data.current_url;
+                this.genPercent = data.percent;
+
+                // Marca la riga corrente come "processing"
+                if (data.current_id) {
+                    this.rowStates[data.current_id] = 'processing';
+                }
+            });
+
+            this.eventSource.addEventListener('item_completed', (e) => {
+                const data = JSON.parse(e.data);
+                this.genCompleted++;
+                this.genPercent = this.genTotal > 0 ? Math.round((this.genCompleted / this.genTotal) * 100) : 0;
+
+                // Aggiorna riga inline
+                this.rowStates[data.id] = 'done';
+                this.generatedData[data.id] = {
+                    title: data.generated_title,
+                    desc: data.generated_desc,
+                    title_length: data.title_length,
+                    desc_length: data.desc_length,
+                    status: 'generated'
+                };
+
+                // Flash verde poi rimuovi lo stato dopo 3 secondi
+                setTimeout(() => {
+                    if (this.rowStates[data.id] === 'done') {
+                        delete this.rowStates[data.id];
+                    }
+                }, 3000);
+            });
+
+            this.eventSource.addEventListener('item_error', (e) => {
+                const data = JSON.parse(e.data);
+                this.genFailed++;
+
+                this.rowStates[data.id] = 'error';
+                this.rowErrors[data.id] = data.error;
+                this.generatedData[data.id] = { status: 'error' };
+            });
+
+            this.eventSource.addEventListener('completed', (e) => {
+                const data = JSON.parse(e.data);
+                this.eventSource.close();
+                this.generating = false;
+                this.genPercent = 100;
+                this.genCurrentUrl = 'Completato!';
+
+                // Pulisci stati "queued" rimasti
+                Object.keys(this.rowStates).forEach(id => {
+                    if (this.rowStates[id] === 'queued') {
+                        delete this.rowStates[id];
+                    }
+                });
+            });
+
+            this.eventSource.addEventListener('cancelled', (e) => {
+                this.eventSource.close();
+                this.generating = false;
+                this.genCurrentUrl = 'Annullato';
+
+                // Pulisci stati "queued" rimasti
+                Object.keys(this.rowStates).forEach(id => {
+                    if (this.rowStates[id] === 'queued' || this.rowStates[id] === 'processing') {
+                        delete this.rowStates[id];
+                    }
+                });
+            });
+
+            this.eventSource.onerror = () => {
+                this.eventSource.close();
+                this.startGeneratePolling();
+            };
+        },
+
+        async startGeneratePolling() {
+            if (!this.generating) return;
+
+            try {
+                const resp = await fetch(`<?= url("/ai-content/projects/{$project['id']}/meta-tags/generate-job-status") ?>?job_id=${this.generateJobId}`);
+                const data = await resp.json();
+
+                if (data.success && data.job) {
+                    this.genCompleted = data.job.items_completed;
+                    this.genFailed = data.job.items_failed;
+                    this.genPercent = data.job.progress;
+
+                    if (data.job.status === 'completed' || data.job.status === 'error' || data.job.status === 'cancelled') {
+                        this.generating = false;
+                        this.genCurrentUrl = data.job.status === 'completed' ? 'Completato!' : 'Terminato';
+                        return;
+                    }
+                }
+
+                setTimeout(() => this.startGeneratePolling(), 2000);
+            } catch (error) {
+                setTimeout(() => this.startGeneratePolling(), 3000);
+            }
+        },
+
+        async cancelGenerate() {
+            if (!this.generateJobId) return;
+
+            try {
+                const formData = new FormData();
+                formData.append('_csrf_token', '<?= csrf_token() ?>');
+                formData.append('job_id', this.generateJobId);
+
+                await fetch('<?= url("/ai-content/projects/{$project['id']}/meta-tags/cancel-generate-job") ?>', {
+                    method: 'POST',
+                    body: formData
+                });
+            } catch (error) {
+                // SSE gestira l'evento cancelled
+            }
+        },
+
+        // =====================
+        // AZIONI ESISTENTI
+        // =====================
 
         confirmDelete(id, url) {
             this.deleteId = id;
@@ -382,32 +718,12 @@ function metaTagsList() {
             this.loading = false;
         },
 
-        async runGenerate() {
-            this.loading = true;
-            try {
-                const formData = new FormData();
-                formData.append('_csrf_token', '<?= csrf_token() ?>');
-                formData.append('batch_size', '10');
-
-                const response = await fetch('<?= url("/ai-content/projects/{$project['id']}/meta-tags/generate") ?>', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                alert(data.success ? data.message : 'Errore: ' + data.error);
-                if (data.success) location.reload();
-            } catch (error) {
-                alert('Errore di connessione');
-            }
-            this.loading = false;
-        },
-
         async approveOne(id) {
             try {
                 const formData = new FormData();
                 formData.append('_csrf_token', '<?= csrf_token() ?>');
 
-                const response = await fetch(`/ai-content/projects/<?= $project['id'] ?>/meta-tags/${id}/approve`, {
+                const response = await fetch(`<?= url("/ai-content/projects/{$project['id']}/meta-tags") ?>/${id}/approve`, {
                     method: 'POST',
                     body: formData
                 });
@@ -427,7 +743,7 @@ function metaTagsList() {
                 const formData = new FormData();
                 formData.append('_csrf_token', '<?= csrf_token() ?>');
 
-                const response = await fetch(`/ai-content/projects/<?= $project['id'] ?>/meta-tags/${id}/publish`, {
+                const response = await fetch(`<?= url("/ai-content/projects/{$project['id']}/meta-tags") ?>/${id}/publish`, {
                     method: 'POST',
                     body: formData
                 });

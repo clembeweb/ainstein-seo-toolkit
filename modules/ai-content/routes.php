@@ -876,6 +876,35 @@ Router::post('/ai-content/projects/{id}/meta-tags/cancel-scrape-job', function (
     return $controller->cancelScrapeJob((int) $id);
 });
 
+// Avvia job di generazione AI in background
+Router::post('/ai-content/projects/{id}/meta-tags/start-generate-job', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->startGenerateJob((int) $id);
+});
+
+// SSE Stream per progress generazione AI real-time
+Router::get('/ai-content/projects/{id}/meta-tags/generate-stream', function ($id) {
+    $controller = new MetaTagController();
+    return $controller->generateStream((int) $id);
+});
+
+// Polling fallback per status job generazione
+Router::get('/ai-content/projects/{id}/meta-tags/generate-job-status', function ($id) {
+    Middleware::auth();
+    $controller = new MetaTagController();
+    return $controller->generateJobStatus((int) $id);
+});
+
+// Annulla job di generazione
+Router::post('/ai-content/projects/{id}/meta-tags/cancel-generate-job', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new MetaTagController();
+    return $controller->cancelGenerateJob((int) $id);
+});
+
 // ============================================
 // META TAGS - ROUTES CON WILDCARD {tagId}
 // IMPORTANTE: Queste routes devono stare DOPO le routes specifiche!

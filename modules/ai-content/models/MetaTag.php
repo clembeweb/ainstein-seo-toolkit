@@ -104,13 +104,18 @@ class MetaTag
         $countStmt->execute($params);
         $total = (int) $countStmt->fetchColumn();
 
+        // Ordinamento
+        $allowedSort = ['url', 'original_title', 'generated_title', 'generated_desc', 'status', 'created_at', 'scraped_word_count'];
+        $sortBy = in_array($filters['sort'] ?? '', $allowedSort) ? $filters['sort'] : 'created_at';
+        $sortDir = (strtolower($filters['dir'] ?? '') === 'asc') ? 'ASC' : 'DESC';
+
         // Fetch con LIMIT/OFFSET
         $params[] = $perPage;
         $params[] = $offset;
 
         $sql = "SELECT * FROM {$this->table}
                 WHERE {$whereClause}
-                ORDER BY created_at DESC
+                ORDER BY {$sortBy} {$sortDir}
                 LIMIT ? OFFSET ?";
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);

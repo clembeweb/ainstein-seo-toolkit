@@ -1,6 +1,6 @@
 # AGENTE: AI SEO Content Generator
 
-> **Ultimo aggiornamento:** 2026-02-09
+> **Ultimo aggiornamento:** 2026-02-10
 
 ## CONTESTO
 
@@ -90,11 +90,33 @@ File: `views/partials/project-nav.php`
 ### 3. Modalita META-TAG (Bulk meta generation)
 1. **Import URL** - Da CSV, sitemap, manuale o **WordPress diretto**
 2. **Scrape** - Estrazione contenuto pagine (saltato per import WordPress)
-3. **Generazione** - Creazione meta title/description con AI
+3. **Generazione SSE** - Creazione meta title/description con AI via SSE streaming (feedback inline row-by-row)
 4. **Approvazione** - Review e modifica manuale
 5. **Pubblicazione** - Sync su WordPress via REST API
 
 Include integrazione WordPress per importazione e pubblicazione diretta.
+
+#### Generazione AI con SSE (Background Job)
+La generazione meta tag usa il pattern background job con SSE:
+- `startGenerateJob()` - Crea job `aic_scrape_jobs` con `type='generate'`, ritorna `job_id` + `item_ids`
+- `generateStream()` - SSE real-time, processa un item alla volta, invia eventi con title/description generati
+- `generateJobStatus()` - Polling fallback
+- `cancelGenerateJob()` - Annulla job in corso
+
+**Feedback inline sulla tabella (no modal bloccante):**
+- Righe "in coda" → sfondo ambra, testo "In coda..."
+- Riga in elaborazione → spinner animato, "Generazione in corso..."
+- Riga completata → flash verde, title/desc appaiono in-place
+- Riga errore → sfondo rosso con messaggio
+- Barra progresso in header con contatore e pulsante "Annulla"
+
+**Rilevamento lingua automatico:** il prompt AI rileva la lingua del contenuto e genera meta tag nella stessa lingua.
+
+#### Colonne ordinabili
+La tabella meta tags supporta ordinamento server-side:
+- Colonne: URL, Meta Title, Meta Description, Stato
+- Click su header → toggle asc/desc con freccia indicatore
+- Parametri `sort` e `dir` preservati nei filtri e paginazione
 
 #### Import WordPress Diretto (skip scraping)
 Quando le pagine vengono importate da un sito WordPress collegato:
@@ -201,7 +223,7 @@ modules/ai-content/
 | `aic_queue` | Coda keyword per AUTO mode |
 | `aic_internal_links_pool` | Pool link interni per progetto |
 | `aic_meta_tags` | URL e meta tag per META-TAG mode |
-| `aic_scrape_jobs` | Job background per scraping meta tags |
+| `aic_scrape_jobs` | Job background per scraping e generazione meta tags (type: scrape/generate) |
 | `aic_wp_sites` | Siti WordPress collegati (globale) |
 | `aic_wp_publish_log` | Log pubblicazioni |
 
@@ -261,6 +283,9 @@ GET  /ai-content/jobs                      → JobController@index
 - Refactoring completo UI con dashboard tabbed per tipo progetto
 
 **Feature recenti (Feb 2026):**
+- Generazione meta tag con SSE streaming + feedback inline row-by-row (no modal bloccante)
+- Rilevamento automatico lingua pagina per meta tag nella lingua corretta
+- Colonne ordinabili nella tabella meta tags (sort server-side)
 - Generazione immagine di copertina via DALL-E 3 (opzionale, 3 crediti)
 - Toggle copertina in settings AUTO e wizard MANUAL
 - Rigenera/Rimuovi copertina dalla vista articolo
