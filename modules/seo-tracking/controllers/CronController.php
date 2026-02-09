@@ -58,17 +58,20 @@ class CronController
                 'gsc' => null
             ];
 
-            // Sync GSC (ultimi 5 giorni per compensare delay)
+            // Sync GSC solo keyword tracciate (leggero, no bulk)
             if ($project['gsc_connected']) {
                 try {
                     $gscService = new GscService();
-                    $endDate = date('Y-m-d', strtotime('-3 days'));
-                    $startDate = date('Y-m-d', strtotime('-7 days')); // 5 giorni di dati
-
-                    $count = $gscService->syncDateRange($project['id'], $startDate, $endDate);
-                    $result['gsc'] = ['success' => true, 'records' => $count];
+                    $syncResult = $gscService->syncTrackedKeywordsOnly($project['id']);
+                    $result['gsc'] = [
+                        'success' => true,
+                        'keywords_processed' => $syncResult['keywords_processed'],
+                        'keywords_updated' => $syncResult['keywords_updated'],
+                        'gsc_records' => $syncResult['gsc_records'] ?? 0,
+                    ];
 
                     // Aggiorna timestamp
+                    Database::reconnect();
                     Database::execute(
                         "UPDATE st_projects SET last_sync_at = NOW(), sync_status = 'completed' WHERE id = ?",
                         [$project['id']]
@@ -185,16 +188,19 @@ class CronController
             'gsc' => null
         ];
 
-        // Sync GSC
+        // Sync GSC solo keyword tracciate
         if ($project['gsc_connected']) {
             try {
                 $gscService = new GscService();
-                $endDate = date('Y-m-d', strtotime('-3 days'));
-                $startDate = date('Y-m-d', strtotime("-" . ($days + 3) . " days"));
+                $syncResult = $gscService->syncTrackedKeywordsOnly($projectId);
+                $result['gsc'] = [
+                    'success' => true,
+                    'keywords_processed' => $syncResult['keywords_processed'],
+                    'keywords_updated' => $syncResult['keywords_updated'],
+                    'gsc_records' => $syncResult['gsc_records'] ?? 0,
+                ];
 
-                $count = $gscService->syncDateRange($projectId, $startDate, $endDate);
-                $result['gsc'] = ['success' => true, 'records' => $count];
-
+                Database::reconnect();
                 Database::execute(
                     "UPDATE st_projects SET last_sync_at = NOW(), sync_status = 'completed' WHERE id = ?",
                     [$projectId]

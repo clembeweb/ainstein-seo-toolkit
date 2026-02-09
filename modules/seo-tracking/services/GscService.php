@@ -562,59 +562,111 @@ class GscService
             return [
                 'keywords_processed' => 0,
                 'keywords_updated' => 0,
+                'gsc_records' => 0,
                 'message' => 'Nessuna keyword tracciata nel progetto'
             ];
         }
 
-        $keywordsUpdated = 0;
+        // Mappa keyword per match veloce (lowercase -> keyword data)
+        $keywordMap = [];
+        foreach ($trackedKeywords as $kw) {
+            $keywordMap[mb_strtolower($kw['keyword'])] = $kw;
+        }
 
-        // Fetch dati GSC per tutte le query del progetto
+        $keywordsUpdated = 0;
+        $gscRecords = 0;
+
+        // Fetch dati GSC con page e country per avere dati completi
         $queryData = $this->fetchSearchAnalytics(
             $token,
             $connection['property_url'],
             $startDate,
             $endDate,
-            ['query', 'date']
+            ['query', 'page', 'date', 'country']
         );
 
-        // Indicizza i dati GSC per keyword
+        // Filtra e salva solo i dati delle keyword tracciate
         $gscDataByKeyword = [];
+        $db = Database::getInstance();
+
         foreach ($queryData as $row) {
-            $query = $row['keys'][0];
-            if (!isset($gscDataByKeyword[$query])) {
-                $gscDataByKeyword[$query] = [];
-            }
-            $gscDataByKeyword[$query][] = [
-                'date' => $row['keys'][1],
-                'clicks' => $row['clicks'] ?? 0,
-                'impressions' => $row['impressions'] ?? 0,
-                'ctr' => $row['ctr'] ?? 0,
-                'position' => $row['position'] ?? 0,
-            ];
-        }
+            $query = $row['keys'][0] ?? '';
+            $queryLower = mb_strtolower($query);
 
-        // Aggiorna solo le keyword tracciate
-        foreach ($trackedKeywords as $kw) {
-            $keywordText = $kw['keyword'];
-
-            // Cerca i dati GSC per questa keyword
-            $matchingData = $gscDataByKeyword[$keywordText] ?? [];
-
-            if (empty($matchingData)) {
+            // Skip se non è una keyword tracciata
+            if (!isset($keywordMap[$queryLower])) {
                 continue;
             }
 
-            // Calcola metriche aggregate (media ultimi 7 giorni)
+            $kw = $keywordMap[$queryLower];
+            $page = $row['keys'][1] ?? '';
+            $date = $row['keys'][2] ?? $startDate;
+            $country = strtoupper($row['keys'][3] ?? '');
+            $clicks = $row['clicks'] ?? 0;
+            $impressions = $row['impressions'] ?? 0;
+            $ctr = $row['ctr'] ?? 0;
+            $position = $row['position'] ?? 0;
+
+            // Salva in st_gsc_data (con keyword_id già linkato)
+            $this->gscData->upsert([
+                'project_id' => $projectId,
+                'query' => $query,
+                'page' => $page,
+                'date' => $date,
+                'country' => $country,
+                'clicks' => $clicks,
+                'impressions' => $impressions,
+                'ctr' => $ctr,
+                'position' => $position,
+                'keyword_id' => $kw['id'],
+            ]);
+            $gscRecords++;
+
+            // Indicizza per aggregazione keyword
+            if (!isset($gscDataByKeyword[$queryLower])) {
+                $gscDataByKeyword[$queryLower] = [];
+            }
+            // Aggrega per data (somma click/impressioni di tutte le page/country)
+            $dateKey = $date;
+            if (!isset($gscDataByKeyword[$queryLower][$dateKey])) {
+                $gscDataByKeyword[$queryLower][$dateKey] = [
+                    'date' => $date,
+                    'clicks' => 0,
+                    'impressions' => 0,
+                    'position_sum' => 0,
+                    'position_count' => 0,
+                ];
+            }
+            $gscDataByKeyword[$queryLower][$dateKey]['clicks'] += $clicks;
+            $gscDataByKeyword[$queryLower][$dateKey]['impressions'] += $impressions;
+            if ($impressions > 0) {
+                $gscDataByKeyword[$queryLower][$dateKey]['position_sum'] += $position;
+                $gscDataByKeyword[$queryLower][$dateKey]['position_count']++;
+            }
+        }
+
+        unset($queryData); // Libera memoria
+
+        // Aggiorna cache keyword e st_keyword_positions
+        foreach ($trackedKeywords as $kw) {
+            $queryLower = mb_strtolower($kw['keyword']);
+            $dayDataMap = $gscDataByKeyword[$queryLower] ?? [];
+
+            if (empty($dayDataMap)) {
+                continue;
+            }
+
+            // Calcola metriche aggregate
             $totalClicks = 0;
             $totalImpressions = 0;
             $positionSum = 0;
             $daysWithData = 0;
 
-            foreach ($matchingData as $dayData) {
+            foreach ($dayDataMap as $dayData) {
                 $totalClicks += $dayData['clicks'];
                 $totalImpressions += $dayData['impressions'];
-                if ($dayData['impressions'] > 0) {
-                    $positionSum += $dayData['position'];
+                if ($dayData['position_count'] > 0) {
+                    $positionSum += $dayData['position_sum'] / $dayData['position_count'];
                     $daysWithData++;
                 }
             }
@@ -633,16 +685,23 @@ class GscService
 
             $keywordsUpdated++;
 
-            // Salva anche in st_keyword_positions per lo storico giornaliero
-            foreach ($matchingData as $dayData) {
+            // Salva in st_keyword_positions per lo storico giornaliero
+            foreach ($dayDataMap as $dayData) {
+                $dayAvgPos = $dayData['position_count'] > 0
+                    ? $dayData['position_sum'] / $dayData['position_count']
+                    : 0;
+                $dayCtr = $dayData['impressions'] > 0
+                    ? $dayData['clicks'] / $dayData['impressions']
+                    : 0;
+
                 $this->keywordPosition->upsert([
                     'project_id' => $projectId,
                     'keyword_id' => $kw['id'],
                     'date' => $dayData['date'],
-                    'avg_position' => $dayData['position'],
+                    'avg_position' => $dayAvgPos,
                     'total_clicks' => $dayData['clicks'],
                     'total_impressions' => $dayData['impressions'],
-                    'avg_ctr' => $dayData['impressions'] > 0 ? $dayData['clicks'] / $dayData['impressions'] : 0,
+                    'avg_ctr' => $dayCtr,
                 ]);
             }
         }
@@ -653,6 +712,7 @@ class GscService
         return [
             'keywords_processed' => count($trackedKeywords),
             'keywords_updated' => $keywordsUpdated,
+            'gsc_records' => $gscRecords,
             'date_range' => "{$startDate} - {$endDate}",
         ];
     }

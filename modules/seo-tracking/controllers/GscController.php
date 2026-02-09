@@ -233,16 +233,24 @@ class GscController
 
         try {
             $this->project->updateSyncStatus($id, 'running');
-            $result = $this->gscService->syncSearchAnalytics($id);
+            $result = $this->gscService->syncTrackedKeywordsOnly($id);
+
+            Database::reconnect();
+            $this->project->updateSyncStatus($id, 'completed');
+
+            $msg = 'Sincronizzazione completata: '
+                . ($result['keywords_updated'] ?? 0) . ' keyword aggiornate, '
+                . ($result['gsc_records'] ?? 0) . ' record GSC';
 
             $this->jsonResponse([
                 'success' => true,
-                'message' => 'Sincronizzazione GSC completata: ' . ($result['records_fetched'] ?? 0) . ' record elaborati',
+                'message' => $msg,
                 'data' => $result
             ]);
 
         } catch (\Exception $e) {
             error_log("[GscController] Sync error project $id: " . $e->getMessage());
+            Database::reconnect();
             $this->project->updateSyncStatus($id, 'failed');
 
             $this->jsonResponse([
