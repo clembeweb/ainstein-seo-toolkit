@@ -233,13 +233,17 @@ class MetaTag
 
     /**
      * Inserimento bulk da WordPress
+     * Se il contenuto e' disponibile (plugin WP aggiornato), salva direttamente come 'scraped'
+     * evitando la fase di scraping HTTP
      */
     public function addBulkFromWp(int $projectId, int $userId, int $wpSiteId, array $posts): int
     {
         $sql = "INSERT IGNORE INTO {$this->table}
-                (project_id, user_id, url, original_title, current_meta_title, current_meta_desc,
-                 wp_site_id, wp_post_id, wp_post_type, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')";
+                (project_id, user_id, url, original_title, original_h1,
+                 current_meta_title, current_meta_desc,
+                 scraped_content, scraped_word_count,
+                 wp_site_id, wp_post_id, wp_post_type, status, scraped_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);
 
         $inserted = 0;
@@ -247,16 +251,26 @@ class MetaTag
             if (empty($post['url'])) {
                 continue;
             }
+
+            $content = $post['content'] ?? '';
+            $wordCount = $post['word_count'] ?? 0;
+            $hasContent = !empty($content) && mb_strlen($content) > 50;
+
             $stmt->execute([
                 $projectId,
                 $userId,
                 $post['url'],
                 $post['title'] ?? null,
+                $post['title'] ?? null, // original_h1: usa il titolo WP
                 $post['seo_title'] ?? null,
                 $post['seo_description'] ?? null,
+                $hasContent ? $content : null,
+                $hasContent ? $wordCount : null,
                 $wpSiteId,
                 $post['id'] ?? null,
                 $post['post_type'] ?? 'post',
+                $hasContent ? 'scraped' : 'pending',
+                $hasContent ? date('Y-m-d H:i:s') : null,
             ]);
             if ($stmt->rowCount() > 0) {
                 $inserted++;

@@ -25,6 +25,79 @@ class SEOToolkitConnector {
         add_action('rest_api_init', [$this, 'registerEndpoints']);
         add_action('admin_init', [$this, 'registerSettings']);
         add_action('admin_notices', [$this, 'showRegeneratedNotice']);
+
+        // Rendering diretto meta tags quando nessun plugin SEO e' installato
+        if (!is_admin()) {
+            add_action('wp_head', [$this, 'renderMetaTags'], 1);
+            add_filter('pre_get_document_title', [$this, 'overrideTitle'], 999);
+        }
+    }
+
+    /**
+     * Rileva quale plugin SEO e' attivo su WordPress
+     * @return string 'yoast'|'rankmath'|'aioseo'|'none'
+     */
+    private function detectSeoPlugin(): string {
+        if (defined('WPSEO_VERSION') || class_exists('WPSEO_Options')) {
+            return 'yoast';
+        }
+        if (class_exists('RankMath') || defined('RANK_MATH_VERSION')) {
+            return 'rankmath';
+        }
+        if (function_exists('aioseo') || defined('AIOSEO_VERSION')) {
+            return 'aioseo';
+        }
+        return 'none';
+    }
+
+    /**
+     * Renderizza meta tags nell'<head> quando nessun plugin SEO e' installato
+     * Legge dai campi custom _seo_toolkit_title e _seo_toolkit_description
+     */
+    public function renderMetaTags(): void {
+        if ($this->detectSeoPlugin() !== 'none') {
+            return;
+        }
+
+        if (!is_singular()) {
+            return;
+        }
+
+        $post_id = get_the_ID();
+        if (!$post_id) {
+            return;
+        }
+
+        $seo_desc = get_post_meta($post_id, '_seo_toolkit_description', true);
+        if (!empty($seo_desc)) {
+            echo '<meta name="description" content="' . esc_attr($seo_desc) . '" />' . "\n";
+        }
+    }
+
+    /**
+     * Override del titolo pagina quando nessun plugin SEO e' installato
+     * Usa il filtro pre_get_document_title (WP 4.1+)
+     */
+    public function overrideTitle($title): string {
+        if ($this->detectSeoPlugin() !== 'none') {
+            return $title;
+        }
+
+        if (!is_singular()) {
+            return $title;
+        }
+
+        $post_id = get_the_ID();
+        if (!$post_id) {
+            return $title;
+        }
+
+        $seo_title = get_post_meta($post_id, '_seo_toolkit_title', true);
+        if (!empty($seo_title)) {
+            return $seo_title;
+        }
+
+        return $title;
     }
 
     public function addAdminMenu() {
@@ -248,12 +321,14 @@ class SEOToolkitConnector {
     }
 
     public function ping(): \WP_REST_Response {
+        $seo_plugin = $this->detectSeoPlugin();
         return new \WP_REST_Response([
             'success' => true,
             'site_name' => get_bloginfo('name'),
             'site_url' => home_url(),
             'wp_version' => get_bloginfo('version'),
-            'plugin_version' => $this->version
+            'plugin_version' => $this->version,
+            'seo_plugin' => $seo_plugin,
         ]);
     }
 
@@ -558,6 +633,11 @@ class SEOToolkitConnector {
                 if ($aioseo_desc) $seo_description = $aioseo_desc;
             }
 
+            // Estrai contenuto pulito direttamente da WordPress (evita scraping HTTP)
+            $clean_content = wp_strip_all_tags($post->post_content);
+            $clean_content = preg_replace('/\s+/', ' ', $clean_content);
+            $clean_content = mb_substr(trim($clean_content), 0, 50000);
+
             $posts[] = [
                 'id' => $post->ID,
                 'title' => $post->post_title,
@@ -568,6 +648,9 @@ class SEOToolkitConnector {
                 'seo_title' => $seo_title,
                 'seo_description' => $seo_description,
                 'has_seo_meta' => !empty($seo_title) || !empty($seo_description),
+                'content' => $clean_content,
+                'excerpt' => $post->post_excerpt,
+                'word_count' => str_word_count($clean_content),
             ];
         }
 
@@ -577,12 +660,15 @@ class SEOToolkitConnector {
             'total' => $query->found_posts,
             'pages' => $query->max_num_pages,
             'current_page' => $page,
+            'seo_plugin' => $this->detectSeoPlugin(),
         ]);
     }
 
     /**
-     * Update only SEO meta (title and description) for a post
-     * Writes to Yoast, RankMath, and AIOSEO meta keys
+     * Update SEO meta (title and description) for a post
+     * Rileva il plugin SEO attivo e scrive solo nei suoi campi.
+     * Se nessun plugin SEO e' installato, salva in campi custom e
+     * il rendering avviene direttamente via wp_head hook.
      */
     public function updateSeoMeta($request): \WP_REST_Response {
         $post_id = (int) $request['id'];
@@ -597,21 +683,28 @@ class SEOToolkitConnector {
             ], 404);
         }
 
+        $seo_plugin = $this->detectSeoPlugin();
         $updated = false;
 
         // Update SEO title
         if (isset($params['seo_title'])) {
             $seo_title = sanitize_text_field($params['seo_title']);
 
-            // Yoast SEO
-            update_post_meta($post_id, '_yoast_wpseo_title', $seo_title);
-
-            // RankMath
-            update_post_meta($post_id, 'rank_math_title', $seo_title);
-
-            // All In One SEO
-            update_post_meta($post_id, '_aioseo_title', $seo_title);
-
+            switch ($seo_plugin) {
+                case 'yoast':
+                    update_post_meta($post_id, '_yoast_wpseo_title', $seo_title);
+                    break;
+                case 'rankmath':
+                    update_post_meta($post_id, 'rank_math_title', $seo_title);
+                    break;
+                case 'aioseo':
+                    update_post_meta($post_id, '_aioseo_title', $seo_title);
+                    break;
+                default:
+                    // Nessun plugin SEO: salva in campo custom, renderizzato via wp_head
+                    update_post_meta($post_id, '_seo_toolkit_title', $seo_title);
+                    break;
+            }
             $updated = true;
         }
 
@@ -619,15 +712,20 @@ class SEOToolkitConnector {
         if (isset($params['seo_description'])) {
             $seo_desc = sanitize_text_field($params['seo_description']);
 
-            // Yoast SEO
-            update_post_meta($post_id, '_yoast_wpseo_metadesc', $seo_desc);
-
-            // RankMath
-            update_post_meta($post_id, 'rank_math_description', $seo_desc);
-
-            // All In One SEO
-            update_post_meta($post_id, '_aioseo_description', $seo_desc);
-
+            switch ($seo_plugin) {
+                case 'yoast':
+                    update_post_meta($post_id, '_yoast_wpseo_metadesc', $seo_desc);
+                    break;
+                case 'rankmath':
+                    update_post_meta($post_id, 'rank_math_description', $seo_desc);
+                    break;
+                case 'aioseo':
+                    update_post_meta($post_id, '_aioseo_description', $seo_desc);
+                    break;
+                default:
+                    update_post_meta($post_id, '_seo_toolkit_description', $seo_desc);
+                    break;
+            }
             $updated = true;
         }
 
@@ -638,10 +736,13 @@ class SEOToolkitConnector {
             ], 400);
         }
 
+        $method = $seo_plugin === 'none' ? 'direct' : $seo_plugin;
+
         return new \WP_REST_Response([
             'success' => true,
             'post_id' => $post_id,
             'message' => 'Meta SEO aggiornati',
+            'method' => $method,
             'post_url' => get_permalink($post_id)
         ]);
     }

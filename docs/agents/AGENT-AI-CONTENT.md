@@ -1,6 +1,6 @@
 # AGENTE: AI SEO Content Generator
 
-> **Ultimo aggiornamento:** 2026-02-06
+> **Ultimo aggiornamento:** 2026-02-09
 
 ## CONTESTO
 
@@ -88,13 +88,31 @@ File: `views/partials/project-nav.php`
 5. **Auto-publish** - Opzionale su WordPress collegato
 
 ### 3. Modalita META-TAG (Bulk meta generation)
-1. **Import URL** - Da CSV, sitemap o manuale
-2. **Scrape** - Estrazione contenuto pagine
+1. **Import URL** - Da CSV, sitemap, manuale o **WordPress diretto**
+2. **Scrape** - Estrazione contenuto pagine (saltato per import WordPress)
 3. **Generazione** - Creazione meta title/description con AI
 4. **Approvazione** - Review e modifica manuale
 5. **Pubblicazione** - Sync su WordPress via REST API
 
-Include integrazione WordPress per pubblicazione diretta.
+Include integrazione WordPress per importazione e pubblicazione diretta.
+
+#### Import WordPress Diretto (skip scraping)
+Quando le pagine vengono importate da un sito WordPress collegato:
+- L'endpoint `/wp-json/seo-toolkit/v1/all-content` restituisce **contenuto completo** (testo pulito)
+- Le pagine vengono inserite con status `scraped` (non `pending`)
+- La fase di scraping HTTP viene **completamente saltata**
+- Si passa direttamente alla generazione AI
+
+Retrocompatibilita: se il plugin WP non e' aggiornato, fallback a status `pending` con scraping normale.
+
+#### Pubblicazione Meta Tags Intelligente
+Il plugin WordPress rileva automaticamente il plugin SEO installato:
+- **Yoast SEO** → scrive in `_yoast_wpseo_title`, `_yoast_wpseo_metadesc`
+- **RankMath** → scrive in `rank_math_title`, `rank_math_description`
+- **All In One SEO** → scrive in `_aioseo_title`, `_aioseo_description`
+- **Nessun plugin** → salva in campi custom `_seo_toolkit_*` e renderizza direttamente nel `<head>` via `wp_head` hook
+
+La risposta API include il campo `method` (`yoast`|`rankmath`|`aioseo`|`direct`).
 
 ---
 
@@ -182,7 +200,8 @@ modules/ai-content/
 | `aic_articles` | Articoli generati (include `cover_image_path`) |
 | `aic_queue` | Coda keyword per AUTO mode |
 | `aic_internal_links_pool` | Pool link interni per progetto |
-| `aic_meta_urls` | URL per META-TAG mode |
+| `aic_meta_tags` | URL e meta tag per META-TAG mode |
+| `aic_scrape_jobs` | Job background per scraping meta tags |
 | `aic_wp_sites` | Siti WordPress collegati (globale) |
 | `aic_wp_publish_log` | Log pubblicazioni |
 
@@ -246,6 +265,8 @@ GET  /ai-content/jobs                      → JobController@index
 - Toggle copertina in settings AUTO e wizard MANUAL
 - Rigenera/Rimuovi copertina dalla vista articolo
 - Step SSE 'cover' nella pipeline AUTO
+- Import WordPress diretto: contenuto estratto via API, skip scraping HTTP
+- Pubblicazione meta tags intelligente: detection Yoast/RankMath/AIOSEO con fallback rendering diretto
 
 ---
 
@@ -365,11 +386,12 @@ Aggiungi [feature] alla modalita Meta-Tag.
 REFERENCE:
 - MetaTagController.php per logica
 - views/meta-tags/*.php per UI
+- Plugin WP: storage/plugins/seo-toolkit-connector/seo-toolkit-connector.php
 
 FLOW:
-1. Import URL (CSV/sitemap/manuale)
-2. Scrape contenuto pagine
+1. Import URL (CSV/sitemap/manuale/WordPress)
+2. Scrape contenuto pagine (saltato per import WordPress)
 3. Genera meta title/description con AI
 4. Review e approvazione
-5. Pubblica su WordPress
+5. Pubblica su WordPress (detection plugin SEO: Yoast/RankMath/AIOSEO/diretto)
 ```

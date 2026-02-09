@@ -4,10 +4,11 @@ Standard patterns and services for URL import functionality across SEO Toolkit m
 
 ## Overview
 
-The SEO Toolkit provides a standardized import system with three methods:
+The SEO Toolkit provides a standardized import system with four methods:
 1. **CSV Upload** - Import URLs from CSV/TXT files
 2. **Sitemap** - Auto-discover and import from XML sitemaps
 3. **Manual Input** - Direct text input for URLs
+4. **WordPress** - Import diretto da siti WordPress collegati (modulo ai-content meta-tags)
 
 ## Shared Services
 
@@ -481,6 +482,72 @@ Router::post('/your-module/project/{id}/urls/store', function ($id) {
     exit;
 });
 ```
+
+---
+
+## WordPress Import (Meta-Tag Mode)
+
+Il modulo ai-content meta-tags supporta import diretto da WordPress via plugin `SEO Toolkit Connector`.
+
+### Endpoint WordPress
+
+```
+GET {wp_site_url}/wp-json/seo-toolkit/v1/all-content
+Header: X-SEO-Toolkit-Key: {api_key}
+```
+
+**Parametri:**
+- `per_page` - Max risultati (default 100, max 500)
+- `post_types` - Tipi post separati da virgola (default: `post,page`)
+- `status` - Status post (default: `publish`)
+
+**Risposta:**
+```json
+{
+    "success": true,
+    "posts": [
+        {
+            "id": 123,
+            "title": "Titolo Post",
+            "url": "https://example.com/post/",
+            "post_type": "post",
+            "status": "publish",
+            "content": "Testo pulito del contenuto...",
+            "excerpt": "Estratto...",
+            "word_count": 850,
+            "seo_title": "Meta Title da Yoast/RankMath/AIOSEO",
+            "seo_description": "Meta Description esistente",
+            "has_seo_meta": true
+        }
+    ],
+    "total": 50,
+    "seo_plugin": "yoast"
+}
+```
+
+### Comportamento Import
+
+Quando il contenuto e' disponibile dall'API WordPress (campo `content` con > 50 caratteri):
+- Le pagine vengono inserite con status **`scraped`** (non `pending`)
+- La fase di scraping HTTP viene **saltata completamente**
+- Si passa direttamente alla generazione AI dei meta tag
+
+Se il plugin WordPress non e' aggiornato e non fornisce il contenuto, le pagine vengono inserite come `pending` e richiedono scraping HTTP come per gli altri metodi di import.
+
+### Pubblicazione Meta Tags
+
+Il plugin WordPress rileva automaticamente il plugin SEO installato tramite `detectSeoPlugin()`:
+
+| Plugin Rilevato | Campi Scritti | Metodo |
+|-----------------|---------------|--------|
+| Yoast SEO | `_yoast_wpseo_title`, `_yoast_wpseo_metadesc` | `yoast` |
+| RankMath | `rank_math_title`, `rank_math_description` | `rankmath` |
+| All In One SEO | `_aioseo_title`, `_aioseo_description` | `aioseo` |
+| Nessuno | `_seo_toolkit_title`, `_seo_toolkit_description` | `direct` |
+
+Quando nessun plugin SEO e' installato, il rendering avviene direttamente:
+- `<title>` via filtro `pre_get_document_title`
+- `<meta name="description">` via hook `wp_head`
 
 ---
 
