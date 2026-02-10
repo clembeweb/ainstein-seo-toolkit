@@ -75,9 +75,9 @@ File: `views/partials/project-nav.php`
 
 ### 1. Modalita MANUAL (Wizard 4 step + cover opzionale)
 1. **Keyword** - Inserimento keyword target
-2. **SERP** - Estrazione risultati Google via SerpAPI
-3. **Fonti** - Selezione competitor da scrappare
-4. **Generazione** - Creazione articolo AI con brief
+2. **SERP** - Estrazione risultati Google via SerpAPI/Serper.dev (configurabile, con fallback automatico)
+3. **Brief** - Analisi competitor + analisi strategica AI (content gaps, titoli vincenti, H2 suggeriti, angoli unici, strategia). L'utente puo editare headings, entities, note e word count — le modifiche vengono passate alla generazione articolo
+4. **Generazione** - Creazione articolo AI con brief (rispetta headings/entities/note editati dall'utente)
 5. **Copertina** (opzionale) - Generazione immagine di copertina via DALL-E 3
 
 ### 2. Modalita AUTO (Scheduling per-keyword + cover opzionale)
@@ -165,10 +165,10 @@ modules/ai-content/
 │   ├── InternalLinksPool.php               # Pool link interni
 │   └── WpSite.php
 ├── services/
-│   ├── SerpApiService.php                  # Chiamate SerpAPI
+│   ├── SerpApiService.php                  # SERP extraction (SerpAPI + Serper.dev con fallback automatico)
 │   ├── ContentScraperService.php           # DEPRECATO - usa ScraperService
-│   ├── BriefBuilderService.php             # Costruzione brief
-│   ├── ArticleGeneratorService.php         # Generazione AI (usa pool link)
+│   ├── BriefBuilderService.php             # Costruzione brief + analisi strategica AI + prompt con user overrides
+│   ├── ArticleGeneratorService.php         # Generazione AI (usa pool link + user edits)
 │   └── CoverImageService.php              # Generazione immagine copertina (DALL-E 3)
 ├── cron/
 │   ├── dispatcher.php                      # CRON job per AUTO mode
@@ -292,12 +292,16 @@ GET  /ai-content/jobs                      → JobController@index
 - Step SSE 'cover' nella pipeline AUTO
 - Import WordPress diretto: contenuto estratto via API, skip scraping HTTP
 - Pubblicazione meta tags intelligente: detection Yoast/RankMath/AIOSEO con fallback rendering diretto
+- SerpApiService supporta SerpAPI + Serper.dev con fallback automatico (provider configurabile da admin)
+- Brief wizard mostra analisi strategica AI: content gaps, titoli vincenti, angoli unici, key differentiators, strategia
+- User edits nel wizard (headings, entities, note) passati effettivamente alla generazione articolo
+- Selezione provider AI e SERP per modulo (override globale)
 
 ---
 
 ## GOLDEN RULES SPECIFICHE
 
-1. **SerpAPI** - Usare SerpApiService, mai chiamate dirette
+1. **SERP Extraction** - Usare SerpApiService (supporta SerpAPI + Serper.dev con fallback automatico), mai chiamate dirette. Provider configurabile da admin (`serp_provider` in module settings)
 2. **Scraping** - Usare `ScraperService::scrape()` con Readability (Golden Rule #12)
 3. **AI** - ArticleGeneratorService usa AiService('ai-content')
 4. **ContentScraperService** - DEPRECATO, non usare per nuovo codice

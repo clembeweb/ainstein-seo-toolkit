@@ -44,11 +44,11 @@
 
 | Modulo | Slug | Prefisso DB | Stato | Note |
 |--------|------|-------------|-------|------|
-| AI Content Generator | `ai-content` | `aic_` | 100% | Reference pattern, scheduling per-keyword, cover image DALL-E 3 |
+| AI Content Generator | `ai-content` | `aic_` | 100% | Reference pattern, scheduling per-keyword, cover image DALL-E 3, brief AI strategico, user edits nel prompt, SERP provider SerpAPI/Serper.dev con fallback |
 | SEO Audit | `seo-audit` | `sa_` | 100% | Action Plan AI completato |
 | Google Ads Analyzer | `ads-analyzer` | `ga_` | 100% | Completo |
 | Internal Links | `internal-links` | `il_` | 85% | Manca AI Suggester |
-| SEO Tracking | `seo-tracking` | `st_` | 95% | Rank Check con DataForSEO/SerpAPI/Serper, API Logs integrato |
+| SEO Tracking | `seo-tracking` | `st_` | 95% | Rank Check con DataForSEO/SerpAPI/Serper, API Logs integrato, provider SERP/Volume configurabili da admin |
 | AI Keyword Research | `keyword-research` | `kr_` | 100% | Research Guidata, Architettura Sito, Quick Check |
 | Content Creator | `content-creator` | `cc_` | 0% | Da implementare |
 
