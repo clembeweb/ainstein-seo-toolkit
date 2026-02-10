@@ -105,8 +105,21 @@ class RankCheckerService
     }
 
     /**
+     * Ottieni il provider SERP configurato per il modulo
+     * @return string 'auto', 'serper', 'dataforseo', 'serpapi'
+     */
+    private function getConfiguredSerpProvider(): string
+    {
+        try {
+            return \Core\ModuleLoader::getSetting('seo-tracking', 'serp_provider', 'auto');
+        } catch (\Exception $e) {
+            return 'auto';
+        }
+    }
+
+    /**
      * Verifica posizione SERP per una keyword e dominio target
-     * Ordine provider: DataForSEO (primario) → SERP API (secondario) → Serper.dev (fallback)
+     * Ordine provider: configurabile da admin (default: cascata DataForSEO → SERP API → Serper.dev)
      *
      * @param string $keyword La keyword da cercare
      * @param string $targetDomain Il dominio da trovare (es: example.com)
@@ -135,6 +148,15 @@ class RankCheckerService
         // Normalizza il dominio (rimuovi protocollo e www se presenti)
         $targetDomain = $this->normalizeDomain($targetDomain);
 
+        // Leggi provider configurato da admin
+        $configuredProvider = $this->getConfiguredSerpProvider();
+
+        // Se un provider specifico è selezionato, usa solo quello
+        if ($configuredProvider !== 'auto') {
+            return $this->checkWithSpecificProvider($configuredProvider, $keyword, $targetDomain, $location, $device, $locationCode);
+        }
+
+        // Modalità auto: cascata DataForSEO → SERP API → Serper.dev
         // Variabili per tracking risultati
         $primaryResult = null;
         $lastError = null;
@@ -244,6 +266,67 @@ class RankCheckerService
         }
 
         throw new \Exception('Nessun provider SERP disponibile');
+    }
+
+    /**
+     * Usa un provider specifico (senza cascata/fallback)
+     */
+    private function checkWithSpecificProvider(
+        string $provider,
+        string $keyword,
+        string $targetDomain,
+        array $location,
+        string $device,
+        string $locationCode
+    ): array {
+        switch ($provider) {
+            case 'dataforseo':
+                if (!$this->hasDataForSeo()) {
+                    throw new \Exception('DataForSEO non configurato. Vai in Admin > Impostazioni > Integrazioni');
+                }
+                $result = $this->dataForSeo->checkSerpPosition($keyword, $targetDomain, $locationCode, $device, 100);
+                if (!$result['success']) {
+                    throw new \Exception('Errore DataForSEO: ' . ($result['error'] ?? 'Errore sconosciuto'));
+                }
+                $this->lastProvider = 'dataforseo';
+                return [
+                    'found' => $result['found'],
+                    'position' => $result['position'],
+                    'url' => $result['url'],
+                    'title' => $result['title'],
+                    'snippet' => $result['snippet'],
+                    'total_organic_results' => $result['total_organic_results'],
+                    'keyword' => $keyword,
+                    'target_domain' => $targetDomain,
+                    'location' => $result['location'],
+                    'location_code' => $locationCode,
+                    'language' => $result['language'],
+                    'device' => $device,
+                    'provider' => 'DataForSEO',
+                    'cost' => $result['cost'] ?? 0,
+                ];
+
+            case 'serpapi':
+                if (!$this->hasSerpApi()) {
+                    throw new \Exception('SerpAPI non configurato. Vai in Admin > Impostazioni > Integrazioni');
+                }
+                $serpResult = $this->checkWithSerpApi($keyword, $targetDomain, $location, $device);
+                $this->lastProvider = 'serpapi';
+                $serpResult['provider'] = 'SERP API';
+                return $serpResult;
+
+            case 'serper':
+                if (!$this->hasSerper()) {
+                    throw new \Exception('Serper.dev non configurato. Vai in Admin > Impostazioni > Essenziali');
+                }
+                $serperResult = $this->checkWithSerper($keyword, $targetDomain, $location, $device);
+                $this->lastProvider = 'serper';
+                $serperResult['provider'] = 'Serper.dev';
+                return $serperResult;
+
+            default:
+                throw new \Exception("Provider SERP sconosciuto: {$provider}");
+        }
     }
 
     /**
@@ -807,7 +890,29 @@ class RankCheckerService
 
         $targetDomain = $this->normalizeDomain($targetDomain);
 
-        // Usa SERP API (primario - più affidabile)
+        // Leggi provider configurato da admin
+        $configuredProvider = $this->getConfiguredSerpProvider();
+
+        // Se provider specifico, usa solo quello per full results
+        if ($configuredProvider !== 'auto') {
+            if ($configuredProvider === 'serper' && $this->hasSerper()) {
+                $result = $this->checkWithSerperFullResults($keyword, $targetDomain, $location, $device, $maxResults);
+                $this->lastProvider = 'serper';
+                $result['provider'] = 'Serper.dev';
+                return $result;
+            } elseif ($configuredProvider === 'serpapi' && $this->hasSerpApi()) {
+                $result = $this->checkWithSerpApiFullResults($keyword, $targetDomain, $location, $device, $maxResults);
+                $this->lastProvider = 'serpapi';
+                $result['provider'] = 'SERP API';
+                return $result;
+            } elseif ($configuredProvider === 'dataforseo' && $this->hasDataForSeo()) {
+                // DataForSEO non ha una versione "full results" - usa checkPosition standard
+                return $this->checkWithSpecificProvider($configuredProvider, $keyword, $targetDomain, $location, $device, $locationCode);
+            }
+            throw new \Exception("Provider SERP '{$configuredProvider}' non configurato.");
+        }
+
+        // Modalità auto: cascata SerpAPI → Serper.dev
         $primaryResult = null;
 
         if ($this->hasSerpApi()) {

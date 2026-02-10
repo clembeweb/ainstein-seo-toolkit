@@ -18,11 +18,76 @@
         "cover_image_generation": 3,
         "wp_publish": 0
     },
+    "settings_groups": {
+        "ai_config": {
+            "label": "Configurazione AI",
+            "icon": "sparkles",
+            "description": "Provider e modello AI per questo modulo",
+            "order": 0
+        },
+        "provider_config": {
+            "label": "Provider SERP",
+            "icon": "globe-alt",
+            "description": "Provider per estrazione risultati SERP e analisi competitor",
+            "order": 0.5
+        }
+    },
     "settings": {
+        "ai_provider": {
+            "type": "select",
+            "label": "Provider AI",
+            "description": "Provider AI per questo modulo",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"},
+                {"value": "anthropic", "label": "Anthropic (Claude)"},
+                {"value": "openai", "label": "OpenAI (GPT)"}
+            ]
+        },
+        "ai_model": {
+            "type": "select",
+            "label": "Modello AI",
+            "description": "Modello AI per questo modulo",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"}
+            ]
+        },
+        "ai_fallback_enabled": {
+            "type": "select",
+            "label": "Fallback AI",
+            "description": "Fallback automatico su altro provider se il primario fallisce",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"},
+                {"value": "1", "label": "Abilitato"},
+                {"value": "0", "label": "Disabilitato"}
+            ]
+        },
+        "serp_provider": {
+            "type": "select",
+            "label": "Provider SERP",
+            "description": "Provider per estrazione risultati di ricerca Google",
+            "default": "serper",
+            "admin_only": true,
+            "group": "provider_config",
+            "options": [
+                {"value": "serper", "label": "Serper.dev"},
+                {"value": "serpapi", "label": "SerpAPI"}
+            ]
+        },
         "serpapi_key": {
             "type": "password",
-            "label": "SerpAPI Key",
-            "admin_only": true
+            "label": "SerpAPI Key (dedicata al modulo)",
+            "description": "API Key SerpAPI specifica per questo modulo. Se vuota, non disponibile come provider.",
+            "admin_only": true,
+            "group": "provider_config"
         },
         "default_language": {
             "type": "select",

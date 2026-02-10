@@ -49,10 +49,11 @@ class AiService
     {
         $this->moduleSlug = $moduleSlug ?? 'unknown';
         $this->loadSettings();
+        $this->loadModuleOverrides();
     }
 
     /**
-     * Load settings from database
+     * Load global settings from database
      */
     private function loadSettings(): void
     {
@@ -79,6 +80,47 @@ class AiService
             } else {
                 $this->apiKey = $this->getSettingDirect('anthropic_api_key', '');
             }
+        }
+    }
+
+    /**
+     * Load module-specific AI overrides from module settings
+     * Priority: Module setting > Global setting
+     */
+    private function loadModuleOverrides(): void
+    {
+        if ($this->moduleSlug === 'unknown' || empty($this->moduleSlug)) {
+            return;
+        }
+
+        try {
+            $moduleProvider = \Core\ModuleLoader::getSetting($this->moduleSlug, 'ai_provider', 'global');
+
+            if ($moduleProvider !== 'global' && !empty($moduleProvider)) {
+                // Override provider
+                $this->provider = $moduleProvider;
+
+                // Override model if set
+                $moduleModel = \Core\ModuleLoader::getSetting($this->moduleSlug, 'ai_model', 'global');
+                if ($moduleModel !== 'global' && !empty($moduleModel)) {
+                    $this->model = $moduleModel;
+                } else {
+                    // Provider changed but model not set - use default for provider
+                    $this->model = $this->getDefaultModelForProvider($moduleProvider);
+                }
+
+                // Update API key for the new provider
+                $this->apiKey = $this->getApiKeyForProvider($this->provider);
+            }
+
+            // Override fallback setting
+            $moduleFallback = \Core\ModuleLoader::getSetting($this->moduleSlug, 'ai_fallback_enabled', 'global');
+            if ($moduleFallback !== 'global' && $moduleFallback !== null) {
+                $this->fallbackEnabled = (bool) $moduleFallback;
+            }
+        } catch (\Exception $e) {
+            // Silently fail - use global settings
+            error_log("AiService: Failed to load module overrides for {$this->moduleSlug}: " . $e->getMessage());
         }
     }
 
@@ -755,6 +797,48 @@ class AiService
             $result = Database::fetch("SELECT value FROM settings WHERE key_name = ?", [$key]);
             return !empty($result['value']);
         }
+    }
+
+    /**
+     * Get module-specific AI configuration with global context
+     * Used by admin UI to display effective configuration
+     */
+    public static function getModuleAiConfig(string $moduleSlug): array
+    {
+        $globalProvider = Settings::get('ai_provider', 'anthropic');
+        $globalModel = Settings::get('ai_model', 'claude-sonnet-4-20250514');
+        $globalFallback = (bool) Settings::get('ai_fallback_enabled', '1');
+
+        $moduleProvider = \Core\ModuleLoader::getSetting($moduleSlug, 'ai_provider', 'global');
+        $moduleModel = \Core\ModuleLoader::getSetting($moduleSlug, 'ai_model', 'global');
+        $moduleFallback = \Core\ModuleLoader::getSetting($moduleSlug, 'ai_fallback_enabled', 'global');
+
+        // Calculate effective values
+        $effectiveProvider = ($moduleProvider !== 'global' && !empty($moduleProvider)) ? $moduleProvider : $globalProvider;
+        $effectiveModel = ($moduleModel !== 'global' && !empty($moduleModel)) ? $moduleModel : $globalModel;
+        $effectiveFallback = ($moduleFallback !== 'global' && $moduleFallback !== null) ? (bool) $moduleFallback : $globalFallback;
+
+        return [
+            'global' => [
+                'provider' => $globalProvider,
+                'provider_label' => self::PROVIDERS[$globalProvider] ?? $globalProvider,
+                'model' => $globalModel,
+                'model_label' => self::MODELS[$globalProvider][$globalModel]['name'] ?? $globalModel,
+                'fallback' => $globalFallback,
+            ],
+            'module' => [
+                'provider' => $moduleProvider ?? 'global',
+                'model' => $moduleModel ?? 'global',
+                'fallback' => $moduleFallback ?? 'global',
+            ],
+            'effective' => [
+                'provider' => $effectiveProvider,
+                'provider_label' => self::PROVIDERS[$effectiveProvider] ?? $effectiveProvider,
+                'model' => $effectiveModel,
+                'model_label' => self::MODELS[$effectiveProvider][$effectiveModel]['name'] ?? $effectiveModel,
+                'fallback' => $effectiveFallback,
+            ],
+        ];
     }
 
     /**

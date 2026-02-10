@@ -2,32 +2,59 @@
 
 namespace Modules\AiContent\Services;
 
+use Core\Settings;
 use Services\ScraperService;
+use Services\ApiLoggerService;
 
 /**
  * SerpApiService
  *
- * Service for extracting SERP results via SerpAPI
- * Uses shared ScraperService for HTTP requests
+ * Service for extracting SERP results via SerpAPI or Serper.dev.
+ * Provider is selected from module settings (serp_provider).
  */
 class SerpApiService
 {
     private string $apiKey;
-    private string $baseUrl = 'https://serpapi.com/search.json';
+    private string $provider;
+    private ?string $fallbackApiKey = null;
+    private ?string $fallbackProvider = null;
     private ScraperService $scraper;
 
     public function __construct(?string $apiKey = null)
     {
-        $this->apiKey = $apiKey ?? getModuleSetting('ai-content', 'serpapi_key', '');
+        // Determine provider from module settings (default: serper)
+        $this->provider = getModuleSetting('ai-content', 'serp_provider', 'serper');
         $this->scraper = new ScraperService();
 
-        if (empty($this->apiKey)) {
-            throw new \Exception('SerpAPI key non configurata. Vai in Admin > Moduli > AI Content > Impostazioni');
+        if ($this->provider === 'serper') {
+            $this->apiKey = $apiKey ?? Settings::get('serper_api_key', '');
+            if (empty($this->apiKey)) {
+                throw new \Exception('Serper.dev API key non configurata. Vai in Admin > Impostazioni > Essenziali > Rank Tracking');
+            }
+            // Setup fallback: SerpAPI
+            $serpApiKey = getModuleSetting('ai-content', 'serpapi_key', '');
+            if (!empty($serpApiKey)) {
+                $this->fallbackProvider = 'serpapi';
+                $this->fallbackApiKey = $serpApiKey;
+            }
+        } else {
+            $this->provider = 'serpapi';
+            $this->apiKey = $apiKey ?? getModuleSetting('ai-content', 'serpapi_key', '');
+            if (empty($this->apiKey)) {
+                throw new \Exception('SerpAPI key non configurata. Vai in Admin > Moduli > AI Content > Impostazioni');
+            }
+            // Setup fallback: Serper.dev
+            $serperKey = Settings::get('serper_api_key', '');
+            if (!empty($serperKey)) {
+                $this->fallbackProvider = 'serper';
+                $this->fallbackApiKey = $serperKey;
+            }
         }
     }
 
     /**
      * Search Google and extract SERP results + PAA
+     * Con fallback automatico sull'altro provider se il primario fallisce.
      *
      * @param string $keyword Search query
      * @param string $language Language code (it, en, es, de, fr)
@@ -36,20 +63,62 @@ class SerpApiService
      */
     public function search(string $keyword, string $language = 'it', string $location = 'Italy'): array
     {
+        // Prova provider primario
+        try {
+            if ($this->provider === 'serper') {
+                return $this->searchWithSerper($keyword, $language, $location, $this->apiKey);
+            }
+            return $this->searchWithSerpApi($keyword, $language, $location, $this->apiKey);
+        } catch (\Exception $primaryError) {
+            // Se non c'e' fallback, rilancia l'errore
+            if (!$this->fallbackProvider || !$this->fallbackApiKey) {
+                throw $primaryError;
+            }
+
+            error_log("[SerpService] Primario ({$this->provider}) fallito: " . $primaryError->getMessage() . " - Provo fallback ({$this->fallbackProvider})");
+
+            // Prova fallback
+            try {
+                if ($this->fallbackProvider === 'serper') {
+                    return $this->searchWithSerper($keyword, $language, $location, $this->fallbackApiKey);
+                }
+                return $this->searchWithSerpApi($keyword, $language, $location, $this->fallbackApiKey);
+            } catch (\Exception $fallbackError) {
+                // Entrambi falliti: lancia errore con info su entrambi
+                throw new \Exception(
+                    "Primario ({$this->provider}): " . $primaryError->getMessage() .
+                    " | Fallback ({$this->fallbackProvider}): " . $fallbackError->getMessage()
+                );
+            }
+        }
+    }
+
+    /**
+     * Search via SerpAPI
+     */
+    private function searchWithSerpApi(string $keyword, string $language, string $location, ?string $apiKey = null): array
+    {
+        $key = $apiKey ?? $this->apiKey;
         $params = [
-            'engine' => 'google',  // REQUIRED parameter
+            'engine' => 'google',
             'q' => $keyword,
             'location' => $location,
             'hl' => $language,
             'gl' => $this->getCountryCode($location),
             'google_domain' => $this->getGoogleDomain($language),
             'num' => 10,
-            'api_key' => $this->apiKey
+            'api_key' => $key
         ];
 
-        $url = $this->baseUrl . '?' . http_build_query($params);
+        $url = 'https://serpapi.com/search.json?' . http_build_query($params);
 
+        $startTime = microtime(true);
         $response = $this->makeRequest($url);
+
+        ApiLoggerService::log('serpapi', '/search.json', ['q' => $keyword, 'location' => $location], $response['data'] ?? null, $response['success'] ? 200 : 500, $startTime, [
+            'module' => 'ai-content',
+            'context' => 'serp_extraction',
+        ]);
 
         if (!$response['success']) {
             throw new \Exception('Errore SerpAPI: ' . ($response['error'] ?? 'Unknown error'));
@@ -65,14 +134,70 @@ class SerpApiService
     }
 
     /**
-     * Parse organic search results
+     * Search via Serper.dev
+     */
+    private function searchWithSerper(string $keyword, string $language, string $location, ?string $apiKey = null): array
+    {
+        $key = $apiKey ?? $this->apiKey;
+        $postData = [
+            'q' => $keyword,
+            'gl' => $this->getCountryCode($location),
+            'hl' => $language,
+            'num' => 10,
+        ];
+
+        $jsonData = json_encode($postData, JSON_UNESCAPED_UNICODE);
+
+        $startTime = microtime(true);
+
+        $ch = curl_init('https://google.serper.dev/search');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $jsonData,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'X-API-KEY: ' . $key,
+            ],
+            CURLOPT_TIMEOUT => 30,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        $data = json_decode($response, true);
+
+        ApiLoggerService::log('serper', '/search', $postData, $data, $httpCode, $startTime, [
+            'module' => 'ai-content',
+            'context' => 'serp_extraction',
+        ]);
+
+        if ($curlError) {
+            throw new \Exception('Errore connessione Serper.dev: ' . $curlError);
+        }
+
+        if ($httpCode !== 200) {
+            $errorMsg = $data['message'] ?? "Errore Serper.dev (HTTP {$httpCode})";
+            throw new \Exception($errorMsg);
+        }
+
+        return [
+            'organic' => $this->parseSerperOrganicResults($data['organic'] ?? []),
+            'paa' => $this->parseSerperPaaResults($data['peopleAlsoAsk'] ?? []),
+            'related' => $this->parseSerperRelatedSearches($data['relatedSearches'] ?? [])
+        ];
+    }
+
+    /**
+     * Parse organic results from SerpAPI format
      */
     private function parseOrganicResults(array $results): array
     {
         $parsed = [];
 
         foreach ($results as $index => $item) {
-            // Skip non-organic results (ads, featured snippets embedded, etc.)
             if (empty($item['link'])) {
                 continue;
             }
@@ -90,7 +215,31 @@ class SerpApiService
     }
 
     /**
-     * Parse People Also Ask questions
+     * Parse organic results from Serper.dev format
+     */
+    private function parseSerperOrganicResults(array $results): array
+    {
+        $parsed = [];
+
+        foreach ($results as $index => $item) {
+            if (empty($item['link'])) {
+                continue;
+            }
+
+            $parsed[] = [
+                'position' => $item['position'] ?? ($index + 1),
+                'title' => $item['title'] ?? '',
+                'url' => $item['link'],
+                'snippet' => $item['snippet'] ?? '',
+                'domain' => parse_url($item['link'], PHP_URL_HOST)
+            ];
+        }
+
+        return $parsed;
+    }
+
+    /**
+     * Parse PAA from SerpAPI format
      */
     private function parsePaaResults(array $results): array
     {
@@ -108,9 +257,37 @@ class SerpApiService
     }
 
     /**
-     * Parse related searches
+     * Parse PAA from Serper.dev format
+     */
+    private function parseSerperPaaResults(array $results): array
+    {
+        $parsed = [];
+
+        foreach ($results as $index => $item) {
+            $parsed[] = [
+                'position' => $index + 1,
+                'question' => $item['question'] ?? '',
+                'snippet' => $item['snippet'] ?? ($item['title'] ?? '')
+            ];
+        }
+
+        return $parsed;
+    }
+
+    /**
+     * Parse related searches from SerpAPI format
      */
     private function parseRelatedSearches(array $results): array
+    {
+        return array_map(function ($item) {
+            return $item['query'] ?? '';
+        }, $results);
+    }
+
+    /**
+     * Parse related searches from Serper.dev format
+     */
+    private function parseSerperRelatedSearches(array $results): array
     {
         return array_map(function ($item) {
             return $item['query'] ?? '';
@@ -155,7 +332,7 @@ class SerpApiService
     }
 
     /**
-     * Make HTTP request to SerpAPI via shared ScraperService
+     * Make HTTP request via shared ScraperService (used by SerpAPI)
      */
     private function makeRequest(string $url): array
     {
@@ -171,7 +348,6 @@ class SerpApiService
             ];
         }
 
-        // Check for SerpAPI errors in response
         if (isset($result['data']['error'])) {
             return [
                 'success' => false,
@@ -186,6 +362,14 @@ class SerpApiService
     }
 
     /**
+     * Get the active provider name
+     */
+    public function getProvider(): string
+    {
+        return $this->provider;
+    }
+
+    /**
      * Test API connection
      */
     public function testConnection(): array
@@ -193,10 +377,13 @@ class SerpApiService
         try {
             $result = $this->search('test', 'en', 'United States');
 
+            $providerLabel = $this->provider === 'serper' ? 'Serper.dev' : 'SerpAPI';
+
             return [
                 'success' => true,
-                'message' => 'Connessione SerpAPI funzionante',
-                'results_count' => count($result['organic'])
+                'message' => "Connessione {$providerLabel} funzionante",
+                'results_count' => count($result['organic']),
+                'provider' => $this->provider
             ];
         } catch (\Exception $e) {
             return [

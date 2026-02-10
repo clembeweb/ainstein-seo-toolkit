@@ -20,7 +20,6 @@ class ArticleGeneratorService
     private float $temperature = 0.7;
     private int $maxRetries = 2;
     private int $retryDelayMs = 2000;
-    private string $model = 'claude-sonnet-4-20250514';
 
     // Output format markers
     private const TITLE_START = '```title';
@@ -79,7 +78,7 @@ class ArticleGeneratorService
                         'content' => $this->sanitizeHtml($parsed['content']),
                         'word_count' => str_word_count(strip_tags($parsed['content'])),
                         'generation_time_ms' => $generationTimeMs,
-                        'model_used' => $this->model,
+                        'model_used' => $this->aiService->getModel(),
                         'tokens_used' => $response['tokens_used'] ?? null,
                     ];
                 }
@@ -381,12 +380,11 @@ PROMPT;
             ];
         }
 
-        // Use the shared AiService complete method
+        // Use the shared AiService complete method (model from module/global settings)
         $result = $this->aiService->complete($userId, [
             ['role' => 'user', 'content' => $prompt],
         ], [
             'max_tokens' => $maxTokens,
-            'model' => $this->model,
         ], 'ai-content');
 
         if (isset($result['error'])) {
@@ -602,27 +600,11 @@ PROMPT;
     }
 
     /**
-     * Get current model
-     */
-    public function getModel(): string
-    {
-        return $this->model;
-    }
-
-    /**
      * Set custom temperature
      */
     public function setTemperature(float $temperature): void
     {
         $this->temperature = max(0, min(1, $temperature));
-    }
-
-    /**
-     * Set custom model
-     */
-    public function setModel(string $model): void
-    {
-        $this->model = $model;
     }
 
     /**
@@ -663,7 +645,7 @@ PROMPT;
             'content' => $this->sanitizeHtml($parsed['content']),
             'word_count' => str_word_count(strip_tags($parsed['content'])),
             'generation_time_ms' => (int) (($endTime - $startTime) * 1000),
-            'model_used' => $this->model,
+            'model_used' => $this->aiService->getModel(),
         ];
     }
 

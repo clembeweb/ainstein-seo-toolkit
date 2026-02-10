@@ -156,6 +156,7 @@ class WizardController
                 'entities' => $this->formatEntitiesForWizard($brief),
                 'targetWordCount' => $brief['recommended_word_count'],
                 'additionalNotes' => '',
+                'aiAnalysis' => $this->formatAiAnalysisForWizard($brief),
             ];
 
             // Save brief to aic_keywords for persistence
@@ -232,6 +233,17 @@ class WizardController
                 $brief['keyword'] = $keyword['keyword'];
                 $brief['language'] = $keyword['language'];
                 $brief['location'] = $keyword['location'];
+            }
+
+            // Inject user overrides from wizard (headings, entities, notes)
+            if (!empty($briefData['suggestedHeadings'])) {
+                $brief['user_headings'] = $briefData['suggestedHeadings'];
+            }
+            if (!empty($briefData['entities'])) {
+                $brief['user_entities'] = $briefData['entities'];
+            }
+            if (!empty($briefData['additionalNotes'])) {
+                $brief['additional_notes'] = $briefData['additionalNotes'];
             }
 
             // Load scraped sources from database
@@ -359,12 +371,22 @@ class WizardController
     private function formatHeadingsForWizard(array $brief): array
     {
         $headings = [];
+        $aiAnalysis = $brief['ai_strategic_analysis'] ?? [];
+        $hasAi = !empty($aiAnalysis['enabled']) && !empty($aiAnalysis['analysis']);
 
-        // H1 - Title suggestion based on SERP
-        $headings[] = ['tag' => 'H1', 'text' => $brief['keyword']];
+        // H1 - AI winning title se disponibile, altrimenti keyword
+        if ($hasAi && !empty($aiAnalysis['analysis']['winning_title_suggestions'])) {
+            $headings[] = ['tag' => 'H1', 'text' => $aiAnalysis['analysis']['winning_title_suggestions'][0]];
+        } else {
+            $headings[] = ['tag' => 'H1', 'text' => $brief['keyword']];
+        }
 
-        // H2s from recommended structure
-        if (!empty($brief['recommended_structure']['sections'])) {
+        // H2 - AI recommended structure se disponibile, altrimenti competitor frequency
+        if ($hasAi && !empty($aiAnalysis['analysis']['recommended_h2_structure'])) {
+            foreach ($aiAnalysis['analysis']['recommended_h2_structure'] as $h2) {
+                $headings[] = ['tag' => 'H2', 'text' => $h2];
+            }
+        } elseif (!empty($brief['recommended_structure']['sections'])) {
             foreach ($brief['recommended_structure']['sections'] as $section) {
                 $headings[] = ['tag' => 'H2', 'text' => $section['suggested_h2']];
             }
@@ -403,5 +425,27 @@ class WizardController
         }
 
         return $entities;
+    }
+
+    /**
+     * Format AI strategic analysis for wizard display
+     */
+    private function formatAiAnalysisForWizard(array $brief): ?array
+    {
+        $aiAnalysis = $brief['ai_strategic_analysis'] ?? [];
+
+        if (empty($aiAnalysis['enabled']) || empty($aiAnalysis['analysis'])) {
+            return null;
+        }
+
+        $analysis = $aiAnalysis['analysis'];
+
+        return [
+            'contentGaps' => $analysis['content_gaps'] ?? [],
+            'uniqueAngles' => $analysis['unique_angles'] ?? [],
+            'winningTitles' => $analysis['winning_title_suggestions'] ?? [],
+            'keyDifferentiators' => $analysis['key_differentiators'] ?? [],
+            'contentStrategy' => $analysis['content_strategy'] ?? '',
+        ];
     }
 }

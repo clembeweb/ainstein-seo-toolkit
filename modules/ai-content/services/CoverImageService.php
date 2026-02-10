@@ -104,11 +104,11 @@ REGOLE OBBLIGATORIE:
 Rispondi SOLO con il prompt in inglese, senza altre spiegazioni o commenti.
 PROMPT;
 
+        // Model from module/global settings (no hardcoded model)
         $result = $this->aiService->complete($userId, [
             ['role' => 'user', 'content' => $prompt],
         ], [
             'max_tokens' => 200,
-            'model' => 'claude-3-5-haiku-20241022',
         ], 'ai-content');
 
         if (isset($result['error'])) {

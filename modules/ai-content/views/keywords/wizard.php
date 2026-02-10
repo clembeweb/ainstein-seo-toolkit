@@ -356,6 +356,73 @@ $baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['
                         </div>
                     </div>
 
+                    <!-- AI Strategic Analysis (when available) -->
+                    <div class="mb-6" x-show="briefData.aiAnalysis" x-cloak>
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                            </svg>
+                            Analisi Strategica AI
+                        </h3>
+                        <div class="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800 space-y-4">
+
+                            <!-- Content Strategy -->
+                            <div x-show="briefData.aiAnalysis?.contentStrategy">
+                                <h4 class="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-1">Strategia Contenuto</h4>
+                                <p class="text-sm text-amber-700 dark:text-amber-300" x-text="briefData.aiAnalysis?.contentStrategy"></p>
+                            </div>
+
+                            <!-- Winning Title Suggestions (clickable) -->
+                            <div x-show="briefData.aiAnalysis?.winningTitles?.length > 0">
+                                <h4 class="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-2">
+                                    Titoli Suggeriti dall'AI
+                                    <span class="font-normal text-amber-600 dark:text-amber-400">(clicca per usare come H1)</span>
+                                </h4>
+                                <div class="space-y-1">
+                                    <template x-for="(title, idx) in (briefData.aiAnalysis?.winningTitles || [])" :key="idx">
+                                        <button @click="briefData.suggestedHeadings[0].text = title"
+                                                class="block w-full text-left px-3 py-2 rounded text-sm transition-colors"
+                                                :class="briefData.suggestedHeadings[0]?.text === title
+                                                    ? 'bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 font-medium'
+                                                    : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-amber-100 dark:hover:bg-amber-800/50'">
+                                            <span x-text="title"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Content Gaps -->
+                            <div x-show="briefData.aiAnalysis?.contentGaps?.length > 0">
+                                <h4 class="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-1">Gap nei Contenuti Competitor</h4>
+                                <ul class="list-disc list-inside text-sm text-amber-700 dark:text-amber-300 space-y-1">
+                                    <template x-for="(gap, idx) in (briefData.aiAnalysis?.contentGaps || [])" :key="idx">
+                                        <li x-text="gap"></li>
+                                    </template>
+                                </ul>
+                            </div>
+
+                            <!-- Unique Angles -->
+                            <div x-show="briefData.aiAnalysis?.uniqueAngles?.length > 0">
+                                <h4 class="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-1">Angoli Unici Consigliati</h4>
+                                <ul class="list-disc list-inside text-sm text-amber-700 dark:text-amber-300 space-y-1">
+                                    <template x-for="(angle, idx) in (briefData.aiAnalysis?.uniqueAngles || [])" :key="idx">
+                                        <li x-text="angle"></li>
+                                    </template>
+                                </ul>
+                            </div>
+
+                            <!-- Key Differentiators -->
+                            <div x-show="briefData.aiAnalysis?.keyDifferentiators?.length > 0">
+                                <h4 class="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-1">Come Differenziarsi</h4>
+                                <ul class="list-disc list-inside text-sm text-amber-700 dark:text-amber-300 space-y-1">
+                                    <template x-for="(diff, idx) in (briefData.aiAnalysis?.keyDifferentiators || [])" :key="idx">
+                                        <li x-text="diff"></li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Suggested Structure -->
                     <div class="mb-6">
                         <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">Struttura Suggerita</h3>
@@ -754,7 +821,8 @@ function keywordWizard(initialData) {
             suggestedHeadings: [],
             entities: [],
             targetWordCount: 1500,
-            additionalNotes: ''
+            additionalNotes: '',
+            aiAnalysis: null
         },
 
         // Step 3 - Article

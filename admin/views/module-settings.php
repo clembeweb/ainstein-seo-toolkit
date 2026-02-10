@@ -4,12 +4,44 @@
  * Pattern riusabile per tutti i moduli
  */
 
-// Organizza settings per gruppo
+// Check if module uses AI (for custom AI settings component)
+$moduleJsonPath = \ROOT_PATH . '/modules/' . $module['slug'] . '/module.json';
+$moduleJsonData = file_exists($moduleJsonPath) ? json_decode(file_get_contents($moduleJsonPath), true) : [];
+$usesAi = in_array('ai', $moduleJsonData['requires']['services'] ?? []);
+
+// AI settings keys handled by custom component
+$aiSettingsKeys = ['ai_provider', 'ai_model', 'ai_fallback_enabled'];
+
+// Check if module has provider_config group (for custom provider settings component)
+$hasProviderConfig = isset($moduleJsonData['settings_groups']['provider_config']);
+$providerSettingsKeys = [];
+if ($hasProviderConfig) {
+    // Collect all settings that belong to provider_config group
+    foreach ($moduleJsonData['settings'] ?? [] as $key => $schema) {
+        if (($schema['group'] ?? null) === 'provider_config') {
+            $providerSettingsKeys[] = $key;
+        }
+    }
+}
+
+// Organizza settings per gruppo (skip AI settings if handled by custom component)
 $groupedSettings = [];
 $ungroupedSettings = [];
 
 foreach ($settingsSchema as $key => $schema) {
+    // Skip AI settings - handled by custom component
+    if ($usesAi && in_array($key, $aiSettingsKeys)) {
+        continue;
+    }
     $group = $schema['group'] ?? null;
+    // Skip ai_config group - handled by custom component
+    if ($usesAi && $group === 'ai_config') {
+        continue;
+    }
+    // Skip provider_config group - handled by custom provider component
+    if ($hasProviderConfig && $group === 'provider_config') {
+        continue;
+    }
     if ($group && isset($settingsGroups[$group])) {
         if (!isset($groupedSettings[$group])) {
             $groupedSettings[$group] = [];
@@ -25,6 +57,7 @@ uasort($settingsGroups, fn($a, $b) => ($a['order'] ?? 99) <=> ($b['order'] ?? 99
 
 // Icone per i gruppi (Heroicons)
 $groupIcons = [
+    'globe-alt' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>',
     'chart-bar' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>',
     'refresh' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>',
     'sparkles' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>',
@@ -63,6 +96,72 @@ $groupIcons = [
     <!-- Settings Form -->
     <form action="<?= url('/admin/modules/' . $module['id'] . '/settings') ?>" method="POST" class="space-y-4">
         <?= csrf_field() ?>
+
+        <?php if ($usesAi): ?>
+        <!-- Custom AI Configuration Component -->
+        <?php
+            $aiConfig = \Services\AiService::getModuleAiConfig($module['slug']);
+            $allModels = \Services\AiService::getAvailableModels();
+            $providers = \Services\AiService::getProviders();
+            $moduleSlug = $module['slug'];
+            include \ROOT_PATH . '/shared/views/components/module-ai-settings.php';
+        ?>
+        <?php endif; ?>
+
+        <?php if ($hasProviderConfig): ?>
+        <!-- Custom Provider Configuration Component -->
+        <?php
+            // Build provider groups configuration based on module
+            $providerGroups = [];
+            $slug = $module['slug'];
+
+            if ($slug === 'seo-tracking') {
+                // SERP Rank Check providers
+                $providerGroups[] = [
+                    'key' => 'serp',
+                    'label' => 'Rank Check',
+                    'description' => 'Provider per la verifica posizioni SERP',
+                    'setting_key' => 'serp_provider',
+                    'providers' => [
+                        ['value' => 'auto', 'label' => 'Auto (cascata)', 'configured' => true, 'note' => ''],
+                        ['value' => 'serper', 'label' => 'Serper.dev', 'configured' => !empty(\Core\Settings::get('serper_api_key', '')), 'note' => ''],
+                        ['value' => 'dataforseo', 'label' => 'DataForSEO', 'configured' => !empty(\Core\Settings::get('dataforseo_login', '')), 'note' => ''],
+                        ['value' => 'serpapi', 'label' => 'SerpAPI', 'configured' => !empty(\Core\Settings::get('serp_api_key', '')), 'note' => ''],
+                    ]
+                ];
+                // Volume providers
+                $providerGroups[] = [
+                    'key' => 'volume',
+                    'label' => 'Volumi Keyword',
+                    'description' => 'Provider per i volumi di ricerca',
+                    'setting_key' => 'volume_provider',
+                    'providers' => [
+                        ['value' => 'auto', 'label' => 'Auto (cascata)', 'configured' => true, 'note' => ''],
+                        ['value' => 'rapidapi', 'label' => 'RapidAPI', 'configured' => !empty(\Core\Settings::get('rapidapi_keyword_key', '')), 'note' => ''],
+                        ['value' => 'dataforseo', 'label' => 'DataForSEO', 'configured' => !empty(\Core\Settings::get('dataforseo_login', '')), 'note' => ''],
+                        ['value' => 'keywordseverywhere', 'label' => 'Keywords Everywhere', 'configured' => !empty(\Core\Settings::get('keywordseverywhere_api_key', '')), 'note' => ''],
+                    ]
+                ];
+            } elseif ($slug === 'ai-content') {
+                // SERP Extraction providers
+                $providerGroups[] = [
+                    'key' => 'serp',
+                    'label' => 'Estrazione SERP',
+                    'description' => 'Provider per estrazione risultati di ricerca Google',
+                    'setting_key' => 'serp_provider',
+                    'providers' => [
+                        ['value' => 'serpapi', 'label' => 'SerpAPI', 'configured' => !empty($currentSettings['serpapi_key'] ?? ''), 'note' => 'Chiave modulo'],
+                        ['value' => 'serper', 'label' => 'Serper.dev', 'configured' => !empty(\Core\Settings::get('serper_api_key', '')), 'note' => 'Chiave globale'],
+                    ]
+                ];
+            }
+
+            $moduleSlug = $module['slug'];
+            if (!empty($providerGroups)) {
+                include \ROOT_PATH . '/shared/views/components/module-provider-settings.php';
+            }
+        ?>
+        <?php endif; ?>
 
         <?php if (!empty($settingsGroups)): ?>
         <!-- Grouped Settings -->

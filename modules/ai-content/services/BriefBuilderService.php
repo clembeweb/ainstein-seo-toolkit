@@ -708,18 +708,44 @@ class BriefBuilderService
             $prompt .= "\n";
         }
 
-        if (!empty($brief['key_entities']['phrases'])) {
+        // Termini chiave: preferisci override utente se disponibile
+        if (!empty($brief['user_entities'])) {
+            $prompt .= "### TERMINI CHIAVE DA INCLUDERE\n";
+            $prompt .= implode(', ', $brief['user_entities']) . "\n\n";
+        } elseif (!empty($brief['key_entities']['phrases'])) {
             $prompt .= "### TERMINI CHIAVE DA INCLUDERE\n";
             $terms = array_column(array_slice($brief['key_entities']['phrases'], 0, 10), 'phrase');
             $prompt .= implode(', ', $terms) . "\n\n";
         }
 
+        // Struttura: preferisci headings editati dall'utente se disponibili
         $prompt .= "### STRUTTURA CONSIGLIATA\n";
-        $prompt .= "- Introduzione\n";
-        foreach ($brief['recommended_structure']['sections'] ?? [] as $section) {
-            $prompt .= "- {$section['suggested_h2']}\n";
+        if (!empty($brief['user_headings'])) {
+            foreach ($brief['user_headings'] as $heading) {
+                $tag = $heading['tag'] ?? 'H2';
+                $text = $heading['text'] ?? '';
+                if (empty($text)) {
+                    continue;
+                }
+                if ($tag === 'H1') {
+                    $prompt .= "- **{$text}** (titolo principale)\n";
+                } else {
+                    $prompt .= "- {$text}\n";
+                }
+            }
+        } else {
+            $prompt .= "- Introduzione\n";
+            foreach ($brief['recommended_structure']['sections'] ?? [] as $section) {
+                $prompt .= "- {$section['suggested_h2']}\n";
+            }
+            $prompt .= "- Conclusione\n";
         }
-        $prompt .= "- Conclusione\n";
+
+        // Note utente: istruzioni aggiuntive
+        if (!empty($brief['additional_notes'])) {
+            $prompt .= "\n### NOTE E ISTRUZIONI SPECIFICHE DELL'UTENTE\n";
+            $prompt .= $brief['additional_notes'] . "\n";
+        }
 
         return $prompt;
     }

@@ -452,32 +452,70 @@ class Keyword
     }
 
     /**
+     * Ottieni il provider volume configurato da admin
+     * @return string 'auto', 'rapidapi', 'dataforseo', 'keywordseverywhere'
+     */
+    private function getConfiguredVolumeProvider(): string
+    {
+        try {
+            return \Core\ModuleLoader::getSetting('seo-tracking', 'volume_provider', 'auto');
+        } catch (\Exception $e) {
+            return 'auto';
+        }
+    }
+
+    /**
      * Ottieni il service per i volumi di ricerca
-     * Cascade: RapidAPI (primario) -> DataForSEO -> Keywords Everywhere (fallback)
+     * Rispetta impostazione admin: se specifico usa solo quello, se auto usa cascata.
      *
      * @return \Services\RapidApiKeywordService|\Services\DataForSeoService|\Services\KeywordsEverywhereService|null
      */
     private function getVolumeService()
     {
-        // Prova RapidAPI (primario)
+        $configured = $this->getConfiguredVolumeProvider();
+
+        // Se provider specifico, usa solo quello
+        if ($configured !== 'auto') {
+            return $this->getSpecificVolumeService($configured);
+        }
+
+        // Auto: cascata RapidAPI -> DataForSEO -> Keywords Everywhere
         $rapidApi = new \Services\RapidApiKeywordService();
         if ($rapidApi->isConfigured()) {
             return $rapidApi;
         }
 
-        // Fallback: DataForSEO
         $dataForSeo = new \Services\DataForSeoService();
         if ($dataForSeo->isConfigured()) {
             return $dataForSeo;
         }
 
-        // Fallback: Keywords Everywhere
         $kwEverywhere = new \Services\KeywordsEverywhereService();
         if ($kwEverywhere->isConfigured()) {
             return $kwEverywhere;
         }
 
         return null;
+    }
+
+    /**
+     * Ottieni un service volume specifico per nome
+     */
+    private function getSpecificVolumeService(string $provider)
+    {
+        switch ($provider) {
+            case 'rapidapi':
+                $service = new \Services\RapidApiKeywordService();
+                return $service->isConfigured() ? $service : null;
+            case 'dataforseo':
+                $service = new \Services\DataForSeoService();
+                return $service->isConfigured() ? $service : null;
+            case 'keywordseverywhere':
+                $service = new \Services\KeywordsEverywhereService();
+                return $service->isConfigured() ? $service : null;
+            default:
+                return null;
+        }
     }
 
     /**
@@ -646,12 +684,29 @@ class Keyword
 
     /**
      * Ottieni tutti i provider volumi configurati (per fallback automatico)
-     * Ordine: RapidAPI -> DataForSEO -> Keywords Everywhere
+     * Rispetta impostazione admin: se specifico ritorna solo quello, se auto usa cascata.
      *
      * @return array Array associativo [nome => service]
      */
     private function getAllVolumeServices(): array
     {
+        $configured = $this->getConfiguredVolumeProvider();
+
+        // Se provider specifico, ritorna solo quello (nessun fallback)
+        if ($configured !== 'auto') {
+            $providerNames = [
+                'rapidapi' => 'RapidAPI',
+                'dataforseo' => 'DataForSEO',
+                'keywordseverywhere' => 'KeywordsEverywhere',
+            ];
+            $service = $this->getSpecificVolumeService($configured);
+            if ($service) {
+                return [$providerNames[$configured] ?? $configured => $service];
+            }
+            return [];
+        }
+
+        // Auto: cascata tutti i provider configurati
         $providers = [];
 
         $rapidApi = new \Services\RapidApiKeywordService();
