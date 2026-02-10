@@ -7,7 +7,7 @@
      x-transition:leave="transform transition ease-in-out duration-300"
      x-transition:leave-start="translate-x-0"
      x-transition:leave-end="-translate-x-full">
-    <div class="flex h-full flex-col bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">
+    <div class="flex h-full flex-col overflow-hidden bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">
         <!-- Mobile header -->
         <div class="flex h-16 items-center justify-between px-4 border-b border-slate-200 dark:border-slate-700">
             <a href="<?= url('/dashboard') ?>" class="flex items-center gap-2">
@@ -29,7 +29,7 @@
 
 <!-- Desktop sidebar -->
 <div class="hidden lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-64 lg:flex-col">
-    <div class="flex grow flex-col bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">
+    <div class="flex grow flex-col overflow-hidden bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">
         <!-- Logo -->
         <div class="flex h-16 shrink-0 items-center px-6 border-b border-slate-200 dark:border-slate-700">
             <a href="<?= url('/dashboard') ?>">
