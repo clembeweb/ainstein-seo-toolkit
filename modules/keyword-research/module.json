@@ -1,0 +1,157 @@
+{
+    "name": "AI Keyword Research",
+    "slug": "keyword-research",
+    "version": "1.0.0",
+    "description": "Keyword research potenziata da AI con clustering semantico e architettura sito",
+    "icon": "magnifying-glass",
+    "color": "emerald",
+    "menu_order": 25,
+    "requires": {
+        "php": ">=8.0",
+        "credits": true,
+        "services": ["ai"]
+    },
+    "settings": {
+        "ai_provider": {
+            "type": "select",
+            "label": "Provider AI",
+            "description": "Provider AI per questo modulo",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"},
+                {"value": "anthropic", "label": "Anthropic (Claude)"},
+                {"value": "openai", "label": "OpenAI (GPT)"}
+            ]
+        },
+        "ai_model": {
+            "type": "select",
+            "label": "Modello AI",
+            "description": "Modello AI per questo modulo",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"}
+            ]
+        },
+        "ai_fallback_enabled": {
+            "type": "select",
+            "label": "Fallback AI",
+            "description": "Fallback automatico su altro provider se il primario fallisce",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"},
+                {"value": "1", "label": "Abilitato"},
+                {"value": "0", "label": "Disabilitato"}
+            ]
+        },
+        "default_location": {
+            "type": "select",
+            "label": "Location predefinita",
+            "description": "Location predefinita per le ricerche keyword",
+            "default": "IT",
+            "options": {
+                "IT": "Italia",
+                "US": "Stati Uniti",
+                "GB": "Regno Unito",
+                "DE": "Germania",
+                "FR": "Francia",
+                "ES": "Spagna"
+            },
+            "group": "general"
+        },
+        "default_language": {
+            "type": "select",
+            "label": "Lingua predefinita",
+            "default": "it",
+            "options": {
+                "it": "Italiano",
+                "en": "Inglese",
+                "de": "Tedesco",
+                "fr": "Francese",
+                "es": "Spagnolo"
+            },
+            "group": "general"
+        },
+        "max_seeds": {
+            "type": "number",
+            "label": "Max seed keywords",
+            "description": "Numero massimo di seed keyword per ricerca",
+            "default": 5,
+            "min": 1,
+            "max": 10,
+            "group": "general"
+        },
+        "min_search_volume": {
+            "type": "number",
+            "label": "Volume minimo",
+            "description": "Escludi keyword con volume inferiore a questo valore",
+            "default": 10,
+            "min": 0,
+            "max": 1000,
+            "group": "general"
+        },
+        "max_clusters": {
+            "type": "number",
+            "label": "Max cluster AI",
+            "description": "Numero massimo di cluster generati dall'AI",
+            "default": 8,
+            "min": 3,
+            "max": 15,
+            "group": "general"
+        },
+        "cost_kr_ai_clustering": {
+            "type": "number",
+            "label": "Costo clustering AI (< 100 kw)",
+            "default": 2,
+            "min": 0,
+            "step": 0.5,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_kr_ai_clustering_large": {
+            "type": "number",
+            "label": "Costo clustering AI (> 100 kw)",
+            "default": 5,
+            "min": 0,
+            "step": 0.5,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_kr_ai_architecture": {
+            "type": "number",
+            "label": "Costo architettura sito AI",
+            "default": 5,
+            "min": 0,
+            "step": 0.5,
+            "admin_only": true,
+            "group": "costs"
+        }
+    },
+    "settings_groups": {
+        "ai_config": {
+            "label": "Configurazione AI",
+            "icon": "sparkles",
+            "description": "Provider e modello AI per questo modulo",
+            "order": 0
+        },
+        "general": {
+            "label": "Impostazioni Generali",
+            "description": "Configurazione predefinita per le ricerche keyword",
+            "icon": "cog",
+            "order": 1,
+            "collapsed": false
+        },
+        "costs": {
+            "label": "Costi Crediti",
+            "description": "Crediti consumati per ogni operazione AI",
+            "icon": "currency-euro",
+            "order": 2,
+            "collapsed": true
+        }
+    }
+}

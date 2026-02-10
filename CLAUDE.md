@@ -29,7 +29,7 @@
 5. API Keys in Database              → MAI in .env, MAI hardcoded
 6. Routes pattern standard           → /modulo/projects/{id}/sezione
 7. Prepared statements SEMPRE        → MAI concatenare SQL
-8. CSRF token su form POST           → csrf_token() in ogni form
+8. CSRF token su form POST           → campo `_csrf_token` (con underscore!)
 9. ai-content è il reference         → Copia pattern da lì
 10. Database::reconnect()            → Prima di salvare dopo AI call
 11. OAuth GSC pattern seo-tracking   → GoogleOAuthService centralizzato
@@ -463,7 +463,7 @@ async startPolling() {
 [ ] Tabelle con prefisso modulo corretto
 [ ] Nessuna API key in file
 [ ] Query SQL con prepared statements
-[ ] CSRF token su form POST
+[ ] CSRF token: campo `_csrf_token` in form/FormData, `csrf_token()` per il valore
 [ ] Database::reconnect() dopo chiamate lunghe
 [ ] Scraping usa ScraperService::scrape()
 [ ] Chiamate API esterne loggano con ApiLoggerService
@@ -499,6 +499,8 @@ async startPolling() {
 | SSE non invia eventi | Output buffering | `ob_flush(); flush();` dopo ogni evento |
 | Job bloccato in processing | Processo crashato | `resetStuckProcessing(30)` nel model queue |
 | API call non loggata | ApiLoggerService mancante | Aggiungi log dopo ogni chiamata API |
+| "Errore di connessione" AJAX POST | Campo CSRF con nome sbagliato | Usare `_csrf_token` (con underscore), NON `csrf_token` |
+| SSE timeout dopo 30s | `set_time_limit` non rimosso | `set_time_limit(0)` prima del loop SSE e prima di AI call |
 
 ---
 
