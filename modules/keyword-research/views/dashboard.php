@@ -1,6 +1,22 @@
+<?php
+// Onboarding tour
+$onboardingConfig = require BASE_PATH . '/config/onboarding.php';
+$onboardingModuleSlug = 'keyword-research';
+$showTour = !\Core\OnboardingService::isModuleCompleted($user['id'] ?? 0, $onboardingModuleSlug);
+if ($showTour && isset($onboardingConfig[$onboardingModuleSlug])):
+    $onboardingSteps = $onboardingConfig[$onboardingModuleSlug]['steps'];
+    $onboardingModuleName = $onboardingConfig[$onboardingModuleSlug]['name'];
+    echo \Core\View::partial('components/onboarding-spotlight', [
+        'onboardingSteps' => $onboardingSteps,
+        'onboardingModuleName' => $onboardingModuleName,
+        'onboardingModuleSlug' => $onboardingModuleSlug,
+    ]);
+endif;
+?>
+
 <div class="space-y-8">
     <!-- Header -->
-    <div>
+    <div data-tour="kr-header">
         <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Keyword Research</h1>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Ricerca keyword potenziata da AI con clustering semantico e architettura sito</p>
     </div>
@@ -8,7 +24,7 @@
     <!-- 3 Mode Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Research Guidata -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
+        <div data-tour="kr-guided" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
             <div class="p-6">
                 <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm mb-4">
                     <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -36,7 +52,7 @@
         </div>
 
         <!-- Architettura Sito -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
+        <div data-tour="kr-architecture" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
             <div class="p-6">
                 <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm mb-4">
                     <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -64,7 +80,7 @@
         </div>
 
         <!-- Quick Check -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
+        <div data-tour="kr-quickcheck" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
             <div class="p-6">
                 <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-sm mb-4">
                     <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">

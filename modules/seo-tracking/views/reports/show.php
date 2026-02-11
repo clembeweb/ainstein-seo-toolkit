@@ -87,7 +87,7 @@
         <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/reports') ?>" class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
             ← Torna alla lista report
         </a>
-        <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/reports/' . $report['id'] . '/delete') ?>" method="POST" onsubmit="return confirm('Eliminare questo report?')">
+        <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/reports/' . $report['id'] . '/delete') ?>" method="POST" x-data @submit.prevent="window.ainstein.confirm('Eliminare questo report?', {destructive: true}).then(() => $el.submit())">
             <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
             <button type="submit" class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
                 Elimina report
@@ -100,7 +100,7 @@
 function copyToClipboard() {
     const content = document.getElementById('report-content').innerText;
     navigator.clipboard.writeText(content).then(() => {
-        alert('Report copiato negli appunti!');
+        window.ainstein.toast('Report copiato negli appunti!', 'success');
     }).catch(err => {
         console.error('Errore nella copia:', err);
     });

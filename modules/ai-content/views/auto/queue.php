@@ -360,16 +360,12 @@ function queueManager() {
                 const data = await response.json();
 
                 if (data.success) {
-                    if (window.dispatchEvent) {
-                        window.dispatchEvent(new CustomEvent('toast', {
-                            detail: { message: 'Aggiornato!', type: 'success' }
-                        }));
-                    }
+                    window.ainstein.toast('Aggiornato!', 'success');
                 } else {
-                    alert(data.error || 'Errore durante l\'aggiornamento');
+                    window.ainstein.alert(data.error || 'Errore durante l\'aggiornamento', 'error');
                 }
             } catch (e) {
-                alert('Errore di connessione');
+                window.ainstein.alert('Errore di connessione', 'error');
             }
         }
     }

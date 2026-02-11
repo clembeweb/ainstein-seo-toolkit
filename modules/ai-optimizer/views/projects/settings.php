@@ -83,7 +83,7 @@ $currentPage = 'settings';
                 Eliminando il progetto, tutte le ottimizzazioni associate verranno eliminate definitivamente.
             </p>
             <form action="<?= url('/ai-optimizer/project/' . $projectId . '/delete') ?>" method="POST"
-                  onsubmit="return confirm('Sei sicuro di voler eliminare questo progetto? Questa azione non può essere annullata.');">
+                  x-data @submit.prevent="window.ainstein.confirm('Sei sicuro di voler eliminare questo progetto? Questa azione non può essere annullata.', {destructive: true}).then(() => $el.submit())">
                 <?= csrf_field() ?>
                 <button type="submit"
                         class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors">

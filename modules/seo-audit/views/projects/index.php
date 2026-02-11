@@ -1,12 +1,28 @@
+<?php
+// Onboarding tour
+$onboardingConfig = require BASE_PATH . '/config/onboarding.php';
+$onboardingModuleSlug = 'seo-audit';
+$showTour = !\Core\OnboardingService::isModuleCompleted($user['id'] ?? 0, $onboardingModuleSlug);
+if ($showTour && isset($onboardingConfig[$onboardingModuleSlug])):
+    $onboardingSteps = $onboardingConfig[$onboardingModuleSlug]['steps'];
+    $onboardingModuleName = $onboardingConfig[$onboardingModuleSlug]['name'];
+    echo \Core\View::partial('components/onboarding-spotlight', [
+        'onboardingSteps' => $onboardingSteps,
+        'onboardingModuleName' => $onboardingModuleName,
+        'onboardingModuleSlug' => $onboardingModuleSlug,
+    ]);
+endif;
+?>
+
 <div class="space-y-6">
     <!-- Header -->
-    <div class="sm:flex sm:items-center sm:justify-between">
+    <div class="sm:flex sm:items-center sm:justify-between" data-tour="sa-header">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">SEO Audit</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Audit SEO completo dei tuoi siti web</p>
         </div>
         <div class="mt-4 sm:mt-0">
-            <a href="<?= url('/seo-audit/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
+            <a href="<?= url('/seo-audit/create') ?>" data-tour="sa-newaudit" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>

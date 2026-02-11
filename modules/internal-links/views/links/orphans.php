@@ -146,7 +146,7 @@
                                     <i data-lucide="external-link" class="w-4 h-4"></i>
                                 </a>
                                 <form action="<?= url("/internal-links/project/{$project['id']}/urls/delete/{$page['id']}") ?>" method="POST" class="inline"
-                                      onsubmit="return confirm('<?= __('Sei sicuro di voler eliminare questo URL?') ?>')">
+                                      x-data @submit.prevent="window.ainstein.confirm('Sei sicuro di voler eliminare questo URL?', {destructive: true}).then(() => $el.submit())">
                                     <?= csrf_field() ?>
                                     <button type="submit"
                                             class="p-1.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition"
@@ -187,39 +187,42 @@ function executeBulkAction() {
     const selected = Array.from(document.querySelectorAll('.orphan-checkbox:checked')).map(cb => cb.value);
 
     if (!action) {
-        alert('<?= __('Seleziona un\'azione') ?>');
+        window.ainstein.alert('Seleziona un\'azione', 'warning');
         return;
     }
 
     if (selected.length === 0) {
-        alert('<?= __('Seleziona almeno un URL') ?>');
+        window.ainstein.alert('Seleziona almeno un URL', 'warning');
         return;
     }
 
-    if (action === 'delete' && !confirm(`<?= __('Sei sicuro di voler eliminare') ?> ${selected.length} <?= __('URL') ?>?`)) {
-        return;
-    }
+    const doAction = () => {
+        fetch('<?= url("/internal-links/project/{$project['id']}/urls/bulk") ?>', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': '<?= csrf_token() ?>'
+            },
+            body: JSON.stringify({ action: action, url_ids: selected })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                window.ainstein.alert(data.error || 'Errore', 'error');
+            }
+        })
+        .catch(error => {
+            window.ainstein.alert('Errore durante l\'esecuzione', 'error');
+        });
+    };
 
-    // Execute bulk action via API
-    fetch('<?= url("/internal-links/project/{$project['id']}/urls/bulk") ?>', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': '<?= csrf_token() ?>'
-        },
-        body: JSON.stringify({ action: action, url_ids: selected })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.reload();
-        } else {
-            alert(data.error || 'Errore');
-        }
-    })
-    .catch(error => {
-        alert('Errore durante l\'esecuzione');
-    });
+    if (action === 'delete') {
+        window.ainstein.confirm(`Sei sicuro di voler eliminare ${selected.length} URL?`, {destructive: true}).then(() => doAction());
+    } else {
+        doAction();
+    }
 }
 
 // Reinit Lucide icons

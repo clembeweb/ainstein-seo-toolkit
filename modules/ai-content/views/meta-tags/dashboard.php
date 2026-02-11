@@ -385,9 +385,9 @@ function closeAndReload() {
 async function cancelJob() {
     if (!currentJobId) return;
 
-    if (!confirm('Vuoi annullare il job? Le pagine gia scrappate verranno salvate.')) {
-        return;
-    }
+    try {
+        await window.ainstein.confirm('Vuoi annullare il job? Le pagine gia scrappate verranno salvate.', {destructive: true});
+    } catch (e) { return; }
 
     try {
         const formData = new FormData();

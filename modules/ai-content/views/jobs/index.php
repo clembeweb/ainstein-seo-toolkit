@@ -312,7 +312,9 @@ function jobsManager() {
         cleanupDays: '7',
 
         async cancelJob(id) {
-            if (!confirm('Sei sicuro di voler cancellare questo job?')) return;
+            try {
+                await window.ainstein.confirm('Sei sicuro di voler cancellare questo job?', {destructive: true});
+            } catch (e) { return; }
 
             this.actionLoading = true;
             try {
@@ -347,7 +349,9 @@ function jobsManager() {
         },
 
         async deleteJob(id) {
-            if (!confirm('Sei sicuro di voler eliminare questo job dallo storico?')) return;
+            try {
+                await window.ainstein.confirm('Sei sicuro di voler eliminare questo job dallo storico?', {destructive: true});
+            } catch (e) { return; }
 
             this.actionLoading = true;
             try {
@@ -382,7 +386,9 @@ function jobsManager() {
         },
 
         async cancelStuck() {
-            if (!confirm('Cancellare tutti i job bloccati (running da più di 30 minuti)?')) return;
+            try {
+                await window.ainstein.confirm('Cancellare tutti i job bloccati (running da più di 30 minuti)?', {destructive: true});
+            } catch (e) { return; }
 
             this.actionLoading = true;
             try {

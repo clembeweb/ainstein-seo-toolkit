@@ -338,12 +338,12 @@ async function startProcess() {
             // Start SSE connection for real-time updates
             startSSE();
         } else {
-            alert(data.error || 'Errore nell\'avvio del processo');
+            window.ainstein.alert(data.error || 'Errore nell\'avvio del processo', 'error');
             resetButton();
         }
     } catch (error) {
         console.error('Start process error:', error);
-        alert('Errore di connessione');
+        window.ainstein.alert('Errore di connessione', 'error');
         resetButton();
     }
 }
@@ -494,9 +494,9 @@ async function checkFinalStatus() {
 async function cancelProcess() {
     if (!currentJobId) return;
 
-    if (!confirm('Sei sicuro di voler annullare l\'elaborazione?')) {
-        return;
-    }
+    try {
+        await window.ainstein.confirm('Sei sicuro di voler annullare l\'elaborazione?', {destructive: true});
+    } catch (e) { return; }
 
     try {
         const formData = new FormData();
@@ -515,11 +515,11 @@ async function cancelProcess() {
             stopSSE();
             showCancelled();
         } else {
-            alert(data.error || 'Errore nell\'annullamento');
+            window.ainstein.alert(data.error || 'Errore nell\'annullamento', 'error');
         }
     } catch (error) {
         console.error('Cancel process error:', error);
-        alert('Errore di connessione');
+        window.ainstein.alert('Errore di connessione', 'error');
     }
 }
 

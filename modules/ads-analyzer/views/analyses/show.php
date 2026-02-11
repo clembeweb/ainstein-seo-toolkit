@@ -333,7 +333,7 @@ function analysisResultsManager(config) {
             <?php endforeach; ?>
 
             if (selectedKeywords.length === 0) {
-                alert('Nessuna keyword selezionata');
+                window.ainstein.alert('Nessuna keyword selezionata', 'warning');
                 return;
             }
 

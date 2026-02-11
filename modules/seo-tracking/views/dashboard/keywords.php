@@ -240,8 +240,7 @@ function updateBulkBar() {
 }
 
 function deleteKeyword(id) {
-    if (!confirm('Eliminare questa keyword dai dati GSC?')) return;
-
+    window.ainstein.confirm('Eliminare questa keyword dai dati GSC?', {destructive: true}).then(() => {
     fetch(`${baseUrl}/keywords/delete/${id}`, {
         method: 'POST',
         headers: {
@@ -259,12 +258,13 @@ function deleteKeyword(id) {
                 setTimeout(() => row.remove(), 300);
             }
         } else {
-            alert(data.error || 'Errore durante l\'eliminazione');
+            window.ainstein.alert(data.error || 'Errore durante l\'eliminazione', 'error');
         }
     })
     .catch(err => {
         console.error(err);
-        alert('Errore di rete');
+        window.ainstein.alert('Errore di rete', 'error');
+    });
     });
 }
 
@@ -272,8 +272,7 @@ function bulkDelete() {
     const ids = [...document.querySelectorAll('.row-checkbox:checked')].map(cb => cb.value);
     if (ids.length === 0) return;
 
-    if (!confirm(`Eliminare ${ids.length} keywords dai dati GSC?`)) return;
-
+    window.ainstein.confirm(`Eliminare ${ids.length} keywords dai dati GSC?`, {destructive: true}).then(() => {
     const formData = new FormData();
     ids.forEach(id => formData.append('ids[]', id));
 
@@ -294,12 +293,13 @@ function bulkDelete() {
             updateBulkBar();
             document.getElementById('selectAll').checked = false;
         } else {
-            alert(data.error || 'Errore durante l\'eliminazione');
+            window.ainstein.alert(data.error || 'Errore durante l\'eliminazione', 'error');
         }
     })
     .catch(err => {
         console.error(err);
-        alert('Errore di rete');
+        window.ainstein.alert('Errore di rete', 'error');
+    });
     });
 }
 </script>

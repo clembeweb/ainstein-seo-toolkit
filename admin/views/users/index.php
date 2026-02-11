@@ -1,9 +1,12 @@
+<?php $pagination = $pagination ?? ['current' => 1, 'total' => 1, 'total_items' => 0, 'per_page' => 50]; ?>
 <div class="space-y-6">
     <!-- Header -->
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Gestione Utenti</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Visualizza e gestisci tutti gli utenti della piattaforma</p>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                <?= number_format($pagination['total_items']) ?> utenti totali
+            </p>
         </div>
     </div>
 
@@ -123,5 +126,40 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Paginazione -->
+        <?php if ($pagination['total'] > 1): ?>
+            <?php $filters = array_filter(['search' => $search, 'role' => $role, 'status' => $status]); ?>
+            <div class="px-4 py-3 bg-slate-50 dark:bg-slate-700/50 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="text-sm text-slate-500 dark:text-slate-400">
+                    Mostrando <?= (($pagination['current'] - 1) * $pagination['per_page']) + 1 ?> -
+                    <?= min($pagination['current'] * $pagination['per_page'], $pagination['total_items']) ?>
+                    di <?= number_format($pagination['total_items']) ?>
+                </div>
+                <div class="flex gap-2">
+                    <?php if ($pagination['current'] > 1): ?>
+                        <a href="?<?= http_build_query(array_merge($filters, ['page' => $pagination['current'] - 1])) ?>"
+                           class="px-3 py-1 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </a>
+                    <?php endif; ?>
+
+                    <span class="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-lg font-medium">
+                        <?= $pagination['current'] ?> / <?= $pagination['total'] ?>
+                    </span>
+
+                    <?php if ($pagination['current'] < $pagination['total']): ?>
+                        <a href="?<?= http_build_query(array_merge($filters, ['page' => $pagination['current'] + 1])) ?>"
+                           class="px-3 py-1 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+        <?php endif; ?>
     </div>
 </div>

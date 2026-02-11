@@ -73,6 +73,7 @@ use Core\Middleware;
 use Core\Database;
 use Core\Credits;
 use Core\ModuleLoader;
+use Core\OnboardingService;
 
 // Auto-detect basePath per supportare sia vhost che subfolder
 $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
@@ -251,6 +252,10 @@ Router::get('/dashboard', function () {
         [$user['id']]
     );
 
+    // Onboarding status
+    $onboardingWelcomeCompleted = OnboardingService::isWelcomeCompleted($user['id']);
+    $onboardingCompletedModules = OnboardingService::getCompletedModules($user['id']);
+
     return View::render('dashboard', [
         'title' => 'Dashboard',
         'user' => $user,
@@ -259,6 +264,9 @@ Router::get('/dashboard', function () {
         'usageMonth' => $usageMonth,
         'projectsCount' => $projectsCount,
         'recentUsage' => $recentUsage,
+        'onboardingWelcomeCompleted' => $onboardingWelcomeCompleted,
+        'onboardingCompletedModules' => $onboardingCompletedModules,
+        'onboardingConfig' => require BASE_PATH . '/config/onboarding.php',
     ]);
 });
 
@@ -319,6 +327,38 @@ Router::post('/profile/password', function () {
 
     $_SESSION['_flash']['success'] = 'Password aggiornata';
     Router::redirect('/profile');
+});
+
+// --- Onboarding Routes ---
+Router::post('/onboarding/welcome/complete', function () {
+    Middleware::auth();
+    Middleware::csrf();
+    OnboardingService::completeWelcome(Auth::id());
+    echo json_encode(['success' => true]);
+});
+
+Router::post('/onboarding/{moduleSlug}/complete', function (string $moduleSlug) {
+    Middleware::auth();
+    Middleware::csrf();
+    OnboardingService::completeModule(Auth::id(), $moduleSlug);
+    echo json_encode(['success' => true]);
+});
+
+Router::post('/onboarding/{moduleSlug}/reset', function (string $moduleSlug) {
+    Middleware::auth();
+    Middleware::csrf();
+    OnboardingService::resetModule(Auth::id(), $moduleSlug);
+    echo json_encode(['success' => true]);
+});
+
+Router::get('/onboarding/status', function () {
+    Middleware::auth();
+    $userId = Auth::id();
+    echo json_encode([
+        'success' => true,
+        'welcome_completed' => OnboardingService::isWelcomeCompleted($userId),
+        'completed_modules' => OnboardingService::getCompletedModules($userId),
+    ]);
 });
 
 // --- OAuth Routes (centralizzati) ---

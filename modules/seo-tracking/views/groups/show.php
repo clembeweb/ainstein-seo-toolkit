@@ -342,7 +342,7 @@
     <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-red-200 dark:border-red-900/50 p-6">
         <h3 class="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">Zona Pericolosa</h3>
         <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">L'eliminazione del gruppo non elimina le keyword, solo l'associazione.</p>
-        <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/groups/' . $group['id'] . '/delete') ?>" method="POST" onsubmit="return confirm('Sei sicuro di voler eliminare questo gruppo?')">
+        <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/groups/' . $group['id'] . '/delete') ?>" method="POST" x-data @submit.prevent="window.ainstein.confirm('Sei sicuro di voler eliminare questo gruppo?', {destructive: true}).then(() => $el.submit())">
             <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
             <button type="submit" class="px-4 py-2 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
                 Elimina Gruppo

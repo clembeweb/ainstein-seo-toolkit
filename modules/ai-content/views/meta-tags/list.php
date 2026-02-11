@@ -511,7 +511,7 @@ function metaTagsList() {
                 const data = await resp.json();
 
                 if (!data.success) {
-                    alert(data.error || 'Errore avvio generazione');
+                    window.ainstein.alert(data.error || 'Errore avvio generazione', 'error');
                     this.generating = false;
                     return;
                 }
@@ -529,7 +529,7 @@ function metaTagsList() {
                 this.connectGenerateSSE();
 
             } catch (error) {
-                alert('Errore di connessione');
+                window.ainstein.alert('Errore di connessione', 'error');
                 this.generating = false;
             }
         },
@@ -690,10 +690,10 @@ function metaTagsList() {
                     this.showDeleteModal = false;
                     location.reload();
                 } else {
-                    alert('Errore: ' + (data.error || 'Eliminazione fallita'));
+                    window.ainstein.alert('Errore: ' + (data.error || 'Eliminazione fallita'), 'error');
                 }
             } catch (error) {
-                alert('Errore di connessione');
+                window.ainstein.alert('Errore di connessione', 'error');
             }
             this.deleting = false;
         },
@@ -710,10 +710,14 @@ function metaTagsList() {
                     body: formData
                 });
                 const data = await response.json();
-                alert(data.success ? data.message : 'Errore: ' + data.error);
-                if (data.success) location.reload();
+                if (data.success) {
+                    window.ainstein.toast(data.message, 'success');
+                    location.reload();
+                } else {
+                    window.ainstein.alert('Errore: ' + data.error, 'error');
+                }
             } catch (error) {
-                alert('Errore di connessione');
+                window.ainstein.alert('Errore di connessione', 'error');
             }
             this.loading = false;
         },
@@ -731,10 +735,10 @@ function metaTagsList() {
                 if (data.success) {
                     location.reload();
                 } else {
-                    alert('Errore: ' + data.error);
+                    window.ainstein.alert('Errore: ' + data.error, 'error');
                 }
             } catch (error) {
-                alert('Errore di connessione');
+                window.ainstein.alert('Errore di connessione', 'error');
             }
         },
 
@@ -748,15 +752,21 @@ function metaTagsList() {
                     body: formData
                 });
                 const data = await response.json();
-                alert(data.success ? data.message : 'Errore: ' + data.error);
-                if (data.success) location.reload();
+                if (data.success) {
+                    window.ainstein.toast(data.message, 'success');
+                    location.reload();
+                } else {
+                    window.ainstein.alert('Errore: ' + data.error, 'error');
+                }
             } catch (error) {
-                alert('Errore di connessione');
+                window.ainstein.alert('Errore di connessione', 'error');
             }
         },
 
         async bulkApprove() {
-            if (!confirm(`Approvare ${this.selectedIds.length} meta tag?`)) return;
+            try {
+                await window.ainstein.confirm(`Approvare ${this.selectedIds.length} meta tag?`, {destructive: false});
+            } catch (e) { return; }
 
             try {
                 const formData = new FormData();
@@ -768,15 +778,21 @@ function metaTagsList() {
                     body: formData
                 });
                 const data = await response.json();
-                alert(data.success ? data.message : 'Errore: ' + data.error);
-                if (data.success) location.reload();
+                if (data.success) {
+                    window.ainstein.toast(data.message, 'success');
+                    location.reload();
+                } else {
+                    window.ainstein.alert('Errore: ' + data.error, 'error');
+                }
             } catch (error) {
-                alert('Errore di connessione');
+                window.ainstein.alert('Errore di connessione', 'error');
             }
         },
 
         async bulkDelete() {
-            if (!confirm(`Eliminare ${this.selectedIds.length} meta tag?`)) return;
+            try {
+                await window.ainstein.confirm(`Eliminare ${this.selectedIds.length} meta tag?`, {destructive: true});
+            } catch (e) { return; }
 
             try {
                 const formData = new FormData();
@@ -788,10 +804,14 @@ function metaTagsList() {
                     body: formData
                 });
                 const data = await response.json();
-                alert(data.success ? data.message : 'Errore: ' + data.error);
-                if (data.success) location.reload();
+                if (data.success) {
+                    window.ainstein.toast(data.message, 'success');
+                    location.reload();
+                } else {
+                    window.ainstein.alert('Errore: ' + data.error, 'error');
+                }
             } catch (error) {
-                alert('Errore di connessione');
+                window.ainstein.alert('Errore di connessione', 'error');
             }
         }
     }

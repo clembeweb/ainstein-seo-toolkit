@@ -159,7 +159,7 @@ $currentPage = 'optimize';
 function copyContent() {
     const content = document.getElementById('optimizedContent').innerHTML;
     navigator.clipboard.writeText(content).then(() => {
-        alert('Contenuto copiato negli appunti!');
+        window.ainstein.toast('Contenuto copiato negli appunti!', 'success');
     }).catch(err => {
         console.error('Errore copia:', err);
     });

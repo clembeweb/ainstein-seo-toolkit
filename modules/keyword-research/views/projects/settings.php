@@ -117,7 +117,7 @@
                 Eliminando questo progetto verranno eliminate anche tutte le ricerche, i cluster e le keyword associate. Questa azione non può essere annullata.
             </p>
             <form action="<?= url('/keyword-research/project/' . $project['id'] . '/delete') ?>" method="POST"
-                  onsubmit="return confirm('Sei sicuro di voler eliminare questo progetto? Verranno eliminate <?= $stats['researches_count'] ?? 0 ?> ricerche e <?= $stats['total_keywords'] ?? 0 ?> keyword. Questa azione non può essere annullata.');">
+                  x-data @submit.prevent="window.ainstein.confirm('Sei sicuro di voler eliminare questo progetto? Verranno eliminate <?= $stats['researches_count'] ?? 0 ?> ricerche e <?= $stats['total_keywords'] ?? 0 ?> keyword. Questa azione non può essere annullata.', {destructive: true}).then(() => $el.submit())">
                 <?= csrf_field() ?>
                 <button type="submit" class="px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition-colors">
                     Elimina progetto

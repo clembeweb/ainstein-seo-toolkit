@@ -131,7 +131,8 @@
             <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Azioni</h3>
                 <div class="space-y-3">
-                    <form action="<?= url('/internal-links/project/' . $project['id'] . '/urls/reset') ?>" method="POST" onsubmit="return confirm('Vuoi resettare tutti gli URL a pending?')">
+                    <form action="<?= url('/internal-links/project/' . $project['id'] . '/urls/reset') ?>" method="POST"
+                          x-data @submit.prevent="window.ainstein.confirm('Vuoi resettare tutti gli URL a pending?', {destructive: true}).then(() => $el.submit())">
                         <?= csrf_field() ?>
                         <button type="submit" class="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
                             Reset tutti a pending

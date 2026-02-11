@@ -3,22 +3,30 @@ $log = $log ?? [];
 
 // Mappa colori provider
 $providerColors = [
-    'dataforseo' => 'text-blue-600 dark:text-blue-400',
-    'serpapi' => 'text-purple-600 dark:text-purple-400',
-    'serper' => 'text-green-600 dark:text-green-400',
-    'google_gsc' => 'text-red-600 dark:text-red-400',
-    'google_oauth' => 'text-orange-600 dark:text-orange-400',
-    'google_ga4' => 'text-yellow-600 dark:text-yellow-400',
+    'dataforseo'              => 'text-blue-600 dark:text-blue-400',
+    'serpapi'                 => 'text-purple-600 dark:text-purple-400',
+    'serper'                  => 'text-green-600 dark:text-green-400',
+    'google_gsc'              => 'text-red-600 dark:text-red-400',
+    'google_oauth'            => 'text-orange-600 dark:text-orange-400',
+    'google_ga4'              => 'text-yellow-600 dark:text-yellow-400',
+    'rapidapi_keyword'        => 'text-cyan-600 dark:text-cyan-400',
+    'rapidapi_keyword_insight' => 'text-teal-600 dark:text-teal-400',
+    'keywordseverywhere'      => 'text-indigo-600 dark:text-indigo-400',
+    'openai_dalle'            => 'text-emerald-600 dark:text-emerald-400',
 ];
 
 // Mappa nomi provider
 $providerNames = [
-    'dataforseo' => 'DataForSEO',
-    'serpapi' => 'SERP API',
-    'serper' => 'Serper.dev',
-    'google_gsc' => 'Google GSC',
-    'google_oauth' => 'Google OAuth',
-    'google_ga4' => 'Google GA4',
+    'dataforseo'              => 'DataForSEO',
+    'serpapi'                 => 'SerpAPI',
+    'serper'                  => 'Serper.dev',
+    'google_gsc'              => 'Google GSC',
+    'google_oauth'            => 'Google OAuth',
+    'google_ga4'              => 'Google GA4',
+    'rapidapi_keyword'        => 'RapidAPI Keyword',
+    'rapidapi_keyword_insight' => 'RapidAPI Insight',
+    'keywordseverywhere'      => 'Keywords Everywhere',
+    'openai_dalle'            => 'OpenAI DALL-E',
 ];
 ?>
 
@@ -60,15 +68,15 @@ $providerNames = [
                 <div class="mt-1">
                     <?php if ($log['status'] === 'success'): ?>
                         <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
-                            Success
+                            Successo
                         </span>
                     <?php elseif ($log['status'] === 'error'): ?>
                         <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
-                            Error
+                            Errore
                         </span>
                     <?php else: ?>
                         <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
-                            Rate Limited
+                            Limite
                         </span>
                     <?php endif; ?>
                 </div>
@@ -195,7 +203,7 @@ function copyToClipboard(elementId) {
     const element = document.getElementById(elementId);
     if (element) {
         navigator.clipboard.writeText(element.textContent).then(() => {
-            alert('Copiato negli appunti!');
+            window.ainstein.toast('Copiato negli appunti!', 'success');
         });
     }
 }

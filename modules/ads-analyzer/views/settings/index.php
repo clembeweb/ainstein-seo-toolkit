@@ -129,9 +129,10 @@
                     <p class="font-medium text-slate-900 dark:text-white truncate"><?= e($ctx['name']) ?></p>
                     <p class="text-xs text-slate-500 dark:text-slate-400 truncate"><?= e(substr($ctx['context'], 0, 100)) ?>...</p>
                 </div>
-                <form action="<?= url('/ads-analyzer/contexts/' . $ctx['id'] . '/delete') ?>" method="POST" class="ml-3">
+                <form action="<?= url('/ads-analyzer/contexts/' . $ctx['id'] . '/delete') ?>" method="POST" class="ml-3"
+                      x-data @submit.prevent="window.ainstein.confirm('Eliminare questo contesto?', {destructive: true}).then(() => $el.submit())">
                     <?= csrf_field() ?>
-                    <button type="submit" onclick="return confirm('Eliminare questo contesto?')" class="text-red-500 hover:text-red-700">
+                    <button type="submit" class="text-red-500 hover:text-red-700">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>

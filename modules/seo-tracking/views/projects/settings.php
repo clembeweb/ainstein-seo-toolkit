@@ -214,7 +214,7 @@
                     <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
                         Eliminando il progetto verranno cancellati tutti i dati storici, keyword, report e connessioni. Questa azione non e reversibile.
                     </p>
-                    <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/delete') ?>" method="POST" onsubmit="return confirm('Sei sicuro di voler eliminare questo progetto? Tutti i dati verranno persi.');">
+                    <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/delete') ?>" method="POST" x-data @submit.prevent="window.ainstein.confirm('Sei sicuro di voler eliminare questo progetto? Tutti i dati verranno persi.', {destructive: true}).then(() => $el.submit())">
                         <?= csrf_field() ?>
 
                         <button type="submit" class="px-4 py-2 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm">

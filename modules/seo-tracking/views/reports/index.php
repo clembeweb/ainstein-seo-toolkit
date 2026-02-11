@@ -122,7 +122,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                             </svg>
                         </a>
-                        <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/reports/' . $report['id'] . '/delete') ?>" method="POST" class="inline" onsubmit="return confirm('Eliminare questo report?')">
+                        <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/reports/' . $report['id'] . '/delete') ?>" method="POST" class="inline" x-data @submit.prevent="window.ainstein.confirm('Eliminare questo report?', {destructive: true}).then(() => $el.submit())">
                             <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
                             <button type="submit" class="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20" title="Elimina">
                                 <svg class="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">

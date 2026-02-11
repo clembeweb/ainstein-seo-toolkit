@@ -102,7 +102,8 @@
             <div class="bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 p-6">
                 <h3 class="text-lg font-semibold text-red-700 dark:text-red-400 mb-2">Zona Pericolosa</h3>
                 <p class="text-sm text-red-600 dark:text-red-400 mb-4">L'eliminazione del progetto e irreversibile. Tutti i dati verranno persi.</p>
-                <form action="<?= url('/internal-links/project/' . $project['id'] . '/delete') ?>" method="POST" onsubmit="return confirm('Sei sicuro di voler eliminare questo progetto? Questa azione e irreversibile.')">
+                <form action="<?= url('/internal-links/project/' . $project['id'] . '/delete') ?>" method="POST"
+                      x-data @submit.prevent="window.ainstein.confirm('Sei sicuro di voler eliminare questo progetto? Questa azione e irreversibile.', {destructive: true, buttonText: 'Elimina Progetto'}).then(() => $el.submit())">
                     <?= csrf_field() ?>
                     <button type="submit" class="inline-flex items-center px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

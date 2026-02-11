@@ -133,7 +133,7 @@ class ApiLogsController
         $log = Database::fetch("SELECT * FROM api_logs WHERE id = ?", [$id]);
 
         if (!$log) {
-            $_SESSION['flash_error'] = 'Log non trovato';
+            $_SESSION['_flash']['error'] = 'Log non trovato';
             header('Location: ' . url('/admin/api-logs'));
             exit;
         }
@@ -171,7 +171,7 @@ class ApiLogsController
             [$days]
         );
 
-        $_SESSION['flash_success'] = "Eliminati {$result} log più vecchi di {$days} giorni";
+        $_SESSION['_flash']['success'] = "Eliminati {$result} log più vecchi di {$days} giorni";
         header('Location: ' . url('/admin/api-logs'));
         exit;
     }
@@ -217,10 +217,25 @@ class ApiLogsController
             ORDER BY calls DESC
         ");
 
+        // Trend giornaliero (ultimi 7 giorni)
+        $dailyTrend = Database::fetchAll("
+            SELECT
+                DATE(created_at) as day,
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as success,
+                SUM(CASE WHEN status = 'error' THEN 1 ELSE 0 END) as errors,
+                SUM(cost) as cost
+            FROM api_logs
+            WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+            GROUP BY DATE(created_at)
+            ORDER BY day ASC
+        ");
+
         return [
             'last_24h' => $last24h ?: ['total' => 0, 'success' => 0, 'errors' => 0, 'rate_limited' => 0, 'cost' => 0, 'avg_duration' => 0],
             'last_30d' => $last30d ?: ['total' => 0, 'cost' => 0, 'credits' => 0],
             'by_provider' => $byProvider ?: [],
+            'daily_trend' => $dailyTrend ?: [],
         ];
     }
 }

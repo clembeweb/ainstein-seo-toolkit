@@ -163,7 +163,7 @@
                 Eliminando questo progetto verranno eliminate anche tutte le keywords e gli articoli associati. Questa azione non può essere annullata.
             </p>
 
-            <form action="<?= url('/ai-content/projects/' . $project['id'] . '/delete') ?>" method="POST" onsubmit="return confirm('Sei sicuro di voler eliminare questo progetto? Verranno eliminate <?= $project['stats']['keywords_count'] ?? 0 ?> keywords e <?= $project['stats']['articles_total'] ?? 0 ?> articoli. Questa azione non può essere annullata.');">
+            <form action="<?= url('/ai-content/projects/' . $project['id'] . '/delete') ?>" method="POST" x-data @submit.prevent="window.ainstein.confirm('Sei sicuro di voler eliminare questo progetto? Verranno eliminate <?= $project['stats']['keywords_count'] ?? 0 ?> keywords e <?= $project['stats']['articles_total'] ?? 0 ?> articoli. Questa azione non può essere annullata.', {destructive: true}).then(() => $el.submit())">
                 <?= csrf_field() ?>
                 <button type="submit" class="px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition-colors">
                     Elimina progetto

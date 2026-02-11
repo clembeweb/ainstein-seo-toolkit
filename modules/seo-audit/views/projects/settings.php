@@ -70,9 +70,10 @@
                         <p class="text-sm text-green-600 dark:text-green-400"><?= e($project['gsc_property'] ?? 'Proprieta configurata') ?></p>
                     </div>
                 </div>
-                <form action="<?= url('/seo-audit/project/' . $project['id'] . '/gsc/disconnect') ?>" method="POST" class="inline">
+                <form action="<?= url('/seo-audit/project/' . $project['id'] . '/gsc/disconnect') ?>" method="POST" class="inline"
+                      x-data @submit.prevent="window.ainstein.confirm('Sei sicuro di voler disconnettere GSC?', {destructive: true}).then(() => $el.submit()).catch(() => {})">
                     <?= csrf_field() ?>
-                    <button type="submit" onclick="return confirm('Sei sicuro di voler disconnettere GSC?')"
+                    <button type="submit"
                             class="px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
                         Disconnetti
                     </button>
@@ -143,7 +144,7 @@
                     </p>
                 </div>
                 <form action="<?= url('/seo-audit/project/' . $project['id'] . '/delete') ?>" method="POST"
-                      onsubmit="return confirm('Sei sicuro di voler eliminare questo progetto? Questa azione non puo essere annullata.');">
+                      x-data @submit.prevent="window.ainstein.confirm('Sei sicuro di voler eliminare questo progetto? Questa azione non puo essere annullata.', {destructive: true}).then(() => $el.submit()).catch(() => {})">
                     <?= csrf_field() ?>
                     <button type="submit" class="inline-flex items-center px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors">
                         <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

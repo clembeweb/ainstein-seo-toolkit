@@ -38,7 +38,7 @@
         </div>
 
         <!-- Navigation -->
-        <nav class="flex flex-1 flex-col overflow-y-auto p-4">
+        <nav class="flex flex-1 flex-col overflow-y-auto p-4" data-tour-welcome="sidebar">
             <?php include __DIR__ . '/components/nav-items.php'; ?>
         </nav>
 

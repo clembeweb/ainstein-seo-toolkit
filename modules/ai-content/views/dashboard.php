@@ -1,4 +1,20 @@
 <?php
+// Onboarding tour
+$onboardingConfig = require BASE_PATH . '/config/onboarding.php';
+$onboardingModuleSlug = 'ai-content';
+$showTour = !\Core\OnboardingService::isModuleCompleted($user['id'] ?? 0, $onboardingModuleSlug);
+if ($showTour && isset($onboardingConfig[$onboardingModuleSlug])):
+    $onboardingSteps = $onboardingConfig[$onboardingModuleSlug]['steps'];
+    $onboardingModuleName = $onboardingConfig[$onboardingModuleSlug]['name'];
+    echo \Core\View::partial('components/onboarding-spotlight', [
+        'onboardingSteps' => $onboardingSteps,
+        'onboardingModuleName' => $onboardingModuleName,
+        'onboardingModuleSlug' => $onboardingModuleSlug,
+    ]);
+endif;
+?>
+
+<?php
 // Determina URL base per i link (con o senza progetto)
 $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'] : '/ai-content';
 ?>
@@ -11,12 +27,12 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
 <div class="space-y-6">
     <?php if (!isset($project) || !$project): ?>
     <!-- Header (global view) -->
-    <div class="sm:flex sm:items-center sm:justify-between">
+    <div class="sm:flex sm:items-center sm:justify-between" data-tour="aic-header">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AI SEO Content Generator</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Genera articoli SEO-ottimizzati con intelligenza artificiale</p>
         </div>
-        <div class="mt-4 sm:mt-0 flex gap-3">
+        <div class="mt-4 sm:mt-0 flex gap-3" data-tour="aic-quickactions">
             <a href="<?= url($baseUrl . '/keywords') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -28,7 +44,7 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
     <?php endif; ?>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4" data-tour="aic-stats">
         <!-- Keywords -->
         <a href="<?= url($baseUrl . '/keywords') ?>" class="block bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all">
             <div class="flex items-center gap-3">

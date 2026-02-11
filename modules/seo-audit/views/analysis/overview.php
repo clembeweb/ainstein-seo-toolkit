@@ -227,10 +227,9 @@ function aiAnalysis() {
         },
 
         async regenerate() {
-            if (!confirm('Vuoi rigenerare l\'analisi? Verranno consumati <?= $credits['overview_cost'] ?> crediti.')) {
-                return;
-            }
-            await this.generate();
+            window.ainstein.confirm('Vuoi rigenerare l\'analisi? Verranno consumati <?= $credits['overview_cost'] ?> crediti.', {destructive: false, buttonText: 'Conferma'}).then(async () => {
+                await this.generate();
+            }).catch(() => {});
         }
     }
 }

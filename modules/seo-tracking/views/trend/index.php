@@ -341,11 +341,11 @@ function positionCompare(projectId) {
                     this.stats = result.data.stats || {total: 0, improved: 0, declined: 0, new: 0, lost: 0};
                     this.hasData = true;
                 } else {
-                    alert(result.error || 'Errore nel caricamento dei dati');
+                    window.ainstein.alert(result.error || 'Errore nel caricamento dei dati', 'error');
                 }
             } catch (error) {
                 console.error('Error loading data:', error);
-                alert('Errore di rete');
+                window.ainstein.alert('Errore di rete', 'error');
             } finally {
                 this.loading = false;
             }

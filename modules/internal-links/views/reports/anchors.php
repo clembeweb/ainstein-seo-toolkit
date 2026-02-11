@@ -247,39 +247,42 @@ function executeBulkAction() {
     const selected = Array.from(document.querySelectorAll('.anchor-checkbox:checked')).map(cb => cb.value);
 
     if (!action) {
-        alert('<?= __('Seleziona un\'azione') ?>');
+        window.ainstein.alert('Seleziona un\'azione', 'warning');
         return;
     }
 
     if (selected.length === 0) {
-        alert('<?= __('Seleziona almeno un anchor') ?>');
+        window.ainstein.alert('Seleziona almeno un anchor', 'warning');
         return;
     }
 
-    if (action === 'delete' && !confirm(`<?= __('Sei sicuro di voler eliminare i link con') ?> ${selected.length} <?= __('anchor selezionati') ?>?`)) {
-        return;
-    }
+    const doAction = () => {
+        fetch('<?= url("/internal-links/project/{$project['id']}/links/bulk-anchors") ?>', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': '<?= csrf_token() ?>'
+            },
+            body: JSON.stringify({ action: action, anchors: selected })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                window.ainstein.alert(data.error || 'Errore', 'error');
+            }
+        })
+        .catch(error => {
+            window.ainstein.alert('Errore durante l\'esecuzione', 'error');
+        });
+    };
 
-    // Execute bulk action via API
-    fetch('<?= url("/internal-links/project/{$project['id']}/links/bulk-anchors") ?>', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': '<?= csrf_token() ?>'
-        },
-        body: JSON.stringify({ action: action, anchors: selected })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.reload();
-        } else {
-            alert(data.error || 'Errore');
-        }
-    })
-    .catch(error => {
-        alert('Errore durante l\'esecuzione');
-    });
+    if (action === 'delete') {
+        window.ainstein.confirm(`Sei sicuro di voler eliminare i link con ${selected.length} anchor selezionati?`, {destructive: true}).then(() => doAction());
+    } else {
+        doAction();
+    }
 }
 
 // Reinit Lucide icons

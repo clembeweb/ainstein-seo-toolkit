@@ -321,7 +321,7 @@ function rankChecker() {
 
             } catch (e) {
                 console.error('Errore:', e);
-                alert('Errore: ' + e.message);
+                window.ainstein.alert('Errore: ' + e.message, 'error');
                 this.resetCheckingState();
             }
         },
@@ -519,7 +519,7 @@ function rankChecker() {
 
                     if (data.error) {
                         console.error(kw.keyword, data.error);
-                        alert('Errore: ' + data.error);
+                        window.ainstein.alert('Errore: ' + data.error, 'error');
                         break;
                     } else {
                         kw.serp_position = data.serp_position;

@@ -405,9 +405,13 @@ function linksManager() {
             this.showClearModal = true;
         },
 
-        bulkAction(action) {
+        async bulkAction(action) {
             if (this.selectedIds.length === 0) return;
-            if (action === 'delete' && !confirm('Eliminare i ' + this.selectedIds.length + ' link selezionati?')) return;
+            if (action === 'delete') {
+                try {
+                    await window.ainstein.confirm('Eliminare i ' + this.selectedIds.length + ' link selezionati?', {destructive: true});
+                } catch (e) { return; }
+            }
             this.bulkActionType = action;
             this.$nextTick(() => document.getElementById('bulkForm').submit());
         },

@@ -211,7 +211,7 @@
         <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/alerts') ?>" class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
             ← Torna alla lista alert
         </a>
-        <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/alerts/' . $alert['id'] . '/dismiss') ?>" method="POST" onsubmit="return confirm('Eliminare questo alert?')">
+        <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/alerts/' . $alert['id'] . '/dismiss') ?>" method="POST" x-data @submit.prevent="window.ainstein.confirm('Eliminare questo alert?', {destructive: true}).then(() => $el.submit())">
             <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
             <button type="submit" class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
                 Elimina alert

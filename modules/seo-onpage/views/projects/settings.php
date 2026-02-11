@@ -63,7 +63,7 @@ include __DIR__ . '/../partials/project-nav.php';
 
             <!-- Submit -->
             <div class="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-700">
-                <button type="button" onclick="confirmDelete()" class="text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
+                <button type="button" @click="window.ainstein.confirm('Sei sicuro di voler eliminare questo progetto? Tutti i dati associati verranno persi.', {destructive: true}).then(() => document.getElementById('delete-form').submit())" class="text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
                     Elimina progetto
                 </button>
                 <button type="submit" class="inline-flex items-center px-4 py-2 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors">
@@ -107,10 +107,3 @@ include __DIR__ . '/../partials/project-nav.php';
     <?= csrf_field() ?>
 </form>
 
-<script>
-function confirmDelete() {
-    if (confirm('Sei sicuro di voler eliminare questo progetto? Tutti i dati associati verranno persi.')) {
-        document.getElementById('delete-form').submit();
-    }
-}
-</script>

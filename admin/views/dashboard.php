@@ -1,3 +1,19 @@
+<?php
+$creditsByDay = $creditsByDay ?? [];
+$usersByDay = $usersByDay ?? [];
+$apiCostMonth = $apiCostMonth ?? ['total' => 0, 'calls' => 0, 'errors' => 0];
+$aiCostMonth = $aiCostMonth ?? ['total' => 0, 'calls' => 0, 'tokens' => 0];
+$topProviders = $topProviders ?? [];
+
+// Provider names map
+$providerNames = [
+    'dataforseo' => 'DataForSEO', 'serpapi' => 'SerpAPI', 'serper' => 'Serper.dev',
+    'google_gsc' => 'Google GSC', 'google_oauth' => 'Google OAuth', 'google_ga4' => 'Google GA4',
+    'rapidapi_keyword' => 'RapidAPI Keyword', 'rapidapi_keyword_insight' => 'RapidAPI Insight',
+    'keywordseverywhere' => 'Keywords Everywhere', 'openai_dalle' => 'OpenAI DALL-E',
+];
+?>
+
 <div class="space-y-6">
     <!-- Header -->
     <div>
@@ -85,6 +101,57 @@
                 <svg class="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </a>
         </div>
+    </div>
+
+    <!-- Costi API/AI Mese -->
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-lg bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center">
+                    <svg class="h-5 w-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-slate-900 dark:text-white">$<?= number_format($apiCostMonth['total'] ?? 0, 4) ?></div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400">Costo API (mese)</div>
+                </div>
+            </div>
+            <div class="mt-2 text-xs text-slate-500 dark:text-slate-400"><?= number_format($apiCostMonth['calls'] ?? 0) ?> chiamate</div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-lg bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center">
+                    <svg class="h-5 w-5 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-slate-900 dark:text-white">$<?= number_format($aiCostMonth['total'] ?? 0, 4) ?></div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400">Costo AI (mese)</div>
+                </div>
+            </div>
+            <div class="mt-2 text-xs text-slate-500 dark:text-slate-400"><?= number_format($aiCostMonth['tokens'] ?? 0) ?> token</div>
+        </div>
+        <?php foreach (array_slice($topProviders, 0, 2) as $tp):
+            $errorRate = ($tp['calls'] > 0) ? round(($tp['errors'] / $tp['calls']) * 100) : 0;
+            $isHighError = $errorRate > 20;
+        ?>
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border <?= $isHighError ? 'border-red-300 dark:border-red-700' : 'border-slate-200 dark:border-slate-700' ?> p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-lg font-bold text-slate-900 dark:text-white">$<?= number_format($tp['total_cost'], 4) ?></div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400"><?= $providerNames[$tp['provider']] ?? $tp['provider'] ?></div>
+                </div>
+                <?php if ($isHighError): ?>
+                <span class="text-xs px-2 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 font-medium">
+                    <?= $errorRate ?>% errori
+                </span>
+                <?php endif; ?>
+            </div>
+            <div class="mt-2 text-xs text-slate-500 dark:text-slate-400"><?= number_format($tp['calls']) ?> chiamate</div>
+        </div>
+        <?php endforeach; ?>
     </div>
 
     <!-- Charts Row -->
@@ -183,7 +250,7 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <a href="<?= url('/admin/users') ?>" class="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 hover:border-primary-300 dark:hover:border-primary-700 transition-colors group">
             <div class="h-12 w-12 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors">
                 <svg class="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -220,6 +287,42 @@
                 <p class="text-sm text-slate-500 dark:text-slate-400">API keys, costi, configurazione</p>
             </div>
         </a>
+
+        <a href="<?= url('/admin/api-logs') ?>" class="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 hover:border-primary-300 dark:hover:border-primary-700 transition-colors group">
+            <div class="h-12 w-12 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/50 transition-colors">
+                <svg class="h-6 w-6 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="font-semibold text-slate-900 dark:text-white">API Logs</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Monitor chiamate API esterne</p>
+            </div>
+        </a>
+
+        <a href="<?= url('/admin/ai-logs') ?>" class="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 hover:border-primary-300 dark:hover:border-primary-700 transition-colors group">
+            <div class="h-12 w-12 rounded-lg bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center group-hover:bg-orange-100 dark:group-hover:bg-orange-900/50 transition-colors">
+                <svg class="h-6 w-6 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="font-semibold text-slate-900 dark:text-white">AI Logs</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Monitor chiamate AI, token, costi</p>
+            </div>
+        </a>
+
+        <a href="<?= url('/admin/plans') ?>" class="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 hover:border-primary-300 dark:hover:border-primary-700 transition-colors group">
+            <div class="h-12 w-12 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/50 transition-colors">
+                <svg class="h-6 w-6 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="font-semibold text-slate-900 dark:text-white">Piani</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Gestisci piani e abbonamenti</p>
+            </div>
+        </a>
     </div>
 </div>
 
@@ -229,14 +332,29 @@ document.addEventListener('DOMContentLoaded', function() {
     const gridColor = isDark ? 'rgba(148, 163, 184, 0.1)' : 'rgba(148, 163, 184, 0.2)';
     const textColor = isDark ? '#94a3b8' : '#64748b';
 
-    // Usage Chart
+    // Dati reali crediti
+    const creditsData = <?= json_encode($creditsByDay) ?>;
+    const creditsLabels = [];
+    const creditsValues = [];
+
+    // Riempi ultimi 7 giorni (anche giorni vuoti)
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().split('T')[0];
+        const label = i === 0 ? 'Oggi' : (i === 1 ? 'Ieri' : d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }));
+        creditsLabels.push(label);
+        const found = creditsData.find(r => r.day === key);
+        creditsValues.push(found ? parseFloat(found.total) : 0);
+    }
+
     new Chart(document.getElementById('usageChart'), {
         type: 'line',
         data: {
-            labels: ['6 giorni fa', '5 giorni fa', '4 giorni fa', '3 giorni fa', '2 giorni fa', 'Ieri', 'Oggi'],
+            labels: creditsLabels,
             datasets: [{
                 label: 'Crediti utilizzati',
-                data: [12, 19, 8, 15, 22, 18, <?= $stats['credits_today'] ?>],
+                data: creditsValues,
                 borderColor: '#006e96',
                 backgroundColor: 'rgba(0, 110, 150, 0.1)',
                 fill: true,
@@ -254,14 +372,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Users Chart
+    // Dati reali utenti
+    const usersData = <?= json_encode($usersByDay) ?>;
+    const usersLabels = [];
+    const usersValues = [];
+
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().split('T')[0];
+        const label = i === 0 ? 'Oggi' : (i === 1 ? 'Ieri' : d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }));
+        usersLabels.push(label);
+        const found = usersData.find(r => r.day === key);
+        usersValues.push(found ? parseInt(found.total) : 0);
+    }
+
     new Chart(document.getElementById('usersChart'), {
         type: 'bar',
         data: {
-            labels: ['6 giorni fa', '5 giorni fa', '4 giorni fa', '3 giorni fa', '2 giorni fa', 'Ieri', 'Oggi'],
+            labels: usersLabels,
             datasets: [{
                 label: 'Nuovi utenti',
-                data: [2, 1, 3, 0, 2, 1, <?= $stats['users_today'] ?>],
+                data: usersValues,
                 backgroundColor: '#10b981',
                 borderRadius: 6,
             }]

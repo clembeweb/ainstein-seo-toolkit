@@ -122,7 +122,7 @@ class AiLogsController
         $log = Database::fetch("SELECT * FROM ai_logs WHERE id = ?", [$id]);
 
         if (!$log) {
-            $_SESSION['flash_error'] = 'Log non trovato';
+            $_SESSION['_flash']['error'] = 'Log non trovato';
             header('Location: ' . url('/admin/ai-logs'));
             exit;
         }
@@ -160,7 +160,7 @@ class AiLogsController
             [$days]
         );
 
-        $_SESSION['flash_success'] = "Eliminati {$result} log piu vecchi di {$days} giorni";
+        $_SESSION['_flash']['success'] = "Eliminati {$result} log più vecchi di {$days} giorni";
         header('Location: ' . url('/admin/ai-logs'));
         exit;
     }
@@ -193,9 +193,52 @@ class AiLogsController
             WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
         ");
 
+        // Breakdown per provider (ultimi 30 giorni)
+        $byProvider = Database::fetchAll("
+            SELECT
+                provider,
+                COUNT(*) as calls,
+                SUM(tokens_total) as tokens,
+                SUM(estimated_cost) as cost,
+                SUM(CASE WHEN status = 'error' THEN 1 ELSE 0 END) as errors,
+                SUM(CASE WHEN status = 'fallback' THEN 1 ELSE 0 END) as fallbacks
+            FROM ai_logs
+            WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            GROUP BY provider
+            ORDER BY calls DESC
+        ");
+
+        // Modello piu' usato
+        $topModel = Database::fetch("
+            SELECT model, COUNT(*) as cnt
+            FROM ai_logs
+            WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) AND status = 'success'
+            GROUP BY model
+            ORDER BY cnt DESC
+            LIMIT 1
+        ");
+
+        // Trend giornaliero (ultimi 7 giorni)
+        $dailyTrend = Database::fetchAll("
+            SELECT
+                DATE(created_at) as day,
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as success,
+                SUM(CASE WHEN status = 'error' THEN 1 ELSE 0 END) as errors,
+                SUM(tokens_total) as tokens,
+                SUM(estimated_cost) as cost
+            FROM ai_logs
+            WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+            GROUP BY DATE(created_at)
+            ORDER BY day ASC
+        ");
+
         return [
             'last_24h' => $last24h ?: ['total' => 0, 'success' => 0, 'errors' => 0, 'fallbacks' => 0, 'tokens' => 0, 'cost' => 0],
             'last_30d' => $last30d ?: ['total' => 0, 'tokens' => 0, 'cost' => 0],
+            'by_provider' => $byProvider ?: [],
+            'top_model' => $topModel ?: null,
+            'daily_trend' => $dailyTrend ?: [],
         ];
     }
 }

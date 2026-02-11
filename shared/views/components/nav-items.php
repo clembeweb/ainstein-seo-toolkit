@@ -21,6 +21,26 @@ if (!function_exists('navLink')) {
     }
 }
 
+// Onboarding: moduli completati per icona "?" tour
+$onbCompletedModules = [];
+$onbModuleSlugs = ['ai-content', 'seo-audit', 'seo-tracking', 'keyword-research', 'internal-links', 'ads-analyzer'];
+if (isset($user['id']) && class_exists('\\Core\\OnboardingService')) {
+    $onbCompletedModules = \Core\OnboardingService::getCompletedModules($user['id']);
+}
+
+if (!function_exists('navTourButton')) {
+    function navTourButton($slug, $completedModules) {
+        $isCompleted = in_array($slug, $completedModules);
+        $dot = !$isCompleted ? '<span class="absolute top-0.5 right-0.5 h-1.5 w-1.5 rounded-full bg-primary-500"></span>' : '';
+        return '<button @click.stop="$dispatch(\'open-module-tour\', { slug: \'' . $slug . '\' })" '
+            . 'class="relative p-1.5 text-slate-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors" '
+            . 'title="Tour guidato">'
+            . '<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">'
+            . '<path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />'
+            . '</svg>' . $dot . '</button>';
+    }
+}
+
 if (!function_exists('navSubLink')) {
     function navSubLink($path, $label, $icon, $currentPath, $exact = false) {
         $isActive = $exact ? ($currentPath === $path) : str_starts_with($currentPath, $path);
@@ -172,6 +192,7 @@ if (preg_match('#^/ai-content/projects/(\d+)#', $currentPath, $matches)) {
                             </svg>
                             <span class="flex-1"><?= e($module['name']) ?></span>
                         </a>
+                        <?= navTourButton('internal-links', $onbCompletedModules) ?>
                         <?php if ($internalLinksProjectId): ?>
                         <button @click="expanded = !expanded" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
                             <svg class="w-4 h-4 transition-transform" :class="expanded && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -232,6 +253,7 @@ if (preg_match('#^/ai-content/projects/(\d+)#', $currentPath, $matches)) {
                             </svg>
                             <span class="flex-1"><?= e($module['name']) ?></span>
                         </a>
+                        <?= navTourButton('seo-audit', $onbCompletedModules) ?>
                         <?php if ($seoAuditProjectId): ?>
                         <button @click="expanded = !expanded" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
                             <svg class="w-4 h-4 transition-transform" :class="expanded && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -331,6 +353,7 @@ if (preg_match('#^/ai-content/projects/(\d+)#', $currentPath, $matches)) {
                             </svg>
                             <span class="flex-1"><?= e($module['name']) ?></span>
                         </a>
+                        <?= navTourButton('seo-tracking', $onbCompletedModules) ?>
                         <?php if ($seoTrackingProjectId): ?>
                         <button @click="expanded = !expanded" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
                             <svg class="w-4 h-4 transition-transform" :class="expanded && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -424,6 +447,7 @@ if (preg_match('#^/ai-content/projects/(\d+)#', $currentPath, $matches)) {
                             </svg>
                             <span class="flex-1"><?= e($module['name']) ?></span>
                         </a>
+                        <?= navTourButton('ai-content', $onbCompletedModules) ?>
                         <button @click="expanded = !expanded" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
                             <svg class="w-4 h-4 transition-transform" :class="expanded && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -496,6 +520,7 @@ if (preg_match('#^/ai-content/projects/(\d+)#', $currentPath, $matches)) {
                             </svg>
                             <span class="flex-1"><?= e($module['name']) ?></span>
                         </a>
+                        <?= navTourButton('keyword-research', $onbCompletedModules) ?>
                         <button @click="expanded = !expanded" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
                             <svg class="w-4 h-4 transition-transform" :class="expanded && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -530,7 +555,16 @@ if (preg_match('#^/ai-content/projects/(\d+)#', $currentPath, $matches)) {
                 </div>
             <?php else: ?>
                 <!-- Other Modules (standard link) -->
+                <?php if (in_array($module['slug'], $onbModuleSlugs)): ?>
+                <div class="flex items-center">
+                    <div class="flex-1">
+                        <?= navLink('/' . $module['slug'], $module['name'], '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>', $currentPath) ?>
+                    </div>
+                    <?= navTourButton($module['slug'], $onbCompletedModules) ?>
+                </div>
+                <?php else: ?>
                 <?= navLink('/' . $module['slug'], $module['name'], '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>', $currentPath) ?>
+                <?php endif; ?>
             <?php endif; ?>
         <?php endforeach; ?>
     </div>

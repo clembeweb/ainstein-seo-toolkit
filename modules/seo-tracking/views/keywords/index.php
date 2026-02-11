@@ -435,12 +435,15 @@ document.getElementById('bulkForm').addEventListener('submit', function(e) {
 
     if (checked === 0) {
         e.preventDefault();
-        alert('Seleziona almeno una keyword');
+        window.ainstein.alert('Seleziona almeno una keyword', 'warning');
         return;
     }
 
-    if (action === 'delete' && !confirm('Sei sicuro di voler eliminare ' + checked + ' keyword?')) {
+    if (action === 'delete') {
         e.preventDefault();
+        window.ainstein.confirm('Sei sicuro di voler eliminare ' + checked + ' keyword?', {destructive: true}).then(() => {
+            document.getElementById('bulkForm').submit();
+        });
     }
 });
 
@@ -448,10 +451,7 @@ document.getElementById('bulkForm').addEventListener('submit', function(e) {
 // ELIMINAZIONE SINGOLA KEYWORD
 // ============================================================
 function deleteKeyword(id, keyword) {
-    if (!confirm(`Sei sicuro di voler eliminare la keyword "${keyword}"?`)) {
-        return;
-    }
-
+    window.ainstein.confirm(`Sei sicuro di voler eliminare la keyword "${keyword}"?`, {destructive: true}).then(() => {
     const csrfToken = document.querySelector('input[name="_csrf_token"]').value;
 
     fetch(`${baseUrl}/seo-tracking/project/${projectId}/keywords/${id}/delete`, {
@@ -474,6 +474,7 @@ function deleteKeyword(id, keyword) {
     .catch(err => {
         console.error('Delete failed:', err);
         showToast('Errore durante l\'eliminazione', 'error');
+    });
     });
 }
 
@@ -829,7 +830,7 @@ function cancelActiveJob() {
         return;
     }
 
-    if (!confirm('Sei sicuro di voler annullare il job in corso?')) return;
+    window.ainstein.confirm('Sei sicuro di voler annullare il job in corso?', {destructive: true}).then(() => {
 
     const csrfInput = document.querySelector('input[name="_csrf_token"]');
     if (!csrfInput) {
@@ -862,6 +863,7 @@ function cancelActiveJob() {
         console.error('Cancel failed:', err);
         showToast('Errore: ' + err.message, 'error');
     });
+    });
 }
 
 // Auto-refresh banner se c'è un job attivo (ogni 30 secondi - non troppo frequente)
@@ -886,7 +888,7 @@ document.addEventListener('keydown', function(e) {
 function checkSingleKeyword(keywordId, keyword, locationCode, btnElement) {
     // Verifica crediti
     if (userCredits < 1) {
-        alert('Crediti insufficienti per verificare la posizione.');
+        window.ainstein.alert('Crediti insufficienti per verificare la posizione.', 'warning');
         return;
     }
 

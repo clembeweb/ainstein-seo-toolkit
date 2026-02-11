@@ -254,11 +254,11 @@ function landingUrlsManager() {
                     // Reload page to show updated contexts
                     window.location.reload();
                 } else {
-                    alert(data.error || 'Errore durante l\'estrazione');
+                    window.ainstein.alert(data.error || 'Errore durante l\'estrazione', 'error');
                 }
             } catch (err) {
                 console.error('Extract all error:', err);
-                alert('Errore di connessione');
+                window.ainstein.alert('Errore di connessione', 'error');
             } finally {
                 this.extractingAll = false;
             }

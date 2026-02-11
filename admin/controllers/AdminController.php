@@ -34,6 +34,41 @@ class AdminController
 
         $topUsers = Credits::getTopUsers(5, 'month');
 
+        // Dati reali grafici ultimi 7 giorni
+        $creditsByDay = Database::fetchAll(
+            "SELECT DATE(created_at) as day, SUM(ABS(amount)) as total
+             FROM credit_transactions
+             WHERE type = 'consume' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+             GROUP BY DATE(created_at) ORDER BY day ASC"
+        );
+
+        $usersByDay = Database::fetchAll(
+            "SELECT DATE(created_at) as day, COUNT(*) as total
+             FROM users
+             WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+             GROUP BY DATE(created_at) ORDER BY day ASC"
+        );
+
+        // Costi API/AI del mese
+        $apiCostMonth = Database::fetch(
+            "SELECT SUM(cost) as total, COUNT(*) as calls,
+                    SUM(CASE WHEN status = 'error' THEN 1 ELSE 0 END) as errors
+             FROM api_logs WHERE created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')"
+        );
+
+        $aiCostMonth = Database::fetch(
+            "SELECT SUM(estimated_cost) as total, COUNT(*) as calls, SUM(tokens_total) as tokens
+             FROM ai_logs WHERE created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')"
+        );
+
+        // Top 3 provider per spesa
+        $topProviders = Database::fetchAll(
+            "SELECT provider, SUM(cost) as total_cost, COUNT(*) as calls,
+                    SUM(CASE WHEN status = 'error' THEN 1 ELSE 0 END) as errors
+             FROM api_logs WHERE created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
+             GROUP BY provider ORDER BY total_cost DESC LIMIT 3"
+        );
+
         return View::render('admin/dashboard', [
             'title' => 'Admin Dashboard',
             'user' => Auth::user(),
@@ -41,6 +76,11 @@ class AdminController
             'stats' => $stats,
             'recentUsers' => $recentUsers,
             'topUsers' => $topUsers,
+            'creditsByDay' => $creditsByDay ?: [],
+            'usersByDay' => $usersByDay ?: [],
+            'apiCostMonth' => $apiCostMonth ?: ['total' => 0, 'calls' => 0, 'errors' => 0],
+            'aiCostMonth' => $aiCostMonth ?: ['total' => 0, 'calls' => 0, 'tokens' => 0],
+            'topProviders' => $topProviders ?: [],
         ]);
     }
 
@@ -49,6 +89,9 @@ class AdminController
         $search = $_GET['search'] ?? '';
         $role = $_GET['role'] ?? '';
         $status = $_GET['status'] ?? '';
+        $page = max(1, intval($_GET['page'] ?? 1));
+        $perPage = 50;
+        $offset = ($page - 1) * $perPage;
 
         $where = '1=1';
         $params = [];
@@ -69,8 +112,15 @@ class AdminController
             $params[] = $status === 'active' ? 1 : 0;
         }
 
+        // Count totale
+        $total = Database::fetch(
+            "SELECT COUNT(*) as total FROM users WHERE {$where}",
+            $params
+        )['total'] ?? 0;
+        $totalPages = $total > 0 ? ceil($total / $perPage) : 1;
+
         $users = Database::fetchAll(
-            "SELECT * FROM users WHERE {$where} ORDER BY created_at DESC",
+            "SELECT * FROM users WHERE {$where} ORDER BY created_at DESC LIMIT {$perPage} OFFSET {$offset}",
             $params
         );
 
@@ -82,6 +132,12 @@ class AdminController
             'search' => $search,
             'role' => $role,
             'status' => $status,
+            'pagination' => [
+                'current' => $page,
+                'total' => $totalPages,
+                'total_items' => $total,
+                'per_page' => $perPage,
+            ],
         ]);
     }
 
@@ -182,6 +238,7 @@ class AdminController
         foreach ($_POST as $key => $value) {
             if ($key === '_csrf_token') continue;
 
+            // Solo aggiornare chiavi già esistenti in DB (whitelist implicita)
             $existing = Database::fetch("SELECT id FROM settings WHERE key_name = ?", [$key]);
 
             if ($existing) {
@@ -191,13 +248,8 @@ class AdminController
                     'key_name = ?',
                     [$key]
                 );
-            } else {
-                Database::insert('settings', [
-                    'key_name' => $key,
-                    'value' => $value,
-                    'updated_by' => Auth::id(),
-                ]);
             }
+            // Ignora chiavi non esistenti - previene iniezione di settings arbitrari
         }
 
         $_SESSION['_flash']['success'] = 'Impostazioni salvate con successo';

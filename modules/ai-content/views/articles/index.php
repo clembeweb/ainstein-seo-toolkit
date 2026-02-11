@@ -473,9 +473,9 @@ function articlesManager() {
         async regenerateArticle(id) {
             if (this.regenerating) return;
 
-            if (!confirm('Rigenerare l\'articolo? Verranno consumati 10 crediti.')) {
-                return;
-            }
+            try {
+                await window.ainstein.confirm('Rigenerare l\'articolo? Verranno consumati 10 crediti.', {destructive: false});
+            } catch (e) { return; }
 
             this.regenerating = id;
 

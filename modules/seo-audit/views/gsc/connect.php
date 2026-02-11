@@ -36,7 +36,7 @@
                 <a href="<?= url('/seo-audit/project/' . $project['id'] . '/gsc') ?>" class="px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors">
                     Vai alla Dashboard
                 </a>
-                <form action="<?= url('/seo-audit/project/' . $project['id'] . '/gsc/disconnect') ?>" method="POST" class="inline" onsubmit="return confirm('Vuoi disconnettere Google Search Console? I dati salvati verranno eliminati.')">
+                <form action="<?= url('/seo-audit/project/' . $project['id'] . '/gsc/disconnect') ?>" method="POST" class="inline" x-data @submit.prevent="window.ainstein.confirm('Vuoi disconnettere Google Search Console? I dati salvati verranno eliminati.', {destructive: true}).then(() => $el.submit()).catch(() => {})">
                     <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
                     <button type="submit" class="px-4 py-2 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
                         Disconnetti

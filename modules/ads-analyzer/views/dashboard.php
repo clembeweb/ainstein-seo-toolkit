@@ -1,12 +1,28 @@
+<?php
+// Onboarding tour
+$onboardingConfig = require BASE_PATH . '/config/onboarding.php';
+$onboardingModuleSlug = 'ads-analyzer';
+$showTour = !\Core\OnboardingService::isModuleCompleted($user['id'] ?? 0, $onboardingModuleSlug);
+if ($showTour && isset($onboardingConfig[$onboardingModuleSlug])):
+    $onboardingSteps = $onboardingConfig[$onboardingModuleSlug]['steps'];
+    $onboardingModuleName = $onboardingConfig[$onboardingModuleSlug]['name'];
+    echo \Core\View::partial('components/onboarding-spotlight', [
+        'onboardingSteps' => $onboardingSteps,
+        'onboardingModuleName' => $onboardingModuleName,
+        'onboardingModuleSlug' => $onboardingModuleSlug,
+    ]);
+endif;
+?>
+
 <div class="space-y-6">
     <!-- Header -->
-    <div class="sm:flex sm:items-center sm:justify-between">
+    <div class="sm:flex sm:items-center sm:justify-between" data-tour="aa-header">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Google Ads Analyzer</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Analizza termini di ricerca ed estrai keyword negative con AI</p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-3">
-            <a href="<?= url('/ads-analyzer/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors">
+            <a href="<?= url('/ads-analyzer/projects/create') ?>" data-tour="aa-newproject" class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>

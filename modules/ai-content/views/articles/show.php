@@ -640,7 +640,9 @@ function coverImageManager(config) {
         },
 
         async removeCover() {
-            if (!confirm('Rimuovere l\'immagine di copertina?')) return;
+            try {
+                await window.ainstein.confirm('Rimuovere l\'immagine di copertina?', {destructive: true});
+            } catch (e) { return; }
 
             this.loading = true;
             this.errorMsg = '';
@@ -761,9 +763,9 @@ function articleEditor(initialData) {
         async regenerateArticle() {
             if (this.regenerating) return;
 
-            if (!confirm('Rigenerare l\'articolo? Verranno consumati 10 crediti e il contenuto attuale verra sostituito.')) {
-                return;
-            }
+            try {
+                await window.ainstein.confirm('Rigenerare l\'articolo? Verranno consumati 10 crediti e il contenuto attuale verra sostituito.', {destructive: false});
+            } catch (e) { return; }
 
             this.regenerating = true;
 
@@ -803,9 +805,9 @@ function articleEditor(initialData) {
         async resetArticle() {
             if (this.resetting) return;
 
-            if (!confirm('Resettare lo status dell\'articolo? L\'articolo tornerà allo stato precedente (bozza).')) {
-                return;
-            }
+            try {
+                await window.ainstein.confirm('Resettare lo status dell\'articolo? L\'articolo tornerà allo stato precedente (bozza).', {destructive: false});
+            } catch (e) { return; }
 
             this.resetting = true;
 

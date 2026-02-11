@@ -104,7 +104,7 @@
             <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
                 Eliminando la keyword verranno cancellati anche tutti i dati storici di posizione associati.
             </p>
-            <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/' . $keyword['id'] . '/delete') ?>" method="POST" onsubmit="return confirm('Sei sicuro di voler eliminare questa keyword?');">
+            <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/' . $keyword['id'] . '/delete') ?>" method="POST" x-data @submit.prevent="window.ainstein.confirm('Sei sicuro di voler eliminare questa keyword?', {destructive: true}).then(() => $el.submit())">
                 <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
                 <button type="submit" class="px-4 py-2 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm">
                     Elimina Keyword

@@ -117,7 +117,8 @@
                                 </svg>
                             </a>
                             <?php endif; ?>
-                            <form action="<?= url('/ads-analyzer/projects/' . $project['id'] . '/delete') ?>" method="POST" class="inline" onsubmit="return confirm('Eliminare questo progetto?')">
+                            <form action="<?= url('/ads-analyzer/projects/' . $project['id'] . '/delete') ?>" method="POST" class="inline"
+                                  x-data @submit.prevent="window.ainstein.confirm('Eliminare questo progetto?', {destructive: true}).then(() => $el.submit())">
                                 <?= csrf_field() ?>
                                 <button type="submit" class="text-slate-400 hover:text-red-600 dark:hover:text-red-400" title="Elimina">
                                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

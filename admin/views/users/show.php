@@ -39,10 +39,19 @@
                                 <option value="admin" <?= $targetUser['role'] === 'admin' ? 'selected' : '' ?>>Admin</option>
                             </select>
                         </div>
-                        <div>
+                        <div x-data="{ isActive: <?= $targetUser['is_active'] ? 'true' : 'false' ?> }">
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Stato account</label>
                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" name="is_active" <?= $targetUser['is_active'] ? 'checked' : '' ?> class="sr-only peer">
+                                <input type="checkbox" name="is_active" :checked="isActive" class="sr-only peer"
+                                       @change.prevent="
+                                           if (isActive) {
+                                               window.ainstein.confirm('Disattivare questo account? L\'utente non potrà più accedere.', {destructive: true})
+                                                   .then(() => { isActive = false; })
+                                                   .catch(() => { $el.checked = true; });
+                                           } else {
+                                               isActive = true;
+                                           }
+                                       ">
                                 <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary-600"></div>
                                 <span class="ml-3 text-sm text-slate-700 dark:text-slate-300">Account attivo</span>
                             </label>
@@ -174,10 +183,24 @@
                         <dt class="text-sm text-slate-500 dark:text-slate-400">Registrato</dt>
                         <dd class="text-sm text-slate-900 dark:text-white"><?= date('d/m/Y H:i', strtotime($targetUser['created_at'])) ?></dd>
                     </div>
+                    <?php if (!empty($targetUser['last_login_at'])): ?>
+                    <div class="flex justify-between">
+                        <dt class="text-sm text-slate-500 dark:text-slate-400">Ultimo login</dt>
+                        <dd class="text-sm text-slate-900 dark:text-white"><?= date('d/m/Y H:i', strtotime($targetUser['last_login_at'])) ?></dd>
+                    </div>
+                    <?php endif; ?>
                     <div class="flex justify-between">
                         <dt class="text-sm text-slate-500 dark:text-slate-400">Ultimo aggiornamento</dt>
                         <dd class="text-sm text-slate-900 dark:text-white"><?= $targetUser['updated_at'] ? date('d/m/Y H:i', strtotime($targetUser['updated_at'])) : '-' ?></dd>
                     </div>
+                    <?php if (!empty($usageStats)): ?>
+                    <div class="pt-3 border-t border-slate-200 dark:border-slate-700">
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-slate-500 dark:text-slate-400">Operazioni (mese)</dt>
+                            <dd class="text-sm font-semibold text-slate-900 dark:text-white"><?= number_format($usageStats['total_operations'] ?? 0) ?></dd>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                 </dl>
             </div>
         </div>

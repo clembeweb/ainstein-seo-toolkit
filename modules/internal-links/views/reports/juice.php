@@ -299,20 +299,23 @@ function executeBulkAction() {
     const selected = Array.from(document.querySelectorAll('.juice-checkbox:checked')).map(cb => cb.value);
 
     if (!action) {
-        alert('<?= __('Seleziona un\'azione') ?>');
+        window.ainstein.alert('Seleziona un\'azione', 'warning');
         return;
     }
 
     if (selected.length === 0) {
-        alert('<?= __('Seleziona almeno una pagina') ?>');
+        window.ainstein.alert('Seleziona almeno una pagina', 'warning');
         return;
     }
 
-    if (action === 'delete' && !confirm(`<?= __('Sei sicuro di voler eliminare') ?> ${selected.length} <?= __('pagine') ?>?`)) {
+    if (action === 'delete') {
+        window.ainstein.confirm(`Sei sicuro di voler eliminare ${selected.length} pagine?`, {destructive: true}).then(() => {
+            window.ainstein.alert('Funzione in sviluppo', 'info');
+        });
         return;
     }
 
-    alert('<?= __('Funzione in sviluppo') ?>');
+    window.ainstein.alert('Funzione in sviluppo', 'info');
 }
 
 // Reinit Lucide icons

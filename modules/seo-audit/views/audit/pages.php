@@ -379,7 +379,7 @@ function crawlManager() {
                 const data = await response.json();
 
                 if (data.error) {
-                    alert(data.message || 'Errore avvio crawl');
+                    window.ainstein.alert(data.message || 'Errore avvio crawl', 'error');
                     this.crawlStarting = false;
                     return;
                 }
@@ -392,7 +392,7 @@ function crawlManager() {
                 this.pollBatch();
 
             } catch (e) {
-                alert('Errore di connessione');
+                window.ainstein.alert('Errore di connessione', 'error');
                 this.crawlStarting = false;
             }
         },
@@ -413,7 +413,7 @@ function crawlManager() {
                 const data = await response.json();
 
                 if (data.error) {
-                    alert(data.message);
+                    window.ainstein.alert(data.message, 'error');
                     this.crawlRunning = false;
                     return;
                 }
@@ -443,7 +443,7 @@ function crawlManager() {
                 setTimeout(() => this.pollBatch(), 500);
 
             } catch (e) {
-                alert('Errore durante analisi');
+                window.ainstein.alert('Errore durante analisi', 'error');
                 this.crawlRunning = false;
             }
         },
@@ -483,59 +483,59 @@ function pagesManager() {
         },
 
         async deleteSelected() {
-            if (!confirm(`Eliminare ${this.selectedIds.length} pagine selezionate?`)) return;
+            window.ainstein.confirm(`Eliminare ${this.selectedIds.length} pagine selezionate?`, {destructive: true}).then(async () => {
+                try {
+                    const response = await fetch('<?= url('/seo-audit/project/' . $project['id'] . '/pages/delete') ?>', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            _token: '<?= csrf_token() ?>',
+                            ids: this.selectedIds
+                        })
+                    });
 
-            try {
-                const response = await fetch('<?= url('/seo-audit/project/' . $project['id'] . '/pages/delete') ?>', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({
-                        _token: '<?= csrf_token() ?>',
-                        ids: this.selectedIds
-                    })
-                });
+                    const data = await response.json();
 
-                const data = await response.json();
-
-                if (data.success) {
-                    window.location.reload();
-                } else {
-                    alert(data.error || 'Errore durante l\'eliminazione');
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        window.ainstein.alert(data.error || 'Errore durante l\'eliminazione', 'error');
+                    }
+                } catch (e) {
+                    window.ainstein.alert('Errore di connessione', 'error');
                 }
-            } catch (e) {
-                alert('Errore di connessione');
-            }
+            }).catch(() => {});
         },
 
         async deleteSingle(id) {
-            if (!confirm('Eliminare questa pagina?')) return;
+            window.ainstein.confirm('Eliminare questa pagina?', {destructive: true}).then(async () => {
+                try {
+                    const response = await fetch('<?= url('/seo-audit/project/' . $project['id'] . '/pages/delete') ?>', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            _token: '<?= csrf_token() ?>',
+                            ids: [id]
+                        })
+                    });
 
-            try {
-                const response = await fetch('<?= url('/seo-audit/project/' . $project['id'] . '/pages/delete') ?>', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({
-                        _token: '<?= csrf_token() ?>',
-                        ids: [id]
-                    })
-                });
+                    const data = await response.json();
 
-                const data = await response.json();
-
-                if (data.success) {
-                    window.location.reload();
-                } else {
-                    alert(data.error || 'Errore durante l\'eliminazione');
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        window.ainstein.alert(data.error || 'Errore durante l\'eliminazione', 'error');
+                    }
+                } catch (e) {
+                    window.ainstein.alert('Errore di connessione', 'error');
                 }
-            } catch (e) {
-                alert('Errore di connessione');
-            }
+            }).catch(() => {});
         }
     };
 }

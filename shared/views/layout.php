@@ -273,5 +273,22 @@
     <div class="htmx-indicator fixed top-0 left-0 right-0 h-1 bg-primary-500 z-50" style="display:none;">
         <div class="h-full bg-primary-300 animate-pulse"></div>
     </div>
+
+    <!-- Global Modals (alert/confirm) -->
+    <?= \Core\View::partial('components/global-modals') ?>
+
+    <!-- Onboarding Welcome (primo accesso) -->
+    <?php if (isset($user) && $user && isset($onboardingWelcomeCompleted) && !$onboardingWelcomeCompleted && !empty($onboardingConfig)): ?>
+        <?php
+        $welcomeSteps = $onboardingConfig['welcome']['steps'] ?? [];
+        if (!empty($welcomeSteps)):
+        ?>
+        <?= \Core\View::partial('components/onboarding-spotlight', [
+            'onboardingSteps' => $welcomeSteps,
+            'onboardingModuleName' => 'Benvenuto su Ainstein',
+            'onboardingModuleSlug' => 'welcome',
+        ]) ?>
+        <?php endif; ?>
+    <?php endif; ?>
 </body>
 </html>

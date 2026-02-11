@@ -374,12 +374,12 @@ function actionPlan(config) {
                     // Reload page to show generated plan
                     window.location.reload();
                 } else {
-                    alert(data.message || 'Errore durante la generazione del piano');
+                    window.ainstein.alert(data.message || 'Errore durante la generazione del piano', 'error');
                     this.generating = false;
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Errore di connessione');
+                window.ainstein.alert('Errore di connessione', 'error');
                 this.generating = false;
             }
         },

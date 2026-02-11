@@ -185,12 +185,12 @@ function deleteAnalysis(analysisId) {
         if (data.success) {
             window.location.reload();
         } else {
-            alert(data.error || 'Errore durante l\'eliminazione');
+            window.ainstein.alert(data.error || 'Errore durante l\'eliminazione', 'error');
         }
     })
     .catch(err => {
         console.error('Delete failed:', err);
-        alert('Errore durante l\'eliminazione');
+        window.ainstein.alert('Errore durante l\'eliminazione', 'error');
     });
 }
 </script>

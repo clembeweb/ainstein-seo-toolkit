@@ -221,7 +221,8 @@
 
     <!-- Actions -->
     <div class="flex items-center justify-between">
-        <form action="<?= url('/ads-analyzer/projects/' . $project['id'] . '/delete') ?>" method="POST" onsubmit="return confirm('Eliminare questo progetto e tutti i dati associati?')">
+        <form action="<?= url('/ads-analyzer/projects/' . $project['id'] . '/delete') ?>" method="POST"
+              x-data @submit.prevent="window.ainstein.confirm('Eliminare questo progetto e tutti i dati associati?', {destructive: true}).then(() => $el.submit())">
             <?= csrf_field() ?>
             <button type="submit" class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium">
                 Elimina progetto

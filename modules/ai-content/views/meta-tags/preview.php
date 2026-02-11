@@ -335,7 +335,9 @@ function metaTagPreview() {
         },
 
         async deleteMetaTag() {
-            if (!confirm('Eliminare questo meta tag?')) return;
+            try {
+                await window.ainstein.confirm('Eliminare questo meta tag?', {destructive: true});
+            } catch (e) { return; }
 
             this.loading = true;
 
