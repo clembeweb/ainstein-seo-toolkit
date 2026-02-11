@@ -4,11 +4,29 @@ namespace Modules\KeywordResearch\Controllers;
 
 use Core\View;
 use Core\Auth;
+use Core\Middleware;
 use Core\ModuleLoader;
 use Modules\KeywordResearch\Services\KeywordInsightService;
 
 class QuickCheckController
 {
+    /**
+     * Carica la lista progetti SEO Tracking dell'utente (per "Invia a SEO Tracking")
+     */
+    private function getStProjects(int $userId): array
+    {
+        if (!ModuleLoader::isModuleActive('seo-tracking')) {
+            return [];
+        }
+        $stProject = new \Modules\SeoTracking\Models\Project();
+        $projects = $stProject->allByUser($userId);
+        return array_map(fn($p) => [
+            'id' => $p['id'],
+            'name' => $p['name'],
+            'domain' => $p['domain'] ?? '',
+        ], $projects);
+    }
+
     public function index(): string
     {
         $user = Auth::user();
@@ -20,6 +38,7 @@ class QuickCheckController
             'keyword' => '',
             'location' => 'IT',
             'results' => null,
+            'stProjects' => $this->getStProjects($user['id']),
         ]);
     }
 
@@ -38,6 +57,7 @@ class QuickCheckController
                 'keyword' => '',
                 'location' => $location,
                 'results' => null,
+                'stProjects' => $this->getStProjects($user['id']),
             ]);
         }
 
@@ -58,6 +78,7 @@ class QuickCheckController
                 'keyword' => $keyword,
                 'location' => $location,
                 'results' => null,
+                'stProjects' => $this->getStProjects($user['id']),
             ]);
         }
 
@@ -67,7 +88,6 @@ class QuickCheckController
         $related = [];
 
         if ($result['success'] && !empty($result['data'])) {
-            // Cerca la keyword esatta o la più vicina
             foreach ($result['data'] as $item) {
                 if (strtolower($item['text'] ?? '') === strtolower($keyword)) {
                     $mainKeyword = $item;
@@ -75,18 +95,15 @@ class QuickCheckController
                 }
             }
 
-            // Se non trovata esatta, prendi la prima
             if (!$mainKeyword && !empty($result['data'][0])) {
                 $mainKeyword = $result['data'][0];
             }
 
-            // Le correlate sono tutte tranne la main
             foreach ($result['data'] as $item) {
                 if ($mainKeyword && ($item['text'] ?? '') === ($mainKeyword['text'] ?? '')) continue;
                 $related[] = $item;
             }
 
-            // Ordina correlate per volume
             usort($related, fn($a, $b) => ($b['volume'] ?? 0) - ($a['volume'] ?? 0));
         }
 
@@ -102,6 +119,116 @@ class QuickCheckController
                 'total_found' => count($result['data']),
             ] : null,
             'error' => !$result['success'] ? $result['error'] : null,
+            'stProjects' => $this->getStProjects($user['id']),
         ]);
+    }
+
+    /**
+     * POST: Invia keyword selezionate a un progetto SEO Tracking
+     */
+    public function sendToTracking(): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $projectId = (int) ($_POST['project_id'] ?? 0);
+        $groupName = trim($_POST['group_name'] ?? '');
+        $location = trim($_POST['location'] ?? 'IT');
+        $keywordsJson = $_POST['keywords_data'] ?? '[]';
+        $keywordsData = json_decode($keywordsJson, true) ?: [];
+
+        if (empty($projectId) || empty($keywordsData)) {
+            echo json_encode(['success' => false, 'error' => 'Dati mancanti.']);
+            return;
+        }
+
+        // Verifica che il modulo seo-tracking sia attivo
+        if (!ModuleLoader::isModuleActive('seo-tracking')) {
+            echo json_encode(['success' => false, 'error' => 'Modulo SEO Tracking non attivo.']);
+            return;
+        }
+
+        // Verifica ownership progetto
+        $stProject = new \Modules\SeoTracking\Models\Project();
+        $project = $stProject->find($projectId, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato.']);
+            return;
+        }
+
+        $keywordModel = new \Modules\SeoTracking\Models\Keyword();
+        $keywordGroupModel = new \Modules\SeoTracking\Models\KeywordGroup();
+
+        $added = 0;
+        $skipped = 0;
+
+        foreach ($keywordsData as $kwData) {
+            $kwText = trim($kwData['text'] ?? '');
+            if (empty($kwText)) continue;
+
+            // Skip se duplicata
+            $existing = $keywordModel->findByKeyword($projectId, $kwText);
+            if ($existing) {
+                $skipped++;
+                continue;
+            }
+
+            $newId = $keywordModel->create([
+                'project_id' => $projectId,
+                'keyword' => $kwText,
+                'group_name' => $groupName ?: null,
+                'location_code' => $location,
+                'is_tracked' => 1,
+                'source' => 'keyword_research',
+                'search_volume' => (int) ($kwData['volume'] ?? 0) ?: null,
+                'cpc' => ($kwData['high_bid'] ?? 0) > 0 ? round((float) $kwData['high_bid'], 2) : null,
+                'competition_level' => !empty($kwData['competition_level']) ? strtolower($kwData['competition_level']) : null,
+                'keyword_intent' => !empty($kwData['intent']) ? strtolower($kwData['intent']) : null,
+                'volume_updated_at' => date('Y-m-d H:i:s'),
+            ]);
+
+            if ($newId && !empty($groupName)) {
+                $keywordGroupModel->syncKeywordToGroup($projectId, $newId, $groupName);
+            }
+
+            $added++;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'added' => $added,
+            'skipped' => $skipped,
+        ]);
+    }
+
+    /**
+     * GET: Ritorna i nomi dei gruppi di un progetto SEO Tracking (per autocomplete)
+     */
+    public function projectGroups(): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $projectId = (int) ($_GET['project_id'] ?? 0);
+
+        if (!$projectId || !ModuleLoader::isModuleActive('seo-tracking')) {
+            echo json_encode(['success' => true, 'groups' => []]);
+            return;
+        }
+
+        $stProject = new \Modules\SeoTracking\Models\Project();
+        $project = $stProject->find($projectId, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => true, 'groups' => []]);
+            return;
+        }
+
+        $keywordModel = new \Modules\SeoTracking\Models\Keyword();
+        $groups = $keywordModel->getGroups($projectId);
+        $groupNames = array_column($groups, 'group_name');
+
+        echo json_encode(['success' => true, 'groups' => $groupNames]);
     }
 }

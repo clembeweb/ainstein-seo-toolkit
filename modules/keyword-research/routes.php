@@ -178,3 +178,16 @@ Router::post('/keyword-research/quick-check/search', function () {
     $controller = new QuickCheckController();
     return $controller->search();
 });
+
+Router::post('/keyword-research/quick-check/send-to-tracking', function () {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new QuickCheckController();
+    return $controller->sendToTracking();
+});
+
+Router::get('/keyword-research/quick-check/project-groups', function () {
+    Middleware::auth();
+    $controller = new QuickCheckController();
+    return $controller->projectGroups();
+});
