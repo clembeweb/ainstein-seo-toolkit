@@ -2,48 +2,57 @@
 
 namespace Controllers;
 
+use Core\Auth;
+use Core\Database;
 use Core\Router;
-use Core\View;
 use Core\Middleware;
 use Services\GoogleOAuthService;
 
 /**
  * OAuthController - Gestisce callback OAuth centralizzati
+ *
+ * Gestisce sia il flusso login/registrazione che il flusso GSC/GA4 moduli.
+ * Discrimina tramite il campo 'action' nello state:
+ * - action=login → flusso autenticazione
+ * - altrimenti → flusso modulo (richiede auth)
  */
 class OAuthController
 {
     /**
      * Callback OAuth Google
      * GET /oauth/google/callback
-     *
-     * Riceve il code da Google, scambia per tokens,
-     * e redirige al modulo che ha iniziato il flusso OAuth.
      */
     public function googleCallback(): string
     {
-        Middleware::auth();
-
         $code = $_GET['code'] ?? null;
         $state = $_GET['state'] ?? null;
         $error = $_GET['error'] ?? null;
 
         // Errore da Google (es: user ha annullato)
         if ($error) {
-            $_SESSION['_flash']['error'] = 'Autorizzazione Google annullata: ' . $error;
-            Router::redirect('/dashboard');
+            $_SESSION['_flash']['error'] = 'Autorizzazione Google annullata.';
+            Router::redirect('/login');
             return '';
         }
 
         // Parametri mancanti
         if (!$code || !$state) {
-            $_SESSION['_flash']['error'] = 'Parametri OAuth mancanti';
-            Router::redirect('/dashboard');
+            $_SESSION['_flash']['error'] = 'Parametri OAuth mancanti.';
+            Router::redirect('/login');
             return '';
         }
 
         $oauth = new GoogleOAuthService();
 
-        // Verifica state (CSRF + decode module/project)
+        // 1. Prova flusso LOGIN/REGISTRAZIONE (utente non autenticato)
+        $loginState = $oauth->verifyLoginState($state);
+        if ($loginState) {
+            return $this->handleLoginCallback($oauth, $code, $loginState);
+        }
+
+        // 2. Flusso MODULO (GSC/GA4) - richiede autenticazione
+        Middleware::auth();
+
         $stateData = $oauth->verifyState($state);
         if (!$stateData) {
             $_SESSION['_flash']['error'] = 'State OAuth non valido o scaduto';
@@ -53,7 +62,7 @@ class OAuthController
 
         $moduleSlug = $stateData['module'];
         $projectId = $stateData['project_id'];
-        $type = $stateData['type'] ?? 'gsc'; // Default a GSC per retrocompatibilita
+        $type = $stateData['type'] ?? 'gsc';
 
         // Scambia code per tokens
         $tokens = $oauth->exchangeCode($code);
@@ -65,7 +74,6 @@ class OAuthController
         }
 
         // Salva tokens in sessione temporanea per il modulo
-        // Il modulo leggerà questi dati e li salverà nel proprio DB
         $_SESSION['google_oauth_tokens'] = [
             'access_token' => $tokens['access_token'],
             'refresh_token' => $tokens['refresh_token'],
@@ -75,10 +83,54 @@ class OAuthController
         ];
 
         // Redirect al modulo per completare la connessione
-        // GSC: /{module}/gsc/connected
-        // GA4: /{module}/ga4/connected
         $endpoint = ($type === 'ga4') ? 'ga4' : 'gsc';
         Router::redirect("/{$moduleSlug}/{$endpoint}/connected");
+        return '';
+    }
+
+    /**
+     * Gestisce callback per login/registrazione con Google
+     */
+    private function handleLoginCallback(GoogleOAuthService $oauth, string $code, array $stateData): string
+    {
+        // Scambia code per token
+        $tokens = $oauth->exchangeLoginCode($code);
+        if (isset($tokens['error'])) {
+            $_SESSION['_flash']['error'] = 'Errore autenticazione Google: ' . $tokens['message'];
+            Router::redirect('/login');
+            return '';
+        }
+
+        // Ottieni info utente da Google
+        $googleUser = $oauth->getUserInfo($tokens['access_token']);
+        if (isset($googleUser['error'])) {
+            $_SESSION['_flash']['error'] = 'Impossibile ottenere i dati del profilo Google.';
+            Router::redirect('/login');
+            return '';
+        }
+
+        // Verifica email confermata
+        if (empty($googleUser['email_verified'])) {
+            $_SESSION['_flash']['error'] = 'L\'email Google non è verificata. Verifica la tua email e riprova.';
+            Router::redirect('/login');
+            return '';
+        }
+
+        // Trova o crea utente
+        $user = Auth::findOrCreateFromGoogle($googleUser);
+        if (!$user) {
+            $_SESSION['_flash']['error'] = 'Errore durante la creazione dell\'account.';
+            Router::redirect('/login');
+            return '';
+        }
+
+        // Login
+        Auth::login($user, true);
+
+        // Redirect
+        $intended = $stateData['intended'] ?? '/dashboard';
+        $_SESSION['_flash']['success'] = 'Benvenuto, ' . htmlspecialchars($user['name'] ?? 'utente') . '!';
+        Router::redirect($intended);
         return '';
     }
 }

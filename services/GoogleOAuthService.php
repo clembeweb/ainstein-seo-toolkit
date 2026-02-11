@@ -245,22 +245,12 @@ class GoogleOAuthService
     }
 
     /**
-     * Redirect URI per login (diverso da quello GSC/GA4)
+     * Redirect URI per login - usa lo stesso callback di GSC/GA4
+     * Google Cloud Console ha già questa URI configurata
      */
     public function getLoginRedirectUri(): string
     {
-        $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
-        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-
-        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
-        $basePath = '';
-        if (preg_match('#^(/[^/]+)/(?:public/)?#', $scriptName, $matches)) {
-            if ($matches[1] !== '/public') {
-                $basePath = $matches[1];
-            }
-        }
-
-        return $scheme . '://' . $host . $basePath . '/auth/google/callback';
+        return $this->getRedirectUri();
     }
 
     /**
