@@ -145,6 +145,78 @@ class Auth
         return $userId;
     }
 
+    /**
+     * Trova o crea utente da Google OAuth
+     *
+     * @param array $googleUser Dati da Google userinfo (sub, email, name, picture)
+     * @return array|null Utente trovato/creato o null se errore
+     */
+    public static function findOrCreateFromGoogle(array $googleUser): ?array
+    {
+        $googleId = $googleUser['sub'];
+        $email = $googleUser['email'];
+        $name = $googleUser['name'] ?? '';
+        $avatar = $googleUser['picture'] ?? null;
+
+        // 1. Cerca per google_id
+        $user = Database::fetch(
+            "SELECT * FROM users WHERE google_id = ? AND is_active = 1",
+            [$googleId]
+        );
+
+        if ($user) {
+            // Aggiorna avatar se cambiato
+            if ($avatar && ($user['avatar'] ?? '') !== $avatar) {
+                Database::update('users', ['avatar' => $avatar], 'id = ?', [$user['id']]);
+            }
+            return $user;
+        }
+
+        // 2. Cerca per email (utente esistente che collega Google)
+        $user = Database::fetch(
+            "SELECT * FROM users WHERE email = ? AND is_active = 1",
+            [$email]
+        );
+
+        if ($user) {
+            // Collega google_id all'account esistente
+            Database::update('users', [
+                'google_id' => $googleId,
+                'avatar' => $avatar,
+            ], 'id = ?', [$user['id']]);
+
+            $user['google_id'] = $googleId;
+            $user['avatar'] = $avatar;
+            return $user;
+        }
+
+        // 3. Nuovo utente - registra
+        $config = require __DIR__ . '/../config/app.php';
+        $freeCredits = $config['free_credits'] ?? 50;
+
+        $userId = Database::insert('users', [
+            'email' => $email,
+            'password' => null,
+            'name' => $name,
+            'role' => 'user',
+            'credits' => $freeCredits,
+            'is_active' => true,
+            'google_id' => $googleId,
+            'avatar' => $avatar,
+        ]);
+
+        // Log crediti benvenuto
+        Database::insert('credit_transactions', [
+            'user_id' => $userId,
+            'amount' => $freeCredits,
+            'type' => 'bonus',
+            'description' => 'Crediti benvenuto (registrazione Google)',
+            'balance_after' => $freeCredits,
+        ]);
+
+        return Database::fetch("SELECT * FROM users WHERE id = ?", [$userId]);
+    }
+
     public static function updatePassword(int $userId, string $password): void
     {
         Database::update(

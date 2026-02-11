@@ -199,6 +199,103 @@ Router::post('/logout', function () {
     Router::redirect('/login');
 });
 
+// =========================================
+// GOOGLE AUTH (Login/Registrazione)
+// =========================================
+
+Router::get('/auth/google', function () {
+    Middleware::guest();
+
+    $oauth = new \Services\GoogleOAuthService();
+
+    if (!$oauth->isConfigured()) {
+        $_SESSION['_flash']['error'] = 'Login con Google non disponibile. OAuth non configurato.';
+        Router::redirect('/login');
+        return;
+    }
+
+    $intended = $_SESSION['_intended_url'] ?? null;
+
+    try {
+        $url = $oauth->getLoginAuthUrl($intended);
+        header('Location: ' . $url);
+        exit;
+    } catch (\Exception $e) {
+        $_SESSION['_flash']['error'] = 'Errore configurazione Google OAuth: ' . $e->getMessage();
+        Router::redirect('/login');
+    }
+});
+
+Router::get('/auth/google/callback', function () {
+    Middleware::guest();
+
+    $code = $_GET['code'] ?? null;
+    $state = $_GET['state'] ?? null;
+    $error = $_GET['error'] ?? null;
+
+    // Utente ha annullato
+    if ($error) {
+        $_SESSION['_flash']['error'] = 'Accesso con Google annullato.';
+        Router::redirect('/login');
+        return;
+    }
+
+    if (!$code || !$state) {
+        $_SESSION['_flash']['error'] = 'Parametri OAuth mancanti.';
+        Router::redirect('/login');
+        return;
+    }
+
+    $oauth = new \Services\GoogleOAuthService();
+
+    // Verifica state (CSRF)
+    $stateData = $oauth->verifyLoginState($state);
+    if (!$stateData) {
+        $_SESSION['_flash']['error'] = 'Sessione OAuth scaduta. Riprova.';
+        Router::redirect('/login');
+        return;
+    }
+
+    // Scambia code per token
+    $tokens = $oauth->exchangeLoginCode($code);
+    if (isset($tokens['error'])) {
+        $_SESSION['_flash']['error'] = 'Errore autenticazione Google: ' . $tokens['message'];
+        Router::redirect('/login');
+        return;
+    }
+
+    // Ottieni info utente da Google
+    $googleUser = $oauth->getUserInfo($tokens['access_token']);
+    if (isset($googleUser['error'])) {
+        $_SESSION['_flash']['error'] = 'Impossibile ottenere i dati del profilo Google.';
+        Router::redirect('/login');
+        return;
+    }
+
+    // Verifica email confermata
+    if (empty($googleUser['email_verified'])) {
+        $_SESSION['_flash']['error'] = 'L\'email Google non e verificata. Verifica la tua email e riprova.';
+        Router::redirect('/login');
+        return;
+    }
+
+    // Trova o crea utente
+    $user = Auth::findOrCreateFromGoogle($googleUser);
+    if (!$user) {
+        $_SESSION['_flash']['error'] = 'Errore durante la creazione dell\'account.';
+        Router::redirect('/login');
+        return;
+    }
+
+    // Login
+    Auth::login($user, true);
+
+    // Redirect
+    $intended = $stateData['intended'] ?? '/dashboard';
+    $_SESSION['_flash']['success'] = 'Benvenuto, ' . htmlspecialchars($user['name'] ?? 'utente') . '!';
+    Router::redirect($intended);
+});
+
 Router::get('/forgot-password', function () {
     Middleware::guest();
     return View::render('auth/forgot-password', ['title' => 'Password dimenticata'], null);
