@@ -110,6 +110,7 @@ class ArchitectureController
         header('Connection: keep-alive');
         header('X-Accel-Buffering: no');
 
+        ignore_user_abort(true);
         set_time_limit(0);
         session_write_close();
 
