@@ -148,7 +148,7 @@ function refactorApp() {
 
             try {
                 const formData = new FormData();
-                formData.append('csrf_token', '<?= csrf_token() ?>');
+                formData.append('_csrf_token', '<?= csrf_token() ?>');
                 formData.append('target_word_count', this.targetWordCount);
                 formData.append('tone', this.tone);
                 formData.append('keep_structure', this.keepStructure ? '1' : '0');

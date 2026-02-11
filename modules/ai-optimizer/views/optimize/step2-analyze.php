@@ -129,7 +129,7 @@ function analyzeApp() {
 
             try {
                 const formData = new FormData();
-                formData.append('csrf_token', '<?= csrf_token() ?>');
+                formData.append('_csrf_token', '<?= csrf_token() ?>');
 
                 const response = await fetch('<?= url('/ai-optimizer/project/' . $projectId . '/optimize/' . $optimization['id'] . '/analyze') ?>', {
                     method: 'POST',

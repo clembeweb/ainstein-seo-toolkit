@@ -77,8 +77,12 @@ class ContentRefactorService
                 $keepStructure
             );
 
-            // Chiama AI
-            $response = $this->aiService->analyze($userId, $prompt, '', 'ai-optimizer');
+            // Chiama AI con max_tokens alto per articoli lunghi
+            $response = $this->aiService->complete($userId, [
+                ['role' => 'user', 'content' => $prompt],
+            ], [
+                'max_tokens' => 16000,
+            ], 'ai-optimizer');
 
             // IMPORTANTE: Riconnetti DB dopo chiamata AI
             Database::reconnect();
@@ -239,6 +243,10 @@ PROMPT;
         $lastBrace = strrpos($jsonStr, '}');
 
         if ($firstBrace === false || $lastBrace === false) {
+            // Risposta troncata senza nessuna parentesi chiusa - tenta riparazione
+            if ($firstBrace !== false) {
+                throw new \Exception('Risposta AI troncata (JSON incompleto). Riprova la generazione.');
+            }
             throw new \Exception('Nessun JSON trovato nella risposta AI');
         }
 
@@ -246,7 +254,13 @@ PROMPT;
         $data = json_decode($jsonStr, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \Exception('JSON non valido: ' . json_last_error_msg());
+            // JSON troncato: potrebbe essere una risposta tagliata dal max_tokens
+            throw new \Exception('Risposta AI troncata o JSON non valido. Riprova la generazione.');
+        }
+
+        // Verifica campi obbligatori
+        if (empty($data['content'])) {
+            throw new \Exception('Risposta AI incompleta: contenuto mancante. Riprova.');
         }
 
         return $data;
