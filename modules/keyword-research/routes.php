@@ -95,6 +95,12 @@ Router::get('/keyword-research/project/{id}/research/stream', function ($id) {
     return $controller->collectionStream((int) $id);
 });
 
+Router::get('/keyword-research/project/{id}/research/collection-results', function ($id) {
+    Middleware::auth();
+    $controller = new ResearchController();
+    return $controller->collectionResults((int) $id);
+});
+
 Router::post('/keyword-research/project/{id}/research/analyze', function ($id) {
     Middleware::auth();
     Middleware::csrf();
@@ -135,6 +141,12 @@ Router::get('/keyword-research/project/{id}/architecture/stream', function ($id)
     Middleware::auth();
     $controller = new ArchitectureController();
     return $controller->collectionStream((int) $id);
+});
+
+Router::get('/keyword-research/project/{id}/architecture/collection-results', function ($id) {
+    Middleware::auth();
+    $controller = new ArchitectureController();
+    return $controller->collectionResults((int) $id);
 });
 
 Router::post('/keyword-research/project/{id}/architecture/analyze', function ($id) {

@@ -332,19 +332,57 @@ function architectureWizard() {
             });
 
             this.eventSource.addEventListener('error', (e) => {
-                const d = JSON.parse(e.data);
-                this.collectionStatus = 'Errore: ' + d.message;
-                this.collecting = false;
-                this.eventSource.close();
+                try {
+                    const d = JSON.parse(e.data);
+                    this.collectionStatus = 'Errore: ' + d.message;
+                    this.collecting = false;
+                    this.eventSource.close();
+                } catch (_) {
+                    // Errore nativo SSE (no data), gestito da onerror
+                }
             });
 
             this.eventSource.onerror = () => {
+                this.eventSource.close();
                 if (!this.collectionDone) {
-                    this.collectionStatus = 'Connessione persa.';
+                    if (this.collectionProgress >= 85) {
+                        this.collectionStatus = 'Recupero risultati...';
+                        this.pollCollectionResults();
+                    } else {
+                        this.collectionStatus = 'Connessione persa. Riprova.';
+                        this.collecting = false;
+                    }
+                }
+            };
+        },
+
+        async pollCollectionResults(attempts = 0) {
+            if (attempts > 10) {
+                this.collectionStatus = 'Impossibile recuperare i risultati. Riprova.';
+                this.collecting = false;
+                return;
+            }
+            try {
+                const resp = await fetch(`<?= url('/keyword-research/project/' . $project['id'] . '/architecture/collection-results') ?>?research_id=${this.researchId}`);
+                const data = await resp.json();
+                if (data.success && data.status === 'collecting') {
+                    setTimeout(() => this.pollCollectionResults(attempts + 1), 2000);
+                    return;
+                }
+                if (data.success && data.keywords && data.keywords.length > 0) {
+                    this.rawKeywordsCount = data.raw_keywords;
+                    this.filteredKeywords = data.keywords;
+                    this.collectionDone = true;
+                    this.collecting = false;
+                    // Auto-avvia AI come farebbe il completed event
+                    this.startAnalysis();
+                } else {
+                    this.collectionStatus = 'Nessun risultato trovato. Riprova.';
                     this.collecting = false;
                 }
-                this.eventSource.close();
-            };
+            } catch (e) {
+                setTimeout(() => this.pollCollectionResults(attempts + 1), 2000);
+            }
         },
 
         async startAnalysis() {

@@ -218,12 +218,13 @@ class ResearchController
         $filterResult = $service->filterKeywords(array_values($allKeywords), $exclusions, $minVolume);
         $filtered = $filterResult['keywords'];
 
-        // Aggiorna research
+        // Salva risultati nel DB (incluse keyword filtrate per fallback polling)
         Database::reconnect();
         $this->researchModel->saveResults($researchId, [
             'raw_keywords_count' => count($allKeywords),
             'filtered_keywords_count' => count($filtered),
             'api_time_ms' => $totalApiTime,
+            'ai_response' => ['filtered_keywords' => $filtered, 'excluded_stats' => $filterResult['excluded_stats']],
             'status' => 'draft',
         ]);
 
@@ -233,7 +234,46 @@ class ResearchController
             'excluded_volume_low' => $filterResult['excluded_stats']['volume_low'],
             'excluded_match' => $filterResult['excluded_stats']['exclusion_match'],
             'api_time_ms' => $totalApiTime,
-            'keywords' => $filtered, // Passa keyword filtrate al frontend
+            'keywords' => $filtered,
+        ]);
+    }
+
+    /**
+     * Polling fallback per risultati raccolta (quando SSE si disconnette)
+     */
+    public function collectionResults(int $projectId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $researchId = (int) ($_GET['research_id'] ?? 0);
+        $research = $this->researchModel->find($researchId, $user['id']);
+
+        if (!$research || $research['project_id'] !== $projectId) {
+            echo json_encode(['success' => false, 'error' => 'Ricerca non trovata.']);
+            return;
+        }
+
+        // Se status è ancora 'collecting', la raccolta non è finita
+        if ($research['status'] === 'collecting') {
+            echo json_encode(['success' => true, 'status' => 'collecting']);
+            return;
+        }
+
+        // Status 'draft' = raccolta completata, keyword salvate in ai_response
+        $aiResponse = json_decode($research['ai_response'] ?? '{}', true);
+        $filtered = $aiResponse['filtered_keywords'] ?? [];
+        $excludedStats = $aiResponse['excluded_stats'] ?? ['volume_low' => 0, 'exclusion_match' => 0];
+
+        echo json_encode([
+            'success' => true,
+            'status' => $research['status'],
+            'raw_keywords' => $research['raw_keywords_count'],
+            'filtered_keywords' => count($filtered),
+            'excluded_volume_low' => $excludedStats['volume_low'],
+            'excluded_match' => $excludedStats['exclusion_match'],
+            'api_time_ms' => $research['api_time_ms'],
+            'keywords' => $filtered,
         ]);
     }
 
