@@ -134,7 +134,7 @@ class ResearchController
         $sendEvent = function (string $event, array $data) {
             echo "event: {$event}\n";
             echo "data: " . json_encode($data) . "\n\n";
-            ob_flush();
+            if (ob_get_level()) ob_flush();
             flush();
         };
 
@@ -215,7 +215,7 @@ class ResearchController
         // Pre-filtro
         $sendEvent('filtering', ['total_raw' => count($allKeywords)]);
 
-        $minVolume = (int) (ModuleLoader::getModuleSetting('keyword-research', 'min_search_volume') ?? 10);
+        $minVolume = (int) (ModuleLoader::getSetting('keyword-research', 'min_search_volume') ?? 10);
         $filterResult = $service->filterKeywords(array_values($allKeywords), $exclusions, $minVolume);
         $filtered = $filterResult['keywords'];
 
@@ -313,7 +313,7 @@ class ResearchController
 
         // Costo crediti
         $costKey = count($keywords) > 100 ? 'cost_kr_ai_clustering_large' : 'cost_kr_ai_clustering';
-        $cost = (float) (ModuleLoader::getModuleSetting('keyword-research', $costKey) ?? (count($keywords) > 100 ? 5 : 2));
+        $cost = (float) (ModuleLoader::getSetting('keyword-research', $costKey) ?? (count($keywords) > 100 ? 5 : 2));
 
         if (!Credits::hasEnough($user['id'], $cost)) {
             echo json_encode(['success' => false, 'error' => "Crediti insufficienti. Richiesti: {$cost}"]);
@@ -321,7 +321,7 @@ class ResearchController
         }
 
         $brief = json_decode($research['brief'], true);
-        $maxClusters = (int) (ModuleLoader::getModuleSetting('keyword-research', 'max_clusters') ?? 8);
+        $maxClusters = (int) (ModuleLoader::getSetting('keyword-research', 'max_clusters') ?? 8);
 
         // Prepara prompt
         $kwLines = [];
