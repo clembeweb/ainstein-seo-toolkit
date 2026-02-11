@@ -31,6 +31,20 @@
             "icon": "sparkles",
             "description": "Provider e modello AI per questo modulo",
             "order": 0
+        },
+        "general": {
+            "label": "Impostazioni Generali",
+            "icon": "cog",
+            "description": "Configurazione predefinita per le analisi Google Ads",
+            "order": 1,
+            "collapsed": false
+        },
+        "costs": {
+            "label": "Costi Operazioni",
+            "icon": "currency-euro",
+            "description": "Crediti consumati per ogni operazione",
+            "order": 99,
+            "collapsed": true
         }
     },
     "settings": {
@@ -77,19 +91,22 @@
             "default": 300,
             "min": 50,
             "max": 500,
-            "description": "Limite termini inviati all'AI per singola analisi"
+            "description": "Limite termini inviati all'AI per singola analisi",
+            "group": "general"
         },
         "auto_select_high_priority": {
             "type": "checkbox",
             "label": "Auto-seleziona keyword priorita Alta",
             "default": true,
-            "description": "Seleziona automaticamente le keyword con priorita 'high' per l'export"
+            "description": "Seleziona automaticamente le keyword con priorita 'high' per l'export",
+            "group": "general"
         },
         "auto_select_medium_priority": {
             "type": "checkbox",
             "label": "Auto-seleziona keyword priorita Media",
             "default": true,
-            "description": "Seleziona automaticamente le keyword con priorita 'medium' per l'export"
+            "description": "Seleziona automaticamente le keyword con priorita 'medium' per l'export",
+            "group": "general"
         },
         "default_match_type": {
             "type": "select",
@@ -100,7 +117,8 @@
                 "phrase": "Corrispondenza a frase \"keyword\"",
                 "broad": "Corrispondenza generica"
             },
-            "description": "Match type usato nell'export per Google Ads Editor"
+            "description": "Match type usato nell'export per Google Ads Editor",
+            "group": "general"
         },
         "cost_context_extraction": {
             "type": "number",
@@ -109,7 +127,8 @@
             "default": 3,
             "min": 0,
             "step": 0.1,
-            "admin_only": true
+            "admin_only": true,
+            "group": "costs"
         },
         "cost_ad_group_analysis": {
             "type": "number",
@@ -118,7 +137,8 @@
             "default": 2,
             "min": 0,
             "step": 0.1,
-            "admin_only": true
+            "admin_only": true,
+            "group": "costs"
         },
         "cost_bulk_analysis": {
             "type": "number",
@@ -127,7 +147,8 @@
             "default": 1.5,
             "min": 0,
             "step": 0.1,
-            "admin_only": true
+            "admin_only": true,
+            "group": "costs"
         },
         "cost_bulk_analysis_discount": {
             "type": "number",
@@ -137,7 +158,8 @@
             "min": 0.1,
             "max": 1,
             "step": 0.05,
-            "admin_only": true
+            "admin_only": true,
+            "group": "costs"
         }
     },
     "routes_prefix": "/ads-analyzer"

@@ -73,6 +73,30 @@
 
 ---
 
+## STANDARD module.json (Admin Settings)
+
+Ogni modulo DEVE avere `settings_groups` nel suo `module.json` per organizzare la pagina admin `/admin/modules/{id}/settings`.
+
+**Ordine gruppi standard:**
+
+| Order | Gruppo | Descrizione | Note |
+|-------|--------|-------------|------|
+| 0 | `ai_config` | Provider/modello AI | Gestito da componente custom |
+| 0.5 | `provider_config` | Provider esterni (SERP, volumi) | Solo se necessario |
+| 1 | `general` | Impostazioni specifiche modulo | - |
+| 2+ | Feature groups | Cron, sync, etc. | Specifici per modulo |
+| 99 | `costs` | Costi operazioni | **Sempre collapsed: true** |
+
+**Reference**: `modules/seo-tracking/module.json` (implementazione completa)
+
+**Regole:**
+- Tutti i settings DEVONO avere `"group"` assegnato (no settings "ungrouped")
+- Costi SEMPRE nel gruppo `costs` con `collapsed: true`
+- Moduli AI DEVONO avere `ai_provider`, `ai_model`, `ai_fallback_enabled` in gruppo `ai_config`
+- Icone gruppi: `sparkles`, `globe-alt`, `cog`, `chart-bar`, `refresh`, `currency-euro`
+
+---
+
 ## STRUTTURA PROGETTO
 
 ```

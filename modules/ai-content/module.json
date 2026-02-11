@@ -30,6 +30,20 @@
             "icon": "globe-alt",
             "description": "Provider per estrazione risultati SERP e analisi competitor",
             "order": 0.5
+        },
+        "general": {
+            "label": "Impostazioni Generali",
+            "icon": "cog",
+            "description": "Configurazione predefinita per la generazione contenuti",
+            "order": 1,
+            "collapsed": false
+        },
+        "costs": {
+            "label": "Costi Operazioni",
+            "icon": "currency-euro",
+            "description": "Crediti consumati per ogni operazione",
+            "order": 99,
+            "collapsed": true
         }
     },
     "settings": {
@@ -93,17 +107,26 @@
             "type": "select",
             "label": "Lingua default",
             "options": ["it", "en", "es", "de", "fr"],
-            "default": "it"
+            "default": "it",
+            "group": "general"
         },
         "default_word_count": {
             "type": "number",
             "label": "Parole target articolo",
-            "default": 1500
+            "description": "Numero di parole target per gli articoli generati",
+            "default": 1500,
+            "min": 500,
+            "max": 5000,
+            "group": "general"
         },
         "max_sources": {
             "type": "number",
             "label": "Max fonti per articolo",
-            "default": 6
+            "description": "Numero massimo di fonti SERP da analizzare per ogni articolo",
+            "default": 6,
+            "min": 1,
+            "max": 15,
+            "group": "general"
         },
         "cost_serp_extraction": {
             "type": "number",
@@ -112,7 +135,8 @@
             "default": 3,
             "min": 0,
             "step": 0.1,
-            "admin_only": true
+            "admin_only": true,
+            "group": "costs"
         },
         "cost_content_scrape": {
             "type": "number",
@@ -121,7 +145,8 @@
             "default": 1,
             "min": 0,
             "step": 0.1,
-            "admin_only": true
+            "admin_only": true,
+            "group": "costs"
         },
         "cost_brief_generation": {
             "type": "number",
@@ -130,7 +155,8 @@
             "default": 5,
             "min": 0,
             "step": 0.1,
-            "admin_only": true
+            "admin_only": true,
+            "group": "costs"
         },
         "cost_article_generation": {
             "type": "number",
@@ -139,7 +165,8 @@
             "default": 10,
             "min": 0,
             "step": 0.1,
-            "admin_only": true
+            "admin_only": true,
+            "group": "costs"
         },
         "cost_cover_image_generation": {
             "type": "number",
@@ -148,7 +175,8 @@
             "default": 3,
             "min": 0,
             "step": 0.1,
-            "admin_only": true
+            "admin_only": true,
+            "group": "costs"
         }
     }
 }

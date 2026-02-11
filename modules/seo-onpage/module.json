@@ -15,22 +15,84 @@
         "audit_page": 2,
         "ai_suggestions": 3
     },
+    "settings_groups": {
+        "ai_config": {
+            "label": "Configurazione AI",
+            "icon": "sparkles",
+            "description": "Provider e modello AI per questo modulo",
+            "order": 0
+        },
+        "general": {
+            "label": "Impostazioni Generali",
+            "icon": "cog",
+            "description": "Configurazione predefinita per le analisi on-page",
+            "order": 1,
+            "collapsed": false
+        },
+        "costs": {
+            "label": "Costi Operazioni",
+            "icon": "currency-euro",
+            "description": "Crediti consumati per ogni operazione",
+            "order": 99,
+            "collapsed": true
+        }
+    },
     "settings": {
+        "ai_provider": {
+            "type": "select",
+            "label": "Provider AI",
+            "description": "Provider AI per questo modulo",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"},
+                {"value": "anthropic", "label": "Anthropic (Claude)"},
+                {"value": "openai", "label": "OpenAI (GPT)"}
+            ]
+        },
+        "ai_model": {
+            "type": "select",
+            "label": "Modello AI",
+            "description": "Modello AI per questo modulo",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"}
+            ]
+        },
+        "ai_fallback_enabled": {
+            "type": "select",
+            "label": "Fallback AI",
+            "description": "Fallback automatico su altro provider se il primario fallisce",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"},
+                {"value": "1", "label": "Abilitato"},
+                {"value": "0", "label": "Disabilitato"}
+            ]
+        },
         "enable_js_rendering": {
             "type": "checkbox",
             "label": "Abilita JS Rendering",
             "description": "Renderizza JavaScript per analisi accurate (costo API maggiore)",
             "default": true,
-            "admin_only": true
+            "admin_only": true,
+            "group": "general"
         },
         "default_device": {
             "type": "select",
             "label": "Device Default",
+            "description": "Device predefinito per le analisi on-page",
             "options": [
                 {"value": "desktop", "label": "Desktop"},
                 {"value": "mobile", "label": "Mobile"}
             ],
-            "default": "desktop"
+            "default": "desktop",
+            "group": "general"
         },
         "cost_audit_page": {
             "type": "number",
@@ -39,7 +101,8 @@
             "default": 2,
             "min": 0,
             "step": 0.1,
-            "admin_only": true
+            "admin_only": true,
+            "group": "costs"
         },
         "cost_ai_suggestions": {
             "type": "number",
@@ -48,7 +111,8 @@
             "default": 3,
             "min": 0,
             "step": 0.1,
-            "admin_only": true
+            "admin_only": true,
+            "group": "costs"
         }
     }
 }

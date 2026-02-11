@@ -16,6 +16,13 @@
             "icon": "sparkles",
             "description": "Provider e modello AI per questo modulo",
             "order": 0
+        },
+        "costs": {
+            "label": "Costi Operazioni",
+            "icon": "currency-euro",
+            "description": "Crediti consumati per ogni operazione",
+            "order": 99,
+            "collapsed": true
         }
     },
     "settings": {
@@ -63,7 +70,8 @@
             "default": 0.5,
             "min": 0,
             "step": 0.1,
-            "admin_only": true
+            "admin_only": true,
+            "group": "costs"
         },
         "cost_ai_suggestions": {
             "type": "number",
@@ -72,7 +80,8 @@
             "default": 1,
             "min": 0,
             "step": 0.1,
-            "admin_only": true
+            "admin_only": true,
+            "group": "costs"
         }
     },
     "routes_prefix": "/internal-links"

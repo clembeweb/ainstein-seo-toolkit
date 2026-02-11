@@ -167,10 +167,19 @@ I costi vengono salvati in `modules.settings` come JSON.
 
 ### Via module.json (Defaults)
 
-Ogni modulo definisce i costi di default nel suo `module.json`:
+Ogni modulo definisce i costi di default nel suo `module.json`, raggruppati nel gruppo `costs` (collapsed di default):
 
 ```json
 {
+    "settings_groups": {
+        "costs": {
+            "label": "Costi Operazioni",
+            "icon": "currency-euro",
+            "description": "Crediti consumati per ogni operazione",
+            "order": 99,
+            "collapsed": true
+        }
+    },
     "settings": {
         "cost_serp_extraction": {
             "type": "number",
@@ -179,7 +188,8 @@ Ogni modulo definisce i costi di default nel suo `module.json`:
             "default": 3,
             "min": 0,
             "step": 0.1,
-            "admin_only": true
+            "admin_only": true,
+            "group": "costs"
         }
     }
 }
