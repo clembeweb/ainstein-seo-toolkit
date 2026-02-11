@@ -1,7 +1,7 @@
 # AINSTEIN - Istruzioni Claude Code
 
 > Questo file viene caricato automaticamente ad ogni sessione.
-> Ultimo aggiornamento: 2026-02-06
+> Ultimo aggiornamento: 2026-02-11
 
 ---
 
@@ -36,6 +36,8 @@
 12. Scraping SEMPRE con Readability  → ScraperService::scrape() per tutto
 13. Background jobs per operazioni lunghe → SSE + job queue (vedi sezione dedicata)
 14. ApiLoggerService per API     → Tutte le chiamate API esterne loggano
+15. ignore_user_abort(true)      → SEMPRE in SSE streams (proxy chiude connessione)
+16. ModuleLoader::getSetting()   → NON getModuleSetting() (non esiste)
 ```
 
 ---
@@ -315,6 +317,10 @@ public function processStream(int $projectId): void {
     header('Cache-Control: no-cache');
     header('X-Accel-Buffering: no');
 
+    // CRITICO: Continua esecuzione anche se proxy chiude connessione
+    ignore_user_abort(true);
+    set_time_limit(0);
+
     // IMPORTANTE: Chiudi sessione PRIMA del loop
     session_write_close();
 
@@ -343,7 +349,7 @@ public function processStream(int $projectId): void {
 private function sendEvent(string $event, array $data): void {
     echo "event: {$event}\n";
     echo "data: " . json_encode($data) . "\n\n";
-    ob_flush();
+    if (ob_get_level()) ob_flush();  // Guard: server potrebbe non avere buffer
     flush();
 }
 
@@ -383,7 +389,19 @@ connectSSE() {
         // Finalizza
     });
 
-    // Fallback a polling se SSE fallisce
+    // Errori custom dal server (event: error nel stream)
+    this.eventSource.addEventListener('error', (e) => {
+        try {
+            const d = JSON.parse(e.data);
+            // Errore server-sent con messaggio
+            this.status = 'Errore: ' + d.message;
+            this.eventSource.close();
+        } catch (_) {
+            // Errore nativo SSE (no data) - gestito da onerror sotto
+        }
+    });
+
+    // Fallback a polling se SSE si disconnette (proxy timeout)
     this.eventSource.onerror = () => {
         this.eventSource.close();
         this.startPolling();
@@ -470,6 +488,11 @@ async startPolling() {
 [ ] php -l su file modificati
 [ ] Operazioni lunghe usano job in background (SSE)
 [ ] session_write_close() prima di loop SSE
+[ ] ignore_user_abort(true) + set_time_limit(0) in SSE streams
+[ ] ob_flush() con guard: if (ob_get_level()) ob_flush()
+[ ] ModuleLoader::getSetting() per settings modulo (NON getModuleSetting)
+[ ] SSE: salvare risultati nel DB PRIMA dell'evento completed (polling fallback)
+[ ] Testare in produzione: deploy → creare tabelle DB → attivare modulo
 ```
 
 ---
@@ -501,6 +524,11 @@ async startPolling() {
 | API call non loggata | ApiLoggerService mancante | Aggiungi log dopo ogni chiamata API |
 | "Errore di connessione" AJAX POST | Campo CSRF con nome sbagliato | Usare `_csrf_token` (con underscore), NON `csrf_token` |
 | SSE timeout dopo 30s | `set_time_limit` non rimosso | `set_time_limit(0)` prima del loop SSE e prima di AI call |
+| SSE "Connessione persa" 90% | Proxy SiteGround chiude SSE | `ignore_user_abort(true)` + polling fallback |
+| SSE dati persi dopo disconnect | Risultati inviati solo via SSE | Salvare nel DB PRIMA dell'evento `completed` |
+| `ob_flush(): Failed to flush` | Nessun buffer attivo | `if (ob_get_level()) ob_flush()` |
+| `getModuleSetting()` undefined | Metodo inesistente | Usare `ModuleLoader::getSetting(slug, key, default)` |
+| Modulo non visibile in prod | Tabelle/record assenti | Creare tabelle + INSERT in `modules` |
 
 ---
 

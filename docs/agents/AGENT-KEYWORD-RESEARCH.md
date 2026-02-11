@@ -1,6 +1,6 @@
 # AGENTE: AI Keyword Research
 
-> **Ultimo aggiornamento:** 2026-02-06
+> **Ultimo aggiornamento:** 2026-02-11
 
 ## CONTESTO
 
@@ -127,7 +127,7 @@ Keyword Research ▼
 - Nessun progetto richiesto
 - Gratis (0 crediti)
 - Form: keyword + location → POST → risultato inline
-- Mostra: volume, CPC, competition, intent, top 20 correlate
+- Mostra: volume, CPC, competition, intent, tutte le correlate (sorting + filtri + paginazione)
 - Nessun salvataggio DB
 
 ---
@@ -199,11 +199,18 @@ Credits::consume($userId, $cost, 'kr_ai_clustering', 'keyword-research', [...]);
 
 Raccolta keyword usa Server-Sent Events per progress real-time.
 
-**Punti critici:**
-1. `session_write_close()` PRIMA del loop (sblocca sessione)
-2. `Database::reconnect()` dopo ogni chiamata API
-3. `ob_flush(); flush();` dopo ogni evento
-4. Check cancellazione non necessario (raccolta breve)
+**Punti critici (ordine nel controller):**
+1. `ignore_user_abort(true)` → CRITICO: proxy SiteGround chiude SSE, senza questo PHP aborta e non salva nel DB
+2. `set_time_limit(0)` → rimuove timeout PHP
+3. `session_write_close()` PRIMA del loop (sblocca sessione)
+4. `Database::reconnect()` dopo ogni chiamata API
+5. `if (ob_get_level()) ob_flush(); flush();` → guard per server senza buffer
+6. **Salvare risultati nel DB PRIMA dell'evento `completed`** → se SSE cade, il polling fallback recupera dal DB
+
+**Polling fallback:**
+- Endpoint: `GET /collection-results?research_id=X`
+- Legge keyword filtrate dal campo `ai_response` JSON della research (salvate durante collection)
+- Frontend auto-poll quando SSE disconnette a progresso >= 85%
 
 **Eventi:**
 | Evento | Dati | Quando |
@@ -211,9 +218,30 @@ Raccolta keyword usa Server-Sent Events per progress real-time.
 | `started` | total_seeds | Inizio raccolta |
 | `seed_started` | seed, index | Prima di ogni seed |
 | `seed_completed` | seed, count, total | Dopo keySuggest() |
-| `seed_error` | seed, error | Errore su seed |
+| `seed_error` | seed, error | Errore su seed (es. HTTP 429) |
 | `filtering` | raw_count | Pre-filtro |
 | `completed` | keywords[], total, filtered | Fine con array keyword |
+
+**Frontend SSE error handling:**
+```javascript
+// Errori custom dal server (event: error nel stream)
+this.eventSource.addEventListener('error', (e) => {
+    try {
+        const d = JSON.parse(e.data);
+        this.status = 'Errore: ' + d.message;
+        this.eventSource.close();
+    } catch (_) {
+        // Errore nativo SSE (no e.data) - gestito da onerror
+    }
+});
+// Disconnessione SSE (proxy timeout)
+this.eventSource.onerror = () => {
+    this.eventSource.close();
+    if (this.progress >= 85) {
+        this.pollCollectionResults(); // recupera dal DB
+    }
+};
+```
 
 ---
 
@@ -232,11 +260,16 @@ Raccolta keyword usa Server-Sent Events per progress real-time.
 
 | File | Descrizione |
 |------|-------------|
-| `controllers/ResearchController.php` | Pattern wizard + SSE + AI (il piu complesso) |
-| `controllers/ArchitectureController.php` | Variante architettura (auto-chain SSE→AI) |
+| `controllers/ResearchController.php` | Wizard + SSE + polling fallback + AI clustering |
+| `controllers/ArchitectureController.php` | Variante architettura (auto-chain SSE→AI) + polling fallback |
 | `controllers/QuickCheckController.php` | Pattern API-only senza crediti |
-| `views/research/wizard.php` | Alpine.js wizard 4-step con SSE |
-| `views/partials/cluster-card.php` | Componente cluster riutilizzabile |
+| `views/research/wizard.php` | Alpine.js wizard 4-step con SSE + polling fallback |
+| `views/architecture/wizard.php` | Alpine.js wizard 3-step con SSE + polling fallback |
+| `views/partials/cluster-card.php` | Componente cluster con sorting Alpine.js |
+| `views/partials/table-helpers.php` | JS condiviso: sort, filtri, paginazione, colori intent/comp |
+| `views/quick-check/index.php` | Tabella correlate con sorting, filtri, paginazione |
+| `views/research/results.php` | Risultati con filtro intent + espandi/comprimi cluster |
+| `views/architecture/results.php` | Tabella struttura con sorting + filtro intent cluster |
 | `services/KeywordInsightService.php` | Wrapper API con ApiLoggerService |
 | `module.json` | Settings schema con groups e admin_only costs |
 
@@ -247,12 +280,35 @@ Raccolta keyword usa Server-Sent Events per progress real-time.
 | Problema | Causa | Soluzione |
 |----------|-------|-----------|
 | "API key non configurata" | rapidapi_keyword_key mancante | Admin > Impostazioni > Integrazioni |
-| SSE non invia eventi | Output buffering | `ob_flush(); flush();` dopo echo |
+| SSE non invia eventi | Output buffering | `if (ob_get_level()) ob_flush(); flush();` |
 | SSE blocca pagine | Sessione non chiusa | `session_write_close()` prima del loop |
+| SSE "Connessione persa" 90% | Proxy SiteGround chiude SSE | `ignore_user_abort(true)` + polling fallback |
+| SSE dati persi dopo disconnect | Risultati solo via SSE | Salvare nel DB PRIMA dell'evento `completed` |
+| `ob_flush(): Failed to flush` | Nessun buffer attivo | `if (ob_get_level()) ob_flush()` |
+| `getModuleSetting()` undefined | Metodo sbagliato | `ModuleLoader::getSetting(slug, key, default)` |
 | "MySQL gone away" dopo AI | Connessione scaduta | `Database::reconnect()` prima di salvare |
 | AI risponde con markdown | Prompt non chiaro | Cleanup con `preg_replace` su backticks |
 | 0 keyword raccolte | API quota esaurita (HTTP 429) | Verificare crediti RapidAPI |
+| "Errore di connessione" al click | Campo CSRF sbagliato | `_csrf_token` (con underscore!), NON `csrf_token` |
 | Export CSV caratteri rotti | Manca BOM | Aggiungere `\xEF\xBB\xBF` a inizio output |
+| Modulo non visibile in prod | Tabelle/modulo non creati | Creare tabelle + INSERT in `modules` |
+
+## DEPLOY PRODUZIONE
+
+```bash
+# 1. Push codice
+git push origin main
+
+# 2. SSH e pull
+ssh -i siteground_key -p 18765 u1608-ykgnd3z1twn4@ssh.ainstein.it
+cd ~/www/ainstein.it/public_html && git pull origin main
+
+# 3. Creare tabelle (prima volta)
+mysql -u USER -pPASS DB < modules/keyword-research/database/schema.sql
+
+# 4. Attivare modulo (prima volta)
+mysql -u USER -pPASS DB -e "INSERT INTO modules (slug, name, description, version, is_active) VALUES ('keyword-research', 'AI Keyword Research', 'Research e analisi keyword con AI', '1.0.0', 1);"
+```
 
 ---
 
