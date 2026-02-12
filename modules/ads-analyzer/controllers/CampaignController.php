@@ -180,9 +180,12 @@ class CampaignController
      */
     public function evaluate(int $projectId): void
     {
-        // Operazione lunga: scraping + AI
+        // Operazione lunga: scraping + AI (pattern da ai-content WizardController)
         ignore_user_abort(true);
         set_time_limit(0);
+
+        ob_start();
+        header('Content-Type: application/json');
 
         try {
             $user = Auth::user();
@@ -224,6 +227,9 @@ class CampaignController
             if (empty($campaigns)) {
                 jsonResponse(['error' => 'Nessuna campagna trovata nel run selezionato'], 400);
             }
+
+            // Chiudi sessione per non bloccare altre request
+            session_write_close();
 
             // Crea record valutazione
             $evalId = CampaignEvaluation::create([
@@ -298,11 +304,13 @@ class CampaignController
                 'landing_pages' => $landingCount,
             ]);
 
-            jsonResponse([
+            ob_end_clean();
+            echo json_encode([
                 'success' => true,
                 'evaluation_id' => $evalId,
                 'redirect' => url("/ads-analyzer/projects/{$projectId}/campaigns/evaluations/{$evalId}"),
             ]);
+            exit;
 
         } catch (\Exception $e) {
             error_log("Campaign evaluation error: " . $e->getMessage());
@@ -312,7 +320,10 @@ class CampaignController
                 CampaignEvaluation::updateStatus($evalId, 'error', $e->getMessage());
             }
 
-            jsonResponse(['error' => 'Errore: ' . $e->getMessage()], 500);
+            ob_end_clean();
+            http_response_code(500);
+            echo json_encode(['error' => 'Errore: ' . $e->getMessage()]);
+            exit;
         }
     }
 
