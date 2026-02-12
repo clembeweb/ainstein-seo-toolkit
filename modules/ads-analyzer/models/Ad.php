@@ -67,15 +67,21 @@ class Ad
         ) ?: [];
     }
 
+    /**
+     * URL uniche degli annunci attivi, ordinate per numero di annunci che le usano
+     */
     public static function getUniqueUrls(int $runId): array
     {
         return Database::fetchAll(
-            "SELECT final_url, COUNT(*) as ad_count,
-                    GROUP_CONCAT(DISTINCT ad_group_name SEPARATOR ', ') as ad_groups
-             FROM ga_ads
-             WHERE run_id = ? AND final_url IS NOT NULL AND final_url != ''
-             GROUP BY final_url
-             ORDER BY ad_count DESC, final_url",
+            "SELECT a.final_url, COUNT(*) as ad_count,
+                    GROUP_CONCAT(DISTINCT a.ad_group_name SEPARATOR ', ') as ad_groups
+             FROM ga_ads a
+             INNER JOIN ga_campaigns c ON c.campaign_id_google = a.campaign_id_google AND c.run_id = a.run_id
+             WHERE a.run_id = ? AND a.final_url IS NOT NULL AND a.final_url != ''
+               AND (a.ad_status IS NULL OR a.ad_status = 'ENABLED')
+               AND (c.campaign_status IS NULL OR c.campaign_status = 'ENABLED')
+             GROUP BY a.final_url
+             ORDER BY ad_count DESC, a.final_url",
             [$runId]
         );
     }

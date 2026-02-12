@@ -124,10 +124,11 @@
                     </template>
                     <span x-text="loading ? 'Avvio valutazione...' : 'Valuta con AI'"></span>
                 </button>
+                <?php $evalCost = \Core\Credits::getCost('campaign_evaluation', 'ads-analyzer', 7); ?>
                 <div class="text-sm text-slate-500 dark:text-slate-400">
-                    <span class="font-medium">Costo:</span> 3 crediti
+                    <span class="font-medium">Costo:</span> <?= number_format($evalCost, 1) ?> crediti
                     <span class="mx-1">&bull;</span>
-                    <span>Disponibili: <strong class="<?= $userCredits >= 3 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' ?>"><?= number_format($userCredits, 1) ?></strong></span>
+                    <span>Disponibili: <strong class="<?= $userCredits >= $evalCost ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' ?>"><?= number_format($userCredits, 1) ?></strong></span>
                 </div>
             </div>
 
@@ -374,7 +375,7 @@ function campaignPageManager() {
     return {
         loading: false,
         errorMsg: '',
-        canEvaluate: <?= ($latestRun && $userCredits >= 3) ? 'true' : 'false' ?>,
+        canEvaluate: <?= ($latestRun && $userCredits >= $evalCost) ? 'true' : 'false' ?>,
 
         async startEvaluation() {
             if (!this.canEvaluate || this.loading) return;
@@ -392,6 +393,15 @@ function campaignPageManager() {
                     body: formData
                 });
 
+                if (!resp.ok) {
+                    // Proxy timeout (502/504): il backend continua in background
+                    // Redirect alla pagina campagne che mostra lo stato
+                    this.errorMsg = 'Valutazione avviata. L\'analisi potrebbe richiedere qualche minuto (scraping landing + AI). Ricarica la pagina tra poco.';
+                    this.loading = false;
+                    setTimeout(() => location.reload(), 15000);
+                    return;
+                }
+
                 const data = await resp.json();
 
                 if (data.success && data.redirect) {
@@ -405,8 +415,10 @@ function campaignPageManager() {
                 }
             } catch (err) {
                 console.error('Evaluation start failed:', err);
-                this.errorMsg = 'Errore di connessione. Riprova.';
+                // Anche qui potrebbe essere un timeout proxy
+                this.errorMsg = 'Valutazione avviata. L\'analisi potrebbe richiedere qualche minuto. Ricarica la pagina tra poco.';
                 this.loading = false;
+                setTimeout(() => location.reload(), 15000);
             }
         }
     };
