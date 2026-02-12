@@ -15,6 +15,9 @@ use Modules\AdsAnalyzer\Controllers\AnalysisController;
 use Modules\AdsAnalyzer\Controllers\AnalysisHistoryController;
 use Modules\AdsAnalyzer\Controllers\ExportController;
 use Modules\AdsAnalyzer\Controllers\SettingsController;
+use Modules\AdsAnalyzer\Controllers\ApiController;
+use Modules\AdsAnalyzer\Controllers\ScriptController;
+use Modules\AdsAnalyzer\Controllers\CampaignController;
 
 $moduleSlug = 'ads-analyzer';
 
@@ -22,6 +25,15 @@ $moduleSlug = 'ads-analyzer';
 if (!ModuleLoader::isModuleActive($moduleSlug)) {
     return;
 }
+
+// ============================================
+// API PUBBLICA (no auth sessione, no CSRF)
+// ============================================
+
+Router::post('/api/v1/ads-analyzer/ingest', function () {
+    $controller = new ApiController();
+    return $controller->ingest();
+});
 
 // ============================================
 // DASHBOARD
@@ -273,6 +285,73 @@ Router::post('/ads-analyzer/projects/{id}/copy-text/{adGroupId}', function ($id,
     Middleware::auth();
     $controller = new ExportController();
     return $controller->copyText((int) $id, (int) $adGroupId);
+});
+
+// ============================================
+// GOOGLE ADS SCRIPT
+// ============================================
+
+// Setup script (genera, copia, configura)
+Router::get('/ads-analyzer/projects/{id}/script', function ($id) {
+    Middleware::auth();
+    $controller = new ScriptController();
+    return $controller->setup((int) $id);
+});
+
+// Rigenera token API (AJAX)
+Router::post('/ads-analyzer/projects/{id}/script/regenerate-token', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new ScriptController();
+    return $controller->regenerateToken((int) $id);
+});
+
+// Aggiorna configurazione script
+Router::post('/ads-analyzer/projects/{id}/script/config', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new ScriptController();
+    return $controller->updateConfig((int) $id);
+});
+
+// Storico esecuzioni script
+Router::get('/ads-analyzer/projects/{id}/script/runs', function ($id) {
+    Middleware::auth();
+    $controller = new ScriptController();
+    return $controller->runs((int) $id);
+});
+
+// ============================================
+// DATI CAMPAGNE (Tool 2)
+// ============================================
+
+// Lista campagne per progetto
+Router::get('/ads-analyzer/projects/{id}/campaigns', function ($id) {
+    Middleware::auth();
+    $controller = new CampaignController();
+    return $controller->index((int) $id);
+});
+
+// Dettaglio run campagne
+Router::get('/ads-analyzer/projects/{id}/campaigns/{runId}', function ($id, $runId) {
+    Middleware::auth();
+    $controller = new CampaignController();
+    return $controller->show((int) $id, (int) $runId);
+});
+
+// Avvia valutazione AI campagne (AJAX)
+Router::post('/ads-analyzer/projects/{id}/campaigns/evaluate', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new CampaignController();
+    return $controller->evaluate((int) $id);
+});
+
+// Dettaglio valutazione AI
+Router::get('/ads-analyzer/projects/{id}/campaigns/evaluations/{evalId}', function ($id, $evalId) {
+    Middleware::auth();
+    $controller = new CampaignController();
+    return $controller->evaluationShow((int) $id, (int) $evalId);
 });
 
 // ============================================

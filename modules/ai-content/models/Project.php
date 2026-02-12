@@ -268,6 +268,107 @@ class Project
     }
 
     /**
+     * Get global stats across all user projects (for entry dashboard)
+     */
+    public function getGlobalStats(int $userId): array
+    {
+        $metaTagsExists = $this->tableExists('aic_meta_tags');
+        $queueExists = $this->tableExists('aic_queue');
+
+        // Conteggio progetti per tipo
+        $projectCounts = Database::fetch("
+            SELECT
+                SUM(CASE WHEN type = 'manual' THEN 1 ELSE 0 END) as manual_count,
+                SUM(CASE WHEN type = 'auto' THEN 1 ELSE 0 END) as auto_count,
+                SUM(CASE WHEN type = 'meta-tag' THEN 1 ELSE 0 END) as meta_count,
+                COUNT(*) as total_projects
+            FROM {$this->table}
+            WHERE user_id = ?
+        ", [$userId]);
+
+        // Stats articoli globali
+        $articleStats = Database::fetch("
+            SELECT
+                COUNT(*) as total_articles,
+                SUM(CASE WHEN a.status = 'published' THEN 1 ELSE 0 END) as published,
+                SUM(COALESCE(a.word_count, 0)) as total_words
+            FROM aic_articles a
+            INNER JOIN {$this->table} p ON a.project_id = p.id
+            WHERE p.user_id = ?
+        ", [$userId]);
+
+        // Keywords totali
+        $kwCount = Database::fetch("
+            SELECT COUNT(*) as cnt
+            FROM aic_keywords k
+            INNER JOIN {$this->table} p ON k.project_id = p.id
+            WHERE p.user_id = ?
+        ", [$userId]);
+
+        // Meta tags totali
+        $metaCount = 0;
+        if ($metaTagsExists) {
+            $metaRow = Database::fetch("
+                SELECT COUNT(*) as cnt
+                FROM aic_meta_tags mt
+                INNER JOIN {$this->table} p ON mt.project_id = p.id
+                WHERE p.user_id = ?
+            ", [$userId]);
+            $metaCount = (int) ($metaRow['cnt'] ?? 0);
+        }
+
+        return [
+            'manual_count' => (int) ($projectCounts['manual_count'] ?? 0),
+            'auto_count' => (int) ($projectCounts['auto_count'] ?? 0),
+            'meta_count' => (int) ($projectCounts['meta_count'] ?? 0),
+            'total_projects' => (int) ($projectCounts['total_projects'] ?? 0),
+            'total_keywords' => (int) ($kwCount['cnt'] ?? 0),
+            'total_articles' => (int) ($articleStats['total_articles'] ?? 0),
+            'published' => (int) ($articleStats['published'] ?? 0),
+            'total_words' => (int) ($articleStats['total_words'] ?? 0),
+            'total_meta_tags' => $metaCount,
+        ];
+    }
+
+    /**
+     * Get recent projects (all types) for entry dashboard
+     */
+    public function getRecentProjects(int $userId, int $limit = 6): array
+    {
+        $metaTagsExists = $this->tableExists('aic_meta_tags');
+
+        $sql = "
+            SELECT
+                p.*,
+                (SELECT COUNT(*) FROM aic_keywords WHERE project_id = p.id) as keywords_count,
+                (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id) as articles_count,
+                (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id AND status = 'published') as articles_published
+            FROM {$this->table} p
+            WHERE p.user_id = ?
+            ORDER BY p.updated_at DESC
+            LIMIT ?
+        ";
+
+        $projects = Database::fetchAll($sql, [$userId, $limit]);
+
+        // Aggiungi meta tags count per i progetti meta-tag
+        if ($metaTagsExists) {
+            foreach ($projects as &$project) {
+                if ($project['type'] === 'meta-tag') {
+                    $mtRow = Database::fetch(
+                        "SELECT COUNT(*) as cnt FROM aic_meta_tags WHERE project_id = ?",
+                        [$project['id']]
+                    );
+                    $project['meta_tags_count'] = (int) ($mtRow['cnt'] ?? 0);
+                }
+            }
+            unset($project);
+        }
+
+        return $projects;
+    }
+
+    /**
      * Count projects for user
      */
     public function countByUser(int $userId): int

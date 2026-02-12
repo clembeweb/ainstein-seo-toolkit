@@ -35,14 +35,14 @@ if (!ModuleLoader::isModuleActive($moduleSlug)) {
 // PROJECT ROUTES
 // ============================================
 
-// Lista progetti (nuova homepage modulo)
+// Entry dashboard con 3 mode cards (homepage modulo)
 Router::get('/ai-content', function () {
     Middleware::auth();
     $controller = new ProjectController();
-    return $controller->index();
+    return $controller->entryDashboard();
 });
 
-// Alias lista progetti
+// Lista progetti con tabs (Manual, Auto, Meta Tags)
 Router::get('/ai-content/projects', function () {
     Middleware::auth();
     $controller = new ProjectController();

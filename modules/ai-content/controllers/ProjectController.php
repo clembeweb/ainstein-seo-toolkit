@@ -24,7 +24,26 @@ class ProjectController
     }
 
     /**
-     * Lista progetti
+     * Entry dashboard con 3 mode cards (nuova homepage modulo)
+     */
+    public function entryDashboard(): string
+    {
+        $user = Auth::user();
+
+        $stats = $this->project->getGlobalStats($user['id']);
+        $recentProjects = $this->project->getRecentProjects($user['id'], 6);
+
+        return View::render('ai-content/entry-dashboard', [
+            'title' => 'AI Content Generator',
+            'user' => $user,
+            'modules' => ModuleLoader::getUserModules($user['id']),
+            'stats' => $stats,
+            'recentProjects' => $recentProjects,
+        ]);
+    }
+
+    /**
+     * Lista progetti (tabs per tipo)
      */
     public function index(): string
     {

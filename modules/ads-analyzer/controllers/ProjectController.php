@@ -66,6 +66,9 @@ class ProjectController
         // Crea progetto
         $projectId = Project::create($data);
 
+        // Genera token API per Google Ads Script
+        Project::generateToken($projectId);
+
         $_SESSION['flash_success'] = 'Progetto creato con successo';
         header('Location: ' . url("/ads-analyzer/projects/{$projectId}/upload"));
         exit;

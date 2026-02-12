@@ -32,7 +32,7 @@ endif;
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
         <!-- Progetti -->
         <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center gap-3">
@@ -92,6 +92,21 @@ endif;
                 </div>
             </div>
         </div>
+
+        <!-- Script Runs -->
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                    <svg class="h-5 w-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($scriptStats['completed_runs'] ?? 0) ?></p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Script Runs</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Quick Actions + Recent Projects -->
@@ -123,6 +138,21 @@ endif;
                         <p class="text-sm text-slate-500 dark:text-slate-400">Gestisci le analisi</p>
                     </div>
                 </a>
+
+                <?php if (!empty($recentProjects)): ?>
+                <?php $firstProject = reset($recentProjects); ?>
+                <a href="<?= url('/ads-analyzer/projects/' . $firstProject['id'] . '/script') ?>" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
+                    <div class="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <svg class="h-5 w-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="font-medium text-slate-900 dark:text-white">Google Ads Script</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Automatizza raccolta dati</p>
+                    </div>
+                </a>
+                <?php endif; ?>
 
                 <a href="<?= url('/ads-analyzer/settings') ?>" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
                     <div class="h-10 w-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -233,6 +263,10 @@ endif;
                 <div class="text-center">
                     <p class="text-2xl font-bold">1.5</p>
                     <p class="text-xs text-amber-200">Analisi bulk (4+)</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-2xl font-bold">3</p>
+                    <p class="text-xs text-amber-200">Valutazione campagne</p>
                 </div>
                 <div class="text-center">
                     <p class="text-2xl font-bold">0</p>

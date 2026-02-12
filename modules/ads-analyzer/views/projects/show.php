@@ -167,6 +167,57 @@
     </div>
     <?php endif; ?>
 
+    <!-- Google Ads Script & Campagne -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Google Ads Script Card -->
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="h-10 w-10 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
+                    <svg class="h-5 w-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-slate-900 dark:text-white">Google Ads Script</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Importazione automatica dati</p>
+                </div>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                Genera uno script da inserire in Google Ads per inviare automaticamente i termini di ricerca e i dati campagne.
+            </p>
+            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/script') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                </svg>
+                Configura Script
+            </a>
+        </div>
+
+        <!-- Dati Campagne Card -->
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                    <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-slate-900 dark:text-white">Performance Campagne</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Valutazione AI annunci e setup</p>
+                </div>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                Visualizza i dati campagne ricevuti via script e avvia una valutazione AI su copy, landing e performance.
+            </p>
+            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                Vedi Campagne
+            </a>
+        </div>
+    </div>
+
     <!-- Recent Analyses -->
     <?php if (!empty($recentAnalyses)): ?>
     <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">

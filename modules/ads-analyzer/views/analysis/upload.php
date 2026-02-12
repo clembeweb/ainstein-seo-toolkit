@@ -16,6 +16,29 @@
         </div>
     </div>
 
+    <!-- Script Alternative Banner -->
+    <div class="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+        <div class="flex items-start gap-3">
+            <div class="h-8 w-8 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="h-4 w-4 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                </svg>
+            </div>
+            <div class="flex-1">
+                <p class="font-medium text-purple-900 dark:text-purple-200">Vuoi automatizzare?</p>
+                <p class="text-sm text-purple-700 dark:text-purple-300 mt-0.5">
+                    Usa il <strong>Google Ads Script</strong> per inviare automaticamente i dati senza export manuali.
+                </p>
+            </div>
+            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/script') ?>" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/50 hover:bg-purple-200 dark:hover:bg-purple-800/50 rounded-lg transition-colors flex-shrink-0">
+                Configura Script
+                <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+
     <!-- Upload Form -->
     <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6"
          x-data="csvUploader()"

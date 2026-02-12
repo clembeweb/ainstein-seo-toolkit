@@ -9,12 +9,12 @@
     </nav>
 
     <!-- Header -->
-    <div class="sm:flex sm:items-center sm:justify-between">
+    <div class="sm:flex sm:items-center sm:justify-between" data-tour="aic-header">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AI Content Generator</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Genera articoli SEO e meta tag ottimizzati con intelligenza artificiale</p>
         </div>
-        <div class="mt-4 sm:mt-0 flex items-center gap-3">
+        <div class="mt-4 sm:mt-0 flex items-center gap-3" data-tour="aic-quickactions">
             <!-- Quick Links -->
             <a href="<?= url('/ai-content/jobs') ?>" class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors" title="Gestione Job">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

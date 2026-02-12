@@ -96,4 +96,56 @@ class Project
             [$userId, $limit]
         );
     }
+
+    /**
+     * Trova progetto per API token (usato dall'endpoint API pubblico)
+     */
+    public static function findByToken(string $token): ?array
+    {
+        return Database::fetch(
+            "SELECT * FROM ga_projects WHERE api_token = ?",
+            [$token]
+        ) ?: null;
+    }
+
+    /**
+     * Genera un nuovo API token per il progetto
+     */
+    public static function generateToken(int $projectId): string
+    {
+        $token = bin2hex(random_bytes(32));
+
+        Database::update('ga_projects', [
+            'api_token' => $token,
+            'api_token_created_at' => date('Y-m-d H:i:s')
+        ], 'id = ?', [$projectId]);
+
+        return $token;
+    }
+
+    /**
+     * Aggiorna la configurazione script del progetto
+     */
+    public static function updateScriptConfig(int $projectId, array $config): bool
+    {
+        return Database::update('ga_projects', [
+            'script_config' => json_encode($config)
+        ], 'id = ?', [$projectId]) > 0;
+    }
+
+    /**
+     * Ottiene la configurazione script con defaults
+     */
+    public static function getScriptConfig(int $projectId): array
+    {
+        $project = self::find($projectId);
+        $config = json_decode($project['script_config'] ?? '{}', true) ?: [];
+
+        return array_merge([
+            'enable_search_terms' => true,
+            'enable_campaign_performance' => true,
+            'date_range' => 'LAST_30_DAYS',
+            'campaign_filter' => '',
+        ], $config);
+    }
 }
