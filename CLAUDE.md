@@ -132,7 +132,7 @@ seo-toolkit/
 
 ### SSH Produzione
 ```bash
-ssh -i siteground_key -p 18765 u1608-ykgnd3z1twn4@ssh.ainstein.it
+ssh -i ~/.ssh/siteground_key -p 18765 u1608-ykgnd3z1twn4@ssh.ainstein.it
 cd ~/www/ainstein.it/public_html
 ```
 
@@ -155,6 +155,24 @@ php -l path/to/file.php
 ### Test Connessione DB (locale)
 ```bash
 mysql -u root seo_toolkit -e "SHOW TABLES;"
+```
+
+### Database Produzione
+```bash
+# Credenziali
+# Host: localhost
+# DB: dbj0xoiwysdlk1
+# User: u6iaaermphtha
+# Password: exkwryfz7ieh
+
+# Eseguire migration in produzione
+mysql -u u6iaaermphtha -pexkwryfz7ieh dbj0xoiwysdlk1 < modules/modulo/database/migrations/NNN_nome.sql
+
+# Verificare tabelle
+mysql -u u6iaaermphtha -pexkwryfz7ieh dbj0xoiwysdlk1 -e "SHOW TABLES LIKE 'prefisso_%';"
+
+# Query rapida
+mysql -u u6iaaermphtha -pexkwryfz7ieh dbj0xoiwysdlk1 -e "SELECT * FROM tabella LIMIT 5;"
 ```
 
 ---
