@@ -12,12 +12,69 @@ use Modules\AdsAnalyzer\Models\ScriptRun;
 use Modules\AdsAnalyzer\Models\Campaign;
 use Modules\AdsAnalyzer\Models\Ad;
 use Modules\AdsAnalyzer\Models\Extension;
+use Modules\AdsAnalyzer\Models\CampaignAdGroup;
+use Modules\AdsAnalyzer\Models\AdGroupKeyword;
 use Modules\AdsAnalyzer\Models\CampaignEvaluation;
 use Modules\AdsAnalyzer\Services\CampaignEvaluatorService;
 use Modules\AdsAnalyzer\Services\ContextExtractorService;
 
 class CampaignController
 {
+    /**
+     * Dashboard progetto campagne
+     */
+    public function dashboard(int $projectId): string
+    {
+        $user = Auth::user();
+        $project = Project::findByUserAndId($user['id'], $projectId);
+
+        if (!$project) {
+            $_SESSION['flash_error'] = 'Progetto non trovato';
+            header('Location: ' . url('/ads-analyzer'));
+            exit;
+        }
+
+        if (($project['type'] ?? 'negative-kw') !== 'campaign') {
+            header('Location: ' . url("/ads-analyzer/projects/{$projectId}"));
+            exit;
+        }
+
+        // Prendi tutti i run con dati campagna
+        $runs = ScriptRun::getByProject($projectId, 10);
+        $campaignRuns = array_values(array_filter($runs, fn($r) =>
+            in_array($r['run_type'], ['campaign_performance', 'both']) && $r['status'] === 'completed'
+        ));
+
+        $latestRun = !empty($campaignRuns) ? reset($campaignRuns) : null;
+        $latestStats = $latestRun ? Campaign::getStatsByRun($latestRun['id']) : [];
+
+        // Valutazioni recenti
+        $evaluations = CampaignEvaluation::getByProject($projectId, 5);
+
+        // Conteggi generali
+        $totalCampaigns = 0;
+        $totalAds = 0;
+        if ($latestRun) {
+            $totalCampaigns = count(Campaign::getByRun($latestRun['id']));
+            $totalAds = count(Ad::getByRun($latestRun['id']));
+        }
+
+        return View::render('ads-analyzer/campaigns/dashboard', [
+            'title' => $project['name'] . ' - Google Ads Analyzer',
+            'user' => $user,
+            'modules' => ModuleLoader::getUserModules($user['id']),
+            'project' => $project,
+            'campaignRuns' => $campaignRuns,
+            'latestRun' => $latestRun,
+            'latestStats' => $latestStats,
+            'evaluations' => $evaluations,
+            'totalCampaigns' => $totalCampaigns,
+            'totalAds' => $totalAds,
+            'currentPage' => 'dashboard',
+            'userCredits' => Credits::getBalance($user['id']),
+        ]);
+    }
+
     /**
      * Lista dati campagne raggruppati per run
      */
@@ -29,6 +86,11 @@ class CampaignController
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
             header('Location: ' . url('/ads-analyzer'));
+            exit;
+        }
+
+        if (($project['type'] ?? 'negative-kw') !== 'campaign') {
+            header('Location: ' . url("/ads-analyzer/projects/{$projectId}"));
             exit;
         }
 
@@ -74,6 +136,11 @@ class CampaignController
             exit;
         }
 
+        if (($project['type'] ?? 'negative-kw') !== 'campaign') {
+            header('Location: ' . url("/ads-analyzer/projects/{$projectId}"));
+            exit;
+        }
+
         $run = ScriptRun::find($runId);
         if (!$run || $run['project_id'] != $projectId) {
             $_SESSION['flash_error'] = 'Esecuzione non trovata';
@@ -113,12 +180,20 @@ class CampaignController
      */
     public function evaluate(int $projectId): void
     {
+        // Operazione lunga: scraping + AI
+        ignore_user_abort(true);
+        set_time_limit(0);
+
         try {
             $user = Auth::user();
             $project = Project::findByUserAndId($user['id'], $projectId);
 
             if (!$project) {
                 jsonResponse(['error' => 'Progetto non trovato'], 404);
+            }
+
+            if (($project['type'] ?? 'negative-kw') !== 'campaign') {
+                jsonResponse(['error' => 'Operazione non disponibile per questo tipo di progetto'], 400);
             }
 
             // Determina run da valutare
@@ -134,7 +209,7 @@ class CampaignController
             }
 
             // Verifica crediti
-            $cost = Credits::getCost('campaign_evaluation', 'ads-analyzer', 3);
+            $cost = Credits::getCost('campaign_evaluation', 'ads-analyzer', 7);
             if (!Credits::hasEnough($user['id'], $cost)) {
                 jsonResponse(['error' => "Crediti insufficienti. Necessari: {$cost}"], 400);
             }
@@ -143,6 +218,8 @@ class CampaignController
             $campaigns = Campaign::getByRun($run['id']);
             $ads = Ad::getByRun($run['id']);
             $extensions = Extension::getByRun($run['id']);
+            $adGroupsData = CampaignAdGroup::getByRun($run['id']);
+            $keywordsData = AdGroupKeyword::getByRun($run['id']);
 
             if (empty($campaigns)) {
                 jsonResponse(['error' => 'Nessuna campagna trovata nel run selezionato'], 400);
@@ -156,32 +233,52 @@ class CampaignController
                 'name' => 'Valutazione ' . date('d/m/Y H:i'),
                 'campaigns_evaluated' => count($campaigns),
                 'ads_evaluated' => count($ads),
+                'ad_groups_evaluated' => count($adGroupsData),
+                'keywords_evaluated' => count($keywordsData),
                 'status' => 'analyzing',
             ]);
 
-            // Estrai contesto landing pages (opzionale, best effort)
+            // Fase A: Scraping + AI estrazione contesto landing pages (best effort)
             $landingContexts = [];
             $uniqueUrls = Ad::getUniqueUrls($run['id']);
             $extractor = new ContextExtractorService();
+            $landingCount = 0;
 
-            foreach (array_slice($uniqueUrls, 0, 5) as $urlRow) {
+            // Max 10 URL, ordinati per quelli usati da piu annunci
+            foreach (array_slice($uniqueUrls, 0, 10) as $urlRow) {
                 $url = $urlRow['final_url'];
                 try {
-                    $result = $extractor->extractFromUrl($user['id'], $url);
+                    set_time_limit(0);
+                    $result = $extractor->extractFromUrl($user['id'], $url, 'campaign');
+                    Database::reconnect();
+
                     if ($result['success']) {
                         $landingContexts[$url] = $result['extracted_context'];
+                        $landingCount++;
                     }
                 } catch (\Exception $e) {
-                    // Ignora errori scraping, non blocca la valutazione
                     error_log("Landing scrape failed for {$url}: " . $e->getMessage());
                 }
             }
 
+            // Aggiorna contatore landing nel record evaluation
             Database::reconnect();
+            CampaignEvaluation::update($evalId, [
+                'landing_pages_analyzed' => $landingCount,
+            ]);
 
-            // Valutazione AI
+            // Fase B: Valutazione AI completa (metriche + landing + copy + keyword)
+            set_time_limit(0);
             $evaluator = new CampaignEvaluatorService();
-            $aiResult = $evaluator->evaluate($user['id'], $campaigns, $ads, $extensions, $landingContexts);
+            $aiResult = $evaluator->evaluate(
+                $user['id'],
+                $campaigns,
+                $ads,
+                $extensions,
+                $landingContexts,
+                $adGroupsData,
+                $keywordsData
+            );
 
             Database::reconnect();
 
@@ -196,6 +293,9 @@ class CampaignController
             Credits::consume($user['id'], $cost, 'campaign_evaluation', 'ads-analyzer', [
                 'run_id' => $run['id'],
                 'campaigns' => count($campaigns),
+                'ad_groups' => count($adGroupsData),
+                'keywords' => count($keywordsData),
+                'landing_pages' => $landingCount,
             ]);
 
             jsonResponse([
@@ -208,6 +308,7 @@ class CampaignController
             error_log("Campaign evaluation error: " . $e->getMessage());
 
             if (isset($evalId)) {
+                Database::reconnect();
                 CampaignEvaluation::updateStatus($evalId, 'error', $e->getMessage());
             }
 
@@ -226,6 +327,11 @@ class CampaignController
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
             header('Location: ' . url('/ads-analyzer'));
+            exit;
+        }
+
+        if (($project['type'] ?? 'negative-kw') !== 'campaign') {
+            header('Location: ' . url("/ads-analyzer/projects/{$projectId}"));
             exit;
         }
 

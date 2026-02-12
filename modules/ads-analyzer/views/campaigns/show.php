@@ -1,52 +1,6 @@
+<?php $currentPage = 'campaigns'; include __DIR__ . '/../partials/project-nav.php'; ?>
+
 <div class="space-y-6" x-data="campaignRunDetail()">
-    <!-- Header -->
-    <div class="sm:flex sm:items-center sm:justify-between">
-        <div>
-            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/script/runs') ?>" class="inline-flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 mb-2">
-                <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                </svg>
-                Storico Esecuzioni
-            </a>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Dettaglio Run</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Progetto: <?= e($project['name']) ?> |
-                <?php if (!empty($run['date_range_start']) && !empty($run['date_range_end'])): ?>
-                    Periodo: <?= date('d/m/Y', strtotime($run['date_range_start'])) ?> - <?= date('d/m/Y', strtotime($run['date_range_end'])) ?>
-                <?php endif; ?>
-                | Eseguito il <?= date('d/m/Y H:i', strtotime($run['created_at'])) ?>
-            </p>
-        </div>
-        <div class="mt-4 sm:mt-0">
-            <?php
-            $runTypeLabels = [
-                'search_terms' => 'Termini di ricerca',
-                'campaign_performance' => 'Performance campagne',
-                'both' => 'Completo',
-            ];
-            $runStatusColors = [
-                'received' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
-                'processing' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
-                'completed' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300',
-                'error' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
-            ];
-            $runStatusLabels = [
-                'received' => 'Ricevuto',
-                'processing' => 'In elaborazione',
-                'completed' => 'Completato',
-                'error' => 'Errore',
-            ];
-            ?>
-            <div class="flex items-center gap-3">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300">
-                    <?= $runTypeLabels[$run['run_type']] ?? e($run['run_type']) ?>
-                </span>
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium <?= $runStatusColors[$run['status']] ?? 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400' ?>">
-                    <?= $runStatusLabels[$run['status']] ?? e($run['status']) ?>
-                </span>
-            </div>
-        </div>
-    </div>
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4">

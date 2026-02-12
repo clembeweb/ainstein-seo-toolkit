@@ -76,7 +76,7 @@ class ApiController
 
             // Verifica che ci siano dati da processare
             $hasSearchTerms = !empty($payload['search_terms']);
-            $hasCampaigns = !empty($payload['campaigns']) || !empty($payload['ads']) || !empty($payload['extensions']);
+            $hasCampaigns = !empty($payload['campaigns']) || !empty($payload['ads']) || !empty($payload['extensions']) || !empty($payload['ad_groups']) || !empty($payload['keywords']);
 
             if (!$hasSearchTerms && !$hasCampaigns) {
                 $this->error('Nessun dato da elaborare. Invia almeno search_terms o campaigns/ads/extensions.', 'NO_DATA', 400);
@@ -106,7 +106,7 @@ class ApiController
             // Elabora dati campagne
             if (in_array($type, ['campaign_performance', 'both'])) {
                 $result = IngestService::processCampaignData($projectId, $runId, $payload);
-                $totalItems += $result['campaigns'] + $result['ads'] + $result['extensions'];
+                $totalItems += $result['campaigns'] + $result['ads'] + ($result['ad_groups'] ?? 0) + ($result['keywords'] ?? 0) + $result['extensions'];
             }
 
             // Aggiorna run

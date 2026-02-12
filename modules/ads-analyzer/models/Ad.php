@@ -70,7 +70,12 @@ class Ad
     public static function getUniqueUrls(int $runId): array
     {
         return Database::fetchAll(
-            "SELECT DISTINCT final_url FROM ga_ads WHERE run_id = ? AND final_url IS NOT NULL AND final_url != '' ORDER BY final_url",
+            "SELECT final_url, COUNT(*) as ad_count,
+                    GROUP_CONCAT(DISTINCT ad_group_name SEPARATOR ', ') as ad_groups
+             FROM ga_ads
+             WHERE run_id = ? AND final_url IS NOT NULL AND final_url != ''
+             GROUP BY final_url
+             ORDER BY ad_count DESC, final_url",
             [$runId]
         );
     }
@@ -82,6 +87,19 @@ class Ad
             [$projectId]
         );
         return (int) ($result['cnt'] ?? 0);
+    }
+
+    /**
+     * Raggruppa annunci per ad_group_id_google
+     */
+    public static function getGroupedByAdGroup(int $runId): array
+    {
+        $rows = self::getByRun($runId);
+        $grouped = [];
+        foreach ($rows as $row) {
+            $grouped[$row['ad_group_id_google']][] = $row;
+        }
+        return $grouped;
     }
 
     public static function deleteByRun(int $runId): bool

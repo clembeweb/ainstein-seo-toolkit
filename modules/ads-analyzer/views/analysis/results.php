@@ -1,49 +1,11 @@
+<?php $currentPage = 'results'; include __DIR__ . '/../partials/project-nav.php'; ?>
+
 <div class="space-y-6" x-data="resultsManager(<?= htmlspecialchars(json_encode([
     'projectId' => $project['id'],
     'baseUrl' => url(''),
     'selectedCount' => $selectedCount,
     'totalNegatives' => $totalNegatives
 ])) ?>)">
-    <!-- Header -->
-    <div class="sm:flex sm:items-center sm:justify-between">
-        <div>
-            <a href="<?= url('/ads-analyzer/projects/' . $project['id']) ?>" class="inline-flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 mb-2">
-                <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                </svg>
-                <?= e($project['name']) ?>
-            </a>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Risultati Analisi</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                <span x-text="selectedCount"></span> keyword selezionate su <?= $totalNegatives ?>
-            </p>
-        </div>
-        <div class="mt-4 sm:mt-0 flex gap-3">
-            <!-- Export Dropdown -->
-            <div class="relative" x-data="{ open: false }">
-                <button @click="open = !open" class="inline-flex items-center px-4 py-2 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors">
-                    <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                    </svg>
-                    Esporta
-                    <svg class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                    </svg>
-                </button>
-                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-56 rounded-lg bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-10">
-                    <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/export/csv') ?>" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
-                        CSV (tutte le selezionate)
-                    </a>
-                    <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/export/google-ads-editor') ?>" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
-                        Google Ads Editor
-                    </a>
-                    <button @click="copyAllKeywords()" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
-                        Copia come testo
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">

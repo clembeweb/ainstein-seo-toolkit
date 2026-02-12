@@ -64,9 +64,13 @@ function main() {
     var campaignData = collectCampaignData();
     payload.campaigns = campaignData.campaigns;
     payload.ads = campaignData.ads;
+    payload.ad_groups = campaignData.adGroups;
+    payload.keywords = campaignData.keywords;
     payload.extensions = campaignData.extensions;
     Logger.log('Campagne: ' + payload.campaigns.length +
+               ', Ad Groups: ' + payload.ad_groups.length +
                ', Annunci: ' + payload.ads.length +
+               ', Keyword: ' + payload.keywords.length +
                ', Estensioni: ' + payload.extensions.length);
   }
 
@@ -163,6 +167,8 @@ function collectSearchTerms() {
 function collectCampaignData() {
   var campaigns = [];
   var ads = [];
+  var adGroupsData = [];
+  var keywords = [];
   var extensions = [];
 
   var campaignIterator = getCampaigns();
@@ -170,12 +176,13 @@ function collectCampaignData() {
   while (campaignIterator.hasNext()) {
     var campaign = campaignIterator.next();
     var stats = campaign.getStatsFor(CONFIG.DATE_RANGE);
+    var campaignType = campaign.getAdvertisingChannelType ? campaign.getAdvertisingChannelType() : 'SEARCH';
 
     campaigns.push({
       campaign_id: String(campaign.getId()),
       campaign_name: campaign.getName(),
       status: campaign.isEnabled() ? 'ENABLED' : 'PAUSED',
-      type: campaign.getAdvertisingChannelType ? campaign.getAdvertisingChannelType() : 'SEARCH',
+      type: campaignType,
       bidding_strategy: campaign.getBiddingStrategyType(),
       budget: campaign.getBudget().getAmount(),
       budget_type: 'DAILY',
@@ -189,61 +196,110 @@ function collectCampaignData() {
       conv_rate: stats.getConversionRate ? stats.getConversionRate() : 0
     });
 
-    // Annunci per ogni Ad Group
-    var adGroupIterator = campaign.adGroups().get();
-    while (adGroupIterator.hasNext() && ads.length < CONFIG.MAX_ITEMS) {
-      var adGroup = adGroupIterator.next();
-      var adIterator = adGroup.ads().get();
+    // Annunci, metriche ad group e keyword per ogni Ad Group
+    try {
+      var adGroupIterator = campaign.adGroups().get();
+      while (adGroupIterator.hasNext() && ads.length < CONFIG.MAX_ITEMS) {
+        var adGroup = adGroupIterator.next();
 
-      while (adIterator.hasNext() && ads.length < CONFIG.MAX_ITEMS) {
-        var ad = adIterator.next();
-        var adStats = ad.getStatsFor(CONFIG.DATE_RANGE);
-        var adData = {
-          campaign_id: String(campaign.getId()),
-          campaign_name: campaign.getName(),
-          ad_group_id: String(adGroup.getId()),
-          ad_group_name: adGroup.getName(),
-          type: ad.getType(),
-          headlines: [],
-          descriptions: [],
-          final_url: '',
-          path1: '',
-          path2: '',
-          status: ad.isEnabled() ? 'ENABLED' : 'PAUSED',
-          clicks: adStats.getClicks(),
-          impressions: adStats.getImpressions(),
-          ctr: adStats.getCtr(),
-          avg_cpc: adStats.getAverageCpc(),
-          cost: adStats.getCost(),
-          conversions: adStats.getConversions(),
-          quality_score: null
-        };
-
-        // Estrai copy in base al tipo
-        if (ad.isType().responsiveSearchAd()) {
-          var rsa = ad.asType().responsiveSearchAd();
-          adData.headlines = rsa.getHeadlines().map(function(h) { return h.text; }).slice(0, 3);
-          adData.descriptions = rsa.getDescriptions().map(function(d) { return d.text; }).slice(0, 2);
-        } else if (ad.isType().expandedTextAd()) {
-          var eta = ad.asType().expandedTextAd();
-          adData.headlines = [eta.getHeadlinePart1(), eta.getHeadlinePart2()];
-          if (eta.getHeadlinePart3) adData.headlines.push(eta.getHeadlinePart3());
-          adData.descriptions = [eta.getDescription1(), eta.getDescription2()];
+        // Metriche aggregate ad group
+        try {
+          var agStats = adGroup.getStatsFor(CONFIG.DATE_RANGE);
+          adGroupsData.push({
+            campaign_id: String(campaign.getId()),
+            campaign_name: campaign.getName(),
+            campaign_type: campaignType,
+            ad_group_id: String(adGroup.getId()),
+            ad_group_name: adGroup.getName(),
+            status: adGroup.isEnabled() ? 'ENABLED' : 'PAUSED',
+            clicks: agStats.getClicks(),
+            impressions: agStats.getImpressions(),
+            ctr: agStats.getCtr(),
+            avg_cpc: agStats.getAverageCpc(),
+            cost: agStats.getCost(),
+            conversions: agStats.getConversions(),
+            conversion_value: agStats.getConversionValue ? agStats.getConversionValue() : 0,
+            conv_rate: agStats.getConversionRate ? agStats.getConversionRate() : 0
+          });
+        } catch (e) {
+          Logger.log('Nota: metriche ad group non disponibili per ' + adGroup.getName() + ' - ' + e.message);
         }
 
-        adData.final_url = ad.urls().getFinalUrl() || '';
-        adData.path1 = ad.isType().responsiveSearchAd() ? (ad.asType().responsiveSearchAd().getPath1() || '') : '';
-        adData.path2 = ad.isType().responsiveSearchAd() ? (ad.asType().responsiveSearchAd().getPath2() || '') : '';
+        // Annunci
+        var adIterator = adGroup.ads().get();
+        while (adIterator.hasNext() && ads.length < CONFIG.MAX_ITEMS) {
+          var ad = adIterator.next();
+          var adStats = ad.getStatsFor(CONFIG.DATE_RANGE);
+          var adData = {
+            campaign_id: String(campaign.getId()),
+            campaign_name: campaign.getName(),
+            ad_group_id: String(adGroup.getId()),
+            ad_group_name: adGroup.getName(),
+            type: ad.getType(),
+            headlines: [],
+            descriptions: [],
+            final_url: '',
+            path1: '',
+            path2: '',
+            status: ad.isEnabled() ? 'ENABLED' : 'PAUSED',
+            clicks: adStats.getClicks(),
+            impressions: adStats.getImpressions(),
+            ctr: adStats.getCtr(),
+            avg_cpc: adStats.getAverageCpc(),
+            cost: adStats.getCost(),
+            conversions: adStats.getConversions(),
+            quality_score: null
+          };
 
-        // Quality Score a livello di keyword
-        var kwIterator = adGroup.keywords().get();
-        if (kwIterator.hasNext()) {
-          var kw = kwIterator.next();
-          adData.quality_score = kw.getQualityScore();
+          // Estrai copy in base al tipo
+          if (ad.isType().responsiveSearchAd()) {
+            var rsa = ad.asType().responsiveSearchAd();
+            adData.headlines = rsa.getHeadlines().map(function(h) { return h.text; }).slice(0, 3);
+            adData.descriptions = rsa.getDescriptions().map(function(d) { return d.text; }).slice(0, 2);
+          } else if (ad.isType().expandedTextAd()) {
+            var eta = ad.asType().expandedTextAd();
+            adData.headlines = [eta.getHeadlinePart1(), eta.getHeadlinePart2()];
+            if (eta.getHeadlinePart3) adData.headlines.push(eta.getHeadlinePart3());
+            adData.descriptions = [eta.getDescription1(), eta.getDescription2()];
+          }
+
+          adData.final_url = ad.urls().getFinalUrl() || '';
+          adData.path1 = ad.isType().responsiveSearchAd() ? (ad.asType().responsiveSearchAd().getPath1() || '') : '';
+          adData.path2 = ad.isType().responsiveSearchAd() ? (ad.asType().responsiveSearchAd().getPath2() || '') : '';
+
+          ads.push(adData);
         }
 
-        ads.push(adData);
+        // Keyword per ad group (non disponibili per Shopping/PMax)
+        try {
+          var kwIterator = adGroup.keywords().get();
+          while (kwIterator.hasNext() && keywords.length < CONFIG.MAX_ITEMS) {
+            var kw = kwIterator.next();
+            var kwStats = kw.getStatsFor(CONFIG.DATE_RANGE);
+            keywords.push({
+              campaign_id: String(campaign.getId()),
+              campaign_name: campaign.getName(),
+              ad_group_id: String(adGroup.getId()),
+              ad_group_name: adGroup.getName(),
+              keyword_text: kw.getText(),
+              match_type: kw.getMatchType(),
+              status: kw.isEnabled() ? 'ENABLED' : 'PAUSED',
+              clicks: kwStats.getClicks(),
+              impressions: kwStats.getImpressions(),
+              ctr: kwStats.getCtr(),
+              avg_cpc: kwStats.getAverageCpc(),
+              cost: kwStats.getCost(),
+              conversions: kwStats.getConversions(),
+              quality_score: kw.getQualityScore(),
+              first_page_cpc: kw.getFirstPageCpc()
+            });
+          }
+        } catch (e) {
+          // Shopping/PMax non hanno keyword tradizionali - normale
+        }
       }
+    } catch (e) {
+      Logger.log('Nota: ad groups non disponibili per ' + campaign.getName() + ' - ' + e.message);
     }
   }
 
@@ -302,7 +358,7 @@ function collectCampaignData() {
     Logger.log('Nota: snippet strutturati non disponibili - ' + e.message);
   }
 
-  return { campaigns: campaigns, ads: ads, extensions: extensions };
+  return { campaigns: campaigns, ads: ads, adGroups: adGroupsData, keywords: keywords, extensions: extensions };
 }
 
 // === UTILITY ===

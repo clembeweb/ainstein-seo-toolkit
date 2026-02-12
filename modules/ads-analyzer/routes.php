@@ -71,11 +71,32 @@ Router::post('/ads-analyzer/projects/store', function () {
     return $controller->store();
 });
 
-// Visualizza progetto
+// Visualizza progetto (redirect basato su tipo)
 Router::get('/ads-analyzer/projects/{id}', function ($id) {
     Middleware::auth();
+    $user = \Core\Auth::user();
+    $project = \Modules\AdsAnalyzer\Models\Project::findByUserAndId($user['id'], (int) $id);
+
+    if (!$project) {
+        $_SESSION['flash_error'] = 'Progetto non trovato';
+        header('Location: ' . url('/ads-analyzer'));
+        exit;
+    }
+
+    if (($project['type'] ?? 'negative-kw') === 'campaign') {
+        header('Location: ' . url("/ads-analyzer/projects/{$id}/campaign-dashboard"));
+        exit;
+    }
+
     $controller = new ProjectController();
     return $controller->show((int) $id);
+});
+
+// Dashboard progetto campagne
+Router::get('/ads-analyzer/projects/{id}/campaign-dashboard', function ($id) {
+    Middleware::auth();
+    $controller = new CampaignController();
+    return $controller->dashboard((int) $id);
 });
 
 // Modifica progetto (form)

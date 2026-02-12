@@ -1,27 +1,6 @@
+<?php $currentPage = 'analyses'; include __DIR__ . '/../partials/project-nav.php'; ?>
+
 <div class="space-y-6">
-    <!-- Header -->
-    <div class="sm:flex sm:items-center sm:justify-between">
-        <div>
-            <a href="<?= url('/ads-analyzer/projects/' . $project['id']) ?>" class="inline-flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 mb-2">
-                <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                </svg>
-                <?= e($project['name']) ?>
-            </a>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Storico Analisi</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                <?= count($analyses) ?> analisi salvate per questo progetto
-            </p>
-        </div>
-        <div class="mt-4 sm:mt-0">
-            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/landing-urls') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Nuova Analisi
-            </a>
-        </div>
-    </div>
 
     <?php if (empty($analyses)): ?>
     <!-- Empty State -->

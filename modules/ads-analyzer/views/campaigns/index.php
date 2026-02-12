@@ -1,19 +1,6 @@
+<?php $currentPage = 'campaigns'; include __DIR__ . '/../partials/project-nav.php'; ?>
+
 <div class="space-y-6" x-data="campaignPageManager()">
-    <!-- Header -->
-    <div class="sm:flex sm:items-center sm:justify-between">
-        <div>
-            <a href="<?= url('/ads-analyzer/projects/' . $project['id']) ?>" class="inline-flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 mb-2">
-                <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                </svg>
-                <?= e($project['name']) ?>
-            </a>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Dati Campagne</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Dati ricevuti e valutazioni AI per <strong><?= e($project['name']) ?></strong>
-            </p>
-        </div>
-    </div>
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">

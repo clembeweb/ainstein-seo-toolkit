@@ -1,20 +1,6 @@
+<?php $currentPage = 'context'; include __DIR__ . '/../partials/project-nav.php'; ?>
+
 <div class="max-w-4xl mx-auto space-y-6">
-    <!-- Header -->
-    <div>
-        <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/upload') ?>" class="inline-flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 mb-4">
-            <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
-            Torna all'upload
-        </a>
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Assegna Landing Pages</h1>
-                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Step 2 di 3 - Inserisci URL landing per ogni Ad Group (opzionale)</p>
-            </div>
-            <span class="text-sm text-slate-500 dark:text-slate-400">Step 2/3</span>
-        </div>
-    </div>
 
     <!-- Info costi -->
     <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">

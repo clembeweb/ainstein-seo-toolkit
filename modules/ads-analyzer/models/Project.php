@@ -10,6 +10,7 @@ class Project
     {
         return Database::insert('ga_projects', [
             'user_id' => $data['user_id'],
+            'type' => $data['type'] ?? 'negative-kw',
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
             'business_context' => $data['business_context'] ?? '',
@@ -33,10 +34,15 @@ class Project
         ) ?: null;
     }
 
-    public static function getAllByUser(int $userId, ?string $status = null): array
+    public static function getAllByUser(int $userId, ?string $status = null, ?string $type = null): array
     {
         $sql = "SELECT * FROM ga_projects WHERE user_id = ?";
         $params = [$userId];
+
+        if ($type) {
+            $sql .= " AND type = ?";
+            $params[] = $type;
+        }
 
         if ($status && $status !== 'all') {
             $sql .= " AND status = ?";
@@ -46,6 +52,79 @@ class Project
         $sql .= " ORDER BY created_at DESC";
 
         return Database::fetchAll($sql, $params);
+    }
+
+    /**
+     * Progetti raggruppati per tipo con stats specifiche
+     */
+    public static function allGroupedByType(int $userId): array
+    {
+        // Negative KW projects con stats
+        $negKw = Database::fetchAll("
+            SELECT p.*,
+                (SELECT COUNT(*) FROM ga_analyses WHERE project_id = p.id) as analyses_count,
+                (SELECT COUNT(*) FROM ga_negative_keywords WHERE project_id = p.id AND is_selected = 1) as selected_count
+            FROM ga_projects p
+            WHERE p.user_id = ? AND p.type = 'negative-kw'
+            ORDER BY p.updated_at DESC
+        ", [$userId]);
+
+        // Campaign projects con stats
+        $campaign = Database::fetchAll("
+            SELECT p.*,
+                (SELECT COUNT(*) FROM ga_script_runs WHERE project_id = p.id AND status = 'completed') as total_runs,
+                (SELECT COUNT(DISTINCT c.id) FROM ga_campaigns c WHERE c.project_id = p.id) as total_campaigns,
+                (SELECT COUNT(*) FROM ga_campaign_evaluations WHERE project_id = p.id AND status = 'completed') as total_evaluations
+            FROM ga_projects p
+            WHERE p.user_id = ? AND p.type = 'campaign'
+            ORDER BY p.updated_at DESC
+        ", [$userId]);
+
+        return [
+            'negative-kw' => $negKw,
+            'campaign' => $campaign,
+        ];
+    }
+
+    /**
+     * Stats globali per entry dashboard
+     */
+    public static function getGlobalStats(int $userId): array
+    {
+        $counts = Database::fetch("
+            SELECT
+                COUNT(*) as total_projects,
+                SUM(CASE WHEN type = 'negative-kw' THEN 1 ELSE 0 END) as negkw_count,
+                SUM(CASE WHEN type = 'campaign' THEN 1 ELSE 0 END) as campaign_count
+            FROM ga_projects WHERE user_id = ?
+        ", [$userId]) ?: [];
+
+        $negkwStats = Database::fetch("
+            SELECT
+                COALESCE(SUM(total_terms), 0) as total_terms,
+                COALESCE(SUM(total_negatives_found), 0) as total_negatives
+            FROM ga_projects WHERE user_id = ? AND type = 'negative-kw'
+        ", [$userId]) ?: [];
+
+        $campaignStats = Database::fetch("
+            SELECT
+                (SELECT COUNT(DISTINCT c.id) FROM ga_campaigns c
+                 INNER JOIN ga_projects p ON c.project_id = p.id
+                 WHERE p.user_id = ? AND p.type = 'campaign') as total_campaigns,
+                (SELECT COUNT(*) FROM ga_campaign_evaluations e
+                 INNER JOIN ga_projects p ON e.project_id = p.id
+                 WHERE p.user_id = ? AND p.type = 'campaign' AND e.status = 'completed') as total_evaluations
+        ", [$userId, $userId]) ?: [];
+
+        return [
+            'total_projects' => (int) ($counts['total_projects'] ?? 0),
+            'negkw_count' => (int) ($counts['negkw_count'] ?? 0),
+            'campaign_count' => (int) ($counts['campaign_count'] ?? 0),
+            'total_terms' => (int) ($negkwStats['total_terms'] ?? 0),
+            'total_negatives' => (int) ($negkwStats['total_negatives'] ?? 0),
+            'total_campaigns' => (int) ($campaignStats['total_campaigns'] ?? 0),
+            'total_evaluations' => (int) ($campaignStats['total_evaluations'] ?? 0),
+        ];
     }
 
     public static function update(int $id, array $data): bool
@@ -63,7 +142,7 @@ class Project
         return Database::delete('ga_projects', 'id = ? AND user_id = ?', [$id, $userId]) > 0;
     }
 
-    public static function getStats(int $userId): array
+    public static function getStats(int $userId, ?string $type = null): array
     {
         $sql = "
             SELECT
@@ -77,8 +156,14 @@ class Project
             FROM ga_projects
             WHERE user_id = ?
         ";
+        $params = [$userId];
 
-        return Database::fetch($sql, [$userId]) ?: [
+        if ($type) {
+            $sql .= " AND type = ?";
+            $params[] = $type;
+        }
+
+        return Database::fetch($sql, $params) ?: [
             'total' => 0,
             'drafts' => 0,
             'analyzing' => 0,

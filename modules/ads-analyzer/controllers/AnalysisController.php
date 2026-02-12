@@ -30,6 +30,17 @@ class AnalysisController
     }
 
     /**
+     * Type guard: solo progetti negative-kw possono accedere alle analisi
+     */
+    private function requireNegKwType(array $project, int $projectId): void
+    {
+        if (($project['type'] ?? 'negative-kw') !== 'negative-kw') {
+            header('Location: ' . url("/ads-analyzer/projects/{$projectId}"));
+            exit;
+        }
+    }
+
+    /**
      * Step 1: Upload CSV
      */
     public function upload(int $projectId): string
@@ -42,6 +53,8 @@ class AnalysisController
             header('Location: ' . url('/ads-analyzer'));
             exit;
         }
+
+        $this->requireNegKwType($project, $projectId);
 
         return View::render('ads-analyzer/analysis/upload', [
             'title' => 'Carica CSV - ' . $project['name'],
@@ -70,6 +83,8 @@ class AnalysisController
             error_log("ERROR: Progetto non trovato");
             jsonResponse(['error' => 'Progetto non trovato'], 404);
         }
+
+        $this->requireNegKwType($project, $projectId);
 
         // Valida file
         if (!isset($_FILES['csv_file'])) {
@@ -164,6 +179,8 @@ class AnalysisController
             exit;
         }
 
+        $this->requireNegKwType($project, $projectId);
+
         $adGroups = AdGroup::getByProject($projectId);
         $savedContexts = BusinessContext::getByUser($user['id']);
 
@@ -202,6 +219,8 @@ class AnalysisController
                 error_log("ERROR: Project not found for user {$user['id']}");
                 jsonResponse(['error' => 'Progetto non trovato'], 404);
             }
+
+            $this->requireNegKwType($project, $projectId);
 
             $businessContext = $_POST['business_context'] ?? '';
             $analysisName = $_POST['analysis_name'] ?? ('Analisi ' . date('d/m/Y H:i'));
@@ -374,6 +393,8 @@ class AnalysisController
             exit;
         }
 
+        $this->requireNegKwType($project, $projectId);
+
         $adGroups = AdGroup::getByProject($projectId);
 
         // Carica categorie e keyword per ogni Ad Group
@@ -416,6 +437,8 @@ class AnalysisController
             jsonResponse(['error' => 'Non autorizzato'], 403);
         }
 
+        $this->requireNegKwType($project, $projectId);
+
         $keyword = NegativeKeyword::find($keywordId);
         if (!$keyword || $keyword['project_id'] != $projectId) {
             jsonResponse(['error' => 'Keyword non trovata'], 404);
@@ -444,6 +467,8 @@ class AnalysisController
         if (!$project) {
             jsonResponse(['error' => 'Non autorizzato'], 403);
         }
+
+        $this->requireNegKwType($project, $projectId);
 
         if ($action === 'invert') {
             NegativeKeyword::invertByCategory($categoryId);
@@ -518,6 +543,8 @@ class AnalysisController
             exit;
         }
 
+        $this->requireNegKwType($project, $projectId);
+
         $adGroups = AdGroup::getByProject($projectId);
 
         return View::render('ads-analyzer/analysis/landing-urls', [
@@ -542,6 +569,8 @@ class AnalysisController
             jsonResponse(['error' => 'Non autorizzato'], 403);
             return;
         }
+
+        $this->requireNegKwType($project, $projectId);
 
         $url = trim($_POST['landing_url'] ?? '');
 
@@ -569,6 +598,8 @@ class AnalysisController
             jsonResponse(['error' => 'Non autorizzato'], 403);
             return;
         }
+
+        $this->requireNegKwType($project, $projectId);
 
         $adGroup = AdGroup::find($adGroupId);
         if (!$adGroup || empty($adGroup['landing_url'])) {
@@ -620,6 +651,8 @@ class AnalysisController
             jsonResponse(['error' => 'Non autorizzato'], 403);
             return;
         }
+
+        $this->requireNegKwType($project, $projectId);
 
         $adGroups = AdGroup::getByProject($projectId);
         $adGroupsWithUrl = array_filter($adGroups, fn($ag) => !empty($ag['landing_url']));

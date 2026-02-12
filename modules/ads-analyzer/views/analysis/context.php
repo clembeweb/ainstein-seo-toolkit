@@ -1,20 +1,6 @@
+<?php $currentPage = 'context'; include __DIR__ . '/../partials/project-nav.php'; ?>
+
 <div class="max-w-3xl mx-auto space-y-6">
-    <!-- Header -->
-    <div>
-        <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/upload') ?>" class="inline-flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 mb-4">
-            <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
-            Torna all'upload
-        </a>
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Contesto Business</h1>
-                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Step 2 di 3 - Descrivi il tuo business per l'analisi AI</p>
-            </div>
-            <span class="text-sm text-slate-500 dark:text-slate-400">Step 2/3</span>
-        </div>
-    </div>
 
     <!-- Import Summary -->
     <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">

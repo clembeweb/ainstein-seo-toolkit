@@ -7,6 +7,8 @@ use Modules\AdsAnalyzer\Models\SearchTerm;
 use Modules\AdsAnalyzer\Models\Campaign;
 use Modules\AdsAnalyzer\Models\Ad;
 use Modules\AdsAnalyzer\Models\Extension;
+use Modules\AdsAnalyzer\Models\CampaignAdGroup;
+use Modules\AdsAnalyzer\Models\AdGroupKeyword;
 use Modules\AdsAnalyzer\Models\Project;
 use Modules\AdsAnalyzer\Models\ScriptRun;
 
@@ -201,9 +203,60 @@ class IngestService
             $extensionsCount++;
         }
 
+        // Ad Groups aggregate
+        $adGroupsCount = 0;
+        foreach ($data['ad_groups'] ?? [] as $ag) {
+            CampaignAdGroup::create([
+                'project_id' => $projectId,
+                'run_id' => $runId,
+                'campaign_id_google' => $ag['campaign_id'] ?? '',
+                'campaign_name' => $ag['campaign_name'] ?? null,
+                'campaign_type' => $ag['campaign_type'] ?? null,
+                'ad_group_id_google' => $ag['ad_group_id'] ?? '',
+                'ad_group_name' => $ag['ad_group_name'] ?? null,
+                'ad_group_status' => $ag['status'] ?? null,
+                'clicks' => (int) ($ag['clicks'] ?? 0),
+                'impressions' => (int) ($ag['impressions'] ?? 0),
+                'ctr' => (float) ($ag['ctr'] ?? 0),
+                'avg_cpc' => (float) ($ag['avg_cpc'] ?? 0),
+                'cost' => (float) ($ag['cost'] ?? 0),
+                'conversions' => (float) ($ag['conversions'] ?? 0),
+                'conversion_value' => (float) ($ag['conversion_value'] ?? 0),
+                'conv_rate' => (float) ($ag['conv_rate'] ?? 0),
+            ]);
+            $adGroupsCount++;
+        }
+
+        // Keyword per ad group
+        $keywordsCount = 0;
+        foreach ($data['keywords'] ?? [] as $kw) {
+            AdGroupKeyword::create([
+                'project_id' => $projectId,
+                'run_id' => $runId,
+                'campaign_id_google' => $kw['campaign_id'] ?? '',
+                'campaign_name' => $kw['campaign_name'] ?? null,
+                'ad_group_id_google' => $kw['ad_group_id'] ?? '',
+                'ad_group_name' => $kw['ad_group_name'] ?? null,
+                'keyword_text' => $kw['keyword_text'] ?? '',
+                'match_type' => $kw['match_type'] ?? null,
+                'keyword_status' => $kw['status'] ?? null,
+                'clicks' => (int) ($kw['clicks'] ?? 0),
+                'impressions' => (int) ($kw['impressions'] ?? 0),
+                'ctr' => (float) ($kw['ctr'] ?? 0),
+                'avg_cpc' => (float) ($kw['avg_cpc'] ?? 0),
+                'cost' => (float) ($kw['cost'] ?? 0),
+                'conversions' => (float) ($kw['conversions'] ?? 0),
+                'quality_score' => isset($kw['quality_score']) ? (int) $kw['quality_score'] : null,
+                'first_page_cpc' => isset($kw['first_page_cpc']) ? (float) $kw['first_page_cpc'] : null,
+            ]);
+            $keywordsCount++;
+        }
+
         return [
             'campaigns' => $campaignsCount,
             'ads' => $adsCount,
+            'ad_groups' => $adGroupsCount,
+            'keywords' => $keywordsCount,
             'extensions' => $extensionsCount,
         ];
     }

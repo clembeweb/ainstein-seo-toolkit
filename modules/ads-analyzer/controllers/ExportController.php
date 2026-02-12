@@ -9,6 +9,14 @@ use Modules\AdsAnalyzer\Models\NegativeKeyword;
 
 class ExportController
 {
+    private function requireNegKwType(array $project, int $projectId): void
+    {
+        if (($project['type'] ?? 'negative-kw') !== 'negative-kw') {
+            header('Location: ' . url("/ads-analyzer/projects/{$projectId}"));
+            exit;
+        }
+    }
+
     /**
      * Export keyword selezionate per Ad Group
      */
@@ -22,6 +30,8 @@ class ExportController
             http_response_code(404);
             exit('Non trovato');
         }
+
+        $this->requireNegKwType($project, $projectId);
 
         $keywords = NegativeKeyword::getSelectedByAdGroup($adGroupId);
 
@@ -44,6 +54,8 @@ class ExportController
             exit('Non trovato');
         }
 
+        $this->requireNegKwType($project, $projectId);
+
         $keywords = NegativeKeyword::getSelectedByProjectWithAdGroup($projectId);
 
         $this->downloadCsv(
@@ -65,6 +77,8 @@ class ExportController
             http_response_code(404);
             exit('Non trovato');
         }
+
+        $this->requireNegKwType($project, $projectId);
 
         $keywords = NegativeKeyword::getSelectedByProjectWithAdGroup($projectId);
 
@@ -101,6 +115,8 @@ class ExportController
         if (!$project) {
             jsonResponse(['error' => 'Non trovato'], 404);
         }
+
+        $this->requireNegKwType($project, $projectId);
 
         if ($adGroupId) {
             $keywords = NegativeKeyword::getSelectedByAdGroup($adGroupId);
