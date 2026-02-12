@@ -186,8 +186,8 @@ class Queue
                 $keyword = trim($item['keyword'] ?? '');
                 if (empty($keyword)) continue;
 
-                // scheduled_at può essere NULL (da pianificare dalla coda)
-                $scheduledAt = $item['scheduled_at'] ?? null;
+                // scheduled_at: default NOW() se non specificato (colonna NOT NULL)
+                $scheduledAt = $item['scheduled_at'] ?? date('Y-m-d H:i:s');
                 $sourcesCount = $item['sources_count'] ?? 3;
 
                 $stmt->execute([

@@ -63,50 +63,38 @@ $baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['
     </div>
     <?php endif; ?>
 
-    <!-- Progress Bar -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+    <!-- Progress Steps (pattern: keyword-research wizard) -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <div class="flex items-center justify-between">
             <?php
             $steps = [
-                1 => ['label' => 'SERP & Fonti', 'icon' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'],
-                2 => ['label' => 'Brief', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
-                3 => ['label' => 'Articolo', 'icon' => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'],
-                4 => ['label' => 'Pubblica', 'icon' => 'M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12'],
+                0 => 'SERP & Fonti',
+                1 => 'Brief',
+                2 => 'Articolo',
+                3 => 'Pubblica',
             ];
-            foreach ($steps as $num => $step):
+            foreach ($steps as $idx => $label):
+            $stepNum = $idx + 1;
             ?>
-            <div class="flex items-center" :class="{ 'flex-1': <?= $num ?> < 4 }">
-                <!-- Step Circle -->
-                <div class="relative flex items-center justify-center">
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
-                         :class="{
-                             'bg-primary-600 text-white': currentStep >= <?= $num ?>,
-                             'bg-slate-200 dark:bg-slate-700 text-slate-500': currentStep < <?= $num ?>
-                         }">
-                        <template x-if="currentStep > <?= $num ?>">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
+            <div class="flex items-center<?= $idx < 3 ? ' flex-1' : '' ?>">
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold transition-colors"
+                         :class="currentStep > <?= $stepNum ?> ? 'bg-emerald-500 text-white' : (currentStep >= <?= $stepNum ?> ? 'bg-primary-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400')">
+                        <template x-if="currentStep > <?= $stepNum ?>">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                         </template>
-                        <template x-if="currentStep <= <?= $num ?>">
-                            <span class="text-sm font-semibold"><?= $num ?></span>
+                        <template x-if="currentStep <= <?= $stepNum ?>">
+                            <span><?= $stepNum ?></span>
                         </template>
                     </div>
-                    <span class="absolute -bottom-6 whitespace-nowrap text-xs font-medium"
-                          :class="{
-                              'text-primary-600 dark:text-primary-400': currentStep >= <?= $num ?>,
-                              'text-slate-500 dark:text-slate-400': currentStep < <?= $num ?>
-                          }">
-                        <?= $step['label'] ?>
+                    <span class="text-sm font-medium hidden sm:block"
+                          :class="currentStep >= <?= $stepNum ?> ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'">
+                        <?= $label ?>
                     </span>
                 </div>
-                <!-- Connector Line -->
-                <?php if ($num < 4): ?>
-                <div class="flex-1 h-1 mx-4 rounded transition-all duration-300"
-                     :class="{
-                         'bg-primary-600': currentStep > <?= $num ?>,
-                         'bg-slate-200 dark:bg-slate-700': currentStep <= <?= $num ?>
-                     }">
+                <?php if ($idx < 3): ?>
+                <div class="flex-1 mx-4 h-0.5 rounded transition-colors"
+                     :class="currentStep > <?= $stepNum ?> ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'">
                 </div>
                 <?php endif; ?>
             </div>
@@ -1021,6 +1009,14 @@ function keywordWizard(initialData) {
                     })
                 });
 
+                if (!response.ok) {
+                    const statusMsg = response.status >= 500
+                        ? `Errore server (${response.status}). L'operazione potrebbe aver impiegato troppo tempo. Riprova con meno fonti.`
+                        : `Errore HTTP ${response.status}`;
+                    this.showToast(statusMsg, 'error');
+                    return;
+                }
+
                 const data = await response.json();
 
                 if (data.success) {
@@ -1033,7 +1029,8 @@ function keywordWizard(initialData) {
                     this.showToast(data.error || 'Errore generazione brief', 'error');
                 }
             } catch (error) {
-                this.showToast('Errore di connessione', 'error');
+                console.error('Brief generation error:', error);
+                this.showToast('Errore di rete. L\'operazione potrebbe aver impiegato troppo tempo. Riprova.', 'error');
             } finally {
                 this.generatingBrief = false;
             }
@@ -1077,6 +1074,15 @@ function keywordWizard(initialData) {
                 });
 
                 clearInterval(progressInterval);
+
+                if (!response.ok) {
+                    const statusMsg = response.status >= 500
+                        ? `Errore server (${response.status}). L'operazione potrebbe aver impiegato troppo tempo. Riprova.`
+                        : `Errore HTTP ${response.status}`;
+                    this.showToast(statusMsg, 'error');
+                    return;
+                }
+
                 const data = await response.json();
 
                 if (data.success) {
@@ -1088,7 +1094,8 @@ function keywordWizard(initialData) {
                     this.showToast(data.error || 'Errore generazione articolo', 'error');
                 }
             } catch (error) {
-                this.showToast('Errore di connessione', 'error');
+                console.error('Article generation error:', error);
+                this.showToast('Errore di rete. L\'operazione potrebbe aver impiegato troppo tempo. Riprova.', 'error');
             } finally {
                 this.generatingArticle = false;
             }

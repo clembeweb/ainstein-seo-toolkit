@@ -756,6 +756,11 @@ class AutoController
         // Dopo questo punto NON usare più $_SESSION
         session_write_close();
 
+        // CRITICAL: Prevent proxy/PHP timeout killing the script
+        // Auto processing can take 300-600s (SERP + scraping + brief + article + cover + publish)
+        ignore_user_abort(true);
+        set_time_limit(0);
+
         // Disable output buffering
         while (ob_get_level()) {
             ob_end_clean();

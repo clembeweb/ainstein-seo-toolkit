@@ -36,6 +36,11 @@ class WizardController
      */
     public function generateBrief(int $keywordId): void
     {
+        // Prevent proxy/PHP timeout killing the script mid-execution
+        // Scraping 3-5 URLs (30s each) + AI call (120s) can take 270s+
+        ignore_user_abort(true);
+        set_time_limit(0);
+
         ob_start();
         header('Content-Type: application/json');
 
@@ -185,6 +190,11 @@ class WizardController
      */
     public function generateArticle(int $keywordId): void
     {
+        // Prevent proxy/PHP timeout killing the script mid-execution
+        // AI generation + cover image can take 300s+
+        ignore_user_abort(true);
+        set_time_limit(0);
+
         ob_start();
         header('Content-Type: application/json');
 

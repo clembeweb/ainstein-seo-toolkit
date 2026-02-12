@@ -3,22 +3,11 @@
 <?php include __DIR__ . '/../partials/project-nav.php'; ?>
 <?php endif; ?>
 
-<div class="space-y-6" x-data="keywordsManager()">
+<div class="space-y-6" x-data="keywordsManager()" @open-add-keyword.window="showAddModal = true">
     <?php if (!empty($projectId) && !empty($project)): ?>
-    <!-- Header (project view) -->
-    <div class="sm:flex sm:items-center sm:justify-between">
-        <div>
-            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Keywords</h2>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400"><?= count($keywords) ?> keyword nel progetto</p>
-        </div>
-        <div class="mt-4 sm:mt-0">
-            <button @click="showAddModal = true" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Aggiungi Keyword
-            </button>
-        </div>
+    <!-- Info (project view) - il bottone "Nuova Keyword" è nel project-nav header -->
+    <div>
+        <p class="text-sm text-slate-500 dark:text-slate-400"><?= count($keywords) ?> keyword nel progetto</p>
     </div>
     <?php elseif (empty($projectId) || empty($project)): ?>
     <!-- Breadcrumbs (global view) -->

@@ -120,6 +120,9 @@ function isJobCancelled(int $jobId): bool
  */
 function processQueue(array $args): void
 {
+    // Allow unlimited execution time for queue processing
+    set_time_limit(0);
+
     global $currentJobId, $processJob;
 
     $jobId = $args['job_id'];
@@ -445,6 +448,9 @@ function processQueueItem(array $item, ?int $jobId = null): array
     }
 
     $generationResult = $articleGenerator->generate($brief, $targetWords, $userId);
+
+    // Reconnect DB after long AI operation (prevents "MySQL server has gone away")
+    Database::reconnect();
 
     if (!$generationResult['success']) {
         $articleModel->updateStatus($articleId, 'failed');

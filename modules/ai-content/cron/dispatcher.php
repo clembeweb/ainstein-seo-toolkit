@@ -290,6 +290,9 @@ function publishToWordPress(int $articleId, int $wpSiteId, int $userId): bool
  */
 function runDispatcher(): void
 {
+    // Allow unlimited execution time for cron processing
+    set_time_limit(0);
+
     logDispatcher("=== DISPATCHER START ===");
 
     $autoConfig = new AutoConfig();

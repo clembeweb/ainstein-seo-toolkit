@@ -1356,14 +1356,19 @@ PROMPT;
             exit('Job non trovato');
         }
 
+        // Chiudi la sessione PRIMA del loop per non bloccare altre richieste
+        session_write_close();
+
+        // CRITICAL: Prevent proxy/PHP timeout killing the script
+        // Batch scraping 10-50 URLs can take 100-1500s
+        ignore_user_abort(true);
+        set_time_limit(0);
+
         // Setup SSE headers
         header('Content-Type: text/event-stream');
         header('Cache-Control: no-cache');
         header('Connection: keep-alive');
         header('X-Accel-Buffering: no');
-
-        // Chiudi la sessione PRIMA del loop per non bloccare altre richieste
-        session_write_close();
 
         // Funzione helper per inviare eventi SSE
         $sendEvent = function (string $event, array $data) {
@@ -1696,13 +1701,19 @@ PROMPT;
             exit('Job non trovato');
         }
 
+        // Chiudi sessione, poi abilita guardie timeout
+        session_write_close();
+
+        // CRITICAL: Prevent proxy/PHP timeout killing the script
+        // AI generation for 10-20 meta tags can take 150-600s
+        ignore_user_abort(true);
+        set_time_limit(0);
+
         // Setup SSE headers
         header('Content-Type: text/event-stream');
         header('Cache-Control: no-cache');
         header('Connection: keep-alive');
         header('X-Accel-Buffering: no');
-
-        session_write_close();
 
         $sendEvent = function (string $event, array $data) {
             echo "event: {$event}\n";
