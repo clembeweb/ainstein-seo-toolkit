@@ -231,6 +231,8 @@ class CampaignController
             // Chiudi sessione per non bloccare altre request
             session_write_close();
 
+            error_log("=== CAMPAIGN EVAL: START project={$projectId} ===");
+
             // Crea record valutazione
             $evalId = CampaignEvaluation::create([
                 'project_id' => $projectId,
@@ -244,15 +246,23 @@ class CampaignController
                 'status' => 'analyzing',
             ]);
 
+            error_log("=== CAMPAIGN EVAL: record created id={$evalId} ===");
+
             // Fase A: Scraping + AI estrazione contesto landing pages (best effort)
             $landingContexts = [];
             $uniqueUrls = Ad::getUniqueUrls($run['id']);
+
+            error_log("=== CAMPAIGN EVAL: " . count($uniqueUrls) . " unique URLs found ===");
+
             $extractor = new ContextExtractorService();
             $landingCount = 0;
 
+            error_log("=== CAMPAIGN EVAL: ContextExtractorService created, starting loop ===");
+
             // Max 10 URL, ordinati per quelli usati da piu annunci
-            foreach (array_slice($uniqueUrls, 0, 10) as $urlRow) {
+            foreach (array_slice($uniqueUrls, 0, 10) as $i => $urlRow) {
                 $url = $urlRow['final_url'];
+                error_log("=== CAMPAIGN EVAL: scraping URL " . ($i + 1) . ": {$url} ===");
                 try {
                     set_time_limit(0);
                     $result = $extractor->extractFromUrl($user['id'], $url, 'campaign');
@@ -261,11 +271,16 @@ class CampaignController
                     if ($result['success']) {
                         $landingContexts[$url] = $result['extracted_context'];
                         $landingCount++;
+                        error_log("=== CAMPAIGN EVAL: URL " . ($i + 1) . " OK, context extracted ===");
+                    } else {
+                        error_log("=== CAMPAIGN EVAL: URL " . ($i + 1) . " FAILED: " . ($result['error'] ?? 'unknown') . " ===");
                     }
                 } catch (\Exception $e) {
-                    error_log("Landing scrape failed for {$url}: " . $e->getMessage());
+                    error_log("=== CAMPAIGN EVAL: URL " . ($i + 1) . " EXCEPTION: " . $e->getMessage() . " ===");
                 }
             }
+
+            error_log("=== CAMPAIGN EVAL: scraping done, {$landingCount} contexts extracted ===");
 
             // Aggiorna contatore landing nel record evaluation
             Database::reconnect();
@@ -274,6 +289,7 @@ class CampaignController
             ]);
 
             // Fase B: Valutazione AI completa (metriche + landing + copy + keyword)
+            error_log("=== CAMPAIGN EVAL: starting AI evaluation ===");
             set_time_limit(0);
             $evaluator = new CampaignEvaluatorService();
             $aiResult = $evaluator->evaluate(
@@ -286,6 +302,7 @@ class CampaignController
                 $keywordsData
             );
 
+            error_log("=== CAMPAIGN EVAL: AI evaluation done ===");
             Database::reconnect();
 
             // Salva risultato
@@ -294,6 +311,7 @@ class CampaignController
                 'credits_used' => $cost,
             ]);
             CampaignEvaluation::updateStatus($evalId, 'completed');
+            error_log("=== CAMPAIGN EVAL: COMPLETED evalId={$evalId} ===");
 
             // Consuma crediti
             Credits::consume($user['id'], $cost, 'campaign_evaluation', 'ads-analyzer', [
