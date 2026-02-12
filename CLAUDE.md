@@ -1,7 +1,7 @@
 # AINSTEIN - Istruzioni Claude Code
 
 > Questo file viene caricato automaticamente ad ogni sessione.
-> Ultimo aggiornamento: 2026-02-11
+> Ultimo aggiornamento: 2026-02-12
 
 ---
 
@@ -36,8 +36,9 @@
 12. Scraping SEMPRE con Readability  → ScraperService::scrape() per tutto
 13. Background jobs per operazioni lunghe → SSE + job queue (vedi sezione dedicata)
 14. ApiLoggerService per API     → Tutte le chiamate API esterne loggano
-15. ignore_user_abort(true)      → SEMPRE in SSE streams (proxy chiude connessione)
+15. ignore_user_abort(true)      → SEMPRE in SSE e AJAX lunghi (proxy chiude connessione)
 16. ModuleLoader::getSetting()   → NON getModuleSetting() (non esiste)
+17. ob_start() in AJAX lunghi    → Output buffering OBBLIGATORIO (vedi sezione dedicata)
 ```
 
 ---
@@ -305,6 +306,76 @@ ApiLoggerService::log('provider-name', '/endpoint', $requestPayload, $data, $htt
 // IMPORTANTE: Redact API keys prima del log!
 ```
 
+### AJAX Sincrono Lungo (Scraping + AI senza SSE)
+
+**Quando usare questo pattern:**
+- Operazioni AJAX che durano 30s-300s (scraping + AI call)
+- Quando SSE/background job è eccessivo per il caso d'uso
+- Reference: `ai-content/WizardController::generateBrief()`, `ads-analyzer/CampaignController::evaluate()`
+
+**Pattern OBBLIGATORIO:**
+```php
+public function longOperation(): void
+{
+    // 1. Protezione processo (proxy SiteGround uccide connessioni)
+    ignore_user_abort(true);
+    set_time_limit(0);
+
+    // 2. Output buffering OBBLIGATORIO — cattura warning/errori PHP
+    ob_start();
+    header('Content-Type: application/json');
+
+    try {
+        $user = Auth::user();
+        // Validazioni rapide...
+
+        // 3. Chiudi sessione PRIMA delle operazioni lunghe
+        session_write_close();
+
+        // 4. Operazione lunga (scraping, AI, etc.)
+        $result = $this->doLongWork();
+        Database::reconnect(); // Sempre dopo operazione lunga
+
+        // 5. Risposta success: pulisci buffer PRIMA di echo
+        ob_end_clean();
+        echo json_encode(['success' => true, 'data' => $result]);
+        exit;
+
+    } catch (\Exception $e) {
+        error_log("Error: " . $e->getMessage());
+
+        // 6. Risposta errore: pulisci buffer PRIMA di echo
+        ob_end_clean();
+        http_response_code(500);
+        echo json_encode(['error' => $e->getMessage()]);
+        exit;
+    }
+}
+```
+
+**CRITICO — Perché `ob_start()` è obbligatorio:**
+- Senza `ob_start()`, qualsiasi PHP warning/notice durante scraping o AI corrompe il JSON
+- Il frontend riceve HTML misto a JSON → `response.json()` lancia eccezione
+- In produzione il processo muore silenziosamente → record DB bloccato in stato intermedio
+- **NON usare `jsonResponse()` helper** — non fa `ob_end_clean()`, usa `echo json_encode()` + `exit`
+
+**Frontend AJAX per operazioni lunghe:**
+```javascript
+const resp = await fetch(url, { method: 'POST', body: formData });
+
+// SEMPRE controllare resp.ok PRIMA di resp.json()
+if (!resp.ok) {
+    // Proxy timeout (502/504): backend potrebbe continuare in background
+    this.errorMsg = 'Operazione avviata. Potrebbe richiedere qualche minuto. Ricarica tra poco.';
+    setTimeout(() => location.reload(), 15000);
+    return;
+}
+
+const data = await resp.json();
+```
+
+---
+
 ### Background Processing (Operazioni Lunghe)
 
 **Quando usare job in background:**
@@ -528,10 +599,11 @@ async startPolling() {
 [ ] Scraping usa ScraperService::scrape()
 [ ] Chiamate API esterne loggano con ApiLoggerService
 [ ] php -l su file modificati
-[ ] Operazioni lunghe usano job in background (SSE)
-[ ] session_write_close() prima di loop SSE
-[ ] ignore_user_abort(true) + set_time_limit(0) in SSE streams
-[ ] ob_flush() con guard: if (ob_get_level()) ob_flush()
+[ ] Operazioni lunghe usano job in background (SSE) o pattern AJAX lungo
+[ ] session_write_close() prima di loop SSE e prima di operazioni AJAX lunghe
+[ ] ignore_user_abort(true) + set_time_limit(0) in SSE streams e AJAX lunghi
+[ ] ob_start() + ob_end_clean() in AJAX lunghi (NON usare jsonResponse(), echo+exit)
+[ ] ob_flush() con guard: if (ob_get_level()) ob_flush() (solo SSE)
 [ ] ModuleLoader::getSetting() per settings modulo (NON getModuleSetting)
 [ ] SSE: salvare risultati nel DB PRIMA dell'evento completed (polling fallback)
 [ ] Testare in produzione: deploy → creare tabelle DB → attivare modulo
@@ -571,6 +643,10 @@ async startPolling() {
 | `ob_flush(): Failed to flush` | Nessun buffer attivo | `if (ob_get_level()) ob_flush()` |
 | `getModuleSetting()` undefined | Metodo inesistente | Usare `ModuleLoader::getSetting(slug, key, default)` |
 | Modulo non visibile in prod | Tabelle/record assenti | Creare tabelle + INSERT in `modules` |
+| AJAX lungo: processo muore silenzioso | Manca `ob_start()` | Aggiungere `ob_start()` + `ob_end_clean()` prima di echo (Golden Rule #17) |
+| AJAX lungo: JSON corrotto | Warning PHP nel body | `ob_start()` cattura warning, `ob_end_clean()` li scarta |
+| AJAX lungo: record DB bloccato | Processo ucciso senza cleanup | `ignore_user_abort(true)` + salvare stato nel DB a ogni step |
+| `jsonResponse()` in operazione lunga | Non fa `ob_end_clean()` | Usare `ob_end_clean()` + `echo json_encode()` + `exit` |
 
 ---
 
