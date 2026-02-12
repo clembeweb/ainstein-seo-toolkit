@@ -232,7 +232,7 @@ class CampaignController
             session_write_close();
 
             // Debug: scrive direttamente su file (error_log non funziona dal web)
-            $debugLog = __DIR__ . '/../../../../storage/logs/campaign_eval_debug.log';
+            $debugLog = __DIR__ . '/../../../storage/logs/campaign_eval_debug.log';
             file_put_contents($debugLog, date('H:i:s') . " START project={$projectId}\n", FILE_APPEND);
 
             error_log("=== CAMPAIGN EVAL: START project={$projectId} ===");
