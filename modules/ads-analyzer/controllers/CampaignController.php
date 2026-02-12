@@ -16,7 +16,6 @@ use Modules\AdsAnalyzer\Models\CampaignAdGroup;
 use Modules\AdsAnalyzer\Models\AdGroupKeyword;
 use Modules\AdsAnalyzer\Models\CampaignEvaluation;
 use Modules\AdsAnalyzer\Services\CampaignEvaluatorService;
-use Modules\AdsAnalyzer\Services\ContextExtractorService;
 
 class CampaignController
 {
@@ -231,12 +230,6 @@ class CampaignController
             // Chiudi sessione per non bloccare altre request
             session_write_close();
 
-            // Debug: scrive direttamente su file (error_log non funziona dal web)
-            $debugLog = __DIR__ . '/../../../storage/logs/campaign_eval_debug.log';
-            file_put_contents($debugLog, date('H:i:s') . " START project={$projectId}\n", FILE_APPEND);
-
-            error_log("=== CAMPAIGN EVAL: START project={$projectId} ===");
-
             // Crea record valutazione
             $evalId = CampaignEvaluation::create([
                 'project_id' => $projectId,
@@ -247,62 +240,15 @@ class CampaignController
                 'ads_evaluated' => count($ads),
                 'ad_groups_evaluated' => count($adGroupsData),
                 'keywords_evaluated' => count($keywordsData),
+                'landing_pages_analyzed' => 0,
                 'status' => 'analyzing',
             ]);
 
-            file_put_contents($debugLog, date('H:i:s') . " record created id={$evalId}\n", FILE_APPEND);
-            error_log("=== CAMPAIGN EVAL: record created id={$evalId} ===");
-
-            // Fase A: Scraping + AI estrazione contesto landing pages (best effort)
+            // Valutazione AI (singola chiamata — no scraping landing per limiti hosting)
+            // Landing URL vengono passate come lista senza contesto scraping
             $landingContexts = [];
             $uniqueUrls = Ad::getUniqueUrls($run['id']);
 
-            file_put_contents($debugLog, date('H:i:s') . " " . count($uniqueUrls) . " unique URLs found\n", FILE_APPEND);
-            error_log("=== CAMPAIGN EVAL: " . count($uniqueUrls) . " unique URLs found ===");
-
-            $extractor = new ContextExtractorService();
-            $landingCount = 0;
-
-            file_put_contents($debugLog, date('H:i:s') . " ContextExtractorService created, starting loop\n", FILE_APPEND);
-            error_log("=== CAMPAIGN EVAL: ContextExtractorService created, starting loop ===");
-
-            // Max 10 URL, ordinati per quelli usati da piu annunci
-            foreach (array_slice($uniqueUrls, 0, 10) as $i => $urlRow) {
-                $url = $urlRow['final_url'];
-                file_put_contents($debugLog, date('H:i:s') . " scraping URL " . ($i + 1) . ": {$url}\n", FILE_APPEND);
-                error_log("=== CAMPAIGN EVAL: scraping URL " . ($i + 1) . ": {$url} ===");
-                try {
-                    set_time_limit(0);
-                    $result = $extractor->extractFromUrl($user['id'], $url, 'campaign');
-                    Database::reconnect();
-
-                    if ($result['success']) {
-                        $landingContexts[$url] = $result['extracted_context'];
-                        $landingCount++;
-                        file_put_contents($debugLog, date('H:i:s') . " URL " . ($i + 1) . " OK\n", FILE_APPEND);
-                        error_log("=== CAMPAIGN EVAL: URL " . ($i + 1) . " OK, context extracted ===");
-                    } else {
-                        file_put_contents($debugLog, date('H:i:s') . " URL " . ($i + 1) . " FAILED: " . ($result['error'] ?? 'unknown') . "\n", FILE_APPEND);
-                        error_log("=== CAMPAIGN EVAL: URL " . ($i + 1) . " FAILED: " . ($result['error'] ?? 'unknown') . " ===");
-                    }
-                } catch (\Exception $e) {
-                    file_put_contents($debugLog, date('H:i:s') . " URL " . ($i + 1) . " EXCEPTION: " . $e->getMessage() . "\n", FILE_APPEND);
-                    error_log("=== CAMPAIGN EVAL: URL " . ($i + 1) . " EXCEPTION: " . $e->getMessage() . " ===");
-                }
-            }
-
-            file_put_contents($debugLog, date('H:i:s') . " scraping done, {$landingCount} contexts\n", FILE_APPEND);
-            error_log("=== CAMPAIGN EVAL: scraping done, {$landingCount} contexts extracted ===");
-
-            // Aggiorna contatore landing nel record evaluation
-            Database::reconnect();
-            CampaignEvaluation::update($evalId, [
-                'landing_pages_analyzed' => $landingCount,
-            ]);
-
-            // Fase B: Valutazione AI completa (metriche + landing + copy + keyword)
-            file_put_contents($debugLog, date('H:i:s') . " starting AI evaluation\n", FILE_APPEND);
-            error_log("=== CAMPAIGN EVAL: starting AI evaluation ===");
             set_time_limit(0);
             $evaluator = new CampaignEvaluatorService();
             $aiResult = $evaluator->evaluate(
@@ -315,8 +261,6 @@ class CampaignController
                 $keywordsData
             );
 
-            file_put_contents($debugLog, date('H:i:s') . " AI evaluation done\n", FILE_APPEND);
-            error_log("=== CAMPAIGN EVAL: AI evaluation done ===");
             Database::reconnect();
 
             // Salva risultato
@@ -325,8 +269,6 @@ class CampaignController
                 'credits_used' => $cost,
             ]);
             CampaignEvaluation::updateStatus($evalId, 'completed');
-            file_put_contents($debugLog, date('H:i:s') . " COMPLETED evalId={$evalId}\n", FILE_APPEND);
-            error_log("=== CAMPAIGN EVAL: COMPLETED evalId={$evalId} ===");
 
             // Consuma crediti
             Credits::consume($user['id'], $cost, 'campaign_evaluation', 'ads-analyzer', [
@@ -334,7 +276,7 @@ class CampaignController
                 'campaigns' => count($campaigns),
                 'ad_groups' => count($adGroupsData),
                 'keywords' => count($keywordsData),
-                'landing_pages' => $landingCount,
+                'landing_pages' => 0,
             ]);
 
             ob_end_clean();
@@ -346,8 +288,6 @@ class CampaignController
             exit;
 
         } catch (\Exception $e) {
-            $debugLog = $debugLog ?? __DIR__ . '/../../../../storage/logs/campaign_eval_debug.log';
-            file_put_contents($debugLog, date('H:i:s') . " EXCEPTION: " . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n", FILE_APPEND);
             error_log("Campaign evaluation error: " . $e->getMessage());
 
             if (isset($evalId)) {
