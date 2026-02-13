@@ -200,7 +200,7 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
                 <?php if (isset($project) && $project): ?>
                 <a href="<?= url($baseUrl . '/settings') ?>" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
                     <div class="h-10 w-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <svg class="h-5 h-5 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="h-5 w-5 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
@@ -236,7 +236,7 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
             <?php else: ?>
             <div class="space-y-3">
                 <?php foreach ($recentArticles as $article): ?>
-                <a href="<?= url('/ai-content/articles/' . $article['id']) ?>" class="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                <a href="<?= url($baseUrl . '/articles/' . $article['id']) ?>" class="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                     <div class="flex items-center gap-3 min-w-0">
                         <div class="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0
                             <?php if ($article['status'] === 'published'): ?>
@@ -305,15 +305,15 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
             </div>
             <div class="flex gap-6">
                 <div class="text-center">
-                    <p class="text-2xl font-bold">3</p>
+                    <p class="text-2xl font-bold"><?= number_format($creditCosts['serp'] ?? 3, 0) ?></p>
                     <p class="text-xs text-purple-200">Estrazione SERP</p>
                 </div>
                 <div class="text-center">
-                    <p class="text-2xl font-bold">1</p>
+                    <p class="text-2xl font-bold"><?= number_format($creditCosts['scrape'] ?? 1, 0) ?></p>
                     <p class="text-xs text-purple-200">Scraping URL</p>
                 </div>
                 <div class="text-center">
-                    <p class="text-2xl font-bold">10</p>
+                    <p class="text-2xl font-bold"><?= number_format($creditCosts['article'] ?? 10, 0) ?></p>
                     <p class="text-xs text-purple-200">Generazione AI</p>
                 </div>
                 <div class="text-center">

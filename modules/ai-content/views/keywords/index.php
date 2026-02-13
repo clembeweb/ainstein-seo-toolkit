@@ -3,7 +3,7 @@
 <?php include __DIR__ . '/../partials/project-nav.php'; ?>
 <?php endif; ?>
 
-<div class="space-y-6" x-data="keywordsManager()" @open-add-keyword.window="showAddModal = true">
+<div class="space-y-6" x-data="keywordsManager()" x-init="if (new URLSearchParams(window.location.search).get('add')) showAddModal = true" @open-add-keyword.window="showAddModal = true">
     <?php if (!empty($projectId) && !empty($project)): ?>
     <!-- Info (project view) - il bottone "Nuova Keyword" è nel project-nav header -->
     <div>
@@ -165,6 +165,9 @@
 
         <!-- Pagination -->
         <?php if ($pagination['last_page'] > 1): ?>
+        <?php $paginationBase = !empty($projectId)
+            ? '/ai-content/projects/' . $projectId . '/keywords'
+            : '/ai-content/keywords'; ?>
         <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-700">
             <div class="flex items-center justify-between">
                 <p class="text-sm text-slate-500 dark:text-slate-400">
@@ -173,12 +176,12 @@
                 </p>
                 <div class="flex gap-2">
                     <?php if ($pagination['current_page'] > 1): ?>
-                    <a href="<?= url('/ai-content/keywords?page=' . ($pagination['current_page'] - 1)) ?>" class="px-3 py-1 rounded-lg border border-slate-300 dark:border-slate-600 text-sm hover:bg-slate-50 dark:hover:bg-slate-700">
+                    <a href="<?= url($paginationBase . '?page=' . ($pagination['current_page'] - 1)) ?>" class="px-3 py-1 rounded-lg border border-slate-300 dark:border-slate-600 text-sm hover:bg-slate-50 dark:hover:bg-slate-700">
                         Precedente
                     </a>
                     <?php endif; ?>
                     <?php if ($pagination['current_page'] < $pagination['last_page']): ?>
-                    <a href="<?= url('/ai-content/keywords?page=' . ($pagination['current_page'] + 1)) ?>" class="px-3 py-1 rounded-lg border border-slate-300 dark:border-slate-600 text-sm hover:bg-slate-50 dark:hover:bg-slate-700">
+                    <a href="<?= url($paginationBase . '?page=' . ($pagination['current_page'] + 1)) ?>" class="px-3 py-1 rounded-lg border border-slate-300 dark:border-slate-600 text-sm hover:bg-slate-50 dark:hover:bg-slate-700">
                         Successiva
                     </a>
                     <?php endif; ?>

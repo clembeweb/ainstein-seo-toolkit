@@ -162,16 +162,6 @@ class ProjectController
     }
 
     /**
-     * Dashboard progetto (redirect a DashboardController)
-     * Questa funzione è un placeholder - il routing va a DashboardController::index
-     */
-    public function show(int $id): void
-    {
-        // Il routing effettivo è gestito in routes.php -> DashboardController::index($id)
-        Router::redirect('/ai-content/projects/' . $id . '/dashboard');
-    }
-
-    /**
      * Impostazioni progetto
      */
     public function settings(int $id): string

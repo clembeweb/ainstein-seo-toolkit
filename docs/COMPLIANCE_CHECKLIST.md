@@ -147,6 +147,15 @@ Checklist di requisiti estratti dalla documentazione ufficiale per verificare la
 - [ ] Progress bar per operazioni lunghe
 - [ ] Conferma prima di azioni distruttive
 
+### Consistenza View (Project-Scoped)
+- [ ] Link interni usano percorsi project-scoped (`/modulo/projects/{id}/sezione`)
+- [ ] Paginazione preserva contesto progetto (non usa percorsi legacy)
+- [ ] Link articoli/keywords recenti usano `$baseUrl` project-aware
+- [ ] Bottoni CTA nel project-nav usano `<a>` link, NON `CustomEvent` cross-pagina
+- [ ] Nessun valore hardcoded nelle view (crediti, limiti → dal controller)
+- [ ] Nessun CSS typo (classi duplicate tipo `h-5 h-5` invece di `h-5 w-5`)
+- [ ] Nessun dead code nei controller (metodi non raggiungibili da routes)
+
 ---
 
 ## REQUISITI module.json

@@ -292,8 +292,84 @@ Keyword Research ▼
 
 ---
 
+## Regole Consistenza View (Project-Scoped)
+
+Quando una view è dentro un contesto progetto (`/modulo/projects/{id}/sezione`), **tutti i link interni** devono mantenere il contesto progetto.
+
+### 1. Link Project-Scoped (MAI usare percorsi legacy)
+
+```php
+// ✅ CORRETTO - Project-aware
+<?php $baseUrl = '/ai-content/projects/' . $projectId; ?>
+<a href="<?= url($baseUrl . '/articles/' . $article['id']) ?>">
+
+// ❌ SBAGLIATO - Percorso legacy perde contesto progetto
+<a href="<?= url('/ai-content/articles/' . $article['id']) ?>">
+```
+
+### 2. Paginazione con Contesto Progetto
+
+```php
+// ✅ CORRETTO - Paginazione project-aware
+<?php $paginationBase = !empty($projectId)
+    ? '/modulo/projects/' . $projectId . '/sezione'
+    : '/modulo/sezione'; ?>
+<a href="<?= url($paginationBase . '?page=' . ($page - 1)) ?>">
+
+// ❌ SBAGLIATO - Perde contesto al cambio pagina
+<a href="<?= url('/modulo/sezione?page=' . ($page - 1)) ?>">
+```
+
+### 3. Bottoni CTA nel project-nav.php
+
+I bottoni azione (CTA) nell'header del progetto devono navigare con `<a>`, **NON** usare `CustomEvent` per azioni cross-pagina.
+
+```php
+// ✅ CORRETTO - Link diretto alla pagina giusta
+<a href="<?= url($basePath . '/keywords?add=1') ?>" class="btn-primary">
+    Nuova Keyword
+</a>
+
+// ❌ SBAGLIATO - CustomEvent funziona SOLO se il listener è nella pagina corrente
+<button onclick="window.dispatchEvent(new CustomEvent('open-add-keyword'))">
+    Nuova Keyword
+</button>
+```
+
+**Quando usare CustomEvent:** Solo per comunicazione tra componenti **nella stessa pagina** (es. header → form nella stessa view).
+
+**Quando usare link `<a>`:** Per navigazione tra pagine diverse. Usare `?param=1` nel query string per triggerare azioni al caricamento (es. aprire un modale).
+
+### 4. Valori Dinamici (MAI hardcoded)
+
+```php
+// ✅ CORRETTO - Valori da controller/config
+<p class="text-2xl font-bold"><?= number_format($creditCosts['serp'] ?? 3, 0) ?></p>
+
+// ❌ SBAGLIATO - Valore hardcoded nella view
+<p class="text-2xl font-bold">3</p>
+```
+
+I costi crediti, limiti, e configurazioni devono essere passati dal controller usando `Credits::getCost()` o `ModuleLoader::getSetting()`.
+
+### 5. Query Param per Auto-Azioni
+
+Per aprire modali o triggerare azioni al caricamento pagina tramite link:
+
+```php
+// Nel link (project-nav.php o altra pagina)
+<a href="<?= url($basePath . '/keywords?add=1') ?>">Nuova Keyword</a>
+
+// Nella pagina target (keywords/index.php) con Alpine.js x-init
+<div x-data="keywordsManager()"
+     x-init="if (new URLSearchParams(window.location.search).get('add')) showAddModal = true">
+```
+
+---
+
 ## File di Riferimento
 
 - **Sidebar principale:** `shared/views/components/nav-items.php`
 - **Esempio modulo con progetto:** `modules/internal-links/`, `modules/keyword-research/`
 - **Template modulo:** `modules/_template/`
+- **Reference view consistency:** `modules/ai-content/` (fix Feb 2026)

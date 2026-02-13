@@ -188,4 +188,42 @@ find modules/ai-content -name "*.php" -exec php -l {} \; 2>&1 | grep -v "No synt
 
 ---
 
-**INIZIA CON BUG #9 - Esegui debug e mostra output.**
+## FIX VIEW CONSISTENCY (Feb 2026)
+
+### BUG #10 - CRITICO: "Nuova Keyword" non funziona dalla dashboard
+- **File:** `views/partials/project-nav.php:132`, `views/keywords/index.php:6`
+- **Problema:** CustomEvent `open-add-keyword` senza listener in dashboard.php
+- **Fix:** Cambiato `<button>` con `<a href="?add=1">` + `x-init` per auto-apertura modale
+- **Status:** ✅ Completato
+
+### BUG #11 - MEDIO: Paginazione keywords perde contesto progetto
+- **File:** `views/keywords/index.php:176,181`
+- **Problema:** Link paginazione usavano percorso legacy `/ai-content/keywords`
+- **Fix:** Variabile `$paginationBase` project-aware
+- **Status:** ✅ Completato
+
+### BUG #12 - MEDIO: Link articoli recenti usa route legacy
+- **File:** `views/dashboard.php:239`
+- **Problema:** Link articoli recenti usavano percorso legacy
+- **Fix:** Usato `$baseUrl` project-scoped
+- **Status:** ✅ Completato
+
+### BUG #13 - CSS: Typo classe dimensione SVG
+- **File:** `views/dashboard.php:203`
+- **Problema:** `h-5 h-5` duplicato invece di `h-5 w-5`
+- **Fix:** Corretto
+- **Status:** ✅ Completato
+
+### BUG #14 - UX: Costi crediti hardcoded
+- **File:** `controllers/DashboardController.php`, `views/dashboard.php:309-322`
+- **Problema:** Valori fissi invece di `Credits::getCost()`
+- **Fix:** Aggiunto `$creditCosts` dinamico dal controller
+- **Status:** ✅ Completato
+
+### BUG #15 - CLEANUP: Dead code ProjectController::show()
+- **File:** `controllers/ProjectController.php:168-172`
+- **Problema:** Metodo `show()` con redirect a route inesistente
+- **Fix:** Rimosso metodo
+- **Status:** ✅ Completato
+
+**Tutti i bug sono stati risolti.**

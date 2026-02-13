@@ -281,6 +281,12 @@ GET  /ai-content/jobs                      → JobController@index
 - Fix UI preview articolo (classe `prose` Tailwind)
 - Card Keywords cliccabile in dashboard
 - Refactoring completo UI con dashboard tabbed per tipo progetto
+- Fix "Nuova Keyword" bottone non funzionava dalla dashboard (CustomEvent → link `<a>` con `?add=1`)
+- Fix paginazione keywords perdeva contesto progetto (URL legacy → project-scoped)
+- Fix link articoli recenti usavano route legacy (→ `$baseUrl` project-aware)
+- Fix CSS typo `h-5 h-5` → `h-5 w-5` su icona impostazioni
+- Costi crediti dinamici da `Credits::getCost()` invece di valori hardcoded
+- Rimosso dead code `ProjectController::show()` con redirect rotto
 
 **Feature recenti (Feb 2026):**
 - Generazione meta tag con SSE streaming + feedback inline row-by-row (no modal bloccante)

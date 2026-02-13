@@ -5,6 +5,7 @@ namespace Modules\AiContent\Controllers;
 use Core\View;
 use Core\Auth;
 use Core\Router;
+use Core\Credits;
 use Core\ModuleLoader;
 use Modules\AiContent\Models\Project;
 use Modules\AiContent\Models\Keyword;
@@ -79,6 +80,14 @@ class DashboardController
 
         $title = $project ? $project['name'] : 'AI SEO Content Generator';
 
+        // Costi crediti dinamici
+        $creditCosts = [
+            'serp' => Credits::getCost('serp_extraction', 'ai-content'),
+            'scrape' => Credits::getCost('content_scrape', 'ai-content'),
+            'brief' => Credits::getCost('brief_generation', 'ai-content'),
+            'article' => Credits::getCost('article_generation', 'ai-content'),
+        ];
+
         return View::render('ai-content/dashboard', [
             'title' => $title,
             'user' => $user,
@@ -86,6 +95,7 @@ class DashboardController
             'project' => $project,
             'projectId' => $projectId,
             'linkedWpSite' => $linkedWpSite,
+            'creditCosts' => $creditCosts,
             'stats' => [
                 'keywords' => $keywordsCount,
                 'articles' => $stats['total'] ?? 0,

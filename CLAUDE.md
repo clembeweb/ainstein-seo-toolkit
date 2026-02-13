@@ -1,7 +1,7 @@
 # AINSTEIN - Istruzioni Claude Code
 
 > Questo file viene caricato automaticamente ad ogni sessione.
-> Ultimo aggiornamento: 2026-02-13 (Golden Rule #18: docs obbligatorie)
+> Ultimo aggiornamento: 2026-02-13 (Golden Rule #18: docs, #19: project-scoped links)
 
 ---
 
@@ -40,6 +40,7 @@
 16. ModuleLoader::getSetting()   → NON getModuleSetting() (non esiste)
 17. ob_start() in AJAX lunghi    → Output buffering OBBLIGATORIO (vedi sezione dedicata)
 18. Aggiornare docs dopo sviluppo → Documentazione utente + Data Model (vedi sezione dedicata)
+19. Link project-scoped nelle view → MAI usare percorsi legacy dentro contesto progetto
 ```
 
 ---
@@ -706,6 +707,9 @@ async startPolling() {
 [ ] Testare in produzione: deploy → creare tabelle DB → attivare modulo
 [ ] Docs utente aggiornate se feature significativa (shared/views/docs/)
 [ ] Data Model aggiornato se nuove tabelle/colonne (docs/data-model.html)
+[ ] Link nelle view usano percorsi project-scoped (MAI percorsi legacy dentro contesto progetto)
+[ ] Paginazione preserva contesto progetto
+[ ] Nessun valore hardcoded nelle view (crediti, limiti → Credits::getCost() dal controller)
 ```
 
 ---
@@ -747,6 +751,10 @@ async startPolling() {
 | AJAX lungo: JSON corrotto | Warning PHP nel body | `ob_start()` cattura warning, `ob_end_clean()` li scarta |
 | AJAX lungo: record DB bloccato | Processo ucciso senza cleanup | `ignore_user_abort(true)` + salvare stato nel DB a ogni step |
 | `jsonResponse()` in operazione lunga | Non fa `ob_end_clean()` | Usare `ob_end_clean()` + `echo json_encode()` + `exit` |
+| Bottone non funziona dalla dashboard | CustomEvent senza listener nella pagina | Usare `<a>` link con `?param=1` + `x-init` nella pagina target |
+| Paginazione perde contesto progetto | Link hardcoded a percorso legacy | Usare `$paginationBase` project-aware (Golden Rule #19) |
+| Link articoli/keyword vanno a vista globale | Percorso legacy `/modulo/sezione` | Usare `$baseUrl` project-scoped: `/modulo/projects/{id}/sezione` |
+| Costi crediti sbagliati in dashboard | Valori hardcoded nella view | Passare `Credits::getCost()` dal controller |
 
 ---
 
