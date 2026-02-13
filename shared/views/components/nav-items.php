@@ -153,6 +153,20 @@ if (preg_match('#^/keyword-research/project/(\d+)#', $currentPath, $matches)) {
     }
 }
 
+// Check if we're inside an ads-analyzer project
+$adsAnalyzerProjectId = null;
+$adsAnalyzerProject = null;
+if (preg_match('#^/ads-analyzer/projects/(\d+)#', $currentPath, $matches)) {
+    $adsAnalyzerProjectId = (int) $matches[1];
+    try {
+        if (class_exists('\\Modules\\AdsAnalyzer\\Models\\Project')) {
+            $adsAnalyzerProject = \Modules\AdsAnalyzer\Models\Project::find($adsAnalyzerProjectId);
+        }
+    } catch (\Exception $e) {
+        // Silently fail
+    }
+}
+
 // Check if we're inside an ai-content project
 $aiContentProjectId = null;
 $aiContentProject = null;
@@ -552,6 +566,69 @@ if (preg_match('#^/ai-content/projects/(\d+)#', $currentPath, $matches)) {
                             <?= navSubLink("/keyword-research/quick-check", 'Quick Check', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>', $currentPath) ?>
                         </div>
                     </div>
+                </div>
+            <?php elseif ($module['slug'] === 'ads-analyzer'): ?>
+                <!-- Google Ads Analyzer Module with Accordion -->
+                <div x-data="{ expanded: <?= $adsAnalyzerProjectId ? 'true' : 'false' ?> }">
+                    <!-- Module Link -->
+                    <div class="flex items-center">
+                        <a href="<?= url('/ads-analyzer') ?>"
+                           class="flex-1 flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors <?= str_starts_with($currentPath, '/ads-analyzer') ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white' ?>">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+                            </svg>
+                            <span class="flex-1"><?= e($module['name']) ?></span>
+                        </a>
+                        <?= navTourButton('ads-analyzer', $onbCompletedModules) ?>
+                        <?php if ($adsAnalyzerProjectId): ?>
+                        <button @click="expanded = !expanded" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                            <svg class="w-4 h-4 transition-transform" :class="expanded && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <?php endif; ?>
+                    </div>
+
+                    <?php if ($adsAnalyzerProjectId && $adsAnalyzerProject): ?>
+                    <?php $adsProjectType = $adsAnalyzerProject['type'] ?? 'negative-kw'; ?>
+                    <!-- Project Sub-navigation -->
+                    <div x-show="expanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="ml-3 mt-1 pl-3 border-l-2 border-slate-200 dark:border-slate-700 space-y-0.5">
+                        <!-- Project Name Header -->
+                        <div class="px-2 py-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 truncate" title="<?= e($adsAnalyzerProject['name']) ?>">
+                            <?= e(mb_substr($adsAnalyzerProject['name'], 0, 20)) ?><?= mb_strlen($adsAnalyzerProject['name']) > 20 ? '...' : '' ?>
+                        </div>
+
+                        <?php if ($adsProjectType === 'campaign'): ?>
+                        <!-- Campaign Project Navigation -->
+                        <?= navSubLink("/ads-analyzer/projects/{$adsAnalyzerProjectId}/campaign-dashboard", 'Dashboard', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>', $currentPath) ?>
+
+                        <?= navSubLink("/ads-analyzer/projects/{$adsAnalyzerProjectId}/campaigns", 'Campagne', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>', $currentPath) ?>
+
+                        <?= navSubLink("/ads-analyzer/projects/{$adsAnalyzerProjectId}/script", 'Script Google Ads', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>', $currentPath) ?>
+
+                        <?= navSubLink("/ads-analyzer/projects/{$adsAnalyzerProjectId}/script/runs", 'Esecuzioni', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>', $currentPath) ?>
+
+                        <?php else: ?>
+                        <!-- Negative-KW Project Navigation -->
+                        <?= navSubLink("/ads-analyzer/projects/{$adsAnalyzerProjectId}", 'Dashboard', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>', $currentPath, true) ?>
+
+                        <?= navSubLink("/ads-analyzer/projects/{$adsAnalyzerProjectId}/upload", 'Carica CSV', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>', $currentPath) ?>
+
+                        <?= navSubLink("/ads-analyzer/projects/{$adsAnalyzerProjectId}/landing-urls", 'Contesto', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>', $currentPath) ?>
+
+                        <?= navSubLink("/ads-analyzer/projects/{$adsAnalyzerProjectId}/results", 'Risultati', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>', $currentPath) ?>
+
+                        <?= navSubLink("/ads-analyzer/projects/{$adsAnalyzerProjectId}/analyses", 'Storico', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>', $currentPath) ?>
+
+                        <?php endif; ?>
+
+                        <!-- Settings -->
+                        <div class="pt-1 mt-1 border-t border-slate-200 dark:border-slate-700">
+                            <?= navSubLink("/ads-analyzer/projects/{$adsAnalyzerProjectId}/edit", 'Impostazioni', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>', $currentPath) ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                 </div>
             <?php else: ?>
                 <!-- Other Modules (standard link) -->

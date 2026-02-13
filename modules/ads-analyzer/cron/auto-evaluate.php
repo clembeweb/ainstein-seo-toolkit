@@ -5,11 +5,16 @@
  * Processa la coda di auto-valutazioni AI per i progetti campagna.
  * Cron: ogni 5 minuti
  * Esempio crontab:
- * 0/5 * * * * php /path/to/seo-toolkit/cron/ads-analyzer-evaluate.php
+ * 0/5 * * * * php /path/to/seo-toolkit/modules/ads-analyzer/cron/auto-evaluate.php
  */
 
+// Solo CLI
+if (php_sapi_name() !== 'cli') {
+    die('Solo CLI');
+}
+
 // Bootstrap CLI
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(__DIR__, 3) . '/cron/bootstrap.php';
 
 use Core\Database;
 use Core\Credits;
