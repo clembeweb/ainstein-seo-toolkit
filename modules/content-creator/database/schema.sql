@@ -1,6 +1,7 @@
 -- Content Creator Module - Database Schema
 -- Prefix: cc_ (content creator)
--- Data: 2026-02-13
+-- Genera contenuti completi di pagina (body HTML) con AI
+-- Data: 2026-02-13 (v2 - pivot to page content)
 
 -- 1. Progetti
 CREATE TABLE IF NOT EXISTS cc_projects (
@@ -9,10 +10,10 @@ CREATE TABLE IF NOT EXISTS cc_projects (
     name VARCHAR(255) NOT NULL,
     description TEXT NULL,
     base_url VARCHAR(500) NULL,
-    content_type ENUM('product','category','article','custom') NOT NULL DEFAULT 'product',
+    content_type ENUM('product','category','article','service','custom') NOT NULL DEFAULT 'product',
     language VARCHAR(10) DEFAULT 'it',
     tone VARCHAR(50) DEFAULT 'professionale',
-    ai_settings JSON NULL COMMENT 'Lengths, custom prompt overrides',
+    ai_settings JSON NULL COMMENT 'Min words, custom prompt overrides',
     connector_id INT NULL COMMENT 'Default CMS connector for this project',
     status ENUM('active','paused','archived') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -22,17 +23,20 @@ CREATE TABLE IF NOT EXISTS cc_projects (
     INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 2. URL da processare
+-- 2. URL/Pagine da processare
 CREATE TABLE IF NOT EXISTS cc_urls (
     id INT AUTO_INCREMENT PRIMARY KEY,
     project_id INT NOT NULL,
     user_id INT NOT NULL,
     url VARCHAR(700) NOT NULL,
     slug VARCHAR(500) NULL,
-    keyword VARCHAR(500) NULL COMMENT 'Keyword target opzionale (da CSV)',
-    category VARCHAR(255) NULL COMMENT 'Categoria opzionale (da CSV o CMS)',
+    keyword VARCHAR(500) NULL COMMENT 'Keyword target principale',
+    secondary_keywords JSON DEFAULT NULL COMMENT 'Keywords secondarie (da KR)',
+    intent VARCHAR(50) DEFAULT NULL COMMENT 'Search intent (informational/commercial/transactional)',
+    source_type ENUM('manual','csv','sitemap','cms','keyword_research') DEFAULT 'manual',
+    category VARCHAR(255) NULL COMMENT 'Categoria (da CSV, CMS o KR)',
 
-    -- Dati scraping
+    -- Dati scraping (opzionale, per contesto)
     scraped_title VARCHAR(500) NULL,
     scraped_h1 VARCHAR(500) NULL,
     scraped_meta_title VARCHAR(500) NULL,
@@ -43,10 +47,10 @@ CREATE TABLE IF NOT EXISTS cc_urls (
     scraped_at DATETIME NULL,
     scrape_error TEXT NULL,
 
-    -- Contenuti generati AI
-    ai_meta_title VARCHAR(500) NULL,
-    ai_meta_description TEXT NULL,
-    ai_page_description LONGTEXT NULL,
+    -- Contenuto generato AI (body HTML completo)
+    ai_content LONGTEXT NULL COMMENT 'Contenuto HTML completo della pagina',
+    ai_h1 VARCHAR(500) NULL COMMENT 'H1 generato',
+    ai_word_count INT DEFAULT 0 COMMENT 'Conteggio parole contenuto generato',
     ai_generated_at DATETIME NULL,
     ai_error TEXT NULL,
 
@@ -76,11 +80,14 @@ CREATE TABLE IF NOT EXISTS cc_connectors (
     user_id INT NOT NULL,
     name VARCHAR(255) NOT NULL,
     type ENUM('wordpress','shopify','prestashop','magento','custom_api') NOT NULL,
-    config JSON NOT NULL COMMENT 'Credenziali e endpoint',
+    config JSON NOT NULL COMMENT 'Credenziali e endpoint specifici per tipo',
+    api_key VARCHAR(100) DEFAULT NULL COMMENT 'API key dal plugin installato sul CMS',
     is_active BOOLEAN DEFAULT TRUE,
     last_test_at DATETIME NULL,
     last_test_status ENUM('success','error') NULL,
     last_sync_at DATETIME NULL,
+    categories_cache JSON DEFAULT NULL COMMENT 'Cache categorie CMS',
+    seo_plugin VARCHAR(50) DEFAULT NULL COMMENT 'Plugin SEO rilevato (yoast/rankmath/aioseo/none)',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
