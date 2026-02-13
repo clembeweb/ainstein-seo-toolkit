@@ -1,7 +1,7 @@
 # AINSTEIN - Istruzioni Claude Code
 
 > Questo file viene caricato automaticamente ad ogni sessione.
-> Ultimo aggiornamento: 2026-02-12
+> Ultimo aggiornamento: 2026-02-13
 
 ---
 
@@ -175,6 +175,26 @@ mysql -u u6iaaermphtha -pexkwryfz7ieh dbj0xoiwysdlk1 -e "SHOW TABLES LIKE 'prefi
 # Query rapida
 mysql -u u6iaaermphtha -pexkwryfz7ieh dbj0xoiwysdlk1 -e "SELECT * FROM tabella LIMIT 5;"
 ```
+
+### Cron Jobs SiteGround
+```
+# Formato OBBLIGATORIO (path assoluti, NO ~, NO >>):
+/usr/bin/php /home/u1608-ykgnd3z1twn4/www/ainstein.it/public_html/<path-script>.php
+
+# Esempi cron attivi:
+/usr/bin/php /home/u1608-ykgnd3z1twn4/www/ainstein.it/public_html/cron/cleanup-data.php                              # Once Daily (0 2 * * *)
+/usr/bin/php /home/u1608-ykgnd3z1twn4/www/ainstein.it/public_html/modules/ai-content/cron/dispatcher.php              # Every Minute (* * * * *)
+/usr/bin/php /home/u1608-ykgnd3z1twn4/www/ainstein.it/public_html/modules/ads-analyzer/cron/auto-evaluate.php         # Every 5 Min (*/5 * * * *)
+/usr/bin/php /home/u1608-ykgnd3z1twn4/www/ainstein.it/public_html/modules/seo-tracking/cron/rank-dispatcher.php       # Every 5 Min (*/5 * * * *)
+/usr/bin/php /home/u1608-ykgnd3z1twn4/www/ainstein.it/public_html/modules/seo-tracking/cron/gsc-sync-dispatcher.php   # Once Hourly (0 * * * *)
+/usr/bin/php /home/u1608-ykgnd3z1twn4/www/ainstein.it/public_html/modules/seo-tracking/cron/ai-report-dispatcher.php  # Once Hourly (0 * * * *)
+```
+
+**Regole:**
+- PHP binary: `/usr/bin/php` (NON `/usr/local/bin/php`)
+- Path base: `/home/u1608-ykgnd3z1twn4/www/ainstein.it/public_html/` (NON `~` o `$HOME`)
+- NON aggiungere redirect output (`>>`) — SiteGround lo gestisce internamente
+- I log vengono scritti dallo script stesso (es. `storage/logs/data-cleanup.log`)
 
 ---
 
