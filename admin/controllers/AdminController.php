@@ -8,6 +8,8 @@ use Core\Auth;
 use Core\Credits;
 use Core\ModuleLoader;
 use Core\Middleware;
+use Core\Settings;
+use Core\BrandingHelper;
 
 class AdminController
 {
@@ -417,6 +419,132 @@ class AdminController
 
         $_SESSION['_flash']['success'] = 'Piano aggiornato';
         \Core\Router::redirect('/admin/plans');
+        return '';
+    }
+
+    /**
+     * Rinomina un modulo
+     */
+    public function moduleRename(string $id): string
+    {
+        Middleware::csrf();
+
+        $module = Database::fetch("SELECT * FROM modules WHERE id = ?", [$id]);
+        if (!$module) {
+            http_response_code(404);
+            return View::render('errors/404');
+        }
+
+        $newName = trim($_POST['module_name'] ?? '');
+        if (empty($newName)) {
+            $_SESSION['_flash']['error'] = 'Il nome non può essere vuoto';
+            \Core\Router::redirect('/admin/modules/' . $id . '/settings');
+            return '';
+        }
+
+        if (mb_strlen($newName) > 100) {
+            $newName = mb_substr($newName, 0, 100);
+        }
+
+        Database::update('modules', ['name' => $newName], 'id = ?', [$id]);
+
+        $_SESSION['_flash']['success'] = 'Nome modulo aggiornato';
+        \Core\Router::redirect('/admin/modules/' . $id . '/settings');
+        return '';
+    }
+
+    /**
+     * Salva impostazioni branding (colori, font, loghi)
+     */
+    public function brandingUpdate(): string
+    {
+        Middleware::csrf();
+
+        $userId = Auth::id();
+
+        // 1. Salva colori (validazione hex)
+        $colorKeys = ['brand_color_primary', 'brand_color_secondary', 'brand_color_accent'];
+        foreach ($colorKeys as $key) {
+            if (isset($_POST[$key])) {
+                $value = trim($_POST[$key]);
+                if (preg_match('/^#[0-9a-fA-F]{6}$/', $value)) {
+                    Settings::set($key, $value, $userId);
+                }
+            }
+        }
+
+        // 2. Salva font (whitelist)
+        $allowedFonts = BrandingHelper::getAllowedFonts();
+        $font = $_POST['brand_font'] ?? 'Inter';
+        if (in_array($font, $allowedFonts)) {
+            Settings::set('brand_font', $font, $userId);
+        }
+
+        // 3. Gestisci upload loghi
+        $uploadDir = \ROOT_PATH . '/public/assets/images/branding';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $logoFields = [
+            'brand_logo_horizontal' => ['max_size' => 2097152, 'accept' => ['png', 'jpg', 'jpeg', 'svg', 'webp']],
+            'brand_logo_square'     => ['max_size' => 2097152, 'accept' => ['png', 'jpg', 'jpeg', 'svg', 'webp']],
+            'brand_favicon'         => ['max_size' => 524288,  'accept' => ['svg', 'png', 'ico']],
+        ];
+
+        foreach ($logoFields as $field => $rules) {
+            // Check rimozione logo custom
+            $removeKey = 'remove_' . str_replace('brand_', '', $field);
+            if (!empty($_POST[$removeKey])) {
+                $oldPath = Settings::get($field, '');
+                if ($oldPath && str_contains($oldPath, 'branding/')) {
+                    $fullOld = \ROOT_PATH . '/public/' . $oldPath;
+                    if (file_exists($fullOld)) {
+                        unlink($fullOld);
+                    }
+                }
+                Settings::set($field, '', $userId);
+                continue;
+            }
+
+            // Upload nuovo file
+            if (!empty($_FILES[$field]['tmp_name']) && $_FILES[$field]['error'] === UPLOAD_ERR_OK) {
+                $file = $_FILES[$field];
+
+                // Validazione dimensione
+                if ($file['size'] > $rules['max_size']) {
+                    continue;
+                }
+
+                // Validazione estensione
+                $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                if (!in_array($ext, $rules['accept'])) {
+                    continue;
+                }
+
+                // Rimuovi vecchio file custom
+                $oldPath = Settings::get($field, '');
+                if ($oldPath && str_contains($oldPath, 'branding/')) {
+                    $fullOld = \ROOT_PATH . '/public/' . $oldPath;
+                    if (file_exists($fullOld)) {
+                        unlink($fullOld);
+                    }
+                }
+
+                // Salva nuovo file
+                $filename = str_replace('brand_', '', $field) . '-' . time() . '.' . $ext;
+                $dest = $uploadDir . '/' . $filename;
+
+                if (move_uploaded_file($file['tmp_name'], $dest)) {
+                    Settings::set($field, 'assets/images/branding/' . $filename, $userId);
+                }
+            }
+        }
+
+        Settings::clearCache();
+
+        $_SESSION['_flash']['success'] = 'Aspetto aggiornato con successo';
+        \Core\Router::redirect('/admin/settings?tab=branding');
         return '';
     }
 }

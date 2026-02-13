@@ -1,5 +1,16 @@
 <?php
 use Services\AiService;
+use Core\BrandingHelper;
+
+// Carica dati branding
+$brandColorPrimary = $settings['brand_color_primary']['value'] ?? '#006e96';
+$brandColorSecondary = $settings['brand_color_secondary']['value'] ?? '#004d69';
+$brandColorAccent = $settings['brand_color_accent']['value'] ?? '#00a3d9';
+$brandFont = $settings['brand_font']['value'] ?? 'Inter';
+$brandLogoH = $settings['brand_logo_horizontal']['value'] ?? '';
+$brandLogoS = $settings['brand_logo_square']['value'] ?? '';
+$brandFavicon = $settings['brand_favicon']['value'] ?? '';
+$allowedFonts = BrandingHelper::getAllowedFonts();
 
 // Carica dati AI
 $aiStatus = AiService::getConfigurationStatus();
@@ -18,7 +29,7 @@ $stripeConfigured = !empty($settings['stripe_public_key']['value'] ?? '') && !em
 $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
 ?>
 
-<div x-data="{ activeTab: 'essentials' }" class="space-y-6">
+<div x-data="{ activeTab: new URLSearchParams(window.location.search).get('tab') || 'essentials' }" class="space-y-6">
     <!-- Header compatto -->
     <div class="flex items-center justify-between">
         <div>
@@ -64,6 +75,12 @@ $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
                     class="flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm rounded-t-lg transition-colors">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 Avanzate
+            </button>
+            <button type="button" @click="activeTab = 'branding'"
+                    :class="activeTab === 'branding' ? 'border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-300'"
+                    class="flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm rounded-t-lg transition-colors">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+                Aspetto
             </button>
         </nav>
     </div>
@@ -678,6 +695,222 @@ $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
             </div>
         </div>
     </form>
+
+    <!-- ============================================ -->
+    <!-- TAB 4: ASPETTO (form separato per file upload) -->
+    <!-- ============================================ -->
+    <form action="<?= url('/admin/settings/branding') ?>" method="POST" enctype="multipart/form-data"
+          x-show="activeTab === 'branding'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+          x-data="brandingHandler()" class="space-y-6">
+        <?= csrf_field() ?>
+
+        <!-- Colori del Brand -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3">
+                <div class="p-2 rounded-lg bg-pink-100 dark:bg-pink-900/30">
+                    <svg class="w-5 h-5 text-pink-600 dark:text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Colori del Brand</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Scegli i colori principali della piattaforma</p>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <!-- Colore Primario -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Colore Primario</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" name="brand_color_primary" x-model="colors.primary" @input="updateShades('primary')"
+                                   class="h-10 w-14 rounded-lg border border-slate-300 dark:border-slate-600 cursor-pointer">
+                            <input type="text" readonly :value="colors.primary"
+                                   class="w-24 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-300 py-2 px-3 text-sm font-mono">
+                        </div>
+                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Pulsanti, link, elementi attivi</p>
+                        <div class="flex mt-2 rounded-lg overflow-hidden h-6 border border-slate-200 dark:border-slate-600">
+                            <template x-for="shade in shades.primary" :key="shade">
+                                <div class="flex-1" :style="'background:'+shade"></div>
+                            </template>
+                        </div>
+                    </div>
+                    <!-- Colore Secondario -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Colore Secondario</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" name="brand_color_secondary" x-model="colors.secondary" @input="updateShades('secondary')"
+                                   class="h-10 w-14 rounded-lg border border-slate-300 dark:border-slate-600 cursor-pointer">
+                            <input type="text" readonly :value="colors.secondary"
+                                   class="w-24 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-300 py-2 px-3 text-sm font-mono">
+                        </div>
+                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Sfondo sidebar, header scuri</p>
+                        <div class="flex mt-2 rounded-lg overflow-hidden h-6 border border-slate-200 dark:border-slate-600">
+                            <template x-for="shade in shades.secondary" :key="shade">
+                                <div class="flex-1" :style="'background:'+shade"></div>
+                            </template>
+                        </div>
+                    </div>
+                    <!-- Colore Accent -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Colore Accent</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" name="brand_color_accent" x-model="colors.accent" @input="updateShades('accent')"
+                                   class="h-10 w-14 rounded-lg border border-slate-300 dark:border-slate-600 cursor-pointer">
+                            <input type="text" readonly :value="colors.accent"
+                                   class="w-24 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-300 py-2 px-3 text-sm font-mono">
+                        </div>
+                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Evidenziazioni, badge, link secondari</p>
+                        <div class="flex mt-2 rounded-lg overflow-hidden h-6 border border-slate-200 dark:border-slate-600">
+                            <template x-for="shade in shades.accent" :key="shade">
+                                <div class="flex-1" :style="'background:'+shade"></div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <button type="button" @click="resetColors()"
+                            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Ripristina colori predefiniti
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tipografia -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3">
+                <div class="p-2 rounded-lg bg-sky-100 dark:bg-sky-900/30">
+                    <svg class="w-5 h-5 text-sky-600 dark:text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Tipografia</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Font principale della piattaforma</p>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="max-w-md">
+                    <label for="brand_font" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Font principale</label>
+                    <select name="brand_font" id="brand_font" x-model="selectedFont" @change="loadFontPreview()"
+                            class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <?php foreach ($allowedFonts as $font): ?>
+                            <option value="<?= e($font) ?>" <?= $brandFont === $font ? 'selected' : '' ?>><?= e($font) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="mt-4 p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700">
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-2">Anteprima:</p>
+                    <p class="text-lg text-slate-900 dark:text-white" :style="'font-family: ' + selectedFont + ', sans-serif'">
+                        La SEO e l'arte di posizionarsi in cima ai risultati di ricerca.
+                    </p>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-1" :style="'font-family: ' + selectedFont + ', sans-serif'">
+                        ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loghi e Favicon -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3">
+                <div class="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30">
+                    <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Loghi e Favicon</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Carica i loghi personalizzati della piattaforma</p>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <!-- Logo Orizzontale -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Logo Orizzontale</label>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Visualizzato nella sidebar desktop</p>
+                        <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-4 text-center hover:border-primary-400 dark:hover:border-primary-500 transition-colors">
+                            <?php if ($brandLogoH): ?>
+                                <img src="<?= url('/' . e($brandLogoH)) ?>" alt="Logo orizzontale" class="h-12 mx-auto mb-3 dark:brightness-0 dark:invert">
+                            <?php else: ?>
+                                <img src="<?= url('/assets/images/logo-ainstein-orizzontal.png') ?>" alt="Logo predefinito" class="h-12 mx-auto mb-3 opacity-40 dark:brightness-0 dark:invert">
+                                <p class="text-xs text-slate-400 mb-2">Logo predefinito</p>
+                            <?php endif; ?>
+                            <input type="file" name="brand_logo_horizontal" accept=".png,.jpg,.jpeg,.svg,.webp"
+                                   class="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-primary-50 file:text-primary-700 dark:file:bg-primary-900/30 dark:file:text-primary-400 hover:file:bg-primary-100">
+                            <p class="mt-2 text-xs text-slate-400">PNG, JPG, SVG o WebP. Max 2MB</p>
+                        </div>
+                        <?php if ($brandLogoH): ?>
+                        <label class="mt-2 flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="remove_logo_horizontal" value="1"
+                                   class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-red-600 focus:ring-red-500 dark:bg-slate-700">
+                            <span class="text-xs text-slate-500 dark:text-slate-400">Rimuovi e usa logo predefinito</span>
+                        </label>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Logo Quadrato -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Logo Quadrato</label>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Visualizzato nella sidebar mobile</p>
+                        <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-4 text-center hover:border-primary-400 dark:hover:border-primary-500 transition-colors">
+                            <?php if ($brandLogoS): ?>
+                                <img src="<?= url('/' . e($brandLogoS)) ?>" alt="Logo quadrato" class="h-12 w-12 mx-auto mb-3 dark:brightness-0 dark:invert">
+                            <?php else: ?>
+                                <img src="<?= url('/assets/images/logo-ainstein-square.png') ?>" alt="Logo predefinito" class="h-12 w-12 mx-auto mb-3 opacity-40 dark:brightness-0 dark:invert">
+                                <p class="text-xs text-slate-400 mb-2">Logo predefinito</p>
+                            <?php endif; ?>
+                            <input type="file" name="brand_logo_square" accept=".png,.jpg,.jpeg,.svg,.webp"
+                                   class="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-primary-50 file:text-primary-700 dark:file:bg-primary-900/30 dark:file:text-primary-400 hover:file:bg-primary-100">
+                            <p class="mt-2 text-xs text-slate-400">PNG, JPG, SVG o WebP. Max 2MB</p>
+                        </div>
+                        <?php if ($brandLogoS): ?>
+                        <label class="mt-2 flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="remove_logo_square" value="1"
+                                   class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-red-600 focus:ring-red-500 dark:bg-slate-700">
+                            <span class="text-xs text-slate-500 dark:text-slate-400">Rimuovi e usa logo predefinito</span>
+                        </label>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Favicon -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Favicon</label>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Icona del browser (tab)</p>
+                        <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-4 text-center hover:border-primary-400 dark:hover:border-primary-500 transition-colors">
+                            <?php if ($brandFavicon): ?>
+                                <img src="<?= url('/' . e($brandFavicon)) ?>" alt="Favicon" class="h-10 w-10 mx-auto mb-3">
+                            <?php else: ?>
+                                <img src="<?= url('/favicon.svg') ?>" alt="Favicon predefinito" class="h-10 w-10 mx-auto mb-3 opacity-40">
+                                <p class="text-xs text-slate-400 mb-2">Favicon predefinito</p>
+                            <?php endif; ?>
+                            <input type="file" name="brand_favicon" accept=".svg,.png,.ico"
+                                   class="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-primary-50 file:text-primary-700 dark:file:bg-primary-900/30 dark:file:text-primary-400 hover:file:bg-primary-100">
+                            <p class="mt-2 text-xs text-slate-400">SVG, PNG o ICO. Max 500KB</p>
+                        </div>
+                        <?php if ($brandFavicon): ?>
+                        <label class="mt-2 flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="remove_favicon" value="1"
+                                   class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-red-600 focus:ring-red-500 dark:bg-slate-700">
+                            <span class="text-xs text-slate-500 dark:text-slate-400">Rimuovi e usa favicon predefinito</span>
+                        </label>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="flex justify-end pt-2">
+            <button type="submit" class="inline-flex items-center px-6 py-3 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors shadow-sm">
+                <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                Salva Aspetto
+            </button>
+        </div>
+    </form>
 </div>
 
 <script>
@@ -705,4 +938,101 @@ document.getElementById('ai_provider').addEventListener('change', function() {
         });
     }
 });
+
+// Branding handler
+function brandingHandler() {
+    return {
+        colors: {
+            primary: '<?= e($brandColorPrimary) ?>',
+            secondary: '<?= e($brandColorSecondary) ?>',
+            accent: '<?= e($brandColorAccent) ?>'
+        },
+        defaultColors: { primary: '#006e96', secondary: '#004d69', accent: '#00a3d9' },
+        selectedFont: '<?= e($brandFont) ?>',
+        shades: { primary: [], secondary: [], accent: [] },
+
+        init() {
+            this.updateShades('primary');
+            this.updateShades('secondary');
+            this.updateShades('accent');
+            this.loadFontPreview();
+        },
+
+        updateShades(key) {
+            this.shades[key] = this.generatePalette(this.colors[key]);
+        },
+
+        resetColors() {
+            this.colors = { ...this.defaultColors };
+            this.updateShades('primary');
+            this.updateShades('secondary');
+            this.updateShades('accent');
+        },
+
+        loadFontPreview() {
+            const fontName = this.selectedFont.replace(/ /g, '+');
+            const linkId = 'branding-font-preview';
+            let link = document.getElementById(linkId);
+            if (!link) {
+                link = document.createElement('link');
+                link.id = linkId;
+                link.rel = 'stylesheet';
+                document.head.appendChild(link);
+            }
+            link.href = 'https://fonts.googleapis.com/css2?family=' + fontName + ':wght@400;500;600;700&display=swap';
+        },
+
+        generatePalette(hex) {
+            const hsl = this.hexToHSL(hex);
+            const h = hsl.h, s = hsl.s, l = hsl.l;
+            const map = [
+                { l: 96, sf: 0.30 }, { l: 91, sf: 0.40 }, { l: 82, sf: 0.55 },
+                { l: 68, sf: 0.70 }, { l: 52, sf: 0.85 }, { l: l, sf: 1.0 },
+                { l: Math.max(5, l*0.82), sf: 1.0 }, { l: Math.max(5, l*0.65), sf: 1.0 },
+                { l: Math.max(4, l*0.50), sf: 1.0 }, { l: Math.max(3, l*0.35), sf: 1.0 },
+                { l: Math.max(2, l*0.20), sf: 1.0 }
+            ];
+            return map.map(m => this.hslToHex(h, s * m.sf, m.l));
+        },
+
+        hexToHSL(hex) {
+            hex = hex.replace('#', '');
+            const r = parseInt(hex.substr(0,2),16)/255;
+            const g = parseInt(hex.substr(2,2),16)/255;
+            const b = parseInt(hex.substr(4,2),16)/255;
+            const max = Math.max(r,g,b), min = Math.min(r,g,b);
+            let h = 0, s = 0, l = (max+min)/2;
+            if (max !== min) {
+                const d = max - min;
+                s = l > 0.5 ? d/(2-max-min) : d/(max+min);
+                if (max === r) h = ((g-b)/d + (g<b?6:0))/6;
+                else if (max === g) h = ((b-r)/d+2)/6;
+                else h = ((r-g)/d+4)/6;
+            }
+            return { h: h*360, s: s*100, l: l*100 };
+        },
+
+        hslToHex(h, s, l) {
+            h /= 360; s /= 100; l /= 100;
+            let r, g, b;
+            if (s === 0) { r = g = b = l; }
+            else {
+                const q = l < 0.5 ? l*(1+s) : l+s-l*s;
+                const p = 2*l - q;
+                const hue2rgb = (p,q,t) => {
+                    if (t<0) t+=1; if (t>1) t-=1;
+                    if (t<1/6) return p+(q-p)*6*t;
+                    if (t<1/2) return q;
+                    if (t<2/3) return p+(q-p)*(2/3-t)*6;
+                    return p;
+                };
+                r = hue2rgb(p,q,h+1/3);
+                g = hue2rgb(p,q,h);
+                b = hue2rgb(p,q,h-1/3);
+            }
+            const toHex = x => Math.round(x*255).toString(16).padStart(2,'0');
+            return '#' + toHex(r) + toHex(g) + toHex(b);
+        }
+    };
+}
 </script>

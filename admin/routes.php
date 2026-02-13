@@ -17,6 +17,8 @@ Router::get('/admin/modules', [AdminController::class, 'modules']);
 Router::post('/admin/modules/{id}/toggle', [AdminController::class, 'moduleToggle']);
 Router::get('/admin/modules/{id}/settings', [AdminController::class, 'moduleSettings']);
 Router::post('/admin/modules/{id}/settings', [AdminController::class, 'moduleSettingsUpdate']);
+Router::post('/admin/modules/{id}/rename', [AdminController::class, 'moduleRename']);
+Router::post('/admin/settings/branding', [AdminController::class, 'brandingUpdate']);
 Router::get('/admin/plans', [AdminController::class, 'plans']);
 Router::post('/admin/plans/{id}', [AdminController::class, 'planUpdate']);
 

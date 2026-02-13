@@ -1,3 +1,9 @@
+<?php
+// Logo paths (set in layout.php branding section, fallback to defaults)
+$_sidebarLogoH = $_brandLogoH ?? (\Core\Settings::get('brand_logo_horizontal', '') ?: 'assets/images/logo-ainstein-orizzontal.png');
+$_sidebarLogoS = $_brandLogoS ?? (\Core\Settings::get('brand_logo_square', '') ?: 'assets/images/logo-ainstein-square.png');
+$_siteName = \Core\Settings::get('site_name', 'Ainstein');
+?>
 <!-- Mobile sidebar -->
 <div x-show="sidebarOpen" x-cloak
      class="fixed inset-y-0 left-0 z-50 w-64 lg:hidden"
@@ -11,8 +17,8 @@
         <!-- Mobile header -->
         <div class="flex h-16 items-center justify-between px-4 border-b border-slate-200 dark:border-slate-700">
             <a href="<?= url('/dashboard') ?>" class="flex items-center gap-2">
-                <img src="<?= url('/assets/images/logo-ainstein-square.png') ?>" alt="Ainstein" class="h-8 w-8 dark:brightness-0 dark:invert">
-                <span class="text-lg font-bold text-slate-900 dark:text-white">Ainstein</span>
+                <img src="<?= url('/' . $_sidebarLogoS) ?>" alt="<?= e($_siteName) ?>" class="h-8 w-8 dark:brightness-0 dark:invert">
+                <span class="text-lg font-bold text-slate-900 dark:text-white"><?= e($_siteName) ?></span>
             </a>
             <button @click="sidebarOpen = false" class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -33,7 +39,7 @@
         <!-- Logo -->
         <div class="flex h-16 shrink-0 items-center px-6 border-b border-slate-200 dark:border-slate-700">
             <a href="<?= url('/dashboard') ?>">
-                <img src="<?= url('/assets/images/logo-ainstein-orizzontal.png') ?>" alt="Ainstein" class="h-10 dark:brightness-0 dark:invert">
+                <img src="<?= url('/' . $_sidebarLogoH) ?>" alt="<?= e($_siteName) ?>" class="h-10 dark:brightness-0 dark:invert">
             </a>
         </div>
 

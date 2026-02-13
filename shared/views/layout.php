@@ -1,3 +1,16 @@
+<?php
+// Branding dinamico
+$_brandPrimary = \Core\Settings::get('brand_color_primary', '#006e96');
+$_brandSecondary = \Core\Settings::get('brand_color_secondary', '#004d69');
+$_brandAccent = \Core\Settings::get('brand_color_accent', '#00a3d9');
+$_brandFont = \Core\Settings::get('brand_font', 'Inter');
+$_brandFavicon = \Core\Settings::get('brand_favicon', '') ?: 'favicon.svg';
+$_brandLogoH = \Core\Settings::get('brand_logo_horizontal', '') ?: 'assets/images/logo-ainstein-orizzontal.png';
+$_brandLogoS = \Core\Settings::get('brand_logo_square', '') ?: 'assets/images/logo-ainstein-square.png';
+$_primaryShades = \Core\BrandingHelper::generateShades($_brandPrimary);
+$_secondaryShades = \Core\BrandingHelper::generateShades($_brandSecondary);
+$_accentShades = \Core\BrandingHelper::generateShades($_brandAccent);
+?>
 <!DOCTYPE html>
 <html lang="it" class="h-full">
 <head>
@@ -6,9 +19,10 @@
     <title><?= e($title ?? 'Ainstein') ?></title>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="apple-touch-icon" href="/favicon.svg">
-    <meta name="theme-color" content="#006e96">
+    <?php $__favExt = pathinfo($_brandFavicon, PATHINFO_EXTENSION); ?>
+    <link rel="icon" type="image/<?= $__favExt === 'svg' ? 'svg+xml' : ($__favExt === 'ico' ? 'x-icon' : 'png') ?>" href="<?= url('/' . $_brandFavicon) ?>">
+    <link rel="apple-touch-icon" href="<?= url('/' . $_brandFavicon) ?>">
+    <meta name="theme-color" content="<?= e($_brandPrimary) ?>">
 
     <!-- Tailwind CSS with Typography plugin -->
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
@@ -18,48 +32,23 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                        sans: ['<?= e($_brandFont) ?>', 'system-ui', '-apple-system', 'sans-serif'],
                     },
                     colors: {
-                        // Ainstein Brand Colors
                         primary: {
-                            50: '#e6f4f8',   // lightest
-                            100: '#cce9f1',
-                            200: '#99d3e3',
-                            300: '#66bdd5',
-                            400: '#33a7c7',
-                            500: '#006e96',  // base - Ainstein primary
-                            600: '#005577',  // primary-dark
-                            700: '#004d69',
-                            800: '#003d54',
-                            900: '#002e3f',
-                            950: '#001f2a',  // darkest
+                            <?php foreach ($_primaryShades as $shade => $hex): ?>
+                            <?= $shade ?>: '<?= $hex ?>',
+                            <?php endforeach; ?>
                         },
                         secondary: {
-                            50: '#e6f0f4',
-                            100: '#cce1e9',
-                            200: '#99c3d3',
-                            300: '#66a5bd',
-                            400: '#3387a7',
-                            500: '#004d69',  // Ainstein secondary
-                            600: '#003d54',
-                            700: '#00313f',
-                            800: '#00252f',
-                            900: '#00191f',
-                            950: '#000d10',
+                            <?php foreach ($_secondaryShades as $shade => $hex): ?>
+                            <?= $shade ?>: '<?= $hex ?>',
+                            <?php endforeach; ?>
                         },
                         accent: {
-                            50: '#e6f7fc',
-                            100: '#cceff9',
-                            200: '#99dff3',
-                            300: '#66cfed',
-                            400: '#33bfe7',
-                            500: '#00a3d9',  // Ainstein accent
-                            600: '#0088b8',  // primary-light
-                            700: '#006e96',
-                            800: '#005577',
-                            900: '#003d54',
-                            950: '#002636',
+                            <?php foreach ($_accentShades as $shade => $hex): ?>
+                            <?= $shade ?>: '<?= $hex ?>',
+                            <?php endforeach; ?>
                         }
                     }
                 }
@@ -76,9 +65,9 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Inter Font -->
+    <!-- Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=<?= urlencode($_brandFont) ?>:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         [x-cloak] { display: none !important; }

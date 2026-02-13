@@ -5,6 +5,7 @@ include __DIR__ . '/../partials/project-nav.php';
 $config = json_encode([
     'projectId' => $project['id'],
     'baseUrl' => url("/ads-analyzer/projects/{$project['id']}/search-term-analysis"),
+    'saveContextUrl' => url('/ads-analyzer/contexts/save'),
     'csrfToken' => csrf_token(),
     'runs' => array_map(fn($r) => [
         'id' => $r['id'],
@@ -34,6 +35,11 @@ $config = json_encode([
         'run_id' => $a['run_id'] ?? null,
         'created_at' => date('d/m/Y H:i', strtotime($a['created_at'])),
     ], $analyses),
+    'savedContexts' => array_map(fn($c) => [
+        'id' => $c['id'],
+        'name' => $c['name'],
+        'context' => $c['context'],
+    ], $savedContexts ?? []),
     'userCredits' => $userCredits,
 ]);
 ?>
@@ -226,11 +232,40 @@ $config = json_encode([
             <!-- Colonna destra: Contesto Business + Analisi -->
             <div>
                 <h3 class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Contesto Business</h3>
+
+                <!-- Contesti salvati -->
+                <div class="mb-3" x-show="savedContexts.length > 0">
+                    <select @change="loadSavedContext($event.target.value); $event.target.value = ''"
+                            class="w-full text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        <option value="">Carica contesto salvato...</option>
+                        <template x-for="ctx in savedContexts" :key="ctx.id">
+                            <option :value="ctx.id" x-text="ctx.name"></option>
+                        </template>
+                    </select>
+                </div>
+
                 <textarea x-model="businessContext" rows="5" placeholder="Descrivi l'attivita, i prodotti/servizi offerti, il target di riferimento..."
                           class="w-full text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
-                <p class="text-xs text-slate-400 mt-1">
-                    I contesti estratti dalle landing pages verranno integrati automaticamente. Min 20 caratteri.
-                </p>
+
+                <!-- Salva contesto -->
+                <div class="flex items-center gap-2 mt-2">
+                    <p class="text-xs text-slate-400 flex-1">
+                        I contesti estratti dalle landing pages verranno integrati automaticamente. Min 20 caratteri.
+                    </p>
+                    <button @click="showSaveContext = !showSaveContext" type="button"
+                            class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 whitespace-nowrap"
+                            x-show="businessContext.length >= 20">
+                        Salva contesto
+                    </button>
+                </div>
+                <div x-show="showSaveContext" x-transition class="mt-2 flex items-center gap-2">
+                    <input type="text" x-model="saveContextName" placeholder="Nome contesto..."
+                           class="flex-1 text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    <button @click="saveBusinessContext()" :disabled="!saveContextName || isSavingContext"
+                            class="px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                        <span x-text="isSavingContext ? 'Salvataggio...' : 'Salva'"></span>
+                    </button>
+                </div>
 
                 <!-- Bottone Analisi AI -->
                 <div class="mt-4">
@@ -267,6 +302,13 @@ $config = json_encode([
                 </p>
             </div>
             <div class="flex items-center gap-2">
+                <!-- Copy button -->
+                <button @click="copyAllKeywords()"
+                   x-show="currentAnalysisId"
+                   class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 transition-colors">
+                    <svg class="w-3.5 h-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                    <span x-text="copyButtonText">Copia tutte</span>
+                </button>
                 <!-- Export buttons -->
                 <a :href="baseUrl + '/export?analysis_id=' + currentAnalysisId + '&format=csv'"
                    x-show="currentAnalysisId"
@@ -382,6 +424,7 @@ function searchTermAnalysis(config) {
         // Config
         projectId: config.projectId,
         baseUrl: config.baseUrl,
+        saveContextUrl: config.saveContextUrl,
         csrfToken: config.csrfToken,
         runs: config.runs,
         userCredits: config.userCredits,
@@ -408,6 +451,12 @@ function searchTermAnalysis(config) {
         statusMessage: '',
         statusType: 'info',
 
+        // Saved contexts
+        savedContexts: config.savedContexts || [],
+        showSaveContext: false,
+        saveContextName: '',
+        isSavingContext: false,
+
         // Results
         analysisResults: null,
         categoriesByAdGroup: {},
@@ -416,6 +465,7 @@ function searchTermAnalysis(config) {
         selectedCount: 0,
         totalCount: 0,
         activeResultTab: null,
+        copyButtonText: 'Copia tutte',
 
         formatNumber(n) {
             return new Intl.NumberFormat('it-IT').format(n);
@@ -631,6 +681,62 @@ function searchTermAnalysis(config) {
             } catch (e) {
                 console.error('toggleCategory error:', e);
             }
+        },
+
+        // === Copia rapida keyword ===
+
+        async copyAllKeywords(adGroupId = null) {
+            if (!this.currentAnalysisId) return;
+            try {
+                const formData = new FormData();
+                formData.append('_csrf_token', this.csrfToken);
+                formData.append('analysis_id', this.currentAnalysisId);
+                if (adGroupId) formData.append('ad_group_id', adGroupId);
+
+                const resp = await fetch(this.baseUrl + '/copy-text', { method: 'POST', body: formData });
+                const data = await resp.json();
+
+                if (data.success) {
+                    await navigator.clipboard.writeText(data.text);
+                    this.copyButtonText = `Copiate ${data.count}!`;
+                    setTimeout(() => { this.copyButtonText = 'Copia tutte'; }, 2000);
+                }
+            } catch (e) {
+                console.error('copyAllKeywords error:', e);
+            }
+        },
+
+        // === Contesti salvati ===
+
+        loadSavedContext(contextId) {
+            if (!contextId) return;
+            const ctx = this.savedContexts.find(c => c.id == contextId);
+            if (ctx) this.businessContext = ctx.context;
+        },
+
+        async saveBusinessContext() {
+            if (!this.saveContextName || this.businessContext.length < 20) return;
+            this.isSavingContext = true;
+            try {
+                const formData = new FormData();
+                formData.append('_csrf_token', this.csrfToken);
+                formData.append('context_name', this.saveContextName);
+                formData.append('context', this.businessContext);
+
+                const resp = await fetch(this.saveContextUrl, { method: 'POST', body: formData });
+                const data = await resp.json();
+
+                if (data.success) {
+                    this.savedContexts.push({ id: data.id, name: this.saveContextName, context: this.businessContext });
+                    this.saveContextName = '';
+                    this.showSaveContext = false;
+                    this.statusMessage = 'Contesto salvato con successo';
+                    this.statusType = 'info';
+                }
+            } catch (e) {
+                console.error('saveBusinessContext error:', e);
+            }
+            this.isSavingContext = false;
         }
     };
 }

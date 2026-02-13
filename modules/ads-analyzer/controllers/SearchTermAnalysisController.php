@@ -15,6 +15,7 @@ use Modules\AdsAnalyzer\Models\Ad;
 use Modules\AdsAnalyzer\Models\NegativeCategory;
 use Modules\AdsAnalyzer\Models\NegativeKeyword;
 use Modules\AdsAnalyzer\Models\ScriptRun;
+use Modules\AdsAnalyzer\Models\BusinessContext;
 use Modules\AdsAnalyzer\Services\KeywordAnalyzerService;
 use Modules\AdsAnalyzer\Services\ContextExtractorService;
 
@@ -103,6 +104,9 @@ class SearchTermAnalysisController
         // Analisi completate per questo progetto (con run_id)
         $analyses = Analysis::getCompletedByProjectWithRun($projectId);
 
+        // Contesti business salvati dall'utente
+        $savedContexts = BusinessContext::getByUser($user['id']);
+
         return View::render('ads-analyzer/campaigns/search-terms', [
             'title' => 'Keyword Negative - ' . $project['name'],
             'user' => $user,
@@ -114,6 +118,7 @@ class SearchTermAnalysisController
             'searchTermStats' => $searchTermStats,
             'landingUrls' => $landingUrls,
             'analyses' => $analyses,
+            'savedContexts' => $savedContexts,
             'currentPage' => 'search-term-analysis',
             'userCredits' => Credits::getBalance($user['id']),
         ]);
@@ -708,6 +713,48 @@ class SearchTermAnalysisController
         }
 
         fclose($output);
+        exit;
+    }
+
+    /**
+     * AJAX: Copia keyword selezionate come testo
+     */
+    public function copyText(int $projectId): void
+    {
+        header('Content-Type: application/json');
+        $ctx = $this->requireCampaignProjectJson($projectId);
+
+        $analysisId = (int)($_POST['analysis_id'] ?? 0);
+        $adGroupId = (int)($_POST['ad_group_id'] ?? 0);
+
+        if (!$analysisId) {
+            echo json_encode(['error' => 'analysis_id richiesto']);
+            exit;
+        }
+
+        $analysis = Analysis::find($analysisId);
+        if (!$analysis || $analysis['project_id'] != $projectId) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Analisi non trovata']);
+            exit;
+        }
+
+        if ($adGroupId) {
+            // Keyword selezionate per singolo Ad Group
+            $keywords = NegativeKeyword::getByAnalysisAndAdGroup($analysisId, $adGroupId);
+            $keywords = array_filter($keywords, fn($kw) => $kw['is_selected']);
+        } else {
+            // Tutte le keyword selezionate dell'analisi
+            $keywords = NegativeKeyword::getSelectedByAnalysis($analysisId);
+        }
+
+        $text = implode("\n", array_column($keywords, 'keyword'));
+
+        echo json_encode([
+            'success' => true,
+            'text' => $text,
+            'count' => count($keywords),
+        ]);
         exit;
     }
 

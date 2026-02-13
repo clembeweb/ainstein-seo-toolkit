@@ -19,25 +19,13 @@ class ProjectController
         $user = Auth::user();
 
         $projectsByType = Project::allGroupedByType($user['id']);
-
-        // Determina tab attivo
-        $activeTab = $_GET['tab'] ?? null;
-        if (!$activeTab || !in_array($activeTab, ['negative-kw', 'campaign'])) {
-            if (!empty($projectsByType['negative-kw'])) {
-                $activeTab = 'negative-kw';
-            } elseif (!empty($projectsByType['campaign'])) {
-                $activeTab = 'campaign';
-            } else {
-                $activeTab = 'negative-kw';
-            }
-        }
+        $projects = $projectsByType['campaign'] ?? [];
 
         return View::render('ads-analyzer/projects/index', [
             'title' => 'Progetti - Google Ads Analyzer',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
-            'projectsByType' => $projectsByType,
-            'activeTab' => $activeTab,
+            'projects' => $projects,
         ]);
     }
 
@@ -58,16 +46,11 @@ class ProjectController
     {
         $user = Auth::user();
 
-        $type = trim($_POST['type'] ?? 'negative-kw');
-        if (!in_array($type, ['negative-kw', 'campaign'])) {
-            $type = 'negative-kw';
-        }
-
         $data = [
             'name' => trim($_POST['name'] ?? ''),
             'description' => trim($_POST['description'] ?? ''),
             'user_id' => $user['id'],
-            'type' => $type,
+            'type' => 'campaign',
         ];
 
         // Valida
@@ -76,7 +59,7 @@ class ProjectController
         if (!empty($errors)) {
             $_SESSION['flash_error'] = implode(', ', $errors);
             $_SESSION['old_input'] = $data;
-            header('Location: ' . url('/ads-analyzer/projects/create?type=' . $type));
+            header('Location: ' . url('/ads-analyzer/projects/create'));
             exit;
         }
 
@@ -87,13 +70,7 @@ class ProjectController
         Project::generateToken($projectId);
 
         $_SESSION['flash_success'] = 'Progetto creato con successo';
-
-        // Redirect in base al tipo
-        if ($type === 'campaign') {
-            header('Location: ' . url("/ads-analyzer/projects/{$projectId}/script"));
-        } else {
-            header('Location: ' . url("/ads-analyzer/projects/{$projectId}/upload"));
-        }
+        header('Location: ' . url("/ads-analyzer/projects/{$projectId}/script"));
         exit;
     }
 
@@ -219,7 +196,7 @@ class ProjectController
 
         $newProjectId = Project::create([
             'user_id' => $user['id'],
-            'type' => $project['type'] ?? 'negative-kw',
+            'type' => 'campaign',
             'name' => $project['name'] . ' (copia)',
             'description' => $project['description'],
             'business_context' => $project['business_context'],

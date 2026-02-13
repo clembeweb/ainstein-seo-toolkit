@@ -3,6 +3,16 @@
 $currentPage = $currentPage ?? '';
 $title = $title ?? 'Documentazione - Ainstein';
 
+// Branding dinamico
+$_docsBrandPrimary = \Core\Settings::get('brand_color_primary', '#006e96');
+$_docsBrandSecondary = \Core\Settings::get('brand_color_secondary', '#004d69');
+$_docsBrandAccent = \Core\Settings::get('brand_color_accent', '#00a3d9');
+$_docsBrandFont = \Core\Settings::get('brand_font', 'Inter');
+$_docsBrandFavicon = \Core\Settings::get('brand_favicon', '') ?: 'favicon.svg';
+$_docsPrimaryShades = \Core\BrandingHelper::generateShades($_docsBrandPrimary);
+$_docsSecondaryShades = \Core\BrandingHelper::generateShades($_docsBrandSecondary);
+$_docsAccentShades = \Core\BrandingHelper::generateShades($_docsBrandAccent);
+
 $navItems = [
     ['slug' => 'getting-started', 'label' => 'Primi Passi', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>'],
     ['slug' => 'ai-content', 'label' => 'AI Content Generator', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>'],
@@ -24,9 +34,10 @@ $navItems = [
     <title><?= e($title) ?></title>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="apple-touch-icon" href="/favicon.svg">
-    <meta name="theme-color" content="#006e96">
+    <?php $__docsFavExt = pathinfo($_docsBrandFavicon, PATHINFO_EXTENSION); ?>
+    <link rel="icon" type="image/<?= $__docsFavExt === 'svg' ? 'svg+xml' : ($__docsFavExt === 'ico' ? 'x-icon' : 'png') ?>" href="<?= url('/' . $_docsBrandFavicon) ?>">
+    <link rel="apple-touch-icon" href="<?= url('/' . $_docsBrandFavicon) ?>">
+    <meta name="theme-color" content="<?= e($_docsBrandPrimary) ?>">
 
     <!-- Tailwind CSS with Typography plugin -->
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
@@ -36,47 +47,23 @@ $navItems = [
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                        sans: ['<?= e($_docsBrandFont) ?>', 'system-ui', '-apple-system', 'sans-serif'],
                     },
                     colors: {
                         primary: {
-                            50: '#e6f4f8',
-                            100: '#cce9f1',
-                            200: '#99d3e3',
-                            300: '#66bdd5',
-                            400: '#33a7c7',
-                            500: '#006e96',
-                            600: '#005577',
-                            700: '#004d69',
-                            800: '#003d54',
-                            900: '#002e3f',
-                            950: '#001f2a',
+                            <?php foreach ($_docsPrimaryShades as $shade => $hex): ?>
+                            <?= $shade ?>: '<?= $hex ?>',
+                            <?php endforeach; ?>
                         },
                         secondary: {
-                            50: '#e6f0f4',
-                            100: '#cce1e9',
-                            200: '#99c3d3',
-                            300: '#66a5bd',
-                            400: '#3387a7',
-                            500: '#004d69',
-                            600: '#003d54',
-                            700: '#00313f',
-                            800: '#00252f',
-                            900: '#00191f',
-                            950: '#000d10',
+                            <?php foreach ($_docsSecondaryShades as $shade => $hex): ?>
+                            <?= $shade ?>: '<?= $hex ?>',
+                            <?php endforeach; ?>
                         },
                         accent: {
-                            50: '#e6f7fc',
-                            100: '#cceff9',
-                            200: '#99dff3',
-                            300: '#66cfed',
-                            400: '#33bfe7',
-                            500: '#00a3d9',
-                            600: '#0088b8',
-                            700: '#006e96',
-                            800: '#005577',
-                            900: '#003d54',
-                            950: '#002636',
+                            <?php foreach ($_docsAccentShades as $shade => $hex): ?>
+                            <?= $shade ?>: '<?= $hex ?>',
+                            <?php endforeach; ?>
                         }
                     }
                 }
@@ -87,9 +74,9 @@ $navItems = [
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-    <!-- Inter Font -->
+    <!-- Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=<?= urlencode($_docsBrandFont) ?>:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         [x-cloak] { display: none !important; }

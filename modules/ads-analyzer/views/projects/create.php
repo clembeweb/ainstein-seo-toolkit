@@ -14,65 +14,12 @@
     <!-- Form -->
     <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
         <form action="<?= url('/ads-analyzer/projects/store') ?>" method="POST"
-              x-data="{ projectType: '<?= e($preselectedType ?? $_SESSION['old_input']['type'] ?? 'negative-kw') ?>', submitting: false }"
+              x-data="{ submitting: false }"
               @submit="submitting = true">
             <?= csrf_field() ?>
-            <input type="hidden" name="type" x-model="projectType">
+            <input type="hidden" name="type" value="campaign">
 
             <div class="p-6 space-y-6">
-                <!-- Tipo Progetto -->
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-                        Tipo di progetto <span class="text-red-500">*</span>
-                    </label>
-                    <div class="grid grid-cols-2 gap-4">
-                        <!-- Card Keyword Negative -->
-                        <label class="relative cursor-pointer">
-                            <input type="radio" name="type_radio" value="negative-kw" x-model="projectType" class="sr-only peer">
-                            <div class="p-4 rounded-lg border-2 transition-all peer-checked:border-amber-500 peer-checked:bg-amber-50 dark:peer-checked:bg-amber-900/20 border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500">
-                                <div class="flex items-start gap-3">
-                                    <div class="h-10 w-10 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
-                                        <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="font-medium text-slate-900 dark:text-white">Keyword Negative</p>
-                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Carica CSV search terms da Google Ads e trova keyword negative con AI</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="absolute top-3 right-3 hidden peer-checked:block">
-                                <svg class="w-5 h-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                        </label>
-
-                        <!-- Card Analisi Campagne -->
-                        <label class="relative cursor-pointer">
-                            <input type="radio" name="type_radio" value="campaign" x-model="projectType" class="sr-only peer">
-                            <div class="p-4 rounded-lg border-2 transition-all peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20 border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500">
-                                <div class="flex items-start gap-3">
-                                    <div class="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
-                                        <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="font-medium text-slate-900 dark:text-white">Analisi Campagne</p>
-                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Configura Google Ads Script per raccogliere e valutare dati campagne con AI</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="absolute top-3 right-3 hidden peer-checked:block">
-                                <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                        </label>
-                    </div>
-                </div>
 
                 <!-- Nome progetto -->
                 <div>

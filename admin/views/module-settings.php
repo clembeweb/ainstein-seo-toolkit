@@ -79,6 +79,51 @@ $groupIcons = [
         </div>
     </div>
 
+    <!-- Nome Modulo -->
+    <?php $originalName = $moduleJsonData['name'] ?? $module['name']; ?>
+    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"
+         x-data="{ moduleName: '<?= e($module['name']) ?>', originalName: '<?= e($originalName) ?>' }">
+        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3">
+            <div class="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                </svg>
+            </div>
+            <div>
+                <h3 class="text-base font-semibold text-slate-900 dark:text-white">Nome Modulo</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Personalizza il nome visualizzato nella sidebar e nel menu</p>
+            </div>
+        </div>
+        <form action="<?= url('/admin/modules/' . $module['id'] . '/rename') ?>" method="POST" class="p-6">
+            <?= csrf_field() ?>
+            <div class="flex items-end gap-4">
+                <div class="flex-1 max-w-md">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nome visualizzato</label>
+                    <input type="text" name="module_name" x-model="moduleName" maxlength="100" required
+                           class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                        Nome originale: <code class="bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded"><?= e($originalName) ?></code>
+                    </p>
+                </div>
+                <button type="button" @click="moduleName = originalName"
+                        x-show="moduleName !== originalName" x-cloak
+                        class="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Ripristina
+                </button>
+                <button type="submit"
+                        class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Salva Nome
+                </button>
+            </div>
+        </form>
+    </div>
+
     <?php if (empty($settingsSchema)): ?>
     <!-- No Settings -->
     <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
