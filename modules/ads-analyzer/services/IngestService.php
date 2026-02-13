@@ -82,6 +82,7 @@ class IngestService
             if (!$adGroupId) {
                 $adGroupId = AdGroup::create([
                     'project_id' => $projectId,
+                    'run_id' => $runId,
                     'name' => $name,
                     'terms_count' => $data['stats']['total'],
                     'zero_ctr_count' => $data['stats']['zero_ctr'],
@@ -95,6 +96,7 @@ class IngestService
             foreach ($data['terms'] as $term) {
                 SearchTerm::create([
                     'project_id' => $projectId,
+                    'run_id' => $runId,
                     'ad_group_id' => $adGroupId,
                     'term' => $term['term'],
                     'clicks' => $term['clicks'],

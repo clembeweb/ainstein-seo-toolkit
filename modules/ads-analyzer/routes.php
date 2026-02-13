@@ -18,6 +18,7 @@ use Modules\AdsAnalyzer\Controllers\SettingsController;
 use Modules\AdsAnalyzer\Controllers\ApiController;
 use Modules\AdsAnalyzer\Controllers\ScriptController;
 use Modules\AdsAnalyzer\Controllers\CampaignController;
+use Modules\AdsAnalyzer\Controllers\SearchTermAnalysisController;
 
 $moduleSlug = 'ads-analyzer';
 
@@ -381,6 +382,76 @@ Router::get('/ads-analyzer/projects/{id}/campaigns/evaluations/{evalId}', functi
     Middleware::auth();
     $controller = new CampaignController();
     return $controller->evaluationShow((int) $id, (int) $evalId);
+});
+
+// ============================================
+// ANALISI KEYWORD NEGATIVE (Campaign Projects)
+// ============================================
+
+// Pagina principale
+Router::get('/ads-analyzer/projects/{id}/search-term-analysis', function ($id) {
+    Middleware::auth();
+    $controller = new SearchTermAnalysisController();
+    return $controller->index((int) $id);
+});
+
+// AJAX: dati per run selezionato
+Router::get('/ads-analyzer/projects/{id}/search-term-analysis/run-data', function ($id) {
+    Middleware::auth();
+    $controller = new SearchTermAnalysisController();
+    return $controller->getRunData((int) $id);
+});
+
+// AJAX: rileva URL landing dagli annunci
+Router::post('/ads-analyzer/projects/{id}/search-term-analysis/detect-urls', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new SearchTermAnalysisController();
+    return $controller->detectLandingUrls((int) $id);
+});
+
+// AJAX: estrai contesti landing pages
+Router::post('/ads-analyzer/projects/{id}/search-term-analysis/extract-contexts', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new SearchTermAnalysisController();
+    return $controller->extractContexts((int) $id);
+});
+
+// AJAX: analisi AI keyword negative
+Router::post('/ads-analyzer/projects/{id}/search-term-analysis/analyze', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new SearchTermAnalysisController();
+    return $controller->analyze((int) $id);
+});
+
+// AJAX: risultati analisi
+Router::get('/ads-analyzer/projects/{id}/search-term-analysis/results', function ($id) {
+    Middleware::auth();
+    $controller = new SearchTermAnalysisController();
+    return $controller->getResults((int) $id);
+});
+
+// AJAX: toggle keyword
+Router::post('/ads-analyzer/projects/{id}/search-term-analysis/keywords/{keywordId}/toggle', function ($id, $keywordId) {
+    Middleware::auth();
+    $controller = new SearchTermAnalysisController();
+    return $controller->toggleKeyword((int) $id, (int) $keywordId);
+});
+
+// AJAX: azioni bulk categoria
+Router::post('/ads-analyzer/projects/{id}/search-term-analysis/categories/{categoryId}/{action}', function ($id, $categoryId, $action) {
+    Middleware::auth();
+    $controller = new SearchTermAnalysisController();
+    return $controller->toggleCategory((int) $id, (int) $categoryId, $action);
+});
+
+// Export CSV / Google Ads Editor
+Router::get('/ads-analyzer/projects/{id}/search-term-analysis/export', function ($id) {
+    Middleware::auth();
+    $controller = new SearchTermAnalysisController();
+    return $controller->export((int) $id);
 });
 
 // ============================================

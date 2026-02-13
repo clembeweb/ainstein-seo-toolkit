@@ -8,14 +8,20 @@ class Analysis
 {
     public static function create(array $data): int
     {
-        return Database::insert('ga_analyses', [
+        $record = [
             'project_id' => $data['project_id'],
             'user_id' => $data['user_id'],
             'name' => $data['name'],
             'business_context' => $data['business_context'] ?? null,
             'context_mode' => $data['context_mode'] ?? 'manual',
             'status' => 'draft'
-        ]);
+        ];
+
+        if (isset($data['run_id'])) {
+            $record['run_id'] = $data['run_id'];
+        }
+
+        return Database::insert('ga_analyses', $record);
     }
 
     public static function find(int $id): ?array
@@ -103,6 +109,26 @@ class Analysis
     {
         return Database::fetchAll(
             "SELECT * FROM ga_analyses WHERE project_id = ? AND status = 'completed' ORDER BY created_at DESC",
+            [$projectId]
+        );
+    }
+
+    public static function findByRunId(int $runId): array
+    {
+        return Database::fetchAll(
+            "SELECT * FROM ga_analyses WHERE run_id = ? ORDER BY created_at DESC",
+            [$runId]
+        );
+    }
+
+    public static function getCompletedByProjectWithRun(int $projectId): array
+    {
+        return Database::fetchAll(
+            "SELECT a.*, r.date_range_start, r.date_range_end, r.created_at as run_created_at
+             FROM ga_analyses a
+             LEFT JOIN ga_script_runs r ON r.id = a.run_id
+             WHERE a.project_id = ? AND a.status = 'completed'
+             ORDER BY a.created_at DESC",
             [$projectId]
         );
     }

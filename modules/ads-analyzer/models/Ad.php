@@ -112,4 +112,20 @@ class Ad
     {
         return Database::delete('ga_ads', 'run_id = ?', [$runId]) >= 0;
     }
+
+    /**
+     * Per ogni ad_group, restituisce la final_url più comune dagli annunci ENABLED
+     */
+    public static function getLandingUrlsByAdGroup(int $runId): array
+    {
+        return Database::fetchAll(
+            "SELECT ad_group_name, ad_group_id_google, final_url, COUNT(*) as url_count
+             FROM ga_ads
+             WHERE run_id = ? AND final_url IS NOT NULL AND final_url != ''
+               AND (ad_status IS NULL OR ad_status = 'ENABLED')
+             GROUP BY ad_group_name, ad_group_id_google, final_url
+             ORDER BY ad_group_name, url_count DESC",
+            [$runId]
+        );
+    }
 }
