@@ -1,6 +1,6 @@
 # AINSTEIN - Roadmap Sviluppo AI
 
-**Ultimo aggiornamento:** 2026-02-06
+**Ultimo aggiornamento:** 2026-02-12
 **Tipo:** Roadmap tecnica
 **Stato:** Attivo
 
@@ -18,7 +18,7 @@
 | **internal-links** | 85% | ❌ Mancante | Suggerimenti link |
 | **seo-tracking** | 95% | ✅ Completa | Alert backend |
 | **keyword-research** | 100% | ✅ Completa | — |
-| **content-creator** | 0% | ❌ | Tutto |
+| **content-creator** | 90% | ✅ Completa | Test e-2-e |
 
 ---
 
@@ -131,7 +131,6 @@
 |---------|--------|---------|--------|
 | Weekly AI Digest | seo-tracking | 🟡 Alto | Medio |
 | Quick Wins Finder | seo-tracking | 🟡 Alto | Basso |
-| Content Creator MVP | content-creator | 🟡 Medio | Alto |
 
 ### Weekly AI Digest (seo-tracking)
 
@@ -213,18 +212,18 @@
 
 ### Questa Settimana
 - [x] ~~AI Keyword Research completo~~ (2026-02-06)
-- [ ] Test e deploy keyword-research in produzione
-- [ ] Definire prompt AI per Link Suggester
+- [x] ~~Content Creator MVP completo~~ (2026-02-12)
+- [ ] Test browser content-creator + CMS push
 
 ### Prossime 2 Settimane
 - [ ] Rilascio AI Link Suggester (internal-links)
+- [ ] Plugin CMS reali (PrestaShop, Magento) per content-creator
 - [ ] Alert backend + email notifiche (seo-tracking)
-- [ ] Test con 2-3 utenti beta
 
 ### Prossimo Mese
-- [ ] Content Creator MVP
 - [ ] Landing page + pricing page
 - [ ] Onboarding utenti beta
+- [ ] Monthly executive report (seo-tracking)
 
 ---
 
@@ -235,10 +234,10 @@ FASE 1 (Ora)
 ├── AI Fix Generator (seo-audit)
 └── AI Link Suggester (internal-links)
 
-FASE 2 (2-3 settimane)
-├── Weekly AI Digest (seo-tracking)
-├── Quick Wins Finder (seo-tracking)
-└── Content Creator MVP
+FASE 2 (2-3 settimane) ← Content Creator ✅ completato
+├── Weekly AI Digest (seo-tracking) ✅
+├── Quick Wins Finder (seo-tracking) ✅
+└── Content Creator MVP ✅ (2026-02-12)
 
 FASE 3 (Ongoing)
 ├── Content Optimizer (ai-content)
@@ -249,4 +248,4 @@ FASE 3 (Ongoing)
 ---
 
 *Roadmap Sviluppo - Ainstein SEO Toolkit*
-*Aggiornato: 2026-02-06*
+*Aggiornato: 2026-02-12*

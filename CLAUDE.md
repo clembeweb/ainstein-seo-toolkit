@@ -54,7 +54,7 @@
 | Internal Links | `internal-links` | `il_` | 85% | Manca AI Suggester |
 | SEO Tracking | `seo-tracking` | `st_` | 95% | Rank Check con DataForSEO/SerpAPI/Serper, API Logs integrato, provider SERP/Volume configurabili da admin |
 | AI Keyword Research | `keyword-research` | `kr_` | 100% | Research Guidata, Architettura Sito, Piano Editoriale, Quick Check |
-| Content Creator | `content-creator` | `cc_` | 0% | Da implementare |
+| Content Creator | `content-creator` | `cc_` | 90% | Generazione contenuti HTML pagina, 4 CMS connectors (WP plugin, Shopify, PrestaShop, Magento), import da KR |
 
 ---
 

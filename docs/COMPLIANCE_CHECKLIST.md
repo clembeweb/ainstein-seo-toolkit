@@ -269,11 +269,23 @@ Checklist di requisiti estratti dalla documentazione ufficiale per verificare la
 - [ ] Export CSV con BOM UTF-8
 
 ### Content Creator (content-creator)
-- [ ] Prefisso DB: cc_
-- [ ] Import via CsvImportService + SitemapService
-- [ ] Scraping via ScraperService
-- [ ] Generazione via AiService
-- [ ] CMS connectors
+- [x] Prefisso DB: cc_
+- [x] 5 tabelle: cc_projects, cc_urls, cc_connectors, cc_jobs, cc_operations_log
+- [x] Import: CSV (CsvImportService), Sitemap (SitemapService), CMS, Manual, Keyword Research
+- [x] Scraping opzionale via ScraperService (contesto per AI)
+- [x] Generazione contenuti HTML via AiService('content-creator')
+- [x] 5 content types: product, category, article, service, custom
+- [x] SSE streaming: scrape, generate, CMS push (con polling fallback)
+- [x] ignore_user_abort(true) + set_time_limit(0) + session_write_close()
+- [x] Database::reconnect() dopo chiamate AI
+- [x] 4 CMS connectors: WordPress (plugin), Shopify (native), PrestaShop, Magento
+- [x] WordPress: plugin seo-toolkit-connector con X-SEO-Toolkit-Key header
+- [x] Export CSV con BOM UTF-8
+- [x] Import da Keyword Research (cluster → cc_urls)
+- [x] Crediti: scrape (1), generate (3), push/export (0)
+- [x] ConnectorController: download plugin, sync categories, fetch items
+- [ ] Test end-to-end browser
+- [ ] Test CMS push con plugin reali
 
 ---
 

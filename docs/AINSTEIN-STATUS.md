@@ -1,6 +1,6 @@
 # AINSTEIN - Stato Progetto
 
-**Ultimo aggiornamento:** 2026-02-10
+**Ultimo aggiornamento:** 2026-02-12
 **Ambiente produzione:** https://ainstein.it
 **Repository:** https://github.com/clembeweb/ainstein-seo-toolkit.git
 
@@ -32,7 +32,7 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 
 ---
 
-## STATO MODULI (Aggiornato 10 Feb 2026)
+## STATO MODULI (Aggiornato 12 Feb 2026)
 
 | Modulo | Slug | Stato Base | Stato AI | % Totale |
 |--------|------|------------|----------|----------|
@@ -42,7 +42,7 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 | Internal Links Analyzer | `internal-links` | ✅ 85% | ❌ Mancante | **75%** |
 | SEO Position Tracking | `seo-tracking` | ✅ 95% | ✅ Completa | **95%** |
 | AI Keyword Research | `keyword-research` | ✅ 100% | ✅ Completa | **100%** |
-| AI Content Bulk Creator | `content-creator` | ❌ 0% | ❌ | **0%** |
+| AI Content Creator | `content-creator` | ✅ 90% | ✅ Completa | **90%** |
 
 ### Legenda Stato AI
 - ✅ **Completa**: AI integrata e funzionante per tutte le feature
@@ -65,7 +65,6 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 |--------|------------------|---------|
 | **seo-tracking** | Alert backend + Email notifiche | Medio |
 | **seo-tracking** | Monthly executive report | Basso |
-| **content-creator** | MVP completo | Medio |
 
 > **Nota:** Quick Wins Finder ✅ (2026-01-28), Weekly AI Digest ✅ (2026-02-03)
 
@@ -74,6 +73,19 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 ---
 
 ## COMPLETATI RECENTEMENTE
+
+### 2026-02-12
+- [x] **Content Creator Pivot** - Modulo completo per generazione contenuti HTML di pagina (`content-creator`)
+- [x] Pivot da Meta Tag Generator a Full Page Content Generator (body HTML)
+- [x] 5 content types: product, category, article, service, custom con prompt specifici
+- [x] SSE scraping + AI generation con polling fallback
+- [x] 4 CMS Connectors: WordPress (plugin API), Shopify (native), PrestaShop, Magento
+- [x] WordPress: switch da Application Passwords a plugin `seo-toolkit-connector` con `X-SEO-Toolkit-Key`
+- [x] Import da Keyword Research: cluster architettura → cc_urls con secondary keywords e intent
+- [x] Export CSV + CMS Push SSE
+- [x] 5 modalità import: CSV, Sitemap, CMS, Manual, Keyword Research
+- [x] ConnectorController con download plugin, sync categorie, fetch items
+- [x] Migration DB + deploy produzione
 
 ### 2026-02-10
 - [x] **Meta Tag Generation SSE** - Generazione meta tag con streaming SSE e feedback inline row-by-row (`ai-content`)
@@ -184,6 +196,7 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 | `CsvImportService.php` | Parser CSV | ads-analyzer |
 | `DataForSeoService.php` | API DataForSEO per rank check | seo-tracking |
 | `KeywordInsightService.php` | Google Keyword Insight API (RapidAPI) | keyword-research (modulo-locale) |
+| `ContentScraperService.php` | Scraping per contesto AI Content Creator | content-creator (modulo-locale) |
 
 ---
 
@@ -199,7 +212,8 @@ ainstein-seo-toolkit/
 │   ├── ads-analyzer/       # Google Ads Analyzer
 │   ├── internal-links/     # Link Analysis
 │   ├── seo-tracking/       # Position Tracking
-│   └── keyword-research/   # AI Keyword Research
+│   ├── keyword-research/   # AI Keyword Research
+│   └── content-creator/    # Content Creator (HTML body)
 ├── admin/                   # Admin panel
 ├── shared/views/            # Layout, sidebar, components
 ├── config/                  # Configurazione
@@ -217,29 +231,29 @@ ainstein-seo-toolkit/
 
 | Aspetto | Dettaglio |
 |---------|-----------|
-| **Data** | 2026-02-10 |
-| **Modifiche principali** | Meta tag generation SSE inline, language detection, sortable columns |
-| **Migration** | Nessuna (riusa tabella `aic_scrape_jobs` con type='generate') |
-| **File modificati** | MetaTagController.php, MetaTag.php, routes.php, list.php |
+| **Data** | 2026-02-12 |
+| **Modifiche principali** | Content Creator pivot completo: generazione contenuti HTML, 4 CMS connectors, import KR |
+| **Migration** | `001_pivot_to_content.sql` - ALTER cc_urls (drop meta fields, add content fields), ALTER cc_connectors (add api_key, categories_cache, seo_plugin) |
+| **File modificati** | 22 file: controllers, models, views, connectors, routes (content-creator + keyword-research) |
 
 ---
 
 ## PROSSIMI STEP
 
 ### Immediati (questa settimana)
-1. Test browser completo modulo keyword-research
-2. Deploy keyword-research in produzione
-3. Definire prompt per AI Link Suggester
+1. Test browser completo modulo content-creator
+2. Test CMS push con plugin WordPress reale
+3. Test import da Keyword Research → Content Creator
 
 ### Breve termine (2-3 settimane)
 1. Rilascio AI Link Suggester (internal-links)
-2. Completare Alert backend + email notifiche (seo-tracking)
-3. Monthly executive report (seo-tracking)
+2. Plugin PrestaShop e Magento per content-creator
+3. Alert backend + email notifiche (seo-tracking)
 
 ### Medio termine (1 mese)
-1. Content Creator MVP
-2. Landing page + pricing
-3. Onboarding utenti beta
+1. Landing page + pricing
+2. Onboarding utenti beta
+3. Monthly executive report (seo-tracking)
 
 ---
 
@@ -278,4 +292,4 @@ ssh -i ~/.ssh/siteground_key -p 18765 u1608-ykgnd3z1twn4@ssh.ainstein.it
 
 ---
 
-*Documento aggiornato - 2026-02-06*
+*Documento aggiornato - 2026-02-12*
