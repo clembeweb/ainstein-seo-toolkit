@@ -6,11 +6,11 @@
 |---------|-----------|
 | **Slug** | `keyword-research` |
 | **Prefisso DB** | `kr_` |
-| **Files** | 20 |
+| **Files** | 25 |
 | **Stato** | ✅ Attivo (100%) |
-| **Ultimo update** | 2026-02-06 |
+| **Ultimo update** | 2026-02-13 |
 
-Modulo per keyword research potenziata da AI con 3 modalità: Research Guidata (clustering semantico), Architettura Sito (struttura pagine con URL/H1), Quick Check (ricerca istantanea gratis).
+Modulo per keyword research potenziata da AI con 4 modalità: Research Guidata (clustering semantico), Architettura Sito (struttura pagine con URL/H1), Piano Editoriale (piano articoli mensile con SERP + AI), Quick Check (ricerca istantanea gratis).
 
 > **Differenziazione:** Output azionabili (cluster, architettura sito, note strategiche) invece di soli dati grezzi.
 
@@ -25,19 +25,21 @@ modules/keyword-research/
 ├── database/
 │   └── schema.sql
 ├── controllers/
-│   ├── DashboardController.php    # Entry point modulo (3 card modalità)
+│   ├── DashboardController.php    # Entry point modulo (4 card modalità)
 │   ├── ProjectController.php      # CRUD progetti
 │   ├── ResearchController.php     # Research Guidata (wizard + SSE + AI)
 │   ├── ArchitectureController.php # Architettura Sito (wizard + SSE + AI)
+│   ├── EditorialController.php    # Piano Editoriale (wizard + SSE + SERP + AI)
 │   └── QuickCheckController.php   # Quick Check (no progetto, gratis)
 ├── models/
 │   ├── Project.php                # CRUD kr_projects
 │   ├── Research.php               # CRUD kr_researches + status
-│   └── Cluster.php                # CRUD kr_clusters + kr_keywords
+│   ├── Cluster.php                # CRUD kr_clusters + kr_keywords
+│   └── EditorialItem.php          # CRUD kr_editorial_items
 ├── services/
 │   └── KeywordInsightService.php  # Wrapper Google Keyword Insight API (RapidAPI)
 └── views/
-    ├── dashboard.php              # Landing 3 modalità + progetti recenti
+    ├── dashboard.php              # Landing 4 modalità + progetti recenti
     ├── projects/
     │   ├── index.php              # Lista progetti (card grid)
     │   ├── create.php             # Form creazione
@@ -48,6 +50,9 @@ modules/keyword-research/
     ├── architecture/
     │   ├── wizard.php             # Wizard 3-step (Alpine.js)
     │   └── results.php            # Struttura sito proposta
+    ├── editorial/
+    │   ├── wizard.php             # Wizard 4-step (Alpine.js, tema viola)
+    │   └── results.php            # Tabella mensile + export AI Content
     ├── quick-check/
     │   └── index.php              # Form + risultati inline
     └── partials/

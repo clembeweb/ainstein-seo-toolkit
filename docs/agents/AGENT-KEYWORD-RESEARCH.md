@@ -1,6 +1,6 @@
 # AGENTE: AI Keyword Research
 
-> **Ultimo aggiornamento:** 2026-02-11
+> **Ultimo aggiornamento:** 2026-02-13
 
 ## CONTESTO
 
@@ -8,7 +8,7 @@
 **Stato:** 100% Completato
 **Prefisso DB:** `kr_`
 
-Modulo per keyword research potenziata da AI con **3 modalità operative**:
+Modulo per keyword research potenziata da AI con **4 modalità operative**:
 
 ---
 
@@ -16,12 +16,13 @@ Modulo per keyword research potenziata da AI con **3 modalità operative**:
 
 ### Dashboard Principale (`/keyword-research`)
 
-La landing page presenta 3 card modalità + progetti recenti + statistiche utente.
+La landing page presenta 4 card modalità + progetti recenti + statistiche utente.
 
 | Card | Modalità | Crediti | Descrizione |
 |------|----------|---------|-------------|
 | **Research Guidata** | Wizard 4-step | 2-5 | Clustering semantico AI di keyword |
 | **Architettura Sito** | Wizard 3-step | 5 | Struttura pagine con URL/H1 suggeriti |
+| **Piano Editoriale** | Wizard 4-step | 5 | Piano articoli mensile con SERP + AI |
 | **Quick Check** | Form singolo | 0 | Ricerca keyword istantanea gratis |
 
 ### Navigazione Sidebar
@@ -31,6 +32,7 @@ Keyword Research ▼
   └── [Nome Progetto] (se dentro progetto)
         ├── Research Guidata
         ├── Architettura Sito
+        ├── Piano Editoriale
         ├── ─── separator ───
         └── Impostazioni
   Quick Check (sempre visibile, no progetto)
@@ -38,7 +40,7 @@ Keyword Research ▼
 
 ---
 
-## 3 MODALITA'
+## 4 MODALITA'
 
 ### 1. Research Guidata
 
@@ -118,7 +120,66 @@ Keyword Research ▼
 }
 ```
 
-### 3. Quick Check
+### 3. Piano Editoriale
+
+**Route:** `/keyword-research/project/{id}/editorial`
+**Controller:** `EditorialController.php`
+**View:** `views/editorial/wizard.php` (Alpine.js single-page)
+
+**Flusso 4 step:**
+
+| Step | Nome | Azione |
+|------|------|--------|
+| 1 | Brief | Form con theme, categories (tag, 2-6), months (3/6/12), articles/month (2/4/6/8), target, geography |
+| 2 | Raccolta | SSE real-time: per ogni categoria chiama `keySuggest()` + `SerpApiService::search()` (SERP titles) |
+| 3 | AI Piano | POST: `AiService::analyzeWithSystem()` con prompt piano editoriale (pattern AJAX lungo con `ob_start()`) |
+| 4 | Risultati | Redirect a `/editorial/{researchId}` con tabella mensile |
+
+**Brief JSON (kr_researches.brief):**
+```json
+{
+    "theme": "Tema principale blog",
+    "categories": ["Categoria 1", "Categoria 2", "Categoria 3"],
+    "months": 3,
+    "articles_per_month": 4,
+    "target": "B2B",
+    "geography": "IT"
+}
+```
+
+**AI Output (piano editoriale):**
+```json
+{
+    "months": [{
+        "month_number": 1,
+        "month_note": "Nota strategica mensile",
+        "articles": [{
+            "title": "Titolo articolo",
+            "main_keyword": "keyword principale",
+            "main_volume": 720,
+            "secondary_keywords": [{"text": "kw2", "volume": 50}],
+            "category": "SEO Tecnico",
+            "content_type": "guida",
+            "intent": "informational",
+            "difficulty": "medium",
+            "notes": "Nota AI",
+            "seasonal_note": "Nota stagionalità",
+            "serp_gap": "Gap competitor SERP"
+        }]
+    }],
+    "strategy_note": "Nota strategica globale"
+}
+```
+
+**Integrazione cross-modulo:**
+- `SerpApiService` da `modules/ai-content/services/` per SERP competitor titles
+- `kr_serp_cache` per cache SERP 7 giorni (evita chiamate duplicate)
+- Export in AI Content: inserisce articoli selezionati in `aic_queue`
+- Controllo duplicati su `sent_to_content` flag
+
+**Crediti:** 5 - configurabile da admin
+
+### 4. Quick Check
 
 **Route:** `/keyword-research/quick-check`
 **Controller:** `QuickCheckController.php`
@@ -164,7 +225,14 @@ Tutte le chiamate loggate con `ApiLoggerService::log('rapidapi_keyword_insight',
 - `find(id)`, `findByProject(projectId)`
 - `create(data)` - brief salvato come JSON
 - `updateStatus(id, status)`, `saveResults(id, data)` - update post-AI
-- `delete(id)` - cascading delete cluster/keywords
+- `delete(id)` - cascading delete editorial_items/cluster/keywords
+
+### EditorialItem (`kr_editorial_items`)
+- `find(id)`, `findByResearch(researchId)` - lista articoli
+- `findGroupedByMonth(researchId)` - raggruppati per mese (vista risultati)
+- `create(data)`, `markSentToContent(id)` - segna inviato a AI Content
+- `getStats(researchId)` - totali per la vista
+- `deleteByResearch(researchId)` - cascading delete
 
 ### Cluster (`kr_clusters`)
 - `find(id)`, `findByResearch(researchId)`
@@ -182,6 +250,7 @@ Tutte le chiamate loggate con `ApiLoggerService::log('rapidapi_keyword_insight',
 | Clustering < 100 kw | `cost_kr_ai_clustering` | 2 | Configurabile admin |
 | Clustering > 100 kw | `cost_kr_ai_clustering_large` | 5 | Configurabile admin |
 | Architettura sito | `cost_kr_ai_architecture` | 5 | Configurabile admin |
+| Piano Editoriale | `cost_kr_editorial_plan` | 5 | Configurabile admin |
 | Quick Check | — | 0 | Sempre gratis |
 
 **Pattern:**
@@ -262,9 +331,12 @@ this.eventSource.onerror = () => {
 |------|-------------|
 | `controllers/ResearchController.php` | Wizard + SSE + polling fallback + AI clustering |
 | `controllers/ArchitectureController.php` | Variante architettura (auto-chain SSE→AI) + polling fallback |
+| `controllers/EditorialController.php` | Piano Editoriale (wizard + SSE + SERP + AI + export AI Content) |
 | `controllers/QuickCheckController.php` | Pattern API-only senza crediti |
 | `views/research/wizard.php` | Alpine.js wizard 4-step con SSE + polling fallback |
 | `views/architecture/wizard.php` | Alpine.js wizard 3-step con SSE + polling fallback |
+| `views/editorial/wizard.php` | Alpine.js wizard 4-step con SSE + SERP + AI (tema viola) |
+| `views/editorial/results.php` | Tabella mensile con export CSV + invio AI Content |
 | `views/partials/cluster-card.php` | Componente cluster con sorting Alpine.js |
 | `views/partials/table-helpers.php` | JS condiviso: sort, filtri, paginazione, colori intent/comp |
 | `views/quick-check/index.php` | Tabella correlate con sorting, filtri, paginazione |
@@ -312,4 +384,4 @@ mysql -u USER -pPASS DB -e "INSERT INTO modules (slug, name, description, versio
 
 ---
 
-*Documento agente - 2026-02-06*
+*Documento agente - 2026-02-13*
