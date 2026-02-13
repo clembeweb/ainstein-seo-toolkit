@@ -3,7 +3,7 @@
 /**
  * Content Creator - Routes
  *
- * Modulo per generazione massiva di contenuti SEO (Meta Title, Meta Description, Page Description) con AI
+ * Modulo per generazione massiva di contenuti pagina (body HTML) con AI
  */
 
 use Core\Router;
@@ -107,6 +107,13 @@ Router::post('/content-creator/projects/{id}/discover', function ($id) {
     Middleware::csrf();
     $controller = new UrlController();
     return $controller->discover((int) $id);
+});
+
+Router::post('/content-creator/projects/{id}/import/keyword-research', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new UrlController();
+    return $controller->importFromKR((int) $id);
 });
 
 // ============================================
@@ -312,6 +319,25 @@ Router::post('/content-creator/connectors/{id}/toggle', function ($id) {
     Middleware::csrf();
     $controller = new ConnectorController();
     return $controller->toggle((int) $id);
+});
+
+Router::get('/content-creator/connectors/download-plugin/{type}', function ($type) {
+    Middleware::auth();
+    $controller = new ConnectorController();
+    return $controller->downloadPlugin($type);
+});
+
+Router::post('/content-creator/connectors/{id}/sync-categories', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new ConnectorController();
+    return $controller->syncCategories((int) $id);
+});
+
+Router::get('/content-creator/connectors/{id}/items', function ($id) {
+    Middleware::auth();
+    $controller = new ConnectorController();
+    return $controller->fetchItems((int) $id);
 });
 
 // ============================================

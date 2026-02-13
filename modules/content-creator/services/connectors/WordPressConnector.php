@@ -5,24 +5,23 @@ namespace Modules\ContentCreator\Services\Connectors;
 use Services\ApiLoggerService;
 
 /**
- * WordPress REST API + WooCommerce v3 + Yoast SEO Connector
+ * WordPress Connector via SEO Toolkit Plugin API
  *
- * Autenticazione: HTTP Basic con username + Application Password
- * Supporta: Products (WooCommerce), Pages, Posts, Categories (WooCommerce)
- * SEO Meta: Yoast SEO (_yoast_wpseo_title, _yoast_wpseo_metadesc)
+ * Autenticazione: X-SEO-Toolkit-Key header (plugin seo-toolkit-connector)
+ * Supporta: Posts, Pages, Products (WooCommerce)
+ * Push: contenuto HTML completo (body)
  */
 class WordPressConnector implements ConnectorInterface
 {
     private string $url;
-    private string $username;
-    private string $applicationPassword;
+    private string $apiKey;
 
     private const TIMEOUT = 30;
     private const PROVIDER = 'wordpress_api';
     private const MODULE = 'content-creator';
 
     /**
-     * @param array $config ['url' => string, 'username' => string, 'application_password' => string]
+     * @param array $config ['url' => string, 'api_key' => string]
      * @throws \InvalidArgumentException Se mancano parametri obbligatori
      */
     public function __construct(array $config)
@@ -30,16 +29,12 @@ class WordPressConnector implements ConnectorInterface
         if (empty($config['url'])) {
             throw new \InvalidArgumentException('URL del sito WordPress obbligatorio');
         }
-        if (empty($config['username'])) {
-            throw new \InvalidArgumentException('Username WordPress obbligatorio');
-        }
-        if (empty($config['application_password'])) {
-            throw new \InvalidArgumentException('Application Password WordPress obbligatoria');
+        if (empty($config['api_key'])) {
+            throw new \InvalidArgumentException('API Key del plugin SEO Toolkit obbligatoria');
         }
 
         $this->url = rtrim($config['url'], '/');
-        $this->username = $config['username'];
-        $this->applicationPassword = $config['application_password'];
+        $this->apiKey = $config['api_key'];
     }
 
     /**
@@ -47,7 +42,7 @@ class WordPressConnector implements ConnectorInterface
      */
     public function test(): array
     {
-        $result = $this->makeRequest('GET', '/wp-json/wp/v2/types');
+        $result = $this->makeRequest('GET', '/wp-json/seo-toolkit/v1/ping');
 
         if (!$result['success']) {
             return [
@@ -57,21 +52,16 @@ class WordPressConnector implements ConnectorInterface
             ];
         }
 
-        // Verifica se WooCommerce e' attivo
-        $hasWooCommerce = false;
-        $wooCheck = $this->makeRequest('GET', '/wp-json/wc/v3/system_status');
-        if ($wooCheck['success']) {
-            $hasWooCommerce = true;
-        }
-
-        $types = array_keys($result['data'] ?? []);
+        $data = $result['data'] ?? [];
 
         return [
             'success' => true,
             'message' => 'Connessione a WordPress riuscita',
             'details' => [
-                'post_types' => $types,
-                'woocommerce' => $hasWooCommerce,
+                'site_name' => $data['site_name'] ?? '',
+                'wp_version' => $data['wp_version'] ?? '',
+                'seo_plugin' => $data['seo_plugin'] ?? 'none',
+                'woocommerce' => $data['woocommerce'] ?? false,
                 'url' => $this->url
             ]
         ];
@@ -82,40 +72,76 @@ class WordPressConnector implements ConnectorInterface
      */
     public function fetchItems(string $entityType = 'products', int $limit = 100): array
     {
-        $endpoint = $this->getEndpointForType($entityType);
-        if ($endpoint === null) {
+        // Usa endpoint all-content del plugin per posts e pages
+        if ($entityType === 'posts' || $entityType === 'pages') {
+            $type = $entityType === 'posts' ? 'post' : 'page';
+            $result = $this->makeRequest('GET', '/wp-json/seo-toolkit/v1/all-content?type=' . $type . '&per_page=' . $limit);
+
+            if (!$result['success']) {
+                return [
+                    'success' => false,
+                    'items' => [],
+                    'total' => 0,
+                    'error' => $result['error'] ?? 'Errore nel recupero degli elementi'
+                ];
+            }
+
+            $items = [];
+            foreach ($result['data'] ?? [] as $item) {
+                $items[] = [
+                    'id' => (string) ($item['id'] ?? ''),
+                    'title' => $item['title'] ?? '',
+                    'url' => $item['url'] ?? '',
+                    'type' => $type,
+                    'content' => $item['content'] ?? '',
+                    'word_count' => $item['word_count'] ?? 0,
+                ];
+            }
+
             return [
-                'success' => false,
-                'items' => [],
-                'total' => 0,
-                'error' => "Tipo entita' non supportato: {$entityType}"
+                'success' => true,
+                'items' => $items,
+                'total' => count($items)
             ];
         }
 
-        $separator = strpos($endpoint, '?') !== false ? '&' : '?';
-        $limitParam = $entityType === 'products' || $entityType === 'categories' ? 'per_page' : 'per_page';
-        $result = $this->makeRequest('GET', $endpoint . $separator . $limitParam . '=' . $limit);
+        // Per prodotti WooCommerce, usa endpoint posts con filtro
+        if ($entityType === 'products') {
+            $result = $this->makeRequest('GET', '/wp-json/seo-toolkit/v1/all-content?type=product&per_page=' . $limit);
 
-        if (!$result['success']) {
+            if (!$result['success']) {
+                return [
+                    'success' => false,
+                    'items' => [],
+                    'total' => 0,
+                    'error' => $result['error'] ?? 'Errore nel recupero dei prodotti'
+                ];
+            }
+
+            $items = [];
+            foreach ($result['data'] ?? [] as $item) {
+                $items[] = [
+                    'id' => (string) ($item['id'] ?? ''),
+                    'title' => $item['title'] ?? '',
+                    'url' => $item['url'] ?? '',
+                    'type' => 'product',
+                    'content' => $item['content'] ?? '',
+                    'word_count' => $item['word_count'] ?? 0,
+                ];
+            }
+
             return [
-                'success' => false,
-                'items' => [],
-                'total' => 0,
-                'error' => $result['error'] ?? 'Errore nel recupero degli elementi'
+                'success' => true,
+                'items' => $items,
+                'total' => count($items)
             ];
-        }
-
-        $items = [];
-        $rawItems = $result['data'] ?? [];
-
-        foreach ($rawItems as $item) {
-            $items[] = $this->normalizeItem($item, $entityType);
         }
 
         return [
-            'success' => true,
-            'items' => $items,
-            'total' => count($items)
+            'success' => false,
+            'items' => [],
+            'total' => 0,
+            'error' => "Tipo entita' non supportato: {$entityType}"
         ];
     }
 
@@ -124,7 +150,7 @@ class WordPressConnector implements ConnectorInterface
      */
     public function fetchCategories(): array
     {
-        $result = $this->makeRequest('GET', '/wp-json/wc/v3/products/categories?per_page=100');
+        $result = $this->makeRequest('GET', '/wp-json/seo-toolkit/v1/categories');
 
         if (!$result['success']) {
             return [
@@ -156,21 +182,38 @@ class WordPressConnector implements ConnectorInterface
      */
     public function updateItem(string $entityId, string $entityType, array $data): array
     {
-        if ($entityType === 'product') {
-            return $this->updateProduct($entityId, $data);
+        $body = [];
+
+        if (isset($data['h1'])) {
+            $body['title'] = $data['h1'];
+        }
+        if (isset($data['content'])) {
+            $body['content'] = $data['content'];
         }
 
-        if ($entityType === 'page' || $entityType === 'post') {
-            return $this->updatePageOrPost($entityId, $entityType, $data);
+        if (empty($body)) {
+            return ['success' => false, 'message' => 'Nessun dato da aggiornare'];
         }
 
-        if ($entityType === 'category') {
-            return $this->updateCategory($entityId, $data);
+        $result = $this->makeRequest('PUT', '/wp-json/seo-toolkit/v1/posts/' . $entityId, $body);
+
+        if (!$result['success']) {
+            $labels = [
+                'product' => 'prodotto',
+                'page' => 'pagina',
+                'post' => 'articolo',
+                'category' => 'categoria',
+            ];
+            $label = $labels[$entityType] ?? 'elemento';
+            return [
+                'success' => false,
+                'message' => "Errore aggiornamento {$label}: " . ($result['error'] ?? 'Errore sconosciuto')
+            ];
         }
 
         return [
-            'success' => false,
-            'message' => "Tipo entita' non supportato per l'aggiornamento: {$entityType}"
+            'success' => true,
+            'message' => 'Contenuto aggiornato con successo'
         ];
     }
 
@@ -187,217 +230,7 @@ class WordPressConnector implements ConnectorInterface
     // -------------------------------------------------------------------------
 
     /**
-     * Aggiorna prodotto WooCommerce con meta Yoast SEO
-     */
-    private function updateProduct(string $entityId, array $data): array
-    {
-        $body = [];
-
-        if (isset($data['page_description'])) {
-            $body['description'] = $data['page_description'];
-        }
-
-        if (isset($data['meta_title'])) {
-            $body['name'] = $data['meta_title'];
-        }
-
-        // Yoast SEO meta
-        $metaData = [];
-        if (isset($data['meta_title'])) {
-            $metaData[] = ['key' => '_yoast_wpseo_title', 'value' => $data['meta_title']];
-        }
-        if (isset($data['meta_description'])) {
-            $metaData[] = ['key' => '_yoast_wpseo_metadesc', 'value' => $data['meta_description']];
-        }
-        if (!empty($metaData)) {
-            $body['meta_data'] = $metaData;
-        }
-
-        if (empty($body)) {
-            return ['success' => false, 'message' => 'Nessun dato da aggiornare'];
-        }
-
-        $result = $this->makeRequest('PUT', '/wp-json/wc/v3/products/' . $entityId, $body);
-
-        if (!$result['success']) {
-            return [
-                'success' => false,
-                'message' => 'Errore aggiornamento prodotto: ' . ($result['error'] ?? 'Errore sconosciuto')
-            ];
-        }
-
-        return [
-            'success' => true,
-            'message' => 'Prodotto aggiornato con successo'
-        ];
-    }
-
-    /**
-     * Aggiorna pagina o post WordPress con meta Yoast SEO
-     */
-    private function updatePageOrPost(string $entityId, string $type, array $data): array
-    {
-        $endpoint = $type === 'page' ? '/wp-json/wp/v2/pages/' : '/wp-json/wp/v2/posts/';
-        $body = [];
-
-        if (isset($data['meta_title'])) {
-            $body['title'] = $data['meta_title'];
-        }
-        if (isset($data['meta_description'])) {
-            $body['excerpt'] = $data['meta_description'];
-        }
-        if (isset($data['page_description'])) {
-            $body['content'] = $data['page_description'];
-        }
-
-        // Yoast SEO meta
-        $meta = [];
-        if (isset($data['meta_title'])) {
-            $meta['_yoast_wpseo_title'] = $data['meta_title'];
-        }
-        if (isset($data['meta_description'])) {
-            $meta['_yoast_wpseo_metadesc'] = $data['meta_description'];
-        }
-        if (!empty($meta)) {
-            $body['meta'] = $meta;
-        }
-
-        if (empty($body)) {
-            return ['success' => false, 'message' => 'Nessun dato da aggiornare'];
-        }
-
-        $result = $this->makeRequest('POST', $endpoint . $entityId, $body);
-
-        if (!$result['success']) {
-            $label = $type === 'page' ? 'pagina' : 'articolo';
-            return [
-                'success' => false,
-                'message' => "Errore aggiornamento {$label}: " . ($result['error'] ?? 'Errore sconosciuto')
-            ];
-        }
-
-        $label = $type === 'page' ? 'Pagina aggiornata' : 'Articolo aggiornato';
-        return [
-            'success' => true,
-            'message' => $label . ' con successo'
-        ];
-    }
-
-    /**
-     * Aggiorna categoria WooCommerce
-     */
-    private function updateCategory(string $entityId, array $data): array
-    {
-        $body = [];
-
-        if (isset($data['meta_title'])) {
-            $body['name'] = $data['meta_title'];
-        }
-        if (isset($data['page_description'])) {
-            $body['description'] = $data['page_description'];
-        }
-
-        if (empty($body)) {
-            return ['success' => false, 'message' => 'Nessun dato da aggiornare'];
-        }
-
-        $result = $this->makeRequest('PUT', '/wp-json/wc/v3/products/categories/' . $entityId, $body);
-
-        if (!$result['success']) {
-            return [
-                'success' => false,
-                'message' => 'Errore aggiornamento categoria: ' . ($result['error'] ?? 'Errore sconosciuto')
-            ];
-        }
-
-        return [
-            'success' => true,
-            'message' => 'Categoria aggiornata con successo'
-        ];
-    }
-
-    /**
-     * Restituisce l'endpoint API per il tipo di entita'
-     */
-    private function getEndpointForType(string $entityType): ?string
-    {
-        $map = [
-            'products' => '/wp-json/wc/v3/products',
-            'pages' => '/wp-json/wp/v2/pages',
-            'posts' => '/wp-json/wp/v2/posts',
-            'categories' => '/wp-json/wc/v3/products/categories',
-        ];
-
-        return $map[$entityType] ?? null;
-    }
-
-    /**
-     * Normalizza un item dalla risposta API
-     */
-    private function normalizeItem(array $item, string $entityType): array
-    {
-        if ($entityType === 'products') {
-            return [
-                'id' => (string) ($item['id'] ?? ''),
-                'title' => $item['name'] ?? '',
-                'url' => $item['permalink'] ?? '',
-                'type' => 'product',
-                'meta_title' => $this->extractYoastMeta($item, '_yoast_wpseo_title'),
-                'meta_description' => $this->extractYoastMeta($item, '_yoast_wpseo_metadesc'),
-                'description' => $item['description'] ?? '',
-                'short_description' => $item['short_description'] ?? '',
-            ];
-        }
-
-        if ($entityType === 'categories') {
-            return [
-                'id' => (string) ($item['id'] ?? ''),
-                'title' => $item['name'] ?? '',
-                'url' => $item['_links']['self'][0]['href'] ?? '',
-                'type' => 'category',
-                'description' => $item['description'] ?? '',
-            ];
-        }
-
-        // Pages / Posts
-        $type = $entityType === 'pages' ? 'page' : 'post';
-        return [
-            'id' => (string) ($item['id'] ?? ''),
-            'title' => $item['title']['rendered'] ?? '',
-            'url' => $item['link'] ?? '',
-            'type' => $type,
-            'meta_title' => $item['meta']['_yoast_wpseo_title'] ?? '',
-            'meta_description' => $item['meta']['_yoast_wpseo_metadesc'] ?? '',
-            'content' => $item['content']['rendered'] ?? '',
-            'excerpt' => $item['excerpt']['rendered'] ?? '',
-        ];
-    }
-
-    /**
-     * Estrai valore meta Yoast dai meta_data WooCommerce
-     */
-    private function extractYoastMeta(array $item, string $key): string
-    {
-        if (!isset($item['meta_data']) || !is_array($item['meta_data'])) {
-            return '';
-        }
-
-        foreach ($item['meta_data'] as $meta) {
-            if (isset($meta['key']) && $meta['key'] === $key) {
-                return (string) ($meta['value'] ?? '');
-            }
-        }
-
-        return '';
-    }
-
-    /**
-     * Esegue una richiesta HTTP verso l'API WordPress/WooCommerce
-     *
-     * @param string $method GET|POST|PUT|DELETE
-     * @param string $endpoint Endpoint relativo (es. /wp-json/wp/v2/pages)
-     * @param array|null $body Body della richiesta (per POST/PUT)
-     * @return array ['success' => bool, 'data' => array|null, 'error' => string|null, 'http_code' => int]
+     * Esegue una richiesta HTTP verso l'API WordPress (plugin SEO Toolkit)
      */
     private function makeRequest(string $method, string $endpoint, ?array $body = null): array
     {
@@ -410,11 +243,10 @@ class WordPressConnector implements ConnectorInterface
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => self::TIMEOUT,
             CURLOPT_CONNECTTIMEOUT => 10,
-            CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
-            CURLOPT_USERPWD => $this->username . ':' . $this->applicationPassword,
             CURLOPT_HTTPHEADER => [
                 'Content-Type: application/json',
                 'Accept: application/json',
+                'X-SEO-Toolkit-Key: ' . $this->apiKey,
             ],
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_FOLLOWLOCATION => true,
@@ -424,6 +256,8 @@ class WordPressConnector implements ConnectorInterface
             curl_setopt($ch, CURLOPT_POST, true);
         } elseif ($method === 'PUT') {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+        } elseif ($method === 'PATCH') {
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
         } elseif ($method === 'DELETE') {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
         }

@@ -187,15 +187,14 @@ class PrestaShopConnector implements ConnectorInterface
             ];
         }
 
-        // 2. Modifica i campi SEO
-        if (isset($data['meta_title'])) {
-            $resource['meta_title'] = $this->wrapLangValue($data['meta_title'], $resource['meta_title'] ?? '');
+        // 2. Modifica i campi contenuto
+        if (isset($data['h1'])) {
+            $nameField = $resourceType === 'cms' ? 'meta_title' : 'name';
+            $resource[$nameField] = $this->wrapLangValue($data['h1'], $resource[$nameField] ?? '');
         }
-        if (isset($data['meta_description'])) {
-            $resource['meta_description'] = $this->wrapLangValue($data['meta_description'], $resource['meta_description'] ?? '');
-        }
-        if (isset($data['page_description'])) {
-            $resource['description'] = $this->wrapLangValue($data['page_description'], $resource['description'] ?? '');
+        if (isset($data['content'])) {
+            $contentField = $resourceType === 'cms' ? 'content' : 'description';
+            $resource[$contentField] = $this->wrapLangValue($data['content'], $resource[$contentField] ?? '');
         }
 
         // 3. PUT con risorsa modificata (XML)

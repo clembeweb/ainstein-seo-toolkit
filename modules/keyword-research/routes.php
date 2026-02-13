@@ -163,6 +163,13 @@ Router::get('/keyword-research/project/{id}/architecture/{researchId}', function
     return $controller->results((int) $id, (int) $researchId);
 });
 
+Router::post('/keyword-research/project/{id}/architecture/{researchId}/send-to-content-creator', function ($id, $researchId) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new ArchitectureController();
+    return $controller->sendToContentCreator((int) $id, (int) $researchId);
+});
+
 // ============================================
 // PIANO EDITORIALE
 // ============================================

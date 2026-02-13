@@ -162,6 +162,124 @@ sort($uniqueIntents);
         </div>
     </div>
 
+    <!-- Send to Content Creator -->
+    <?php if (!empty($ccProjects)): ?>
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6"
+         x-data="{
+             ccProjectId: '',
+             selectedClusters: <?= json_encode(array_column($clusters, 'id'), JSON_HEX_TAG) ?>,
+             selectAll: true,
+             sending: false,
+             message: '',
+             messageType: '',
+             toggleAll() {
+                 this.selectAll = !this.selectAll;
+                 this.selectedClusters = this.selectAll ? <?= json_encode(array_column($clusters, 'id'), JSON_HEX_TAG) ?> : [];
+             },
+             toggleCluster(id) {
+                 const idx = this.selectedClusters.indexOf(id);
+                 if (idx > -1) { this.selectedClusters.splice(idx, 1); }
+                 else { this.selectedClusters.push(id); }
+                 this.selectAll = this.selectedClusters.length === <?= count($clusters) ?>;
+             },
+             async send() {
+                 if (!this.ccProjectId) { this.message = 'Seleziona un progetto Content Creator.'; this.messageType = 'error'; return; }
+                 if (this.selectedClusters.length === 0) { this.message = 'Seleziona almeno un cluster.'; this.messageType = 'error'; return; }
+                 this.sending = true;
+                 this.message = '';
+                 try {
+                     const formData = new FormData();
+                     formData.append('_csrf_token', '<?= csrf_token() ?>');
+                     formData.append('cc_project_id', this.ccProjectId);
+                     formData.append('cluster_ids', JSON.stringify(this.selectedClusters));
+                     const resp = await fetch('<?= url('/keyword-research/project/' . $project['id'] . '/architecture/' . $research['id'] . '/send-to-content-creator') ?>', {
+                         method: 'POST',
+                         body: formData
+                     });
+                     const data = await resp.json();
+                     if (data.success) {
+                         this.message = data.message;
+                         this.messageType = 'success';
+                     } else {
+                         this.message = data.error || 'Errore durante l\'invio.';
+                         this.messageType = 'error';
+                     }
+                 } catch (e) {
+                     this.message = 'Errore di connessione.';
+                     this.messageType = 'error';
+                 } finally {
+                     this.sending = false;
+                 }
+             }
+         }">
+        <div class="flex items-center gap-3 mb-4">
+            <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+            </svg>
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Invia a Content Creator</h2>
+        </div>
+
+        <div class="flex flex-wrap items-end gap-4">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Progetto Content Creator</label>
+                <select x-model="ccProjectId"
+                        class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
+                    <option value="">Seleziona progetto...</option>
+                    <?php foreach ($ccProjects as $ccP): ?>
+                    <option value="<?= $ccP['id'] ?>"><?= e($ccP['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <label class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 cursor-pointer">
+                    <input type="checkbox" :checked="selectAll" @change="toggleAll()"
+                           class="rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
+                    Tutti (<span x-text="selectedClusters.length"></span>/<?= count($clusters) ?>)
+                </label>
+
+                <button @click="send()" :disabled="sending || !ccProjectId || selectedClusters.length === 0"
+                        class="inline-flex items-center px-4 py-2 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                    <template x-if="!sending">
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                            </svg>
+                            Invia Selezionati
+                        </span>
+                    </template>
+                    <template x-if="sending">
+                        <span class="flex items-center">
+                            <svg class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                            Invio...
+                        </span>
+                    </template>
+                </button>
+            </div>
+        </div>
+
+        <!-- Cluster selection chips -->
+        <div class="mt-3 flex flex-wrap gap-2">
+            <?php foreach ($clusters as $c): ?>
+            <button type="button"
+                    @click="toggleCluster(<?= $c['id'] ?>)"
+                    :class="selectedClusters.includes(<?= $c['id'] ?>) ? 'bg-emerald-100 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400'"
+                    class="inline-flex items-center px-3 py-1 rounded-full border text-xs font-medium transition-colors">
+                <?= e($c['name']) ?>
+            </button>
+            <?php endforeach; ?>
+        </div>
+
+        <!-- Feedback message -->
+        <template x-if="message">
+            <div class="mt-3 p-3 rounded-lg text-sm"
+                 :class="messageType === 'success' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800'">
+                <span x-text="message"></span>
+            </div>
+        </template>
+    </div>
+    <?php endif; ?>
+
     <!-- Meta info -->
     <div class="text-center text-xs text-slate-400 dark:text-slate-500">
         API: <?= number_format(($research['api_time_ms'] ?? 0) / 1000, 1) ?>s | AI: <?= number_format(($research['ai_time_ms'] ?? 0) / 1000, 1) ?>s | Crediti: <?= $research['credits_used'] ?? 0 ?>

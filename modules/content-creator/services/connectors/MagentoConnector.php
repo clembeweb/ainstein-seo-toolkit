@@ -276,38 +276,28 @@ class MagentoConnector implements ConnectorInterface
     private function updateProduct(string $sku, array $data): array
     {
         $customAttributes = [];
+        $productBody = ['sku' => $sku];
 
-        if (isset($data['meta_title'])) {
-            $customAttributes[] = [
-                'attribute_code' => 'meta_title',
-                'value' => $data['meta_title']
-            ];
+        if (isset($data['h1'])) {
+            $productBody['name'] = $data['h1'];
         }
 
-        if (isset($data['meta_description'])) {
-            $customAttributes[] = [
-                'attribute_code' => 'meta_description',
-                'value' => $data['meta_description']
-            ];
-        }
-
-        if (isset($data['page_description'])) {
+        if (isset($data['content'])) {
             $customAttributes[] = [
                 'attribute_code' => 'description',
-                'value' => $data['page_description']
+                'value' => $data['content']
             ];
         }
 
-        if (empty($customAttributes)) {
+        if (!empty($customAttributes)) {
+            $productBody['custom_attributes'] = $customAttributes;
+        }
+
+        if (count($productBody) <= 1) {
             return ['success' => false, 'message' => 'Nessun dato da aggiornare'];
         }
 
-        $body = [
-            'product' => [
-                'sku' => $sku,
-                'custom_attributes' => $customAttributes
-            ]
-        ];
+        $body = ['product' => $productBody];
 
         $encodedSku = rawurlencode($sku);
         $result = $this->makeRequest('PUT', '/rest/V1/products/' . $encodedSku, $body);
@@ -332,24 +322,14 @@ class MagentoConnector implements ConnectorInterface
     {
         $body = ['category' => []];
 
-        if (isset($data['meta_title'])) {
-            $body['category']['custom_attributes'][] = [
-                'attribute_code' => 'meta_title',
-                'value' => $data['meta_title']
-            ];
+        if (isset($data['h1'])) {
+            $body['category']['name'] = $data['h1'];
         }
 
-        if (isset($data['meta_description'])) {
-            $body['category']['custom_attributes'][] = [
-                'attribute_code' => 'meta_description',
-                'value' => $data['meta_description']
-            ];
-        }
-
-        if (isset($data['page_description'])) {
+        if (isset($data['content'])) {
             $body['category']['custom_attributes'][] = [
                 'attribute_code' => 'description',
-                'value' => $data['page_description']
+                'value' => $data['content']
             ];
         }
 

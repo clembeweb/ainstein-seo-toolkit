@@ -516,20 +516,25 @@ class UrlController
             return;
         }
 
-        $aiMetaTitle = trim($_POST['ai_meta_title'] ?? '');
-        $aiMetaDescription = trim($_POST['ai_meta_description'] ?? '');
-        $aiPageDescription = trim($_POST['ai_page_description'] ?? '');
+        $aiH1 = trim($_POST['ai_h1'] ?? '');
+        $aiContent = trim($_POST['ai_content'] ?? '');
+        $aiWordCount = (int) ($_POST['ai_word_count'] ?? 0);
 
-        if (empty($aiMetaTitle) && empty($aiMetaDescription) && empty($aiPageDescription)) {
+        if (empty($aiH1) && empty($aiContent)) {
             echo json_encode(['success' => false, 'error' => 'Inserisci almeno un campo']);
             return;
         }
 
+        // Ricalcola word count se non fornito
+        if ($aiWordCount === 0 && !empty($aiContent)) {
+            $aiWordCount = str_word_count(strip_tags($aiContent));
+        }
+
         try {
             $this->url->update($urlId, [
-                'ai_meta_title' => $aiMetaTitle ?: null,
-                'ai_meta_description' => $aiMetaDescription ?: null,
-                'ai_page_description' => $aiPageDescription ?: null,
+                'ai_h1' => $aiH1 ?: null,
+                'ai_content' => $aiContent ?: null,
+                'ai_word_count' => $aiWordCount,
             ]);
 
             echo json_encode([
@@ -632,6 +637,71 @@ class UrlController
         } catch (\Exception $e) {
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Import da Keyword Research (chiamata da KR oppure diretta)
+     * POST /content-creator/projects/{id}/import/keyword-research
+     */
+    public function importFromKR(int $id): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->getProject($id, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato.']);
+            return;
+        }
+
+        $researchId = (int) ($_POST['research_id'] ?? 0);
+
+        if (!$researchId) {
+            echo json_encode(['success' => false, 'error' => 'ID ricerca mancante.']);
+            return;
+        }
+
+        // Verifica che la ricerca esista e sia dell'utente
+        $research = \Core\Database::fetch(
+            "SELECT r.* FROM kr_researches r WHERE r.id = ? AND r.user_id = ?",
+            [$researchId, $user['id']]
+        );
+
+        if (!$research) {
+            echo json_encode(['success' => false, 'error' => 'Ricerca non trovata.']);
+            return;
+        }
+
+        // Carica cluster della ricerca con le keyword
+        $clusters = \Core\Database::fetchAll(
+            "SELECT * FROM kr_clusters WHERE research_id = ? ORDER BY sort_order ASC",
+            [$researchId]
+        );
+
+        if (empty($clusters)) {
+            echo json_encode(['success' => false, 'error' => 'Nessun cluster trovato.']);
+            return;
+        }
+
+        // Arricchisci cluster con secondary keywords
+        foreach ($clusters as &$cluster) {
+            $keywords = \Core\Database::fetchAll(
+                "SELECT text FROM kr_keywords WHERE cluster_id = ? AND is_main = 0 ORDER BY volume DESC",
+                [$cluster['id']]
+            );
+            $cluster['secondary_keywords'] = array_column($keywords, 'text');
+        }
+        unset($cluster);
+
+        $inserted = $this->url->addBulkFromKR($id, $user['id'], $clusters);
+
+        echo json_encode([
+            'success' => true,
+            'added' => $inserted,
+            'total' => count($clusters),
+            'message' => "{$inserted} pagine importate da Keyword Research." . ($inserted < count($clusters) ? ' ' . (count($clusters) - $inserted) . ' saltate (duplicati o senza URL).' : ''),
+        ]);
     }
 
     /**

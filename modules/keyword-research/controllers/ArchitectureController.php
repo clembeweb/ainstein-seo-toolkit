@@ -485,6 +485,15 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
             $totalVolume += $c['total_volume'];
         }
 
+        // Carica progetti Content Creator per il dropdown "Invia a CC"
+        $ccProjects = [];
+        if (ModuleLoader::isModuleActive('content-creator')) {
+            $ccProjects = Database::fetchAll(
+                "SELECT id, name FROM cc_projects WHERE user_id = ? ORDER BY name ASC",
+                [$user['id']]
+            );
+        }
+
         return View::render('keyword-research::architecture/results', [
             'title' => 'Architettura Sito - ' . $project['name'],
             'user' => $user,
@@ -494,7 +503,116 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
             'excludedKeywords' => $excludedKeywords,
             'brief' => $brief,
             'totalVolume' => $totalVolume,
+            'ccProjects' => $ccProjects,
             'modules' => ModuleLoader::getUserModules($user['id']),
+        ]);
+    }
+
+    /**
+     * Invia cluster selezionati a Content Creator
+     */
+    public function sendToContentCreator(int $projectId, int $researchId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->projectModel->find($projectId, $user['id']);
+        $research = $this->researchModel->find($researchId, $user['id']);
+
+        if (!$project || !$research || $research['project_id'] !== $projectId) {
+            echo json_encode(['success' => false, 'error' => 'Dati non trovati.']);
+            return;
+        }
+
+        if (!ModuleLoader::isModuleActive('content-creator')) {
+            echo json_encode(['success' => false, 'error' => 'Modulo Content Creator non attivo.']);
+            return;
+        }
+
+        $rawClusterIds = $_POST['cluster_ids'] ?? '[]';
+        $clusterIds = is_array($rawClusterIds) ? $rawClusterIds : json_decode($rawClusterIds, true);
+        $ccProjectId = (int) ($_POST['cc_project_id'] ?? 0);
+
+        if (empty($clusterIds) || !$ccProjectId) {
+            echo json_encode(['success' => false, 'error' => 'Seleziona almeno un cluster e un progetto Content Creator.']);
+            return;
+        }
+
+        // Verifica progetto content-creator
+        $ccProject = Database::fetch(
+            "SELECT id FROM cc_projects WHERE id = ? AND user_id = ?",
+            [$ccProjectId, $user['id']]
+        );
+
+        if (!$ccProject) {
+            echo json_encode(['success' => false, 'error' => 'Progetto Content Creator non trovato.']);
+            return;
+        }
+
+        $added = 0;
+        $skipped = 0;
+
+        foreach ($clusterIds as $clusterId) {
+            $cluster = $this->clusterModel->find((int) $clusterId);
+            if (!$cluster || $cluster['research_id'] !== $researchId) {
+                $skipped++;
+                continue;
+            }
+
+            $url = trim($cluster['suggested_url'] ?? '');
+            if (empty($url)) {
+                $skipped++;
+                continue;
+            }
+
+            // Verifica duplicato in cc_urls
+            $existing = Database::fetch(
+                "SELECT id FROM cc_urls WHERE project_id = ? AND (url = ? OR keyword = ?) LIMIT 1",
+                [$ccProjectId, $url, $cluster['main_keyword']]
+            );
+
+            if ($existing) {
+                $skipped++;
+                continue;
+            }
+
+            // Raccogli secondary keywords dal cluster
+            $keywords = $this->clusterModel->getKeywords($cluster['id']);
+            $secondaryKw = [];
+            foreach ($keywords as $kw) {
+                if (!$kw['is_main']) {
+                    $secondaryKw[] = $kw['text'];
+                }
+            }
+
+            // Estrai slug dalla URL suggerita
+            $slug = trim($url, '/');
+            if (str_contains($slug, '/')) {
+                $slug = basename($slug);
+            }
+
+            Database::insert('cc_urls', [
+                'project_id' => $ccProjectId,
+                'user_id' => $user['id'],
+                'url' => $url,
+                'slug' => $slug,
+                'keyword' => $cluster['main_keyword'],
+                'secondary_keywords' => !empty($secondaryKw) ? json_encode($secondaryKw) : null,
+                'intent' => $cluster['intent'] ?? null,
+                'category' => $cluster['name'],
+                'source_type' => 'keyword_research',
+                'status' => 'pending',
+                'created_at' => date('Y-m-d H:i:s'),
+            ]);
+
+            $added++;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'added' => $added,
+            'skipped' => $skipped,
+            'message' => "{$added} pagine aggiunte al progetto Content Creator." . ($skipped > 0 ? " {$skipped} saltate (duplicati o senza URL)." : ''),
         ]);
     }
 }

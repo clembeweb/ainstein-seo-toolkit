@@ -56,6 +56,7 @@
                         <option value="product">Prodotto</option>
                         <option value="category">Categoria</option>
                         <option value="article">Articolo/Blog</option>
+                        <option value="service">Servizio</option>
                         <option value="custom">Custom</option>
                     </select>
                 </div>

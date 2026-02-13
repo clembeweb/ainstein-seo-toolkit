@@ -109,11 +109,11 @@ $statusTabs = [
                     :disabled="scraping || generating"
                     x-show="!generating"
                     class="inline-flex items-center px-3 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    <?= $stats['scraped'] == 0 ? 'disabled' : '' ?>>
+                    <?= ($stats['pending'] + $stats['scraped']) == 0 ? 'disabled' : '' ?>>
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                 </svg>
-                Genera AI (<?= $stats['scraped'] ?>)
+                Genera Contenuto (<?= $stats['pending'] + $stats['scraped'] ?>)
             </button>
             <!-- Cancel generate -->
             <button type="button"
@@ -321,8 +321,13 @@ $statusTabs = [
                             </a>
                         </th>
                         <th class="px-4 py-3 text-left">
-                            <a href="<?= $sortUrl('ai_meta_title') ?>" class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200">
-                                AI Meta Title <?= $sortIcon('ai_meta_title') ?>
+                            <a href="<?= $sortUrl('ai_h1') ?>" class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200">
+                                Contenuto <?= $sortIcon('ai_h1') ?>
+                            </a>
+                        </th>
+                        <th class="px-4 py-3 text-center">
+                            <a href="<?= $sortUrl('ai_word_count') ?>" class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200">
+                                Parole <?= $sortIcon('ai_word_count') ?>
                             </a>
                         </th>
                         <th class="px-4 py-3 text-left">
@@ -343,7 +348,7 @@ $statusTabs = [
                         $itemStatus = $item['status'] ?? 'pending';
                         $itemStatusColor = $statusColors[$itemStatus] ?? $statusColors['pending'];
                         $itemStatusLabel = $statusLabels[$itemStatus] ?? $itemStatus;
-                        $titleLen = mb_strlen($item['ai_meta_title'] ?? '');
+                        $wordCount = (int) ($item['ai_word_count'] ?? 0);
                     ?>
                     <tr class="transition-colors duration-300 hover:bg-slate-50 dark:hover:bg-slate-700/50"
                         :class="{
@@ -374,7 +379,7 @@ $statusTabs = [
                                 <?= e($item['keyword'] ?? '-') ?>
                             </span>
                         </td>
-                        <td class="px-4 py-3" id="title-<?= $item['id'] ?>">
+                        <td class="px-4 py-3" id="content-<?= $item['id'] ?>">
                             <!-- Stato inline SSE -->
                             <template x-if="rowStates[<?= $item['id'] ?>] === 'generating'">
                                 <div class="flex items-center gap-2">
@@ -401,31 +406,31 @@ $statusTabs = [
                                 <span class="text-sm text-red-500" x-text="rowErrors[<?= $item['id'] ?>] || 'Errore'"></span>
                             </template>
                             <!-- Risultato inline da SSE -->
-                            <template x-if="generatedData[<?= $item['id'] ?>]?.title">
+                            <template x-if="generatedData[<?= $item['id'] ?>]?.h1">
                                 <div class="max-w-xs">
-                                    <p class="text-sm text-slate-900 dark:text-white truncate" x-text="generatedData[<?= $item['id'] ?>].title"></p>
-                                    <p class="text-xs font-medium" :class="{
-                                        'text-emerald-600 dark:text-emerald-400': generatedData[<?= $item['id'] ?>].title_length >= 50 && generatedData[<?= $item['id'] ?>].title_length <= 60,
-                                        'text-amber-600 dark:text-amber-400': (generatedData[<?= $item['id'] ?>].title_length >= 40 && generatedData[<?= $item['id'] ?>].title_length < 50) || (generatedData[<?= $item['id'] ?>].title_length > 60 && generatedData[<?= $item['id'] ?>].title_length <= 65),
-                                        'text-red-600 dark:text-red-400': generatedData[<?= $item['id'] ?>].title_length < 40 || generatedData[<?= $item['id'] ?>].title_length > 65
-                                    }">
-                                        <span x-text="generatedData[<?= $item['id'] ?>].title_length"></span> caratteri
-                                    </p>
+                                    <p class="text-sm text-slate-900 dark:text-white truncate" x-text="generatedData[<?= $item['id'] ?>].h1"></p>
                                 </div>
                             </template>
                             <!-- Dati statici (no SSE) -->
-                            <template x-if="!rowStates[<?= $item['id'] ?>] && !generatedData[<?= $item['id'] ?>]?.title">
-                                <?php if (!empty($item['ai_meta_title'])): ?>
+                            <template x-if="!rowStates[<?= $item['id'] ?>] && !generatedData[<?= $item['id'] ?>]?.h1">
+                                <?php if (!empty($item['ai_h1'])): ?>
                                 <div class="max-w-xs">
-                                    <p class="text-sm text-slate-900 dark:text-white truncate"><?= e($item['ai_meta_title']) ?></p>
-                                    <p class="text-xs font-medium <?php
-                                        if ($titleLen >= 50 && $titleLen <= 60) echo 'text-emerald-600 dark:text-emerald-400';
-                                        elseif (($titleLen >= 40 && $titleLen < 50) || ($titleLen > 60 && $titleLen <= 65)) echo 'text-amber-600 dark:text-amber-400';
-                                        else echo 'text-red-600 dark:text-red-400';
-                                    ?>"><?= $titleLen ?> caratteri</p>
+                                    <p class="text-sm text-slate-900 dark:text-white truncate"><?= e($item['ai_h1']) ?></p>
                                 </div>
                                 <?php else: ?>
                                 <span class="text-sm text-slate-400 dark:text-slate-500">-</span>
+                                <?php endif; ?>
+                            </template>
+                        </td>
+                        <td class="px-4 py-3 text-center" id="words-<?= $item['id'] ?>">
+                            <template x-if="generatedData[<?= $item['id'] ?>]?.word_count">
+                                <span class="text-sm font-medium text-emerald-600 dark:text-emerald-400" x-text="generatedData[<?= $item['id'] ?>].word_count"></span>
+                            </template>
+                            <template x-if="!generatedData[<?= $item['id'] ?>]?.word_count">
+                                <?php if ($wordCount > 0): ?>
+                                <span class="text-sm font-medium text-slate-600 dark:text-slate-400"><?= number_format($wordCount) ?></span>
+                                <?php else: ?>
+                                <span class="text-sm text-slate-400">-</span>
                                 <?php endif; ?>
                             </template>
                         </td>
@@ -578,7 +583,7 @@ function resultsManager() {
         // Row inline states
         rowStates: {},       // {id: 'queued'|'scraping'|'generating'|'done'|'error'}
         rowErrors: {},       // {id: 'error message'}
-        generatedData: {},   // {id: {title, title_length, status}}
+        generatedData: {},   // {id: {h1, word_count, status}}
 
         // =====================
         // BULK SELECTION
@@ -669,14 +674,14 @@ function resultsManager() {
                 this.scrapeCompleted++;
                 this.scrapePercent = this.scrapeTotal > 0 ? Math.round((this.scrapeCompleted / this.scrapeTotal) * 100) : 0;
 
-                this.rowStates[data.id] = 'done';
-                this.generatedData[data.id] = {
+                this.rowStates[data.url_id] = 'done';
+                this.generatedData[data.url_id] = {
                     status: 'scraped'
                 };
 
                 setTimeout(() => {
-                    if (this.rowStates[data.id] === 'done') {
-                        delete this.rowStates[data.id];
+                    if (this.rowStates[data.url_id] === 'done') {
+                        delete this.rowStates[data.url_id];
                     }
                 }, 3000);
             });
@@ -685,9 +690,9 @@ function resultsManager() {
                 const data = JSON.parse(e.data);
                 this.scrapeFailed++;
 
-                this.rowStates[data.id] = 'error';
-                this.rowErrors[data.id] = data.error || 'Errore scraping';
-                this.generatedData[data.id] = { status: 'error' };
+                this.rowStates[data.url_id] = 'error';
+                this.rowErrors[data.url_id] = data.error || 'Errore scraping';
+                this.generatedData[data.url_id] = { status: 'error' };
             });
 
             this.eventSource.addEventListener('completed', (e) => {
@@ -828,17 +833,17 @@ function resultsManager() {
                 this.genPercent = this.genTotal > 0 ? Math.round((this.genCompleted / this.genTotal) * 100) : 0;
 
                 // Aggiorna riga inline
-                this.rowStates[data.id] = 'done';
-                this.generatedData[data.id] = {
-                    title: data.ai_meta_title || data.generated_title || '',
-                    title_length: data.title_length || (data.ai_meta_title || data.generated_title || '').length,
+                this.rowStates[data.url_id] = 'done';
+                this.generatedData[data.url_id] = {
+                    h1: data.h1 || '',
+                    word_count: data.word_count || 0,
                     status: 'generated'
                 };
 
                 // Flash verde poi rimuovi stato dopo 3s
                 setTimeout(() => {
-                    if (this.rowStates[data.id] === 'done') {
-                        delete this.rowStates[data.id];
+                    if (this.rowStates[data.url_id] === 'done') {
+                        delete this.rowStates[data.url_id];
                     }
                 }, 3000);
             });
@@ -847,9 +852,9 @@ function resultsManager() {
                 const data = JSON.parse(e.data);
                 this.genFailed++;
 
-                this.rowStates[data.id] = 'error';
-                this.rowErrors[data.id] = data.error || 'Errore generazione';
-                this.generatedData[data.id] = { status: 'error' };
+                this.rowStates[data.url_id] = 'error';
+                this.rowErrors[data.url_id] = data.error || 'Errore generazione';
+                this.generatedData[data.url_id] = { status: 'error' };
             });
 
             this.eventSource.addEventListener('completed', (e) => {

@@ -82,17 +82,13 @@ class ConnectorController
         if ($type === 'wordpress') {
             $config = [
                 'url' => trim($_POST['wp_url'] ?? ''),
-                'username' => trim($_POST['wp_username'] ?? ''),
-                'application_password' => trim($_POST['wp_application_password'] ?? ''),
+                'api_key' => trim($_POST['wp_api_key'] ?? ''),
             ];
             if (empty($config['url'])) {
                 $errors[] = 'URL del sito WordPress è obbligatorio';
             }
-            if (empty($config['username'])) {
-                $errors[] = 'Username WordPress è obbligatorio';
-            }
-            if (empty($config['application_password'])) {
-                $errors[] = 'Application Password è obbligatoria';
+            if (empty($config['api_key'])) {
+                $errors[] = 'API Key del plugin SEO Toolkit è obbligatoria';
             }
         } elseif ($type === 'shopify') {
             $config = [
@@ -265,6 +261,150 @@ class ConnectorController
             'is_active' => $isActive,
             'message' => $isActive ? 'Connettore attivato' : 'Connettore disattivato',
         ]);
+    }
+
+    /**
+     * Download plugin CMS
+     * GET /content-creator/connectors/download-plugin/{type}
+     */
+    public function downloadPlugin(string $type): void
+    {
+        $user = Auth::user();
+        if (!$user) {
+            header('Location: /login');
+            exit;
+        }
+
+        $pluginMap = [
+            'wordpress' => 'seo-toolkit-connector',
+        ];
+
+        if (!isset($pluginMap[$type])) {
+            $_SESSION['_flash']['error'] = 'Plugin non disponibile per questo tipo di CMS';
+            Router::redirect('/content-creator/connectors');
+            return;
+        }
+
+        $pluginDir = ROOT_PATH . '/storage/plugins/' . $pluginMap[$type];
+        if (!is_dir($pluginDir)) {
+            $_SESSION['_flash']['error'] = 'Plugin non trovato nel sistema';
+            Router::redirect('/content-creator/connectors');
+            return;
+        }
+
+        $zipName = $pluginMap[$type] . '.zip';
+        $tempZip = sys_get_temp_dir() . '/' . $zipName;
+
+        $zip = new \ZipArchive();
+        if ($zip->open($tempZip, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            $_SESSION['_flash']['error'] = 'Errore nella creazione del pacchetto ZIP';
+            Router::redirect('/content-creator/connectors');
+            return;
+        }
+
+        $files = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($pluginDir, \RecursiveDirectoryIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::LEAVES_ONLY
+        );
+
+        foreach ($files as $file) {
+            if (!$file->isDir()) {
+                $filePath = $file->getRealPath();
+                $relativePath = $pluginMap[$type] . '/' . substr($filePath, strlen($pluginDir) + 1);
+                $zip->addFile($filePath, str_replace('\\', '/', $relativePath));
+            }
+        }
+
+        $zip->close();
+
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="' . $zipName . '"');
+        header('Content-Length: ' . filesize($tempZip));
+        header('Cache-Control: no-cache');
+
+        readfile($tempZip);
+        unlink($tempZip);
+        exit;
+    }
+
+    /**
+     * Sync categorie dal CMS
+     * POST /content-creator/connectors/{id}/sync-categories (AJAX)
+     */
+    public function syncCategories(int $id): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $connector = $this->connector->findByUser($id, $user['id']);
+
+        if (!$connector) {
+            echo json_encode(['success' => false, 'error' => 'Connettore non trovato']);
+            return;
+        }
+
+        $config = json_decode($connector['config'] ?? '{}', true);
+        if (!is_array($config)) {
+            $config = [];
+        }
+
+        try {
+            $service = $this->createConnectorService($connector['type'], $config);
+            $result = $service->fetchCategories();
+
+            if ($result['success']) {
+                $this->connector->update($id, [
+                    'categories_cache' => json_encode($result['categories']),
+                ]);
+                $this->connector->updateSyncTime($id);
+            }
+
+            echo json_encode($result);
+
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Errore: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Fetch items dal CMS
+     * GET /content-creator/connectors/{id}/items (AJAX)
+     */
+    public function fetchItems(int $id): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $connector = $this->connector->findByUser($id, $user['id']);
+
+        if (!$connector) {
+            echo json_encode(['success' => false, 'error' => 'Connettore non trovato']);
+            return;
+        }
+
+        $config = json_decode($connector['config'] ?? '{}', true);
+        if (!is_array($config)) {
+            $config = [];
+        }
+
+        $entityType = $_GET['type'] ?? 'products';
+        $limit = min((int) ($_GET['limit'] ?? 100), 500);
+
+        try {
+            $service = $this->createConnectorService($connector['type'], $config);
+            $result = $service->fetchItems($entityType, $limit);
+
+            echo json_encode($result);
+
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Errore: ' . $e->getMessage(),
+            ]);
+        }
     }
 
     /**

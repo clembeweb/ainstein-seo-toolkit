@@ -210,11 +210,7 @@ class ProjectController
 
         // AI settings from form
         $aiSettings = [
-            'meta_title_min' => (int) ($_POST['meta_title_min'] ?? 50),
-            'meta_title_max' => (int) ($_POST['meta_title_max'] ?? 60),
-            'meta_desc_min' => (int) ($_POST['meta_desc_min'] ?? 140),
-            'meta_desc_max' => (int) ($_POST['meta_desc_max'] ?? 160),
-            'page_desc_min' => (int) ($_POST['page_desc_min'] ?? 300),
+            'min_words' => (int) ($_POST['min_words'] ?? 300),
             'custom_prompt' => trim($_POST['custom_prompt'] ?? ''),
         ];
 

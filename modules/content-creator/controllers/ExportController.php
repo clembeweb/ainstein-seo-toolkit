@@ -105,24 +105,30 @@ class ExportController
             'slug',
             'keyword',
             'category',
-            'scraped_title',
-            'ai_meta_title',
-            'ai_meta_description',
-            'ai_page_description',
+            'intent',
+            'ai_h1',
+            'ai_content',
+            'ai_word_count',
             'status',
         ], ';');
 
         // Righe dati
         foreach ($urls as $url) {
+            // Tronca contenuto HTML a 32000 chars per compatibilità Excel
+            $content = $url['ai_content'] ?? '';
+            if (mb_strlen($content) > 32000) {
+                $content = mb_substr($content, 0, 32000) . '...';
+            }
+
             fputcsv($output, [
                 $url['url'] ?? '',
                 $url['slug'] ?? '',
                 $url['keyword'] ?? '',
                 $url['category'] ?? '',
-                $url['scraped_title'] ?? '',
-                $url['ai_meta_title'] ?? '',
-                $url['ai_meta_description'] ?? '',
-                $url['ai_page_description'] ?? '',
+                $url['intent'] ?? '',
+                $url['ai_h1'] ?? '',
+                $content,
+                $url['ai_word_count'] ?? 0,
                 $url['status'] ?? '',
             ], ';');
         }
@@ -356,8 +362,31 @@ class ExportController
                     throw new \Exception('Connettore CMS non trovato');
                 }
 
-                // TODO: Use actual CMS connector when implemented (Step 10)
-                // For now, just mark as published
+                $config = json_decode($connector['config'] ?? '{}', true);
+                if (!is_array($config)) {
+                    $config = [];
+                }
+
+                $connectorService = match ($connector['type']) {
+                    'wordpress' => new \Modules\ContentCreator\Services\Connectors\WordPressConnector($config),
+                    'shopify' => new \Modules\ContentCreator\Services\Connectors\ShopifyConnector($config),
+                    'prestashop' => new \Modules\ContentCreator\Services\Connectors\PrestaShopConnector($config),
+                    'magento' => new \Modules\ContentCreator\Services\Connectors\MagentoConnector($config),
+                    default => throw new \Exception('Tipo connettore non supportato: ' . $connector['type']),
+                };
+
+                $entityId = $item['cms_entity_id'] ?? $item['id'];
+                $entityType = $item['cms_entity_type'] ?? 'page';
+
+                $pushResult = $connectorService->updateItem((string) $entityId, $entityType, [
+                    'content' => $item['ai_content'] ?? '',
+                    'h1' => $item['ai_h1'] ?? '',
+                ]);
+
+                if (!$pushResult['success']) {
+                    throw new \Exception($pushResult['message'] ?? 'Errore push CMS');
+                }
+
                 Database::reconnect();
                 $this->url->markPublished($item['id']);
 

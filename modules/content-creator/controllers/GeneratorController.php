@@ -21,7 +21,11 @@ class GeneratorController
     private Url $url;
 
     private const SCRAPE_CREDIT_COST = 1;
-    private const GENERATE_CREDIT_COST = 2;
+    private const GENERATE_CREDIT_COST = 3;
+
+    // Marker per parsing output AI
+    private const HTML_START = '```html';
+    private const HTML_END = '```';
 
     public function __construct()
     {
@@ -423,16 +427,16 @@ class GeneratorController
             return;
         }
 
-        // Conta URL scrappate (pronte per generazione)
-        $scrapedCount = $this->url->countByProject($id, 'scraped');
+        // Conta URL pronte per generazione (pending + scraped)
+        $readyCount = $this->url->countReadyForGeneration($id);
 
-        if ($scrapedCount === 0) {
-            echo json_encode(['error' => true, 'message' => 'Nessuna URL scrappata pronta per la generazione']);
+        if ($readyCount === 0) {
+            echo json_encode(['error' => true, 'message' => 'Nessuna URL pronta per la generazione']);
             return;
         }
 
         // Verifica crediti
-        $estimatedCredits = $scrapedCount * self::GENERATE_CREDIT_COST;
+        $estimatedCredits = $readyCount * self::GENERATE_CREDIT_COST;
         if (!Credits::hasEnough($user['id'], $estimatedCredits)) {
             $balance = Credits::getBalance($user['id']);
             echo json_encode([
@@ -447,13 +451,13 @@ class GeneratorController
             'project_id' => $id,
             'user_id' => $user['id'],
             'type' => Job::TYPE_GENERATE,
-            'items_requested' => $scrapedCount,
+            'items_requested' => $readyCount,
         ]);
 
         echo json_encode([
             'success' => true,
             'job_id' => $jobId,
-            'items_queued' => $scrapedCount,
+            'items_queued' => $readyCount,
             'estimated_credits' => $estimatedCredits,
         ]);
     }
@@ -521,11 +525,11 @@ class GeneratorController
 
         // Carica settings modulo per il prompt
         $settings = [
-            'meta_title_min' => (int) ModuleLoader::getSetting('content-creator', 'meta_title_min', 30),
-            'meta_title_max' => (int) ModuleLoader::getSetting('content-creator', 'meta_title_max', 60),
-            'meta_desc_min' => (int) ModuleLoader::getSetting('content-creator', 'meta_desc_min', 120),
-            'meta_desc_max' => (int) ModuleLoader::getSetting('content-creator', 'meta_desc_max', 160),
-            'page_desc_min' => (int) ModuleLoader::getSetting('content-creator', 'page_desc_min', 300),
+            'min_words_product' => (int) ModuleLoader::getSetting('content-creator', 'min_words_product', 300),
+            'min_words_category' => (int) ModuleLoader::getSetting('content-creator', 'min_words_category', 400),
+            'min_words_article' => (int) ModuleLoader::getSetting('content-creator', 'min_words_article', 800),
+            'min_words_service' => (int) ModuleLoader::getSetting('content-creator', 'min_words_service', 500),
+            'min_words_default' => (int) ModuleLoader::getSetting('content-creator', 'min_words_default', 300),
         ];
 
         while (true) {
@@ -542,8 +546,8 @@ class GeneratorController
                 break;
             }
 
-            // Prossima URL scrappata
-            $items = $this->url->getNextScraped($id, 1);
+            // Prossima URL pronta per generazione (pending o scraped)
+            $items = $this->url->getNextForGeneration($id, 1);
             if (empty($items)) {
                 // Nessuna URL rimasta - completa job
                 Database::reconnect();
@@ -583,6 +587,7 @@ class GeneratorController
 
             $this->sendEvent('progress', [
                 'current_url' => $item['url'],
+                'keyword' => $item['keyword'] ?? '',
                 'completed' => $completed,
                 'failed' => $failed,
                 'total' => $total,
@@ -596,7 +601,7 @@ class GeneratorController
                 // IMPORTANTE: reset time limit prima di ogni chiamata AI
                 set_time_limit(0);
 
-                // Chiamata AI (skip_credits gestito manualmente)
+                // Chiamata AI
                 $result = $ai->analyze($user['id'], $prompt, '', 'content-creator');
 
                 Database::reconnect();
@@ -605,33 +610,27 @@ class GeneratorController
                     throw new \Exception($result['message'] ?? 'Errore AI sconosciuto');
                 }
 
-                $aiContent = $result['result'] ?? '';
+                $aiResponse = $result['result'] ?? '';
 
-                // Pulizia markdown code fences
-                $aiContent = preg_replace('/^```(?:json)?\s*/i', '', $aiContent);
-                $aiContent = preg_replace('/\s*```$/i', '', $aiContent);
-                $aiContent = trim($aiContent);
+                // Parse risposta: estrai HTML tra ```html e ```
+                $parsed = $this->parseResponse($aiResponse);
 
-                // Parse JSON
-                $parsed = json_decode($aiContent, true);
-
-                if (!$parsed || !isset($parsed['meta_title'])) {
-                    throw new \Exception('Risposta AI non valida: formato JSON non riconosciuto');
+                if (!$parsed['success']) {
+                    throw new \Exception($parsed['error']);
                 }
 
-                $metaTitle = trim($parsed['meta_title'] ?? '');
-                $metaDescription = trim($parsed['meta_description'] ?? '');
-                $pageDescription = trim($parsed['page_description'] ?? '');
+                $htmlContent = $this->sanitizeHtml($parsed['content']);
+                $h1 = $parsed['h1'];
+                $wordCount = str_word_count(strip_tags($htmlContent));
 
                 // Salva risultati nel DB PRIMA dell'evento completed
-                $this->url->updateGeneratedData($item['id'], $metaTitle, $metaDescription, $pageDescription);
+                $this->url->updateGeneratedData($item['id'], $htmlContent, $h1, $wordCount);
 
                 // Consuma crediti per generazione
                 Credits::consume($user['id'], self::GENERATE_CREDIT_COST, 'cc_generate', 'content-creator', [
                     'url' => $item['url'],
-                    'meta_title_len' => mb_strlen($metaTitle),
-                    'meta_desc_len' => mb_strlen($metaDescription),
-                    'page_desc_len' => mb_strlen($pageDescription),
+                    'keyword' => $item['keyword'] ?? '',
+                    'word_count' => $wordCount,
                 ]);
 
                 $completed++;
@@ -643,9 +642,9 @@ class GeneratorController
                 $this->sendEvent('item_completed', [
                     'url_id' => (int) $item['id'],
                     'url' => $item['url'],
-                    'meta_title' => $metaTitle,
-                    'meta_description' => $metaDescription,
-                    'page_description' => mb_substr($pageDescription, 0, 200) . (mb_strlen($pageDescription) > 200 ? '...' : ''),
+                    'h1' => $h1,
+                    'word_count' => $wordCount,
+                    'preview' => mb_substr(strip_tags($htmlContent), 0, 150) . '...',
                     'completed' => $completed,
                     'failed' => $failed,
                     'total' => $total,
@@ -671,8 +670,8 @@ class GeneratorController
                 ]);
             }
 
-            // Pausa tra items (300ms)
-            usleep(300000);
+            // Pausa tra items (500ms - contenuti più lunghi)
+            usleep(500000);
         }
 
         exit;
@@ -800,7 +799,7 @@ class GeneratorController
     // ─────────────────────────────────────────────
 
     /**
-     * Costruisce il prompt AI per la generazione contenuti
+     * Costruisce il prompt AI per generazione contenuto HTML completo
      */
     private function buildPrompt(array $item, array $project, array $settings): string
     {
@@ -814,66 +813,253 @@ class GeneratorController
             $aiSettings = json_decode($project['ai_settings'], true) ?: [];
         }
 
-        // Limiti lunghezza (priorita: progetto > modulo defaults)
-        $metaTitleMin = (int) ($aiSettings['meta_title_min'] ?? $settings['meta_title_min']);
-        $metaTitleMax = (int) ($aiSettings['meta_title_max'] ?? $settings['meta_title_max']);
-        $metaDescMin = (int) ($aiSettings['meta_desc_min'] ?? $settings['meta_desc_min']);
-        $metaDescMax = (int) ($aiSettings['meta_desc_max'] ?? $settings['meta_desc_max']);
-        $pageDescMin = (int) ($aiSettings['page_desc_min'] ?? $settings['page_desc_min']);
+        // Min words per content type (priorità: progetto > modulo defaults)
+        $minWordsKey = 'min_words_' . $contentType;
+        $minWords = (int) ($aiSettings['min_words'] ?? $settings[$minWordsKey] ?? $settings['min_words_default']);
 
-        // Estratto contenuto (max 3000 chars per il prompt)
-        $contentExcerpt = mb_substr($item['scraped_content'] ?? '', 0, 3000);
+        // Keyword e secondary keywords
+        $keyword = $item['keyword'] ?? $item['slug'] ?? '';
+        $secondaryKw = '';
+        if (!empty($item['secondary_keywords'])) {
+            $skw = is_string($item['secondary_keywords'])
+                ? json_decode($item['secondary_keywords'], true)
+                : $item['secondary_keywords'];
+            if (is_array($skw)) {
+                $secondaryKw = implode(', ', array_slice($skw, 0, 10));
+            }
+        }
 
-        // Prezzo
-        $priceInfo = !empty($item['scraped_price']) ? $item['scraped_price'] : 'Non disponibile';
+        // Search intent
+        $intent = $item['intent'] ?? '';
+
+        // Contesto da scraping (opzionale)
+        $contextSection = '';
+        if (!empty($item['scraped_content'])) {
+            $contentExcerpt = mb_substr($item['scraped_content'], 0, 3000);
+            $priceInfo = !empty($item['scraped_price']) ? "\n- Prezzo: " . $item['scraped_price'] : '';
+            $contextSection = <<<CTX
+
+CONTESTO PAGINA ESISTENTE (usa come riferimento, NON copiare):
+- Titolo attuale: {$item['scraped_title']}
+- H1 attuale: {$item['scraped_h1']}{$priceInfo}
+- Contenuto attuale (estratto):
+{$contentExcerpt}
+CTX;
+        }
 
         // Custom prompt
         $customPrompt = '';
         if (!empty($aiSettings['custom_prompt'])) {
-            $customPrompt = "\nISTRUZIONI AGGIUNTIVE:\n" . $aiSettings['custom_prompt'];
+            $customPrompt = "\nISTRUZIONI AGGIUNTIVE DELL'UTENTE:\n" . $aiSettings['custom_prompt'];
         }
+
+        // Secondary keywords section
+        $secondarySection = '';
+        if (!empty($secondaryKw)) {
+            $secondarySection = "\n- Keywords secondarie: {$secondaryKw}";
+        }
+
+        // Intent section
+        $intentSection = '';
+        if (!empty($intent)) {
+            $intentSection = "\n- Search intent: {$intent}";
+        }
+
+        // Istruzioni specifiche per content type
+        $typeInstructions = $this->getTypeInstructions($contentType);
 
         // Mappa content type per il prompt
         $typeLabels = [
             'product' => 'prodotto',
-            'category' => 'categoria',
+            'category' => 'categoria e-commerce',
             'article' => 'articolo/blog post',
-            'service' => 'servizio',
-            'custom' => 'pagina',
+            'service' => 'pagina servizio',
+            'custom' => 'pagina generica',
         ];
         $typeLabel = $typeLabels[$contentType] ?? 'pagina';
 
         $prompt = <<<PROMPT
-Sei un esperto SEO e copywriter. Genera contenuti ottimizzati per la seguente pagina di tipo "{$typeLabel}".
+Sei un esperto SEO copywriter. Genera il CONTENUTO HTML COMPLETO per una pagina di tipo "{$typeLabel}".
 
 DATI PAGINA:
 - URL: {$item['url']}
-- Titolo attuale: {$item['scraped_title']}
-- H1: {$item['scraped_h1']}
-- Meta Title attuale: {$item['scraped_meta_title']}
-- Meta Description attuale: {$item['scraped_meta_description']}
-- Prezzo: {$priceInfo}
-- Contenuto (estratto):
-{$contentExcerpt}
+- Slug: {$item['slug']}
+- Keyword principale: {$keyword}{$secondarySection}{$intentSection}
+- Categoria: {$item['category']}{$contextSection}
 
 VINCOLI:
 - Lingua: {$language}
 - Tono: {$tone}
-- Meta Title: {$metaTitleMin}-{$metaTitleMax} caratteri
-- Meta Description: {$metaDescMin}-{$metaDescMax} caratteri
-- Page Description: minimo {$pageDescMin} caratteri
+- Lunghezza minima: {$minWords} parole
 {$customPrompt}
 
-ISTRUZIONI:
-- Ottimizza per SEO mantenendo naturalezza e leggibilita
-- Il meta title deve includere la keyword principale e essere accattivante
-- La meta description deve invogliare al click e contenere una call-to-action
-- La page description deve essere un testo descrittivo completo, ottimizzato SEO, con paragrafi ben strutturati
+STRUTTURA RICHIESTA PER TIPO "{$typeLabel}":
+{$typeInstructions}
 
-Rispondi SOLO con un JSON valido (senza markdown, senza commenti):
-{"meta_title": "...", "meta_description": "...", "page_description": "..."}
+ISTRUZIONI GENERALI:
+- Genera SOLO il body content HTML (NO <html>, <head>, <body> wrapper)
+- Usa tag semantici: h1, h2, h3, p, ul, ol, strong, em
+- L'H1 deve contenere la keyword principale ed essere unico
+- Includi la keyword principale nelle prime 100 parole
+- Distribuisci le keywords secondarie naturalmente nel testo
+- Scrivi per gli utenti, non per i motori di ricerca
+- Paragrafi brevi (2-4 frasi), buona leggibilità
+- NO contenuto inventato (prezzi, specifiche tecniche non fornite)
+- NO link esterni o placeholder [link]
+
+FORMATO OUTPUT RICHIESTO:
+
+```html
+<h1>Titolo H1 ottimizzato</h1>
+<p>Contenuto della pagina...</p>
+<h2>Sottosezione</h2>
+<p>Altro contenuto...</p>
+```
 PROMPT;
 
         return $prompt;
+    }
+
+    /**
+     * Istruzioni specifiche per tipo di contenuto
+     */
+    private function getTypeInstructions(string $contentType): string
+    {
+        switch ($contentType) {
+            case 'product':
+                return <<<INST
+1. H1: Nome prodotto ottimizzato con keyword
+2. Introduzione: 2-3 frasi che presentano il prodotto e il suo valore
+3. H2 "Caratteristiche principali": lista puntata delle features
+4. H2 "Vantaggi": perché scegliere questo prodotto
+5. H2 "Specifiche tecniche": tabella o lista (se hai dati dal contesto)
+6. H2 "Domande frequenti": 3-4 FAQ con risposte brevi
+7. Paragrafo conclusivo con call-to-action
+INST;
+
+            case 'category':
+                return <<<INST
+1. H1: Nome categoria ottimizzato
+2. Introduzione: descrizione della categoria e cosa troverà l'utente
+3. H2 "Guida alla scelta": consigli per scegliere il prodotto giusto
+4. H2 con sottocategorie o tipologie principali (H3 per ciascuna)
+5. H2 "Domande frequenti": 3-4 FAQ sulla categoria
+6. Paragrafo conclusivo che invita all'esplorazione
+INST;
+
+            case 'article':
+                return <<<INST
+1. H1: Titolo articolo accattivante con keyword
+2. Introduzione: hook + anticipazione del contenuto + keyword nelle prime righe
+3. 3-5 sezioni H2 con sviluppo approfondito del tema
+4. Sottosezioni H3 dove necessario per approfondimenti
+5. Liste puntate o numerate per informazioni strutturate
+6. Conclusione con takeaway principali
+INST;
+
+            case 'service':
+                return <<<INST
+1. H1: Nome servizio ottimizzato con keyword
+2. Introduzione: problema che il servizio risolve + proposta di valore
+3. H2 "Come funziona": spiegazione del processo/servizio
+4. H2 "Benefici": vantaggi concreti per il cliente
+5. H2 "Per chi è adatto": target audience e casi d'uso
+6. H2 "Domande frequenti": 3-4 FAQ sul servizio
+7. Paragrafo conclusivo con call-to-action forte
+INST;
+
+            default: // custom
+                return <<<INST
+1. H1: Titolo ottimizzato con keyword principale
+2. Introduzione chiara e coinvolgente
+3. 2-4 sezioni H2 con contenuto pertinente
+4. Liste puntate dove utile
+5. Conclusione con call-to-action o sintesi
+INST;
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    //  RESPONSE PARSING
+    // ─────────────────────────────────────────────
+
+    /**
+     * Parse risposta AI: estrae HTML e H1
+     */
+    private function parseResponse(string $response): array
+    {
+        $html = $this->extractBlock($response, self::HTML_START, self::HTML_END);
+
+        if (empty($html)) {
+            // Fallback: prova a usare tutta la risposta come HTML
+            $cleaned = trim($response);
+            if (preg_match('/<h[1-6]/', $cleaned)) {
+                $html = $cleaned;
+            } else {
+                return ['success' => false, 'error' => 'Impossibile estrarre il contenuto HTML dalla risposta AI'];
+            }
+        }
+
+        // Estrai H1 dal contenuto
+        $h1 = '';
+        if (preg_match('/<h1[^>]*>(.*?)<\/h1>/is', $html, $matches)) {
+            $h1 = trim(strip_tags($matches[1]));
+        }
+
+        if (empty($h1)) {
+            return ['success' => false, 'error' => 'Contenuto HTML senza tag H1'];
+        }
+
+        return [
+            'success' => true,
+            'content' => trim($html),
+            'h1' => $h1,
+        ];
+    }
+
+    /**
+     * Estrae blocco di testo tra marker ```type e ```
+     */
+    private function extractBlock(string $response, string $startMarker, string $endMarker): string
+    {
+        $startPos = strpos($response, $startMarker);
+        if ($startPos === false) {
+            return '';
+        }
+
+        $startPos += strlen($startMarker);
+        while ($startPos < strlen($response) && ($response[$startPos] === "\n" || $response[$startPos] === "\r")) {
+            $startPos++;
+        }
+
+        $endPos = strpos($response, $endMarker, $startPos);
+        if ($endPos === false) {
+            return '';
+        }
+
+        while ($endPos > $startPos && ($response[$endPos - 1] === "\n" || $response[$endPos - 1] === "\r")) {
+            $endPos--;
+        }
+
+        return substr($response, $startPos, $endPos - $startPos);
+    }
+
+    /**
+     * Sanitizza contenuto HTML generato
+     */
+    private function sanitizeHtml(string $html): string
+    {
+        // Rimuovi tag pericolosi
+        $html = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $html);
+        $html = preg_replace('/<style\b[^>]*>.*?<\/style>/is', '', $html);
+        $html = preg_replace('/<iframe\b[^>]*>.*?<\/iframe>/is', '', $html);
+
+        // Rimuovi event handlers on*
+        $html = preg_replace('/\s+on\w+\s*=\s*["\'][^"\']*["\']/i', '', $html);
+
+        // Pulisci whitespace tra tag
+        $html = preg_replace('/>\s+</', ">\n<", $html);
+
+        return trim($html);
     }
 }

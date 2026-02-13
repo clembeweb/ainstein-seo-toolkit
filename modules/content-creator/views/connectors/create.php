@@ -49,6 +49,24 @@
             <!-- WordPress Fields     -->
             <!-- ===================== -->
             <div x-show="type === 'wordpress'" x-cloak class="space-y-4">
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div class="text-sm text-blue-700 dark:text-blue-300">
+                            <p class="font-medium mb-1">Plugin richiesto</p>
+                            <p>Installa il plugin <strong>SEO Toolkit Connector</strong> sul sito WordPress. L'API Key viene generata automaticamente dal plugin.</p>
+                            <a href="<?= url('/content-creator/connectors/download-plugin/wordpress') ?>"
+                               class="inline-flex items-center mt-2 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition-colors">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                Scarica Plugin WordPress
+                            </a>
+                        </div>
+                    </div>
+                </div>
                 <div>
                     <label for="wp_url" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                         URL del sito <span class="text-red-500">*</span>
@@ -58,22 +76,14 @@
                            placeholder="https://www.example.com">
                 </div>
                 <div>
-                    <label for="wp_username" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                        Username WordPress <span class="text-red-500">*</span>
+                    <label for="wp_api_key" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        API Key Plugin <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" id="wp_username" name="wp_username"
+                    <input type="password" id="wp_api_key" name="wp_api_key"
                            class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                           placeholder="admin">
-                </div>
-                <div>
-                    <label for="wp_application_password" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                        Application Password <span class="text-red-500">*</span>
-                    </label>
-                    <input type="password" id="wp_application_password" name="wp_application_password"
-                           class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                           placeholder="xxxx xxxx xxxx xxxx xxxx xxxx">
+                           placeholder="stk_xxxxxxxxxxxxxxxxxxxxxxxxxx">
                     <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        Genera da Utenti > Profilo > Password Applicazione nella dashboard WordPress
+                        Trova l'API Key in Impostazioni > SEO Toolkit nella dashboard WordPress
                     </p>
                 </div>
             </div>
@@ -214,7 +224,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-600 dark:text-slate-400">
             <div>
                 <p class="font-medium text-slate-700 dark:text-slate-300">WordPress</p>
-                <p class="mt-1">Richiede REST API attiva (default in WP 4.7+). Crea una Application Password dal profilo utente.</p>
+                <p class="mt-1">Installa il plugin SEO Toolkit Connector. L'API Key viene generata automaticamente. Trova la chiave in Impostazioni > SEO Toolkit.</p>
             </div>
             <div>
                 <p class="font-medium text-slate-700 dark:text-slate-300">Shopify</p>

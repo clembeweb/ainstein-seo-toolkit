@@ -90,9 +90,9 @@ class Url
             $params[] = $filters['status'];
         }
 
-        // Filtro search (URL, keyword, slug, meta title generato)
+        // Filtro search (URL, keyword, slug, H1 generato)
         if (!empty($filters['search'])) {
-            $where[] = "(url LIKE ? OR keyword LIKE ? OR slug LIKE ? OR ai_meta_title LIKE ?)";
+            $where[] = "(url LIKE ? OR keyword LIKE ? OR slug LIKE ? OR ai_h1 LIKE ?)";
             $searchTerm = '%' . $filters['search'] . '%';
             $params[] = $searchTerm;
             $params[] = $searchTerm;
@@ -114,7 +114,7 @@ class Url
         $total = (int) $countStmt->fetchColumn();
 
         // Ordinamento
-        $allowedSort = ['url', 'slug', 'keyword', 'category', 'scraped_title', 'ai_meta_title', 'status', 'created_at', 'scraped_word_count'];
+        $allowedSort = ['url', 'slug', 'keyword', 'category', 'scraped_title', 'ai_h1', 'ai_word_count', 'status', 'created_at', 'scraped_word_count'];
         $sortBy = in_array($filters['sort'] ?? '', $allowedSort) ? $filters['sort'] : 'created_at';
         $sortDir = (strtolower($filters['dir'] ?? '') === 'asc') ? 'ASC' : 'DESC';
 
@@ -201,16 +201,22 @@ class Url
     {
         $stmt = $this->db->prepare("
             INSERT INTO {$this->table}
-            (project_id, user_id, url, slug, keyword, category,
+            (project_id, user_id, url, slug, keyword, secondary_keywords, intent, source_type, category,
              connector_id, cms_entity_id, cms_entity_type, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
+        $secondaryKw = !empty($data['secondary_keywords'])
+            ? (is_string($data['secondary_keywords']) ? $data['secondary_keywords'] : json_encode($data['secondary_keywords']))
+            : null;
         $stmt->execute([
             $data['project_id'],
             $data['user_id'],
             $data['url'],
             $data['slug'] ?? self::extractSlug($data['url']),
             $data['keyword'] ?? null,
+            $secondaryKw,
+            $data['intent'] ?? null,
+            $data['source_type'] ?? 'manual',
             $data['category'] ?? null,
             $data['connector_id'] ?? null,
             $data['cms_entity_id'] ?? null,
@@ -302,10 +308,10 @@ class Url
     public function update(int $id, array $data): bool
     {
         $allowedFields = [
-            'url', 'slug', 'keyword', 'category',
+            'url', 'slug', 'keyword', 'secondary_keywords', 'intent', 'source_type', 'category',
             'scraped_title', 'scraped_h1', 'scraped_meta_title', 'scraped_meta_description',
             'scraped_content', 'scraped_price', 'scraped_word_count',
-            'ai_meta_title', 'ai_meta_description', 'ai_page_description',
+            'ai_content', 'ai_h1', 'ai_word_count',
             'status', 'scrape_error', 'ai_error',
             'scraped_at', 'ai_generated_at',
             'connector_id', 'cms_entity_id', 'cms_entity_type',
@@ -377,21 +383,21 @@ class Url
     }
 
     /**
-     * Aggiorna dati generazione AI (3 campi: meta_title, meta_description, page_description)
+     * Aggiorna contenuto generato AI (body HTML completo)
      */
-    public function updateGeneratedData(int $id, string $title, string $desc, string $pageDesc): bool
+    public function updateGeneratedData(int $id, string $content, string $h1, int $wordCount): bool
     {
         $stmt = $this->db->prepare("
             UPDATE {$this->table}
-            SET ai_meta_title = ?,
-                ai_meta_description = ?,
-                ai_page_description = ?,
+            SET ai_content = ?,
+                ai_h1 = ?,
+                ai_word_count = ?,
                 status = 'generated',
                 ai_error = NULL,
                 ai_generated_at = NOW()
             WHERE id = ?
         ");
-        return $stmt->execute([$title, $desc, $pageDesc, $id]);
+        return $stmt->execute([$content, $h1, $wordCount, $id]);
     }
 
     /**
@@ -588,17 +594,89 @@ class Url
     }
 
     /**
-     * Reset errori generazione a scraped (per retry)
+     * Reset errori generazione (per retry)
+     * Resetta a 'scraped' se ha dati scraping, altrimenti a 'pending'
      */
     public function resetGenerationErrors(int $projectId): int
     {
         $stmt = $this->db->prepare("
             UPDATE {$this->table}
-            SET status = 'scraped', ai_error = NULL
+            SET status = CASE WHEN scraped_at IS NOT NULL THEN 'scraped' ELSE 'pending' END,
+                ai_error = NULL
             WHERE project_id = ? AND status = 'error' AND ai_error IS NOT NULL
         ");
         $stmt->execute([$projectId]);
         return $stmt->rowCount();
+    }
+
+    /**
+     * Ottieni prossime URL pronte per generazione AI
+     * Include sia 'pending' (senza scraping) che 'scraped' (con scraping)
+     */
+    public function getNextForGeneration(int $projectId, int $limit = 20): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT * FROM {$this->table}
+            WHERE project_id = ? AND status IN ('pending', 'scraped')
+            ORDER BY created_at ASC
+            LIMIT ?
+        ");
+        $stmt->execute([$projectId, $limit]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Conta URL pronte per generazione
+     */
+    public function countReadyForGeneration(int $projectId): int
+    {
+        $stmt = $this->db->prepare("
+            SELECT COUNT(*) FROM {$this->table}
+            WHERE project_id = ? AND status IN ('pending', 'scraped')
+        ");
+        $stmt->execute([$projectId]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * Inserimento bulk da Keyword Research (cluster → URL)
+     */
+    public function addBulkFromKR(int $projectId, int $userId, array $clusters): int
+    {
+        $sql = "INSERT IGNORE INTO {$this->table}
+                (project_id, user_id, url, slug, keyword, secondary_keywords, intent, category, source_type, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'keyword_research', 'pending')";
+        $stmt = $this->db->prepare($sql);
+
+        $inserted = 0;
+        foreach ($clusters as $cluster) {
+            $url = trim($cluster['suggested_url'] ?? $cluster['url'] ?? '');
+            if (empty($url)) {
+                continue;
+            }
+
+            $slug = self::extractSlug($url);
+            $keyword = $cluster['main_keyword'] ?? $cluster['keyword'] ?? null;
+            $secondaryKw = !empty($cluster['secondary_keywords']) ? json_encode($cluster['secondary_keywords']) : null;
+            $intent = $cluster['intent'] ?? null;
+            $category = $cluster['category'] ?? $cluster['name'] ?? null;
+
+            $stmt->execute([
+                $projectId,
+                $userId,
+                $url,
+                $slug,
+                $keyword,
+                $secondaryKw,
+                $intent,
+                $category,
+            ]);
+            if ($stmt->rowCount() > 0) {
+                $inserted++;
+            }
+        }
+
+        return $inserted;
     }
 
     /**

@@ -25,10 +25,10 @@ interface ConnectorInterface
     public function fetchCategories(): array;
 
     /**
-     * Update item's SEO content in CMS
+     * Update item's content in CMS
      * @param string $entityId CMS entity ID (product/page/category ID)
      * @param string $entityType product|category|page
-     * @param array $data ['meta_title' => string, 'meta_description' => string, 'page_description' => string]
+     * @param array $data ['content' => string (HTML body), 'h1' => string (title/heading)]
      * @return array ['success' => bool, 'message' => string]
      */
     public function updateItem(string $entityId, string $entityType, array $data): array;

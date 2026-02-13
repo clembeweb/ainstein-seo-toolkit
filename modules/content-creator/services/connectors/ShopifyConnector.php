@@ -190,56 +190,33 @@ class ShopifyConnector implements ConnectorInterface
     // -------------------------------------------------------------------------
 
     /**
-     * Aggiorna prodotto Shopify con metafield SEO
+     * Aggiorna prodotto Shopify con contenuto HTML
      */
     private function updateProduct(string $entityId, array $data): array
     {
         $productBody = [];
 
-        if (isset($data['meta_title'])) {
-            $productBody['title'] = $data['meta_title'];
+        if (isset($data['h1'])) {
+            $productBody['title'] = $data['h1'];
         }
-        if (isset($data['page_description'])) {
-            $productBody['body_html'] = $data['page_description'];
-        }
-
-        // Aggiorna prodotto base
-        if (!empty($productBody)) {
-            $result = $this->makeRequest(
-                'PUT',
-                '/admin/api/' . self::API_VERSION . '/products/' . $entityId . '.json',
-                ['product' => array_merge(['id' => (int) $entityId], $productBody)]
-            );
-
-            if (!$result['success']) {
-                return [
-                    'success' => false,
-                    'message' => 'Errore aggiornamento prodotto: ' . ($result['error'] ?? 'Errore sconosciuto')
-                ];
-            }
+        if (isset($data['content'])) {
+            $productBody['body_html'] = $data['content'];
         }
 
-        // Aggiorna metafield SEO (title_tag e description_tag)
-        $metaErrors = [];
-
-        if (isset($data['meta_title'])) {
-            $metaResult = $this->setProductMetafield($entityId, 'title_tag', $data['meta_title']);
-            if (!$metaResult['success']) {
-                $metaErrors[] = 'title_tag: ' . ($metaResult['error'] ?? 'Errore');
-            }
+        if (empty($productBody)) {
+            return ['success' => false, 'message' => 'Nessun dato da aggiornare'];
         }
 
-        if (isset($data['meta_description'])) {
-            $metaResult = $this->setProductMetafield($entityId, 'description_tag', $data['meta_description']);
-            if (!$metaResult['success']) {
-                $metaErrors[] = 'description_tag: ' . ($metaResult['error'] ?? 'Errore');
-            }
-        }
+        $result = $this->makeRequest(
+            'PUT',
+            '/admin/api/' . self::API_VERSION . '/products/' . $entityId . '.json',
+            ['product' => array_merge(['id' => (int) $entityId], $productBody)]
+        );
 
-        if (!empty($metaErrors)) {
+        if (!$result['success']) {
             return [
                 'success' => false,
-                'message' => 'Prodotto aggiornato ma errori nei metafield SEO: ' . implode(', ', $metaErrors)
+                'message' => 'Errore aggiornamento prodotto: ' . ($result['error'] ?? 'Errore sconosciuto')
             ];
         }
 
@@ -250,34 +227,17 @@ class ShopifyConnector implements ConnectorInterface
     }
 
     /**
-     * Imposta metafield SEO su prodotto
-     */
-    private function setProductMetafield(string $productId, string $key, string $value): array
-    {
-        $endpoint = '/admin/api/' . self::API_VERSION . '/products/' . $productId . '/metafields.json';
-
-        return $this->makeRequest('POST', $endpoint, [
-            'metafield' => [
-                'namespace' => 'global',
-                'key' => $key,
-                'value' => $value,
-                'type' => 'single_line_text_field',
-            ]
-        ]);
-    }
-
-    /**
-     * Aggiorna pagina Shopify
+     * Aggiorna pagina Shopify con contenuto HTML
      */
     private function updatePage(string $entityId, array $data): array
     {
         $pageBody = [];
 
-        if (isset($data['meta_title'])) {
-            $pageBody['title'] = $data['meta_title'];
+        if (isset($data['h1'])) {
+            $pageBody['title'] = $data['h1'];
         }
-        if (isset($data['page_description'])) {
-            $pageBody['body_html'] = $data['page_description'];
+        if (isset($data['content'])) {
+            $pageBody['body_html'] = $data['content'];
         }
 
         if (empty($pageBody)) {

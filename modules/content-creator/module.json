@@ -1,8 +1,8 @@
 {
-    "name": "AI Content Bulk Creator",
+    "name": "AI Page Content Generator",
     "slug": "content-creator",
-    "version": "1.0.0",
-    "description": "Genera massivamente Meta Title, Meta Description e Page Description con AI per e-commerce",
+    "version": "2.0.0",
+    "description": "Genera contenuti completi di pagina (body HTML) con AI: prodotti, servizi, categorie, articoli",
     "icon": "document-duplicate",
     "color": "teal",
     "menu_order": 25,
@@ -13,7 +13,7 @@
     },
     "credits": {
         "scrape_url": 1,
-        "ai_generate": 2
+        "ai_generate": 3
     },
     "settings_groups": {
         "ai_config": {
@@ -27,6 +27,13 @@
             "icon": "cog",
             "description": "Impostazioni predefinite per la generazione contenuti",
             "order": 1,
+            "collapsed": false
+        },
+        "content_length": {
+            "label": "Lunghezza Contenuto",
+            "icon": "document-text",
+            "description": "Numero minimo di parole per tipo di contenuto",
+            "order": 2,
             "collapsed": false
         },
         "costs": {
@@ -93,54 +100,59 @@
                 {"value": "professionale", "label": "Professionale"},
                 {"value": "informativo", "label": "Informativo"},
                 {"value": "tecnico", "label": "Tecnico"},
-                {"value": "commerciale", "label": "Commerciale"}
+                {"value": "commerciale", "label": "Commerciale"},
+                {"value": "persuasivo", "label": "Persuasivo"}
             ]
         },
-        "meta_title_min": {
+        "min_words_product": {
             "type": "number",
-            "label": "Meta Title - Min caratteri",
-            "default": 50,
-            "min": 30,
-            "max": 70,
-            "group": "general"
-        },
-        "meta_title_max": {
-            "type": "number",
-            "label": "Meta Title - Max caratteri",
-            "default": 60,
-            "min": 50,
-            "max": 80,
-            "group": "general"
-        },
-        "meta_desc_min": {
-            "type": "number",
-            "label": "Meta Description - Min caratteri",
-            "default": 140,
-            "min": 100,
-            "max": 160,
-            "group": "general"
-        },
-        "meta_desc_max": {
-            "type": "number",
-            "label": "Meta Description - Max caratteri",
-            "default": 160,
-            "min": 140,
-            "max": 200,
-            "group": "general"
-        },
-        "page_desc_min": {
-            "type": "number",
-            "label": "Page Description - Min caratteri",
-            "description": "Lunghezza minima della descrizione di pagina",
+            "label": "Prodotto - Min parole",
+            "description": "Parole minime per descrizione prodotto",
             "default": 300,
             "min": 100,
-            "max": 1000,
-            "group": "general"
+            "max": 2000,
+            "group": "content_length"
+        },
+        "min_words_category": {
+            "type": "number",
+            "label": "Categoria - Min parole",
+            "description": "Parole minime per descrizione categoria",
+            "default": 400,
+            "min": 100,
+            "max": 2000,
+            "group": "content_length"
+        },
+        "min_words_article": {
+            "type": "number",
+            "label": "Articolo - Min parole",
+            "description": "Parole minime per articolo/blog post",
+            "default": 800,
+            "min": 200,
+            "max": 5000,
+            "group": "content_length"
+        },
+        "min_words_service": {
+            "type": "number",
+            "label": "Servizio - Min parole",
+            "description": "Parole minime per pagina servizio",
+            "default": 500,
+            "min": 100,
+            "max": 3000,
+            "group": "content_length"
+        },
+        "min_words_default": {
+            "type": "number",
+            "label": "Custom/Default - Min parole",
+            "description": "Parole minime per tipo custom o non specificato",
+            "default": 300,
+            "min": 100,
+            "max": 2000,
+            "group": "content_length"
         },
         "cost_scrape_url": {
             "type": "number",
             "label": "Costo Scraping per URL",
-            "description": "Crediti per scraping contenuto pagina",
+            "description": "Crediti per scraping contenuto pagina (opzionale)",
             "default": 1,
             "min": 0,
             "step": 0.1,
@@ -150,8 +162,8 @@
         "cost_ai_generate": {
             "type": "number",
             "label": "Costo Generazione AI per URL",
-            "description": "Crediti per generazione contenuti AI",
-            "default": 2,
+            "description": "Crediti per generazione contenuto HTML completo",
+            "default": 3,
             "min": 0,
             "step": 0.1,
             "admin_only": true,

@@ -2,11 +2,7 @@
 
 <?php
 $moduleSettings = \Core\ModuleLoader::getModuleSettings('content-creator');
-$metaTitleMin = $aiSettings['meta_title_min'] ?? ($moduleSettings['meta_title_min'] ?? 50);
-$metaTitleMax = $aiSettings['meta_title_max'] ?? ($moduleSettings['meta_title_max'] ?? 60);
-$metaDescMin = $aiSettings['meta_desc_min'] ?? ($moduleSettings['meta_desc_min'] ?? 140);
-$metaDescMax = $aiSettings['meta_desc_max'] ?? ($moduleSettings['meta_desc_max'] ?? 160);
-$pageDescMin = $aiSettings['page_desc_min'] ?? ($moduleSettings['page_desc_min'] ?? 300);
+$minWords = $aiSettings['min_words'] ?? null;
 $customPrompt = $aiSettings['custom_prompt'] ?? '';
 ?>
 
@@ -50,6 +46,7 @@ $customPrompt = $aiSettings['custom_prompt'] ?? '';
                             <option value="product" <?= ($project['content_type'] ?? '') === 'product' ? 'selected' : '' ?>>Prodotto</option>
                             <option value="category" <?= ($project['content_type'] ?? '') === 'category' ? 'selected' : '' ?>>Categoria</option>
                             <option value="article" <?= ($project['content_type'] ?? '') === 'article' ? 'selected' : '' ?>>Articolo/Blog</option>
+                            <option value="service" <?= ($project['content_type'] ?? '') === 'service' ? 'selected' : '' ?>>Servizio</option>
                             <option value="custom" <?= ($project['content_type'] ?? '') === 'custom' ? 'selected' : '' ?>>Custom</option>
                         </select>
                     </div>
@@ -66,7 +63,7 @@ $customPrompt = $aiSettings['custom_prompt'] ?? '';
                         <label for="tone" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tono</label>
                         <select id="tone" name="tone"
                                 class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                            <?php foreach (['professionale' => 'Professionale', 'informativo' => 'Informativo', 'tecnico' => 'Tecnico', 'commerciale' => 'Commerciale'] as $val => $label): ?>
+                            <?php foreach (['professionale' => 'Professionale', 'informativo' => 'Informativo', 'tecnico' => 'Tecnico', 'commerciale' => 'Commerciale', 'persuasivo' => 'Persuasivo'] as $val => $label): ?>
                             <option value="<?= $val ?>" <?= ($project['tone'] ?? 'professionale') === $val ? 'selected' : '' ?>><?= $label ?></option>
                             <?php endforeach; ?>
                         </select>
@@ -96,41 +93,21 @@ $customPrompt = $aiSettings['custom_prompt'] ?? '';
             </div>
         </div>
 
-        <!-- Impostazioni AI -->
+        <!-- Lunghezza Contenuto -->
         <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
             <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-                <h3 class="text-lg font-medium text-slate-900 dark:text-white">Lunghezze Contenuti</h3>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Personalizza le lunghezze per questo progetto (override dei default globali)</p>
+                <h3 class="text-lg font-medium text-slate-900 dark:text-white">Lunghezza Contenuto</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Override del numero minimo di parole per questo progetto (lascia vuoto per usare il default globale)</p>
             </div>
-            <div class="p-6 space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Meta Title - Min caratteri</label>
-                        <input type="number" name="meta_title_min" value="<?= (int) $metaTitleMin ?>" min="30" max="70"
-                               class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Meta Title - Max caratteri</label>
-                        <input type="number" name="meta_title_max" value="<?= (int) $metaTitleMax ?>" min="50" max="80"
-                               class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Meta Description - Min caratteri</label>
-                        <input type="number" name="meta_desc_min" value="<?= (int) $metaDescMin ?>" min="100" max="160"
-                               class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Meta Description - Max caratteri</label>
-                        <input type="number" name="meta_desc_max" value="<?= (int) $metaDescMax ?>" min="140" max="200"
-                               class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                    </div>
-                </div>
+            <div class="p-6">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Page Description - Min caratteri</label>
-                    <input type="number" name="page_desc_min" value="<?= (int) $pageDescMin ?>" min="100" max="1000"
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Parole minime</label>
+                    <input type="number" name="min_words" value="<?= $minWords !== null ? (int) $minWords : '' ?>" min="100" max="5000"
+                           placeholder="Default in base al tipo contenuto"
                            class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        Default: Prodotto 300, Categoria 400, Servizio 500, Articolo 800, Custom 300
+                    </p>
                 </div>
             </div>
         </div>
