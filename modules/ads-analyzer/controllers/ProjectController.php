@@ -6,10 +6,6 @@ use Core\View;
 use Core\Auth;
 use Core\ModuleLoader;
 use Modules\AdsAnalyzer\Models\Project;
-use Modules\AdsAnalyzer\Models\AdGroup;
-use Modules\AdsAnalyzer\Models\SearchTerm;
-use Modules\AdsAnalyzer\Models\Analysis;
-use Modules\AdsAnalyzer\Models\NegativeKeyword;
 use Modules\AdsAnalyzer\Services\ValidationService;
 
 class ProjectController
@@ -72,48 +68,6 @@ class ProjectController
         $_SESSION['flash_success'] = 'Progetto creato con successo';
         header('Location: ' . url("/ads-analyzer/projects/{$projectId}/script"));
         exit;
-    }
-
-    public function show(int $id): string
-    {
-        $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $id);
-
-        if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
-            header('Location: ' . url('/ads-analyzer'));
-            exit;
-        }
-
-        // Type guard: solo negative-kw usa questa dashboard
-        if (($project['type'] ?? 'negative-kw') === 'campaign') {
-            header('Location: ' . url("/ads-analyzer/projects/{$id}/campaign-dashboard"));
-            exit;
-        }
-
-        $adGroups = AdGroup::getWithStats($id);
-        $termStats = SearchTerm::getStatsByProject($id);
-        $selectedCount = NegativeKeyword::countSelectedByProject($id);
-        $totalNegatives = NegativeKeyword::countByProject($id);
-
-        // Analisi recenti (ultime 3)
-        $recentAnalyses = Analysis::findByProjectId($id);
-        $recentAnalyses = array_slice($recentAnalyses, 0, 3);
-        $totalAnalyses = Analysis::countByProject($id);
-
-        return View::render('ads-analyzer/projects/show', [
-            'title' => $project['name'] . ' - Google Ads Analyzer',
-            'user' => $user,
-            'modules' => ModuleLoader::getUserModules($user['id']),
-            'project' => $project,
-            'adGroups' => $adGroups,
-            'termStats' => $termStats,
-            'selectedCount' => $selectedCount,
-            'totalNegatives' => $totalNegatives,
-            'recentAnalyses' => $recentAnalyses,
-            'totalAnalyses' => $totalAnalyses,
-            'currentPage' => 'dashboard',
-        ]);
     }
 
     public function edit(int $id): string
