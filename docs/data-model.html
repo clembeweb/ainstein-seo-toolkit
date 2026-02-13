@@ -5,19 +5,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ainstein SEO Toolkit - Data Model</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#e6f4f8',
+                            100: '#cce9f1',
+                            200: '#99d3e3',
+                            300: '#66bdd5',
+                            400: '#33a7c7',
+                            500: '#006e96',
+                            600: '#005577',
+                            700: '#004d69',
+                            800: '#003d54',
+                            900: '#002e3f',
+                            950: '#001f2a',
+                        },
+                        secondary: {
+                            50: '#e6f0f4',
+                            100: '#cce1e9',
+                            200: '#99c3d3',
+                            300: '#66a5bd',
+                            400: '#3387a7',
+                            500: '#004d69',
+                            600: '#003d54',
+                            700: '#00313f',
+                            800: '#00252f',
+                            900: '#00191f',
+                        },
+                        accent: {
+                            50: '#e6f7fc',
+                            100: '#cceff9',
+                            200: '#99dff3',
+                            300: '#66cfed',
+                            400: '#33bfe7',
+                            500: '#00a3d9',
+                            600: '#0088b8',
+                            700: '#006e96',
+                            800: '#005577',
+                            900: '#003d54',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .mermaid { background: #1e293b; border-radius: 8px; padding: 16px; }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        [x-cloak] { display: none !important; }
+        .mermaid { background: #f1f5f9; border-radius: 8px; padding: 16px; }
+        .dark .mermaid { background: #1e293b; }
         .mermaid svg { max-width: 100%; }
         details summary { cursor: pointer; }
         details summary::-webkit-details-marker { display: none; }
         .pk { color: #f59e0b; font-weight: 600; }
         .fk { color: #3b82f6; font-weight: 600; }
+        /* Scrollbar (same as main layout) */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
         @media print {
             body { background: white !important; color: black !important; font-size: 10px; }
             nav, .no-print { display: none !important; }
+            main { margin-left: 0 !important; }
             .mermaid { background: #f1f5f9 !important; }
             details { break-inside: avoid; }
             details[open] summary ~ * { display: block !important; }
@@ -25,48 +84,96 @@
             .print-break { break-before: page; }
         }
     </style>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
-        mermaid.initialize({
-            startOnLoad: true,
-            theme: 'dark',
-            er: { useMaxWidth: true, layoutDirection: 'TB' }
+        // Initialize mermaid after Alpine sets dark mode
+        document.addEventListener('alpine:init', () => {
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            mermaid.initialize({
+                startOnLoad: true,
+                theme: isDark ? 'dark' : 'default',
+                er: { useMaxWidth: true, layoutDirection: 'TB' }
+            });
         });
     </script>
 </head>
-<body class="bg-slate-900 text-slate-200 min-h-screen">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 min-h-screen font-sans"
+      x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }"
+      x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))"
+      :class="{ 'dark': darkMode }">
 
 <!-- Navigation -->
-<nav class="fixed top-0 left-0 w-64 h-full bg-slate-800 border-r border-slate-700 overflow-y-auto z-50 no-print">
-    <div class="p-4 border-b border-slate-700">
-        <h1 class="text-lg font-bold text-white">Ainstein Data Model</h1>
-        <p class="text-xs text-slate-400 mt-1">~70 tabelle &middot; 7 moduli</p>
+<nav class="fixed top-0 left-0 w-64 h-full bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 overflow-y-auto z-50 no-print">
+    <div class="flex h-16 shrink-0 items-center px-6 border-b border-slate-200 dark:border-slate-700">
+        <img src="../public/assets/images/logo-ainstein-orizzontal.png" alt="Ainstein" class="h-8 dark:brightness-0 dark:invert">
     </div>
-    <div class="p-3 space-y-1 text-sm">
-        <a href="#overview" class="block px-3 py-1.5 rounded hover:bg-slate-700 text-slate-300">Panoramica Generale</a>
-        <div class="pt-2 pb-1 px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Core</div>
-        <a href="#core" class="block px-3 py-1.5 rounded hover:bg-slate-700 text-slate-300">Tabelle Core (12)</a>
-        <div class="pt-2 pb-1 px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Moduli</div>
-        <a href="#aic" class="block px-3 py-1.5 rounded hover:bg-slate-700 text-amber-400">AI Content (aic_)</a>
-        <a href="#sa" class="block px-3 py-1.5 rounded hover:bg-slate-700 text-emerald-400">SEO Audit (sa_)</a>
-        <a href="#st" class="block px-3 py-1.5 rounded hover:bg-slate-700 text-blue-400">SEO Tracking (st_)</a>
-        <a href="#kr" class="block px-3 py-1.5 rounded hover:bg-slate-700 text-purple-400">Keyword Research (kr_)</a>
-        <a href="#il" class="block px-3 py-1.5 rounded hover:bg-slate-700 text-cyan-400">Internal Links (il_)</a>
-        <a href="#ga" class="block px-3 py-1.5 rounded hover:bg-slate-700 text-rose-400">Ads Analyzer (ga_)</a>
+    <div class="p-4">
+        <p class="px-3 mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Data Model</p>
+        <p class="px-3 mb-3 text-xs text-slate-400 dark:text-slate-500">~70 tabelle &middot; 7 moduli</p>
+    </div>
+    <div class="px-3 pb-3 space-y-1 text-sm">
+        <a href="#overview" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 font-medium transition-colors">
+            <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Panoramica
+        </a>
+        <div class="pt-3 pb-1 px-3 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Core</div>
+        <a href="#core" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors">
+            <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+            Tabelle Core (12)
+        </a>
+        <div class="pt-3 pb-1 px-3 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Moduli</div>
+        <a href="#aic" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 text-amber-600 dark:text-amber-400 transition-colors">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+            AI Content (aic_)
+        </a>
+        <a href="#sa" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 text-emerald-600 dark:text-emerald-400 transition-colors">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            SEO Audit (sa_)
+        </a>
+        <a href="#st" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 text-blue-600 dark:text-blue-400 transition-colors">
+            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+            SEO Tracking (st_)
+        </a>
+        <a href="#kr" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 text-purple-600 dark:text-purple-400 transition-colors">
+            <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+            Keyword Research (kr_)
+        </a>
+        <a href="#il" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 text-cyan-600 dark:text-cyan-400 transition-colors">
+            <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
+            Internal Links (il_)
+        </a>
+        <a href="#ga" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 text-rose-600 dark:text-rose-400 transition-colors">
+            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+            Ads Analyzer (ga_)
+        </a>
     </div>
 </nav>
 
 <!-- Main Content -->
 <main class="ml-64 p-8 max-w-6xl">
 
+    <!-- Dark mode toggle (top-right) -->
+    <div class="fixed top-4 right-4 z-50 no-print">
+        <button @click="darkMode = !darkMode" class="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+            <svg x-show="!darkMode" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+            <svg x-show="darkMode" x-cloak class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+        </button>
+    </div>
+
     <!-- Header -->
     <div class="mb-12">
-        <h1 class="text-3xl font-bold text-white mb-2">Ainstein SEO Toolkit &mdash; Data Model</h1>
-        <p class="text-slate-400">Documentazione completa dello schema database. Generato il <strong class="text-slate-300">13 Febbraio 2026</strong>.</p>
-        <div class="flex gap-4 mt-4 text-sm">
-            <span class="px-3 py-1 bg-slate-800 rounded-full border border-slate-700">~70 tabelle</span>
-            <span class="px-3 py-1 bg-slate-800 rounded-full border border-slate-700">7 moduli</span>
-            <span class="px-3 py-1 bg-slate-800 rounded-full border border-slate-700">MySQL 8.0 / InnoDB</span>
-            <span class="px-3 py-1 bg-slate-800 rounded-full border border-slate-700">utf8mb4</span>
+        <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Ainstein SEO Toolkit &mdash; Data Model</h1>
+        <p class="text-slate-500 dark:text-slate-400">Documentazione completa dello schema database. Generato il <strong class="text-slate-700 dark:text-slate-300">13 Febbraio 2026</strong>.</p>
+        <div class="flex flex-wrap gap-3 mt-4 text-sm">
+            <span class="px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">~70 tabelle</span>
+            <span class="px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">7 moduli</span>
+            <span class="px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">MySQL 8.0 / InnoDB</span>
+            <span class="px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">utf8mb4</span>
         </div>
         <div class="mt-4 flex gap-3 text-xs">
             <span class="pk">&#9679; PK = Primary Key</span>
@@ -77,11 +184,11 @@
 
     <!-- ==================== OVERVIEW ==================== -->
     <section id="overview" class="mb-16">
-        <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+        <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
             <svg class="w-6 h-6 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3z"/></svg>
             Panoramica Generale
         </h2>
-        <p class="text-slate-400 mb-6">Relazioni principali tra la tabella <code class="text-amber-400">users</code> e le tabelle progetto di ogni modulo.</p>
+        <p class="text-slate-500 dark:text-slate-400 mb-6">Relazioni principali tra la tabella <code class="text-amber-400">users</code> e le tabelle progetto di ogni modulo.</p>
         <div class="mermaid">
 erDiagram
     users ||--o{ aic_projects : "possiede"
@@ -112,8 +219,8 @@ erDiagram
 
     <!-- ==================== CORE ==================== -->
     <section id="core" class="mb-16 print-break">
-        <h2 class="text-2xl font-bold text-white mb-6">Tabelle Core</h2>
-        <p class="text-slate-400 mb-6">Tabelle condivise dall'intero framework: autenticazione, crediti, piani, logging.</p>
+        <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">Tabelle Core</h2>
+        <p class="text-slate-500 dark:text-slate-400 mb-6">Tabelle condivise dall'intero framework: autenticazione, crediti, piani, logging.</p>
 
         <div class="mermaid">
 erDiagram
@@ -187,15 +294,15 @@ erDiagram
         </div>
 
         <!-- users -->
-        <details class="mt-6 bg-slate-800 rounded-lg border border-slate-700">
-            <summary class="p-4 font-semibold text-white flex justify-between items-center">
+        <details class="mt-6 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white flex justify-between items-center">
                 users
-                <span class="text-xs text-slate-400">12 colonne</span>
+                <span class="text-xs text-slate-500 dark:text-slate-400">12 colonne</span>
             </summary>
-            <div class="p-4 border-t border-slate-700 overflow-x-auto">
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 overflow-x-auto">
                 <table class="w-full text-sm">
-                    <thead><tr class="text-left text-slate-400 border-b border-slate-700"><th class="pb-2">Colonna</th><th class="pb-2">Tipo</th><th class="pb-2">Note</th></tr></thead>
-                    <tbody class="text-slate-300">
+                    <thead><tr class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700"><th class="pb-2">Colonna</th><th class="pb-2">Tipo</th><th class="pb-2">Note</th></tr></thead>
+                    <tbody class="text-slate-600 dark:text-slate-300">
                         <tr><td class="py-1 pk">id</td><td>INT AUTO_INCREMENT</td><td>PRIMARY KEY</td></tr>
                         <tr><td class="py-1">email</td><td>VARCHAR(255)</td><td>UNIQUE</td></tr>
                         <tr><td class="py-1">password</td><td>VARCHAR(255)</td><td></td></tr>
@@ -212,15 +319,15 @@ erDiagram
         </details>
 
         <!-- credit_transactions -->
-        <details class="mt-3 bg-slate-800 rounded-lg border border-slate-700">
-            <summary class="p-4 font-semibold text-white flex justify-between items-center">
+        <details class="mt-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white flex justify-between items-center">
                 credit_transactions
-                <span class="text-xs text-slate-400">8 colonne</span>
+                <span class="text-xs text-slate-500 dark:text-slate-400">8 colonne</span>
             </summary>
-            <div class="p-4 border-t border-slate-700 overflow-x-auto">
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 overflow-x-auto">
                 <table class="w-full text-sm">
-                    <thead><tr class="text-left text-slate-400 border-b border-slate-700"><th class="pb-2">Colonna</th><th class="pb-2">Tipo</th><th class="pb-2">Note</th></tr></thead>
-                    <tbody class="text-slate-300">
+                    <thead><tr class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700"><th class="pb-2">Colonna</th><th class="pb-2">Tipo</th><th class="pb-2">Note</th></tr></thead>
+                    <tbody class="text-slate-600 dark:text-slate-300">
                         <tr><td class="py-1 pk">id</td><td>INT AUTO_INCREMENT</td><td>PRIMARY KEY</td></tr>
                         <tr><td class="py-1 fk">user_id</td><td>INT</td><td>FK &rarr; users(id) CASCADE</td></tr>
                         <tr><td class="py-1">amount</td><td>DECIMAL(10,2)</td><td></td></tr>
@@ -235,15 +342,15 @@ erDiagram
         </details>
 
         <!-- usage_log -->
-        <details class="mt-3 bg-slate-800 rounded-lg border border-slate-700">
-            <summary class="p-4 font-semibold text-white flex justify-between items-center">
+        <details class="mt-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white flex justify-between items-center">
                 usage_log
-                <span class="text-xs text-slate-400">6 colonne</span>
+                <span class="text-xs text-slate-500 dark:text-slate-400">6 colonne</span>
             </summary>
-            <div class="p-4 border-t border-slate-700 overflow-x-auto">
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 overflow-x-auto">
                 <table class="w-full text-sm">
-                    <thead><tr class="text-left text-slate-400 border-b border-slate-700"><th class="pb-2">Colonna</th><th class="pb-2">Tipo</th><th class="pb-2">Note</th></tr></thead>
-                    <tbody class="text-slate-300">
+                    <thead><tr class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700"><th class="pb-2">Colonna</th><th class="pb-2">Tipo</th><th class="pb-2">Note</th></tr></thead>
+                    <tbody class="text-slate-600 dark:text-slate-300">
                         <tr><td class="py-1 pk">id</td><td>INT AUTO_INCREMENT</td><td>PRIMARY KEY</td></tr>
                         <tr><td class="py-1 fk">user_id</td><td>INT</td><td>FK &rarr; users(id) CASCADE</td></tr>
                         <tr><td class="py-1">module_slug</td><td>VARCHAR(100)</td><td></td></tr>
@@ -257,15 +364,15 @@ erDiagram
         </details>
 
         <!-- plans, subscriptions, settings, modules, ai_logs, password_resets -->
-        <details class="mt-3 bg-slate-800 rounded-lg border border-slate-700">
-            <summary class="p-4 font-semibold text-white flex justify-between items-center">
+        <details class="mt-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white flex justify-between items-center">
                 plans
-                <span class="text-xs text-slate-400">9 colonne</span>
+                <span class="text-xs text-slate-500 dark:text-slate-400">9 colonne</span>
             </summary>
-            <div class="p-4 border-t border-slate-700 overflow-x-auto">
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 overflow-x-auto">
                 <table class="w-full text-sm">
-                    <thead><tr class="text-left text-slate-400 border-b border-slate-700"><th class="pb-2">Colonna</th><th class="pb-2">Tipo</th><th class="pb-2">Note</th></tr></thead>
-                    <tbody class="text-slate-300">
+                    <thead><tr class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700"><th class="pb-2">Colonna</th><th class="pb-2">Tipo</th><th class="pb-2">Note</th></tr></thead>
+                    <tbody class="text-slate-600 dark:text-slate-300">
                         <tr><td class="py-1 pk">id</td><td>INT AUTO_INCREMENT</td><td>PRIMARY KEY</td></tr>
                         <tr><td class="py-1">name</td><td>VARCHAR(100)</td><td></td></tr>
                         <tr><td class="py-1">slug</td><td>VARCHAR(100)</td><td>UNIQUE</td></tr>
@@ -280,15 +387,15 @@ erDiagram
             </div>
         </details>
 
-        <details class="mt-3 bg-slate-800 rounded-lg border border-slate-700">
-            <summary class="p-4 font-semibold text-white flex justify-between items-center">
+        <details class="mt-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white flex justify-between items-center">
                 subscriptions
-                <span class="text-xs text-slate-400">8 colonne</span>
+                <span class="text-xs text-slate-500 dark:text-slate-400">8 colonne</span>
             </summary>
-            <div class="p-4 border-t border-slate-700 overflow-x-auto">
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 overflow-x-auto">
                 <table class="w-full text-sm">
-                    <thead><tr class="text-left text-slate-400 border-b border-slate-700"><th class="pb-2">Colonna</th><th class="pb-2">Tipo</th><th class="pb-2">Note</th></tr></thead>
-                    <tbody class="text-slate-300">
+                    <thead><tr class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700"><th class="pb-2">Colonna</th><th class="pb-2">Tipo</th><th class="pb-2">Note</th></tr></thead>
+                    <tbody class="text-slate-600 dark:text-slate-300">
                         <tr><td class="py-1 pk">id</td><td>INT AUTO_INCREMENT</td><td>PRIMARY KEY</td></tr>
                         <tr><td class="py-1 fk">user_id</td><td>INT</td><td>FK &rarr; users(id) CASCADE</td></tr>
                         <tr><td class="py-1 fk">plan_id</td><td>INT</td><td>FK &rarr; plans(id) CASCADE</td></tr>
@@ -302,16 +409,16 @@ erDiagram
             </div>
         </details>
 
-        <details class="mt-3 bg-slate-800 rounded-lg border border-slate-700">
-            <summary class="p-4 font-semibold text-white flex justify-between items-center">
+        <details class="mt-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white flex justify-between items-center">
                 settings &middot; modules &middot; ai_logs &middot; password_resets
-                <span class="text-xs text-slate-400">Altre tabelle core</span>
+                <span class="text-xs text-slate-500 dark:text-slate-400">Altre tabelle core</span>
             </summary>
-            <div class="p-4 border-t border-slate-700 space-y-4 text-sm text-slate-300">
-                <div><strong class="text-white">settings</strong>: id(PK), key_name(UK), value, is_secret, updated_by(FK&rarr;users), updated_at</div>
-                <div><strong class="text-white">modules</strong>: id(PK), slug(UK), name, description, version, is_active, settings(JSON), created_at, updated_at</div>
-                <div><strong class="text-white">ai_logs</strong>: id(PK), user_id(FK), module_slug, provider, model, request_payload, response_payload, tokens_input, tokens_output, tokens_total(GENERATED), duration_ms, status, error_message, fallback_from, estimated_cost, credits_used, created_at</div>
-                <div><strong class="text-white">password_resets</strong>: id(PK), email, token, created_at</div>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 space-y-4 text-sm text-slate-600 dark:text-slate-300">
+                <div><strong class="text-slate-900 dark:text-white">settings</strong>: id(PK), key_name(UK), value, is_secret, updated_by(FK&rarr;users), updated_at</div>
+                <div><strong class="text-slate-900 dark:text-white">modules</strong>: id(PK), slug(UK), name, description, version, is_active, settings(JSON), created_at, updated_at</div>
+                <div><strong class="text-slate-900 dark:text-white">ai_logs</strong>: id(PK), user_id(FK), module_slug, provider, model, request_payload, response_payload, tokens_input, tokens_output, tokens_total(GENERATED), duration_ms, status, error_message, fallback_from, estimated_cost, credits_used, created_at</div>
+                <div><strong class="text-slate-900 dark:text-white">password_resets</strong>: id(PK), email, token, created_at</div>
             </div>
         </details>
     </section>
@@ -319,7 +426,7 @@ erDiagram
     <!-- ==================== AI CONTENT ==================== -->
     <section id="aic" class="mb-16 print-break">
         <h2 class="text-2xl font-bold text-amber-400 mb-6">AI Content Generator (aic_)</h2>
-        <p class="text-slate-400 mb-6">11 tabelle. Generazione articoli SEO con SERP analysis, brief AI e WordPress integration.</p>
+        <p class="text-slate-500 dark:text-slate-400 mb-6">11 tabelle. Generazione articoli SEO con SERP analysis, brief AI e WordPress integration.</p>
 
         <div class="mermaid">
 erDiagram
@@ -363,50 +470,50 @@ erDiagram
     }
         </div>
 
-        <details class="mt-6 bg-slate-800 rounded-lg border border-amber-900/50">
-            <summary class="p-4 font-semibold text-white">aic_projects</summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300">
+        <details class="mt-6 bg-white dark:bg-slate-800 rounded-lg border border-amber-200 dark:border-amber-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">aic_projects</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300">
                 id(PK), user_id(FK&rarr;users), name, description, default_language, default_location, settings(JSON), created_at, updated_at
             </div>
         </details>
-        <details class="mt-2 bg-slate-800 rounded-lg border border-amber-900/50">
-            <summary class="p-4 font-semibold text-white">aic_keywords</summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300">
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-amber-200 dark:border-amber-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">aic_keywords</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300">
                 id(PK), user_id(FK&rarr;users), project_id(FK&rarr;aic_projects), keyword, language, location, serp_extracted_at, created_at
             </div>
         </details>
-        <details class="mt-2 bg-slate-800 rounded-lg border border-amber-900/50">
-            <summary class="p-4 font-semibold text-white">aic_articles</summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300">
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-amber-200 dark:border-amber-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">aic_articles</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300">
                 id(PK), user_id(FK&rarr;users), project_id, keyword_id(FK&rarr;aic_keywords), title, content(LONGTEXT), meta_description, word_count, status(draft/generating/ready/published/failed), brief_data(JSON), ai_model, generation_time_ms, credits_used, published_at, wp_site_id(FK&rarr;aic_wp_sites), wp_post_id, published_url, created_at, updated_at
             </div>
         </details>
-        <details class="mt-2 bg-slate-800 rounded-lg border border-amber-900/50">
-            <summary class="p-4 font-semibold text-white">aic_serp_results</summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300">
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-amber-200 dark:border-amber-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">aic_serp_results</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300">
                 id(PK), keyword_id(FK&rarr;aic_keywords CASCADE), position, title, url, snippet, domain, created_at
             </div>
         </details>
-        <details class="mt-2 bg-slate-800 rounded-lg border border-amber-900/50">
-            <summary class="p-4 font-semibold text-white">aic_paa_questions</summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300">
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-amber-200 dark:border-amber-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">aic_paa_questions</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300">
                 id(PK), keyword_id(FK&rarr;aic_keywords CASCADE), question, snippet, position, created_at
             </div>
         </details>
-        <details class="mt-2 bg-slate-800 rounded-lg border border-amber-900/50">
-            <summary class="p-4 font-semibold text-white">aic_sources</summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300">
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-amber-200 dark:border-amber-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">aic_sources</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300">
                 id(PK), article_id(FK&rarr;aic_articles CASCADE), url, title, content_extracted(LONGTEXT), headings_json(JSON), word_count, is_custom, scrape_status(pending/success/failed), error_message, scraped_at, created_at
             </div>
         </details>
-        <details class="mt-2 bg-slate-800 rounded-lg border border-amber-900/50">
-            <summary class="p-4 font-semibold text-white">aic_wp_sites &middot; aic_wp_publish_log &middot; aic_meta_tags &middot; aic_internal_links_pool &middot; aic_process_jobs</summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300 space-y-3">
-                <div><strong class="text-white">aic_wp_sites</strong>: id(PK), user_id(FK), name, url, api_key, is_active, last_sync_at, categories_cache(JSON)</div>
-                <div><strong class="text-white">aic_wp_publish_log</strong>: id(PK), article_id(FK), wp_site_id(FK), wp_post_id, status(success/failed), response_data(JSON)</div>
-                <div><strong class="text-white">aic_meta_tags</strong>: id(PK), project_id(FK), user_id, url(UK con project), original_title, original_h1, current_meta_title/desc, generated_title/desc, scraped_content, status(pending/scraped/generated/approved/published/error), wp_site_id, wp_post_id, wp_post_type, scrape/generation/publish_error, timestamps</div>
-                <div><strong class="text-white">aic_internal_links_pool</strong>: id(PK), project_id(FK), url(UK con project), title, description, sitemap_source, scrape_status, is_active</div>
-                <div><strong class="text-white">aic_process_jobs</strong>: id(PK), project_id(FK), user_id(FK), type(cron/manual), status(pending/running/completed/error/cancelled), keywords_requested/completed/failed, current_queue_id, current_keyword, current_step, articles_generated, credits_used, error_message, started/completed_at</div>
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-amber-200 dark:border-amber-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">aic_wp_sites &middot; aic_wp_publish_log &middot; aic_meta_tags &middot; aic_internal_links_pool &middot; aic_process_jobs</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
+                <div><strong class="text-slate-900 dark:text-white">aic_wp_sites</strong>: id(PK), user_id(FK), name, url, api_key, is_active, last_sync_at, categories_cache(JSON)</div>
+                <div><strong class="text-slate-900 dark:text-white">aic_wp_publish_log</strong>: id(PK), article_id(FK), wp_site_id(FK), wp_post_id, status(success/failed), response_data(JSON)</div>
+                <div><strong class="text-slate-900 dark:text-white">aic_meta_tags</strong>: id(PK), project_id(FK), user_id, url(UK con project), original_title, original_h1, current_meta_title/desc, generated_title/desc, scraped_content, status(pending/scraped/generated/approved/published/error), wp_site_id, wp_post_id, wp_post_type, scrape/generation/publish_error, timestamps</div>
+                <div><strong class="text-slate-900 dark:text-white">aic_internal_links_pool</strong>: id(PK), project_id(FK), url(UK con project), title, description, sitemap_source, scrape_status, is_active</div>
+                <div><strong class="text-slate-900 dark:text-white">aic_process_jobs</strong>: id(PK), project_id(FK), user_id(FK), type(cron/manual), status(pending/running/completed/error/cancelled), keywords_requested/completed/failed, current_queue_id, current_keyword, current_step, articles_generated, credits_used, error_message, started/completed_at</div>
             </div>
         </details>
     </section>
@@ -414,7 +521,7 @@ erDiagram
     <!-- ==================== SEO AUDIT ==================== -->
     <section id="sa" class="mb-16 print-break">
         <h2 class="text-2xl font-bold text-emerald-400 mb-6">SEO Audit (sa_)</h2>
-        <p class="text-slate-400 mb-6">12 tabelle. Crawling sito, rilevamento 50+ problemi, integrazione GSC, analisi AI.</p>
+        <p class="text-slate-500 dark:text-slate-400 mb-6">12 tabelle. Crawling sito, rilevamento 50+ problemi, integrazione GSC, analisi AI.</p>
 
         <div class="mermaid">
 erDiagram
@@ -453,36 +560,36 @@ erDiagram
     }
         </div>
 
-        <details class="mt-6 bg-slate-800 rounded-lg border border-emerald-900/50">
-            <summary class="p-4 font-semibold text-white">sa_projects</summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300">
+        <details class="mt-6 bg-white dark:bg-slate-800 rounded-lg border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">sa_projects</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300">
                 id(PK), user_id(FK&rarr;users), name, base_url, crawl_mode(sitemap/spider/both), max_pages, status(pending/crawling/analyzing/completed/failed), pages_found, pages_crawled, issues_count, health_score, gsc_connected, gsc_property, created_at, updated_at, completed_at
             </div>
         </details>
-        <details class="mt-2 bg-slate-800 rounded-lg border border-emerald-900/50">
-            <summary class="p-4 font-semibold text-white">sa_pages <span class="text-xs text-slate-400 ml-2">~30 colonne</span></summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300">
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">sa_pages <span class="text-xs text-slate-400 ml-2">~30 colonne</span></summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300">
                 id(PK), project_id(FK), url, status_code, load_time_ms, content_length, title, title_length, meta_description, meta_description_length, meta_robots, canonical_url, og_title/description/image, h1_count..h6_count, word_count, images_count, images_without_alt, images_data(JSON), internal/external/broken/nofollow_links_count, links_data(JSON), has_schema, schema_types(JSON), hreflang_tags(JSON), is_indexable, indexability_reason, html_content(LONGTEXT), crawled_at
             </div>
         </details>
-        <details class="mt-2 bg-slate-800 rounded-lg border border-emerald-900/50">
-            <summary class="p-4 font-semibold text-white">sa_issues</summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300">
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">sa_issues</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300">
                 id(PK), project_id(FK), page_id(FK&rarr;sa_pages CASCADE), category, issue_type, severity(critical/warning/notice/info), title, description, affected_element, recommendation, source(crawler/gsc), created_at
             </div>
         </details>
-        <details class="mt-2 bg-slate-800 rounded-lg border border-emerald-900/50">
-            <summary class="p-4 font-semibold text-white">sa_gsc_* &middot; sa_site_config &middot; sa_ai_analyses &middot; sa_activity_logs</summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300 space-y-3">
-                <div><strong class="text-white">sa_gsc_connections</strong>: id(PK), project_id(FK UK), user_id(FK), access_token, refresh_token, token_expires_at, property_url, property_type(URL_PREFIX/DOMAIN), is_active, last_sync_at</div>
-                <div><strong class="text-white">sa_gsc_performance</strong>: id(PK), project_id(FK), date, query, page, device, country, clicks, impressions, ctr, position</div>
-                <div><strong class="text-white">sa_gsc_coverage</strong>: id(PK), project_id(FK), url, coverage_state(11 valori ENUM), verdict(PASS/NEUTRAL/FAIL), robots_txt_state, indexing_state, google/user_canonical, last_crawl_time</div>
-                <div><strong class="text-white">sa_gsc_core_web_vitals</strong>: id(PK), project_id(FK), form_factor(PHONE/DESKTOP), metric_type(LCP/INP/CLS), good/needs_improvement/poor_percent, p75_value, p75_unit, date_range</div>
-                <div><strong class="text-white">sa_gsc_mobile_usability</strong>: id(PK), project_id(FK), url, issue_type(8 ENUM values), severity</div>
-                <div><strong class="text-white">sa_gsc_sync_log</strong>: id(PK), project_id(FK), sync_type, date_range, records_imported, status, error_message</div>
-                <div><strong class="text-white">sa_site_config</strong>: id(PK), project_id(FK UK), robots_txt, robots_allows/disallows(JSON), sitemap_urls(JSON), has_sitemap, has_robots, is_https, ssl_valid</div>
-                <div><strong class="text-white">sa_ai_analyses</strong>: id(PK), project_id(FK), type(overview/category), category, content(LONGTEXT), credits_used</div>
-                <div><strong class="text-white">sa_activity_logs</strong>: id(PK), project_id(FK), user_id(FK), action, details(JSON)</div>
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">sa_gsc_* &middot; sa_site_config &middot; sa_ai_analyses &middot; sa_activity_logs</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
+                <div><strong class="text-slate-900 dark:text-white">sa_gsc_connections</strong>: id(PK), project_id(FK UK), user_id(FK), access_token, refresh_token, token_expires_at, property_url, property_type(URL_PREFIX/DOMAIN), is_active, last_sync_at</div>
+                <div><strong class="text-slate-900 dark:text-white">sa_gsc_performance</strong>: id(PK), project_id(FK), date, query, page, device, country, clicks, impressions, ctr, position</div>
+                <div><strong class="text-slate-900 dark:text-white">sa_gsc_coverage</strong>: id(PK), project_id(FK), url, coverage_state(11 valori ENUM), verdict(PASS/NEUTRAL/FAIL), robots_txt_state, indexing_state, google/user_canonical, last_crawl_time</div>
+                <div><strong class="text-slate-900 dark:text-white">sa_gsc_core_web_vitals</strong>: id(PK), project_id(FK), form_factor(PHONE/DESKTOP), metric_type(LCP/INP/CLS), good/needs_improvement/poor_percent, p75_value, p75_unit, date_range</div>
+                <div><strong class="text-slate-900 dark:text-white">sa_gsc_mobile_usability</strong>: id(PK), project_id(FK), url, issue_type(8 ENUM values), severity</div>
+                <div><strong class="text-slate-900 dark:text-white">sa_gsc_sync_log</strong>: id(PK), project_id(FK), sync_type, date_range, records_imported, status, error_message</div>
+                <div><strong class="text-slate-900 dark:text-white">sa_site_config</strong>: id(PK), project_id(FK UK), robots_txt, robots_allows/disallows(JSON), sitemap_urls(JSON), has_sitemap, has_robots, is_https, ssl_valid</div>
+                <div><strong class="text-slate-900 dark:text-white">sa_ai_analyses</strong>: id(PK), project_id(FK), type(overview/category), category, content(LONGTEXT), credits_used</div>
+                <div><strong class="text-slate-900 dark:text-white">sa_activity_logs</strong>: id(PK), project_id(FK), user_id(FK), action, details(JSON)</div>
             </div>
         </details>
     </section>
@@ -490,7 +597,7 @@ erDiagram
     <!-- ==================== SEO TRACKING ==================== -->
     <section id="st" class="mb-16 print-break">
         <h2 class="text-2xl font-bold text-blue-400 mb-6">SEO Tracking (st_)</h2>
-        <p class="text-slate-400 mb-6">16+ tabelle. Monitoraggio posizioni, GSC/GA4 integration, alert, report AI, rank checking.</p>
+        <p class="text-slate-500 dark:text-slate-400 mb-6">16+ tabelle. Monitoraggio posizioni, GSC/GA4 integration, alert, report AI, rank checking.</p>
 
         <div class="mermaid">
 erDiagram
@@ -530,45 +637,45 @@ erDiagram
     }
         </div>
 
-        <details class="mt-6 bg-slate-800 rounded-lg border border-blue-900/50">
-            <summary class="p-4 font-semibold text-white">st_projects</summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300">
+        <details class="mt-6 bg-white dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-blue-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">st_projects</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300">
                 id(PK), user_id(FK), name, domain, gsc_connected, ga4_connected, sync_enabled, last_sync_at, sync_status, ai_reports_enabled, weekly_report_day/time, monthly_report_day, notification_emails(JSON), data_retention_months, created_at, updated_at
             </div>
         </details>
-        <details class="mt-2 bg-slate-800 rounded-lg border border-blue-900/50">
-            <summary class="p-4 font-semibold text-white">st_keywords</summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300">
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-blue-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">st_keywords</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300">
                 id(PK), project_id(FK), keyword(UK con project), keyword_group, is_brand, target_url, priority(high/medium/low), alert_position_change, alert_enabled, last_position, last_clicks, last_impressions, last_ctr, last_updated_at, created_at
             </div>
         </details>
-        <details class="mt-2 bg-slate-800 rounded-lg border border-blue-900/50">
-            <summary class="p-4 font-semibold text-white">st_gsc_data <span class="text-xs text-slate-400 ml-2">BIGINT PK - tabella ad alto volume</span></summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300">
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-blue-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">st_gsc_data <span class="text-xs text-slate-400 ml-2">BIGINT PK - tabella ad alto volume</span></summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300">
                 id(BIGINT PK), project_id(FK), date, query, page, country, device(DESKTOP/MOBILE/TABLET/ALL), clicks, impressions, ctr, position, keyword_id(FK nullable). UK(project, date, query, page, country, device)
             </div>
         </details>
-        <details class="mt-2 bg-slate-800 rounded-lg border border-blue-900/50">
-            <summary class="p-4 font-semibold text-white">st_keyword_positions &middot; st_keyword_revenue</summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300 space-y-3">
-                <div><strong class="text-white">st_keyword_positions</strong> (BIGINT PK): project_id(FK), keyword_id(FK), date, avg_position, best_position, total_clicks, total_impressions, avg_ctr, position/clicks/impressions_change, top_pages(JSON), country_data(JSON). UK(keyword_id, date)</div>
-                <div><strong class="text-white">st_keyword_revenue</strong> (BIGINT PK): project_id(FK), keyword_id(FK nullable), date, query, landing_page, clicks, impressions, position, sessions, revenue, purchases, add_to_carts, revenue_per_click, conversion_rate</div>
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-blue-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">st_keyword_positions &middot; st_keyword_revenue</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
+                <div><strong class="text-slate-900 dark:text-white">st_keyword_positions</strong> (BIGINT PK): project_id(FK), keyword_id(FK), date, avg_position, best_position, total_clicks, total_impressions, avg_ctr, position/clicks/impressions_change, top_pages(JSON), country_data(JSON). UK(keyword_id, date)</div>
+                <div><strong class="text-slate-900 dark:text-white">st_keyword_revenue</strong> (BIGINT PK): project_id(FK), keyword_id(FK nullable), date, query, landing_page, clicks, impressions, position, sessions, revenue, purchases, add_to_carts, revenue_per_click, conversion_rate</div>
             </div>
         </details>
-        <details class="mt-2 bg-slate-800 rounded-lg border border-blue-900/50">
-            <summary class="p-4 font-semibold text-white">st_gsc_daily &middot; st_ga4_data &middot; st_ga4_daily &middot; Connessioni &middot; Alert &middot; Report &middot; Sync &middot; Rank</summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300 space-y-3">
-                <div><strong class="text-white">st_gsc_daily</strong>: project_id(FK), date(UK), total_clicks, total_impressions, avg_ctr, avg_position, unique_queries, unique_pages, changes</div>
-                <div><strong class="text-white">st_ga4_data</strong> (BIGINT): project_id(FK), date, landing_page, source_medium, country, device, sessions, users, new_users, engagement metrics, e-commerce metrics (purchases, revenue)</div>
-                <div><strong class="text-white">st_ga4_daily</strong>: project_id(FK), date(UK), traffic + engagement + e-commerce aggregati giornalieri</div>
-                <div><strong class="text-white">st_gsc_connections</strong>: project_id(FK UK), OAuth tokens, property_url, property_type, is_active, last_sync_at</div>
-                <div><strong class="text-white">st_ga4_connections</strong>: project_id(FK UK), service_account_json, property_id, property_name, is_active</div>
-                <div><strong class="text-white">st_alerts</strong>: project_id(FK), alert_type(9 valori), severity, title, message, keyword_id(FK), previous/current_value, change_percent, ai_analysis, ai_suggestion, status(new/read/actioned/dismissed)</div>
-                <div><strong class="text-white">st_alert_settings</strong>: project_id(FK UK), position/traffic/revenue/anomaly alert config, email_enabled, email_frequency</div>
-                <div><strong class="text-white">st_ai_reports</strong>: project_id(FK), report_type(6 valori), date_from/to, title, summary, content(LONGTEXT), metrics_snapshot(JSON), credits_used, email config, is_scheduled</div>
-                <div><strong class="text-white">st_sync_log</strong>: project_id(FK), sync_type(gsc/ga4/full), date range, records_fetched/inserted/updated, status, duration_seconds</div>
-                <div><strong class="text-white">st_rank_jobs</strong>: project_id(FK), user_id(FK), type(cron/manual), status, keywords_requested/completed/failed/found, current_keyword, avg_position, credits_used</div>
-                <div><strong class="text-white">st_rank_queue</strong>: project_id(FK), keyword_id(FK), keyword, target_domain, location_code, device, status, scheduled_at, result_position, result_url, job_id</div>
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-blue-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">st_gsc_daily &middot; st_ga4_data &middot; st_ga4_daily &middot; Connessioni &middot; Alert &middot; Report &middot; Sync &middot; Rank</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
+                <div><strong class="text-slate-900 dark:text-white">st_gsc_daily</strong>: project_id(FK), date(UK), total_clicks, total_impressions, avg_ctr, avg_position, unique_queries, unique_pages, changes</div>
+                <div><strong class="text-slate-900 dark:text-white">st_ga4_data</strong> (BIGINT): project_id(FK), date, landing_page, source_medium, country, device, sessions, users, new_users, engagement metrics, e-commerce metrics (purchases, revenue)</div>
+                <div><strong class="text-slate-900 dark:text-white">st_ga4_daily</strong>: project_id(FK), date(UK), traffic + engagement + e-commerce aggregati giornalieri</div>
+                <div><strong class="text-slate-900 dark:text-white">st_gsc_connections</strong>: project_id(FK UK), OAuth tokens, property_url, property_type, is_active, last_sync_at</div>
+                <div><strong class="text-slate-900 dark:text-white">st_ga4_connections</strong>: project_id(FK UK), service_account_json, property_id, property_name, is_active</div>
+                <div><strong class="text-slate-900 dark:text-white">st_alerts</strong>: project_id(FK), alert_type(9 valori), severity, title, message, keyword_id(FK), previous/current_value, change_percent, ai_analysis, ai_suggestion, status(new/read/actioned/dismissed)</div>
+                <div><strong class="text-slate-900 dark:text-white">st_alert_settings</strong>: project_id(FK UK), position/traffic/revenue/anomaly alert config, email_enabled, email_frequency</div>
+                <div><strong class="text-slate-900 dark:text-white">st_ai_reports</strong>: project_id(FK), report_type(6 valori), date_from/to, title, summary, content(LONGTEXT), metrics_snapshot(JSON), credits_used, email config, is_scheduled</div>
+                <div><strong class="text-slate-900 dark:text-white">st_sync_log</strong>: project_id(FK), sync_type(gsc/ga4/full), date range, records_fetched/inserted/updated, status, duration_seconds</div>
+                <div><strong class="text-slate-900 dark:text-white">st_rank_jobs</strong>: project_id(FK), user_id(FK), type(cron/manual), status, keywords_requested/completed/failed/found, current_keyword, avg_position, credits_used</div>
+                <div><strong class="text-slate-900 dark:text-white">st_rank_queue</strong>: project_id(FK), keyword_id(FK), keyword, target_domain, location_code, device, status, scheduled_at, result_position, result_url, job_id</div>
             </div>
         </details>
     </section>
@@ -576,7 +683,7 @@ erDiagram
     <!-- ==================== KEYWORD RESEARCH ==================== -->
     <section id="kr" class="mb-16 print-break">
         <h2 class="text-2xl font-bold text-purple-400 mb-6">AI Keyword Research (kr_)</h2>
-        <p class="text-slate-400 mb-6">4 tabelle. Research guidata con clustering AI e architettura sito.</p>
+        <p class="text-slate-500 dark:text-slate-400 mb-6">4 tabelle. Research guidata con clustering AI e architettura sito.</p>
 
         <div class="mermaid">
 erDiagram
@@ -615,13 +722,13 @@ erDiagram
     }
         </div>
 
-        <details class="mt-6 bg-slate-800 rounded-lg border border-purple-900/50">
-            <summary class="p-4 font-semibold text-white">Tutte le tabelle kr_</summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300 space-y-3">
-                <div><strong class="text-white">kr_projects</strong>: id(PK), user_id, name, description, default_location, default_language, created_at, updated_at</div>
-                <div><strong class="text-white">kr_researches</strong>: id(PK), project_id(FK), user_id, type(research/architecture), status(draft/collecting/analyzing/completed/error), brief(JSON), raw_keywords_count, filtered_keywords_count, ai_response(JSON), strategy_note, credits_used, api_time_ms, ai_time_ms</div>
-                <div><strong class="text-white">kr_clusters</strong>: id(PK), research_id(FK), name, main_keyword, main_volume, total_volume, keywords_count, intent, note, suggested_url, suggested_h1, sort_order</div>
-                <div><strong class="text-white">kr_keywords</strong>: id(PK), research_id(FK), cluster_id(FK), text, volume, competition_level, competition_index, low_bid, high_bid, trend, intent, is_main, is_excluded, source</div>
+        <details class="mt-6 bg-white dark:bg-slate-800 rounded-lg border border-purple-200 dark:border-purple-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">Tutte le tabelle kr_</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
+                <div><strong class="text-slate-900 dark:text-white">kr_projects</strong>: id(PK), user_id, name, description, default_location, default_language, created_at, updated_at</div>
+                <div><strong class="text-slate-900 dark:text-white">kr_researches</strong>: id(PK), project_id(FK), user_id, type(research/architecture), status(draft/collecting/analyzing/completed/error), brief(JSON), raw_keywords_count, filtered_keywords_count, ai_response(JSON), strategy_note, credits_used, api_time_ms, ai_time_ms</div>
+                <div><strong class="text-slate-900 dark:text-white">kr_clusters</strong>: id(PK), research_id(FK), name, main_keyword, main_volume, total_volume, keywords_count, intent, note, suggested_url, suggested_h1, sort_order</div>
+                <div><strong class="text-slate-900 dark:text-white">kr_keywords</strong>: id(PK), research_id(FK), cluster_id(FK), text, volume, competition_level, competition_index, low_bid, high_bid, trend, intent, is_main, is_excluded, source</div>
             </div>
         </details>
     </section>
@@ -629,7 +736,7 @@ erDiagram
     <!-- ==================== INTERNAL LINKS ==================== -->
     <section id="il" class="mb-16 print-break">
         <h2 class="text-2xl font-bold text-cyan-400 mb-6">Internal Links (il_)</h2>
-        <p class="text-slate-400 mb-6">8 tabelle. Analisi struttura link interni, rilevamento pagine orfane, snapshot storici.</p>
+        <p class="text-slate-500 dark:text-slate-400 mb-6">8 tabelle. Analisi struttura link interni, rilevamento pagine orfane, snapshot storici.</p>
 
         <div class="mermaid">
 erDiagram
@@ -661,17 +768,17 @@ erDiagram
     }
         </div>
 
-        <details class="mt-6 bg-slate-800 rounded-lg border border-cyan-900/50">
-            <summary class="p-4 font-semibold text-white">Tutte le tabelle il_</summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300 space-y-3">
-                <div><strong class="text-white">il_projects</strong>: id(PK), user_id(FK), name, base_url, css_selector, html_block_regex, scrape_delay, user_agent, status, created_at</div>
-                <div><strong class="text-white">il_urls</strong>: id(PK), project_id(FK), url(UK con project), keyword, raw_html, content_html, http_status, scraped_at, status(pending/scraping/scraped/error/no_content), error_message</div>
-                <div><strong class="text-white">il_internal_links</strong>: id(PK), project_id(FK), source_url_id(FK&rarr;il_urls), destination_url, anchor_text, anchor_text_clean, link_position, source_block, is_internal, is_valid, ai_relevance_score(1-10), ai_anchor_quality(1-10), ai_juice_flow(optimal/good/weak/poor/orphan), ai_notes, ai_suggestions, analyzed_at</div>
-                <div><strong class="text-white">il_scrape_sessions</strong>: id(PK), project_id(FK), status(running/paused/completed/stopped), mode(pending/all), total_urls, processed_urls, error_count</div>
-                <div><strong class="text-white">il_snapshots</strong>: id(PK), project_id(FK), user_id(FK), name, description, total_urls/links, internal/external_links, orphan_pages, avg_relevance_score</div>
-                <div><strong class="text-white">il_snapshot_links</strong>: id(PK), snapshot_id(FK), source_url, destination_url, anchor_text, is_internal, ai_relevance_score, ai_juice_flow</div>
-                <div><strong class="text-white">il_project_stats</strong>: project_id(PK FK), total_urls, scraped/error_urls, total/internal/external/analyzed_links, avg_relevance_score, orphan_pages</div>
-                <div><strong class="text-white">il_activity_logs</strong>: id(PK), project_id(FK), user_id(FK), action, details(JSON)</div>
+        <details class="mt-6 bg-white dark:bg-slate-800 rounded-lg border border-cyan-200 dark:border-cyan-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">Tutte le tabelle il_</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
+                <div><strong class="text-slate-900 dark:text-white">il_projects</strong>: id(PK), user_id(FK), name, base_url, css_selector, html_block_regex, scrape_delay, user_agent, status, created_at</div>
+                <div><strong class="text-slate-900 dark:text-white">il_urls</strong>: id(PK), project_id(FK), url(UK con project), keyword, raw_html, content_html, http_status, scraped_at, status(pending/scraping/scraped/error/no_content), error_message</div>
+                <div><strong class="text-slate-900 dark:text-white">il_internal_links</strong>: id(PK), project_id(FK), source_url_id(FK&rarr;il_urls), destination_url, anchor_text, anchor_text_clean, link_position, source_block, is_internal, is_valid, ai_relevance_score(1-10), ai_anchor_quality(1-10), ai_juice_flow(optimal/good/weak/poor/orphan), ai_notes, ai_suggestions, analyzed_at</div>
+                <div><strong class="text-slate-900 dark:text-white">il_scrape_sessions</strong>: id(PK), project_id(FK), status(running/paused/completed/stopped), mode(pending/all), total_urls, processed_urls, error_count</div>
+                <div><strong class="text-slate-900 dark:text-white">il_snapshots</strong>: id(PK), project_id(FK), user_id(FK), name, description, total_urls/links, internal/external_links, orphan_pages, avg_relevance_score</div>
+                <div><strong class="text-slate-900 dark:text-white">il_snapshot_links</strong>: id(PK), snapshot_id(FK), source_url, destination_url, anchor_text, is_internal, ai_relevance_score, ai_juice_flow</div>
+                <div><strong class="text-slate-900 dark:text-white">il_project_stats</strong>: project_id(PK FK), total_urls, scraped/error_urls, total/internal/external/analyzed_links, avg_relevance_score, orphan_pages</div>
+                <div><strong class="text-slate-900 dark:text-white">il_activity_logs</strong>: id(PK), project_id(FK), user_id(FK), action, details(JSON)</div>
             </div>
         </details>
     </section>
@@ -679,7 +786,7 @@ erDiagram
     <!-- ==================== ADS ANALYZER ==================== -->
     <section id="ga" class="mb-16 print-break">
         <h2 class="text-2xl font-bold text-rose-400 mb-6">Google Ads Analyzer (ga_)</h2>
-        <p class="text-slate-400 mb-6">15 tabelle. Analisi negative keywords, valutazione campagne AI, Google Ads Script integration.</p>
+        <p class="text-slate-500 dark:text-slate-400 mb-6">15 tabelle. Analisi negative keywords, valutazione campagne AI, Google Ads Script integration.</p>
 
         <div class="mermaid">
 erDiagram
@@ -713,35 +820,35 @@ erDiagram
     }
         </div>
 
-        <details class="mt-6 bg-slate-800 rounded-lg border border-rose-900/50">
-            <summary class="p-4 font-semibold text-white">Negative Keywords: ga_projects &middot; ga_analyses &middot; ga_ad_groups &middot; ga_search_terms &middot; ga_negative_categories &middot; ga_negative_keywords &middot; ga_saved_contexts</summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300 space-y-3">
-                <div><strong class="text-white">ga_projects</strong>: id(PK), user_id(FK), type(negative-kw/campaign), name, description, business_context, status, api_token(UK), api_token_created_at, script_config(JSON), auto_evaluate, total_terms, total_negatives_found</div>
-                <div><strong class="text-white">ga_analyses</strong>: id(PK), project_id(FK), user_id(FK), name, business_context, context_mode, status, run_id(FK), total_categories/keywords, error_message, started/completed_at</div>
-                <div><strong class="text-white">ga_ad_groups</strong>: id(PK), project_id(FK), run_id(FK), name, terms_count, zero_ctr_count, wasted_impressions, analysis_status, landing_url, scraped_content, extracted_context</div>
-                <div><strong class="text-white">ga_search_terms</strong>: id(PK), project_id(FK), ad_group_id(FK), run_id(FK), term, match_type, clicks, impressions, ctr, cost, conversions, conversion_value, is_zero_ctr</div>
-                <div><strong class="text-white">ga_negative_categories</strong>: id(PK), project_id(FK), ad_group_id(FK), analysis_id(FK), category_key, category_name, description, priority(high/medium/low), keywords_count, sort_order</div>
-                <div><strong class="text-white">ga_negative_keywords</strong>: id(PK), project_id(FK), ad_group_id(FK), analysis_id(FK), category_id(FK), keyword, is_selected, suggested_match_type</div>
-                <div><strong class="text-white">ga_saved_contexts</strong>: id(PK), user_id(FK), name, context(LONGTEXT)</div>
+        <details class="mt-6 bg-white dark:bg-slate-800 rounded-lg border border-rose-200 dark:border-rose-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">Negative Keywords: ga_projects &middot; ga_analyses &middot; ga_ad_groups &middot; ga_search_terms &middot; ga_negative_categories &middot; ga_negative_keywords &middot; ga_saved_contexts</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
+                <div><strong class="text-slate-900 dark:text-white">ga_projects</strong>: id(PK), user_id(FK), type(negative-kw/campaign), name, description, business_context, status, api_token(UK), api_token_created_at, script_config(JSON), auto_evaluate, total_terms, total_negatives_found</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_analyses</strong>: id(PK), project_id(FK), user_id(FK), name, business_context, context_mode, status, run_id(FK), total_categories/keywords, error_message, started/completed_at</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_ad_groups</strong>: id(PK), project_id(FK), run_id(FK), name, terms_count, zero_ctr_count, wasted_impressions, analysis_status, landing_url, scraped_content, extracted_context</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_search_terms</strong>: id(PK), project_id(FK), ad_group_id(FK), run_id(FK), term, match_type, clicks, impressions, ctr, cost, conversions, conversion_value, is_zero_ctr</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_negative_categories</strong>: id(PK), project_id(FK), ad_group_id(FK), analysis_id(FK), category_key, category_name, description, priority(high/medium/low), keywords_count, sort_order</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_negative_keywords</strong>: id(PK), project_id(FK), ad_group_id(FK), analysis_id(FK), category_id(FK), keyword, is_selected, suggested_match_type</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_saved_contexts</strong>: id(PK), user_id(FK), name, context(LONGTEXT)</div>
             </div>
         </details>
-        <details class="mt-2 bg-slate-800 rounded-lg border border-rose-900/50">
-            <summary class="p-4 font-semibold text-white">Campaign Analysis: ga_script_runs &middot; ga_campaigns &middot; ga_ads &middot; ga_extensions &middot; ga_campaign_evaluations &middot; ga_campaign_ad_groups &middot; ga_ad_group_keywords &middot; ga_auto_eval_queue</summary>
-            <div class="p-4 border-t border-slate-700 text-sm text-slate-300 space-y-3">
-                <div><strong class="text-white">ga_script_runs</strong>: id(PK), project_id(FK), run_type, status(received/processing/completed/error), items_received, error_message, script_version, date_range</div>
-                <div><strong class="text-white">ga_campaigns</strong>: id(PK), project_id(FK), run_id(FK), campaign_id_google, campaign_name, status/type, bidding_strategy, budget, clicks, impressions, ctr, avg_cpc, cost, conversions, conversion_value, conv_rate</div>
-                <div><strong class="text-white">ga_ads</strong>: id(PK), project_id(FK), run_id(FK), campaign/ad_group IDs, ad_type, headline1-3, description1-2, final_url, path1-2, status, metrics, quality_score</div>
-                <div><strong class="text-white">ga_extensions</strong>: id(PK), project_id(FK), run_id(FK), extension_type, extension_text, status, clicks, impressions</div>
-                <div><strong class="text-white">ga_campaign_evaluations</strong>: id(PK), project_id(FK), user_id(FK), run_id(FK), eval_type(manual/auto), previous_eval_id, name, campaigns/ads/ad_groups/keywords_evaluated, landing_pages_analyzed, ai_response(LONGTEXT), metric_deltas(JSON), campaigns_filter(JSON), status, credits_used</div>
-                <div><strong class="text-white">ga_campaign_ad_groups</strong>: id(PK), project_id(FK), run_id(FK), campaign info, ad_group info, all metrics</div>
-                <div><strong class="text-white">ga_ad_group_keywords</strong>: id(PK), project_id(FK), run_id(FK), campaign/ad_group info, keyword_text, match_type, status, metrics, quality_score, first_page_cpc</div>
-                <div><strong class="text-white">ga_auto_eval_queue</strong>: id(PK), project_id(FK), run_id(FK UK), status(pending/processing/completed/skipped/error), skip_reason, attempts, scheduled_for, timestamps</div>
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-rose-200 dark:border-rose-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">Campaign Analysis: ga_script_runs &middot; ga_campaigns &middot; ga_ads &middot; ga_extensions &middot; ga_campaign_evaluations &middot; ga_campaign_ad_groups &middot; ga_ad_group_keywords &middot; ga_auto_eval_queue</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
+                <div><strong class="text-slate-900 dark:text-white">ga_script_runs</strong>: id(PK), project_id(FK), run_type, status(received/processing/completed/error), items_received, error_message, script_version, date_range</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_campaigns</strong>: id(PK), project_id(FK), run_id(FK), campaign_id_google, campaign_name, status/type, bidding_strategy, budget, clicks, impressions, ctr, avg_cpc, cost, conversions, conversion_value, conv_rate</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_ads</strong>: id(PK), project_id(FK), run_id(FK), campaign/ad_group IDs, ad_type, headline1-3, description1-2, final_url, path1-2, status, metrics, quality_score</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_extensions</strong>: id(PK), project_id(FK), run_id(FK), extension_type, extension_text, status, clicks, impressions</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_campaign_evaluations</strong>: id(PK), project_id(FK), user_id(FK), run_id(FK), eval_type(manual/auto), previous_eval_id, name, campaigns/ads/ad_groups/keywords_evaluated, landing_pages_analyzed, ai_response(LONGTEXT), metric_deltas(JSON), campaigns_filter(JSON), status, credits_used</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_campaign_ad_groups</strong>: id(PK), project_id(FK), run_id(FK), campaign info, ad_group info, all metrics</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_ad_group_keywords</strong>: id(PK), project_id(FK), run_id(FK), campaign/ad_group info, keyword_text, match_type, status, metrics, quality_score, first_page_cpc</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_auto_eval_queue</strong>: id(PK), project_id(FK), run_id(FK UK), status(pending/processing/completed/skipped/error), skip_reason, attempts, scheduled_for, timestamps</div>
             </div>
         </details>
     </section>
 
     <!-- Footer -->
-    <footer class="mt-16 pt-8 border-t border-slate-700 text-center text-sm text-slate-500">
+    <footer class="mt-16 pt-8 border-t border-slate-200 dark:border-slate-700 text-center text-sm text-slate-500 dark:text-slate-500">
         <p>Ainstein SEO Toolkit &mdash; Data Model v1.0 &mdash; Generato il 13 Febbraio 2026</p>
         <p class="mt-1">Per stampare come PDF: Ctrl+P &rarr; Salva come PDF (layout A4 Landscape consigliato)</p>
     </footer>

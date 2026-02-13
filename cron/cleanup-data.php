@@ -49,6 +49,10 @@ $config = [
 
     // --- Nuovi: keyword-research ---
     'kr_cache_days'             => 14,   // Cache keyword API: 14 giorni
+
+    // --- Nuovi: content-creator ---
+    'cc_jobs_days'              => 7,    // Jobs completati: 7 giorni
+    'cc_operations_log_days'    => 90,   // Operations log: 90 giorni
 ];
 
 $logFile = BASE_PATH . '/storage/logs/data-cleanup.log';
@@ -781,6 +785,48 @@ function cleanupKrCache(array $config): int
 }
 
 // ============================================
+// 21. cc_jobs → DELETE completed/cancelled > 7 giorni
+// ============================================
+
+function cleanupCcJobs(array $config, int $batchSize): int
+{
+    if (!tableExists('cc_jobs')) {
+        logMsg("  Tabella cc_jobs non trovata, skip");
+        return 0;
+    }
+
+    $days = $config['cc_jobs_days'];
+
+    return batchDelete(
+        'cc_jobs',
+        "status IN ('completed', 'error', 'cancelled') AND created_at < DATE_SUB(NOW(), INTERVAL ? DAY)",
+        [$days],
+        $batchSize
+    );
+}
+
+// ============================================
+// 22. cc_operations_log → DELETE > 90 giorni
+// ============================================
+
+function cleanupCcOperationsLog(array $config, int $batchSize): int
+{
+    if (!tableExists('cc_operations_log')) {
+        logMsg("  Tabella cc_operations_log non trovata, skip");
+        return 0;
+    }
+
+    $days = $config['cc_operations_log_days'];
+
+    return batchDelete(
+        'cc_operations_log',
+        "created_at < DATE_SUB(NOW(), INTERVAL ? DAY)",
+        [$days],
+        $batchSize
+    );
+}
+
+// ============================================
 // ESECUZIONE PRINCIPALE
 // ============================================
 
@@ -812,6 +858,10 @@ $sections = [
     ['aic_scrape_jobs (> 7gg)',        'cleanupScrapeJobs',       [$config, $deleteBatchSize]],
     ['aic_sources (content > 90gg)',   'cleanupAicSourcesContent', [$config, $batchSize]],
     ['kr_keyword_cache (> 14gg)',      'cleanupKrCache',          [$config]],
+
+    // --- Nuovi (21-22): content-creator ---
+    ['cc_jobs (> 7gg)',               'cleanupCcJobs',           [$config, $deleteBatchSize]],
+    ['cc_operations_log (> 90gg)',    'cleanupCcOperationsLog',  [$config, $deleteBatchSize]],
 ];
 
 foreach ($sections as [$label, $func, $args]) {

@@ -632,6 +632,15 @@ if (preg_match('#^/ai-content/projects/(\d+)#', $currentPath, $matches)) {
                     </div>
                     <?php endif; ?>
                 </div>
+            <?php elseif ($module['slug'] === 'content-creator'): ?>
+                <!-- Content Creator Module -->
+                <a href="<?= url('/content-creator') ?>"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors <?= str_starts_with($currentPath, '/content-creator') ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white' ?>">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/>
+                    </svg>
+                    <span class="flex-1"><?= e($module['name']) ?></span>
+                </a>
             <?php else: ?>
                 <!-- Other Modules (standard link) -->
                 <?php if (in_array($module['slug'], $onbModuleSlugs)): ?>

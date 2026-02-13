@@ -77,7 +77,12 @@ class EditorialController
             return;
         }
 
-        $categories = array_filter(array_map('trim', explode(',', $_POST['categories'] ?? '')));
+        $rawCategories = $_POST['categories'] ?? '';
+        if (is_array($rawCategories)) {
+            $categories = array_filter(array_map('trim', $rawCategories));
+        } else {
+            $categories = array_filter(array_map('trim', explode(',', $rawCategories)));
+        }
 
         $brief = [
             'theme' => trim($_POST['theme'] ?? ''),
