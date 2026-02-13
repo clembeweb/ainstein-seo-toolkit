@@ -551,6 +551,83 @@ Quando nessun plugin SEO e' installato, il rendering avviene direttamente:
 
 ---
 
+## Content Creator Import (5 Methods)
+
+The Content Creator module (`content-creator`) extends the standard import system with 5 methods, including CMS connector fetch and Keyword Research integration.
+
+### Overview
+
+| # | Method | Source field | Service | Endpoint |
+|---|--------|-------------|---------|----------|
+| 1 | CSV | `csv` | `CsvImportService` | `POST /content-creator/projects/{id}/import/csv` |
+| 2 | Sitemap | `sitemap` | `SitemapService` | `POST /content-creator/projects/{id}/import/sitemap` |
+| 3 | CMS | `cms` | Connector fetch | `POST /content-creator/projects/{id}/import/cms` |
+| 4 | Manual | `manual` | Form input | `POST /content-creator/projects/{id}/import/store` |
+| 5 | Keyword Research | `keyword_research` | kr_clusters data | `POST /content-creator/projects/{id}/import/keyword-research` |
+
+### 1. CSV Import
+
+Uses the shared `CsvImportService`. Supports URL column + optional keyword column. Delimiter auto-detect. Same pattern as other modules.
+
+```
+POST /content-creator/projects/{id}/import/csv
+Content-Type: multipart/form-data
+Fields: csv_file, has_header, delimiter, url_column, keyword_column
+```
+
+### 2. Sitemap Import
+
+Uses the shared `SitemapService`. Discovery from robots.txt, URL pattern filter, preview before import.
+
+```
+POST /content-creator/projects/{id}/import/sitemap
+```
+
+Uses the standard sitemap API endpoints:
+- `POST /content-creator/api/sitemap-discover` - Discover sitemaps
+- `POST /content-creator/api/sitemap` - Parse/preview/import
+
+### 3. CMS Import (Connector Fetch)
+
+Fetches items directly from a connected CMS (WordPress, Shopify, PrestaShop, Magento, Custom API). Requires a configured connector in `/content-creator/connectors`.
+
+```
+POST /content-creator/projects/{id}/import/cms
+Content-Type: application/x-www-form-urlencoded
+Fields: connector_id, content_types (comma-separated), max_items
+```
+
+Imports URL + title + existing content as context for AI regeneration. Each imported URL gets `source = 'cms'` and existing content is stored in `scraped_content` (status set to `scraped`, skipping the scrape phase).
+
+### 4. Manual Import
+
+Form with textarea for entering URLs (one per line), with optional keyword separated by tab or comma.
+
+```
+POST /content-creator/projects/{id}/import/store
+Content-Type: application/x-www-form-urlencoded
+Fields: urls_text (newline-separated URLs with optional keywords)
+```
+
+### 5. Keyword Research Import
+
+Receives clusters from the `keyword-research` module (Architecture mode). Each cluster becomes a `cc_url` entry with:
+- `main_keyword` = cluster main keyword
+- `secondary_keywords` = JSON array of secondary keywords
+- `intent` = cluster intent (informational, transactional, commercial, navigational)
+- `content_type` = auto-mapped from intent (transactional -> product/service, informational -> article)
+- `source` = `keyword_research`
+
+```
+POST /content-creator/projects/{id}/import/keyword-research
+Content-Type: application/json
+Body: { "cluster_ids": [1, 2, 3], "research_id": 42 }
+```
+
+The endpoint reads `kr_clusters` and `kr_cluster_keywords` to populate `cc_urls` with full keyword data.
+
+---
+
 ## Best Practices
 
 1. **Always validate project ownership** before performing imports
