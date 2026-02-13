@@ -416,8 +416,17 @@ class EditorialController
 
             $systemPrompt = "Sei un esperto SEO italiano e content strategist specializzato in pianificazione editoriale per blog. Rispondi SOLO con JSON valido, senza markdown, senza commenti, senza testo prima o dopo il JSON.";
 
+            // max_tokens proporzionato al numero di articoli (ogni articolo ~200 tokens di output)
+            $totalArticles = ($brief['months'] ?? 6) * ($brief['articles_per_month'] ?? 4);
+            $maxTokens = max(4096, min(16000, $totalArticles * 350));
+
             $aiStart = microtime(true);
-            $aiResult = $ai->analyzeWithSystem($user['id'], $systemPrompt, $prompt, 'keyword-research');
+            $aiResult = $ai->complete($user['id'], [
+                ['role' => 'user', 'content' => $prompt],
+            ], [
+                'system' => $systemPrompt,
+                'max_tokens' => $maxTokens,
+            ], 'keyword-research');
             $aiElapsed = (int) round((microtime(true) - $aiStart) * 1000);
 
             Database::reconnect();
