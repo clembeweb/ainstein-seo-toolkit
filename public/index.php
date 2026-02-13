@@ -253,6 +253,56 @@ Router::post('/forgot-password', function () {
     ], null);
 });
 
+// --- Documentation Routes (Public) ---
+
+Router::get('/docs', function () {
+    $content = View::render('docs/index', ['currentPage' => 'index'], null);
+
+    // Render con layout docs custom (standalone, no main layout)
+    ob_start();
+    $title = 'Documentazione - Ainstein';
+    $currentPage = 'index';
+    include BASE_PATH . '/shared/views/docs/layout.php';
+    $html = ob_get_clean();
+    echo $html;
+    exit;
+});
+
+Router::get('/docs/{slug}', function (string $slug) {
+    $validPages = [
+        'getting-started' => 'Primi Passi',
+        'ai-content' => 'AI Content Generator',
+        'seo-audit' => 'SEO Audit',
+        'seo-tracking' => 'SEO Tracking',
+        'keyword-research' => 'Keyword Research',
+        'internal-links' => 'Internal Links',
+        'ads-analyzer' => 'Google Ads Analyzer',
+        'credits' => 'Sistema Crediti',
+        'faq' => 'FAQ',
+    ];
+
+    if (!isset($validPages[$slug])) {
+        http_response_code(404);
+        return View::render('errors/404', ['title' => 'Pagina non trovata']);
+    }
+
+    $viewPath = BASE_PATH . '/shared/views/docs/' . $slug . '.php';
+    if (!file_exists($viewPath)) {
+        http_response_code(404);
+        return View::render('errors/404', ['title' => 'Pagina non trovata']);
+    }
+
+    $content = View::render('docs/' . $slug, ['currentPage' => $slug], null);
+
+    ob_start();
+    $title = $validPages[$slug] . ' - Documentazione Ainstein';
+    $currentPage = $slug;
+    include BASE_PATH . '/shared/views/docs/layout.php';
+    $html = ob_get_clean();
+    echo $html;
+    exit;
+});
+
 // --- Protected Routes ---
 
 Router::get('/dashboard', function () {

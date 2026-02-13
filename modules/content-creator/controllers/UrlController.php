@@ -1,0 +1,668 @@
+<?php
+
+namespace Modules\ContentCreator\Controllers;
+
+use Core\View;
+use Core\Auth;
+use Core\Router;
+use Core\ModuleLoader;
+use Modules\ContentCreator\Models\Project;
+use Modules\ContentCreator\Models\Url;
+use Modules\ContentCreator\Models\Connector;
+use Services\SitemapService;
+
+/**
+ * UrlController
+ *
+ * Gestisce l'import e la gestione delle URL nel modulo Content Creator.
+ * Workflow: Import (CSV/Sitemap/Manuale/CMS) -> Manage -> Approve/Reject -> Preview
+ */
+class UrlController
+{
+    private Project $project;
+    private Url $url;
+
+    public function __construct()
+    {
+        $this->project = new Project();
+        $this->url = new Url();
+    }
+
+    /**
+     * Verifica progetto e ownership
+     */
+    private function getProject(int $id, int $userId): ?array
+    {
+        $project = $this->project->findByUser($id, $userId);
+
+        if (!$project) {
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
+            return null;
+        }
+
+        return $project;
+    }
+
+    /**
+     * Wizard import URL
+     * GET /content-creator/projects/{id}/import
+     */
+    public function import(int $id): string
+    {
+        $user = Auth::user();
+        $project = $this->getProject($id, $user['id']);
+
+        if (!$project) {
+            Router::redirect('/content-creator');
+            exit;
+        }
+
+        // Carica connettori attivi per tab CMS
+        $connectorModel = new Connector();
+        $connectors = $connectorModel->getActive($user['id']);
+
+        return View::render('content-creator/urls/import', [
+            'title' => 'Importa URL - ' . $project['name'],
+            'user' => $user,
+            'modules' => ModuleLoader::getUserModules($user['id']),
+            'project' => $project,
+            'connectors' => $connectors,
+            'currentPage' => 'import',
+        ]);
+    }
+
+    /**
+     * Import da CSV (AJAX)
+     * POST /content-creator/projects/{id}/import/csv
+     */
+    public function importCsv(int $id): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->findByUser($id, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        if (empty($_FILES['csv_file']['tmp_name'])) {
+            echo json_encode(['success' => false, 'error' => 'Nessun file caricato']);
+            return;
+        }
+
+        $hasHeader = isset($_POST['has_header']);
+        $delimiter = $_POST['delimiter'] ?? 'auto';
+        $urlColumn = (int) ($_POST['url_column'] ?? 0);
+        $keywordColumn = (int) ($_POST['keyword_column'] ?? -1);
+        $categoryColumn = (int) ($_POST['category_column'] ?? -1);
+
+        // Auto-detect delimiter
+        if ($delimiter === 'auto') {
+            $firstLine = fgets(fopen($_FILES['csv_file']['tmp_name'], 'r'));
+            if (str_contains($firstLine, ';')) {
+                $delimiter = ';';
+            } elseif (str_contains($firstLine, "\t")) {
+                $delimiter = "\t";
+            } else {
+                $delimiter = ',';
+            }
+        }
+
+        try {
+            $handle = fopen($_FILES['csv_file']['tmp_name'], 'r');
+            $urls = [];
+            $lineNum = 0;
+
+            while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
+                $lineNum++;
+
+                if ($lineNum === 1 && $hasHeader) {
+                    continue;
+                }
+
+                $url = trim($row[$urlColumn] ?? '');
+
+                if (empty($url)) {
+                    continue;
+                }
+
+                // Normalizza URL
+                if (!preg_match('#^https?://#', $url) && !str_starts_with($url, '/')) {
+                    $url = 'https://' . $url;
+                }
+
+                if (!filter_var($url, FILTER_VALIDATE_URL)) {
+                    continue;
+                }
+
+                $keyword = ($keywordColumn >= 0) ? trim($row[$keywordColumn] ?? '') : null;
+                $category = ($categoryColumn >= 0) ? trim($row[$categoryColumn] ?? '') : null;
+
+                $urls[] = [
+                    'url' => $url,
+                    'keyword' => $keyword ?: null,
+                    'category' => $category ?: null,
+                ];
+            }
+
+            fclose($handle);
+
+            if (empty($urls)) {
+                echo json_encode(['success' => false, 'error' => 'Nessuna URL valida trovata nel CSV']);
+                return;
+            }
+
+            $inserted = $this->url->addBulk($id, $user['id'], $urls);
+
+            echo json_encode([
+                'success' => true,
+                'inserted' => $inserted,
+                'total_found' => count($urls),
+                'message' => "Importate {$inserted} URL dal CSV",
+            ]);
+
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'error' => 'Errore: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Import da sitemap (AJAX)
+     * POST /content-creator/projects/{id}/import/sitemap
+     */
+    public function importSitemap(int $id): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->findByUser($id, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        $sitemapUrls = $_POST['sitemaps'] ?? [];
+        $filter = trim($_POST['filter'] ?? '');
+
+        if (empty($sitemapUrls)) {
+            echo json_encode(['success' => false, 'error' => 'Seleziona almeno una sitemap']);
+            return;
+        }
+
+        try {
+            $sitemapService = new SitemapService();
+            $result = $sitemapService->previewMultiple($sitemapUrls, $filter, 2000);
+
+            if (empty($result['urls'])) {
+                echo json_encode(['success' => false, 'error' => 'Nessuna URL trovata nelle sitemap']);
+                return;
+            }
+
+            $inserted = $this->url->addBulk($id, $user['id'], $result['urls']);
+
+            echo json_encode([
+                'success' => true,
+                'inserted' => $inserted,
+                'total_found' => count($result['urls']),
+                'message' => "Importate {$inserted} URL dalla sitemap",
+            ]);
+
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'error' => 'Errore: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Import da CMS (AJAX) - Placeholder
+     * POST /content-creator/projects/{id}/import/cms
+     */
+    public function importFromCms(int $id): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->findByUser($id, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        echo json_encode([
+            'success' => false,
+            'message' => 'Funzionalit\u00e0 in sviluppo',
+        ]);
+    }
+
+    /**
+     * Import manuale (AJAX)
+     * POST /content-creator/projects/{id}/import/manual
+     */
+    public function importManual(int $id): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->findByUser($id, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        $urlsText = $_POST['urls_text'] ?? '';
+
+        if (empty(trim($urlsText))) {
+            echo json_encode(['success' => false, 'error' => 'Inserisci almeno un URL']);
+            return;
+        }
+
+        try {
+            $lines = explode("\n", $urlsText);
+            $urls = [];
+
+            foreach ($lines as $line) {
+                $line = trim($line);
+
+                if (empty($line) || str_starts_with($line, '#')) {
+                    continue;
+                }
+
+                $url = $line;
+
+                if (empty($url)) {
+                    continue;
+                }
+
+                // Normalizza URL
+                if (!preg_match('#^https?://#', $url) && !str_starts_with($url, '/')) {
+                    $url = 'https://' . $url;
+                }
+
+                if (filter_var($url, FILTER_VALIDATE_URL)) {
+                    $urls[] = $url;
+                }
+            }
+
+            if (empty($urls)) {
+                echo json_encode(['success' => false, 'error' => 'Nessuna URL valida trovata']);
+                return;
+            }
+
+            $inserted = $this->url->addBulk($id, $user['id'], $urls);
+
+            echo json_encode([
+                'success' => true,
+                'inserted' => $inserted,
+                'total_found' => count($urls),
+                'message' => "Importate {$inserted} URL",
+            ]);
+
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'error' => 'Errore: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Scopri sitemap da URL sito (AJAX)
+     * POST /content-creator/projects/{id}/discover
+     */
+    public function discover(int $id): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->findByUser($id, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        $siteUrl = trim($_POST['site_url'] ?? '');
+
+        if (empty($siteUrl)) {
+            echo json_encode(['success' => false, 'error' => 'Inserisci URL del sito']);
+            return;
+        }
+
+        // Normalizza URL
+        if (!preg_match('#^https?://#', $siteUrl)) {
+            $siteUrl = 'https://' . $siteUrl;
+        }
+        $siteUrl = rtrim($siteUrl, '/');
+
+        if (!filter_var($siteUrl, FILTER_VALIDATE_URL)) {
+            echo json_encode(['success' => false, 'error' => 'URL non valido']);
+            return;
+        }
+
+        try {
+            $sitemapService = new SitemapService();
+            $sitemaps = $sitemapService->discoverFromRobotsTxt($siteUrl, true);
+
+            if (empty($sitemaps)) {
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Nessuna sitemap trovata. Verifica che il sito abbia una sitemap.'
+                ]);
+                return;
+            }
+
+            echo json_encode([
+                'success' => true,
+                'site_url' => $siteUrl,
+                'sitemaps' => $sitemaps,
+            ]);
+
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'error' => 'Errore: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Bulk approve URL (AJAX)
+     * POST /content-creator/projects/{id}/urls/bulk-approve
+     */
+    public function bulkApprove(int $id): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->findByUser($id, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        $urlIds = $_POST['url_ids'] ?? [];
+
+        if (empty($urlIds)) {
+            echo json_encode(['success' => false, 'error' => 'Seleziona almeno una URL']);
+            return;
+        }
+
+        $urlIds = array_map('intval', $urlIds);
+
+        try {
+            $count = $this->url->approveBulk($urlIds);
+            echo json_encode([
+                'success' => true,
+                'approved' => $count,
+                'message' => "Approvate {$count} URL",
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Bulk delete URL (AJAX)
+     * POST /content-creator/projects/{id}/urls/bulk-delete
+     */
+    public function bulkDelete(int $id): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->findByUser($id, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        $urlIds = $_POST['url_ids'] ?? [];
+
+        if (empty($urlIds)) {
+            echo json_encode(['success' => false, 'error' => 'Seleziona almeno una URL']);
+            return;
+        }
+
+        $urlIds = array_map('intval', $urlIds);
+
+        try {
+            $count = $this->url->deleteBulk($urlIds);
+            echo json_encode([
+                'success' => true,
+                'deleted' => $count,
+                'message' => "Eliminate {$count} URL",
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Reset errori scraping (AJAX)
+     * POST /content-creator/projects/{id}/urls/reset-scrape-errors
+     */
+    public function resetScrapeErrors(int $id): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->findByUser($id, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        try {
+            $count = $this->url->resetScrapeErrors($id);
+            echo json_encode([
+                'success' => true,
+                'reset' => $count,
+                'message' => "Reset {$count} errori scraping",
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Reset errori generazione (AJAX)
+     * POST /content-creator/projects/{id}/urls/reset-generation-errors
+     */
+    public function resetGenerationErrors(int $id): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->findByUser($id, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        try {
+            $count = $this->url->resetGenerationErrors($id);
+            echo json_encode([
+                'success' => true,
+                'reset' => $count,
+                'message' => "Reset {$count} errori generazione",
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Aggiorna singola URL (AJAX)
+     * POST /content-creator/projects/{id}/urls/{urlId}/update
+     */
+    public function updateUrl(int $id, int $urlId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->findByUser($id, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        $urlRecord = $this->url->findByProject($urlId, $id);
+
+        if (!$urlRecord) {
+            echo json_encode(['success' => false, 'error' => 'URL non trovata']);
+            return;
+        }
+
+        $aiMetaTitle = trim($_POST['ai_meta_title'] ?? '');
+        $aiMetaDescription = trim($_POST['ai_meta_description'] ?? '');
+        $aiPageDescription = trim($_POST['ai_page_description'] ?? '');
+
+        if (empty($aiMetaTitle) && empty($aiMetaDescription) && empty($aiPageDescription)) {
+            echo json_encode(['success' => false, 'error' => 'Inserisci almeno un campo']);
+            return;
+        }
+
+        try {
+            $this->url->update($urlId, [
+                'ai_meta_title' => $aiMetaTitle ?: null,
+                'ai_meta_description' => $aiMetaDescription ?: null,
+                'ai_page_description' => $aiPageDescription ?: null,
+            ]);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'URL aggiornata',
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Approva singola URL (AJAX)
+     * POST /content-creator/projects/{id}/urls/{urlId}/approve
+     */
+    public function approve(int $id, int $urlId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->findByUser($id, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        $urlRecord = $this->url->findByProject($urlId, $id);
+
+        if (!$urlRecord) {
+            echo json_encode(['success' => false, 'error' => 'URL non trovata']);
+            return;
+        }
+
+        try {
+            $this->url->approve($urlId);
+            echo json_encode(['success' => true, 'message' => 'URL approvata']);
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Rifiuta singola URL (AJAX)
+     * POST /content-creator/projects/{id}/urls/{urlId}/reject
+     */
+    public function reject(int $id, int $urlId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->findByUser($id, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        $urlRecord = $this->url->findByProject($urlId, $id);
+
+        if (!$urlRecord) {
+            echo json_encode(['success' => false, 'error' => 'URL non trovata']);
+            return;
+        }
+
+        try {
+            $this->url->reject($urlId);
+            echo json_encode(['success' => true, 'message' => 'URL rifiutata']);
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Elimina singola URL (AJAX)
+     * POST /content-creator/projects/{id}/urls/{urlId}/delete
+     */
+    public function delete(int $id, int $urlId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->findByUser($id, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        $urlRecord = $this->url->findByProject($urlId, $id);
+
+        if (!$urlRecord) {
+            echo json_encode(['success' => false, 'error' => 'URL non trovata']);
+            return;
+        }
+
+        try {
+            $this->url->delete($urlId);
+            echo json_encode(['success' => true, 'message' => 'URL eliminata']);
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Preview singola URL
+     * GET /content-creator/projects/{id}/urls/{urlId}
+     */
+    public function preview(int $id, int $urlId): string
+    {
+        $user = Auth::user();
+        $project = $this->getProject($id, $user['id']);
+
+        if (!$project) {
+            Router::redirect('/content-creator');
+            exit;
+        }
+
+        $urlRecord = $this->url->findByProject($urlId, $id);
+
+        if (!$urlRecord) {
+            $_SESSION['_flash']['error'] = 'URL non trovata';
+            Router::redirect("/content-creator/projects/{$id}/results");
+            exit;
+        }
+
+        return View::render('content-creator/urls/preview', [
+            'title' => 'Preview URL - ' . $project['name'],
+            'user' => $user,
+            'modules' => ModuleLoader::getUserModules($user['id']),
+            'project' => $project,
+            'url' => $urlRecord,
+            'currentPage' => 'results',
+        ]);
+    }
+}

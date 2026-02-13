@@ -77,6 +77,7 @@ class Research
 
     public function delete(int $id): void
     {
+        Database::delete('kr_editorial_items', 'research_id = ?', [$id]);
         Database::delete('kr_keywords', 'research_id = ?', [$id]);
         Database::delete('kr_clusters', 'research_id = ?', [$id]);
         Database::delete($this->table, 'id = ?', [$id]);

@@ -1,0 +1,161 @@
+{
+    "name": "AI Content Bulk Creator",
+    "slug": "content-creator",
+    "version": "1.0.0",
+    "description": "Genera massivamente Meta Title, Meta Description e Page Description con AI per e-commerce",
+    "icon": "document-duplicate",
+    "color": "teal",
+    "menu_order": 25,
+    "requires": {
+        "php": ">=8.0",
+        "credits": true,
+        "services": ["ai", "scraper"]
+    },
+    "credits": {
+        "scrape_url": 1,
+        "ai_generate": 2
+    },
+    "settings_groups": {
+        "ai_config": {
+            "label": "Configurazione AI",
+            "icon": "sparkles",
+            "description": "Provider e modello AI per questo modulo",
+            "order": 0
+        },
+        "general": {
+            "label": "Impostazioni Generali",
+            "icon": "cog",
+            "description": "Impostazioni predefinite per la generazione contenuti",
+            "order": 1,
+            "collapsed": false
+        },
+        "costs": {
+            "label": "Costi Operazioni",
+            "icon": "currency-euro",
+            "description": "Crediti consumati per ogni operazione",
+            "order": 99,
+            "collapsed": true
+        }
+    },
+    "settings": {
+        "ai_provider": {
+            "type": "select",
+            "label": "Provider AI",
+            "description": "Provider AI per questo modulo",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"},
+                {"value": "anthropic", "label": "Anthropic (Claude)"},
+                {"value": "openai", "label": "OpenAI (GPT)"}
+            ]
+        },
+        "ai_model": {
+            "type": "select",
+            "label": "Modello AI",
+            "description": "Modello AI per questo modulo",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"}
+            ]
+        },
+        "ai_fallback_enabled": {
+            "type": "select",
+            "label": "Fallback AI",
+            "description": "Fallback automatico su altro provider se il primario fallisce",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"},
+                {"value": "1", "label": "Abilitato"},
+                {"value": "0", "label": "Disabilitato"}
+            ]
+        },
+        "default_language": {
+            "type": "select",
+            "label": "Lingua default",
+            "description": "Lingua predefinita per i contenuti generati",
+            "options": ["it", "en", "es", "de", "fr"],
+            "default": "it",
+            "group": "general"
+        },
+        "default_tone": {
+            "type": "select",
+            "label": "Tono default",
+            "description": "Tono predefinito per i contenuti generati",
+            "default": "professionale",
+            "group": "general",
+            "options": [
+                {"value": "professionale", "label": "Professionale"},
+                {"value": "informativo", "label": "Informativo"},
+                {"value": "tecnico", "label": "Tecnico"},
+                {"value": "commerciale", "label": "Commerciale"}
+            ]
+        },
+        "meta_title_min": {
+            "type": "number",
+            "label": "Meta Title - Min caratteri",
+            "default": 50,
+            "min": 30,
+            "max": 70,
+            "group": "general"
+        },
+        "meta_title_max": {
+            "type": "number",
+            "label": "Meta Title - Max caratteri",
+            "default": 60,
+            "min": 50,
+            "max": 80,
+            "group": "general"
+        },
+        "meta_desc_min": {
+            "type": "number",
+            "label": "Meta Description - Min caratteri",
+            "default": 140,
+            "min": 100,
+            "max": 160,
+            "group": "general"
+        },
+        "meta_desc_max": {
+            "type": "number",
+            "label": "Meta Description - Max caratteri",
+            "default": 160,
+            "min": 140,
+            "max": 200,
+            "group": "general"
+        },
+        "page_desc_min": {
+            "type": "number",
+            "label": "Page Description - Min caratteri",
+            "description": "Lunghezza minima della descrizione di pagina",
+            "default": 300,
+            "min": 100,
+            "max": 1000,
+            "group": "general"
+        },
+        "cost_scrape_url": {
+            "type": "number",
+            "label": "Costo Scraping per URL",
+            "description": "Crediti per scraping contenuto pagina",
+            "default": 1,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_ai_generate": {
+            "type": "number",
+            "label": "Costo Generazione AI per URL",
+            "description": "Crediti per generazione contenuti AI",
+            "default": 2,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        }
+    }
+}

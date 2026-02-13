@@ -12,6 +12,7 @@ use Modules\KeywordResearch\Controllers\ProjectController;
 use Modules\KeywordResearch\Controllers\ResearchController;
 use Modules\KeywordResearch\Controllers\ArchitectureController;
 use Modules\KeywordResearch\Controllers\QuickCheckController;
+use Modules\KeywordResearch\Controllers\EditorialController;
 
 $moduleSlug = 'keyword-research';
 
@@ -160,6 +161,61 @@ Router::get('/keyword-research/project/{id}/architecture/{researchId}', function
     Middleware::auth();
     $controller = new ArchitectureController();
     return $controller->results((int) $id, (int) $researchId);
+});
+
+// ============================================
+// PIANO EDITORIALE
+// ============================================
+
+Router::get('/keyword-research/project/{id}/editorial', function ($id) {
+    Middleware::auth();
+    $controller = new EditorialController();
+    return $controller->wizard((int) $id);
+});
+
+Router::post('/keyword-research/project/{id}/editorial/start', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new EditorialController();
+    return $controller->startCollection((int) $id);
+});
+
+Router::get('/keyword-research/project/{id}/editorial/stream', function ($id) {
+    Middleware::auth();
+    $controller = new EditorialController();
+    return $controller->collectionStream((int) $id);
+});
+
+Router::get('/keyword-research/project/{id}/editorial/collection-results', function ($id) {
+    Middleware::auth();
+    $controller = new EditorialController();
+    return $controller->collectionResults((int) $id);
+});
+
+Router::post('/keyword-research/project/{id}/editorial/analyze', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new EditorialController();
+    return $controller->aiAnalyze((int) $id);
+});
+
+Router::get('/keyword-research/project/{id}/editorial/{researchId}', function ($id, $researchId) {
+    Middleware::auth();
+    $controller = new EditorialController();
+    return $controller->results((int) $id, (int) $researchId);
+});
+
+Router::get('/keyword-research/project/{id}/editorial/{researchId}/export', function ($id, $researchId) {
+    Middleware::auth();
+    $controller = new EditorialController();
+    return $controller->exportCsv((int) $id, (int) $researchId);
+});
+
+Router::post('/keyword-research/project/{id}/editorial/{researchId}/send-to-content', function ($id, $researchId) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new EditorialController();
+    return $controller->sendToContent((int) $id, (int) $researchId);
 });
 
 // ============================================
