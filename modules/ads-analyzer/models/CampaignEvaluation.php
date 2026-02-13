@@ -8,7 +8,7 @@ class CampaignEvaluation
 {
     public static function create(array $data): int
     {
-        return Database::insert('ga_campaign_evaluations', [
+        $record = [
             'project_id' => $data['project_id'],
             'user_id' => $data['user_id'],
             'run_id' => $data['run_id'] ?? null,
@@ -16,7 +16,29 @@ class CampaignEvaluation
             'campaigns_evaluated' => $data['campaigns_evaluated'] ?? 0,
             'ads_evaluated' => $data['ads_evaluated'] ?? 0,
             'status' => $data['status'] ?? 'pending',
-        ]);
+        ];
+
+        // Colonne opzionali (migration 003+004+005)
+        if (isset($data['ad_groups_evaluated'])) {
+            $record['ad_groups_evaluated'] = $data['ad_groups_evaluated'];
+        }
+        if (isset($data['keywords_evaluated'])) {
+            $record['keywords_evaluated'] = $data['keywords_evaluated'];
+        }
+        if (isset($data['landing_pages_analyzed'])) {
+            $record['landing_pages_analyzed'] = $data['landing_pages_analyzed'];
+        }
+        if (isset($data['eval_type'])) {
+            $record['eval_type'] = $data['eval_type'];
+        }
+        if (isset($data['previous_eval_id'])) {
+            $record['previous_eval_id'] = $data['previous_eval_id'];
+        }
+        if (isset($data['campaigns_filter'])) {
+            $record['campaigns_filter'] = $data['campaigns_filter'];
+        }
+
+        return Database::insert('ga_campaign_evaluations', $record);
     }
 
     public static function find(int $id): ?array

@@ -112,6 +112,34 @@
             "description": "Seleziona automaticamente le keyword con priorita 'medium' per l'export",
             "group": "general"
         },
+        "auto_eval_delay_minutes": {
+            "type": "number",
+            "label": "Ritardo auto-valutazione (minuti)",
+            "default": 2,
+            "min": 1,
+            "max": 60,
+            "description": "Minuti di attesa dopo ricezione dati prima della valutazione automatica",
+            "group": "general"
+        },
+        "auto_eval_significance_threshold": {
+            "type": "number",
+            "label": "Soglia significativita cambiamenti (%)",
+            "default": 10,
+            "min": 5,
+            "max": 50,
+            "step": 5,
+            "description": "Variazione % minima per attivare valutazione AI (sotto questa soglia = skip, 0 crediti)",
+            "group": "general"
+        },
+        "max_campaigns_per_evaluation": {
+            "type": "number",
+            "label": "Max campagne per valutazione",
+            "default": 15,
+            "min": 5,
+            "max": 30,
+            "description": "Numero massimo di campagne in una singola valutazione AI",
+            "group": "general"
+        },
         "default_match_type": {
             "type": "select",
             "label": "Match type predefinito export",

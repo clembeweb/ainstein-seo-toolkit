@@ -5,6 +5,7 @@ namespace Modules\AdsAnalyzer\Controllers;
 use Core\Database;
 use Modules\AdsAnalyzer\Models\Project;
 use Modules\AdsAnalyzer\Models\ScriptRun;
+use Modules\AdsAnalyzer\Models\AutoEvalQueue;
 use Modules\AdsAnalyzer\Services\IngestService;
 
 /**
@@ -115,6 +116,11 @@ class ApiController
                 'items_received' => $totalItems,
             ]);
 
+            // Auto-evaluation: accoda valutazione AI se abilitata
+            if (in_array($type, ['campaign_performance', 'both'])) {
+                $this->queueAutoEvaluation($projectId, $runId);
+            }
+
             echo json_encode([
                 'success' => true,
                 'run_id' => $runId,
@@ -131,6 +137,29 @@ class ApiController
             }
 
             $this->error('Errore interno: ' . $e->getMessage(), 'INTERNAL_ERROR', 500);
+        }
+    }
+
+    /**
+     * Accoda auto-valutazione AI se il progetto ha l'opzione attiva
+     */
+    private function queueAutoEvaluation(int $projectId, int $runId): void
+    {
+        try {
+            $project = Project::find($projectId);
+            if (!$project || !($project['auto_evaluate'] ?? false)) {
+                return;
+            }
+
+            // Delay configurabile (default 2 minuti)
+            $delayMinutes = (int)\Core\ModuleLoader::getSetting('ads-analyzer', 'auto_eval_delay_minutes', 2);
+            AutoEvalQueue::create([
+                'project_id' => $projectId,
+                'run_id' => $runId,
+                'scheduled_for' => date('Y-m-d H:i:s', strtotime("+{$delayMinutes} minutes")),
+            ]);
+        } catch (\Exception $e) {
+            error_log("Auto-eval queue error: " . $e->getMessage());
         }
     }
 

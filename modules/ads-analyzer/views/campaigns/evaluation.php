@@ -133,6 +133,20 @@ $hasResults = !empty($aiResponse) && !$isError && !$isAnalyzing;
     $landingEval = $aiResponse['landing_evaluation'] ?? null;
     $campaignSuggestions = $aiResponse['campaign_suggestions'] ?? [];
     $landingSuggestions = $aiResponse['landing_suggestions'] ?? [];
+    $trend = $aiResponse['trend'] ?? null;
+    $changesSummary = $aiResponse['changes_summary'] ?? null;
+    $newIssues = $aiResponse['new_issues'] ?? [];
+    $resolvedIssues = $aiResponse['resolved_issues'] ?? [];
+    $evalType = $evaluation['eval_type'] ?? 'manual';
+    $metricDeltas = !empty($evaluation['metric_deltas']) ? json_decode($evaluation['metric_deltas'], true) : null;
+
+    $trendConfig = [
+        'improving' => ['label' => 'In miglioramento', 'color' => 'text-emerald-600 dark:text-emerald-400', 'bg' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300', 'icon' => 'M5 10l7-7m0 0l7 7m-7-7v18'],
+        'stable' => ['label' => 'Stabile', 'color' => 'text-slate-600 dark:text-slate-400', 'bg' => 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300', 'icon' => 'M5 12h14'],
+        'declining' => ['label' => 'In calo', 'color' => 'text-red-600 dark:text-red-400', 'bg' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300', 'icon' => 'M19 14l-7 7m0 0l-7-7m7 7V3'],
+        'mixed' => ['label' => 'Misto', 'color' => 'text-amber-600 dark:text-amber-400', 'bg' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300', 'icon' => 'M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4'],
+    ];
+    $trendConf = $trendConfig[$trend] ?? null;
     ?>
 
     <!-- Overall Score Card -->
@@ -140,14 +154,36 @@ $hasResults = !empty($aiResponse) && !$isError && !$isAnalyzing;
         <div class="flex flex-col md:flex-row md:items-center gap-6">
             <!-- Score Circle -->
             <div class="flex-shrink-0 flex justify-center">
-                <div class="w-24 h-24 rounded-full flex items-center justify-center border-4 <?= scoreBorderClass($overallScore) ?> bg-white dark:bg-slate-900">
-                    <span class="text-3xl font-bold <?= scoreTextClass($overallScore) ?>"><?= number_format($overallScore, 1) ?></span>
+                <div class="relative">
+                    <div class="w-24 h-24 rounded-full flex items-center justify-center border-4 <?= scoreBorderClass($overallScore) ?> bg-white dark:bg-slate-900">
+                        <span class="text-3xl font-bold <?= scoreTextClass($overallScore) ?>"><?= number_format($overallScore, 1) ?></span>
+                    </div>
+                    <?php if ($trendConf): ?>
+                    <div class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full <?= $trendConf['bg'] ?> flex items-center justify-center" title="<?= $trendConf['label'] ?>">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="<?= $trendConf['icon'] ?>"/>
+                        </svg>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
             <!-- Summary & Metadata -->
             <div class="flex-1 min-w-0">
-                <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Punteggio Complessivo</h2>
+                <div class="flex items-center gap-2 mb-2">
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Punteggio Complessivo</h2>
+                    <?php if ($evalType === 'auto'): ?>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                        <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Auto
+                    </span>
+                    <?php endif; ?>
+                    <?php if ($trendConf): ?>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $trendConf['bg'] ?>">
+                        <?= $trendConf['label'] ?>
+                    </span>
+                    <?php endif; ?>
+                </div>
                 <?php if ($summary): ?>
                 <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed"><?= e($summary) ?></p>
                 <?php endif; ?>
@@ -209,6 +245,96 @@ $hasResults = !empty($aiResponse) && !$isError && !$isAnalyzing;
             </div>
         </div>
     </div>
+
+    <!-- Changes Summary (auto-eval with historical context) -->
+    <?php if ($changesSummary): ?>
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-5">
+        <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+            </svg>
+            <div>
+                <h3 class="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-1">Riepilogo Cambiamenti</h3>
+                <p class="text-sm text-blue-700 dark:text-blue-400 leading-relaxed"><?= e($changesSummary) ?></p>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- Metric Deltas (comparison with previous run) -->
+    <?php if (!empty($metricDeltas)): ?>
+    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            Variazioni rispetto al periodo precedente
+        </h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            <?php foreach ($metricDeltas as $key => $delta): ?>
+            <?php
+            $deltaPercent = (float)($delta['percent'] ?? 0);
+            $positiveIsGood = $delta['positive_is_good'] ?? true;
+            $isPositive = $deltaPercent > 0;
+            $isGood = ($isPositive && $positiveIsGood) || (!$isPositive && !$positiveIsGood);
+            $isBad = ($isPositive && !$positiveIsGood) || (!$isPositive && $positiveIsGood);
+            $colorClass = abs($deltaPercent) < 2 ? 'text-slate-500 dark:text-slate-400' : ($isGood ? 'text-emerald-600 dark:text-emerald-400' : ($isBad ? 'text-red-600 dark:text-red-400' : 'text-slate-500 dark:text-slate-400'));
+            $arrow = $deltaPercent > 0 ? '↑' : ($deltaPercent < 0 ? '↓' : '→');
+            ?>
+            <div class="text-center">
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-1"><?= e($delta['label'] ?? $key) ?></p>
+                <p class="text-lg font-bold <?= $colorClass ?>">
+                    <?= $arrow ?> <?= $delta['percent_display'] ?? (number_format(abs($deltaPercent), 1) . '%') ?>
+                </p>
+                <p class="text-xs text-slate-400 dark:text-slate-500"><?= e($delta['current'] ?? '') ?></p>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- New Issues / Resolved Issues -->
+    <?php if (!empty($newIssues) || !empty($resolvedIssues)): ?>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <?php if (!empty($newIssues)): ?>
+        <div class="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-5">
+            <h3 class="text-sm font-semibold text-red-800 dark:text-red-300 mb-3 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+                Nuovi Problemi (<?= count($newIssues) ?>)
+            </h3>
+            <ul class="space-y-2">
+                <?php foreach ($newIssues as $ni): ?>
+                <li class="flex items-start gap-2 text-sm text-red-700 dark:text-red-400">
+                    <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0"></span>
+                    <?= e(is_string($ni) ? $ni : ($ni['description'] ?? '')) ?>
+                </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+        <?php endif; ?>
+
+        <?php if (!empty($resolvedIssues)): ?>
+        <div class="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-lg p-5">
+            <h3 class="text-sm font-semibold text-emerald-800 dark:text-emerald-300 mb-3 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Problemi Risolti (<?= count($resolvedIssues) ?>)
+            </h3>
+            <ul class="space-y-2">
+                <?php foreach ($resolvedIssues as $ri): ?>
+                <li class="flex items-start gap-2 text-sm text-emerald-700 dark:text-emerald-400">
+                    <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                    <?= e(is_string($ri) ? $ri : ($ri['description'] ?? '')) ?>
+                </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
 
     <!-- Top Recommendations -->
     <?php if (!empty($topRecommendations)): ?>

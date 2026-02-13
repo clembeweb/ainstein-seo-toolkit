@@ -368,6 +368,14 @@ Router::post('/ads-analyzer/projects/{id}/campaigns/evaluate', function ($id) {
     return $controller->evaluate((int) $id);
 });
 
+// Toggle auto-valutazione (AJAX)
+Router::post('/ads-analyzer/projects/{id}/campaigns/toggle-auto-evaluate', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new CampaignController();
+    return $controller->toggleAutoEvaluate((int) $id);
+});
+
 // Dettaglio valutazione AI
 Router::get('/ads-analyzer/projects/{id}/campaigns/evaluations/{evalId}', function ($id, $evalId) {
     Middleware::auth();

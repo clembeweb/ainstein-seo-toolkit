@@ -73,6 +73,8 @@ class CampaignEvaluatorService
 
     /**
      * Valuta le campagne con AI - analisi a 3 livelli (Account > Campagna > Ad Group)
+     *
+     * @param array|null $campaignFilter Array di campaign_id_google da includere (null = tutte)
      */
     public function evaluate(
         int $userId,
@@ -81,8 +83,17 @@ class CampaignEvaluatorService
         array $extensions,
         array $landingContexts = [],
         array $adGroups = [],
-        array $keywords = []
+        array $keywords = [],
+        ?array $campaignFilter = null
     ): array {
+        // Filtra per campagne selezionate
+        if ($campaignFilter !== null && !empty($campaignFilter)) {
+            $campaigns = array_values(array_filter($campaigns, fn($c) => in_array($c['campaign_id_google'], $campaignFilter)));
+            $ads = array_values(array_filter($ads, fn($a) => in_array($a['campaign_id_google'], $campaignFilter)));
+            $adGroups = array_values(array_filter($adGroups, fn($ag) => in_array($ag['campaign_id_google'], $campaignFilter)));
+            $keywords = array_values(array_filter($keywords, fn($kw) => in_array($kw['campaign_id_google'], $campaignFilter)));
+        }
+
         $prompt = $this->buildPrompt($campaigns, $ads, $extensions, $landingContexts, $adGroups, $keywords);
 
         $messages = [
@@ -103,6 +114,97 @@ class CampaignEvaluatorService
         }
 
         return $this->parseResponse($response['result']);
+    }
+
+    /**
+     * Valuta con contesto storico (per auto-eval e confronto trend)
+     */
+    public function evaluateWithContext(
+        int $userId,
+        array $campaigns,
+        array $ads,
+        array $extensions,
+        array $landingContexts,
+        array $adGroups,
+        array $keywords,
+        ?array $previousEvalSummary = null,
+        ?array $metricDeltas = null,
+        ?array $alerts = null,
+        ?array $campaignFilter = null
+    ): array {
+        // Filtra per campagne selezionate
+        if ($campaignFilter !== null && !empty($campaignFilter)) {
+            $campaigns = array_values(array_filter($campaigns, fn($c) => in_array($c['campaign_id_google'], $campaignFilter)));
+            $ads = array_values(array_filter($ads, fn($a) => in_array($a['campaign_id_google'], $campaignFilter)));
+            $adGroups = array_values(array_filter($adGroups, fn($ag) => in_array($ag['campaign_id_google'], $campaignFilter)));
+            $keywords = array_values(array_filter($keywords, fn($kw) => in_array($kw['campaign_id_google'], $campaignFilter)));
+        }
+
+        $prompt = $this->buildPrompt($campaigns, $ads, $extensions, $landingContexts, $adGroups, $keywords);
+
+        // Aggiungi contesto storico
+        if ($previousEvalSummary || $metricDeltas) {
+            $prompt .= "\n\n" . $this->buildHistoricalContext($previousEvalSummary, $metricDeltas, $alerts);
+        }
+
+        $messages = [
+            ['role' => 'user', 'content' => $prompt],
+        ];
+
+        $response = $this->aiService->complete(
+            $userId,
+            $messages,
+            ['max_tokens' => 8192],
+            'ads-analyzer'
+        );
+
+        Database::reconnect();
+
+        if (isset($response['error'])) {
+            throw new \Exception($response['message'] ?? 'Errore AI');
+        }
+
+        return $this->parseResponse($response['result']);
+    }
+
+    /**
+     * Costruisce la sezione di contesto storico per il prompt
+     */
+    private function buildHistoricalContext(?array $previousEval, ?array $deltas, ?array $alerts): string
+    {
+        $lines = [];
+
+        if ($previousEval) {
+            $lines[] = "CONTESTO STORICO (valutazione precedente):";
+            $lines[] = "- Punteggio precedente: " . ($previousEval['score'] ?? 'N/D') . "/10";
+            if (!empty($previousEval['summary'])) {
+                $lines[] = "- Summary precedente: " . $previousEval['summary'];
+            }
+            if (!empty($previousEval['top_recommendations'])) {
+                $lines[] = "- Raccomandazioni precedenti:";
+                foreach (array_slice($previousEval['top_recommendations'], 0, 5) as $rec) {
+                    $lines[] = "  * " . $rec;
+                }
+            }
+            $lines[] = "";
+        }
+
+        if ($deltas) {
+            $lines[] = "VARIAZIONI METRICHE RISPETTO AL PERIODO PRECEDENTE:";
+            $lines[] = \Modules\AdsAnalyzer\Services\MetricComparisonService::buildDeltaSummary($deltas, $alerts ?? []);
+            $lines[] = "";
+        }
+
+        $lines[] = "ISTRUZIONI SPECIALI PER CONFRONTO STORICO:";
+        $lines[] = "- Confronta la situazione attuale con quella precedente";
+        $lines[] = "- Evidenzia cosa e MIGLIORATO e cosa e PEGGIORATO";
+        $lines[] = "- NON ripetere raccomandazioni gia date se la situazione non e cambiata";
+        $lines[] = "- Concentrati sui CAMBIAMENTI e sulle NUOVE criticita";
+        $lines[] = "- Se le metriche sono stabili o migliorate, riconosci il progresso";
+        $lines[] = "- Nel JSON includi \"trend\": \"improving\" | \"stable\" | \"declining\" | \"mixed\"";
+        $lines[] = "- Nel JSON includi \"changes_summary\": breve descrizione dei cambiamenti principali";
+
+        return implode("\n", $lines);
     }
 
     private function buildPrompt(

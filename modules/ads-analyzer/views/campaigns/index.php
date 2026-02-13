@@ -367,6 +367,84 @@
     </div>
 </div>
 
+<!-- Campaign Selection Modal -->
+<template x-if="showCampaignModal">
+    <div class="fixed inset-0 z-50 overflow-y-auto" x-transition>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-black/50" @click="showCampaignModal = false"></div>
+            <div class="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-lg w-full max-h-[80vh] flex flex-col">
+                <!-- Header -->
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Seleziona Campagne</h3>
+                    <button @click="showCampaignModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="px-6 py-4 overflow-y-auto flex-1">
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-3">
+                        Il progetto ha molte campagne. Seleziona quelle da valutare (max <span x-text="maxCampaigns"></span>).
+                    </p>
+
+                    <!-- Select All / None -->
+                    <div class="flex items-center gap-3 mb-3">
+                        <button @click="selectAllCampaigns()" class="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">Seleziona tutte</button>
+                        <span class="text-slate-300 dark:text-slate-600">|</span>
+                        <button @click="selectedCampaigns = []" class="text-xs font-medium text-slate-500 dark:text-slate-400 hover:underline">Deseleziona tutte</button>
+                        <span class="ml-auto text-xs text-slate-500 dark:text-slate-400">
+                            <span x-text="selectedCampaigns.length"></span>/<span x-text="maxCampaigns"></span> selezionate
+                        </span>
+                    </div>
+
+                    <!-- Campaign List -->
+                    <div class="space-y-1.5">
+                        <template x-for="c in allCampaigns" :key="c.id_google">
+                            <label class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors"
+                                   :class="selectedCampaigns.includes(c.id_google) ? 'bg-amber-50 dark:bg-amber-900/20' : ''">
+                                <input type="checkbox"
+                                       :value="c.id_google"
+                                       x-model="selectedCampaigns"
+                                       :disabled="!selectedCampaigns.includes(c.id_google) && selectedCampaigns.length >= maxCampaigns"
+                                       class="rounded border-slate-300 dark:border-slate-600 text-amber-600 focus:ring-amber-500">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-slate-900 dark:text-white truncate" x-text="c.name"></p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                                        <span x-text="c.type"></span> &bull;
+                                        <span x-text="c.status"></span> &bull;
+                                        Costo: <span x-text="c.cost.toFixed(2)"></span>&euro; &bull;
+                                        Click: <span x-text="c.clicks"></span>
+                                    </p>
+                                </div>
+                            </label>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                    <p class="text-xs text-slate-500 dark:text-slate-400" x-show="selectedCampaigns.length >= maxCampaigns">
+                        Limite raggiunto
+                    </p>
+                    <div class="flex items-center gap-3 ml-auto">
+                        <button @click="showCampaignModal = false" class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                            Annulla
+                        </button>
+                        <button @click="doEvaluate(selectedCampaigns)"
+                                :disabled="selectedCampaigns.length === 0"
+                                class="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                                :class="selectedCampaigns.length > 0 ? 'bg-amber-600 text-white hover:bg-amber-700' : 'bg-slate-200 text-slate-400 cursor-not-allowed'">
+                            Valuta <span x-text="selectedCampaigns.length"></span> campagne
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
 <!-- Hidden CSRF token for AJAX -->
 <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
 
@@ -376,10 +454,37 @@ function campaignPageManager() {
         loading: false,
         errorMsg: '',
         canEvaluate: <?= ($latestRun && $userCredits >= $evalCost) ? 'true' : 'false' ?>,
+        showCampaignModal: false,
+        allCampaigns: <?= json_encode($campaignsList ?? [], JSON_UNESCAPED_UNICODE) ?>,
+        selectedCampaigns: [],
+        maxCampaigns: 15,
 
-        async startEvaluation() {
+        startEvaluation() {
             if (!this.canEvaluate || this.loading) return;
 
+            // Se > 10 campagne, mostra modale di selezione
+            if (this.allCampaigns.length > 10) {
+                // Preseleziona top 10 ENABLED per costo
+                this.selectedCampaigns = this.allCampaigns
+                    .filter(c => c.status === 'ENABLED')
+                    .sort((a, b) => b.cost - a.cost)
+                    .slice(0, 10)
+                    .map(c => c.id_google);
+                this.showCampaignModal = true;
+            } else {
+                // <= 10 campagne: valuta tutte
+                this.doEvaluate([]);
+            }
+        },
+
+        selectAllCampaigns() {
+            this.selectedCampaigns = this.allCampaigns
+                .slice(0, this.maxCampaigns)
+                .map(c => c.id_google);
+        },
+
+        async doEvaluate(filter) {
+            this.showCampaignModal = false;
             this.loading = true;
             this.errorMsg = '';
 
@@ -387,6 +492,9 @@ function campaignPageManager() {
                 const csrfToken = document.querySelector('input[name="_csrf_token"]')?.value;
                 const formData = new FormData();
                 formData.append('_csrf_token', csrfToken);
+                if (filter && filter.length > 0) {
+                    formData.append('campaigns_filter', JSON.stringify(filter));
+                }
 
                 const resp = await fetch('<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns/evaluate') ?>', {
                     method: 'POST',
@@ -394,9 +502,7 @@ function campaignPageManager() {
                 });
 
                 if (!resp.ok) {
-                    // Proxy timeout (502/504): il backend continua in background
-                    // Redirect alla pagina campagne che mostra lo stato
-                    this.errorMsg = 'Valutazione avviata. L\'analisi potrebbe richiedere qualche minuto (scraping landing + AI). Ricarica la pagina tra poco.';
+                    this.errorMsg = 'Valutazione avviata. L\'analisi potrebbe richiedere qualche minuto. Ricarica la pagina tra poco.';
                     this.loading = false;
                     setTimeout(() => location.reload(), 15000);
                     return;
@@ -415,7 +521,6 @@ function campaignPageManager() {
                 }
             } catch (err) {
                 console.error('Evaluation start failed:', err);
-                // Anche qui potrebbe essere un timeout proxy
                 this.errorMsg = 'Valutazione avviata. L\'analisi potrebbe richiedere qualche minuto. Ricarica la pagina tra poco.';
                 this.loading = false;
                 setTimeout(() => location.reload(), 15000);

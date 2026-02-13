@@ -16,6 +16,7 @@ use Modules\AdsAnalyzer\Models\CampaignAdGroup;
 use Modules\AdsAnalyzer\Models\AdGroupKeyword;
 use Modules\AdsAnalyzer\Models\CampaignEvaluation;
 use Modules\AdsAnalyzer\Services\CampaignEvaluatorService;
+use Modules\AdsAnalyzer\Services\MetricComparisonService;
 
 class CampaignController
 {
@@ -48,7 +49,7 @@ class CampaignController
         $latestStats = $latestRun ? Campaign::getStatsByRun($latestRun['id']) : [];
 
         // Valutazioni recenti
-        $evaluations = CampaignEvaluation::getByProject($projectId, 5);
+        $evaluations = CampaignEvaluation::getByProject($projectId, 10);
 
         // Conteggi generali
         $totalCampaigns = 0;
@@ -57,6 +58,23 @@ class CampaignController
             $totalCampaigns = count(Campaign::getByRun($latestRun['id']));
             $totalAds = count(Ad::getByRun($latestRun['id']));
         }
+
+        // Ultima valutazione completata con AI response
+        $latestEval = CampaignEvaluation::getLatestByProject($projectId);
+        $latestAiResponse = $latestEval ? json_decode($latestEval['ai_response'] ?? '{}', true) : null;
+
+        // KPI deltas (confronto con run precedente)
+        $kpiDeltas = null;
+        if ($latestRun && count($campaignRuns) >= 2) {
+            $previousRun = $campaignRuns[1] ?? null;
+            if ($previousRun) {
+                $previousStats = Campaign::getStatsByRun($previousRun['id']);
+                $kpiDeltas = MetricComparisonService::computeDeltas($latestStats, $previousStats);
+            }
+        }
+
+        // Auto-eval status
+        $autoEvalEnabled = (bool)($project['auto_evaluate'] ?? false);
 
         return View::render('ads-analyzer/campaigns/dashboard', [
             'title' => $project['name'] . ' - Google Ads Analyzer',
@@ -69,6 +87,10 @@ class CampaignController
             'evaluations' => $evaluations,
             'totalCampaigns' => $totalCampaigns,
             'totalAds' => $totalAds,
+            'latestEval' => $latestEval,
+            'latestAiResponse' => $latestAiResponse,
+            'kpiDeltas' => $kpiDeltas,
+            'autoEvalEnabled' => $autoEvalEnabled,
             'currentPage' => 'dashboard',
             'userCredits' => Credits::getBalance($user['id']),
         ]);
@@ -107,6 +129,21 @@ class CampaignController
         // Valutazioni recenti
         $evaluations = CampaignEvaluation::getByProject($projectId, 5);
 
+        // Lista campagne per modale selezione
+        $campaignsList = [];
+        if ($latestRun) {
+            $allCampaigns = Campaign::getByRun($latestRun['id']);
+            $campaignsList = array_map(fn($c) => [
+                'id_google' => $c['campaign_id_google'],
+                'name' => $c['campaign_name'],
+                'status' => $c['campaign_status'] ?? 'UNKNOWN',
+                'type' => $c['campaign_type'] ?? 'SEARCH',
+                'cost' => (float)$c['cost'],
+                'clicks' => (int)$c['clicks'],
+                'conversions' => (float)$c['conversions'],
+            ], $allCampaigns);
+        }
+
         return View::render('ads-analyzer/campaigns/index', [
             'title' => 'Dati Campagne - ' . $project['name'],
             'user' => $user,
@@ -117,6 +154,7 @@ class CampaignController
             'latestStats' => $latestStats,
             'latestAdStats' => $latestAdStats,
             'evaluations' => $evaluations,
+            'campaignsList' => $campaignsList,
             'userCredits' => Credits::getBalance($user['id']),
         ]);
     }
@@ -216,6 +254,18 @@ class CampaignController
                 jsonResponse(['error' => "Crediti insufficienti. Necessari: {$cost}"], 400);
             }
 
+            // Filtro campagne (selezione utente)
+            $campaignsFilter = null;
+            if (!empty($_POST['campaigns_filter'])) {
+                $campaignsFilter = json_decode($_POST['campaigns_filter'], true);
+                if (!is_array($campaignsFilter)) {
+                    $campaignsFilter = null;
+                }
+                if ($campaignsFilter && count($campaignsFilter) > 15) {
+                    $campaignsFilter = array_slice($campaignsFilter, 0, 15);
+                }
+            }
+
             // Carica dati
             $campaigns = Campaign::getByRun($run['id']);
             $ads = Ad::getByRun($run['id']);
@@ -241,13 +291,12 @@ class CampaignController
                 'ad_groups_evaluated' => count($adGroupsData),
                 'keywords_evaluated' => count($keywordsData),
                 'landing_pages_analyzed' => 0,
+                'campaigns_filter' => $campaignsFilter ? json_encode($campaignsFilter) : null,
                 'status' => 'analyzing',
             ]);
 
             // Valutazione AI (singola chiamata — no scraping landing per limiti hosting)
-            // Landing URL vengono passate come lista senza contesto scraping
             $landingContexts = [];
-            $uniqueUrls = Ad::getUniqueUrls($run['id']);
 
             set_time_limit(0);
             $evaluator = new CampaignEvaluatorService();
@@ -258,7 +307,8 @@ class CampaignController
                 $extensions,
                 $landingContexts,
                 $adGroupsData,
-                $keywordsData
+                $keywordsData,
+                $campaignsFilter
             );
 
             Database::reconnect();
@@ -300,6 +350,38 @@ class CampaignController
             echo json_encode(['error' => 'Errore: ' . $e->getMessage()]);
             exit;
         }
+    }
+
+    /**
+     * Toggle auto-valutazione per progetto
+     */
+    public function toggleAutoEvaluate(int $projectId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = Project::findByUserAndId($user['id'], $projectId);
+
+        if (!$project) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Progetto non trovato']);
+            exit;
+        }
+
+        if (($project['type'] ?? 'negative-kw') !== 'campaign') {
+            http_response_code(400);
+            echo json_encode(['error' => 'Operazione non disponibile']);
+            exit;
+        }
+
+        $current = (bool)($project['auto_evaluate'] ?? false);
+        Project::update($projectId, ['auto_evaluate' => $current ? 0 : 1]);
+
+        echo json_encode([
+            'success' => true,
+            'auto_evaluate' => !$current,
+        ]);
+        exit;
     }
 
     /**
