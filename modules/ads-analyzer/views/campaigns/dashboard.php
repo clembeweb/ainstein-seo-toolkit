@@ -121,7 +121,7 @@ $trendLabels = [
         $healthScore = (float)$latestAiResponse['overall_score'];
         $trend = $latestAiResponse['trend'] ?? null;
         $changesSummary = $latestAiResponse['changes_summary'] ?? null;
-        $evalType = $latestEval['eval_type'] ?? 'manual';
+        $evalType = ($latestEvalWithAi ?? $latestEval)['eval_type'] ?? 'manual';
         ?>
         <div class="md:col-span-1 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex flex-col items-center text-center">
@@ -139,8 +139,8 @@ $trendLabels = [
                     </span>
                     <?php endif; ?>
                 </div>
-                <?php if ($latestEval): ?>
-                <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns/evaluations/' . $latestEval['id']) ?>" class="mt-2 text-xs text-amber-600 dark:text-amber-400 hover:underline">
+                <?php if ($latestEvalWithAi ?? null): ?>
+                <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns/evaluations/' . $latestEvalWithAi['id']) ?>" class="mt-2 text-xs text-amber-600 dark:text-amber-400 hover:underline">
                     Dettagli
                 </a>
                 <?php endif; ?>
@@ -254,6 +254,24 @@ $trendLabels = [
                     <?php endif; ?>
                 </p>
             </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- KPI Trend Chart -->
+    <?php if (count($kpiTrend ?? []) >= 2): ?>
+    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Andamento KPI</h2>
+            <select id="kpiMetricSelector" class="text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="clicks">Click</option>
+                <option value="cost">Costo</option>
+                <option value="conversions">Conversioni</option>
+                <option value="ctr">CTR %</option>
+            </select>
+        </div>
+        <div class="h-64">
+            <canvas id="kpiTrendChart"></canvas>
         </div>
     </div>
     <?php endif; ?>
@@ -418,3 +436,93 @@ function dashboardManager() {
     };
 }
 </script>
+
+<?php if (count($kpiTrend ?? []) >= 2): ?>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function() {
+    const kpiTrend = <?= json_encode($kpiTrend) ?>;
+    const isDark = document.documentElement.classList.contains('dark');
+    const gridColor = isDark ? 'rgba(148, 163, 184, 0.1)' : 'rgba(148, 163, 184, 0.2)';
+    const textColor = isDark ? '#94a3b8' : '#64748b';
+
+    const metricConfig = {
+        clicks: { label: 'Click', color: '#3b82f6', bgColor: 'rgba(59, 130, 246, 0.1)', format: v => v.toLocaleString('it-IT') },
+        cost: { label: 'Costo', color: '#ef4444', bgColor: 'rgba(239, 68, 68, 0.1)', format: v => v.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' \u20ac' },
+        conversions: { label: 'Conversioni', color: '#10b981', bgColor: 'rgba(16, 185, 129, 0.1)', format: v => v.toLocaleString('it-IT', {minimumFractionDigits: 1, maximumFractionDigits: 1}) },
+        ctr: { label: 'CTR %', color: '#f59e0b', bgColor: 'rgba(245, 158, 11, 0.1)', format: v => v.toFixed(2) + '%' },
+    };
+
+    let kpiChart = null;
+
+    function renderChart(metric) {
+        const cfg = metricConfig[metric];
+        const labels = kpiTrend.map(d => d.label);
+        const data = kpiTrend.map(d => d[metric]);
+
+        if (kpiChart) kpiChart.destroy();
+
+        const ctx = document.getElementById('kpiTrendChart');
+        if (!ctx) return;
+
+        Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
+        Chart.defaults.color = textColor;
+
+        kpiChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: cfg.label,
+                    data: data,
+                    borderColor: cfg.color,
+                    backgroundColor: cfg.bgColor,
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 3,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: cfg.color,
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return cfg.label + ': ' + cfg.format(context.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: gridColor },
+                        ticks: { color: textColor }
+                    },
+                    y: {
+                        grid: { color: gridColor },
+                        ticks: {
+                            color: textColor,
+                            callback: function(value) { return cfg.format(value); }
+                        },
+                        beginAtZero: true,
+                    }
+                }
+            }
+        });
+    }
+
+    document.getElementById('kpiMetricSelector').addEventListener('change', function() {
+        renderChart(this.value);
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        renderChart('clicks');
+    });
+})();
+</script>
+<?php endif; ?>

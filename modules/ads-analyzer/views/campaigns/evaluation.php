@@ -57,6 +57,11 @@ function scoreBadgeBgClass(float $score): string {
 $isError = ($evaluation['status'] ?? '') === 'error';
 $isAnalyzing = ($evaluation['status'] ?? '') === 'analyzing';
 $hasResults = !empty($aiResponse) && !$isError && !$isAnalyzing;
+$isNoChange = !$hasResults && !$isError && !$isAnalyzing
+    && ($evaluation['status'] === 'completed')
+    && (($evaluation['credits_used'] ?? 1) == 0);
+$noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
+    ? json_decode($evaluation['metric_deltas'], true) : null;
 ?>
 
 <?php $currentPage = 'evaluations'; include __DIR__ . '/../partials/project-nav.php'; ?>
@@ -102,6 +107,96 @@ $hasResults = !empty($aiResponse) && !$isError && !$isAnalyzing;
         </div>
     </div>
     <script>setTimeout(() => location.reload(), 5000);</script>
+
+    <?php elseif ($isNoChange): ?>
+    <!-- No Change State -->
+    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-blue-200 dark:border-blue-800 p-8">
+        <div class="flex flex-col items-center text-center">
+            <div class="mx-auto h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mb-4">
+                <svg class="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-slate-900 dark:text-white">Nessun cambiamento significativo</h3>
+            <p class="mt-2 text-sm text-slate-500 dark:text-slate-400 max-w-lg">
+                Le metriche delle campagne non hanno subito variazioni superiori alla soglia configurata rispetto al periodo precedente.
+                Non e stata effettuata un'analisi AI per risparmiare crediti.
+            </p>
+            <div class="flex items-center gap-3 mt-3">
+                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                    <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    Auto
+                </span>
+                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">0 crediti</span>
+                <span class="text-xs text-slate-400"><?= date('d/m/Y H:i', strtotime($evaluation['created_at'])) ?></span>
+                <span class="text-xs text-slate-400">&bull; <?= $evaluation['campaigns_evaluated'] ?? 0 ?> campagne</span>
+            </div>
+        </div>
+    </div>
+
+    <?php if ($noChangeDeltas): ?>
+    <!-- Metric Deltas -->
+    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-4">Variazioni rilevate</h3>
+        <?php
+        $deltaLabels = [
+            'total_clicks' => ['label' => 'Click', 'icon' => 'M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122'],
+            'total_impressions' => ['label' => 'Impressioni', 'icon' => 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'],
+            'total_cost' => ['label' => 'Costo', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'invert' => true],
+            'total_conversions' => ['label' => 'Conversioni', 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
+            'avg_ctr' => ['label' => 'CTR', 'icon' => 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6'],
+            'avg_cpc' => ['label' => 'CPC', 'icon' => 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z', 'invert' => true],
+        ];
+        ?>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <?php foreach ($deltaLabels as $key => $cfg): ?>
+            <?php if (isset($noChangeDeltas[$key])): ?>
+            <?php
+            $d = $noChangeDeltas[$key];
+            $pct = $d['percent_display'] ?? 0;
+            $invert = $cfg['invert'] ?? false;
+            if (abs($pct) < 0.5) {
+                $colorClass = 'text-slate-400';
+                $arrow = '&rarr;';
+            } else {
+                $isGood = $pct > 0;
+                if ($invert) $isGood = !$isGood;
+                $colorClass = $isGood ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400';
+                $arrow = $pct > 0
+                    ? '<svg class="w-3.5 h-3.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>'
+                    : '<svg class="w-3.5 h-3.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
+            }
+            ?>
+            <div class="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-700/30">
+                <div class="h-8 w-8 rounded-lg bg-slate-200 dark:bg-slate-600 flex items-center justify-center flex-shrink-0">
+                    <svg class="h-4 w-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $cfg['icon'] ?>"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400"><?= $cfg['label'] ?></p>
+                    <p class="text-sm font-medium <?= $colorClass ?>">
+                        <?= $arrow ?> <?= $pct >= 0 ? '+' : '' ?><?= $pct ?>%
+                    </p>
+                </div>
+            </div>
+            <?php endif; ?>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <?php if (!empty($evaluation['previous_eval_id'])): ?>
+    <div class="text-center">
+        <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns/evaluations/' . $evaluation['previous_eval_id']) ?>"
+           class="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors text-sm">
+            <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Vedi ultima valutazione completa
+        </a>
+    </div>
+    <?php endif; ?>
 
     <?php elseif (!$hasResults): ?>
     <!-- Empty State -->

@@ -90,6 +90,20 @@ class CampaignEvaluation
         ) ?: null;
     }
 
+    /**
+     * Ultima valutazione completata CON ai_response reale (esclude no_change)
+     */
+    public static function getLatestWithAiByProject(int $projectId): ?array
+    {
+        return Database::fetch(
+            "SELECT * FROM ga_campaign_evaluations
+             WHERE project_id = ? AND status = 'completed'
+             AND ai_response IS NOT NULL AND ai_response != '{}' AND ai_response != 'null'
+             ORDER BY created_at DESC LIMIT 1",
+            [$projectId]
+        ) ?: null;
+    }
+
     public static function countByProject(int $projectId): int
     {
         $result = Database::fetch(

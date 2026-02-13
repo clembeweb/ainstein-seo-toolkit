@@ -59,9 +59,12 @@ class CampaignController
             $totalAds = count(Ad::getByRun($latestRun['id']));
         }
 
-        // Ultima valutazione completata con AI response
-        $latestEval = CampaignEvaluation::getLatestByProject($projectId);
-        $latestAiResponse = $latestEval ? json_decode($latestEval['ai_response'] ?? '{}', true) : null;
+        // Ultima valutazione completata CON AI response reale (per Health Score)
+        $latestEvalWithAi = CampaignEvaluation::getLatestWithAiByProject($projectId);
+        $latestAiResponse = $latestEvalWithAi ? json_decode($latestEvalWithAi['ai_response'] ?? '{}', true) : null;
+
+        // Ultima eval in assoluto (per link dettagli, può essere no_change)
+        $latestEval = $latestEvalWithAi ?: CampaignEvaluation::getLatestByProject($projectId);
 
         // KPI deltas (confronto con run precedente)
         $kpiDeltas = null;
@@ -76,6 +79,20 @@ class CampaignController
         // Auto-eval status
         $autoEvalEnabled = (bool)($project['auto_evaluate'] ?? false);
 
+        // Trend storico KPI (tutti i run completati, ordine cronologico)
+        $kpiTrend = [];
+        foreach (array_reverse($campaignRuns) as $run) {
+            $runStats = ($run['id'] == ($latestRun['id'] ?? 0)) ? $latestStats : Campaign::getStatsByRun($run['id']);
+            $kpiTrend[] = [
+                'date' => $run['date_range_end'] ?? date('Y-m-d', strtotime($run['created_at'])),
+                'label' => date('d/m', strtotime($run['date_range_end'] ?? $run['created_at'])),
+                'clicks' => (int)($runStats['total_clicks'] ?? 0),
+                'cost' => round((float)($runStats['total_cost'] ?? 0), 2),
+                'conversions' => round((float)($runStats['total_conversions'] ?? 0), 1),
+                'ctr' => round((float)($runStats['avg_ctr'] ?? 0) * 100, 2),
+            ];
+        }
+
         return View::render('ads-analyzer/campaigns/dashboard', [
             'title' => $project['name'] . ' - Google Ads Analyzer',
             'user' => $user,
@@ -88,8 +105,10 @@ class CampaignController
             'totalCampaigns' => $totalCampaigns,
             'totalAds' => $totalAds,
             'latestEval' => $latestEval,
+            'latestEvalWithAi' => $latestEvalWithAi,
             'latestAiResponse' => $latestAiResponse,
             'kpiDeltas' => $kpiDeltas,
+            'kpiTrend' => $kpiTrend,
             'autoEvalEnabled' => $autoEvalEnabled,
             'currentPage' => 'dashboard',
             'userCredits' => Credits::getBalance($user['id']),
