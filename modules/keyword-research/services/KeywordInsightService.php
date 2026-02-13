@@ -2,6 +2,7 @@
 
 namespace Modules\KeywordResearch\Services;
 
+use Core\Database;
 use Core\Settings;
 use Services\ApiLoggerService;
 
@@ -152,12 +153,18 @@ class KeywordInsightService
     }
 
     /**
-     * Chiamata generica all'API
+     * Chiamata generica all'API con cache
      */
     private function callApi(string $endpoint, array $params): array
     {
         if (!$this->isConfigured()) {
             return ['success' => false, 'error' => 'API key non configurata', 'data' => []];
+        }
+
+        // Check cache prima della chiamata API
+        $cached = $this->getFromCache($endpoint, $params);
+        if ($cached !== null) {
+            return ['success' => true, 'data' => $cached, 'error' => null, 'from_cache' => true];
         }
 
         $url = $this->baseUrl . $endpoint . '?' . http_build_query($params);
@@ -205,6 +212,58 @@ class KeywordInsightService
             return ['success' => false, 'error' => 'Risposta JSON non valida', 'data' => []];
         }
 
+        // Salva in cache dopo successo
+        $this->saveToCache($endpoint, $params, $data);
+
         return ['success' => true, 'data' => $data, 'error' => null];
+    }
+
+    /**
+     * Cerca risultati in cache (TTL 14 giorni)
+     */
+    private function getFromCache(string $endpoint, array $params): ?array
+    {
+        try {
+            $keyword = $params['keyword'] ?? '';
+            $location = $params['location'] ?? 'IT';
+            $lang = $params['lang'] ?? 'it';
+
+            $row = Database::fetch(
+                "SELECT results FROM kr_keyword_cache
+                 WHERE seed_keyword = ? AND location = ? AND language = ? AND endpoint = ?
+                 AND cached_at > DATE_SUB(NOW(), INTERVAL 14 DAY)",
+                [$keyword, $location, $lang, $endpoint]
+            );
+
+            if ($row && !empty($row['results'])) {
+                $data = json_decode($row['results'], true);
+                return is_array($data) ? $data : null;
+            }
+        } catch (\Exception $e) {
+            // Cache miss silenzioso se tabella non esiste ancora
+        }
+
+        return null;
+    }
+
+    /**
+     * Salva risultati API in cache (UPSERT)
+     */
+    private function saveToCache(string $endpoint, array $params, array $data): void
+    {
+        try {
+            $keyword = $params['keyword'] ?? '';
+            $location = $params['location'] ?? 'IT';
+            $lang = $params['lang'] ?? 'it';
+
+            Database::query(
+                "INSERT INTO kr_keyword_cache (seed_keyword, location, language, endpoint, results, results_count, cached_at)
+                 VALUES (?, ?, ?, ?, ?, ?, NOW())
+                 ON DUPLICATE KEY UPDATE results = VALUES(results), results_count = VALUES(results_count), cached_at = NOW()",
+                [$keyword, $location, $lang, $endpoint, json_encode($data), count($data)]
+            );
+        } catch (\Exception $e) {
+            // Fallback silenzioso se tabella non esiste ancora
+        }
     }
 }

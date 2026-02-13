@@ -19,6 +19,7 @@ use Core\Database;
 // ============================================
 
 $config = [
+    // --- Esistenti ---
     'sa_pages_html_days'        => 90,   // NULL html_content dopo 90 giorni
     'il_urls_raw_html_days'     => 30,   // NULL raw_html dopo 30 giorni
     'ga_runs_keep_per_project'  => 5,    // Mantieni ultimi 5 run per progetto
@@ -28,6 +29,26 @@ $config = [
     'aic_jobs_days'             => 30,   // Process jobs completati: 30 giorni
     'st_rank_queue_days'        => 7,    // Rank queue completati: 7 giorni
     'ga_eval_queue_days'        => 30,   // Auto-eval queue completati: 30 giorni
+
+    // --- Nuovi: seo-tracking ---
+    'st_rank_checks_months'     => 6,    // Rank checks: 6 mesi
+    'st_rank_jobs_days'         => 30,   // Rank jobs completati: 30 giorni
+    'st_sync_log_days'          => 60,   // Sync log: 60 giorni
+
+    // --- Nuovi: seo-audit ---
+    'sa_gsc_performance_months' => 6,    // GSC performance: 6 mesi
+    'sa_gsc_sync_log_days'      => 60,   // GSC sync log: 60 giorni
+    'sa_activity_logs_days'     => 180,  // Activity logs: 180 giorni
+
+    // --- Nuovi: internal-links ---
+    'il_activity_logs_days'     => 180,  // Activity logs: 180 giorni
+
+    // --- Nuovi: ai-content ---
+    'aic_scrape_jobs_days'      => 7,    // Scrape jobs completati: 7 giorni
+    'aic_sources_content_days'  => 90,   // Sources content_extracted: 90 giorni
+
+    // --- Nuovi: keyword-research ---
+    'kr_cache_days'             => 14,   // Cache keyword API: 14 giorni
 ];
 
 $logFile = BASE_PATH . '/storage/logs/data-cleanup.log';
@@ -448,6 +469,318 @@ function cleanupAutoEvalQueue(array $config, int $deleteBatchSize): int
 }
 
 // ============================================
+// 10. st_ga4_data/daily + st_gsc_daily + st_keyword_revenue → per-project retention
+// ============================================
+
+function cleanupStProjectData(array $config): int
+{
+    if (!tableExists('st_projects')) {
+        logMsg("  Tabella st_projects non trovata, skip");
+        return 0;
+    }
+
+    $projects = Database::fetchAll("SELECT id, COALESCE(data_retention_months, 16) as retention FROM st_projects");
+    if (empty($projects)) {
+        logMsg("  Nessun progetto seo-tracking");
+        return 0;
+    }
+
+    $tables = ['st_ga4_data', 'st_ga4_daily', 'st_gsc_daily', 'st_keyword_revenue'];
+    $totalDeleted = 0;
+
+    foreach ($projects as $p) {
+        $projectId = (int) $p['id'];
+        $retention = (int) $p['retention'];
+        $cutoff = date('Y-m-d', strtotime("-{$retention} months"));
+
+        foreach ($tables as $table) {
+            if (!tableExists($table)) {
+                continue;
+            }
+
+            $deleted = Database::execute(
+                "DELETE FROM {$table} WHERE project_id = ? AND date < ?",
+                [$projectId, $cutoff]
+            );
+
+            if ($deleted > 0) {
+                logMsg("  {$table} progetto {$projectId}: {$deleted} righe > {$retention} mesi");
+                $totalDeleted += $deleted;
+            }
+        }
+    }
+
+    return $totalDeleted;
+}
+
+// ============================================
+// 11. st_rank_checks → DELETE > 6 mesi
+// ============================================
+
+function cleanupRankChecks(array $config, int $deleteBatchSize): int
+{
+    if (!tableExists('st_rank_checks')) {
+        logMsg("  Tabella st_rank_checks non trovata, skip");
+        return 0;
+    }
+
+    $months = $config['st_rank_checks_months'];
+    $cutoff = date('Y-m-d', strtotime("-{$months} months"));
+
+    $totalDeleted = 0;
+    do {
+        $deleted = Database::execute(
+            "DELETE FROM st_rank_checks WHERE checked_at < ? LIMIT ?",
+            [$cutoff, $deleteBatchSize]
+        );
+        $totalDeleted += $deleted;
+
+        if ($deleted === $deleteBatchSize) {
+            usleep(100000);
+        }
+    } while ($deleted === $deleteBatchSize);
+
+    return $totalDeleted;
+}
+
+// ============================================
+// 12. st_rank_jobs → DELETE completati > 30 giorni
+// ============================================
+
+function cleanupRankJobs(array $config, int $deleteBatchSize): int
+{
+    if (!tableExists('st_rank_jobs')) {
+        logMsg("  Tabella st_rank_jobs non trovata, skip");
+        return 0;
+    }
+
+    $days = $config['st_rank_jobs_days'];
+
+    $totalDeleted = 0;
+    do {
+        $deleted = Database::execute(
+            "DELETE FROM st_rank_jobs WHERE status IN ('completed', 'error', 'cancelled') AND created_at < DATE_SUB(NOW(), INTERVAL ? DAY) LIMIT ?",
+            [$days, $deleteBatchSize]
+        );
+        $totalDeleted += $deleted;
+
+        if ($deleted === $deleteBatchSize) {
+            usleep(100000);
+        }
+    } while ($deleted === $deleteBatchSize);
+
+    return $totalDeleted;
+}
+
+// ============================================
+// 13. st_sync_log → DELETE > 60 giorni
+// ============================================
+
+function cleanupSyncLog(array $config, int $deleteBatchSize): int
+{
+    if (!tableExists('st_sync_log')) {
+        logMsg("  Tabella st_sync_log non trovata, skip");
+        return 0;
+    }
+
+    $days = $config['st_sync_log_days'];
+
+    $deleted = Database::execute(
+        "DELETE FROM st_sync_log WHERE started_at < DATE_SUB(NOW(), INTERVAL ? DAY)",
+        [$days]
+    );
+
+    return $deleted;
+}
+
+// ============================================
+// 14. sa_gsc_performance → DELETE > 6 mesi
+// ============================================
+
+function cleanupSaGscPerformance(array $config, int $deleteBatchSize): int
+{
+    if (!tableExists('sa_gsc_performance')) {
+        logMsg("  Tabella sa_gsc_performance non trovata, skip");
+        return 0;
+    }
+
+    $months = $config['sa_gsc_performance_months'];
+    $cutoff = date('Y-m-d', strtotime("-{$months} months"));
+
+    $totalDeleted = 0;
+    do {
+        $deleted = Database::execute(
+            "DELETE FROM sa_gsc_performance WHERE date < ? LIMIT ?",
+            [$cutoff, $deleteBatchSize]
+        );
+        $totalDeleted += $deleted;
+
+        if ($deleted === $deleteBatchSize) {
+            usleep(100000);
+        }
+    } while ($deleted === $deleteBatchSize);
+
+    return $totalDeleted;
+}
+
+// ============================================
+// 15. sa_gsc_sync_log → DELETE > 60 giorni
+// ============================================
+
+function cleanupSaGscSyncLog(array $config): int
+{
+    if (!tableExists('sa_gsc_sync_log')) {
+        logMsg("  Tabella sa_gsc_sync_log non trovata, skip");
+        return 0;
+    }
+
+    $days = $config['sa_gsc_sync_log_days'];
+
+    return Database::execute(
+        "DELETE FROM sa_gsc_sync_log WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)",
+        [$days]
+    );
+}
+
+// ============================================
+// 16. sa_activity_logs → DELETE > 180 giorni
+// ============================================
+
+function cleanupSaActivityLogs(array $config): int
+{
+    if (!tableExists('sa_activity_logs')) {
+        logMsg("  Tabella sa_activity_logs non trovata, skip");
+        return 0;
+    }
+
+    $days = $config['sa_activity_logs_days'];
+
+    return Database::execute(
+        "DELETE FROM sa_activity_logs WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)",
+        [$days]
+    );
+}
+
+// ============================================
+// 17. il_activity_logs → DELETE > 180 giorni
+// ============================================
+
+function cleanupIlActivityLogs(array $config): int
+{
+    if (!tableExists('il_activity_logs')) {
+        logMsg("  Tabella il_activity_logs non trovata, skip");
+        return 0;
+    }
+
+    $days = $config['il_activity_logs_days'];
+
+    return Database::execute(
+        "DELETE FROM il_activity_logs WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)",
+        [$days]
+    );
+}
+
+// ============================================
+// 18. aic_scrape_jobs → DELETE completati > 7 giorni
+// ============================================
+
+function cleanupScrapeJobs(array $config, int $deleteBatchSize): int
+{
+    if (!tableExists('aic_scrape_jobs')) {
+        logMsg("  Tabella aic_scrape_jobs non trovata, skip");
+        return 0;
+    }
+
+    $days = $config['aic_scrape_jobs_days'];
+
+    $totalDeleted = 0;
+    do {
+        $deleted = Database::execute(
+            "DELETE FROM aic_scrape_jobs WHERE status IN ('completed', 'error') AND created_at < DATE_SUB(NOW(), INTERVAL ? DAY) LIMIT ?",
+            [$days, $deleteBatchSize]
+        );
+        $totalDeleted += $deleted;
+
+        if ($deleted === $deleteBatchSize) {
+            usleep(100000);
+        }
+    } while ($deleted === $deleteBatchSize);
+
+    return $totalDeleted;
+}
+
+// ============================================
+// 19. aic_sources.content_extracted → SET NULL su articoli pubblicati > 90 giorni
+// ============================================
+
+function cleanupAicSourcesContent(array $config, int $batchSize): int
+{
+    if (!tableExists('aic_sources') || !tableExists('aic_articles')) {
+        logMsg("  Tabelle aic_sources/aic_articles non trovate, skip");
+        return 0;
+    }
+
+    $days = $config['aic_sources_content_days'];
+
+    $count = Database::fetch(
+        "SELECT COUNT(*) as total FROM aic_sources s
+         JOIN aic_articles a ON s.article_id = a.id
+         WHERE s.content_extracted IS NOT NULL
+         AND a.status = 'published'
+         AND s.scraped_at < DATE_SUB(NOW(), INTERVAL ? DAY)",
+        [$days]
+    );
+    $toClean = $count['total'] ?? 0;
+
+    if ($toClean === 0) {
+        logMsg("  Nessuna source content da pulire");
+        return 0;
+    }
+
+    logMsg("  Sources con content > {$days} giorni (articoli pubblicati): {$toClean}");
+
+    $totalCleaned = 0;
+    do {
+        $affected = Database::execute(
+            "UPDATE aic_sources s
+             JOIN aic_articles a ON s.article_id = a.id
+             SET s.content_extracted = NULL
+             WHERE s.content_extracted IS NOT NULL
+             AND a.status = 'published'
+             AND s.scraped_at < DATE_SUB(NOW(), INTERVAL ? DAY)
+             LIMIT ?",
+            [$days, $batchSize]
+        );
+        $totalCleaned += $affected;
+
+        if ($affected === $batchSize) {
+            usleep(200000);
+        }
+    } while ($affected === $batchSize);
+
+    return $totalCleaned;
+}
+
+// ============================================
+// 20. kr_keyword_cache → DELETE expired > 14 giorni
+// ============================================
+
+function cleanupKrCache(array $config): int
+{
+    if (!tableExists('kr_keyword_cache')) {
+        logMsg("  Tabella kr_keyword_cache non trovata, skip");
+        return 0;
+    }
+
+    $days = $config['kr_cache_days'];
+
+    return Database::execute(
+        "DELETE FROM kr_keyword_cache WHERE cached_at < DATE_SUB(NOW(), INTERVAL ? DAY)",
+        [$days]
+    );
+}
+
+// ============================================
 // ESECUZIONE PRINCIPALE
 // ============================================
 
@@ -456,6 +789,7 @@ logMsg("=== Inizio cleanup dati ===");
 logMsg("========================================");
 
 $sections = [
+    // --- Esistenti (1-9) ---
     ['sa_pages (html_content)',      'cleanupSaPages',          [$config, $batchSize]],
     ['il_urls (raw_html)',           'cleanupIlUrls',           [$config, $batchSize]],
     ['ga_* (run vecchi)',            'cleanupOldRuns',           [$config]],
@@ -465,6 +799,19 @@ $sections = [
     ['aic_process_jobs (> 30gg)',   'cleanupProcessJobs',       [$config, $deleteBatchSize]],
     ['st_rank_queue (> 7gg)',       'cleanupRankQueue',         [$config, $deleteBatchSize]],
     ['ga_auto_eval_queue (> 30gg)', 'cleanupAutoEvalQueue',     [$config, $deleteBatchSize]],
+
+    // --- Nuovi (10-20) ---
+    ['st_ga4/gsc/revenue (retention)', 'cleanupStProjectData',    [$config]],
+    ['st_rank_checks (> 6 mesi)',      'cleanupRankChecks',       [$config, $deleteBatchSize]],
+    ['st_rank_jobs (> 30gg)',          'cleanupRankJobs',         [$config, $deleteBatchSize]],
+    ['st_sync_log (> 60gg)',           'cleanupSyncLog',          [$config, $deleteBatchSize]],
+    ['sa_gsc_performance (> 6 mesi)',  'cleanupSaGscPerformance', [$config, $deleteBatchSize]],
+    ['sa_gsc_sync_log (> 60gg)',       'cleanupSaGscSyncLog',     [$config]],
+    ['sa_activity_logs (> 180gg)',      'cleanupSaActivityLogs',   [$config]],
+    ['il_activity_logs (> 180gg)',      'cleanupIlActivityLogs',   [$config]],
+    ['aic_scrape_jobs (> 7gg)',        'cleanupScrapeJobs',       [$config, $deleteBatchSize]],
+    ['aic_sources (content > 90gg)',   'cleanupAicSourcesContent', [$config, $batchSize]],
+    ['kr_keyword_cache (> 14gg)',      'cleanupKrCache',          [$config]],
 ];
 
 foreach ($sections as [$label, $func, $args]) {
