@@ -1,6 +1,6 @@
 # AINSTEIN - Stato Progetto
 
-**Ultimo aggiornamento:** 2026-02-12
+**Ultimo aggiornamento:** 2026-02-13
 **Ambiente produzione:** https://ainstein.it
 **Repository:** https://github.com/clembeweb/ainstein-seo-toolkit.git
 
@@ -32,7 +32,7 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 
 ---
 
-## STATO MODULI (Aggiornato 12 Feb 2026)
+## STATO MODULI (Aggiornato 13 Feb 2026)
 
 | Modulo | Slug | Stato Base | Stato AI | % Totale |
 |--------|------|------------|----------|----------|
@@ -74,6 +74,21 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 
 ## COMPLETATI RECENTEMENTE
 
+### 2026-02-13
+- [x] **Piano Editoriale** - 4a modalità AI Keyword Research (`keyword-research`)
+- [x] Wizard 4-step: Brief → Raccolta keyword+SERP (SSE) → AI Piano → Risultati tabella mensile
+- [x] Raccolta dati per categoria: keyword expansion + titoli competitor SERP
+- [x] SERP cache (`kr_serp_cache`) con TTL 7 giorni per evitare chiamate duplicate
+- [x] AI chunked: piani >6 mesi splittat in chunk da 6 mesi con deduplicazione keyword
+- [x] Dynamic `max_tokens` basato su numero articoli (350 token/articolo, max 16000)
+- [x] Export CSV + invio diretto a AI Content (`aic_queue`)
+- [x] Tabella `kr_editorial_items` con 15+ campi (title, keyword, volume, category, intent, difficulty, etc.)
+- [x] 5 crediti per analisi (configurabile da admin)
+- [x] Cross-module: `SerpApiService` da ai-content, `Queue` per export
+- [x] **Ads Analyzer Simplification** - Semplificato a campaign-only + admin branding
+- [x] Rimosso multi-type project handling, hardcoded type='campaign'
+- [x] **AI Content view fixes** - Consistenza viste e docs update
+
 ### 2026-02-12
 - [x] **Content Creator Pivot** - Modulo completo per generazione contenuti HTML di pagina (`content-creator`)
 - [x] Pivot da Meta Tag Generator a Full Page Content Generator (body HTML)
@@ -109,7 +124,7 @@ Pricing model: ~55€/mese (vs 120€+ competitor).
 - [x] Architettura Sito: wizard 3-step (Brief → Collection+AI → Struttura pagine con URL/H1)
 - [x] Quick Check: ricerca keyword istantanea senza progetto (gratis)
 - [x] KeywordInsightService: wrapper Google Keyword Insight API (RapidAPI) con ApiLoggerService
-- [x] 5 controller, 3 model, 1 service, 10 view, dashboard con 3 modalità
+- [x] 6 controller, 4 model, 1 service, 12 view, dashboard con 4 modalità
 - [x] Sistema crediti integrato (2-5 crediti clustering AI, 5 crediti architettura)
 - [x] SSE real-time per raccolta keyword con session_write_close()
 - [x] Sidebar accordion con navigazione progetto
@@ -231,10 +246,10 @@ ainstein-seo-toolkit/
 
 | Aspetto | Dettaglio |
 |---------|-----------|
-| **Data** | 2026-02-12 |
-| **Modifiche principali** | Content Creator pivot completo: generazione contenuti HTML, 4 CMS connectors, import KR |
-| **Migration** | `001_pivot_to_content.sql` - ALTER cc_urls (drop meta fields, add content fields), ALTER cc_connectors (add api_key, categories_cache, seo_plugin) |
-| **File modificati** | 22 file: controllers, models, views, connectors, routes (content-creator + keyword-research) |
+| **Data** | 2026-02-13 |
+| **Modifiche principali** | Piano Editoriale (4a modalità keyword-research), Ads Analyzer semplificazione campaign-only, AI Content view fixes |
+| **Migration** | `002_editorial_plan.sql` - ALTER kr_researches ENUM + CREATE kr_editorial_items + kr_serp_cache (già deployate) |
+| **File modificati** | EditorialController, EditorialItem model, wizard+results views, routes, module.json, dashboard, nav-items, onboarding |
 
 ---
 
@@ -244,6 +259,7 @@ ainstein-seo-toolkit/
 1. Test browser completo modulo content-creator
 2. Test CMS push con plugin WordPress reale
 3. Test import da Keyword Research → Content Creator
+4. Test Piano Editoriale export → AI Content pipeline
 
 ### Breve termine (2-3 settimane)
 1. Rilascio AI Link Suggester (internal-links)
@@ -292,4 +308,4 @@ ssh -i ~/.ssh/siteground_key -p 18765 u1608-ykgnd3z1twn4@ssh.ainstein.it
 
 ---
 
-*Documento aggiornato - 2026-02-12*
+*Documento aggiornato - 2026-02-13*

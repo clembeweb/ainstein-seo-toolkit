@@ -10,7 +10,7 @@ class Project
     {
         return Database::insert('ga_projects', [
             'user_id' => $data['user_id'],
-            'type' => $data['type'] ?? 'negative-kw',
+            'type' => $data['type'] ?? 'campaign',
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
             'business_context' => $data['business_context'] ?? '',
@@ -92,18 +92,8 @@ class Project
     public static function getGlobalStats(int $userId): array
     {
         $counts = Database::fetch("
-            SELECT
-                COUNT(*) as total_projects,
-                SUM(CASE WHEN type = 'negative-kw' THEN 1 ELSE 0 END) as negkw_count,
-                SUM(CASE WHEN type = 'campaign' THEN 1 ELSE 0 END) as campaign_count
-            FROM ga_projects WHERE user_id = ?
-        ", [$userId]) ?: [];
-
-        $negkwStats = Database::fetch("
-            SELECT
-                COALESCE(SUM(total_terms), 0) as total_terms,
-                COALESCE(SUM(total_negatives_found), 0) as total_negatives
-            FROM ga_projects WHERE user_id = ? AND type = 'negative-kw'
+            SELECT COUNT(*) as total_projects
+            FROM ga_projects WHERE user_id = ? AND type = 'campaign'
         ", [$userId]) ?: [];
 
         $campaignStats = Database::fetch("
@@ -116,14 +106,25 @@ class Project
                  WHERE p.user_id = ? AND p.type = 'campaign' AND e.status = 'completed') as total_evaluations
         ", [$userId, $userId]) ?: [];
 
+        // Count search term negatives from campaign projects
+        $negStats = Database::fetch("
+            SELECT
+                COALESCE(SUM(p.total_terms), 0) as total_terms,
+                (SELECT COUNT(*) FROM ga_negative_keywords nk
+                 INNER JOIN ga_analyses a ON nk.analysis_id = a.id
+                 INNER JOIN ga_projects p2 ON a.project_id = p2.id
+                 WHERE p2.user_id = ? AND p2.type = 'campaign' AND nk.is_selected = 1) as total_negatives
+            FROM ga_projects p
+            WHERE p.user_id = ? AND p.type = 'campaign'
+        ", [$userId, $userId]) ?: [];
+
         return [
             'total_projects' => (int) ($counts['total_projects'] ?? 0),
-            'negkw_count' => (int) ($counts['negkw_count'] ?? 0),
-            'campaign_count' => (int) ($counts['campaign_count'] ?? 0),
-            'total_terms' => (int) ($negkwStats['total_terms'] ?? 0),
-            'total_negatives' => (int) ($negkwStats['total_negatives'] ?? 0),
+            'campaign_count' => (int) ($counts['total_projects'] ?? 0),
             'total_campaigns' => (int) ($campaignStats['total_campaigns'] ?? 0),
             'total_evaluations' => (int) ($campaignStats['total_evaluations'] ?? 0),
+            'total_terms' => (int) ($negStats['total_terms'] ?? 0),
+            'total_negatives' => (int) ($negStats['total_negatives'] ?? 0),
         ];
     }
 
@@ -177,7 +178,7 @@ class Project
     public static function getRecent(int $userId, int $limit = 5): array
     {
         return Database::fetchAll(
-            "SELECT * FROM ga_projects WHERE user_id = ? ORDER BY updated_at DESC LIMIT ?",
+            "SELECT * FROM ga_projects WHERE user_id = ? AND type = 'campaign' ORDER BY updated_at DESC LIMIT ?",
             [$userId, $limit]
         );
     }

@@ -1,6 +1,6 @@
 # AINSTEIN - Roadmap Sviluppo AI
 
-**Ultimo aggiornamento:** 2026-02-12
+**Ultimo aggiornamento:** 2026-02-13
 **Tipo:** Roadmap tecnica
 **Stato:** Attivo
 
@@ -17,7 +17,7 @@
 | **ads-analyzer** | 100% | ✅ Completa | — |
 | **internal-links** | 85% | ❌ Mancante | Suggerimenti link |
 | **seo-tracking** | 95% | ✅ Completa | Alert backend |
-| **keyword-research** | 100% | ✅ Completa | — |
+| **keyword-research** | 100% | ✅ Completa | — (4 modalità: Research, Architettura, Piano Editoriale, Quick Check) |
 | **content-creator** | 90% | ✅ Completa | Test e-2-e |
 
 ---
@@ -213,6 +213,7 @@
 ### Questa Settimana
 - [x] ~~AI Keyword Research completo~~ (2026-02-06)
 - [x] ~~Content Creator MVP completo~~ (2026-02-12)
+- [x] ~~Piano Editoriale (4a modalità keyword-research)~~ (2026-02-13)
 - [ ] Test browser content-creator + CMS push
 
 ### Prossime 2 Settimane
@@ -237,7 +238,8 @@ FASE 1 (Ora)
 FASE 2 (2-3 settimane) ← Content Creator ✅ completato
 ├── Weekly AI Digest (seo-tracking) ✅
 ├── Quick Wins Finder (seo-tracking) ✅
-└── Content Creator MVP ✅ (2026-02-12)
+├── Content Creator MVP ✅ (2026-02-12)
+└── Piano Editoriale ✅ (2026-02-13)
 
 FASE 3 (Ongoing)
 ├── Content Optimizer (ai-content)
@@ -248,4 +250,4 @@ FASE 3 (Ongoing)
 ---
 
 *Roadmap Sviluppo - Ainstein SEO Toolkit*
-*Aggiornato: 2026-02-12*
+*Aggiornato: 2026-02-13*
