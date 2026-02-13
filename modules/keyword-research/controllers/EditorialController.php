@@ -626,7 +626,8 @@ class EditorialController
             return;
         }
 
-        $itemIds = json_decode($_POST['item_ids'] ?? '[]', true);
+        $rawItemIds = $_POST['item_ids'] ?? '[]';
+        $itemIds = is_array($rawItemIds) ? $rawItemIds : json_decode($rawItemIds, true);
         $aicProjectId = (int) ($_POST['aic_project_id'] ?? 0);
 
         if (empty($itemIds) || !$aicProjectId) {
