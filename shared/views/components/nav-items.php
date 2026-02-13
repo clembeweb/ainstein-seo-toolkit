@@ -23,7 +23,7 @@ if (!function_exists('navLink')) {
 
 // Onboarding: moduli completati per icona "?" tour
 $onbCompletedModules = [];
-$onbModuleSlugs = ['ai-content', 'seo-audit', 'seo-tracking', 'keyword-research', 'internal-links', 'ads-analyzer'];
+$onbModuleSlugs = ['ai-content', 'seo-audit', 'seo-tracking', 'keyword-research', 'internal-links', 'ads-analyzer', 'content-creator'];
 if (isset($user['id']) && class_exists('\\Core\\OnboardingService')) {
     $onbCompletedModules = \Core\OnboardingService::getCompletedModules($user['id']);
 }
@@ -180,6 +180,21 @@ if (preg_match('#^/ai-content/projects/(\d+)#', $currentPath, $matches)) {
         }
     } catch (\Exception $e) {
         // Silently fail - project info not critical for navigation
+    }
+}
+
+// Check if we're inside a content-creator project
+$ccProjectId = null;
+$ccProject = null;
+if (preg_match('#^/content-creator/projects/(\d+)#', $currentPath, $matches)) {
+    $ccProjectId = (int) $matches[1];
+    try {
+        if (class_exists('\\Modules\\ContentCreator\\Models\\Project')) {
+            $projectModel = new \Modules\ContentCreator\Models\Project();
+            $ccProject = $projectModel->findByUser($ccProjectId, $user['id'] ?? 0);
+        }
+    } catch (\Exception $e) {
+        // Silently fail
     }
 }
 ?>
@@ -635,14 +650,52 @@ if (preg_match('#^/ai-content/projects/(\d+)#', $currentPath, $matches)) {
                     <?php endif; ?>
                 </div>
             <?php elseif ($module['slug'] === 'content-creator'): ?>
-                <!-- Content Creator Module -->
-                <a href="<?= url('/content-creator') ?>"
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors <?= str_starts_with($currentPath, '/content-creator') ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white' ?>">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/>
-                    </svg>
-                    <span class="flex-1"><?= e($module['name']) ?></span>
-                </a>
+                <!-- Content Creator Module with Accordion -->
+                <?php $ccExpanded = $ccProjectId || str_starts_with($currentPath, '/content-creator/connectors'); ?>
+                <div x-data="{ expanded: <?= $ccExpanded ? 'true' : 'false' ?> }">
+                    <!-- Module Link -->
+                    <div class="flex items-center">
+                        <a href="<?= url('/content-creator') ?>"
+                           class="flex-1 flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors <?= str_starts_with($currentPath, '/content-creator') ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white' ?>">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/>
+                            </svg>
+                            <span class="flex-1"><?= e($module['name']) ?></span>
+                        </a>
+                        <button @click="expanded = !expanded" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                            <svg class="w-4 h-4 transition-transform" :class="expanded && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Sub-navigation -->
+                    <div x-show="expanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="ml-3 mt-1 pl-3 border-l-2 border-slate-200 dark:border-slate-700 space-y-0.5">
+
+                    <?php if ($ccProjectId && $ccProject): ?>
+                        <!-- Project Name Header -->
+                        <div class="px-2 py-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 truncate" title="<?= e($ccProject['name']) ?>">
+                            <?= e(mb_substr($ccProject['name'], 0, 20)) ?><?= mb_strlen($ccProject['name']) > 20 ? '...' : '' ?>
+                        </div>
+
+                        <?= navSubLink("/content-creator/projects/{$ccProjectId}", 'Dashboard', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>', $currentPath, true) ?>
+
+                        <?= navSubLink("/content-creator/projects/{$ccProjectId}/import", 'Importa URL', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>', $currentPath) ?>
+
+                        <?= navSubLink("/content-creator/projects/{$ccProjectId}/results", 'Risultati', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>', $currentPath) ?>
+
+                        <!-- Settings -->
+                        <div class="pt-1 mt-1 border-t border-slate-200 dark:border-slate-700">
+                            <?= navSubLink("/content-creator/projects/{$ccProjectId}/settings", 'Impostazioni', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>', $currentPath) ?>
+                        </div>
+                    <?php endif; ?>
+
+                        <!-- Connettori CMS (sempre visibile) -->
+                        <div class="<?= $ccProjectId ? 'pt-1 mt-1 border-t border-slate-200 dark:border-slate-700' : '' ?>">
+                            <?= navSubLink("/content-creator/connectors", 'Connettori CMS', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>', $currentPath) ?>
+                        </div>
+                    </div>
+                </div>
             <?php else: ?>
                 <!-- Other Modules (standard link) -->
                 <?php if (in_array($module['slug'], $onbModuleSlugs)): ?>
