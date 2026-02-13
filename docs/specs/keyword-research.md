@@ -73,6 +73,10 @@ kr_researches            -- Ricerche/analisi (project_id, type, status, brief JS
 -- Cluster e keyword
 kr_clusters              -- Cluster semantici generati da AI (research_id, name, intent, URL/H1)
 kr_keywords              -- Keyword singole (research_id, cluster_id, text, volume, CPC, intent)
+
+-- Piano Editoriale
+kr_editorial_items       -- Articoli piano editoriale (research_id, month, category, title, keyword)
+kr_serp_cache            -- Cache SERP 7 giorni (query, organic_results, paa, related)
 ```
 
 ### Tabelle
@@ -95,7 +99,7 @@ kr_keywords              -- Keyword singole (research_id, cluster_id, text, volu
 | id | INT PK | Primary key |
 | project_id | INT | FK a kr_projects |
 | user_id | INT | Utente |
-| type | ENUM | 'research' o 'architecture' |
+| type | ENUM | 'research', 'architecture' o 'editorial' |
 | status | ENUM | draft, collecting, analyzing, completed, error |
 | brief | JSON | Input utente (business, target, seeds, etc.) |
 | raw_keywords_count | INT | Keyword grezze da API |
@@ -140,6 +144,40 @@ kr_keywords              -- Keyword singole (research_id, cluster_id, text, volu
 | is_excluded | TINYINT(1) | 1 se esclusa dal clustering |
 | source | VARCHAR(50) | Fonte (keysuggest) |
 
+#### kr_editorial_items
+| Colonna | Tipo | Descrizione |
+|---------|------|-------------|
+| id | INT PK | Primary key |
+| research_id | INT | FK a kr_researches |
+| month_number | INT | Mese (1-based) |
+| week_number | INT | Settimana (opzionale, 1-4) |
+| category | VARCHAR(255) | Categoria articolo |
+| title | VARCHAR(500) | Titolo suggerito |
+| main_keyword | VARCHAR(500) | Keyword principale |
+| main_volume | INT | Volume keyword principale |
+| secondary_keywords | JSON | [{text, volume}] |
+| intent | VARCHAR(50) | Search intent |
+| difficulty | VARCHAR(20) | low/medium/high |
+| content_type | VARCHAR(100) | guida/tutorial/listicle/case-study/etc |
+| notes | TEXT | Note AI strategiche |
+| seasonal_note | VARCHAR(500) | Nota stagionalità |
+| serp_gap | TEXT | Gap competitor SERP |
+| sort_order | INT | Ordine visualizzazione |
+| sent_to_content | TINYINT(1) | 1 se inviato a AI Content |
+| sent_at | TIMESTAMP | Data invio |
+
+#### kr_serp_cache
+| Colonna | Tipo | Descrizione |
+|---------|------|-------------|
+| id | INT PK | Primary key |
+| query | VARCHAR(500) | Query di ricerca |
+| location | VARCHAR(10) | Location (IT, US, ...) |
+| language | VARCHAR(10) | Lingua (it, en, ...) |
+| organic_results | JSON | Risultati organici SERP |
+| paa | JSON | People Also Ask |
+| related_searches | JSON | Ricerche correlate |
+| cached_at | TIMESTAMP | TTL 7 giorni |
+
 ---
 
 ## API Esterna
@@ -176,7 +214,7 @@ $service->filterKeywords(keywords[], exclusions[], minVolume): array
 
 ---
 
-## 3 Modalità
+## 4 Modalità
 
 ### 1. Research Guidata (wizard 4 step)
 
@@ -212,7 +250,37 @@ $service->filterKeywords(keywords[], exclusions[], minVolume): array
 **Output AI:** Pagine con name, main_keyword, suggested_url, suggested_h1, keywords[], intent, note
 **Crediti:** 5 - configurabile da admin
 
-### 3. Quick Check (no progetto)
+### 3. Piano Editoriale (wizard 4 step)
+
+**Step 1 - Brief** (form Alpine.js)
+- Theme (textarea, required), categories (tag input violet, min 2, max 6)
+- Period: 3, 6, 12 mesi | Articles/month: 2, 4, 6, 8
+- Target (B2B/B2C/Entrambi), geography
+
+**Step 2 - Raccolta Dati** (SSE)
+- POST `/editorial/start` → crea research type='editorial', ritorna research_id
+- GET `/editorial/stream?research_id=X` → SSE per ogni categoria
+- Per ogni categoria: `KeywordInsightService::keySuggest()` + `SerpApiService::search()` (SERP titles)
+- Cache SERP in `kr_serp_cache` (7 giorni TTL, UPSERT)
+- Eventi: `started`, `category_started`, `category_keywords`, `category_serp`, `category_completed`, `completed`
+
+**Step 3 - AI Piano** (AJAX lungo con `ob_start()`)
+- POST `/editorial/analyze` → `AiService::analyzeWithSystem()` con module 'keyword-research'
+- Prompt: tema, categorie, top 30 keyword per categoria (con volumi), titoli SERP competitor
+- `Database::reconnect()` prima di salvare
+- `Credits::consume()` dopo successo
+- Salvataggio: `kr_editorial_items` per ogni articolo
+
+**Step 4 - Risultati** (redirect a results view)
+- Tabella mensile, export CSV, invio a AI Content
+
+**Crediti:** 5 - configurabile da admin
+
+**Integrazione cross-modulo:**
+- `SerpApiService` da ai-content (opzionale, graceful degradation)
+- Export in `aic_queue` con controllo duplicati
+
+### 4. Quick Check (no progetto)
 
 - Pagina singola, no progetto necessario, **gratis** (0 crediti)
 - Form: keyword + location
@@ -229,6 +297,7 @@ $service->filterKeywords(keywords[], exclusions[], minVolume): array
 | AI Clustering (< 100 kw) | `cost_kr_ai_clustering` | 2 | Clustering semantico AI |
 | AI Clustering (> 100 kw) | `cost_kr_ai_clustering_large` | 5 | Clustering AI (large) |
 | Architettura sito AI | `cost_kr_ai_architecture` | 5 | Struttura sito con URL/H1 |
+| Piano Editoriale AI | `cost_kr_editorial_plan` | 5 | Piano editoriale mensile |
 | Quick Check | — | 0 | Gratis (solo API) |
 
 ---
@@ -237,7 +306,7 @@ $service->filterKeywords(keywords[], exclusions[], minVolume): array
 
 ```
 # Dashboard
-GET  /keyword-research                                      # Landing 3 modalità
+GET  /keyword-research                                      # Landing 4 modalità
 
 # Progetti
 GET  /keyword-research/projects                             # Lista
@@ -261,6 +330,16 @@ POST /keyword-research/project/{id}/architecture/start      # Avvia raccolta
 GET  /keyword-research/project/{id}/architecture/stream     # SSE streaming
 POST /keyword-research/project/{id}/architecture/analyze    # AI analisi
 GET  /keyword-research/project/{id}/architecture/{researchId} # Risultati
+
+# Piano Editoriale
+GET  /keyword-research/project/{id}/editorial                # Wizard
+POST /keyword-research/project/{id}/editorial/start          # Avvia raccolta
+GET  /keyword-research/project/{id}/editorial/stream         # SSE streaming (kw + SERP)
+GET  /keyword-research/project/{id}/editorial/collection-results  # Polling fallback
+POST /keyword-research/project/{id}/editorial/analyze        # AI piano editoriale
+GET  /keyword-research/project/{id}/editorial/{researchId}   # Risultati tabella mensile
+GET  /keyword-research/project/{id}/editorial/{researchId}/export  # Export CSV
+POST /keyword-research/project/{id}/editorial/{researchId}/send-to-content  # Invio AI Content
 
 # Quick Check
 GET  /keyword-research/quick-check                          # Form
@@ -286,6 +365,7 @@ POST /keyword-research/quick-check/search                   # Ricerca
 | cost_kr_ai_clustering | number | 2 | Crediti clustering (< 100 kw) |
 | cost_kr_ai_clustering_large | number | 5 | Crediti clustering (> 100 kw) |
 | cost_kr_ai_architecture | number | 5 | Crediti architettura sito |
+| cost_kr_editorial_plan | number | 5 | Crediti piano editoriale |
 
 ---
 
@@ -330,6 +410,7 @@ Keyword Research ▼
   └── [Nome Progetto] (se dentro progetto)
         ├── Research Guidata
         ├── Architettura Sito
+        ├── Piano Editoriale
         ├── ─── separator ───
         └── Impostazioni
   Quick Check (sempre visibile)
@@ -345,7 +426,12 @@ Keyword Research ▼
 4. **AI prompt JSON-only**: cleanup risposta con `preg_replace('/^```(?:json)?\s*/i', '', $content)`
 5. **Export CSV UTF-8**: BOM `\xEF\xBB\xBF` per compatibilità Excel
 6. **Architecture auto-chain**: dopo collection SSE, il frontend auto-avvia AI analysis (no click utente)
+7. **Editorial SERP cross-module**: usa `SerpApiService` da ai-content, wrappato in try/catch per graceful degradation
+8. **Editorial SERP cache**: `kr_serp_cache` con TTL 7 giorni, UPSERT con `ON DUPLICATE KEY UPDATE`
+9. **Editorial AI prompt lungo**: pattern AJAX lungo con `ob_start()` / `ob_end_clean()` (NON `jsonResponse()`)
+10. **Editorial export AI Content**: inserisce in `aic_queue` con `scheduled_at = date('Y-m-d H:i:s')` (NOT NULL)
+11. **Input handling robusto**: `categories` e `item_ids` gestiscono sia array PHP che stringa JSON/CSV
 
 ---
 
-*Spec creata - 2026-02-06*
+*Spec aggiornata - 2026-02-13*
