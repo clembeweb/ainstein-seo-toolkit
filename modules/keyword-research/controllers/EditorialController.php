@@ -404,9 +404,6 @@ class EditorialController
 
             session_write_close();
 
-            // Costruisci prompt
-            $prompt = $this->buildAiPrompt($brief, $categoriesData);
-
             $ai = new AiService('keyword-research');
             if (!$ai->isConfigured()) {
                 ob_end_clean();
@@ -416,67 +413,106 @@ class EditorialController
 
             $systemPrompt = "Sei un esperto SEO italiano e content strategist specializzato in pianificazione editoriale per blog. Rispondi SOLO con JSON valido, senza markdown, senza commenti, senza testo prima o dopo il JSON.";
 
-            // max_tokens proporzionato al numero di articoli (ogni articolo ~200 tokens di output)
-            $totalArticles = ($brief['months'] ?? 6) * ($brief['articles_per_month'] ?? 4);
-            $maxTokens = max(4096, min(16000, $totalArticles * 350));
+            $totalMonths = (int) ($brief['months'] ?? 6);
+            $articlesPerMonth = (int) ($brief['articles_per_month'] ?? 4);
 
-            $aiStart = microtime(true);
-            $aiResult = $ai->complete($user['id'], [
-                ['role' => 'user', 'content' => $prompt],
-            ], [
-                'system' => $systemPrompt,
-                'max_tokens' => $maxTokens,
-            ], 'keyword-research');
-            $aiElapsed = (int) round((microtime(true) - $aiStart) * 1000);
-
-            Database::reconnect();
-
-            if (isset($aiResult['error']) && $aiResult['error']) {
-                $this->researchModel->updateStatus($researchId, 'error');
-                ob_end_clean();
-                echo json_encode(['success' => false, 'error' => $aiResult['message'] ?? 'Errore AI.']);
-                exit;
+            // Spezza in chunk da max 6 mesi per evitare troncamento AI
+            $chunkSize = 6;
+            $chunks = [];
+            for ($start = 1; $start <= $totalMonths; $start += $chunkSize) {
+                $end = min($start + $chunkSize - 1, $totalMonths);
+                $chunks[] = ['start' => $start, 'end' => $end];
             }
 
-            // Parse JSON response
-            $aiContent = $aiResult['result'] ?? '';
-            $aiContent = preg_replace('/^```(?:json)?\s*/i', '', $aiContent);
-            $aiContent = preg_replace('/\s*```\s*$/', '', $aiContent);
-            $aiContent = trim($aiContent);
-
-            $parsed = json_decode($aiContent, true);
-
-            if ($parsed === null || !isset($parsed['months'])) {
-                $this->researchModel->updateStatus($researchId, 'error');
-                ob_end_clean();
-                echo json_encode(['success' => false, 'error' => 'Risposta AI non valida. ' . json_last_error_msg()]);
-                exit;
-            }
-
-            // Salva editorial items nel DB
             $totalArticles = 0;
-            foreach ($parsed['months'] as $month) {
-                $monthNum = (int) ($month['month_number'] ?? 0);
-                $articles = $month['articles'] ?? [];
+            $strategyNote = '';
+            $aiElapsed = 0;
+            $usedKeywords = [];
 
-                foreach ($articles as $sortIdx => $article) {
-                    $this->editorialModel->create([
-                        'research_id' => $researchId,
-                        'month_number' => $monthNum,
-                        'category' => $article['category'] ?? '',
-                        'title' => $article['title'] ?? '',
-                        'main_keyword' => $article['main_keyword'] ?? '',
-                        'main_volume' => (int) ($article['main_volume'] ?? 0),
-                        'secondary_keywords' => $article['secondary_keywords'] ?? [],
-                        'intent' => $article['intent'] ?? null,
-                        'difficulty' => $article['difficulty'] ?? 'medium',
-                        'content_type' => $article['content_type'] ?? null,
-                        'notes' => $article['notes'] ?? null,
-                        'seasonal_note' => $article['seasonal_note'] ?? null,
-                        'serp_gap' => $article['serp_gap'] ?? null,
-                        'sort_order' => $sortIdx,
-                    ]);
-                    $totalArticles++;
+            foreach ($chunks as $chunkIdx => $chunk) {
+                $chunkMonths = $chunk['end'] - $chunk['start'] + 1;
+                $chunkBrief = $brief;
+                $chunkBrief['months'] = $chunkMonths;
+                $chunkBrief['_month_start'] = $chunk['start'];
+                $chunkBrief['_month_end'] = $chunk['end'];
+                if (!empty($usedKeywords)) {
+                    $chunkBrief['_used_keywords'] = $usedKeywords;
+                }
+
+                $prompt = $this->buildAiPrompt($chunkBrief, $categoriesData);
+                $maxTokens = max(4096, min(16000, $chunkMonths * $articlesPerMonth * 350));
+
+                set_time_limit(0);
+                $aiStart2 = microtime(true);
+                $aiResult = $ai->complete($user['id'], [
+                    ['role' => 'user', 'content' => $prompt],
+                ], [
+                    'system' => $systemPrompt,
+                    'max_tokens' => $maxTokens,
+                ], 'keyword-research');
+                $aiElapsed += (int) round((microtime(true) - $aiStart2) * 1000);
+
+                Database::reconnect();
+
+                if (isset($aiResult['error']) && $aiResult['error']) {
+                    if ($totalArticles === 0) {
+                        $this->researchModel->updateStatus($researchId, 'error');
+                        ob_end_clean();
+                        echo json_encode(['success' => false, 'error' => $aiResult['message'] ?? 'Errore AI.']);
+                        exit;
+                    }
+                    break; // Salva almeno i mesi già generati
+                }
+
+                $aiContent = $aiResult['result'] ?? '';
+                $aiContent = preg_replace('/^```(?:json)?\s*/i', '', $aiContent);
+                $aiContent = preg_replace('/\s*```\s*$/', '', $aiContent);
+                $aiContent = trim($aiContent);
+
+                $parsed = json_decode($aiContent, true);
+
+                if ($parsed === null || !isset($parsed['months'])) {
+                    if ($totalArticles === 0) {
+                        $this->researchModel->updateStatus($researchId, 'error');
+                        ob_end_clean();
+                        echo json_encode(['success' => false, 'error' => 'Risposta AI non valida. ' . json_last_error_msg()]);
+                        exit;
+                    }
+                    break;
+                }
+
+                // Salva editorial items nel DB
+                foreach ($parsed['months'] as $month) {
+                    $monthNum = (int) ($month['month_number'] ?? 0);
+                    $articles = $month['articles'] ?? [];
+
+                    foreach ($articles as $sortIdx => $article) {
+                        $kw = $article['main_keyword'] ?? '';
+                        $this->editorialModel->create([
+                            'research_id' => $researchId,
+                            'month_number' => $monthNum,
+                            'category' => $article['category'] ?? '',
+                            'title' => $article['title'] ?? '',
+                            'main_keyword' => $kw,
+                            'main_volume' => (int) ($article['main_volume'] ?? 0),
+                            'secondary_keywords' => $article['secondary_keywords'] ?? [],
+                            'intent' => $article['intent'] ?? null,
+                            'difficulty' => $article['difficulty'] ?? 'medium',
+                            'content_type' => $article['content_type'] ?? null,
+                            'notes' => $article['notes'] ?? null,
+                            'seasonal_note' => $article['seasonal_note'] ?? null,
+                            'serp_gap' => $article['serp_gap'] ?? null,
+                            'sort_order' => $sortIdx,
+                        ]);
+                        $totalArticles++;
+                        if ($kw) {
+                            $usedKeywords[] = $kw;
+                        }
+                    }
+                }
+
+                if (!empty($parsed['strategy_note']) && $chunkIdx === 0) {
+                    $strategyNote = $parsed['strategy_note'];
                 }
             }
 
@@ -488,7 +524,7 @@ class EditorialController
 
             // Aggiorna research
             $this->researchModel->saveResults($researchId, [
-                'strategy_note' => $parsed['strategy_note'] ?? null,
+                'strategy_note' => $strategyNote ?: null,
                 'credits_used' => $cost,
                 'ai_time_ms' => $aiElapsed,
                 'status' => 'completed',
@@ -726,15 +762,22 @@ class EditorialController
         $articlesPerMonth = (int) ($brief['articles_per_month'] ?? 4);
         $categories = $brief['categories'] ?? [];
         $totalArticles = $months * $articlesPerMonth;
+        $monthStart = (int) ($brief['_month_start'] ?? 1);
+        $monthEnd = (int) ($brief['_month_end'] ?? $months);
+        $usedKeywords = $brief['_used_keywords'] ?? [];
+
+        $periodLabel = ($monthStart === 1 && $monthEnd === $months)
+            ? "{$months} mesi"
+            : "mesi {$monthStart}-{$monthEnd} (di {$months} totali)";
 
         $prompt = "Crea un piano editoriale per un blog.
 
 TEMA DEL BLOG: {$theme}
 TARGET: {$target}
 GEOGRAFIA: {$geography}
-PERIODO: {$months} mesi
+PERIODO: {$periodLabel}
 ARTICOLI AL MESE: {$articlesPerMonth}
-TOTALE ARTICOLI: {$totalArticles}
+TOTALE ARTICOLI DA GENERARE: " . (($monthEnd - $monthStart + 1) * $articlesPerMonth) . "
 CATEGORIE: " . implode(', ', $categories) . "
 
 DATI KEYWORD E COMPETITOR PER CATEGORIA:\n\n";
@@ -778,8 +821,13 @@ DATI KEYWORD E COMPETITOR PER CATEGORIA:\n\n";
             $prompt .= "\n";
         }
 
+        if (!empty($usedKeywords)) {
+            $prompt .= "KEYWORD GIA' USATE NEI MESI PRECEDENTI (NON ripeterle come keyword principale):\n";
+            $prompt .= implode(', ', array_slice($usedKeywords, 0, 50)) . "\n\n";
+        }
+
         $prompt .= "ISTRUZIONI:
-1. Crea esattamente {$articlesPerMonth} articoli per ognuno dei {$months} mesi (totale {$totalArticles} articoli)
+1. Crea esattamente {$articlesPerMonth} articoli per ognuno dei mesi da {$monthStart} a {$monthEnd} (totale " . (($monthEnd - $monthStart + 1) * $articlesPerMonth) . " articoli). I month_number devono essere da {$monthStart} a {$monthEnd}.
 2. Distribuisci equamente le categorie nei mesi
 3. Per ogni articolo suggerisci:
    - Titolo accattivante e SEO-ottimizzato (diverso dai competitor trovati nelle SERP)
