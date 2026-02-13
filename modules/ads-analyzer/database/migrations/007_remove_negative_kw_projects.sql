@@ -29,10 +29,5 @@ DELETE ag FROM ga_ad_groups ag
 INNER JOIN ga_projects p ON ag.project_id = p.id
 WHERE p.type = 'negative-kw';
 
--- 6. Elimina landing pages dei progetti negative-kw
-DELETE lp FROM ga_landing_pages lp
-INNER JOIN ga_projects p ON lp.project_id = p.id
-WHERE p.type = 'negative-kw';
-
--- 7. Elimina i progetti negative-kw
+-- 6. Elimina i progetti negative-kw
 DELETE FROM ga_projects WHERE type = 'negative-kw';
