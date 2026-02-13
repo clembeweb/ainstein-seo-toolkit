@@ -10,6 +10,24 @@ Bootstrap leggero per script CLI. Carica autoloader e Database senza routing/ses
 ### cleanup-ai-logs.php
 Elimina i log AI piu vecchi di 30 giorni dalla tabella `ai_logs`.
 
+### cleanup-api-logs.php
+Elimina i log API piu vecchi di 30 giorni dalla tabella `api_logs`.
+
+### cleanup-data.php
+Cleanup centralizzato di dati obsoleti da tutti i moduli. Esegue 9 operazioni indipendenti:
+
+| Target | Retention | Azione |
+|--------|-----------|--------|
+| `sa_pages.html_content` | 90 giorni | SET NULL (metadata JSON intatti) |
+| `il_urls.raw_html` | 30 giorni | SET NULL (content_html intatto) |
+| `ga_script_runs` + dati collegati | Ultimi 5 per progetto | DELETE run vecchi |
+| `st_gsc_data` | 16 mesi | DELETE |
+| `st_keyword_positions` | 16 mesi | DELETE |
+| `st_alerts` | 90 giorni (solo letti) | DELETE |
+| `aic_process_jobs` | 30 giorni (completati) | DELETE |
+| `st_rank_queue` | 7 giorni (completati) | DELETE |
+| `ga_auto_eval_queue` | 30 giorni (completati) | DELETE |
+
 ---
 
 ## Configurazione Cron
@@ -19,8 +37,14 @@ Elimina i log AI piu vecchi di 30 giorni dalla tabella `ai_logs`.
 Esegui `crontab -e` e aggiungi:
 
 ```bash
+# Cleanup dati obsoleti - Ogni giorno alle 02:00
+0 2 * * * php /path/to/seo-toolkit/cron/cleanup-data.php >> /path/to/seo-toolkit/storage/logs/cron.log 2>&1
+
 # Cleanup AI logs - Ogni giorno alle 03:00
-0 3 * * * php /var/www/seo-toolkit/cron/cleanup-ai-logs.php >> /var/www/seo-toolkit/storage/logs/cron.log 2>&1
+0 3 * * * php /path/to/seo-toolkit/cron/cleanup-ai-logs.php >> /path/to/seo-toolkit/storage/logs/cron.log 2>&1
+
+# Cleanup API logs - Ogni giorno alle 04:00
+0 4 * * * php /path/to/seo-toolkit/cron/cleanup-api-logs.php >> /path/to/seo-toolkit/storage/logs/cron.log 2>&1
 ```
 
 ### Windows (Task Scheduler)
@@ -44,7 +68,10 @@ Laragon non supporta cron nativamente, ma puoi:
 
 ## Log
 
-I log vengono salvati in: `storage/logs/ai-cleanup.log`
+I log vengono salvati in:
+- `storage/logs/data-cleanup.log` - Cleanup dati centralizzato
+- `storage/logs/ai-cleanup.log` - Cleanup AI logs
+- `storage/logs/api-cleanup.log` - Cleanup API logs
 
 Formato:
 ```
@@ -62,14 +89,32 @@ Formato:
 
 ```bash
 cd C:\laragon\www\seo-toolkit
+php cron/cleanup-data.php
 php cron/cleanup-ai-logs.php
+php cron/cleanup-api-logs.php
 ```
 
 ---
 
 ## Parametri configurabili
 
-Nel file `cleanup-ai-logs.php`:
+### cleanup-data.php
+
+Tutti i parametri sono nell'array `$config` all'inizio del file:
+
+| Variabile | Default | Descrizione |
+|-----------|---------|-------------|
+| `sa_pages_html_days` | 90 | Giorni prima di nullificare html_content |
+| `il_urls_raw_html_days` | 30 | Giorni prima di nullificare raw_html |
+| `ga_runs_keep_per_project` | 5 | Run Google Ads da mantenere per progetto |
+| `st_gsc_data_months` | 16 | Mesi di dati GSC da mantenere |
+| `st_positions_months` | 16 | Mesi di posizioni keyword da mantenere |
+| `st_alerts_days` | 90 | Giorni per alert letti/dismissati |
+| `aic_jobs_days` | 30 | Giorni per process jobs completati |
+| `st_rank_queue_days` | 7 | Giorni per rank queue completati |
+| `ga_eval_queue_days` | 30 | Giorni per auto-eval queue completati |
+
+### cleanup-ai-logs.php / cleanup-api-logs.php
 
 | Variabile | Default | Descrizione |
 |-----------|---------|-------------|
