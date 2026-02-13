@@ -15,13 +15,13 @@ class ProjectController
         $user = Auth::user();
 
         $projectsByType = Project::allGroupedByType($user['id']);
-        $projects = $projectsByType['campaign'] ?? [];
 
         return View::render('ads-analyzer/projects/index', [
             'title' => 'Progetti - Google Ads Analyzer',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
-            'projects' => $projects,
+            'campaignProjects' => $projectsByType['campaign'] ?? [],
+            'creatorProjects' => $projectsByType['campaign-creator'] ?? [],
         ]);
     }
 
@@ -41,7 +41,35 @@ class ProjectController
     public function store(): void
     {
         $user = Auth::user();
+        $type = $_POST['type'] ?? 'campaign';
 
+        if ($type === 'campaign-creator') {
+            $data = [
+                'name' => trim($_POST['name'] ?? ''),
+                'brief' => trim($_POST['brief'] ?? ''),
+                'campaign_type_gads' => $_POST['campaign_type_gads'] ?? '',
+                'landing_url' => trim($_POST['landing_url'] ?? ''),
+                'user_id' => $user['id'],
+                'type' => 'campaign-creator',
+            ];
+
+            $errors = ValidationService::validateCampaignCreator($data);
+
+            if (!empty($errors)) {
+                $_SESSION['flash_error'] = implode(', ', $errors);
+                $_SESSION['old_input'] = $data;
+                header('Location: ' . url('/ads-analyzer/projects/create?type=campaign-creator'));
+                exit;
+            }
+
+            $projectId = Project::create($data);
+
+            $_SESSION['flash_success'] = 'Progetto creato con successo';
+            header('Location: ' . url("/ads-analyzer/projects/{$projectId}/campaign-creator"));
+            exit;
+        }
+
+        // Default: campaign (analisi)
         $data = [
             'name' => trim($_POST['name'] ?? ''),
             'description' => trim($_POST['description'] ?? ''),
@@ -49,7 +77,6 @@ class ProjectController
             'type' => 'campaign',
         ];
 
-        // Valida
         $errors = ValidationService::validateProject($data);
 
         if (!empty($errors)) {
@@ -59,10 +86,7 @@ class ProjectController
             exit;
         }
 
-        // Crea progetto
         $projectId = Project::create($data);
-
-        // Genera token API per Google Ads Script
         Project::generateToken($projectId);
 
         $_SESSION['flash_success'] = 'Progetto creato con successo';

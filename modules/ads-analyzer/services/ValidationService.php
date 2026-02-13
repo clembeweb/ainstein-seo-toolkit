@@ -84,6 +84,38 @@ class ValidationService
     }
 
     /**
+     * Valida dati Campaign Creator
+     */
+    public static function validateCampaignCreator(array $data): array
+    {
+        $errors = [];
+
+        if (empty($data['name'])) {
+            $errors['name'] = 'Il nome del progetto e obbligatorio';
+        } elseif (strlen($data['name']) > 255) {
+            $errors['name'] = 'Il nome non puo superare 255 caratteri';
+        }
+
+        if (empty($data['brief']) || strlen(trim($data['brief'])) < 20) {
+            $errors['brief'] = 'Il brief deve essere almeno 20 caratteri';
+        } elseif (strlen($data['brief']) > 5000) {
+            $errors['brief'] = 'Il brief non puo superare 5000 caratteri';
+        }
+
+        if (empty($data['campaign_type_gads']) || !in_array($data['campaign_type_gads'], ['search', 'pmax'])) {
+            $errors['campaign_type_gads'] = 'Seleziona il tipo di campagna (Search o PMax)';
+        }
+
+        if (empty($data['landing_url'])) {
+            $errors['landing_url'] = 'L\'URL della landing page e obbligatorio';
+        } elseif (!filter_var($data['landing_url'], FILTER_VALIDATE_URL)) {
+            $errors['landing_url'] = 'L\'URL inserito non e valido';
+        }
+
+        return $errors;
+    }
+
+    /**
      * Valida nome contesto salvato
      */
     public static function validateSavedContext(array $data): array

@@ -786,7 +786,7 @@ erDiagram
     <!-- ==================== ADS ANALYZER ==================== -->
     <section id="ga" class="mb-16 print-break">
         <h2 class="text-2xl font-bold text-rose-400 mb-6">Google Ads Analyzer (ga_)</h2>
-        <p class="text-slate-500 dark:text-slate-400 mb-6">15 tabelle. Analisi negative keywords, valutazione campagne AI, Google Ads Script integration.</p>
+        <p class="text-slate-500 dark:text-slate-400 mb-6">18 tabelle. Analisi negative keywords, valutazione campagne AI, Google Ads Script integration, Campaign Creator AI.</p>
 
         <div class="mermaid">
 erDiagram
@@ -800,11 +800,19 @@ erDiagram
     ga_negative_categories ||--o{ ga_negative_keywords : "kw negative"
     ga_script_runs ||--o{ ga_campaigns : "dati campagne"
     ga_script_runs ||--o{ ga_ads : "annunci"
+    ga_projects ||--o{ ga_creator_generations : "generazioni"
+    ga_projects ||--o{ ga_creator_keywords : "keywords"
+    ga_projects ||--o{ ga_creator_campaigns : "campagne AI"
+    ga_creator_generations ||--o{ ga_creator_keywords : "keywords"
+    ga_creator_generations ||--o{ ga_creator_campaigns : "campagna"
     ga_projects {
         int id PK
         int user_id FK
-        enum type "negative-kw/campaign"
+        enum type "negative-kw/campaign/campaign-creator"
         varchar api_token UK
+        varchar landing_url
+        enum campaign_type_gads "search/pmax"
+        text brief
     }
     ga_analyses {
         int id PK
@@ -817,6 +825,30 @@ erDiagram
         int project_id FK
         enum eval_type "manual/auto"
         longtext ai_response
+    }
+    ga_creator_generations {
+        int id PK
+        int project_id FK
+        int user_id FK
+        enum step "keywords/campaign"
+        enum status
+        longtext ai_response
+    }
+    ga_creator_keywords {
+        int id PK
+        int project_id FK
+        int generation_id FK
+        text keyword
+        enum match_type
+        tinyint is_negative
+        tinyint is_selected
+    }
+    ga_creator_campaigns {
+        int id PK
+        int project_id FK
+        int generation_id FK
+        enum campaign_type "search/pmax"
+        longtext assets_json
     }
         </div>
 
@@ -843,6 +875,15 @@ erDiagram
                 <div><strong class="text-slate-900 dark:text-white">ga_campaign_ad_groups</strong>: id(PK), project_id(FK), run_id(FK), campaign info, ad_group info, all metrics</div>
                 <div><strong class="text-slate-900 dark:text-white">ga_ad_group_keywords</strong>: id(PK), project_id(FK), run_id(FK), campaign/ad_group info, keyword_text, match_type, status, metrics, quality_score, first_page_cpc</div>
                 <div><strong class="text-slate-900 dark:text-white">ga_auto_eval_queue</strong>: id(PK), project_id(FK), run_id(FK UK), status(pending/processing/completed/skipped/error), skip_reason, attempts, scheduled_for, timestamps</div>
+            </div>
+        </details>
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-rose-200 dark:border-rose-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">Campaign Creator: ga_creator_generations &middot; ga_creator_keywords &middot; ga_creator_campaigns</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
+                <div><strong class="text-slate-900 dark:text-white">ga_projects (colonne aggiuntive)</strong>: landing_url(VARCHAR 2048), campaign_type_gads(ENUM search/pmax), brief(TEXT), scraped_content(LONGTEXT), scraped_context(TEXT)</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_creator_generations</strong>: id(PK), project_id(FK), user_id(FK), step(ENUM keywords/campaign), status(pending/processing/completed/error), ai_response(LONGTEXT), credits_used(DECIMAL), error_message, completed_at</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_creator_keywords</strong>: id(PK), project_id(FK), generation_id(FK), keyword(TEXT), match_type(ENUM broad/phrase/exact), ad_group_name, intent, is_negative, is_selected, reason, sort_order</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_creator_campaigns</strong>: id(PK), project_id(FK), generation_id(FK), campaign_type(ENUM search/pmax), campaign_name, assets_json(LONGTEXT — JSON con headlines, descriptions, sitelinks, callouts, structured_snippets, display_paths, business_name)</div>
             </div>
         </details>
     </section>

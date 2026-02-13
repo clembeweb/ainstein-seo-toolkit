@@ -28,7 +28,7 @@
     </h2>
     <div class="prose dark:prose-invert max-w-none">
         <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
-            Analizza le campagne Google Ads tramite <strong class="text-slate-900 dark:text-white">integrazione automatica con Google Ads Script</strong>. Raccogli dati sulle campagne, ricevi valutazioni AI delle performance e identifica keyword negative per ottimizzare il budget pubblicitario.
+            Due modalita per Google Ads: <strong class="text-slate-900 dark:text-white">Analisi Campagne</strong> per monitorare e valutare campagne esistenti tramite Google Ads Script, e <strong class="text-slate-900 dark:text-white">Campaign Creator</strong> per generare da zero campagne complete (Search o PMax) con AI, pronte da copiare in piattaforma o importare via CSV.
         </p>
     </div>
 </section>
@@ -158,6 +158,30 @@
             </div>
             <p class="text-sm text-slate-600 dark:text-slate-400">Esporta in CSV o formato Google Ads Editor, oppure copia le keyword selezionate negli appunti con un clic.</p>
         </div>
+        <!-- Campaign Creator -->
+        <div class="p-4 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="shrink-0 w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                </div>
+                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Campaign Creator AI</h3>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Genera campagne Google Ads complete (Search o PMax) con un wizard guidato: brief, scraping landing, keyword research AI, generazione copy e estensioni con rispetto dei limiti caratteri Google Ads.</p>
+        </div>
+        <!-- Asset completi -->
+        <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="shrink-0 w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Asset completi con limiti Google</h3>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Headlines, descrizioni, sitelinks, callouts e structured snippets generati rispettando i limiti caratteri ufficiali Google Ads, con contatori visivi.</p>
+        </div>
     </div>
 </section>
 
@@ -200,6 +224,33 @@
                     <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Analisi bulk keyword negative (4+ ad group)</td>
                     <td class="px-4 py-3 text-right">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">1.5 crediti / gruppo</span>
+                    </td>
+                </tr>
+                <tr class="bg-amber-50/50 dark:bg-amber-900/10">
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300 font-medium" colspan="2">Campaign Creator</td>
+                </tr>
+                <tr class="bg-white dark:bg-slate-800/50">
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Scraping landing page</td>
+                    <td class="px-4 py-3 text-right">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">1 credito</span>
+                    </td>
+                </tr>
+                <tr class="bg-white dark:bg-slate-800/50">
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Keyword research AI</td>
+                    <td class="px-4 py-3 text-right">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">3 crediti</span>
+                    </td>
+                </tr>
+                <tr class="bg-white dark:bg-slate-800/50">
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Generazione campagna completa</td>
+                    <td class="px-4 py-3 text-right">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">5 crediti</span>
+                    </td>
+                </tr>
+                <tr class="bg-amber-50/50 dark:bg-amber-900/10">
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300 font-medium">Totale Campaign Creator</td>
+                    <td class="px-4 py-3 text-right">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200">9 crediti</span>
                     </td>
                 </tr>
             </tbody>

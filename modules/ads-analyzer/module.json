@@ -27,6 +27,18 @@
         "campaign_evaluation": {
             "cost": 7,
             "description": "Valutazione AI completa: campagne + gruppi annunci + keyword + landing pages + suggerimenti"
+        },
+        "creator_scrape": {
+            "cost": 1,
+            "description": "Scraping landing page per Campaign Creator"
+        },
+        "creator_keywords": {
+            "cost": 3,
+            "description": "Keyword research AI per Campaign Creator"
+        },
+        "creator_campaign": {
+            "cost": 5,
+            "description": "Generazione campagna completa AI per Campaign Creator"
         }
     },
     "settings_groups": {
@@ -199,6 +211,36 @@
             "description": "Crediti per valutazione AI completa (campagne + gruppi annunci + keyword + landing pages)",
             "default": 7,
             "min": 1,
+            "step": 0.5,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_creator_scrape": {
+            "type": "number",
+            "label": "Costo Creator: Scraping",
+            "description": "Crediti per scraping landing page (Campaign Creator)",
+            "default": 1,
+            "min": 0,
+            "step": 0.5,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_creator_keywords": {
+            "type": "number",
+            "label": "Costo Creator: Keyword Research",
+            "description": "Crediti per keyword research AI (Campaign Creator)",
+            "default": 3,
+            "min": 0,
+            "step": 0.5,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_creator_campaign": {
+            "type": "number",
+            "label": "Costo Creator: Generazione Campagna",
+            "description": "Crediti per generazione campagna completa AI (Campaign Creator)",
+            "default": 5,
+            "min": 0,
             "step": 0.5,
             "admin_only": true,
             "group": "costs"

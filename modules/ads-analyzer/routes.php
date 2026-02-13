@@ -15,6 +15,7 @@ use Modules\AdsAnalyzer\Controllers\SettingsController;
 use Modules\AdsAnalyzer\Controllers\ApiController;
 use Modules\AdsAnalyzer\Controllers\ScriptController;
 use Modules\AdsAnalyzer\Controllers\CampaignController;
+use Modules\AdsAnalyzer\Controllers\CampaignCreatorController;
 use Modules\AdsAnalyzer\Controllers\SearchTermAnalysisController;
 
 $moduleSlug = 'ads-analyzer';
@@ -69,7 +70,7 @@ Router::post('/ads-analyzer/projects/store', function () {
     return $controller->store();
 });
 
-// Visualizza progetto (redirect a dashboard campagne)
+// Visualizza progetto (redirect in base al tipo)
 Router::get('/ads-analyzer/projects/{id}', function ($id) {
     Middleware::auth();
     $user = \Core\Auth::user();
@@ -81,10 +82,13 @@ Router::get('/ads-analyzer/projects/{id}', function ($id) {
         exit;
     }
 
-    // Tutti i progetti vanno alla dashboard campagne
-    // (progetti negative-kw legacy vengono reindirizzati)
+    if ($project['type'] === 'campaign-creator') {
+        header('Location: ' . url("/ads-analyzer/projects/{$id}/campaign-creator"));
+        exit;
+    }
+
     if (($project['type'] ?? 'negative-kw') === 'negative-kw') {
-        $_SESSION['flash_error'] = 'Questa modalita non e piu disponibile. I progetti Keyword Negative sono stati rimossi.';
+        $_SESSION['flash_error'] = 'Questa modalita non e piu disponibile.';
         header('Location: ' . url('/ads-analyzer'));
         exit;
     }
@@ -290,6 +294,70 @@ Router::get('/ads-analyzer/projects/{id}/search-term-analysis/export', function 
     Middleware::auth();
     $controller = new SearchTermAnalysisController();
     return $controller->export((int) $id);
+});
+
+// ============================================
+// CAMPAIGN CREATOR (Wizard AI)
+// ============================================
+
+// Wizard principale
+Router::get('/ads-analyzer/projects/{id}/campaign-creator', function ($id) {
+    Middleware::auth();
+    $controller = new CampaignCreatorController();
+    return $controller->wizard((int) $id);
+});
+
+// Scraping + Keyword Research AI (AJAX lungo)
+Router::post('/ads-analyzer/projects/{id}/campaign-creator/generate-kw', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new CampaignCreatorController();
+    return $controller->generateKeywords((int) $id);
+});
+
+// Toggle keyword selezionata (AJAX rapido)
+Router::post('/ads-analyzer/projects/{id}/campaign-creator/toggle-kw/{kwId}', function ($id, $kwId) {
+    Middleware::auth();
+    $controller = new CampaignCreatorController();
+    return $controller->toggleKeyword((int) $id, (int) $kwId);
+});
+
+// Aggiorna match type keyword (AJAX rapido)
+Router::post('/ads-analyzer/projects/{id}/campaign-creator/update-match/{kwId}', function ($id, $kwId) {
+    Middleware::auth();
+    $controller = new CampaignCreatorController();
+    return $controller->updateMatchType((int) $id, (int) $kwId);
+});
+
+// Genera campagna completa (AJAX lungo)
+Router::post('/ads-analyzer/projects/{id}/campaign-creator/generate', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new CampaignCreatorController();
+    return $controller->generateCampaign((int) $id);
+});
+
+// Copia testo (AJAX rapido)
+Router::post('/ads-analyzer/projects/{id}/campaign-creator/copy-text', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new CampaignCreatorController();
+    return $controller->copyText((int) $id);
+});
+
+// Export CSV Google Ads Editor
+Router::get('/ads-analyzer/projects/{id}/campaign-creator/export', function ($id) {
+    Middleware::auth();
+    $controller = new CampaignCreatorController();
+    return $controller->exportCsv((int) $id);
+});
+
+// Rigenera (AJAX rapido)
+Router::post('/ads-analyzer/projects/{id}/campaign-creator/regenerate', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new CampaignCreatorController();
+    return $controller->regenerate((int) $id);
 });
 
 // ============================================
