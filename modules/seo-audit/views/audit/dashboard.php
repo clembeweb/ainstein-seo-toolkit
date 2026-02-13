@@ -43,6 +43,9 @@ $categoryColors = [
 ];
 ?>
 
+<?php $currentPage = 'dashboard'; ?>
+<?php include __DIR__ . '/../partials/project-nav.php'; ?>
+
 <div class="space-y-6">
     <!-- Header con Health Score -->
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">

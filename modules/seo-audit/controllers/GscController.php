@@ -5,6 +5,7 @@ namespace Modules\SeoAudit\Controllers;
 use Core\View;
 use Core\Auth;
 use Core\Credits;
+use Core\Database;
 use Core\Router;
 use Core\ModuleLoader;
 use Modules\SeoAudit\Models\Project;
@@ -60,6 +61,7 @@ class GscController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
+            'currentPage' => 'gsc-connect',
             'connection' => $connection,
             'authUrl' => $authUrl,
             'isConfigured' => $isConfigured,
@@ -205,6 +207,7 @@ class GscController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
+            'currentPage' => 'gsc-properties',
             'properties' => $propertiesResult['properties'],
             'isMockMode' => $isMockMode,
         ]);
@@ -289,6 +292,7 @@ class GscController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
+            'currentPage' => 'gsc-dashboard',
             'connection' => $connection,
             'stats' => $stats,
             'credits' => [
@@ -304,28 +308,41 @@ class GscController
      */
     public function sync(int $id): void
     {
+        // Pattern AJAX lungo: protezione proxy + output buffering
+        ignore_user_abort(true);
+        set_time_limit(0);
+        ob_start();
+        header('Content-Type: application/json');
+
         $user = Auth::user();
         $project = $this->projectModel->findWithStats($id, $user['id']);
 
         if (!$project) {
-            jsonResponse(['error' => true, 'message' => 'Progetto non trovato'], 404);
-            return;
+            ob_end_clean();
+            http_response_code(404);
+            echo json_encode(['error' => true, 'message' => 'Progetto non trovato']);
+            exit;
         }
 
         // Check credits
         $syncCost = Credits::getCost('gsc_sync') ?? 5;
         if (!Credits::hasEnough($user['id'], $syncCost)) {
-            jsonResponse(['error' => true, 'message' => 'Crediti insufficienti. Richiesti: ' . $syncCost]);
-            return;
+            ob_end_clean();
+            echo json_encode(['error' => true, 'message' => 'Crediti insufficienti. Richiesti: ' . $syncCost]);
+            exit;
         }
 
         try {
+            session_write_close();
+
             // Perform sync
             $result = $this->gscService->syncDailyData($id, 28); // Last 28 days
+            Database::reconnect();
 
             if (isset($result['error'])) {
-                jsonResponse($result);
-                return;
+                ob_end_clean();
+                echo json_encode($result);
+                exit;
             }
 
             // Consume credits
@@ -336,10 +353,15 @@ class GscController
             ]);
 
             $result['credits_used'] = $syncCost;
-            jsonResponse($result);
+            ob_end_clean();
+            echo json_encode($result);
+            exit;
         } catch (\Throwable $e) {
             error_log("GSC SYNC ERROR: " . $e->getMessage());
-            jsonResponse(['error' => true, 'message' => 'Errore sync: ' . $e->getMessage()]);
+            ob_end_clean();
+            http_response_code(500);
+            echo json_encode(['error' => true, 'message' => 'Errore sync: ' . $e->getMessage()]);
+            exit;
         }
     }
 

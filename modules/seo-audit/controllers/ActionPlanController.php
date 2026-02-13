@@ -69,6 +69,7 @@ class ActionPlanController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
+            'currentPage' => 'action-plan',
             'plan' => $plan,
             'pagesWithFixes' => $pagesWithFixes,
             'issueStats' => $issueStats,
@@ -97,7 +98,7 @@ class ActionPlanController
 
         // Verifica CSRF
         $input = json_decode(file_get_contents('php://input'), true);
-        if (empty($input['_token']) || $input['_token'] !== csrf_token()) {
+        if (empty($input['_csrf_token']) || $input['_csrf_token'] !== csrf_token()) {
             http_response_code(403);
             echo json_encode(['error' => true, 'message' => 'Token CSRF non valido']);
             exit;
@@ -139,7 +140,7 @@ class ActionPlanController
 
         // Verifica CSRF
         $input = json_decode(file_get_contents('php://input'), true);
-        if (empty($input['_token']) || $input['_token'] !== csrf_token()) {
+        if (empty($input['_csrf_token']) || $input['_csrf_token'] !== csrf_token()) {
             http_response_code(403);
             echo json_encode(['error' => true, 'message' => 'Token CSRF non valido']);
             exit;
@@ -205,7 +206,7 @@ class ActionPlanController
 
         // Verifica CSRF
         $input = json_decode(file_get_contents('php://input'), true);
-        if (empty($input['_token']) || $input['_token'] !== csrf_token()) {
+        if (empty($input['_csrf_token']) || $input['_csrf_token'] !== csrf_token()) {
             http_response_code(403);
             echo json_encode(['error' => true, 'message' => 'Token CSRF non valido']);
             exit;

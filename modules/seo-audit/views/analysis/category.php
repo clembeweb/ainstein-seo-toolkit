@@ -14,20 +14,14 @@ $categoryColors = [
     'robots' => 'orange',
 ];
 $color = $categoryColors[$category] ?? 'slate';
+$currentPage = 'analysis-category';
 ?>
 
+<?php include __DIR__ . '/../partials/project-nav.php'; ?>
+
 <div class="space-y-6" x-data="aiCategoryAnalysis()">
-    <!-- Breadcrumb + Header -->
+    <!-- Header -->
     <div>
-        <nav class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2">
-            <a href="<?= url('/seo-audit') ?>" class="hover:text-slate-700 dark:hover:text-slate-300">SEO Audit</a>
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            <a href="<?= url('/seo-audit/project/' . $project['id'] . '/dashboard') ?>" class="hover:text-slate-700 dark:hover:text-slate-300"><?= e($project['name']) ?></a>
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            <a href="<?= url('/seo-audit/project/' . $project['id'] . '/analysis') ?>" class="hover:text-slate-700 dark:hover:text-slate-300">Analisi AI</a>
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            <span class="text-slate-900 dark:text-white"><?= e($categoryLabel) ?></span>
-        </nav>
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">

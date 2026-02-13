@@ -2,22 +2,17 @@
 /**
  * Storico Scansioni - SEO Audit
  */
+$currentPage = 'history';
 ?>
+
+<?php include __DIR__ . '/../partials/project-nav.php'; ?>
 
 <div class="space-y-6">
     <!-- Header -->
     <div class="flex items-center justify-between">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Storico Scansioni</h1>
-            <p class="text-slate-600 dark:text-slate-400"><?= e($project['name']) ?></p>
         </div>
-        <a href="<?= url('/seo-audit/project/' . $project['id'] . '/dashboard') ?>"
-           class="text-primary-600 hover:text-primary-800 dark:text-primary-400 flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
-            Torna alla Dashboard
-        </a>
     </div>
 
     <!-- Grafico Trend -->

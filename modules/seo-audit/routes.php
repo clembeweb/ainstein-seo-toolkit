@@ -215,6 +215,7 @@ Router::get('/seo-audit/project/{id}/pages', function ($id) {
 // Elimina pagine selezionate (API JSON)
 Router::post('/seo-audit/project/{id}/pages/delete', function ($id) {
     Middleware::auth();
+    Middleware::csrf();
     $controller = new AuditController();
     return $controller->deletePages((int) $id);
 });
@@ -282,6 +283,40 @@ Router::get('/seo-audit/project/{id}/analysis/{category}', function ($id, $categ
 });
 
 // ============================================
+// STRUTTURA LINK ROUTES
+// ============================================
+
+use Modules\SeoAudit\Controllers\LinkStructureController;
+
+// Dashboard struttura link
+Router::get('/seo-audit/project/{id}/links', function ($id) {
+    Middleware::auth();
+    $controller = new LinkStructureController();
+    return $controller->overview((int) $id);
+});
+
+// Pagine orfane
+Router::get('/seo-audit/project/{id}/links/orphans', function ($id) {
+    Middleware::auth();
+    $controller = new LinkStructureController();
+    return $controller->orphans((int) $id);
+});
+
+// Analisi anchor text
+Router::get('/seo-audit/project/{id}/links/anchors', function ($id) {
+    Middleware::auth();
+    $controller = new LinkStructureController();
+    return $controller->anchors((int) $id);
+});
+
+// Grafo link
+Router::get('/seo-audit/project/{id}/links/graph', function ($id) {
+    Middleware::auth();
+    $controller = new LinkStructureController();
+    return $controller->graph((int) $id);
+});
+
+// ============================================
 // ACTION PLAN AI ROUTES
 // ============================================
 
@@ -295,6 +330,7 @@ Router::get('/seo-audit/project/{id}/action-plan', function ($id) {
 // Genera piano (POST AJAX)
 Router::post('/seo-audit/project/{id}/action-plan/generate', function ($id) {
     Middleware::auth();
+    Middleware::csrf();
     $controller = new ActionPlanController();
     $controller->generate((int) $id);
 });
@@ -302,6 +338,7 @@ Router::post('/seo-audit/project/{id}/action-plan/generate', function ($id) {
 // Toggle fix completato (POST AJAX)
 Router::post('/seo-audit/project/{id}/fix/{fixId}/toggle', function ($id, $fixId) {
     Middleware::auth();
+    Middleware::csrf();
     $controller = new ActionPlanController();
     $controller->toggleFix((int) $id, (int) $fixId);
 });
@@ -316,6 +353,7 @@ Router::get('/seo-audit/project/{id}/action-plan/export', function ($id) {
 // Elimina piano (POST AJAX)
 Router::post('/seo-audit/project/{id}/action-plan/delete', function ($id) {
     Middleware::auth();
+    Middleware::csrf();
     $controller = new ActionPlanController();
     $controller->delete((int) $id);
 });
@@ -402,6 +440,7 @@ use Modules\SeoAudit\Models\Project;
 // Sitemap discovery API
 Router::post('/seo-audit/api/sitemap-discover', function () {
     Middleware::auth();
+    Middleware::csrf();
     header('Content-Type: application/json');
 
     $user = Auth::user();
@@ -429,6 +468,7 @@ Router::post('/seo-audit/api/sitemap-discover', function () {
 // Sitemap import/preview API
 Router::post('/seo-audit/api/sitemap', function () {
     Middleware::auth();
+    Middleware::csrf();
     header('Content-Type: application/json');
 
     try {
@@ -498,6 +538,7 @@ Router::post('/seo-audit/api/sitemap', function () {
 // Spider crawl API - Discovery + Auto-start crawl
 Router::post('/seo-audit/api/spider', function () {
     Middleware::auth();
+    Middleware::csrf();
     header('Content-Type: application/json');
 
     try {

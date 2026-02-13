@@ -192,20 +192,12 @@ class Project
         $warningCount = (int) ($issues['warning'] ?? 0);
         $noticeCount = (int) ($issues['notice'] ?? 0);
 
-        // Pesi per severity (impact su score)
-        $criticalWeight = 10; // -10 punti per ogni critical
-        $warningWeight = 3;   // -3 punti per ogni warning
-        $noticeWeight = 0.5;  // -0.5 punti per ogni notice
+        // Formula bilanciata con cap per severity (diminishing returns)
+        $criticalPenalty = min($criticalCount * 5, 40); // max 40 punti persi
+        $warningPenalty = min($warningCount * 1, 30);   // max 30 punti persi
+        $noticePenalty = min($noticeCount * 0.2, 10);   // max 10 punti persi
 
-        // Score base 100, sottraiamo in base alle issues
-        $deduction = ($criticalCount * $criticalWeight)
-                   + ($warningCount * $warningWeight)
-                   + ($noticeCount * $noticeWeight);
-
-        // Normalizza in base al numero di pagine (issues per pagina)
-        $deduction = min($deduction, 100); // Max deduction = 100
-
-        return max(0, 100 - (int) $deduction);
+        return max(0, (int) round(100 - $criticalPenalty - $warningPenalty - $noticePenalty));
     }
 
     /**

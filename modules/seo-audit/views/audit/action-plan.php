@@ -31,6 +31,9 @@ if ($estimatedMinutes >= 60) {
 }
 ?>
 
+<?php $currentPage = 'action-plan'; ?>
+<?php include __DIR__ . '/../partials/project-nav.php'; ?>
+
 <div class="space-y-6" x-data="actionPlan(<?= htmlspecialchars(json_encode([
     'projectId' => $project['id'],
     'baseUrl' => url(''),

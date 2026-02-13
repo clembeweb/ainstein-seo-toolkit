@@ -7,17 +7,14 @@
 
 $projectId = $project['id'];
 $baseUrl = $project['base_url'] ?? '';
+$currentPage = 'import';
 ?>
+
+<?php include __DIR__ . '/../partials/project-nav.php'; ?>
 
 <div class="max-w-4xl">
     <!-- Header -->
     <div class="mb-8">
-        <a href="<?= url("/seo-audit/project/{$projectId}/dashboard") ?>" class="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 mb-4 transition">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
-            Torna alla Dashboard
-        </a>
         <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Importa URL Manualmente</h1>
         <p class="mt-1 text-slate-500 dark:text-slate-400">Aggiungi URL specifici a <?= e($project['name']) ?> per l'audit SEO</p>
     </div>

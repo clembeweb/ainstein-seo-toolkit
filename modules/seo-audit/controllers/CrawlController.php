@@ -324,6 +324,9 @@ class CrawlController
                 ]);
             }
 
+            // Riconnetti DB dopo crawl batch (potrebbe essere scaduta la connessione)
+            Database::reconnect();
+
             // Aggiorna stats
             $this->projectModel->updateStats($id);
 

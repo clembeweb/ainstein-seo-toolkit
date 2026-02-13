@@ -200,10 +200,12 @@ class Page
     public function getPendingUrls(int $projectId, int $limit = 0): array
     {
         $sql = "SELECT id, url FROM {$this->table} WHERE project_id = ? AND status = 'pending' ORDER BY id";
+        $params = [$projectId];
         if ($limit > 0) {
-            $sql .= " LIMIT {$limit}";
+            $sql .= " LIMIT ?";
+            $params[] = $limit;
         }
-        return Database::fetchAll($sql, [$projectId]);
+        return Database::fetchAll($sql, $params);
     }
 
     /**

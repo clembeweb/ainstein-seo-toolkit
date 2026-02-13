@@ -45,7 +45,7 @@ $config = array_merge([
 $presets = [
     'veloce' => [
         'label' => 'Veloce',
-        'icon' => '🚀',
+        'icon' => '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>',
         'desc' => '100 pagine, profondità 2',
         'max_pages' => 100,
         'max_depth' => 2,
@@ -53,7 +53,7 @@ $presets = [
     ],
     'bilanciato' => [
         'label' => 'Bilanciato',
-        'icon' => '⚖️',
+        'icon' => '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>',
         'desc' => '500 pagine, profondità 3',
         'max_pages' => 500,
         'max_depth' => 3,
@@ -61,7 +61,7 @@ $presets = [
     ],
     'completo' => [
         'label' => 'Completo',
-        'icon' => '🔍',
+        'icon' => '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>',
         'desc' => '2000 pagine, profondità 5',
         'max_pages' => 2000,
         'max_depth' => 5,
@@ -204,7 +204,7 @@ $lastScanDate = $project['completed_at'] ?? null;
                             @click="applyPreset('<?= $key ?>')"
                             :class="currentPreset === '<?= $key ?>' ? 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/30 border-primary-300' : 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 hover:bg-slate-100'"
                             class="p-3 rounded-xl border text-center transition-all">
-                        <span class="text-2xl"><?= $preset['icon'] ?></span>
+                        <span class="text-primary-500 dark:text-primary-400"><?= $preset['icon'] ?></span>
                         <p class="font-medium text-slate-900 dark:text-white mt-1"><?= $preset['label'] ?></p>
                         <p class="text-xs text-slate-500 dark:text-slate-400"><?= $preset['desc'] ?></p>
                     </button>

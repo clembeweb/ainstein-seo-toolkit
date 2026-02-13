@@ -176,6 +176,7 @@ class ProjectController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
+            'currentPage' => 'settings',
             'credits' => [
                 'balance' => $creditBalance,
             ],
@@ -280,6 +281,7 @@ class ProjectController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
+            'currentPage' => 'import',
         ]);
     }
 }

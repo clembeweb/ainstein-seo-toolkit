@@ -77,6 +77,7 @@ class AuditController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
+            'currentPage' => 'dashboard',
             'categoryStats' => $categoryStats,
             'topIssues' => $topIssues,
             'pageStats' => $pageStats,
@@ -141,6 +142,7 @@ class AuditController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
+            'currentPage' => 'category',
             'category' => $slug,
             'categoryLabel' => $categoryLabel,
             'issues' => $issuesData['data'],
@@ -195,6 +197,7 @@ class AuditController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
+            'currentPage' => 'issues',
             'issues' => $issuesData['data'],
             'pagination' => [
                 'current_page' => $issuesData['current_page'],
@@ -246,6 +249,7 @@ class AuditController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
+            'currentPage' => 'page-detail',
             'page' => $page,
             'pageIssues' => $pageIssues,
             'h1Texts' => $h1Texts,
@@ -291,6 +295,7 @@ class AuditController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
+            'currentPage' => 'pages',
             'pages' => $pagesData['data'],
             'pagination' => [
                 'current_page' => $pagesData['current_page'],
@@ -334,6 +339,7 @@ class AuditController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
+            'currentPage' => 'analysis',
             'analysis' => $analysis,
             'issueCounts' => $issueCounts,
             'credits' => [
@@ -381,6 +387,7 @@ class AuditController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
+            'currentPage' => 'analysis-category',
             'category' => $category,
             'categoryLabel' => Issue::CATEGORIES[$category],
             'analysis' => $analysis,
@@ -470,22 +477,22 @@ class AuditController
         $project = $this->projectModel->find($id, $user['id']);
 
         if (!$project) {
-            echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            echo json_encode(['error' => true, 'message' => 'Progetto non trovato']);
             exit;
         }
 
         $input = json_decode(file_get_contents('php://input'), true);
 
         // Verify CSRF
-        if (empty($input['_token']) || $input['_token'] !== csrf_token()) {
-            echo json_encode(['success' => false, 'error' => 'Token CSRF non valido']);
+        if (empty($input['_csrf_token']) || $input['_csrf_token'] !== csrf_token()) {
+            echo json_encode(['error' => true, 'message' => 'Token CSRF non valido']);
             exit;
         }
 
         $ids = $input['ids'] ?? [];
 
         if (empty($ids) || !is_array($ids)) {
-            echo json_encode(['success' => false, 'error' => 'Nessuna pagina selezionata']);
+            echo json_encode(['error' => true, 'message' => 'Nessuna pagina selezionata']);
             exit;
         }
 
@@ -551,6 +558,7 @@ class AuditController
         return View::render('seo-audit/audit/history', [
             'project' => $project,
             'sessions' => $sessions,
+            'currentPage' => 'history',
             'title' => 'Storico Scansioni - ' . $project['name'],
             'user' => $user,
             'modules' => \Core\ModuleLoader::getUserModules($user['id']),
