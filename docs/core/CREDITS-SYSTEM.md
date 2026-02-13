@@ -248,6 +248,7 @@ Ogni modulo definisce i costi di default nel suo `module.json`, raggruppati nel 
 | AI Clustering (< 100 kw) | `cost_kr_ai_clustering` | 2 | Clustering semantico AI |
 | AI Clustering (> 100 kw) | `cost_kr_ai_clustering_large` | 5 | Clustering semantico AI (large) |
 | Architettura sito AI | `cost_kr_ai_architecture` | 5 | Struttura sito con URL/H1 |
+| Piano Editoriale AI | `cost_kr_editorial_plan` | 5 | Piano editoriale mensile con articoli |
 | Quick Check | — | 0 | Gratis (solo API, no AI) |
 
 ---

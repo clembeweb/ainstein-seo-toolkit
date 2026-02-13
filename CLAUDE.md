@@ -1,7 +1,7 @@
 # AINSTEIN - Istruzioni Claude Code
 
 > Questo file viene caricato automaticamente ad ogni sessione.
-> Ultimo aggiornamento: 2026-02-13
+> Ultimo aggiornamento: 2026-02-13 (Golden Rule #18: docs obbligatorie)
 
 ---
 
@@ -39,6 +39,7 @@
 15. ignore_user_abort(true)      → SEMPRE in SSE e AJAX lunghi (proxy chiude connessione)
 16. ModuleLoader::getSetting()   → NON getModuleSetting() (non esiste)
 17. ob_start() in AJAX lunghi    → Output buffering OBBLIGATORIO (vedi sezione dedicata)
+18. Aggiornare docs dopo sviluppo → Documentazione utente + Data Model (vedi sezione dedicata)
 ```
 
 ---
@@ -52,7 +53,7 @@
 | Google Ads Analyzer | `ads-analyzer` | `ga_` | 100% | Completo |
 | Internal Links | `internal-links` | `il_` | 85% | Manca AI Suggester |
 | SEO Tracking | `seo-tracking` | `st_` | 95% | Rank Check con DataForSEO/SerpAPI/Serper, API Logs integrato, provider SERP/Volume configurabili da admin |
-| AI Keyword Research | `keyword-research` | `kr_` | 100% | Research Guidata, Architettura Sito, Quick Check |
+| AI Keyword Research | `keyword-research` | `kr_` | 100% | Research Guidata, Architettura Sito, Piano Editoriale, Quick Check |
 | Content Creator | `content-creator` | `cc_` | 0% | Da implementare |
 
 ---
@@ -124,7 +125,83 @@ seo-toolkit/
 │   └── components/
 │       ├── nav-items.php    # Sidebar con accordion
 │       └── import-tabs.php  # Componente import URL
+├── docs/
+│   └── data-model.html      # Schema DB standalone (Mermaid.js ER diagrams)
+├── shared/views/docs/        # Documentazione utente pubblica (/docs)
+│   ├── layout.php            # Layout standalone docs (no login)
+│   ├── index.php             # Landing page Centro Assistenza
+│   ├── getting-started.php   # Primi Passi
+│   ├── ai-content.php        # Guida AI Content Generator
+│   ├── seo-audit.php         # Guida SEO Audit
+│   ├── seo-tracking.php      # Guida SEO Tracking
+│   ├── keyword-research.php  # Guida Keyword Research
+│   ├── internal-links.php    # Guida Internal Links
+│   ├── ads-analyzer.php      # Guida Google Ads Analyzer
+│   ├── credits.php           # Sistema Crediti
+│   └── faq.php               # FAQ
 └── config/
+```
+
+---
+
+## DOCUMENTAZIONE UTENTE E DATA MODEL (Golden Rule #18)
+
+**OBBLIGO: Dopo ogni sviluppo significativo, aggiornare la documentazione.**
+
+### Quando aggiornare
+
+| Evento | Docs utente (`/docs`) | Data Model (`docs/data-model.html`) |
+|--------|----------------------|-------------------------------------|
+| Nuova feature in modulo esistente | Aggiornare la pagina del modulo | - |
+| Nuovo modulo | Creare nuova pagina + aggiungere a `index.php` routes | Aggiungere sezione con ER + tabelle |
+| Nuova tabella DB / colonne significative | - | Aggiornare sezione del modulo |
+| Cambio costi crediti | Aggiornare tabella costi nella pagina modulo + `credits.php` | - |
+| Nuova integrazione (API, OAuth) | Aggiornare Quick Start del modulo | - |
+| Rimozione feature/modulo | Rimuovere/aggiornare pagina | Rimuovere/aggiornare sezione |
+
+### Cosa aggiornare - Docs utente
+
+**File**: `shared/views/docs/{modulo-slug}.php`
+
+Ogni pagina modulo ha questa struttura (da mantenere):
+1. **Cos'e** - Descrizione 2-3 frasi
+2. **Quick Start** - Passi numerati (creare progetto → configurare → eseguire → risultati)
+3. **Funzionalita principali** - Lista feature con icone
+4. **Costi in crediti** - Tabella operazione/costi
+5. **Suggerimenti** - 2-3 tips pratici
+
+**Regole:**
+- Lingua: italiano (come tutta la UI)
+- Icone: solo Heroicons SVG
+- Stile: Tailwind con dark mode (`dark:` variants)
+- Layout: contenuto HTML puro (no `<html>`/`<head>`, renderizzato dentro `layout.php`)
+- Nuova pagina modulo → aggiungere route in `public/index.php` array `$validPages`
+
+### Cosa aggiornare - Data Model
+
+**File**: `docs/data-model.html` (standalone, aprire direttamente nel browser)
+
+Per ogni modulo la sezione contiene:
+1. **Diagramma ER** (Mermaid.js `erDiagram`) con relazioni tra tabelle
+2. **Details collassabili** per ogni tabella con colonne, tipi, PK/FK/UK
+
+**Regole:**
+- Aggiungere nuove tabelle nel diagramma ER della sezione modulo
+- Aggiungere `<details>` con schema colonne per tabelle nuove
+- Se nuova colonna significativa in tabella esistente → aggiornare il `<details>` corrispondente
+- Mantenere dual-mode light/dark (`bg-white dark:bg-slate-800`, etc.)
+- Bordi colorati per modulo: amber(aic), emerald(sa), blue(st), purple(kr), cyan(il), rose(ga)
+- Aggiungere link nella sidebar nav se nuovo modulo
+
+### Checklist rapida post-sviluppo
+
+```
+Dopo feature significativa:
+[ ] Pagina docs modulo aggiornata (nuove feature, costi, Quick Start)
+[ ] Data Model aggiornato (nuove tabelle/colonne nel diagramma ER)
+[ ] Route /docs aggiornata se nuova pagina (public/index.php $validPages)
+[ ] Sidebar docs aggiornata se nuova pagina (layout.php $navItems)
+[ ] Testare /docs/{slug} in locale prima di deploy
 ```
 
 ---
@@ -627,6 +704,8 @@ async startPolling() {
 [ ] ModuleLoader::getSetting() per settings modulo (NON getModuleSetting)
 [ ] SSE: salvare risultati nel DB PRIMA dell'evento completed (polling fallback)
 [ ] Testare in produzione: deploy → creare tabelle DB → attivare modulo
+[ ] Docs utente aggiornate se feature significativa (shared/views/docs/)
+[ ] Data Model aggiornato se nuove tabelle/colonne (docs/data-model.html)
 ```
 
 ---
@@ -637,7 +716,8 @@ async startPolling() {
 2. **Un task alla volta** - fermati per conferma
 3. **Verifica sintassi** dopo ogni modifica PHP
 4. **Test manuale** in browser prima di commit
-5. **Commit atomici** con messaggi descrittivi
+5. **Aggiorna documentazione** se sviluppo significativo (docs utente + data model)
+6. **Commit atomici** con messaggi descrittivi
 
 ---
 
