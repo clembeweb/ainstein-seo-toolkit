@@ -40,7 +40,7 @@
                 </button>
                 <div x-show="open === 1" x-cloak x-collapse>
                     <div class="px-5 pb-4 text-sm text-slate-600 dark:text-slate-400">
-                        Ainstein è una piattaforma SEO completa potenziata dall'intelligenza artificiale. Offre 6 moduli integrati che coprono ogni aspetto della strategia SEO: dalla generazione di contenuti ottimizzati (AI Content Generator) all'audit tecnico del sito (SEO Audit), dal monitoraggio delle posizioni (SEO Tracking) alla ricerca keyword (Keyword Research), dall'analisi dei link interni (Internal Links) all'ottimizzazione delle campagne Google Ads (Ads Analyzer).
+                        Ainstein è una piattaforma SEO completa potenziata dall'intelligenza artificiale. Offre 7 moduli integrati che coprono ogni aspetto della strategia SEO: dalla generazione di contenuti ottimizzati (AI Content Generator) all'audit tecnico del sito (SEO Audit), dal monitoraggio delle posizioni (SEO Tracking) alla ricerca keyword (Keyword Research), dall'analisi dei link interni (Internal Links), all'ottimizzazione delle campagne Google Ads (Ads Analyzer), fino alla creazione di contenuti HTML per pagine esistenti (Content Creator).
                     </div>
                 </div>
             </div>
@@ -227,6 +227,90 @@
                 <div x-show="open === 10" x-cloak x-collapse>
                     <div class="px-5 pb-4 text-sm text-slate-600 dark:text-slate-400">
                         No, assolutamente no. L'AI analizza i contenuti presenti nella SERP per comprendere l'intento di ricerca, la struttura degli argomenti e gli aspetti da coprire, ma genera sempre contenuti <strong class="text-slate-900 dark:text-white">completamente originali</strong>. Il brief strategico guida la generazione fornendo indicazioni su temi e struttura, ma il testo prodotto è unico e non contiene copie o parafrasi da fonti esistenti.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categoria: Content Creator -->
+    <section class="mb-10">
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+            </svg>
+            Content Creator
+        </h2>
+
+        <div class="space-y-3">
+            <!-- FAQ 15 -->
+            <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+                <button @click="open === 15 ? open = null : open = 15"
+                        class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <span class="text-sm font-medium text-slate-900 dark:text-white">Qual è la differenza tra Content Creator e AI Content Generator?</span>
+                    <svg class="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 transition-transform duration-200"
+                         :class="{ 'rotate-180': open === 15 }"
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="open === 15" x-cloak x-collapse>
+                    <div class="px-5 pb-4 text-sm text-slate-600 dark:text-slate-400">
+                        Content Creator genera il body HTML di pagine esistenti (prodotti, categorie, servizi), mentre AI Content Generator crea articoli blog completi da zero con analisi SERP, brief strategico e immagine di copertina.
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ 16 -->
+            <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+                <button @click="open === 16 ? open = null : open = 16"
+                        class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <span class="text-sm font-medium text-slate-900 dark:text-white">Quali CMS sono supportati?</span>
+                    <svg class="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 transition-transform duration-200"
+                         :class="{ 'rotate-180': open === 16 }"
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="open === 16" x-cloak x-collapse>
+                    <div class="px-5 pb-4 text-sm text-slate-600 dark:text-slate-400">
+                        WordPress (tramite plugin seo-toolkit-connector), Shopify (API nativa), PrestaShop (plugin), Magento 2 (estensione) e qualsiasi CMS tramite API personalizzata. Per WordPress, PrestaShop e Magento è necessario installare il plugin dedicato.
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ 17 -->
+            <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+                <button @click="open === 17 ? open = null : open = 17"
+                        class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <span class="text-sm font-medium text-slate-900 dark:text-white">Posso importare keyword da Keyword Research?</span>
+                    <svg class="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 transition-transform duration-200"
+                         :class="{ 'rotate-180': open === 17 }"
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="open === 17" x-cloak x-collapse>
+                    <div class="px-5 pb-4 text-sm text-slate-600 dark:text-slate-400">
+                        Sì, se hai usato la modalità "Architettura Sito" nel modulo Keyword Research, puoi inviare i risultati direttamente al Content Creator. Le keyword principali, secondarie e l'intent vengono trasferiti automaticamente.
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ 18 -->
+            <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+                <button @click="open === 18 ? open = null : open = 18"
+                        class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <span class="text-sm font-medium text-slate-900 dark:text-white">Quanto costa generare contenuti?</span>
+                    <svg class="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 transition-transform duration-200"
+                         :class="{ 'rotate-180': open === 18 }"
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="open === 18" x-cloak x-collapse>
+                    <div class="px-5 pb-4 text-sm text-slate-600 dark:text-slate-400">
+                        Lo scraping opzionale della pagina costa 1 credito, la generazione AI del contenuto costa 3 crediti per URL. L'esportazione CSV e il push al CMS sono gratuiti.
                     </div>
                 </div>
             </div>

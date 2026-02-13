@@ -277,6 +277,7 @@ Router::get('/docs/{slug}', function (string $slug) {
         'keyword-research' => 'Keyword Research',
         'internal-links' => 'Internal Links',
         'ads-analyzer' => 'Google Ads Analyzer',
+        'content-creator' => 'Content Creator',
         'credits' => 'Sistema Crediti',
         'faq' => 'FAQ',
     ];

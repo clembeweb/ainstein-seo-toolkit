@@ -28,7 +28,7 @@
     </h2>
     <div class="prose dark:prose-invert max-w-none">
         <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
-            Analizza le campagne Google Ads per identificare keyword negative, valutare le performance e ottimizzare il budget. Supporta sia l'<strong class="text-slate-900 dark:text-white">analisi manuale via CSV</strong> che l'<strong class="text-slate-900 dark:text-white">integrazione automatica tramite Google Ads Script</strong> per un flusso di lavoro senza interruzioni.
+            Analizza le campagne Google Ads tramite <strong class="text-slate-900 dark:text-white">integrazione automatica con Google Ads Script</strong>. Raccogli dati sulle campagne, ricevi valutazioni AI delle performance e identifica keyword negative per ottimizzare il budget pubblicitario.
         </p>
     </div>
 </section>
@@ -47,39 +47,31 @@
             <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">1</div>
             <div>
                 <h3 class="font-medium text-slate-900 dark:text-white">Crea un progetto</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Scegli il tipo di progetto: Negative Keywords per trovare keyword da escludere, oppure Campaign Analysis per valutare le performance.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Accedi a Google Ads Analyzer e crea un nuovo progetto. Assegna un nome descrittivo per identificare facilmente l'account o la campagna che vuoi monitorare.</p>
             </div>
         </div>
         <!-- Step 2 -->
         <div class="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">2</div>
             <div>
-                <h3 class="font-medium text-slate-900 dark:text-white">Importa i dati</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Carica un file CSV esportato da Google Ads oppure configura lo script automatico per dati aggiornati in tempo reale.</p>
+                <h3 class="font-medium text-slate-900 dark:text-white">Configura lo script Google Ads</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Copia lo script generato automaticamente e incollalo nel tuo account Google Ads (Strumenti > Script). Eseguilo per inviare i dati delle campagne ad Ainstein.</p>
             </div>
         </div>
         <!-- Step 3 -->
         <div class="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">3</div>
             <div>
-                <h3 class="font-medium text-slate-900 dark:text-white">Specifica il contesto business</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">L'AI puo estrarre automaticamente il contesto dal tuo sito web oppure puoi inserirlo manualmente per risultati piu precisi.</p>
+                <h3 class="font-medium text-slate-900 dark:text-white">Avvia la valutazione AI delle campagne</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Dopo aver ricevuto i dati, avvia la valutazione AI per ottenere un'analisi dettagliata delle performance, suggerimenti sui copy degli annunci e raccomandazioni di ottimizzazione.</p>
             </div>
         </div>
         <!-- Step 4 -->
         <div class="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">4</div>
             <div>
-                <h3 class="font-medium text-slate-900 dark:text-white">Analisi AI dei termini di ricerca</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">L'intelligenza artificiale analizza i search terms e identifica le keyword negative, classificandole per categoria e priorita.</p>
-            </div>
-        </div>
-        <!-- Step 5 -->
-        <div class="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-            <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">5</div>
-            <div>
-                <h3 class="font-medium text-slate-900 dark:text-white">Rivedi e esporta</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Rivedi le raccomandazioni dell'AI, approva le keyword negative e esporta in formato compatibile con Google Ads Editor.</p>
+                <h3 class="font-medium text-slate-900 dark:text-white">Analizza le keyword negative</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Usa il tab "Keyword Negative" per analizzare i search terms raccolti. L'AI identifica i termini irrilevanti, li classifica per categoria e priorita, e puoi esportarli per Google Ads Editor.</p>
             </div>
         </div>
     </div>
@@ -94,18 +86,6 @@
         Funzionalita principali
     </h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Keyword negative -->
-        <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-            <div class="flex items-center gap-3 mb-2">
-                <div class="shrink-0 w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center">
-                    <svg class="w-4 h-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
-                    </svg>
-                </div>
-                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Analisi keyword negative</h3>
-            </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Identifica i termini di ricerca non pertinenti che sprecano budget nelle campagne Google Ads.</p>
-        </div>
         <!-- Google Ads Script -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <div class="flex items-center gap-3 mb-2">
@@ -116,43 +96,7 @@
                 </div>
                 <h3 class="font-medium text-slate-900 dark:text-white text-sm">Google Ads Script</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Integrazione automatica per ricevere dati aggiornati in tempo reale senza upload manuali.</p>
-        </div>
-        <!-- Contesto business AI -->
-        <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-            <div class="flex items-center gap-3 mb-2">
-                <div class="shrink-0 w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center">
-                    <svg class="w-4 h-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Contesto business AI</h3>
-            </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Estrazione automatica del contesto dal sito web o inserimento manuale per analisi piu accurate.</p>
-        </div>
-        <!-- Categorizzazione AI -->
-        <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-            <div class="flex items-center gap-3 mb-2">
-                <div class="shrink-0 w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
-                    <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                    </svg>
-                </div>
-                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Categorizzazione AI</h3>
-            </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Le keyword negative vengono raggruppate per categoria tematica per una gestione piu ordinata.</p>
-        </div>
-        <!-- Prioritizzazione -->
-        <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-            <div class="flex items-center gap-3 mb-2">
-                <div class="shrink-0 w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
-                    <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
-                    </svg>
-                </div>
-                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Prioritizzazione</h3>
-            </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Ogni keyword negativa viene classificata come alta priorita, media priorita o da valutare.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Integrazione automatica per ricevere dati aggiornati sulle campagne senza intervento manuale.</p>
         </div>
         <!-- Valutazione campagne -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -164,7 +108,31 @@
                 </div>
                 <h3 class="font-medium text-slate-900 dark:text-white text-sm">Valutazione campagne AI</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Analisi delle performance con raccomandazioni AI e confronto metriche tra valutazioni successive.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Analisi delle performance con raccomandazioni AI su copy annunci, budget e strategie di ottimizzazione.</p>
+        </div>
+        <!-- Keyword negative -->
+        <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="shrink-0 w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                    </svg>
+                </div>
+                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Analisi keyword negative</h3>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Identifica i termini di ricerca irrilevanti dai dati raccolti dallo script, classificati per categoria e priorita con AI.</p>
+        </div>
+        <!-- Contesti business salvati -->
+        <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="shrink-0 w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Contesti business salvati</h3>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Salva e riutilizza i contesti business per analisi ripetute. L'AI puo anche estrarre il contesto automaticamente dalle landing page.</p>
         </div>
         <!-- Auto-evaluation -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -176,9 +144,9 @@
                 </div>
                 <h3 class="font-medium text-slate-900 dark:text-white text-sm">Auto-evaluation</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Valutazione automatica dopo ogni run dello script Google Ads per analisi continue senza intervento manuale.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Valutazione automatica dopo ogni esecuzione dello script per monitoraggio continuo senza intervento manuale.</p>
         </div>
-        <!-- Export -->
+        <!-- Export e copia rapida -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <div class="flex items-center gap-3 mb-2">
                 <div class="shrink-0 w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
@@ -186,9 +154,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                     </svg>
                 </div>
-                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Export multipli</h3>
+                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Export e copia rapida</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Esporta in CSV semplice per analisi rapida o nel formato Google Ads Editor per applicazione diretta.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Esporta in CSV o formato Google Ads Editor, oppure copia le keyword selezionate negli appunti con un clic.</p>
         </div>
     </div>
 </section>
@@ -211,19 +179,25 @@
             </thead>
             <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                 <tr class="bg-white dark:bg-slate-800/50">
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Valutazione AI campagne</td>
+                    <td class="px-4 py-3 text-right">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">7 crediti</span>
+                    </td>
+                </tr>
+                <tr class="bg-white dark:bg-slate-800/50">
                     <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Estrazione contesto business dal sito</td>
                     <td class="px-4 py-3 text-right">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">3 crediti</span>
                     </td>
                 </tr>
                 <tr class="bg-white dark:bg-slate-800/50">
-                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Analisi singolo ad group</td>
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Analisi keyword negative (per ad group)</td>
                     <td class="px-4 py-3 text-right">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">2 crediti</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">~2 crediti</span>
                     </td>
                 </tr>
                 <tr class="bg-white dark:bg-slate-800/50">
-                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Analisi bulk (4+ ad group)</td>
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Analisi bulk keyword negative (4+ ad group)</td>
                     <td class="px-4 py-3 text-right">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">1.5 crediti / gruppo</span>
                     </td>
@@ -250,8 +224,8 @@
                 </svg>
             </div>
             <div>
-                <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Usa lo script Google Ads</h3>
-                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Configura lo script di integrazione Google Ads per ricevere dati sempre aggiornati senza dover scaricare e caricare CSV manualmente. Risparmierai tempo e avrai analisi piu tempestive.</p>
+                <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Pianifica lo script come cron</h3>
+                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">In Google Ads, programma lo script per eseguirsi automaticamente ogni giorno o settimana. Cosi avrai sempre dati aggiornati senza doverlo eseguire manualmente.</p>
             </div>
         </div>
         <!-- Tip 2 -->
@@ -262,8 +236,8 @@
                 </svg>
             </div>
             <div>
-                <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Rivedi sempre le keyword negative</h3>
-                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Controlla sempre i suggerimenti dell'AI prima di applicarli nelle campagne. Alcune keyword potrebbero sembrare irrilevanti ma avere un valore indiretto per il tuo business.</p>
+                <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Attiva l'auto-evaluation</h3>
+                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Abilita la valutazione automatica per ricevere analisi aggiornate dopo ogni sincronizzazione. Monitora l'andamento delle campagne senza intervento manuale.</p>
             </div>
         </div>
         <!-- Tip 3 -->
@@ -274,8 +248,8 @@
                 </svg>
             </div>
             <div>
-                <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Attiva l'auto-evaluation</h3>
-                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Abilita la valutazione automatica per ricevere analisi aggiornate dopo ogni sincronizzazione dello script. Cosi potrai monitorare l'andamento delle campagne senza intervento manuale.</p>
+                <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Salva i contesti business</h3>
+                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Se gestisci piu campagne per lo stesso cliente, salva il contesto business per riutilizzarlo nelle analisi keyword negative successive senza doverlo reinserire.</p>
             </div>
         </div>
     </div>
