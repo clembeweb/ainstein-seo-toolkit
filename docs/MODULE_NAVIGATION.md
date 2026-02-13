@@ -367,6 +367,35 @@ Per aprire modali o triggerare azioni al caricamento pagina tramite link:
 
 ---
 
+## Esempio: Content Creator Module
+
+```
+Content Creator ▼
+  └── "My Project" ▼
+        ├── Dashboard
+        ├── Import URLs
+        ├── Risultati
+        ├── ─── separator ───
+        └── Impostazioni
+  Connettori CMS (sempre visibile, no progetto)
+```
+
+### Route Pattern
+
+| Tipo | Pattern | Esempio |
+|------|---------|---------|
+| Lista progetti | `/content-creator` | Landing con progetti |
+| Dashboard progetto | `/content-creator/projects/{id}` | Stats e azioni |
+| Import URLs | `/content-creator/projects/{id}/import` | Tabs import (5 metodi) |
+| Risultati | `/content-creator/projects/{id}/results` | Contenuti generati |
+| Impostazioni | `/content-creator/projects/{id}/settings` | Config progetto |
+| Connettori | `/content-creator/connectors` | Lista connettori CMS (project-independent) |
+| Connettori CRUD | `/content-creator/connectors/{id}/edit` | Modifica connettore |
+
+**Nota:** I connettori CMS (`/content-creator/connectors/...`) sono indipendenti dal progetto e sempre visibili nella sidebar, come Quick Check in keyword-research.
+
+---
+
 ## File di Riferimento
 
 - **Sidebar principale:** `shared/views/components/nav-items.php`

@@ -26,6 +26,7 @@ seo-toolkit/
 │   ├── internal-links/
 │   ├── seo-tracking/
 │   ├── keyword-research/
+│   ├── content-creator/    # Content Creator (HTML body)
 │   └── _template/
 ├── admin/                    # Area admin
 │   ├── controllers/
