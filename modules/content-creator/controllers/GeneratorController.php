@@ -778,7 +778,18 @@ class GeneratorController
         $page = max(1, (int) ($_GET['page'] ?? 1));
 
         // URL paginate con filtri
-        $urls = $this->url->getPaginated($id, $page, 50, $filters);
+        $paginatedResult = $this->url->getPaginated($id, $page, 50, $filters);
+
+        // Separa dati da paginazione
+        $urls = $paginatedResult['data'];
+        $pagination = [
+            'total' => $paginatedResult['total'],
+            'per_page' => $paginatedResult['per_page'],
+            'current_page' => $paginatedResult['current_page'],
+            'last_page' => $paginatedResult['last_page'],
+            'from' => $paginatedResult['from'],
+            'to' => $paginatedResult['to'],
+        ];
 
         // Statistiche
         $stats = $this->url->getStats($id);
@@ -787,6 +798,7 @@ class GeneratorController
             'user' => $user,
             'project' => $project,
             'urls' => $urls,
+            'pagination' => $pagination,
             'stats' => $stats,
             'filters' => $filters,
             'currentPage' => 'results',
