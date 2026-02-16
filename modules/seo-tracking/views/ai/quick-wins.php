@@ -10,7 +10,7 @@
     <?php endif; ?>
 
     <!-- Info Box -->
-    <div class="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
+    <div class="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-6">
         <div class="flex gap-4">
             <div class="flex-shrink-0">
                 <svg class="w-8 h-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -49,7 +49,7 @@
 
     <!-- Candidate Stats -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center gap-4">
                 <div class="p-3 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
                     <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -63,7 +63,7 @@
             </div>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center gap-4">
                 <div class="p-3 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg">
                     <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -77,7 +77,7 @@
             </div>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center gap-4">
                 <div class="p-3 bg-violet-100 dark:bg-violet-900/50 rounded-lg">
                     <svg class="w-6 h-6 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -127,7 +127,7 @@
         </div>
     </div>
     <?php else: ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Pronto per l'analisi</h3>
@@ -163,7 +163,7 @@
     <?php endif; ?>
 
     <!-- Loading State -->
-    <div x-show="loading" x-cloak class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-8">
+    <div x-show="loading" x-cloak class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-8">
         <div class="flex flex-col items-center justify-center">
             <div class="relative">
                 <div class="w-16 h-16 border-4 border-amber-200 dark:border-amber-800 rounded-full"></div>
@@ -238,8 +238,8 @@
         </div>
 
         <!-- Opportunities List -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
-            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
+            <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Opportunita Quick Wins</h3>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Ordinate per impatto potenziale</p>
             </div>
@@ -297,7 +297,7 @@
         </div>
 
         <!-- General Recommendations -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6" x-show="results?.recommendations?.length > 0">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6" x-show="results?.recommendations?.length > 0">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Raccomandazioni Generali</h3>
             <ul class="space-y-3">
                 <template x-for="(rec, idx) in results?.recommendations || []" :key="idx">
@@ -320,30 +320,30 @@
 
     <!-- Candidate Keywords Preview -->
     <?php if (count($candidates) > 0 && $isConfigured): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Keyword Candidate</h3>
             <p class="text-sm text-slate-500 dark:text-slate-400">Preview delle keyword che verranno analizzate</p>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full">
-                <thead class="bg-slate-50 dark:bg-slate-800/50">
+                <thead class="bg-slate-50 dark:bg-slate-700/50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Keyword</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Posizione</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Click</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Impressioni</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">CTR</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Azioni</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Keyword</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Posizione</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Click</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Impressioni</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">CTR</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Azioni</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <?php foreach (array_slice($candidates, 0, 10) as $kw): ?>
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                        <td class="px-6 py-4">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <td class="px-4 py-3">
                             <p class="text-sm font-medium text-slate-900 dark:text-white truncate max-w-xs"><?= e($kw['keyword']) ?></p>
                         </td>
-                        <td class="px-6 py-4 text-right">
+                        <td class="px-4 py-3 text-right">
                             <?php
                             $pos = $kw['position'] ?? 0;
                             $posClass = $pos <= 10 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300';
@@ -352,10 +352,10 @@
                                 <?= number_format($pos, 1) ?>
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-right text-sm text-slate-900 dark:text-white"><?= number_format($kw['clicks'] ?? 0) ?></td>
-                        <td class="px-6 py-4 text-right text-sm text-slate-500 dark:text-slate-400"><?= number_format($kw['impressions'] ?? 0) ?></td>
-                        <td class="px-6 py-4 text-right text-sm text-slate-500 dark:text-slate-400"><?= number_format(($kw['ctr'] ?? 0) * 100, 2) ?>%</td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-4 py-3 text-right text-sm text-slate-900 dark:text-white"><?= number_format($kw['clicks'] ?? 0) ?></td>
+                        <td class="px-4 py-3 text-right text-sm text-slate-500 dark:text-slate-400"><?= number_format($kw['impressions'] ?? 0) ?></td>
+                        <td class="px-4 py-3 text-right text-sm text-slate-500 dark:text-slate-400"><?= number_format(($kw['ctr'] ?? 0) * 100, 2) ?>%</td>
+                        <td class="px-4 py-3 text-center">
                             <?php if (!empty($kw['target_url'])): ?>
                             <button
                                 @click="analyzeKeywordPage('<?= e(addslashes($kw['keyword'])) ?>', '<?= e(addslashes($kw['target_url'])) ?>', <?= number_format($kw['position'] ?? 0, 1, '.', '') ?>)"
@@ -377,7 +377,7 @@
             </table>
         </div>
         <?php if (count($candidates) > 10): ?>
-        <div class="px-6 py-3 bg-slate-50 dark:bg-slate-800/50 text-center text-sm text-slate-500 dark:text-slate-400">
+        <div class="px-4 py-3 bg-slate-50 dark:bg-slate-700/50 text-center text-sm text-slate-500 dark:text-slate-400">
             ... e altre <?= count($candidates) - 10 ?> keyword
         </div>
         <?php endif; ?>

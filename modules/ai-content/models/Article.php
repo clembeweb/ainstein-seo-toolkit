@@ -62,7 +62,7 @@ class Article
     /**
      * Get all articles for a user
      */
-    public function allByUser(int $userId, int $page = 1, int $perPage = 20, ?string $status = null): array
+    public function allByUser(int $userId, int $page = 1, int $perPage = 20, ?string $status = null, array $filters = []): array
     {
         $offset = ($page - 1) * $perPage;
 
@@ -84,7 +84,13 @@ class Article
             $params[] = $status;
         }
 
-        $sql .= " ORDER BY a.created_at DESC LIMIT ? OFFSET ?";
+        // Sorting
+        $allowedSort = ['title', 'keyword', 'word_count', 'status', 'created_at'];
+        $sortField = in_array($filters['sort'] ?? '', $allowedSort) ? $filters['sort'] : 'created_at';
+        $sortPrefix = in_array($sortField, ['keyword']) ? 'k.' : 'a.';
+        $sortDir = (strtolower($filters['dir'] ?? '') === 'asc') ? 'ASC' : 'DESC';
+
+        $sql .= " ORDER BY {$sortPrefix}{$sortField} {$sortDir} LIMIT ? OFFSET ?";
         $params[] = $perPage;
         $params[] = $offset;
 
@@ -96,7 +102,9 @@ class Article
             'total' => $total,
             'current_page' => $page,
             'last_page' => (int) ceil($total / $perPage) ?: 1,
-            'per_page' => $perPage
+            'per_page' => $perPage,
+            'from' => $total > 0 ? $offset + 1 : 0,
+            'to' => min($offset + $perPage, $total),
         ];
     }
 
@@ -371,7 +379,7 @@ class Article
     /**
      * Get all articles for a project
      */
-    public function allByProject(int $projectId, int $page = 1, int $perPage = 20, ?string $status = null): array
+    public function allByProject(int $projectId, int $page = 1, int $perPage = 20, ?string $status = null, array $filters = []): array
     {
         $offset = ($page - 1) * $perPage;
 
@@ -393,7 +401,13 @@ class Article
             $params[] = $status;
         }
 
-        $sql .= " ORDER BY a.created_at DESC LIMIT ? OFFSET ?";
+        // Sorting
+        $allowedSort = ['title', 'keyword', 'word_count', 'status', 'created_at'];
+        $sortField = in_array($filters['sort'] ?? '', $allowedSort) ? $filters['sort'] : 'created_at';
+        $sortPrefix = in_array($sortField, ['keyword']) ? 'k.' : 'a.';
+        $sortDir = (strtolower($filters['dir'] ?? '') === 'asc') ? 'ASC' : 'DESC';
+
+        $sql .= " ORDER BY {$sortPrefix}{$sortField} {$sortDir} LIMIT ? OFFSET ?";
         $params[] = $perPage;
         $params[] = $offset;
 
@@ -405,7 +419,9 @@ class Article
             'total' => $total,
             'current_page' => $page,
             'last_page' => (int) ceil($total / $perPage) ?: 1,
-            'per_page' => $perPage
+            'per_page' => $perPage,
+            'from' => $total > 0 ? $offset + 1 : 0,
+            'to' => min($offset + $perPage, $total),
         ];
     }
 }

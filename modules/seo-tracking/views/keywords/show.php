@@ -31,7 +31,7 @@
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Current Position -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Posizione Attuale</p>
             <?php
             $pos = $keyword['last_position'] ?? 0;
@@ -48,7 +48,7 @@
         </div>
 
         <!-- Clicks -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Click (30gg)</p>
             <p class="text-3xl font-bold text-slate-900 dark:text-white mt-1">
                 <?= number_format($keyword['last_clicks'] ?? 0) ?>
@@ -56,7 +56,7 @@
         </div>
 
         <!-- Impressions -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Impressioni (30gg)</p>
             <p class="text-3xl font-bold text-slate-900 dark:text-white mt-1">
                 <?= number_format($keyword['last_impressions'] ?? 0) ?>
@@ -64,7 +64,7 @@
         </div>
 
         <!-- CTR -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <p class="text-sm font-medium text-slate-500 dark:text-slate-400">CTR</p>
             <?php
             $clicks = $keyword['last_clicks'] ?? 0;
@@ -78,7 +78,7 @@
     </div>
 
     <!-- Position Chart -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Storico Posizioni</h2>
             <select id="chartDays" onchange="loadChart()" class="text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
@@ -99,7 +99,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Keyword Info -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                 <h2 class="font-semibold text-slate-900 dark:text-white">Informazioni</h2>
             </div>
@@ -140,7 +140,7 @@
         </div>
 
         <!-- Recent GSC Data -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                 <h2 class="font-semibold text-slate-900 dark:text-white">Dati GSC Recenti</h2>
             </div>
@@ -177,7 +177,7 @@
 
     <!-- GSC Landing Pages -->
     <?php if (!empty($gscTopPages)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <h2 class="font-semibold text-slate-900 dark:text-white">Landing Pages (GSC)</h2>
         </div>
@@ -214,7 +214,7 @@
 
     <!-- GSC Countries -->
     <?php if (!empty($gscCountries)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <h2 class="font-semibold text-slate-900 dark:text-white">Paesi (GSC)</h2>
         </div>

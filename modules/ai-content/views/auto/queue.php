@@ -5,26 +5,26 @@
 
     <!-- Stats Summary -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 text-center">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
             <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($stats['total'] ?? 0) ?></p>
             <p class="text-xs text-slate-500 dark:text-slate-400">Totale</p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 text-center">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
             <p class="text-2xl font-bold text-blue-600 dark:text-blue-400"><?= number_format($stats['pending'] ?? 0) ?></p>
             <p class="text-xs text-slate-500 dark:text-slate-400">In Attesa</p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 text-center">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
             <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400"><?= number_format($stats['completed'] ?? 0) ?></p>
             <p class="text-xs text-slate-500 dark:text-slate-400">Completati</p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 text-center">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
             <p class="text-2xl font-bold text-red-600 dark:text-red-400"><?= number_format($stats['errors'] ?? 0) ?></p>
             <p class="text-xs text-slate-500 dark:text-slate-400">Errori</p>
         </div>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <div class="border-b border-slate-200 dark:border-slate-700">
             <nav class="flex -mb-px">
                 <a href="<?= url('/ai-content/projects/' . $project['id'] . '/auto/queue') ?>"
@@ -57,14 +57,14 @@
         <?php else: ?>
         <!-- Table -->
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+            <table class="w-full">
                 <thead class="bg-slate-50 dark:bg-slate-700/50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Keyword</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stato</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Fonti</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Schedulato</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Azioni</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Keyword</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stato</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Fonti</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Schedulato</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Azioni</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
@@ -85,19 +85,19 @@
                             default => $item['status']
                         };
                     ?>
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                        <td class="px-6 py-4">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <td class="px-4 py-3">
                             <p class="text-sm font-medium text-slate-900 dark:text-white"><?= e($item['keyword']) ?></p>
                             <?php if ($item['status'] === 'error' && !empty($item['error_message'])): ?>
                             <p class="text-xs text-red-600 dark:text-red-400 mt-1"><?= e($item['error_message']) ?></p>
                             <?php endif; ?>
                         </td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-4 py-3 text-center">
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium <?= $statusClass ?>">
                                 <?= $statusLabel ?>
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-4 py-3 text-center">
                             <?php if ($item['status'] === 'pending'): ?>
                             <div x-data="{ editing: false, value: '<?= $item['sources_count'] ?? 3 ?>', originalValue: '<?= $item['sources_count'] ?? 3 ?>' }">
                                 <span x-show="!editing"
@@ -121,7 +121,7 @@
                             <span class="text-sm text-slate-400 dark:text-slate-500"><?= $item['sources_count'] ?? 3 ?> fonti</span>
                             <?php endif; ?>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-4 py-3">
                             <?php if ($item['status'] === 'pending'): ?>
                                 <?php if (empty($item['scheduled_at'])): ?>
                                 <!-- Non pianificato: mostra bottone Pianifica -->
@@ -220,7 +220,7 @@
                             <?php endif; ?>
                             <?php endif; ?>
                         </td>
-                        <td class="px-6 py-4 text-right">
+                        <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-2">
                                 <?php if ($item['status'] === 'completed' && !empty($item['article_id'])): ?>
                                 <a href="<?= url('/ai-content/articles/' . $item['article_id']) ?>"

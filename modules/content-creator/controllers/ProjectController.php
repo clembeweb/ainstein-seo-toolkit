@@ -130,8 +130,18 @@ class ProjectController
         }
 
         $stats = $this->project->getStats($id);
+
+        // Filtri e paginazione
+        $filters = [
+            'status' => trim($_GET['status'] ?? ''),
+            'search' => trim($_GET['q'] ?? ''),
+            'sort' => trim($_GET['sort'] ?? 'created_at'),
+            'dir' => trim($_GET['dir'] ?? 'desc'),
+        ];
+
+        $page = max(1, (int) ($_GET['page'] ?? 1));
         $urlModel = new Url();
-        $recentUrls = $urlModel->getByProject($id, null, 20);
+        $result = $urlModel->getPaginated($id, $page, 25, $filters);
 
         return View::render('content-creator/projects/show', [
             'title' => $project['name'] . ' - Content Creator',
@@ -139,7 +149,16 @@ class ProjectController
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
             'stats' => $stats,
-            'recentUrls' => $recentUrls,
+            'urls' => $result['data'],
+            'pagination' => [
+                'current_page' => $result['current_page'],
+                'last_page' => $result['last_page'],
+                'total' => $result['total'],
+                'per_page' => $result['per_page'],
+                'from' => $result['from'],
+                'to' => $result['to'],
+            ],
+            'filters' => $filters,
             'currentPage' => 'dashboard',
         ]);
     }

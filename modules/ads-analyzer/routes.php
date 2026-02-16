@@ -307,7 +307,23 @@ Router::get('/ads-analyzer/projects/{id}/campaign-creator', function ($id) {
     return $controller->wizard((int) $id);
 });
 
-// Scraping + Keyword Research AI (AJAX lungo)
+// Analizza landing page (scraping + brief auto) (AJAX lungo)
+Router::post('/ads-analyzer/projects/{id}/campaign-creator/analyze-landing', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new CampaignCreatorController();
+    return $controller->analyzeLanding((int) $id);
+});
+
+// Salva brief editato (AJAX rapido)
+Router::post('/ads-analyzer/projects/{id}/campaign-creator/update-brief', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new CampaignCreatorController();
+    return $controller->updateBrief((int) $id);
+});
+
+// Keyword Research AI (AJAX lungo)
 Router::post('/ads-analyzer/projects/{id}/campaign-creator/generate-kw', function ($id) {
     Middleware::auth();
     Middleware::csrf();

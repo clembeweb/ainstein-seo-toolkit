@@ -74,38 +74,38 @@ sort($uniqueIntents);
     <?php endif; ?>
 
     <!-- Architecture Table -->
-    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"
          x-data='architectureTable(<?= json_encode($clustersForTable, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP) ?>)'>
-        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
             <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Struttura Pagine</h2>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="bg-slate-50 dark:bg-slate-700/50">
                     <tr>
-                        <th class="px-6 py-3 text-left cursor-pointer select-none" @click="toggleSort('_index')">
+                        <th class="px-4 py-3 text-left cursor-pointer select-none" @click="toggleSort('_index')">
                             <span class="inline-flex items-center text-xs font-medium text-slate-500 uppercase hover:text-slate-700 dark:hover:text-slate-200">
                                 # <span x-html="sortField === null ? '' : krSortIcon('_index', '_none', 'asc')"></span>
                             </span>
                         </th>
-                        <th class="px-6 py-3 text-left cursor-pointer select-none" @click="toggleSort('name')">
+                        <th class="px-4 py-3 text-left cursor-pointer select-none" @click="toggleSort('name')">
                             <span class="inline-flex items-center text-xs font-medium text-slate-500 uppercase hover:text-slate-700 dark:hover:text-slate-200">
                                 Pagina <span x-html="krSortIcon('name', sortField, sortDir)"></span>
                             </span>
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">URL</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">H1</th>
-                        <th class="px-6 py-3 text-right cursor-pointer select-none" @click="toggleSort('total_volume')">
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">URL</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">H1</th>
+                        <th class="px-4 py-3 text-right cursor-pointer select-none" @click="toggleSort('total_volume')">
                             <span class="inline-flex items-center justify-end text-xs font-medium text-slate-500 uppercase hover:text-slate-700 dark:hover:text-slate-200">
                                 Volume <span x-html="krSortIcon('total_volume', sortField, sortDir)"></span>
                             </span>
                         </th>
-                        <th class="px-6 py-3 text-center cursor-pointer select-none" @click="toggleSort('keywords_count')">
+                        <th class="px-4 py-3 text-center cursor-pointer select-none" @click="toggleSort('keywords_count')">
                             <span class="inline-flex items-center text-xs font-medium text-slate-500 uppercase hover:text-slate-700 dark:hover:text-slate-200">
                                 Kw <span x-html="krSortIcon('keywords_count', sortField, sortDir)"></span>
                             </span>
                         </th>
-                        <th class="px-6 py-3 text-center cursor-pointer select-none" @click="toggleSort('intent')">
+                        <th class="px-4 py-3 text-center cursor-pointer select-none" @click="toggleSort('intent')">
                             <span class="inline-flex items-center text-xs font-medium text-slate-500 uppercase hover:text-slate-700 dark:hover:text-slate-200">
                                 Intent <span x-html="krSortIcon('intent', sortField, sortDir)"></span>
                             </span>
@@ -114,23 +114,23 @@ sort($uniqueIntents);
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <template x-for="c in sortedClusters" :key="c._index">
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                        <td class="px-6 py-4 text-slate-400 font-bold" x-text="c._index"></td>
-                        <td class="px-6 py-4">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <td class="px-4 py-3 text-slate-400 font-bold" x-text="c._index"></td>
+                        <td class="px-4 py-3">
                             <div class="font-medium text-slate-900 dark:text-white" x-text="c.name"></div>
                             <div class="text-xs text-slate-500 mt-0.5">
                                 Main: <span x-text="c.main_keyword"></span> (<span x-text="(c.main_volume || 0).toLocaleString()"></span>)
                             </div>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-4 py-3">
                             <template x-if="c.suggested_url">
                                 <code class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded text-primary-600 dark:text-primary-400" x-text="c.suggested_url"></code>
                             </template>
                         </td>
-                        <td class="px-6 py-4 text-sm text-slate-700 dark:text-slate-300" x-text="c.suggested_h1 || ''"></td>
-                        <td class="px-6 py-4 text-right font-medium text-slate-900 dark:text-white" x-text="(c.total_volume || 0).toLocaleString()"></td>
-                        <td class="px-6 py-4 text-center text-slate-700 dark:text-slate-300" x-text="c.keywords_count"></td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300" x-text="c.suggested_h1 || ''"></td>
+                        <td class="px-4 py-3 text-right font-medium text-slate-900 dark:text-white" x-text="(c.total_volume || 0).toLocaleString()"></td>
+                        <td class="px-4 py-3 text-center text-slate-700 dark:text-slate-300" x-text="c.keywords_count"></td>
+                        <td class="px-4 py-3 text-center">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" :class="krIntentClass(c.intent)" x-text="c.intent ? c.intent.charAt(0).toUpperCase() + c.intent.slice(1) : 'N/A'"></span>
                         </td>
                     </tr>
@@ -164,7 +164,7 @@ sort($uniqueIntents);
 
     <!-- Send to Content Creator -->
     <?php if (!empty($ccProjects)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6"
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6"
          x-data="{
              ccProjectId: '',
              selectedClusters: <?= json_encode(array_column($clusters, 'id'), JSON_HEX_TAG) ?>,

@@ -1,30 +1,18 @@
 {
     "name": "SEO Audit",
     "slug": "seo-audit",
-    "version": "1.0.0",
-    "description": "Audit SEO completo con Google Search Console e analisi AI",
+    "version": "1.1.0",
+    "description": "Audit SEO completo con Piano d'Azione AI",
     "icon": "clipboard-document-check",
     "menu_order": 20,
     "requires": {
         "php": ">=8.0",
-        "services": ["scraper", "ai", "sitemap"]
+        "services": ["scraper", "ai"]
     },
     "credits": {
         "crawl_per_page": {
             "cost": 0.2,
             "description": "Scansione singola pagina"
-        },
-        "gsc_sync": {
-            "cost": 5,
-            "description": "Sincronizzazione dati Google Search Console"
-        },
-        "ai_overview": {
-            "cost": 15,
-            "description": "Analisi AI panoramica completa"
-        },
-        "ai_category": {
-            "cost": 3,
-            "description": "Analisi AI singola categoria"
         },
         "action_plan_generate": {
             "cost": 15,
@@ -37,12 +25,6 @@
             "icon": "sparkles",
             "description": "Provider e modello AI per questo modulo",
             "order": 0
-        },
-        "google_config": {
-            "label": "Google OAuth",
-            "icon": "globe-alt",
-            "description": "Credenziali OAuth per Google Search Console",
-            "order": 1
         },
         "costs": {
             "label": "Costi Operazioni",
@@ -89,52 +71,6 @@
                 {"value": "1", "label": "Abilitato"},
                 {"value": "0", "label": "Disabilitato"}
             ]
-        },
-        "gsc_client_id": {
-            "type": "text",
-            "label": "Google Client ID",
-            "description": "Client ID dal progetto Google Cloud Console",
-            "default": "",
-            "admin_only": true,
-            "group": "google_config"
-        },
-        "gsc_client_secret": {
-            "type": "password",
-            "label": "Google Client Secret",
-            "description": "Client Secret dal progetto Google Cloud Console",
-            "default": "",
-            "admin_only": true,
-            "group": "google_config"
-        },
-        "cost_ai_overview": {
-            "type": "number",
-            "label": "Costo Analisi AI Overview",
-            "description": "Crediti per analisi AI overview progetto",
-            "default": 15,
-            "min": 0,
-            "step": 0.1,
-            "admin_only": true,
-            "group": "costs"
-        },
-        "cost_ai_category": {
-            "type": "number",
-            "label": "Costo Analisi AI Categoria",
-            "description": "Crediti per analisi AI per categoria issue",
-            "default": 3,
-            "min": 0,
-            "step": 0.1,
-            "admin_only": true,
-            "group": "costs"
-        },
-        "cost_gsc_sync": {
-            "type": "number",
-            "label": "Costo Sync GSC",
-            "description": "Crediti per sincronizzazione Google Search Console",
-            "default": 5,
-            "min": 0,
-            "step": 0.1,
-            "admin_only": true,
-            "group": "costs"
         },
         "cost_action_plan_generate": {
             "type": "number",

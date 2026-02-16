@@ -67,6 +67,8 @@ class InternalLinksController
         $filters = [
             'status' => $_GET['status'] ?? null,
             'search' => $_GET['q'] ?? null,
+            'sort' => $_GET['sort'] ?? null,
+            'dir' => $_GET['dir'] ?? null,
         ];
 
         // Ottieni link paginati

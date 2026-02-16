@@ -27,6 +27,9 @@ class Project
         if (isset($data['brief'])) {
             $record['brief'] = $data['brief'];
         }
+        if (isset($data['input_mode'])) {
+            $record['input_mode'] = $data['input_mode'];
+        }
 
         return Database::insert('ga_projects', $record);
     }

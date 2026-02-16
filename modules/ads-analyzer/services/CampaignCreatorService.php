@@ -109,6 +109,42 @@ class CampaignCreatorService
         ];
     }
 
+    /**
+     * Genera brief automatico dal contesto scraping
+     */
+    public static function generateBriefFromContext(int $userId, string $context, string $content, string $campaignType): string
+    {
+        $ai = new AiService('ads-analyzer');
+        if (!$ai->isConfigured()) return '';
+
+        $typeLabel = $campaignType === 'pmax' ? 'Performance Max' : 'Search';
+        $contentSnippet = mb_substr($content, 0, 3000);
+
+        $prompt = "Basandoti sul contesto e contenuto di questa landing page, genera un brief per campagna Google Ads {$typeLabel}.\n\n";
+        $prompt .= "CONTESTO ESTRATTO:\n{$context}\n\n";
+        if (!empty($contentSnippet)) {
+            $prompt .= "CONTENUTO PAGINA:\n{$contentSnippet}\n\n";
+        }
+        $prompt .= "Il brief deve includere:\n";
+        $prompt .= "- Obiettivo della campagna (lead generation, vendite, awareness)\n";
+        $prompt .= "- Target di riferimento (chi sono i clienti ideali)\n";
+        $prompt .= "- Prodotti/servizi da promuovere\n";
+        $prompt .= "- Tono di voce (professionale, commerciale, etc.)\n";
+        $prompt .= "- USP e punti di forza da evidenziare\n\n";
+        $prompt .= "Rispondi SOLO con il testo del brief (150-400 parole), senza preamboli.";
+
+        $result = $ai->analyze($userId, $prompt, '', 'ads-analyzer');
+        Database::reconnect();
+
+        if (!empty($result['error'])) return '';
+
+        $brief = trim($result['result'] ?? '');
+        $brief = preg_replace('/^```[\w]*\n?/', '', $brief);
+        $brief = preg_replace('/\n?```$/', '', $brief);
+
+        return trim($brief);
+    }
+
     // ===== PROMPT KEYWORD RESEARCH =====
 
     private static function getKeywordResearchSystemPrompt(string $type): string
@@ -150,8 +186,15 @@ class CampaignCreatorService
 
     private static function getKeywordResearchUserPrompt(string $type, string $brief, string $url, string $context, string $content): string
     {
-        $prompt = "BRIEF CAMPAGNA:\n{$brief}\n\n";
-        $prompt .= "URL LANDING PAGE: {$url}\n\n";
+        $prompt = '';
+
+        if (!empty($brief)) {
+            $prompt .= "BRIEF CAMPAGNA:\n{$brief}\n\n";
+        }
+
+        if (!empty($url)) {
+            $prompt .= "URL LANDING PAGE: {$url}\n\n";
+        }
 
         if (!empty($context)) {
             $prompt .= "CONTESTO ESTRATTO DALLA LANDING:\n{$context}\n\n";
@@ -229,8 +272,15 @@ class CampaignCreatorService
 
     private static function getCampaignGenerationUserPrompt(string $type, array $project, array $keywords): string
     {
-        $prompt = "BRIEF CAMPAGNA:\n" . ($project['brief'] ?? '') . "\n\n";
-        $prompt .= "URL LANDING PAGE: " . ($project['landing_url'] ?? '') . "\n\n";
+        $prompt = '';
+
+        if (!empty($project['brief'])) {
+            $prompt .= "BRIEF CAMPAGNA:\n" . $project['brief'] . "\n\n";
+        }
+
+        if (!empty($project['landing_url'])) {
+            $prompt .= "URL LANDING PAGE: " . $project['landing_url'] . "\n\n";
+        }
 
         if (!empty($project['scraped_context'])) {
             $prompt .= "CONTESTO LANDING:\n" . $project['scraped_context'] . "\n\n";

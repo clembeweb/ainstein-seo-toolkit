@@ -83,7 +83,7 @@
     <div x-show="activeTab === 'manual'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
         <?php if (empty($projectsByType['manual'])): ?>
         <!-- Empty State Manual -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
             <div class="mx-auto h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mb-4">
                 <svg class="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -104,7 +104,7 @@
         <!-- Projects Grid Manual -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <?php foreach ($projectsByType['manual'] as $project): ?>
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
                 <div class="p-5 border-b border-slate-200 dark:border-slate-700">
                     <div class="flex items-start justify-between">
                         <div class="min-w-0 flex-1">
@@ -173,7 +173,7 @@
         <?php endif; ?>
 
         <!-- Info Box Manual -->
-        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-sm p-6 text-white mt-6">
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-sm p-6 text-white mt-6">
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-lg font-semibold">Modalita Manuale</h3>
@@ -213,7 +213,7 @@
     <div x-show="activeTab === 'auto'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
         <?php if (empty($projectsByType['auto'])): ?>
         <!-- Empty State Auto -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
             <div class="mx-auto h-16 w-16 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center mb-4">
                 <svg class="h-8 w-8 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -234,7 +234,7 @@
         <!-- Projects Grid Auto -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <?php foreach ($projectsByType['auto'] as $project): ?>
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
                 <div class="p-5 border-b border-slate-200 dark:border-slate-700">
                     <div class="flex items-start justify-between">
                         <div class="min-w-0 flex-1">
@@ -307,7 +307,7 @@
         <?php endif; ?>
 
         <!-- Info Box Auto -->
-        <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-sm p-6 text-white mt-6">
+        <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-sm p-6 text-white mt-6">
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-lg font-semibold">Modalita Automatica</h3>
@@ -347,7 +347,7 @@
     <div x-show="activeTab === 'meta-tag'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
         <?php if (empty($projectsByType['meta-tag'])): ?>
         <!-- Empty State Meta-Tag -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
             <div class="mx-auto h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center mb-4">
                 <svg class="h-8 w-8 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
@@ -368,7 +368,7 @@
         <!-- Projects Grid Meta-Tag -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <?php foreach ($projectsByType['meta-tag'] as $project): ?>
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
                 <div class="p-5 border-b border-slate-200 dark:border-slate-700">
                     <div class="flex items-start justify-between">
                         <div class="min-w-0 flex-1">
@@ -443,7 +443,7 @@
         <?php endif; ?>
 
         <!-- Info Box Meta-Tag -->
-        <div class="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-lg shadow-sm p-6 text-white mt-6">
+        <div class="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl shadow-sm p-6 text-white mt-6">
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-lg font-semibold">SEO Meta Tags</h3>

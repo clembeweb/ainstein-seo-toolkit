@@ -37,7 +37,7 @@
 
     <!-- Stats -->
     <div class="grid grid-cols-4 gap-4">
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4 text-center">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 text-center">
             <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= $stats['unread'] ?? 0 ?></p>
             <p class="text-xs text-slate-500 dark:text-slate-400">Non letti</p>
         </div>
@@ -56,7 +56,7 @@
     </div>
 
     <!-- Filters -->
-    <form method="GET" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+    <form method="GET" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
         <div class="flex flex-wrap items-center gap-4">
             <select name="type" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm">
                 <option value="">Tutti i tipi</option>
@@ -83,7 +83,7 @@
     </form>
 
     <!-- Alerts List -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <?php if (empty($alerts)): ?>
         <div class="p-12 text-center">
             <div class="mx-auto h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center mb-4">

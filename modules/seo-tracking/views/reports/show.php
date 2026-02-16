@@ -47,7 +47,7 @@
     ?>
 
     <!-- Report Meta -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
         <div class="flex flex-wrap items-center gap-4">
             <span class="px-3 py-1 rounded-full text-sm font-medium <?= $typeColor ?>">
                 <?= $typeLabel ?>
@@ -76,7 +76,7 @@
     </div>
 
     <!-- Report Content -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div id="report-content" class="prose prose-slate dark:prose-invert max-w-none p-6 lg:p-8">
             <?= $renderedContent ?? nl2br(e($report['content'])) ?>
         </div>

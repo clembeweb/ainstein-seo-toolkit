@@ -4,7 +4,7 @@
     <?php include __DIR__ . '/../partials/project-nav.php'; ?>
 
     <!-- Info Box -->
-    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
         <div class="flex gap-4">
             <div class="flex-shrink-0">
                 <svg class="w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -43,7 +43,7 @@
 
     <!-- Stats -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center gap-4">
                 <div class="p-3 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
                     <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -57,7 +57,7 @@
             </div>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center gap-4">
                 <div class="p-3 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg">
                     <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -71,7 +71,7 @@
             </div>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center gap-4">
                 <div class="p-3 bg-violet-100 dark:bg-violet-900/50 rounded-lg">
                     <svg class="w-6 h-6 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -88,7 +88,7 @@
 
     <!-- Status Messages -->
     <?php if (!$isConfigured): ?>
-    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
         <div class="flex items-center gap-3">
             <svg class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
@@ -101,7 +101,7 @@
     <?php endif; ?>
 
     <!-- Keywords Table -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <div class="p-4 border-b border-slate-200 dark:border-slate-700">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
@@ -195,8 +195,8 @@
         </div>
         <?php else: ?>
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                <thead class="bg-slate-50 dark:bg-slate-900/50">
+            <table class="w-full">
+                <thead class="bg-slate-50 dark:bg-slate-700/50">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Keyword</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">URL</th>
@@ -207,7 +207,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <?php foreach ($keywords as $kw): ?>
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                         <td class="px-4 py-3">
                             <span class="font-medium text-slate-900 dark:text-white"><?= e($kw['keyword']) ?></span>
                         </td>
@@ -251,106 +251,34 @@
         </div>
 
         <!-- Paginazione -->
-        <?php if (!empty($pagination) && $pagination['total_pages'] > 1): ?>
-        <?php
-        // Funzione helper per costruire URL con filtri
-        $buildPageUrl = function($page) use ($project, $filters) {
-            $params = array_filter([
-                'page' => $page,
+        <?php if (!empty($pagination) && $pagination['total_pages'] > 1):
+            $paginationPerPage = $pagination['per_page'] ?? 20;
+            $paginationFrom = ($pagination['current_page'] - 1) * $paginationPerPage + 1;
+            $paginationTo = min($pagination['current_page'] * $paginationPerPage, $pagination['total_count']);
+        ?>
+        <?= \Core\View::partial('components/table-pagination', [
+            'pagination' => [
+                'current_page' => $pagination['current_page'],
+                'last_page' => $pagination['total_pages'],
+                'total' => $pagination['total_count'],
+                'per_page' => $paginationPerPage,
+                'from' => $paginationFrom,
+                'to' => $paginationTo,
+            ],
+            'baseUrl' => url("/seo-tracking/project/{$project['id']}/page-analyzer"),
+            'filters' => array_filter([
                 'search' => $filters['search'] ?? '',
                 'max_position' => $filters['max_position'] ?? '',
                 'min_impressions' => $filters['min_impressions'] ?? '',
-            ], fn($v) => $v !== '' && $v !== 0);
-            return url("/seo-tracking/project/{$project['id']}/page-analyzer") . '?' . http_build_query($params);
-        };
-        ?>
-        <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-700">
-            <nav class="flex items-center justify-between">
-                <!-- Precedente -->
-                <div class="flex items-center gap-2">
-                    <?php if ($pagination['current_page'] > 1): ?>
-                    <a href="<?= $buildPageUrl($pagination['current_page'] - 1) ?>"
-                       class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                        <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                        </svg>
-                        Precedente
-                    </a>
-                    <?php else: ?>
-                    <span class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-400 dark:text-slate-500 cursor-not-allowed">
-                        <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                        </svg>
-                        Precedente
-                    </span>
-                    <?php endif; ?>
-                </div>
-
-                <!-- Numeri pagina -->
-                <div class="hidden sm:flex items-center gap-1">
-                    <?php
-                    $startPage = max(1, $pagination['current_page'] - 2);
-                    $endPage = min($pagination['total_pages'], $pagination['current_page'] + 2);
-                    ?>
-
-                    <?php if ($startPage > 1): ?>
-                        <a href="<?= $buildPageUrl(1) ?>" class="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors">1</a>
-                        <?php if ($startPage > 2): ?>
-                            <span class="px-2 text-slate-400 dark:text-slate-500">...</span>
-                        <?php endif; ?>
-                    <?php endif; ?>
-
-                    <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
-                        <?php if ($i === $pagination['current_page']): ?>
-                            <span class="px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-md"><?= $i ?></span>
-                        <?php else: ?>
-                            <a href="<?= $buildPageUrl($i) ?>"
-                               class="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"><?= $i ?></a>
-                        <?php endif; ?>
-                    <?php endfor; ?>
-
-                    <?php if ($endPage < $pagination['total_pages']): ?>
-                        <?php if ($endPage < $pagination['total_pages'] - 1): ?>
-                            <span class="px-2 text-slate-400 dark:text-slate-500">...</span>
-                        <?php endif; ?>
-                        <a href="<?= $buildPageUrl($pagination['total_pages']) ?>"
-                           class="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"><?= $pagination['total_pages'] ?></a>
-                    <?php endif; ?>
-                </div>
-
-                <!-- Mobile: indicatore pagina -->
-                <div class="sm:hidden text-sm text-slate-500 dark:text-slate-400">
-                    Pagina <?= $pagination['current_page'] ?> di <?= $pagination['total_pages'] ?>
-                </div>
-
-                <!-- Successivo -->
-                <div class="flex items-center gap-2">
-                    <?php if ($pagination['current_page'] < $pagination['total_pages']): ?>
-                    <a href="<?= $buildPageUrl($pagination['current_page'] + 1) ?>"
-                       class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                        Successivo
-                        <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </a>
-                    <?php else: ?>
-                    <span class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-400 dark:text-slate-500 cursor-not-allowed">
-                        Successivo
-                        <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </span>
-                    <?php endif; ?>
-                </div>
-            </nav>
-        </div>
+            ], fn($v) => $v !== '' && $v !== 0),
+        ]) ?>
         <?php endif; ?>
         <?php endif; ?>
     </div>
 
     <!-- Recent Analyses -->
     <?php if (!empty($recentAnalyses)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <div class="p-4 border-b border-slate-200 dark:border-slate-700">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Analisi Recenti</h3>
         </div>
@@ -534,7 +462,7 @@
                                 <div class="grid gap-4 sm:grid-cols-2">
                                     <!-- Missing Topics -->
                                     <template x-if="analysisData.gap_analysis.missing_topics?.length > 0">
-                                        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                                        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
                                             <p class="text-xs font-medium text-red-800 dark:text-red-300 uppercase mb-2">Topic Mancanti</p>
                                             <ul class="space-y-1">
                                                 <template x-for="topic in analysisData.gap_analysis.missing_topics" :key="topic">

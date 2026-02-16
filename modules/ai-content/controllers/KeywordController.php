@@ -238,6 +238,11 @@ class KeywordController
         $page = (int) ($_GET['page'] ?? 1);
         $project = null;
 
+        $filters = [
+            'sort' => $_GET['sort'] ?? null,
+            'dir' => $_GET['dir'] ?? null,
+        ];
+
         // Leggi project_id anche da query string se non passato come parametro
         if ($projectId === null && !empty($_GET['project_id'])) {
             $projectId = (int) $_GET['project_id'];
@@ -254,11 +259,11 @@ class KeywordController
                 exit;
             }
 
-            $keywordsData = $this->keyword->allByProject($projectId, $page, 20);
+            $keywordsData = $this->keyword->allByProject($projectId, $page, 20, $filters);
             $title = 'Keywords - ' . $project['name'];
         } else {
             // Lista globale utente (fallback)
-            $keywordsData = $this->keyword->allByUser($user['id'], $page, 20);
+            $keywordsData = $this->keyword->allByUser($user['id'], $page, 20, $filters);
             $title = 'Keywords - AI Content';
         }
 
@@ -267,12 +272,8 @@ class KeywordController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'keywords' => $keywordsData['data'],
-            'pagination' => [
-                'current_page' => $keywordsData['current_page'],
-                'last_page' => $keywordsData['last_page'],
-                'total' => $keywordsData['total'],
-                'per_page' => $keywordsData['per_page']
-            ],
+            'pagination' => $keywordsData,
+            'filters' => $filters,
             'projectId' => $projectId,
             'project' => $project
         ]);
@@ -377,6 +378,48 @@ class KeywordController
 
         header('Location: ' . $redirectUrl);
         exit;
+    }
+
+    /**
+     * Bulk delete keywords
+     * POST /ai-content/projects/{id}/keywords/bulk-delete
+     */
+    public function bulkDelete(?int $projectId = null): void
+    {
+        Middleware::csrf();
+        $user = Auth::user();
+
+        $ids = $_POST['ids'] ?? [];
+        if (empty($ids)) {
+            jsonResponse(['error' => 'Nessuna keyword selezionata'], 400);
+        }
+
+        $articleModel = new Article();
+        $deleted = 0;
+        $skipped = 0;
+
+        foreach ($ids as $id) {
+            $id = (int) $id;
+            $keyword = $this->keyword->find($id, $user['id']);
+            if (!$keyword) continue;
+
+            // Skip keywords with articles
+            $articles = $articleModel->getByKeyword($id);
+            if (!empty($articles)) {
+                $skipped++;
+                continue;
+            }
+
+            $this->keyword->delete($id, $user['id']);
+            $deleted++;
+        }
+
+        $msg = "{$deleted} keyword eliminate";
+        if ($skipped > 0) {
+            $msg .= " ({$skipped} saltate perche hanno articoli associati)";
+        }
+
+        jsonResponse(['success' => true, 'message' => $msg]);
     }
 
     /**

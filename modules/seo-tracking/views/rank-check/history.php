@@ -28,7 +28,7 @@ $currentPage = 'history';
     </div>
 
     <!-- Filtri -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
         <form method="get" class="flex flex-wrap gap-4 items-end">
             <div class="flex-1 min-w-[200px]">
                 <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Filtra Keyword</label>
@@ -73,39 +73,26 @@ $currentPage = 'history';
 
     <!-- Stats -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Check Totali</p>
             <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1"><?= $stats['total_checks'] ?></p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-emerald-200 dark:border-emerald-800 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-emerald-200 dark:border-emerald-800 p-4">
             <p class="text-sm text-emerald-600 dark:text-emerald-400">Trovati</p>
             <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1"><?= $stats['found_count'] ?></p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-blue-200 dark:border-blue-800 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-blue-200 dark:border-blue-800 p-4">
             <p class="text-sm text-blue-600 dark:text-blue-400">Top 10</p>
             <p class="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1"><?= $stats['top10_count'] ?></p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Pos. Media</p>
             <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1"><?= $stats['avg_position'] ? number_format($stats['avg_position'], 1) : '-' ?></p>
         </div>
     </div>
 
-    <!-- Info risultati -->
-    <?php if (!empty($pagination)): ?>
-    <div class="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
-        <span>
-            <?php
-            $start = ($pagination['current_page'] - 1) * $pagination['per_page'] + 1;
-            $end = min($pagination['current_page'] * $pagination['per_page'], $pagination['total_count']);
-            ?>
-            Mostrati <?= $start ?>-<?= $end ?> di <?= number_format($pagination['total_count']) ?> risultati
-        </span>
-    </div>
-    <?php endif; ?>
-
     <!-- Tabella -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <?php if (empty($checks)): ?>
         <div class="px-6 py-12 text-center">
             <svg class="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -120,7 +107,7 @@ $currentPage = 'history';
         <?php else: ?>
         <div class="overflow-x-auto">
             <table class="w-full">
-                <thead class="bg-slate-50 dark:bg-slate-800/50">
+                <thead class="bg-slate-50 dark:bg-slate-700/50">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Keyword</th>
                         <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">SERP</th>
@@ -134,7 +121,7 @@ $currentPage = 'history';
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <?php foreach ($checks as $check): ?>
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                         <td class="px-4 py-3">
                             <div>
                                 <span class="text-sm font-medium text-slate-900 dark:text-white"><?= e($check['keyword']) ?></span>
@@ -203,76 +190,30 @@ $currentPage = 'history';
         </div>
 
         <!-- Paginazione -->
-        <?php if (!empty($pagination) && $pagination['total_pages'] > 1): ?>
-        <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-700">
-            <?php
-            // Costruisci query string mantenendo i filtri
-            $queryParams = [];
-            if (!empty($filters['keyword'])) $queryParams['keyword'] = $filters['keyword'];
-            if (!empty($filters['device'])) $queryParams['device'] = $filters['device'];
-            if (!empty($filters['date_from'])) $queryParams['date_from'] = $filters['date_from'];
-            if (!empty($filters['date_to'])) $queryParams['date_to'] = $filters['date_to'];
-            if (!empty($filters['found_only'])) $queryParams['found_only'] = '1';
-            if (!empty($filters['not_found_only'])) $queryParams['not_found_only'] = '1';
-
-            $baseUrl = url("/seo-tracking/project/{$project['id']}/rank-check/history");
-
-            function buildPageUrl($baseUrl, $queryParams, $page) {
-                $queryParams['page'] = $page;
-                return $baseUrl . '?' . http_build_query($queryParams);
-            }
-            ?>
-            <nav class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <?php if ($pagination['current_page'] > 1): ?>
-                    <a href="<?= buildPageUrl($baseUrl, $queryParams, $pagination['current_page'] - 1) ?>"
-                       class="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-600">
-                        Precedente
-                    </a>
-                    <?php endif; ?>
-                </div>
-
-                <div class="flex items-center gap-1">
-                    <?php
-                    $startPage = max(1, $pagination['current_page'] - 2);
-                    $endPage = min($pagination['total_pages'], $pagination['current_page'] + 2);
-
-                    if ($startPage > 1): ?>
-                        <a href="<?= buildPageUrl($baseUrl, $queryParams, 1) ?>"
-                           class="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md">1</a>
-                        <?php if ($startPage > 2): ?>
-                            <span class="px-2 text-slate-400">...</span>
-                        <?php endif; ?>
-                    <?php endif; ?>
-
-                    <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
-                        <?php if ($i === $pagination['current_page']): ?>
-                            <span class="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md"><?= $i ?></span>
-                        <?php else: ?>
-                            <a href="<?= buildPageUrl($baseUrl, $queryParams, $i) ?>"
-                               class="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md"><?= $i ?></a>
-                        <?php endif; ?>
-                    <?php endfor; ?>
-
-                    <?php if ($endPage < $pagination['total_pages']): ?>
-                        <?php if ($endPage < $pagination['total_pages'] - 1): ?>
-                            <span class="px-2 text-slate-400">...</span>
-                        <?php endif; ?>
-                        <a href="<?= buildPageUrl($baseUrl, $queryParams, $pagination['total_pages']) ?>"
-                           class="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md"><?= $pagination['total_pages'] ?></a>
-                    <?php endif; ?>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <?php if ($pagination['current_page'] < $pagination['total_pages']): ?>
-                    <a href="<?= buildPageUrl($baseUrl, $queryParams, $pagination['current_page'] + 1) ?>"
-                       class="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-600">
-                        Successivo
-                    </a>
-                    <?php endif; ?>
-                </div>
-            </nav>
-        </div>
+        <?php if (!empty($pagination) && $pagination['total_pages'] > 1):
+            $paginationPerPage = $pagination['per_page'] ?? 50;
+            $paginationFrom = ($pagination['current_page'] - 1) * $paginationPerPage + 1;
+            $paginationTo = min($pagination['current_page'] * $paginationPerPage, $pagination['total_count']);
+        ?>
+        <?= \Core\View::partial('components/table-pagination', [
+            'pagination' => [
+                'current_page' => $pagination['current_page'],
+                'last_page' => $pagination['total_pages'],
+                'total' => $pagination['total_count'],
+                'per_page' => $paginationPerPage,
+                'from' => $paginationFrom,
+                'to' => $paginationTo,
+            ],
+            'baseUrl' => url("/seo-tracking/project/{$project['id']}/rank-check/history"),
+            'filters' => array_filter([
+                'keyword' => $filters['keyword'] ?? '',
+                'device' => $filters['device'] ?? '',
+                'date_from' => $filters['date_from'] ?? '',
+                'date_to' => $filters['date_to'] ?? '',
+                'found_only' => !empty($filters['found_only']) ? '1' : '',
+                'not_found_only' => !empty($filters['not_found_only']) ? '1' : '',
+            ], fn($v) => $v !== ''),
+        ]) ?>
         <?php endif; ?>
 
         <?php endif; ?>

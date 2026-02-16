@@ -75,12 +75,12 @@ $lastScanDate = $project['completed_at'] ?? null;
 ?>
 
 <!-- Crawl Control Card con Accordion -->
-<div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"
+<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"
      id="crawl-control"
      x-data="{ expanded: <?= $hasCompletedScans ? 'false' : 'true' ?> }">
 
     <!-- Header (sempre visibile, cliccabile se ha scansioni) -->
-    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between <?= $hasCompletedScans ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors' : '' ?>"
+    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between <?= $hasCompletedScans ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors' : '' ?>"
          <?= $hasCompletedScans ? '@click="expanded = !expanded"' : '' ?>>
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">

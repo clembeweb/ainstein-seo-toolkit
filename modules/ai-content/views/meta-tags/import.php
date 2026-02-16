@@ -17,7 +17,7 @@
     </div>
 
     <!-- Tabs -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <div class="border-b border-slate-200 dark:border-slate-700">
             <nav class="flex -mb-px">
                 <button type="button"

@@ -103,7 +103,7 @@ $baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['
     </div>
 
     <!-- Step Content Container -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 min-h-[500px]">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 min-h-[500px]">
 
         <!-- ========== STEP 1: SERP & Fonti ========== -->
         <div x-show="currentStep === 1" x-cloak class="p-6">

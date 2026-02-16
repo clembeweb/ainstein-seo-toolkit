@@ -12,7 +12,7 @@
 
     <!-- Stats Summary -->
     <?php if (!empty($project['stats'])): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
         <div class="grid grid-cols-4 gap-4 text-center">
             <div>
                 <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($project['stats']['keywords_count'] ?? 0) ?></p>
@@ -35,7 +35,7 @@
     <?php endif; ?>
 
     <!-- Settings Form -->
-    <form action="<?= url('/ai-content/projects/' . $project['id'] . '/update') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700" x-data="{ submitting: false }" @submit="submitting = true">
+    <form action="<?= url('/ai-content/projects/' . $project['id'] . '/update') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700" x-data="{ submitting: false }" @submit="submitting = true">
         <?= csrf_field() ?>
 
         <div class="p-6 space-y-6">
@@ -156,7 +156,7 @@
     </form>
 
     <!-- Danger Zone -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-red-200 dark:border-red-900">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-red-200 dark:border-red-900">
         <div class="p-6">
             <h2 class="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">Zona pericolosa</h2>
             <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">

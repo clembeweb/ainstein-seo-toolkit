@@ -51,11 +51,17 @@ class ProjectController
         $type = $_POST['type'] ?? 'campaign';
 
         if ($type === 'campaign-creator') {
+            $inputMode = $_POST['input_mode'] ?? 'url';
+            if (!in_array($inputMode, ['url', 'brief', 'both'])) {
+                $inputMode = 'url';
+            }
+
             $data = [
                 'name' => trim($_POST['name'] ?? ''),
                 'brief' => trim($_POST['brief'] ?? ''),
                 'campaign_type_gads' => $_POST['campaign_type_gads'] ?? '',
                 'landing_url' => trim($_POST['landing_url'] ?? ''),
+                'input_mode' => $inputMode,
                 'user_id' => $user['id'],
                 'type' => 'campaign-creator',
             ];

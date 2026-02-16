@@ -42,6 +42,11 @@ class ArticleController
         $status = $_GET['status'] ?? null;
         $project = null;
 
+        $filters = [
+            'sort' => $_GET['sort'] ?? null,
+            'dir' => $_GET['dir'] ?? null,
+        ];
+
         // Se projectId specificato, verifica ownership e filtra
         if ($projectId !== null) {
             $projectModel = new Project();
@@ -53,11 +58,11 @@ class ArticleController
                 exit;
             }
 
-            $articlesData = $this->article->allByProject($projectId, $page, 20, $status);
+            $articlesData = $this->article->allByProject($projectId, $page, 20, $status, $filters);
             $stats = $this->article->getStatsByProject($projectId);
             $title = 'Articoli - ' . $project['name'];
         } else {
-            $articlesData = $this->article->allByUser($user['id'], $page, 20, $status);
+            $articlesData = $this->article->allByUser($user['id'], $page, 20, $status, $filters);
             $stats = $this->article->getStats($user['id']);
             $title = 'Articoli - AI Content';
         }
@@ -69,17 +74,13 @@ class ArticleController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'articles' => $articlesData['data'],
-            'pagination' => [
-                'current_page' => $articlesData['current_page'],
-                'last_page' => $articlesData['last_page'],
-                'total' => $articlesData['total'],
-                'per_page' => $articlesData['per_page']
-            ],
+            'pagination' => $articlesData,
             'currentStatus' => $status,
             'stats' => $stats,
             'wpSites' => $wpSites,
             'project' => $project,
-            'projectId' => $projectId
+            'projectId' => $projectId,
+            'filters' => $filters
         ]);
     }
 

@@ -1,27 +1,43 @@
-<?php $currentPage = 'internal-links'; ?>
+<?php
+$currentPage = 'internal-links';
+include __DIR__ . '/../../../../shared/views/components/table-helpers.php';
+$ilBaseUrl = url('/ai-content/projects/' . $project['id'] . '/internal-links');
+$currentSort = $_GET['sort'] ?? 'created_at';
+$currentDir = $_GET['dir'] ?? 'desc';
+$ilSortFilters = array_filter([
+    'status' => $filters['status'] ?? '',
+    'q' => $filters['search'] ?? '',
+], fn($v) => $v !== '' && $v !== null);
+$ilPaginationFilters = array_filter([
+    'status' => $filters['status'] ?? '',
+    'q' => $filters['search'] ?? '',
+    'sort' => $_GET['sort'] ?? '',
+    'dir' => $_GET['dir'] ?? '',
+], fn($v) => $v !== '' && $v !== null);
+?>
 <?php include __DIR__ . '/../partials/project-nav.php'; ?>
 
 <div class="space-y-6" x-data="linksManager()">
 
     <!-- Stats Summary -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 text-center">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
             <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($stats['total'] ?? 0) ?></p>
             <p class="text-xs text-slate-500 dark:text-slate-400">Totale URL</p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 text-center">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
             <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400"><?= number_format($stats['completed'] ?? 0) ?></p>
             <p class="text-xs text-slate-500 dark:text-slate-400">Pronte</p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 text-center">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
             <p class="text-2xl font-bold text-blue-600 dark:text-blue-400"><?= number_format($stats['pending'] ?? 0) ?></p>
             <p class="text-xs text-slate-500 dark:text-slate-400">Da Elaborare</p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 text-center">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
             <p class="text-2xl font-bold text-primary-600 dark:text-primary-400"><?= number_format($stats['active'] ?? 0) ?></p>
             <p class="text-xs text-slate-500 dark:text-slate-400">Attive</p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 text-center">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
             <p class="text-2xl font-bold text-red-600 dark:text-red-400"><?= number_format($stats['errors'] ?? 0) ?></p>
             <p class="text-xs text-slate-500 dark:text-slate-400">Errori</p>
         </div>
@@ -90,7 +106,7 @@
     </div>
 
     <!-- Main Table -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <!-- Filters -->
         <?php
         $baseFilterUrl = '/ai-content/projects/' . $project['id'] . '/internal-links';
@@ -156,16 +172,14 @@
 
         <!-- Table -->
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+            <table class="w-full">
                 <thead class="bg-slate-50 dark:bg-slate-700/50">
                     <tr>
-                        <th class="px-4 py-3 w-12">
-                            <input type="checkbox" @change="toggleAll($event)" class="rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
-                        </th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">URL / Titolo</th>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-24">Stato</th>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-24">Attivo</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-32">Azioni</th>
+                        <?= table_checkbox_header() ?>
+                        <?= table_sort_header('URL / Titolo', 'url', $currentSort, $currentDir, $ilBaseUrl, $ilSortFilters) ?>
+                        <?= table_sort_header('Stato', 'scrape_status', $currentSort, $currentDir, $ilBaseUrl, $ilSortFilters) ?>
+                        <?= table_header('Attivo', 'center') ?>
+                        <?= table_header('Azioni', 'right') ?>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
@@ -184,7 +198,7 @@
                             default => $link['scrape_status']
                         };
                     ?>
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                         <td class="px-4 py-3">
                             <input type="checkbox" value="<?= $link['id'] ?>" @change="toggleSelect(<?= $link['id'] ?>)" :checked="selectedIds.includes(<?= $link['id'] ?>)" class="rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
                         </td>
@@ -243,65 +257,31 @@
             </table>
         </div>
 
-        <!-- Footer with Pagination -->
-        <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <!-- Info -->
-                <p class="text-sm text-slate-500 dark:text-slate-400">
-                    <?php if ($pagination['total'] > 0): ?>
-                    Mostrati <?= $pagination['from'] ?>-<?= $pagination['to'] ?> di <?= number_format($pagination['total']) ?> link
-                    <?php else: ?>
-                    Nessun link trovato
-                    <?php endif; ?>
-                </p>
+        <!-- Pagination -->
+        <?= \Core\View::partial('components/table-pagination', [
+            'pagination' => $pagination,
+            'baseUrl' => $ilBaseUrl,
+            'filters' => $ilPaginationFilters,
+        ]) ?>
 
-                <!-- Pagination -->
-                <?php if ($pagination['last_page'] > 1): ?>
-                <?php
-                $queryParams = [];
-                if (!empty($filters['status'])) $queryParams['status'] = $filters['status'];
-                if (!empty($filters['search'])) $queryParams['q'] = $filters['search'];
-                $queryString = http_build_query($queryParams);
-                ?>
-                <div class="flex items-center gap-2">
-                    <?php if ($pagination['current_page'] > 1): ?>
-                    <a href="<?= url($baseFilterUrl . '?' . ($queryString ? $queryString . '&' : '') . 'page=' . ($pagination['current_page'] - 1)) ?>"
-                       class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
-                        &larr; Precedente
-                    </a>
-                    <?php endif; ?>
-
-                    <span class="px-3 py-1.5 text-sm text-slate-500 dark:text-slate-400">
-                        Pagina <?= $pagination['current_page'] ?> di <?= $pagination['last_page'] ?>
-                    </span>
-
-                    <?php if ($pagination['current_page'] < $pagination['last_page']): ?>
-                    <a href="<?= url($baseFilterUrl . '?' . ($queryString ? $queryString . '&' : '') . 'page=' . ($pagination['current_page'] + 1)) ?>"
-                       class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
-                        Successiva &rarr;
-                    </a>
-                    <?php endif; ?>
-                </div>
-                <?php endif; ?>
-
-                <!-- Actions -->
-                <div class="flex items-center gap-2">
-                    <?php if (($stats['errors'] ?? 0) > 0): ?>
-                    <form action="<?= url('/ai-content/projects/' . $project['id'] . '/internal-links/reset-errors') ?>" method="POST" class="inline">
-                        <?= csrf_field() ?>
-                        <button type="submit" class="px-3 py-1.5 rounded text-sm text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/30">
-                            Reset Errori
-                        </button>
-                    </form>
-                    <?php endif; ?>
-                    <?php if (($stats['total'] ?? 0) > 0): ?>
-                    <button @click="confirmClear()" class="px-3 py-1.5 rounded text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30">
-                        Svuota Pool
-                    </button>
-                    <?php endif; ?>
-                </div>
-            </div>
+        <!-- Footer Actions -->
+        <?php if (($stats['errors'] ?? 0) > 0 || ($stats['total'] ?? 0) > 0): ?>
+        <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-2">
+            <?php if (($stats['errors'] ?? 0) > 0): ?>
+            <form action="<?= url('/ai-content/projects/' . $project['id'] . '/internal-links/reset-errors') ?>" method="POST" class="inline">
+                <?= csrf_field() ?>
+                <button type="submit" class="px-3 py-1.5 rounded-lg text-sm text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/30">
+                    Reset Errori
+                </button>
+            </form>
+            <?php endif; ?>
+            <?php if (($stats['total'] ?? 0) > 0): ?>
+            <button @click="confirmClear()" class="px-3 py-1.5 rounded-lg text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30">
+                Svuota Pool
+            </button>
+            <?php endif; ?>
         </div>
+        <?php endif; ?>
         <?php endif; ?>
     </div>
 

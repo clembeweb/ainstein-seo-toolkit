@@ -102,13 +102,18 @@ class InternalLinksPool
         $countStmt->execute($params);
         $total = (int) $countStmt->fetchColumn();
 
+        // Sorting
+        $allowedSort = ['url', 'title', 'scrape_status', 'is_active', 'created_at'];
+        $sortBy = in_array($filters['sort'] ?? '', $allowedSort) ? $filters['sort'] : 'created_at';
+        $sortDir = (strtolower($filters['dir'] ?? '') === 'asc') ? 'ASC' : 'DESC';
+
         // Fetch con LIMIT/OFFSET
         $params[] = $perPage;
         $params[] = $offset;
 
         $sql = "SELECT * FROM {$this->table}
                 WHERE {$whereClause}
-                ORDER BY created_at DESC
+                ORDER BY {$sortBy} {$sortDir}
                 LIMIT ? OFFSET ?";
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);

@@ -18,7 +18,7 @@
         <!-- Main Panel -->
         <div class="lg:col-span-2 space-y-6">
             <!-- Progress Card -->
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Stato Analisi</h3>
                     <span id="analysis-status" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300">
@@ -69,7 +69,7 @@
             </div>
 
             <!-- Score Distribution -->
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Distribuzione Score</h3>
                 <div class="space-y-3">
                     <?php
@@ -104,7 +104,7 @@
             </div>
 
             <!-- Analysis Log -->
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
                 <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Log Analisi</h3>
                     <button type="button" id="btn-clear-log" class="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700">Pulisci</button>
@@ -118,7 +118,7 @@
         <!-- Sidebar -->
         <div class="space-y-6">
             <!-- Settings -->
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Impostazioni</h3>
                 <div class="space-y-4">
                     <div>
@@ -136,7 +136,7 @@
             </div>
 
             <!-- Credits Info -->
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Crediti</h3>
                 <div class="space-y-3">
                     <div class="flex justify-between">
@@ -155,7 +155,7 @@
             </div>
 
             <!-- What AI Analyzes -->
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Cosa Analizza</h3>
                 <ul class="space-y-2 text-sm text-slate-600 dark:text-slate-400">
                     <li class="flex items-center">

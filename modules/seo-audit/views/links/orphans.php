@@ -38,31 +38,31 @@ $basePath = '/seo-audit/project/' . ($project['id'] ?? 0) . '/links';
 <?php else: ?>
 
 <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+    <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
         <h3 class="font-semibold text-slate-900 dark:text-white"><?= count($orphans) ?> pagine orfane trovate</h3>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="bg-slate-50 dark:bg-slate-700/50">
                 <tr>
-                    <th class="px-6 py-3 text-left font-medium text-slate-500 dark:text-slate-400">URL</th>
-                    <th class="px-6 py-3 text-left font-medium text-slate-500 dark:text-slate-400">Titolo</th>
-                    <th class="px-6 py-3 text-center font-medium text-slate-500 dark:text-slate-400">Link Uscenti</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">URL</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Titolo</th>
+                    <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Link Uscenti</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                 <?php foreach ($orphans as $orphan): ?>
-                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                    <td class="px-6 py-3">
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <td class="px-4 py-3">
                         <a href="<?= url('/seo-audit/project/' . ($project['id'] ?? 0) . '/page/' . $orphan['id']) ?>"
                            class="text-primary-600 dark:text-primary-400 hover:underline truncate block max-w-md" title="<?= e($orphan['url']) ?>">
                             <?= e(strlen($orphan['url']) > 60 ? '...' . substr($orphan['url'], -57) : $orphan['url']) ?>
                         </a>
                     </td>
-                    <td class="px-6 py-3 text-slate-600 dark:text-slate-400">
+                    <td class="px-4 py-3 text-slate-600 dark:text-slate-400">
                         <?= e($orphan['title'] ?: '-') ?>
                     </td>
-                    <td class="px-6 py-3 text-center text-slate-600 dark:text-slate-400">
+                    <td class="px-4 py-3 text-center text-slate-600 dark:text-slate-400">
                         <?= $orphan['outgoing_links'] ?>
                     </td>
                 </tr>

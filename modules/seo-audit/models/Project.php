@@ -293,26 +293,6 @@ class Project
     }
 
     /**
-     * Verifica se GSC è connesso
-     */
-    public function isGscConnected(int $projectId): bool
-    {
-        $project = $this->find($projectId);
-        return $project && (bool) $project['gsc_connected'];
-    }
-
-    /**
-     * Aggiorna stato GSC
-     */
-    public function updateGscStatus(int $projectId, bool $connected, ?string $property = null): void
-    {
-        $this->update($projectId, [
-            'gsc_connected' => $connected,
-            'gsc_property' => $property,
-        ]);
-    }
-
-    /**
      * Normalizza URL base
      */
     public static function normalizeBaseUrl(string $url): string

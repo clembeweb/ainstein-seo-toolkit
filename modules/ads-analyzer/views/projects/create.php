@@ -50,7 +50,7 @@
                     <h3 class="font-semibold text-slate-900 dark:text-white">Crea Campagna AI</h3>
                     <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Genera da zero una campagna completa (Search o PMax) con keyword, copy ed estensioni.</p>
                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 mt-2">
-                        9 crediti totali
+                        8-9 crediti totali
                     </span>
                 </div>
             </div>
@@ -59,7 +59,7 @@
 
     <!-- Form Analisi Campagne -->
     <div x-show="projectType === 'campaign'" x-transition x-cloak>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
             <form action="<?= url('/ads-analyzer/projects/store') ?>" method="POST" @submit="submitting = true">
                 <?= csrf_field() ?>
                 <input type="hidden" name="type" value="campaign">
@@ -117,11 +117,15 @@
 
     <!-- Form Campaign Creator -->
     <div x-show="projectType === 'campaign-creator'" x-transition x-cloak>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
             <form action="<?= url('/ads-analyzer/projects/store') ?>" method="POST" @submit="submitting = true"
-                  x-data="{ campaignType: '<?= e($_SESSION['old_input']['campaign_type_gads'] ?? '') ?>' }">
+                  x-data="{
+                      campaignType: '<?= e($_SESSION['old_input']['campaign_type_gads'] ?? '') ?>',
+                      inputMode: '<?= e($_SESSION['old_input']['input_mode'] ?? 'url') ?>'
+                  }">
                 <?= csrf_field() ?>
                 <input type="hidden" name="type" value="campaign-creator">
+                <input type="hidden" name="input_mode" :value="inputMode">
 
                 <div class="p-6 space-y-5">
                     <!-- Nome -->
@@ -157,29 +161,72 @@
                         <input type="hidden" name="campaign_type_gads" :value="campaignType">
                     </div>
 
-                    <!-- Landing URL -->
+                    <!-- Modalita input -->
                     <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            Cosa hai a disposizione? <span class="text-red-500">*</span>
+                        </label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <button type="button" @click="inputMode = 'url'"
+                                    :class="inputMode === 'url' ? 'ring-2 ring-amber-500 border-amber-500 bg-amber-50 dark:bg-amber-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-amber-300'"
+                                    class="border rounded-lg p-3 text-center transition-all">
+                                <svg class="w-5 h-5 mx-auto mb-1 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                                </svg>
+                                <div class="font-medium text-slate-900 dark:text-white text-sm">Ho una URL</div>
+                                <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Landing page esistente</div>
+                            </button>
+                            <button type="button" @click="inputMode = 'brief'"
+                                    :class="inputMode === 'brief' ? 'ring-2 ring-amber-500 border-amber-500 bg-amber-50 dark:bg-amber-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-amber-300'"
+                                    class="border rounded-lg p-3 text-center transition-all">
+                                <svg class="w-5 h-5 mx-auto mb-1 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                <div class="font-medium text-slate-900 dark:text-white text-sm">Ho un brief</div>
+                                <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Descrizione testuale</div>
+                            </button>
+                            <button type="button" @click="inputMode = 'both'"
+                                    :class="inputMode === 'both' ? 'ring-2 ring-amber-500 border-amber-500 bg-amber-50 dark:bg-amber-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-amber-300'"
+                                    class="border rounded-lg p-3 text-center transition-all">
+                                <svg class="w-5 h-5 mx-auto mb-1 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                </svg>
+                                <div class="font-medium text-slate-900 dark:text-white text-sm">Entrambi</div>
+                                <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">URL + brief manuale</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Landing URL (visibile se url o both) -->
+                    <div x-show="inputMode === 'url' || inputMode === 'both'" x-transition>
                         <label for="landing-url" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                             URL Landing Page <span class="text-red-500">*</span>
                         </label>
-                        <input type="url" id="landing-url" name="landing_url" required
+                        <input type="url" id="landing-url"
+                               :name="inputMode !== 'brief' ? 'landing_url' : null"
+                               :required="inputMode !== 'brief'"
                                value="<?= e($_SESSION['old_input']['landing_url'] ?? '') ?>"
                                placeholder="https://www.esempio.it/landing-page"
                                class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
-                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">La pagina verra analizzata per estrarre contesto e generare keyword pertinenti</p>
+                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1" x-show="inputMode === 'url'">La pagina verra analizzata e l'AI generera automaticamente il brief della campagna</p>
+                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1" x-show="inputMode === 'both'">La pagina verra analizzata per estrarre contesto aggiuntivo al brief</p>
                     </div>
 
-                    <!-- Brief -->
-                    <div>
+                    <!-- Brief (visibile se brief o both) -->
+                    <div x-show="inputMode === 'brief' || inputMode === 'both'" x-transition>
                         <label for="brief" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                             Brief campagna <span class="text-red-500">*</span>
                         </label>
-                        <textarea id="brief" name="brief" rows="4" required minlength="20"
+                        <textarea id="brief"
+                                  :name="inputMode !== 'url' ? 'brief' : null"
+                                  :required="inputMode !== 'url'"
+                                  rows="4" minlength="20"
                                   placeholder="Descrivi l'obiettivo della campagna, il target, i prodotti/servizi da promuovere, il tono di voce desiderato..."
                                   class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"><?= e($_SESSION['old_input']['brief'] ?? '') ?></textarea>
                         <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Minimo 20 caratteri. Piu dettagli fornisci, migliore sara il risultato.</p>
                     </div>
 
+                    <!-- Info box dinamico -->
                     <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
                         <div class="flex gap-3">
                             <svg class="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -187,11 +234,29 @@
                             </svg>
                             <div class="text-sm text-amber-700 dark:text-amber-300">
                                 <p class="font-medium mb-1">Come funziona</p>
-                                <ol class="list-decimal list-inside space-y-1">
-                                    <li>Analisi automatica della landing page (1 credito)</li>
+
+                                <!-- URL mode -->
+                                <ol x-show="inputMode === 'url'" class="list-decimal list-inside space-y-1">
+                                    <li>Scraping e analisi della landing page (1 credito)</li>
+                                    <li>Generazione automatica del brief dall'AI</li>
                                     <li>Keyword research AI con ad group e negative (3 crediti)</li>
                                     <li>Generazione completa: copy, estensioni, keyword (5 crediti)</li>
-                                    <li>Copia/incolla in piattaforma o esporta CSV per Google Ads Editor</li>
+                                    <li>Totale: <strong>9 crediti</strong></li>
+                                </ol>
+
+                                <!-- Brief mode -->
+                                <ol x-show="inputMode === 'brief'" class="list-decimal list-inside space-y-1">
+                                    <li>Keyword research AI dal brief fornito (3 crediti)</li>
+                                    <li>Generazione completa: copy, estensioni, keyword (5 crediti)</li>
+                                    <li>Totale: <strong>8 crediti</strong></li>
+                                </ol>
+
+                                <!-- Both mode -->
+                                <ol x-show="inputMode === 'both'" class="list-decimal list-inside space-y-1">
+                                    <li>Scraping e analisi della landing page (1 credito)</li>
+                                    <li>Keyword research AI con brief + contesto landing (3 crediti)</li>
+                                    <li>Generazione completa: copy, estensioni, keyword (5 crediti)</li>
+                                    <li>Totale: <strong>9 crediti</strong></li>
                                 </ol>
                             </div>
                         </div>

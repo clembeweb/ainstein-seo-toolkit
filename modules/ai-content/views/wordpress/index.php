@@ -40,7 +40,7 @@
 
     <?php if (empty($sites)): ?>
     <!-- Empty State -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-12">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12">
         <div class="max-w-md mx-auto text-center">
             <div class="mx-auto h-20 w-20 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mb-6">
                 <svg class="h-10 w-10 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="currentColor">
@@ -101,7 +101,7 @@
     <!-- Sites Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         <?php foreach ($sites as $site): ?>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"
              x-data="{ testing: false, syncing: false }">
             <!-- Card Header -->
             <div class="p-5 border-b border-slate-200 dark:border-slate-700">

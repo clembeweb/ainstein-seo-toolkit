@@ -10,7 +10,7 @@
     </div>
 
     <!-- Form -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <form action="<?= url('/internal-links/projects') ?>" method="POST" class="p-6 space-y-6">
             <?= csrf_field() ?>
 

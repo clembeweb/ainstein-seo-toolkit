@@ -49,7 +49,7 @@
     <?php endif; ?>
 
     <!-- Process Status Panel (hidden by default) -->
-    <div id="process-panel" class="hidden bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div id="process-panel" class="hidden bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center">
                 <div id="process-spinner" class="mr-3">
@@ -124,7 +124,7 @@
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- In Coda -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-slate-500 dark:text-slate-400">In Coda</p>
@@ -142,7 +142,7 @@
         </div>
 
         <!-- Completate Oggi -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Completate Oggi</p>
@@ -160,7 +160,7 @@
         </div>
 
         <!-- Prossima Schedulata -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Prossima</p>
@@ -184,7 +184,7 @@
     <!-- Main Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Coda Pending -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
             <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
                 <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Coda</h2>
                 <a href="<?= url('/ai-content/projects/' . $project['id'] . '/auto/queue') ?>" class="text-sm text-primary-600 dark:text-primary-400 hover:underline">
@@ -224,7 +224,7 @@
         </div>
 
         <!-- Articoli Recenti -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
             <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                 <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Articoli Recenti</h2>
             </div>
@@ -263,7 +263,7 @@
 
     <!-- Errori Recenti -->
     <?php if (!empty($errorItems)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-red-200 dark:border-red-800">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-red-200 dark:border-red-800">
         <div class="px-6 py-4 border-b border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 rounded-t-lg">
             <div class="flex items-center">
                 <svg class="w-5 h-5 text-red-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

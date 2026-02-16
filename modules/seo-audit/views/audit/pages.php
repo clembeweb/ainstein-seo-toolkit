@@ -191,7 +191,7 @@ function getStatusColorClass($code) {
 
     <!-- Pages Table -->
     <?php if (empty($pages)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-12 text-center">
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-12 text-center">
         <div class="mx-auto h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mb-4">
             <svg class="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -207,7 +207,7 @@ function getStatusColorClass($code) {
         </p>
     </div>
     <?php else: ?>
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead>
@@ -215,21 +215,21 @@ function getStatusColorClass($code) {
                         <th class="px-4 py-3 text-left w-10">
                             <input type="checkbox" @change="toggleAll($event)" :checked="allSelected" class="rounded border-slate-300 text-primary-600 focus:ring-primary-500">
                         </th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">URL</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-24">Stato</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-20">HTTP</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Title</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-20">Issues</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-24">Azione</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">URL</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-24">Stato</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-20">HTTP</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Title</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-20">Issues</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-24">Azione</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <?php foreach ($pages as $page): ?>
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                        <td class="px-4 py-4">
+                        <td class="px-4 py-3">
                             <input type="checkbox" value="<?= $page['id'] ?>" x-model="selectedIds" class="rounded border-slate-300 text-primary-600 focus:ring-primary-500">
                         </td>
-                        <td class="px-4 py-4">
+                        <td class="px-4 py-3">
                             <?php if ($page['status'] === 'crawled'): ?>
                             <a href="<?= url('/seo-audit/project/' . $project['id'] . '/page/' . $page['id']) ?>" class="text-sm text-slate-900 dark:text-white hover:text-primary-600 max-w-xs truncate block" title="<?= e($page['url']) ?>">
                                 <?= e(strlen($page['url']) > 60 ? '...' . substr($page['url'], -57) : $page['url']) ?>
@@ -240,7 +240,7 @@ function getStatusColorClass($code) {
                             </span>
                             <?php endif; ?>
                         </td>
-                        <td class="px-4 py-4 text-center">
+                        <td class="px-4 py-3 text-center">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $pageStatusColors[$page['status'] ?? 'pending'] ?>">
                                 <?php
                                 $statusLabels = ['pending' => 'In Attesa', 'crawled' => 'Analizzata', 'error' => 'Errore'];
@@ -248,7 +248,7 @@ function getStatusColorClass($code) {
                                 ?>
                             </span>
                         </td>
-                        <td class="px-4 py-4 text-center">
+                        <td class="px-4 py-3 text-center">
                             <?php if ($page['status_code']): ?>
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= getStatusColorClass($page['status_code']) ?>">
                                 <?= $page['status_code'] ?>
@@ -257,12 +257,12 @@ function getStatusColorClass($code) {
                             <span class="text-slate-400">-</span>
                             <?php endif; ?>
                         </td>
-                        <td class="px-4 py-4">
+                        <td class="px-4 py-3">
                             <p class="text-sm text-slate-600 dark:text-slate-300 max-w-xs truncate" title="<?= e($page['title'] ?? '') ?>">
                                 <?= e($page['title'] ? (strlen($page['title']) > 40 ? substr($page['title'], 0, 40) . '...' : $page['title']) : '-') ?>
                             </p>
                         </td>
-                        <td class="px-4 py-4 text-center">
+                        <td class="px-4 py-3 text-center">
                             <?php if (($page['issues_count'] ?? 0) > 0): ?>
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300">
                                 <?= $page['issues_count'] ?>
@@ -277,7 +277,7 @@ function getStatusColorClass($code) {
                             <span class="text-slate-400">-</span>
                             <?php endif; ?>
                         </td>
-                        <td class="px-4 py-4 text-right">
+                        <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-2">
                                 <?php if ($page['status'] === 'crawled'): ?>
                                 <a href="<?= url('/seo-audit/project/' . $project['id'] . '/page/' . $page['id']) ?>" class="text-primary-600 dark:text-primary-400 hover:text-primary-700 text-sm font-medium">
@@ -297,31 +297,11 @@ function getStatusColorClass($code) {
             </table>
         </div>
 
-        <!-- Pagination -->
-        <?php if ($pagination['last_page'] > 1): ?>
-        <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
-            <p class="text-sm text-slate-500 dark:text-slate-400">
-                Mostrando <?= $pagination['from'] ?>-<?= $pagination['to'] ?> di <?= $pagination['total'] ?>
-            </p>
-            <div class="flex items-center gap-2">
-                <?php if ($pagination['current_page'] > 1): ?>
-                <a href="<?= url('/seo-audit/project/' . $project['id'] . '/pages?' . http_build_query(array_merge($filters, ['page' => $pagination['current_page'] - 1]))) ?>"
-                   class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm hover:bg-slate-50 dark:hover:bg-slate-700">
-                    Precedente
-                </a>
-                <?php endif; ?>
-                <span class="px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400">
-                    Pagina <?= $pagination['current_page'] ?> di <?= $pagination['last_page'] ?>
-                </span>
-                <?php if ($pagination['current_page'] < $pagination['last_page']): ?>
-                <a href="<?= url('/seo-audit/project/' . $project['id'] . '/pages?' . http_build_query(array_merge($filters, ['page' => $pagination['current_page'] + 1]))) ?>"
-                   class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm hover:bg-slate-50 dark:hover:bg-slate-700">
-                    Successiva
-                </a>
-                <?php endif; ?>
-            </div>
-        </div>
-        <?php endif; ?>
+        <?= \Core\View::partial('components/table-pagination', [
+            'pagination' => $pagination,
+            'baseUrl' => url('/seo-audit/project/' . $project['id'] . '/pages'),
+            'filters' => $filters,
+        ]) ?>
     </div>
     <?php endif; ?>
 

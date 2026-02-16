@@ -14,7 +14,7 @@
     </div>
 
     <!-- Edit Form -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <div class="p-6 border-b border-slate-200 dark:border-slate-700">
             <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Modifica Link</h2>
             <a href="<?= e($link['url']) ?>" target="_blank" class="text-sm text-primary-600 dark:text-primary-400 hover:underline break-all">

@@ -17,10 +17,6 @@ CREATE TABLE IF NOT EXISTS sa_projects (
     issues_count INT DEFAULT 0,
     health_score INT DEFAULT NULL,
 
-    -- GSC link
-    gsc_connected BOOLEAN DEFAULT FALSE,
-    gsc_property VARCHAR(500) NULL,
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     completed_at TIMESTAMP NULL,
@@ -102,8 +98,7 @@ CREATE TABLE IF NOT EXISTS sa_issues (
     affected_element TEXT,
     recommendation TEXT,
 
-    -- Source: 'crawler' o 'gsc'
-    source ENUM('crawler', 'gsc') DEFAULT 'crawler',
+    source VARCHAR(20) DEFAULT 'crawler',
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -112,21 +107,6 @@ CREATE TABLE IF NOT EXISTS sa_issues (
     INDEX idx_project_category (project_id, category),
     INDEX idx_project_severity (project_id, severity),
     INDEX idx_project_type (project_id, issue_type)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Analisi AI
-CREATE TABLE IF NOT EXISTS sa_ai_analyses (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    project_id INT NOT NULL,
-    type ENUM('overview', 'category') NOT NULL,
-    category VARCHAR(50) NULL,
-    content LONGTEXT NOT NULL,
-    credits_used INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (project_id) REFERENCES sa_projects(id) ON DELETE CASCADE,
-    INDEX idx_project_type (project_id, type),
-    UNIQUE KEY unique_project_category (project_id, type, category)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Configurazione robots.txt e sitemap
@@ -148,171 +128,68 @@ CREATE TABLE IF NOT EXISTS sa_site_config (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================
--- TABELLE GOOGLE SEARCH CONSOLE
+-- PIANO D'AZIONE AI
 -- =============================================
 
--- Connessioni OAuth GSC (per progetto)
-CREATE TABLE IF NOT EXISTS sa_gsc_connections (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    project_id INT NOT NULL UNIQUE,
-    user_id INT NOT NULL,
+-- Piano d'Azione
+CREATE TABLE IF NOT EXISTS sa_action_plans (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    project_id INT NOT NULL,
+    session_id INT NULL,
 
-    -- OAuth tokens (CRIPTATI con openssl_encrypt)
-    access_token TEXT NOT NULL,
-    refresh_token TEXT NOT NULL,
-    token_expires_at TIMESTAMP NOT NULL,
-
-    -- Proprietà selezionata
-    property_url VARCHAR(500) NOT NULL,
-    property_type ENUM('URL_PREFIX', 'DOMAIN') NOT NULL,
+    -- Metriche piano
+    total_pages INT DEFAULT 0,
+    total_fixes INT DEFAULT 0,
+    fixes_completed INT DEFAULT 0,
+    health_current INT DEFAULT 0,
+    health_expected INT DEFAULT 0,
+    estimated_time_minutes INT DEFAULT 0,
 
     -- Stato
-    is_active BOOLEAN DEFAULT TRUE,
-    last_sync_at TIMESTAMP NULL,
+    status ENUM('generating', 'ready', 'in_progress', 'completed') DEFAULT 'generating',
 
+    -- Meta
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (project_id) REFERENCES sa_projects(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    UNIQUE KEY unique_project_session (project_id, session_id),
+    INDEX idx_project_status (project_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Performance data (query/pagine)
-CREATE TABLE IF NOT EXISTS sa_gsc_performance (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+-- Fix per Pagina
+CREATE TABLE IF NOT EXISTS sa_page_fixes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    plan_id INT NOT NULL,
     project_id INT NOT NULL,
+    page_id INT NOT NULL,
+    issue_id INT NOT NULL,
 
-    -- Dimensioni
-    date DATE NOT NULL,
-    query VARCHAR(500) NULL,
-    page VARCHAR(2000) NULL,
-    device ENUM('DESKTOP', 'MOBILE', 'TABLET') NULL,
-    country VARCHAR(10) NULL,
+    -- Fix generato
+    fix_code TEXT NULL,
+    fix_explanation TEXT NOT NULL,
 
     -- Metriche
-    clicks INT DEFAULT 0,
-    impressions INT DEFAULT 0,
-    ctr DECIMAL(5,4) DEFAULT 0,
-    position DECIMAL(5,2) DEFAULT 0,
+    priority TINYINT DEFAULT 5,
+    difficulty ENUM('facile', 'medio', 'difficile') DEFAULT 'medio',
+    time_estimate_minutes INT DEFAULT 5,
+    impact_points INT DEFAULT 1,
+    step_order TINYINT DEFAULT 1,
 
+    -- Stato
+    is_completed BOOLEAN DEFAULT FALSE,
+    completed_at TIMESTAMP NULL,
+
+    -- Meta
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
+    FOREIGN KEY (plan_id) REFERENCES sa_action_plans(id) ON DELETE CASCADE,
     FOREIGN KEY (project_id) REFERENCES sa_projects(id) ON DELETE CASCADE,
-    INDEX idx_project_date (project_id, date),
-    INDEX idx_project_page (project_id, page(255)),
-    INDEX idx_project_query (project_id, query(255))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Copertura indice
-CREATE TABLE IF NOT EXISTS sa_gsc_coverage (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    project_id INT NOT NULL,
-
-    url VARCHAR(2000) NOT NULL,
-
-    -- Stato indicizzazione
-    coverage_state ENUM(
-        'SUBMITTED_AND_INDEXED',
-        'DUPLICATE_WITHOUT_CANONICAL',
-        'DUPLICATE_GOOGLE_CHOSE_DIFFERENT_CANONICAL',
-        'NOT_FOUND_404',
-        'SOFT_404',
-        'REDIRECT',
-        'BLOCKED_BY_ROBOTS_TXT',
-        'BLOCKED_BY_TAG',
-        'CRAWLED_NOT_INDEXED',
-        'DISCOVERED_NOT_INDEXED',
-        'OTHER'
-    ) NOT NULL,
-
-    -- Dettagli
-    verdict ENUM('PASS', 'NEUTRAL', 'FAIL') NOT NULL,
-    robots_txt_state VARCHAR(50),
-    indexing_state VARCHAR(50),
-    page_fetch_state VARCHAR(50),
-    google_canonical VARCHAR(2000),
-    user_canonical VARCHAR(2000),
-
-    last_crawl_time TIMESTAMP NULL,
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (project_id) REFERENCES sa_projects(id) ON DELETE CASCADE,
-    INDEX idx_project_state (project_id, coverage_state),
-    INDEX idx_project_url (project_id, url(255))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Core Web Vitals
-CREATE TABLE IF NOT EXISTS sa_gsc_core_web_vitals (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    project_id INT NOT NULL,
-
-    -- Tipo
-    form_factor ENUM('PHONE', 'DESKTOP') NOT NULL,
-    metric_type ENUM('LCP', 'INP', 'CLS') NOT NULL,
-
-    -- Valori aggregati
-    good_percent DECIMAL(5,2) DEFAULT 0,
-    needs_improvement_percent DECIMAL(5,2) DEFAULT 0,
-    poor_percent DECIMAL(5,2) DEFAULT 0,
-
-    -- Percentile 75
-    p75_value DECIMAL(10,3),
-    p75_unit VARCHAR(20),
-
-    -- Periodo
-    date_range_start DATE,
-    date_range_end DATE,
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (project_id) REFERENCES sa_projects(id) ON DELETE CASCADE,
-    INDEX idx_project_metric (project_id, form_factor, metric_type)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Mobile Usability Issues
-CREATE TABLE IF NOT EXISTS sa_gsc_mobile_usability (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    project_id INT NOT NULL,
-
-    url VARCHAR(2000) NOT NULL,
-
-    -- Issue type
-    issue_type ENUM(
-        'MOBILE_FRIENDLY',
-        'NOT_MOBILE_FRIENDLY',
-        'USES_INCOMPATIBLE_PLUGINS',
-        'CONFIGURE_VIEWPORT',
-        'FIXED_WIDTH_VIEWPORT',
-        'TEXT_TOO_SMALL_TO_READ',
-        'CONTENT_WIDER_THAN_SCREEN',
-        'CLICKABLE_ELEMENTS_TOO_CLOSE_TOGETHER'
-    ) NOT NULL,
-
-    severity ENUM('warning', 'critical') NOT NULL,
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (project_id) REFERENCES sa_projects(id) ON DELETE CASCADE,
-    INDEX idx_project_issue (project_id, issue_type)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Sync log
-CREATE TABLE IF NOT EXISTS sa_gsc_sync_log (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    project_id INT NOT NULL,
-
-    sync_type ENUM('performance', 'coverage', 'cwv', 'mobile') NOT NULL,
-    date_range_start DATE,
-    date_range_end DATE,
-    records_imported INT DEFAULT 0,
-    status ENUM('success', 'failed', 'partial') NOT NULL,
-    error_message TEXT NULL,
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (project_id) REFERENCES sa_projects(id) ON DELETE CASCADE,
-    INDEX idx_project_type (project_id, sync_type)
+    FOREIGN KEY (page_id) REFERENCES sa_pages(id) ON DELETE CASCADE,
+    FOREIGN KEY (issue_id) REFERENCES sa_issues(id) ON DELETE CASCADE,
+    INDEX idx_plan_page (plan_id, page_id),
+    INDEX idx_completed (plan_id, is_completed),
+    INDEX idx_priority (plan_id, priority DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Activity logs

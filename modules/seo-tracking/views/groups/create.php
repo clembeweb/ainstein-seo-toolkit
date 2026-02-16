@@ -16,7 +16,7 @@
     <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/groups/store') ?>" method="POST" class="space-y-6">
         <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
 
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6 space-y-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 space-y-6">
             <!-- Nome -->
             <div>
                 <label for="name" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -55,7 +55,7 @@
         </div>
 
         <!-- Keyword Selection -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                 <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Seleziona Keyword</h2>
                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Scegli le keyword da includere in questo gruppo (opzionale, puoi aggiungerle dopo)</p>

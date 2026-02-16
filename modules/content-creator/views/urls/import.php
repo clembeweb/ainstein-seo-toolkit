@@ -22,7 +22,7 @@
     </div>
 
     <!-- Tabs -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <div class="border-b border-slate-200 dark:border-slate-700">
             <nav class="flex -mb-px">
                 <button type="button"
@@ -248,15 +248,6 @@
                         </select>
                     </div>
 
-                    <div class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                        <p class="text-sm text-amber-700 dark:text-amber-300">
-                            <svg class="w-4 h-4 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            Funzionalita in fase di sviluppo. Verifica la configurazione del connettore prima di procedere.
-                        </p>
-                    </div>
-
                     <div class="pt-4">
                         <button type="button"
                                 @click="importFromCms()"
@@ -330,7 +321,7 @@
 <script>
 function importWizard() {
     return {
-        activeTab: 'csv',
+        activeTab: '<?= !empty($project['connector_id']) ? 'cms' : 'csv' ?>',
         loading: false,
         resultMessage: '',
         resultSuccess: false,
@@ -350,7 +341,7 @@ function importWizard() {
         sitemapFilter: '',
 
         // CMS
-        cmsConnectorId: '',
+        cmsConnectorId: '<?= (int)($project['connector_id'] ?? 0) ?: '' ?>',
         cmsEntityType: 'products',
 
         // Manual

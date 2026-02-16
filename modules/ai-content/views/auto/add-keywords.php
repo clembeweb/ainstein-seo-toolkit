@@ -34,7 +34,7 @@
 
     <!-- Form -->
     <form action="<?= url('/ai-content/projects/' . $project['id'] . '/auto/add') ?>" method="POST"
-          class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700"
+          class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700"
           x-data="keywordsForm()"
           @submit="submitting = true">
         <?= csrf_field() ?>

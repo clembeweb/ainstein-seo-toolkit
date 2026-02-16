@@ -3,29 +3,21 @@
  * Lista Meta Tags con filtri, colonne ordinabili e generazione inline SSE
  */
 
+include __DIR__ . '/../../../../shared/views/components/table-helpers.php';
+
 $currentSort = $filters['sort'] ?? 'created_at';
 $currentDir = $filters['dir'] ?? 'desc';
-
-// Helper per generare URL di ordinamento
-$sortUrl = function(string $column) use ($currentSort, $currentDir, $filters, $project, $pagination) {
-    $newDir = ($currentSort === $column && $currentDir === 'asc') ? 'desc' : 'asc';
-    $params = ['sort' => $column, 'dir' => $newDir];
-    if (!empty($filters['status'])) $params['status'] = $filters['status'];
-    if (!empty($filters['search'])) $params['q'] = $filters['search'];
-    if (($pagination['current_page'] ?? 1) > 1) $params['page'] = $pagination['current_page'];
-    return url("/ai-content/projects/{$project['id']}/meta-tags/list") . '?' . http_build_query($params);
-};
-
-// Helper per icona freccia ordinamento
-$sortIcon = function(string $column) use ($currentSort, $currentDir) {
-    if ($currentSort !== $column) {
-        return '<svg class="w-3 h-3 ml-1 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>';
-    }
-    if ($currentDir === 'asc') {
-        return '<svg class="w-3 h-3 ml-1 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>';
-    }
-    return '<svg class="w-3 h-3 ml-1 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
-};
+$baseUrl = url("/ai-content/projects/{$project['id']}/meta-tags/list");
+$paginationFilters = array_filter([
+    'status' => $filters['status'] ?? '',
+    'q' => $filters['search'] ?? '',
+    'sort' => $filters['sort'] ?? '',
+    'dir' => $filters['dir'] ?? '',
+], fn($v) => $v !== '' && $v !== null);
+$sortFilters = array_filter([
+    'status' => $filters['status'] ?? '',
+    'q' => $filters['search'] ?? '',
+], fn($v) => $v !== '' && $v !== null);
 ?>
 
 <?php include __DIR__ . '/../partials/project-nav.php'; ?>
@@ -100,7 +92,7 @@ $sortIcon = function(string $column) use ($currentSort, $currentDir) {
     </div>
 
     <!-- Filtri -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
         <form method="GET" class="flex flex-wrap items-center gap-4">
             <div class="flex-1 min-w-[200px]">
                 <input type="text"
@@ -136,75 +128,34 @@ $sortIcon = function(string $column) use ($currentSort, $currentDir) {
     </div>
 
     <!-- Bulk Actions Bar -->
-    <div x-show="selectedIds.length > 0" x-cloak
-         class="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4">
-        <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-primary-700 dark:text-primary-300">
-                <span x-text="selectedIds.length"></span> selezionati
-            </span>
-            <div class="flex items-center gap-2">
-                <button type="button"
-                        @click="bulkApprove()"
-                        class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors">
-                    Approva
-                </button>
-                <button type="button"
-                        @click="bulkDelete()"
-                        class="px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors">
-                    Elimina
-                </button>
-                <button type="button" @click="selectedIds = []" class="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400">
-                    Deseleziona
-                </button>
-            </div>
-        </div>
-    </div>
+    <?= \Core\View::partial('components/table-bulk-bar', [
+        'actions' => [
+            ['label' => 'Approva', 'action' => 'bulkApprove()', 'color' => 'emerald'],
+            ['label' => 'Elimina', 'action' => 'bulkDelete()', 'color' => 'red'],
+        ],
+    ]) ?>
 
     <!-- Table -->
     <?php if (empty($metaTags)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-8 text-center">
-        <svg class="w-12 h-12 mx-auto text-slate-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-        </svg>
-        <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">Nessun meta tag</h3>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
-            Inizia importando le URL delle pagine da ottimizzare
-        </p>
-        <a href="<?= url("/ai-content/projects/{$project['id']}/meta-tags/import") ?>"
-           class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors">
-            Importa URL
-        </a>
-    </div>
+    <?= \Core\View::partial('components/table-empty-state', [
+        'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>',
+        'heading' => 'Nessun meta tag',
+        'message' => 'Inizia importando le URL delle pagine da ottimizzare',
+        'ctaText' => 'Importa URL',
+        'ctaUrl' => url("/ai-content/projects/{$project['id']}/meta-tags/import"),
+    ]) ?>
     <?php else: ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead class="bg-slate-50 dark:bg-slate-700/50">
                     <tr>
-                        <th class="w-10 px-4 py-3">
-                            <input type="checkbox" @change="toggleAll($event)" class="rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
-                        </th>
-                        <th class="px-4 py-3 text-left">
-                            <a href="<?= $sortUrl('url') ?>" class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200">
-                                URL / Titolo <?= $sortIcon('url') ?>
-                            </a>
-                        </th>
-                        <th class="px-4 py-3 text-left">
-                            <a href="<?= $sortUrl('generated_title') ?>" class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200">
-                                Meta Title <?= $sortIcon('generated_title') ?>
-                            </a>
-                        </th>
-                        <th class="px-4 py-3 text-left">
-                            <a href="<?= $sortUrl('generated_desc') ?>" class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200">
-                                Meta Description <?= $sortIcon('generated_desc') ?>
-                            </a>
-                        </th>
-                        <th class="px-4 py-3 text-left">
-                            <a href="<?= $sortUrl('status') ?>" class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200">
-                                Stato <?= $sortIcon('status') ?>
-                            </a>
-                        </th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Azioni</th>
+                        <?= table_checkbox_header() ?>
+                        <?= table_sort_header('URL / Titolo', 'url', $currentSort, $currentDir, $baseUrl, $sortFilters) ?>
+                        <?= table_sort_header('Meta Title', 'generated_title', $currentSort, $currentDir, $baseUrl, $sortFilters) ?>
+                        <?= table_sort_header('Meta Description', 'generated_desc', $currentSort, $currentDir, $baseUrl, $sortFilters) ?>
+                        <?= table_sort_header('Stato', 'status', $currentSort, $currentDir, $baseUrl, $sortFilters) ?>
+                        <?= table_header('Azioni', 'right') ?>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
@@ -383,35 +334,11 @@ $sortIcon = function(string $column) use ($currentSort, $currentDir) {
         </div>
 
         <!-- Pagination -->
-        <?php if ($pagination['last_page'] > 1): ?>
-        <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
-            <p class="text-sm text-slate-500 dark:text-slate-400">
-                Mostrando <?= $pagination['from'] ?> - <?= $pagination['to'] ?> di <?= $pagination['total'] ?>
-            </p>
-            <div class="flex items-center gap-2">
-                <?php
-                $paginationParams = [];
-                if (!empty($filters['status'])) $paginationParams['status'] = $filters['status'];
-                if (!empty($filters['search'])) $paginationParams['q'] = $filters['search'];
-                if (!empty($filters['sort'])) $paginationParams['sort'] = $filters['sort'];
-                if (!empty($filters['dir'])) $paginationParams['dir'] = $filters['dir'];
-                $paginationQuery = $paginationParams ? '&' . http_build_query($paginationParams) : '';
-                ?>
-                <?php if ($pagination['current_page'] > 1): ?>
-                <a href="?page=<?= $pagination['current_page'] - 1 ?><?= $paginationQuery ?>"
-                   class="px-3 py-1 rounded border border-slate-300 dark:border-slate-600 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700">
-                    Precedente
-                </a>
-                <?php endif; ?>
-                <?php if ($pagination['current_page'] < $pagination['last_page']): ?>
-                <a href="?page=<?= $pagination['current_page'] + 1 ?><?= $paginationQuery ?>"
-                   class="px-3 py-1 rounded border border-slate-300 dark:border-slate-600 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700">
-                    Successivo
-                </a>
-                <?php endif; ?>
-            </div>
-        </div>
-        <?php endif; ?>
+        <?= \Core\View::partial('components/table-pagination', [
+            'pagination' => $pagination,
+            'baseUrl' => $baseUrl,
+            'filters' => $paginationFilters,
+        ]) ?>
     </div>
     <?php endif; ?>
 

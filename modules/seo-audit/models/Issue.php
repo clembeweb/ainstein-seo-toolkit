@@ -27,16 +27,7 @@ class Issue
         'security' => 'Sicurezza',
         'sitemap' => 'Sitemap',
         'robots' => 'Robots.txt',
-        'indexing' => 'Indicizzazione',      // GSC
-        'performance' => 'Performance',       // GSC
-        'cwv' => 'Core Web Vitals',          // GSC
-        'mobile' => 'Mobile',                 // GSC
     ];
-
-    /**
-     * Categorie che richiedono GSC
-     */
-    public const GSC_CATEGORIES = ['indexing', 'performance', 'cwv', 'mobile'];
 
     /**
      * Definizione issue types con dettagli
@@ -292,133 +283,6 @@ class Issue
             'recommendation' => 'Installa un certificato SSL valido.',
         ],
 
-        // GSC - Indicizzazione
-        'not_indexed' => [
-            'category' => 'indexing',
-            'severity' => 'warning',
-            'title' => 'Pagina non indicizzata',
-            'recommendation' => 'Verifica che la pagina sia accessibile e non bloccata.',
-        ],
-        'duplicate_no_canonical' => [
-            'category' => 'indexing',
-            'severity' => 'warning',
-            'title' => 'Duplicato senza canonical',
-            'recommendation' => 'Aggiungi un tag canonical per indicare la versione principale.',
-        ],
-        'soft_404' => [
-            'category' => 'indexing',
-            'severity' => 'critical',
-            'title' => 'Soft 404',
-            'recommendation' => 'Restituisci un vero codice 404 o aggiungi contenuto significativo.',
-        ],
-        'crawl_error' => [
-            'category' => 'indexing',
-            'severity' => 'critical',
-            'title' => 'Errore di scansione',
-            'recommendation' => 'Risolvi l\'errore che impedisce a Google di scansionare la pagina.',
-        ],
-        'redirect_error' => [
-            'category' => 'indexing',
-            'severity' => 'warning',
-            'title' => 'Errore di redirect',
-            'recommendation' => 'Correggi il redirect problematico.',
-        ],
-
-        // GSC - Performance
-        'low_ctr' => [
-            'category' => 'performance',
-            'severity' => 'notice',
-            'title' => 'CTR basso',
-            'recommendation' => 'Ottimizza title e meta description per aumentare il CTR.',
-        ],
-        'declining_clicks' => [
-            'category' => 'performance',
-            'severity' => 'warning',
-            'title' => 'Click in calo',
-            'recommendation' => 'Analizza le cause del calo e aggiorna il contenuto.',
-        ],
-        'low_position' => [
-            'category' => 'performance',
-            'severity' => 'notice',
-            'title' => 'Posizione bassa',
-            'recommendation' => 'Migliora il contenuto e i backlink per salire nel ranking.',
-        ],
-        'zero_impressions' => [
-            'category' => 'performance',
-            'severity' => 'notice',
-            'title' => 'Nessuna impressione',
-            'recommendation' => 'Verifica che la pagina sia indicizzata e ottimizza per keyword rilevanti.',
-        ],
-
-        // GSC - Core Web Vitals
-        'poor_lcp' => [
-            'category' => 'cwv',
-            'severity' => 'critical',
-            'title' => 'LCP scarso',
-            'recommendation' => 'Ottimizza il caricamento del contenuto principale (target: < 2.5s).',
-        ],
-        'poor_inp' => [
-            'category' => 'cwv',
-            'severity' => 'critical',
-            'title' => 'INP scarso',
-            'recommendation' => 'Riduci il tempo di risposta alle interazioni utente (target: < 200ms).',
-        ],
-        'poor_cls' => [
-            'category' => 'cwv',
-            'severity' => 'warning',
-            'title' => 'CLS scarso',
-            'recommendation' => 'Evita spostamenti del layout durante il caricamento (target: < 0.1).',
-        ],
-        'needs_improvement_lcp' => [
-            'category' => 'cwv',
-            'severity' => 'warning',
-            'title' => 'LCP da migliorare',
-            'recommendation' => 'Il tempo di caricamento può essere ulteriormente ottimizzato.',
-        ],
-        'needs_improvement_inp' => [
-            'category' => 'cwv',
-            'severity' => 'warning',
-            'title' => 'INP da migliorare',
-            'recommendation' => 'Ottimizza la reattività della pagina.',
-        ],
-        'needs_improvement_cls' => [
-            'category' => 'cwv',
-            'severity' => 'notice',
-            'title' => 'CLS da migliorare',
-            'recommendation' => 'Riduci gli spostamenti di layout durante il caricamento.',
-        ],
-
-        // GSC - Mobile
-        'not_mobile_friendly' => [
-            'category' => 'mobile',
-            'severity' => 'critical',
-            'title' => 'Non ottimizzato per mobile',
-            'recommendation' => 'Implementa un design responsive per dispositivi mobili.',
-        ],
-        'text_too_small' => [
-            'category' => 'mobile',
-            'severity' => 'warning',
-            'title' => 'Testo troppo piccolo',
-            'recommendation' => 'Aumenta la dimensione del font per la leggibilità mobile (min 16px).',
-        ],
-        'viewport_not_set' => [
-            'category' => 'mobile',
-            'severity' => 'warning',
-            'title' => 'Viewport non configurato',
-            'recommendation' => 'Aggiungi il meta tag viewport per il responsive design.',
-        ],
-        'content_wider_than_screen' => [
-            'category' => 'mobile',
-            'severity' => 'warning',
-            'title' => 'Contenuto troppo largo',
-            'recommendation' => 'Adatta il contenuto alla larghezza dello schermo mobile.',
-        ],
-        'clickable_too_close' => [
-            'category' => 'mobile',
-            'severity' => 'notice',
-            'title' => 'Elementi tap troppo vicini',
-            'recommendation' => 'Aumenta lo spazio tra gli elementi cliccabili (min 48px).',
-        ],
     ];
 
     /**
@@ -562,7 +426,7 @@ class Issue
             'title' => $typeInfo['title'],
             'recommendation' => $typeInfo['recommendation'],
             'affected_element' => $affectedElement,
-            'source' => in_array($typeInfo['category'], self::GSC_CATEGORIES) ? 'gsc' : 'crawler',
+            'source' => 'crawler',
         ]);
     }
 
@@ -692,11 +556,4 @@ class Issue
         return self::ISSUE_TYPES[$issueType] ?? null;
     }
 
-    /**
-     * Verifica se categoria richiede GSC
-     */
-    public static function isGscCategory(string $category): bool
-    {
-        return in_array($category, self::GSC_CATEGORIES);
-    }
 }

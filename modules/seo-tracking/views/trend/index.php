@@ -31,7 +31,7 @@ $dateRange = $dateRange ?? ['min_date' => date('Y-m-d', strtotime('-16 months'))
     </div>
 
     <!-- Controlli Periodo -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Preset -->
             <div>
@@ -110,30 +110,30 @@ $dateRange = $dateRange ?? ['min_date' => date('Y-m-d', strtotime('-16 months'))
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4" x-show="hasData" x-cloak>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Totale Keywords</p>
             <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1" x-text="stats.total"></p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-emerald-200 dark:border-emerald-800 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-emerald-200 dark:border-emerald-800 p-4">
             <p class="text-sm text-emerald-600 dark:text-emerald-400">Migliorate</p>
             <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1" x-text="stats.improved"></p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-red-200 dark:border-red-800 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-red-200 dark:border-red-800 p-4">
             <p class="text-sm text-red-600 dark:text-red-400">Peggiorate</p>
             <p class="text-2xl font-bold text-red-600 dark:text-red-400 mt-1" x-text="stats.declined"></p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-blue-200 dark:border-blue-800 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-blue-200 dark:border-blue-800 p-4">
             <p class="text-sm text-blue-600 dark:text-blue-400">Nuove</p>
             <p class="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1" x-text="stats.new"></p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-300 dark:border-slate-600 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-300 dark:border-slate-600 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Perse</p>
             <p class="text-2xl font-bold text-slate-500 dark:text-slate-400 mt-1" x-text="stats.lost"></p>
         </div>
     </div>
 
     <!-- Tabs -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700" x-show="hasData" x-cloak>
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700" x-show="hasData" x-cloak>
         <!-- Tab Headers -->
         <div class="border-b border-slate-200 dark:border-slate-700 px-4">
             <nav class="flex gap-6 -mb-px">
@@ -168,7 +168,7 @@ $dateRange = $dateRange ?? ['min_date' => date('Y-m-d', strtotime('-16 months'))
         <!-- Table -->
         <div class="overflow-x-auto">
             <table class="w-full">
-                <thead class="bg-slate-50 dark:bg-slate-800/50">
+                <thead class="bg-slate-50 dark:bg-slate-700/50">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Keyword</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">URL</th>
@@ -183,7 +183,7 @@ $dateRange = $dateRange ?? ['min_date' => date('Y-m-d', strtotime('-16 months'))
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <template x-for="row in currentData" :key="row.keyword">
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                             <td class="px-4 py-3">
                                 <span class="text-sm font-medium text-slate-900 dark:text-white" x-text="row.keyword"></span>
                             </td>
@@ -245,7 +245,7 @@ $dateRange = $dateRange ?? ['min_date' => date('Y-m-d', strtotime('-16 months'))
     </div>
 
     <!-- Initial State -->
-    <div x-show="!hasData && !loading" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
+    <div x-show="!hasData && !loading" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
         <svg class="w-16 h-16 mx-auto text-slate-300 dark:text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>

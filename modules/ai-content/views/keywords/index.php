@@ -1,3 +1,20 @@
+<?php
+/**
+ * Keywords index - AI Content
+ * Con sorting server-side, bulk delete, paginazione e CSS standard
+ */
+include __DIR__ . '/../../../../shared/views/components/table-helpers.php';
+
+$currentSort = $filters['sort'] ?? 'created_at';
+$currentDir = $filters['dir'] ?? 'desc';
+$baseUrl = url(!empty($projectId) ? "/ai-content/projects/{$projectId}/keywords" : '/ai-content/keywords');
+$sortFilters = [];
+$paginationFilters = array_filter([
+    'sort' => $filters['sort'] ?? '',
+    'dir' => $filters['dir'] ?? '',
+], fn($v) => $v !== '' && $v !== null);
+?>
+
 <?php if (!empty($projectId) && !empty($project)): ?>
 <?php $currentPage = 'keywords'; ?>
 <?php include __DIR__ . '/../partials/project-nav.php'; ?>
@@ -7,7 +24,7 @@
     <?php if (!empty($projectId) && !empty($project)): ?>
     <!-- Info (project view) - il bottone "Nuova Keyword" è nel project-nav header -->
     <div>
-        <p class="text-sm text-slate-500 dark:text-slate-400"><?= count($keywords) ?> keyword nel progetto</p>
+        <p class="text-sm text-slate-500 dark:text-slate-400"><?= $pagination['total'] ?> keyword nel progetto</p>
     </div>
     <?php elseif (empty($projectId) || empty($project)): ?>
     <!-- Breadcrumbs (global view) -->
@@ -46,37 +63,32 @@
 
     <?php if (empty($keywords)): ?>
     <!-- Empty State -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
-        <div class="mx-auto h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mb-4">
-            <svg class="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-        </div>
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Nessuna keyword</h3>
-        <p class="mt-2 text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-            Aggiungi la tua prima keyword per iniziare ad analizzare la SERP e generare articoli ottimizzati.
-        </p>
-        <div class="mt-6">
-            <button @click="showAddModal = true" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Aggiungi Keyword
-            </button>
-        </div>
-    </div>
+    <?= \Core\View::partial('components/table-empty-state', [
+        'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>',
+        'heading' => 'Nessuna keyword',
+        'message' => 'Aggiungi la tua prima keyword per iniziare ad analizzare la SERP e generare articoli ottimizzati.',
+    ]) ?>
     <?php else: ?>
+
+    <!-- Bulk Actions Bar -->
+    <?= \Core\View::partial('components/table-bulk-bar', [
+        'actions' => [
+            ['label' => 'Elimina', 'action' => 'bulkDelete()', 'color' => 'red'],
+        ],
+    ]) ?>
+
     <!-- Keywords Table -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+            <table class="w-full">
                 <thead class="bg-slate-50 dark:bg-slate-700/50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Keyword</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Lingua</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stato</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Data</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Azioni</th>
+                        <?= table_checkbox_header() ?>
+                        <?= table_sort_header('Keyword', 'keyword', $currentSort, $currentDir, $baseUrl, $sortFilters) ?>
+                        <?= table_sort_header('Lingua', 'language', $currentSort, $currentDir, $baseUrl, $sortFilters) ?>
+                        <?= table_header('Stato', 'center') ?>
+                        <?= table_sort_header('Data', 'created_at', $currentSort, $currentDir, $baseUrl, $sortFilters) ?>
+                        <?= table_header('Azioni', 'right') ?>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
@@ -108,9 +120,12 @@
                             $statusClass = 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300';
                         }
                     ?>
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 cursor-pointer transition-colors"
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors"
                         onclick="window.location.href='<?= url(!empty($projectId) ? '/ai-content/projects/' . $projectId . '/keywords/' . $kw['id'] . '/wizard' : '/ai-content/keywords/' . $kw['id'] . '/wizard') ?>'">
-                        <td class="px-6 py-4">
+                        <td class="px-4 py-3" onclick="event.stopPropagation()">
+                            <input type="checkbox" value="<?= $kw['id'] ?>" x-model="selectedIds" class="rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
+                        </td>
+                        <td class="px-4 py-3">
                             <div class="flex items-center gap-3">
                                 <div class="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0">
                                     <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -123,21 +138,21 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-4 py-3">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300">
                                 <?= strtoupper($kw['language']) ?>
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-center">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium <?= $statusClass ?>">
+                        <td class="px-4 py-3 text-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $statusClass ?>">
                                 <?= $statusLabel ?>
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
+                        <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">
                             <?= date('d/m/Y', strtotime($kw['created_at'])) ?>
                         </td>
-                        <td class="px-6 py-4 text-right" onclick="event.stopPropagation()">
-                            <div class="flex items-center justify-end gap-2">
+                        <td class="px-4 py-3 text-right" onclick="event.stopPropagation()">
+                            <div class="flex items-center justify-end gap-1">
                                 <!-- Open Wizard -->
                                 <a href="<?= url(!empty($projectId) ? '/ai-content/projects/' . $projectId . '/keywords/' . $kw['id'] . '/wizard' : '/ai-content/keywords/' . $kw['id'] . '/wizard') ?>"
                                    class="p-2 rounded-lg text-slate-500 hover:text-primary-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
@@ -164,31 +179,11 @@
         </div>
 
         <!-- Pagination -->
-        <?php if ($pagination['last_page'] > 1): ?>
-        <?php $paginationBase = !empty($projectId)
-            ? '/ai-content/projects/' . $projectId . '/keywords'
-            : '/ai-content/keywords'; ?>
-        <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-700">
-            <div class="flex items-center justify-between">
-                <p class="text-sm text-slate-500 dark:text-slate-400">
-                    Pagina <?= $pagination['current_page'] ?> di <?= $pagination['last_page'] ?>
-                    (<?= $pagination['total'] ?> keywords)
-                </p>
-                <div class="flex gap-2">
-                    <?php if ($pagination['current_page'] > 1): ?>
-                    <a href="<?= url($paginationBase . '?page=' . ($pagination['current_page'] - 1)) ?>" class="px-3 py-1 rounded-lg border border-slate-300 dark:border-slate-600 text-sm hover:bg-slate-50 dark:hover:bg-slate-700">
-                        Precedente
-                    </a>
-                    <?php endif; ?>
-                    <?php if ($pagination['current_page'] < $pagination['last_page']): ?>
-                    <a href="<?= url($paginationBase . '?page=' . ($pagination['current_page'] + 1)) ?>" class="px-3 py-1 rounded-lg border border-slate-300 dark:border-slate-600 text-sm hover:bg-slate-50 dark:hover:bg-slate-700">
-                        Successiva
-                    </a>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-        <?php endif; ?>
+        <?= \Core\View::partial('components/table-pagination', [
+            'pagination' => $pagination,
+            'baseUrl' => $baseUrl,
+            'filters' => $paginationFilters,
+        ]) ?>
     </div>
     <?php endif; ?>
 
@@ -277,17 +272,52 @@
 <script>
 function keywordsManager() {
     return {
+        selectedIds: [],
         showAddModal: false,
         showDeleteModal: false,
         deleteId: null,
         deleteKeyword: '',
         deleteUrl: '',
 
+        toggleAll(event) {
+            if (event.target.checked) {
+                this.selectedIds = <?= json_encode(array_map(fn($k) => (string)$k['id'], $keywords)) ?>;
+            } else {
+                this.selectedIds = [];
+            }
+        },
+
         confirmDelete(id, keyword) {
             this.deleteId = id;
             this.deleteKeyword = keyword;
             this.deleteUrl = '<?= url(!empty($projectId) ? '/ai-content/projects/' . $projectId . '/keywords' : '/ai-content/keywords') ?>/' + id + '/delete';
             this.showDeleteModal = true;
+        },
+
+        async bulkDelete() {
+            try {
+                await window.ainstein.confirm(`Eliminare ${this.selectedIds.length} keyword?`, {destructive: true});
+            } catch (e) { return; }
+
+            try {
+                const formData = new FormData();
+                formData.append('_csrf_token', '<?= csrf_token() ?>');
+                this.selectedIds.forEach(id => formData.append('ids[]', id));
+
+                const resp = await fetch('<?= url(!empty($projectId) ? "/ai-content/projects/{$projectId}/keywords/bulk-delete" : "/ai-content/keywords/bulk-delete") ?>', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    window.ainstein.toast(data.message, 'success');
+                    location.reload();
+                } else {
+                    window.ainstein.alert('Errore: ' + (data.error || 'Operazione fallita'), 'error');
+                }
+            } catch (error) {
+                window.ainstein.alert('Errore di connessione', 'error');
+            }
         }
     }
 }

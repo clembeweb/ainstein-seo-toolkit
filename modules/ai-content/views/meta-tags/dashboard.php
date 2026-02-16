@@ -10,27 +10,27 @@
 <div class="space-y-6">
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <div class="text-2xl font-bold text-slate-900 dark:text-white"><?= $stats['total'] ?></div>
             <div class="text-sm text-slate-500 dark:text-slate-400">Totale URL</div>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <div class="text-2xl font-bold text-amber-600"><?= $stats['pending'] ?></div>
             <div class="text-sm text-slate-500 dark:text-slate-400">Da scrapare</div>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <div class="text-2xl font-bold text-blue-600"><?= $stats['scraped'] ?></div>
             <div class="text-sm text-slate-500 dark:text-slate-400">Scrappate</div>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <div class="text-2xl font-bold text-purple-600"><?= $stats['generated'] ?></div>
             <div class="text-sm text-slate-500 dark:text-slate-400">Generate</div>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <div class="text-2xl font-bold text-emerald-600"><?= $stats['approved'] ?></div>
             <div class="text-sm text-slate-500 dark:text-slate-400">Approvate</div>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <div class="text-2xl font-bold text-green-600"><?= $stats['published'] ?></div>
             <div class="text-sm text-slate-500 dark:text-slate-400">Pubblicate</div>
         </div>
@@ -59,7 +59,7 @@
     <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Import -->
         <a href="<?= url("/ai-content/projects/{$project['id']}/meta-tags/import") ?>"
-           class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6 hover:border-primary-500 dark:hover:border-primary-500 transition-colors group">
+           class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 hover:border-primary-500 dark:hover:border-primary-500 transition-colors group">
             <div class="flex items-center gap-4">
                 <div class="h-12 w-12 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center group-hover:bg-blue-200 dark:group-hover:bg-blue-900 transition-colors">
                     <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -77,7 +77,7 @@
         <button type="button"
                 onclick="runScrape()"
                 <?= $stats['pending'] === 0 ? 'disabled' : '' ?>
-                class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6 hover:border-primary-500 dark:hover:border-primary-500 transition-colors group text-left disabled:opacity-50 disabled:cursor-not-allowed">
+                class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 hover:border-primary-500 dark:hover:border-primary-500 transition-colors group text-left disabled:opacity-50 disabled:cursor-not-allowed">
             <div class="flex items-center gap-4">
                 <div class="h-12 w-12 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center group-hover:bg-amber-200 dark:group-hover:bg-amber-900 transition-colors">
                     <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -95,7 +95,7 @@
         <button type="button"
                 onclick="runGenerate()"
                 <?= $stats['scraped'] === 0 ? 'disabled' : '' ?>
-                class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6 hover:border-primary-500 dark:hover:border-primary-500 transition-colors group text-left disabled:opacity-50 disabled:cursor-not-allowed">
+                class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 hover:border-primary-500 dark:hover:border-primary-500 transition-colors group text-left disabled:opacity-50 disabled:cursor-not-allowed">
             <div class="flex items-center gap-4">
                 <div class="h-12 w-12 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center group-hover:bg-purple-200 dark:group-hover:bg-purple-900 transition-colors">
                     <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -111,7 +111,7 @@
 
         <!-- View All -->
         <a href="<?= url("/ai-content/projects/{$project['id']}/meta-tags/list") ?>"
-           class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6 hover:border-primary-500 dark:hover:border-primary-500 transition-colors group">
+           class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 hover:border-primary-500 dark:hover:border-primary-500 transition-colors group">
             <div class="flex items-center gap-4">
                 <div class="h-12 w-12 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center group-hover:bg-slate-200 dark:group-hover:bg-slate-600 transition-colors">
                     <svg class="w-6 h-6 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -128,7 +128,7 @@
 
     <!-- WordPress Status -->
     <?php if ($wpSite): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
@@ -165,7 +165,7 @@
 
     <!-- Recent Meta Tags -->
     <?php if (!empty($recent)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
             <h2 class="font-semibold text-slate-900 dark:text-white">Ultimi Meta Tag</h2>
         </div>

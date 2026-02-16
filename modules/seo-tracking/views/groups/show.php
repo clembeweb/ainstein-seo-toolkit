@@ -34,7 +34,7 @@
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <!-- Keyword -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <div class="flex items-center gap-3">
                 <div class="p-2 bg-primary-100 dark:bg-primary-900/50 rounded-lg">
                     <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -49,7 +49,7 @@
         </div>
 
         <!-- Posizione Media -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <div class="flex items-center gap-3">
                 <div class="p-2 bg-amber-100 dark:bg-amber-900/50 rounded-lg">
                     <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -72,7 +72,7 @@
         </div>
 
         <!-- Miglioramenti -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <div class="flex items-center gap-3">
                 <div class="p-2 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg">
                     <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -87,7 +87,7 @@
         </div>
 
         <!-- Peggioramenti -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <div class="flex items-center gap-3">
                 <div class="p-2 bg-red-100 dark:bg-red-900/50 rounded-lg">
                     <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -105,7 +105,7 @@
     <!-- Distribution and Comparison -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Position Distribution -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Distribuzione Posizioni</h3>
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
@@ -155,7 +155,7 @@
         </div>
 
         <!-- Historical Comparison -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Variazioni Recenti</h3>
             <div class="space-y-4">
                 <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
@@ -191,7 +191,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Top Performers -->
         <?php if (!empty($topPerformers)): ?>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Migliori Posizioni</h3>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Keyword con miglior ranking</p>
@@ -219,7 +219,7 @@
 
         <!-- Top Movers -->
         <?php if (!empty($topMovers)): ?>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Maggiori Variazioni</h3>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Keyword con più movimento</p>
@@ -241,7 +241,7 @@
     </div>
 
     <!-- Keywords Table -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <div>
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Keyword nel Gruppo</h3>
@@ -339,7 +339,7 @@
     </div>
 
     <!-- Danger Zone -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-red-200 dark:border-red-900/50 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-red-200 dark:border-red-900/50 p-6">
         <h3 class="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">Zona Pericolosa</h3>
         <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">L'eliminazione del gruppo non elimina le keyword, solo l'associazione.</p>
         <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/groups/' . $group['id'] . '/delete') ?>" method="POST" x-data @submit.prevent="window.ainstein.confirm('Sei sicuro di voler eliminare questo gruppo?', {destructive: true}).then(() => $el.submit())">

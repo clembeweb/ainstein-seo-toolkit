@@ -12,7 +12,7 @@
     </div>
 
     <!-- Form -->
-    <form action="<?= url('/seo-tracking/project/store') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <form action="<?= url('/seo-tracking/project/store') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
         <!-- Basic Info -->
         <div class="p-6 space-y-6">
@@ -67,7 +67,7 @@
     </form>
 
     <!-- Info Card -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
         <div class="flex items-start gap-3">
             <div class="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/50 flex items-center justify-center flex-shrink-0">
                 <svg class="h-5 w-5 text-green-600 dark:text-green-400" viewBox="0 0 24 24" fill="currentColor">

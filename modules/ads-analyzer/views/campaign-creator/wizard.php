@@ -4,6 +4,14 @@ $campaignTypeLabel = $isPmax ? 'Performance Max' : 'Search';
 $keywordsJson = json_encode($keywords ?? []);
 $campaignJson = json_encode($campaign['assets'] ?? []);
 $projectId = $project['id'];
+$inputMode = $project['input_mode'] ?? 'url';
+$hasUrl = !empty($project['landing_url']);
+$hasBrief = !empty($project['brief']);
+$needsScraping = $inputMode !== 'brief'; // url e both hanno scraping
+$isAutoBrief = ($inputMode === 'url' && $hasBrief && ($hasScrapedData ?? false));
+$canEditBrief = ($inputMode === 'url'); // solo url mode permette edit brief
+$scrapeCost = \Modules\AdsAnalyzer\Services\CampaignCreatorService::getCost('scrape');
+$kwCost = \Modules\AdsAnalyzer\Services\CampaignCreatorService::getCost('keywords');
 ?>
 
 <div class="space-y-6" x-data="campaignCreatorWizard()">
@@ -55,9 +63,11 @@ $projectId = $project['id'];
     </div>
 
     <!-- ============================================ -->
-    <!-- STEP 1: Info Progetto -->
+    <!-- STEP 1: Info Progetto (Phase A/B) -->
     <!-- ============================================ -->
     <div x-show="currentStep === 0" x-transition>
+
+        <!-- Riepilogo Progetto (sempre visibile) -->
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 space-y-4">
             <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Riepilogo Progetto</h2>
 
@@ -70,45 +80,183 @@ $projectId = $project['id'];
                         </span>
                     </p>
                 </div>
+                <?php if ($hasUrl): ?>
                 <div>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Landing page</p>
-                    <a href="<?= e($project['landing_url'] ?? '#') ?>" target="_blank" class="text-sm text-blue-600 dark:text-blue-400 hover:underline break-all"><?= e($project['landing_url'] ?? '') ?></a>
+                    <a href="<?= e($project['landing_url']) ?>" target="_blank" class="text-sm text-blue-600 dark:text-blue-400 hover:underline break-all"><?= e($project['landing_url']) ?></a>
                 </div>
+                <?php endif; ?>
             </div>
 
-            <div>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Brief campagna</p>
-                <p class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line"><?= e($project['brief'] ?? '') ?></p>
-            </div>
-
-            <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-                <div class="flex gap-3">
-                    <svg class="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <div class="text-sm text-amber-700 dark:text-amber-300">
-                        <p class="font-medium">Costo operazione</p>
-                        <p class="mt-1">Scraping landing (1 credito) + Keyword Research AI (3 crediti) = <strong>4 crediti</strong></p>
+            <!-- ====== PHASE A: Analizza Landing (solo url/both, pre-scraping) ====== -->
+            <?php if ($needsScraping): ?>
+            <div x-show="!phaseADone" x-transition>
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mt-2">
+                    <div class="flex gap-3">
+                        <svg class="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <div class="text-sm text-blue-700 dark:text-blue-300">
+                            <p class="font-medium">Analisi Landing Page</p>
+                            <p class="mt-1">La pagina verra analizzata per estrarre contesto, prodotti/servizi e informazioni utili per la campagna.
+                            <?php if ($inputMode === 'url'): ?>
+                            L'AI generera automaticamente anche un brief di campagna.</p>
+                            <?php else: ?>
+                            Il brief fornito verra mantenuto.</p>
+                            <?php endif; ?>
+                            <p class="mt-1 text-xs">Costo: <strong><?= $scrapeCost ?> credito</strong></p>
+                        </div>
                     </div>
                 </div>
+
+                <div class="flex justify-end mt-4">
+                    <button type="button" @click="analyzeLanding()" :disabled="analyzingLanding"
+                            class="inline-flex items-center px-5 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors disabled:opacity-50">
+                        <svg x-show="analyzingLanding" x-cloak class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span x-text="analyzingLanding ? 'Analisi in corso...' : 'Analizza Landing Page'"></span>
+                        <svg x-show="!analyzingLanding" class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
 
-            <div class="flex justify-end">
-                <button type="button" @click="startKeywordResearch()" :disabled="loading"
-                        class="inline-flex items-center px-5 py-2.5 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors disabled:opacity-50">
-                    <svg x-show="loading" x-cloak class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+            <!-- Loading scraping -->
+            <div x-show="analyzingLanding" x-transition class="mt-4">
+                <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 text-center">
+                    <svg class="w-10 h-10 text-blue-500 mx-auto animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span x-text="loading ? 'Analisi in corso...' : 'Avvia Analisi'"></span>
-                    <svg x-show="!loading" class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                    </svg>
-                </button>
+                    <p class="mt-3 text-slate-600 dark:text-slate-400 text-sm">Analisi della landing page in corso...</p>
+                    <p class="mt-1 text-xs text-slate-400">Potrebbe richiedere 20-40 secondi</p>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- ====== PHASE B: Risultati analisi + Avvia KW Research ====== -->
+            <div x-show="phaseADone" x-transition>
+
+                <!-- Contesto estratto (collapsabile) -->
+                <template x-if="scrapedContext">
+                    <div class="mt-4">
+                        <button type="button" @click="showContext = !showContext"
+                                class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+                            <svg class="w-4 h-4 transition-transform" :class="showContext ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                            Contesto estratto dalla landing page
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+                                <svg class="w-3 h-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                Completato
+                            </span>
+                        </button>
+                        <div x-show="showContext" x-transition x-cloak class="mt-2 p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600">
+                            <p class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line" x-text="scrapedContext"></p>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Brief campagna -->
+                <div class="mt-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide">Brief campagna</p>
+                        <template x-if="isAutoBrief">
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                                <svg class="w-3 h-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                                Generato da AI
+                            </span>
+                        </template>
+                        <?php if ($canEditBrief): ?>
+                        <button type="button" @click="editingBrief = !editingBrief; if(editingBrief) editedBrief = brief"
+                                x-show="!editingBrief" x-cloak
+                                class="text-xs text-amber-600 dark:text-amber-400 hover:underline">
+                            Modifica
+                        </button>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Brief read-only -->
+                    <div x-show="!editingBrief">
+                        <template x-if="brief">
+                            <p class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4 border border-slate-200 dark:border-slate-600" x-text="brief"></p>
+                        </template>
+                        <template x-if="!brief">
+                            <p class="text-sm text-slate-500 dark:text-slate-400 italic">Nessun brief disponibile</p>
+                        </template>
+                    </div>
+
+                    <!-- Brief editing -->
+                    <?php if ($canEditBrief): ?>
+                    <div x-show="editingBrief" x-transition x-cloak class="space-y-2">
+                        <textarea x-model="editedBrief" rows="6"
+                                  class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white focus:ring-amber-500 focus:border-amber-500"
+                                  placeholder="Descrivi il prodotto/servizio, il target, gli obiettivi..."></textarea>
+                        <div class="flex items-center gap-2 justify-end">
+                            <button type="button" @click="editingBrief = false"
+                                    class="px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">
+                                Annulla
+                            </button>
+                            <button type="button" @click="saveBrief()" :disabled="savingBrief"
+                                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50">
+                                <svg x-show="savingBrief" x-cloak class="w-3 h-3 mr-1.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Salva Brief
+                            </button>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Costo keyword research -->
+                <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mt-4">
+                    <div class="flex gap-3">
+                        <svg class="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div class="text-sm text-amber-700 dark:text-amber-300">
+                            <p class="font-medium">Prossimo passo: Keyword Research AI</p>
+                            <p class="mt-1">L'AI analizera il contesto e il brief per generare keyword e gruppi di annunci ottimizzati.</p>
+                            <p class="mt-1 text-xs">Costo: <strong><?= $kwCost ?> crediti</strong></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Azioni Phase B -->
+                <div class="flex items-center justify-between mt-4">
+                    <?php if ($needsScraping): ?>
+                    <button type="button" @click="regenerateStep('landing')" :disabled="loading"
+                            class="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        Rianalizza landing page
+                    </button>
+                    <?php else: ?>
+                    <div></div>
+                    <?php endif; ?>
+
+                    <button type="button" @click="startKeywordResearch()" :disabled="loading"
+                            class="inline-flex items-center px-5 py-2.5 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors disabled:opacity-50">
+                        <svg x-show="loading" x-cloak class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span x-text="loading ? 'Keyword Research in corso...' : 'Avvia Keyword Research'"></span>
+                        <svg x-show="!loading" class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- Loading state -->
+        <!-- Loading keyword research -->
         <div x-show="loading" x-transition class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-8 text-center mt-6">
             <svg class="w-12 h-12 text-amber-500 mx-auto animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -536,6 +684,19 @@ function campaignCreatorWizard() {
         errorMsg: '',
         copySuccess: false,
 
+        // Phase A/B (Step 0)
+        needsScraping: <?= $needsScraping ? 'true' : 'false' ?>,
+        phaseADone: <?= ($phaseAComplete ?? false) ? 'true' : 'false' ?>,
+        analyzingLanding: false,
+        scrapedContext: <?= json_encode($scrapedContext ?? '') ?>,
+        brief: <?= json_encode($project['brief'] ?? '') ?>,
+        isAutoBrief: <?= $isAutoBrief ? 'true' : 'false' ?>,
+        canEditBrief: <?= $canEditBrief ? 'true' : 'false' ?>,
+        editingBrief: false,
+        editedBrief: '',
+        savingBrief: false,
+        showContext: false,
+
         // Keywords
         keywords: <?= $keywordsJson ?>,
 
@@ -574,11 +735,94 @@ function campaignCreatorWizard() {
             return groups;
         },
 
+        // Phase A: Analizza landing page
+        async analyzeLanding() {
+            this.analyzingLanding = true;
+            this.errorMsg = '';
+
+            const formData = new FormData();
+            formData.append('_csrf_token', this.csrfToken);
+
+            try {
+                const resp = await fetch(`<?= url("/ads-analyzer/projects/{$projectId}/campaign-creator/analyze-landing") ?>`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!resp.ok) {
+                    if (resp.status === 502 || resp.status === 504) {
+                        this.errorMsg = 'Operazione avviata. Ricarica tra qualche secondo.';
+                        setTimeout(() => location.reload(), 15000);
+                        return;
+                    }
+                    const err = await resp.json().catch(() => ({}));
+                    this.errorMsg = err.error || 'Errore durante l\'analisi della landing page';
+                    this.analyzingLanding = false;
+                    return;
+                }
+
+                const data = await resp.json();
+
+                if (!data.success) {
+                    this.errorMsg = data.error || 'Errore sconosciuto';
+                    this.analyzingLanding = false;
+                    return;
+                }
+
+                // Aggiorna stato Phase A → B
+                this.scrapedContext = data.scraped_context || '';
+                this.brief = data.brief || '';
+                this.isAutoBrief = data.is_auto_brief || false;
+                this.phaseADone = true;
+                this.analyzingLanding = false;
+
+            } catch (e) {
+                this.errorMsg = 'Errore di connessione. Riprova.';
+                this.analyzingLanding = false;
+            }
+        },
+
+        // Salva brief editato
+        async saveBrief() {
+            if (this.editedBrief.trim().length < 20) {
+                this.errorMsg = 'Il brief deve contenere almeno 20 caratteri';
+                return;
+            }
+
+            this.savingBrief = true;
+            this.errorMsg = '';
+
+            const formData = new FormData();
+            formData.append('_csrf_token', this.csrfToken);
+            formData.append('brief', this.editedBrief.trim());
+
+            try {
+                const resp = await fetch(`<?= url("/ads-analyzer/projects/{$projectId}/campaign-creator/update-brief") ?>`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const data = await resp.json();
+
+                if (data.success) {
+                    this.brief = this.editedBrief.trim();
+                    this.editingBrief = false;
+                    this.isAutoBrief = false;
+                } else {
+                    this.errorMsg = data.error || 'Errore nel salvataggio';
+                }
+            } catch (e) {
+                this.errorMsg = 'Errore di connessione. Riprova.';
+            }
+
+            this.savingBrief = false;
+        },
+
         // Step 1: Keyword Research
         async startKeywordResearch() {
             this.loading = true;
             this.errorMsg = '';
-            this.statusMsg = 'Analisi landing page e keyword research AI...';
+            this.statusMsg = 'Keyword research AI in corso...';
 
             const formData = new FormData();
             formData.append('_csrf_token', this.csrfToken);
@@ -697,7 +941,12 @@ function campaignCreatorWizard() {
 
         // Regenerate
         async regenerateStep(step) {
-            if (!confirm(step === 'keywords' ? 'Rigenerare keywords e campagna? (verranno consumati crediti aggiuntivi)' : 'Rigenerare la campagna? (verranno consumati 5 crediti aggiuntivi)')) {
+            const messages = {
+                'landing': 'Rianalizzare la landing page? I risultati precedenti verranno cancellati.',
+                'keywords': 'Rigenerare keywords e campagna? (verranno consumati crediti aggiuntivi)',
+                'campaign': 'Rigenerare la campagna? (verranno consumati 5 crediti aggiuntivi)',
+            };
+            if (!confirm(messages[step] || messages['campaign'])) {
                 return;
             }
 

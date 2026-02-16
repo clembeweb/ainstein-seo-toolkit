@@ -190,7 +190,6 @@ class AuditAnalyzer
                 'warning' => $counts['warning'],
                 'notice' => $counts['notice'],
                 'info' => $counts['info'] ?? 0,
-                'is_gsc' => Issue::isGscCategory($slug),
             ];
         }
 

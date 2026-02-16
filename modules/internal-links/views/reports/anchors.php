@@ -11,7 +11,7 @@
         <div class="flex items-center gap-3">
             <a href="<?= url("/internal-links/project/{$project['id']}/export?type=anchors") ?>"
                class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-xl hover:bg-primary-700 transition shadow-lg shadow-primary-600/25">
-                <i data-lucide="download" class="w-4 h-4"></i>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 <?= __('Esporta CSV') ?>
             </a>
         </div>
@@ -19,10 +19,10 @@
 
     <!-- Alerts for Duplicate Anchors -->
     <?php if (!empty($duplicateAnchors)): ?>
-    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4">
+    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
         <div class="flex items-start gap-3">
             <div class="flex-shrink-0">
-                <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500"></i>
+                <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
             </div>
             <div class="flex-1">
                 <h3 class="font-semibold text-amber-800 dark:text-amber-200"><?= __('Anchor Duplicati Rilevati') ?></h3>
@@ -73,12 +73,12 @@
         </a>
         <a href="<?= url("/internal-links/project/{$project['id']}/reports/anchors?filter=duplicates") ?>"
            class="px-4 py-2 text-sm font-medium rounded-lg transition flex items-center gap-1 <?= ($filter ?? '') === 'duplicates' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' ?>">
-            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
             <?= __('Solo Duplicati') ?>
         </a>
         <a href="<?= url("/internal-links/project/{$project['id']}/reports/anchors?filter=single") ?>"
            class="px-4 py-2 text-sm font-medium rounded-lg transition flex items-center gap-1 <?= ($filter ?? '') === 'single' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' ?>">
-            <i data-lucide="check-circle" class="w-4 h-4"></i>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <?= __('Anchor Puliti') ?>
         </a>
     </div>
@@ -88,7 +88,7 @@
         <!-- Search -->
         <div class="relative w-full sm:w-80">
             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
             <input type="text"
                    id="anchorSearch"
@@ -111,9 +111,9 @@
 
     <!-- Anchors Table -->
     <?php if (empty($anchors)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-12 text-center">
-        <div class="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <i data-lucide="type" class="w-8 h-8 text-slate-400"></i>
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-12 text-center">
+        <div class="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
         </div>
         <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2"><?= __('Nessun Dato Anchor Text') ?></h3>
         <p class="text-slate-500 dark:text-slate-400">
@@ -121,7 +121,7 @@
         </p>
     </div>
     <?php else: ?>
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full data-table" data-sortable>
                 <thead>
@@ -129,16 +129,16 @@
                         <th class="w-12 text-center px-4 py-3">
                             <input type="checkbox" id="selectAll" class="rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
                         </th>
-                        <th class="sortable px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"><?= __('Anchor Text') ?></th>
-                        <th class="sortable w-24 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"><?= __('Utilizzi') ?></th>
-                        <th class="sortable w-28 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"><?= __('Destinazioni') ?></th>
-                        <th class="sortable w-24 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"><?= __('Score') ?></th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"><?= __('URL Target') ?></th>
+                        <th class="sortable px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= __('Anchor Text') ?></th>
+                        <th class="sortable w-24 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= __('Utilizzi') ?></th>
+                        <th class="sortable w-28 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= __('Destinazioni') ?></th>
+                        <th class="sortable w-24 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= __('Score') ?></th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= __('URL Target') ?></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <?php foreach ($anchors as $anchor): ?>
-                    <tr class="anchor-row hover:bg-slate-50 dark:hover:bg-slate-700/50 <?= ($anchor['unique_destinations'] ?? 0) > 1 ? 'bg-amber-50/50 dark:bg-amber-900/10' : '' ?>">
+                    <tr class="anchor-row hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors <?= ($anchor['unique_destinations'] ?? 0) > 1 ? 'bg-amber-50/50 dark:bg-amber-900/10' : '' ?>">
                         <td class="text-center px-4 py-3">
                             <input type="checkbox" name="anchor_ids[]" value="<?= e($anchor['anchor'] ?? '') ?>" class="anchor-checkbox rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
                         </td>
@@ -146,7 +146,7 @@
                             <div class="flex items-center gap-2">
                                 <?php if (($anchor['unique_destinations'] ?? 0) > 1): ?>
                                 <span class="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center" title="<?= __('Anchor Duplicato') ?>">
-                                    <i data-lucide="alert-triangle" class="w-3 h-3 text-amber-600 dark:text-amber-400"></i>
+                                    <svg class="w-3 h-3 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                                 </span>
                                 <?php endif; ?>
                                 <span class="font-medium text-slate-900 dark:text-white truncate" title="<?= e($anchor['anchor'] ?? '') ?>">
@@ -285,8 +285,4 @@ function executeBulkAction() {
     }
 }
 
-// Reinit Lucide icons
-if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
-}
 </script>

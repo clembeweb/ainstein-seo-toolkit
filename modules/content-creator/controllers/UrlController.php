@@ -9,6 +9,11 @@ use Core\ModuleLoader;
 use Modules\ContentCreator\Models\Project;
 use Modules\ContentCreator\Models\Url;
 use Modules\ContentCreator\Models\Connector;
+use Modules\ContentCreator\Services\Connectors\ConnectorInterface;
+use Modules\ContentCreator\Services\Connectors\WordPressConnector;
+use Modules\ContentCreator\Services\Connectors\ShopifyConnector;
+use Modules\ContentCreator\Services\Connectors\PrestaShopConnector;
+use Modules\ContentCreator\Services\Connectors\MagentoConnector;
 use Services\SitemapService;
 
 /**
@@ -216,7 +221,7 @@ class UrlController
     }
 
     /**
-     * Import da CMS (AJAX) - Placeholder
+     * Import da CMS (AJAX)
      * POST /content-creator/projects/{id}/import/cms
      */
     public function importFromCms(int $id): void
@@ -231,10 +236,74 @@ class UrlController
             return;
         }
 
-        echo json_encode([
-            'success' => false,
-            'message' => 'Funzionalit\u00e0 in sviluppo',
-        ]);
+        $connectorId = (int) ($_POST['connector_id'] ?? 0);
+        $entityType = trim($_POST['entity_type'] ?? 'products');
+
+        if (!$connectorId) {
+            echo json_encode(['success' => false, 'error' => 'Seleziona un connettore']);
+            return;
+        }
+
+        if (!in_array($entityType, ['products', 'categories', 'pages'])) {
+            echo json_encode(['success' => false, 'error' => 'Tipo contenuto non valido']);
+            return;
+        }
+
+        $connectorModel = new Connector();
+        $connector = $connectorModel->findByUser($connectorId, $user['id']);
+
+        if (!$connector) {
+            echo json_encode(['success' => false, 'error' => 'Connettore non trovato']);
+            return;
+        }
+
+        try {
+            $config = json_decode($connector['config'] ?? '{}', true);
+            if (!is_array($config)) {
+                $config = [];
+            }
+
+            $service = $this->createConnectorService($connector['type'], $config);
+            $result = $service->fetchItems($entityType, 100);
+
+            if (!$result['success']) {
+                echo json_encode(['success' => false, 'error' => $result['error'] ?? 'Errore nel recupero dati dal CMS']);
+                return;
+            }
+
+            $items = $result['items'] ?? [];
+            if (empty($items)) {
+                echo json_encode(['success' => false, 'error' => 'Nessun elemento trovato nel CMS']);
+                return;
+            }
+
+            // Normalizza items per addBulkFromCms
+            $normalizedItems = [];
+            foreach ($items as $item) {
+                if (empty($item['url'])) {
+                    continue;
+                }
+                $normalizedItems[] = [
+                    'url' => $item['url'],
+                    'keyword' => $item['title'] ?? $item['name'] ?? null,
+                    'category' => $item['category'] ?? null,
+                    'entity_id' => $item['id'] ?? null,
+                    'entity_type' => $this->mapEntityType($entityType),
+                ];
+            }
+
+            $inserted = $this->url->addBulkFromCms($id, $user['id'], $connectorId, $normalizedItems);
+
+            echo json_encode([
+                'success' => true,
+                'message' => "Importate {$inserted} URL da " . ucfirst($connector['type']),
+                'inserted' => $inserted,
+                'total_found' => count($items),
+            ]);
+
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'error' => 'Errore: ' . $e->getMessage()]);
+        }
     }
 
     /**
@@ -734,5 +803,32 @@ class UrlController
             'url' => $urlRecord,
             'currentPage' => 'results',
         ]);
+    }
+
+    /**
+     * Factory per istanziare il servizio connettore corretto
+     */
+    private function createConnectorService(string $type, array $config): ConnectorInterface
+    {
+        return match ($type) {
+            'wordpress' => new WordPressConnector($config),
+            'shopify' => new ShopifyConnector($config),
+            'prestashop' => new PrestaShopConnector($config),
+            'magento' => new MagentoConnector($config),
+            default => throw new \Exception("Tipo connettore non supportato: {$type}"),
+        };
+    }
+
+    /**
+     * Mappa entity type plurale → singolare per il DB
+     */
+    private function mapEntityType(string $entityType): string
+    {
+        return match ($entityType) {
+            'products' => 'product',
+            'categories' => 'category',
+            'pages' => 'page',
+            default => $entityType,
+        };
     }
 }

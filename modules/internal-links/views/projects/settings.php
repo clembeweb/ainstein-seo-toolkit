@@ -14,7 +14,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Main Form -->
         <div class="lg:col-span-2">
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
                 <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Configurazione</h3>
                 </div>
@@ -76,7 +76,7 @@
         <!-- Sidebar -->
         <div class="space-y-6">
             <!-- Info -->
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Info Progetto</h3>
                 <dl class="space-y-3">
                     <div class="flex justify-between">

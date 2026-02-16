@@ -5,7 +5,7 @@
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
         <!-- Campagne -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center gap-3">
                 <div class="h-10 w-10 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
                     <svg class="h-5 w-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -20,7 +20,7 @@
         </div>
 
         <!-- Annunci -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center gap-3">
                 <div class="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
                     <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -35,7 +35,7 @@
         </div>
 
         <!-- Costo -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center gap-3">
                 <div class="h-10 w-10 rounded-lg bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
                     <svg class="h-5 w-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -50,7 +50,7 @@
         </div>
 
         <!-- Click -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center gap-3">
                 <div class="h-10 w-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
                     <svg class="h-5 w-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -65,7 +65,7 @@
         </div>
 
         <!-- Quality Score Medio -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center gap-3">
                 <div class="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
                     <svg class="h-5 w-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -86,7 +86,7 @@
 
     <!-- Campagne Section -->
     <?php if (empty($campaigns)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-12">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12">
         <div class="text-center">
             <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
@@ -102,11 +102,11 @@
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Campagne (<?= count($campaigns) ?>)</h2>
 
         <?php foreach ($campaigns as $index => $campaign): ?>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"
              x-data="{ expanded: <?= $index === 0 ? 'true' : 'false' ?> }">
 
             <!-- Campaign Header (clickable) -->
-            <div class="px-6 py-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" @click="expanded = !expanded">
+            <div class="px-4 py-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" @click="expanded = !expanded">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3 min-w-0">
                         <!-- Campaign icon -->
@@ -170,7 +170,7 @@
             <!-- Campaign Detail (expandable) -->
             <div x-show="expanded" x-collapse>
                 <!-- Performance Metrics -->
-                <div class="px-6 py-4 bg-slate-50 dark:bg-slate-700/30 border-t border-slate-200 dark:border-slate-700">
+                <div class="px-4 py-3 bg-slate-50 dark:bg-slate-700/30 border-t border-slate-200 dark:border-slate-700">
                     <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
                         <div class="text-center">
                             <p class="text-lg font-bold text-slate-900 dark:text-white"><?= number_format($campaign['clicks'] ?? 0, 0, ',', '.') ?></p>
@@ -213,28 +213,28 @@
                 ?>
                 <?php if (!empty($campaignAds)): ?>
                 <div class="border-t border-slate-200 dark:border-slate-700">
-                    <div class="px-6 py-3 bg-slate-50/50 dark:bg-slate-700/20">
+                    <div class="px-4 py-3 bg-slate-50/50 dark:bg-slate-700/20">
                         <h4 class="text-sm font-semibold text-slate-700 dark:text-slate-300">
                             Annunci (<?= count($campaignAds) ?>)
                         </h4>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                        <table class="w-full divide-y divide-slate-200 dark:divide-slate-700">
                             <thead class="bg-slate-50 dark:bg-slate-700/50">
                                 <tr>
-                                    <th class="px-4 py-2.5 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Gruppo</th>
-                                    <th class="px-4 py-2.5 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Titoli</th>
-                                    <th class="px-4 py-2.5 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Descrizioni</th>
-                                    <th class="px-4 py-2.5 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">URL</th>
-                                    <th class="px-4 py-2.5 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">QS</th>
-                                    <th class="px-4 py-2.5 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Click</th>
-                                    <th class="px-4 py-2.5 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">CTR</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Gruppo</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Titoli</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Descrizioni</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">URL</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">QS</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Click</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">CTR</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                                 <?php foreach ($campaignAds as $ad): ?>
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                                    <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                    <td class="px-4 py-3 text-sm text-slate-900 dark:text-white whitespace-nowrap">
                                         <?= e($ad['ad_group_name'] ?? '-') ?>
                                     </td>
                                     <td class="px-4 py-3 text-sm max-w-xs">
@@ -312,7 +312,7 @@
                     </div>
                 </div>
                 <?php else: ?>
-                <div class="border-t border-slate-200 dark:border-slate-700 px-6 py-6">
+                <div class="border-t border-slate-200 dark:border-slate-700 px-4 py-6">
                     <p class="text-sm text-slate-500 dark:text-slate-400 text-center">Nessun annuncio trovato per questa campagna.</p>
                 </div>
                 <?php endif; ?>
@@ -323,13 +323,13 @@
     <?php endif; ?>
 
     <!-- Estensioni Section -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
             <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Estensioni annuncio</h2>
         </div>
 
         <?php if (empty($extensions)): ?>
-        <div class="px-6 py-12">
+        <div class="px-4 py-12">
             <div class="text-center">
                 <svg class="mx-auto h-10 w-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"/>
@@ -357,7 +357,7 @@
             ];
             ?>
             <?php foreach ($extensions as $type => $items): ?>
-            <div class="px-6 py-4" x-data="{ showExt: true }">
+            <div class="px-4 py-3" x-data="{ showExt: true }">
                 <!-- Extension Type Header -->
                 <div class="flex items-center justify-between mb-3 cursor-pointer" @click="showExt = !showExt">
                     <div class="flex items-center gap-2">
@@ -379,22 +379,22 @@
                 <!-- Extension Items -->
                 <div x-show="showExt" x-collapse>
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                            <thead>
+                        <table class="w-full divide-y divide-slate-200 dark:divide-slate-700">
+                            <thead class="bg-slate-50 dark:bg-slate-700/50">
                                 <tr>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Testo</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stato</th>
-                                    <th class="px-4 py-2 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Click</th>
-                                    <th class="px-4 py-2 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Impression</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Testo</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stato</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Click</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Impression</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                                 <?php foreach ($items as $ext): ?>
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                                    <td class="px-4 py-2.5 text-sm text-slate-900 dark:text-white">
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                    <td class="px-4 py-3 text-sm text-slate-900 dark:text-white">
                                         <?= e($ext['extension_text'] ?? '-') ?>
                                     </td>
-                                    <td class="px-4 py-2.5 text-sm whitespace-nowrap">
+                                    <td class="px-4 py-3 text-sm whitespace-nowrap">
                                         <?php
                                         $extStatus = $ext['status'] ?? 'UNKNOWN';
                                         $extStatusColors = [
@@ -412,10 +412,10 @@
                                             <?= $extStatusLabelsMap[$extStatus] ?? e($extStatus) ?>
                                         </span>
                                     </td>
-                                    <td class="px-4 py-2.5 text-sm text-right text-slate-700 dark:text-slate-300 font-medium whitespace-nowrap">
+                                    <td class="px-4 py-3 text-sm text-right text-slate-900 dark:text-white font-medium whitespace-nowrap">
                                         <?= number_format($ext['clicks'] ?? 0, 0, ',', '.') ?>
                                     </td>
-                                    <td class="px-4 py-2.5 text-sm text-right text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                                    <td class="px-4 py-3 text-sm text-right text-slate-900 dark:text-white whitespace-nowrap">
                                         <?= number_format($ext['impressions'] ?? 0, 0, ',', '.') ?>
                                     </td>
                                 </tr>

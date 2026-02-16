@@ -108,6 +108,11 @@ class PrestaShopConnector implements ConnectorInterface
             $items[] = $this->normalizeItem($item, $entityType);
         }
 
+        // Post-processing: risolvi gerarchia categorie
+        if ($entityType === 'categories' && !empty($items)) {
+            $items = $this->resolveHierarchy($items);
+        }
+
         return [
             'success' => true,
             'items' => $items,
@@ -251,7 +256,7 @@ class PrestaShopConnector implements ConnectorInterface
     {
         $map = [
             'products' => ['id', 'name', 'link_rewrite', 'meta_title', 'meta_description', 'description', 'description_short'],
-            'categories' => ['id', 'name', 'link_rewrite', 'meta_title', 'meta_description'],
+            'categories' => ['id', 'name', 'link_rewrite', 'meta_title', 'meta_description', 'id_parent'],
             'pages' => ['id', 'meta_title', 'meta_description', 'content', 'link_rewrite'],
         ];
 
@@ -312,6 +317,68 @@ class PrestaShopConnector implements ConnectorInterface
         ];
 
         return $map[$entityType] ?? $entityType;
+    }
+
+    /**
+     * Risolvi gerarchia categorie: aggiunge il path completo (es. "Ceramiche > Arredo > Piatti")
+     * Esclude le root categories di sistema PrestaShop (Root, Home)
+     */
+    private function resolveHierarchy(array $items): array
+    {
+        // Mappa id → item per lookup rapido
+        $map = [];
+        foreach ($items as $item) {
+            $map[$item['id']] = $item;
+        }
+
+        // Identifica root categories di sistema (parent_id=0 e i loro figli diretti)
+        // Root (id=1, parent_id=0) e Home (id=2, parent_id=1) in PrestaShop
+        $rootIds = [];
+        foreach ($items as $item) {
+            if (($item['parent_id'] ?? '0') === '0') {
+                $rootIds[$item['id']] = true;
+            }
+        }
+        // Solo i figli diretti delle root (esattamente 1 livello), senza cascading
+        $systemIds = $rootIds;
+        foreach ($items as $item) {
+            if (isset($rootIds[$item['parent_id'] ?? ''])) {
+                $systemIds[$item['id']] = true;
+            }
+        }
+
+        // Costruisci path gerarchico e filtra
+        $result = [];
+        foreach ($items as $item) {
+            // Escludi le root categories di sistema
+            if (isset($systemIds[$item['id']])) {
+                continue;
+            }
+
+            $path = [];
+            $currentId = $item['parent_id'] ?? '0';
+            $visited = [];
+
+            while ($currentId && $currentId !== '0' && isset($map[$currentId]) && !isset($visited[$currentId])) {
+                $visited[$currentId] = true;
+                // Salta le categorie di sistema nel path
+                if (!isset($systemIds[$currentId])) {
+                    $parentName = $map[$currentId]['title'] ?? '';
+                    if ($parentName !== '') {
+                        array_unshift($path, $parentName);
+                    }
+                }
+                $currentId = $map[$currentId]['parent_id'] ?? '0';
+            }
+
+            $path[] = $item['title'];
+
+            $item['title'] = implode(' > ', $path);
+            $item['category'] = count($path) > 1 ? implode(' > ', array_slice($path, 0, -1)) : null;
+            $result[] = $item;
+        }
+
+        return $result;
     }
 
     /**
@@ -380,6 +447,7 @@ class PrestaShopConnector implements ConnectorInterface
                 'title' => $this->extractLangValue($item['name'] ?? ''),
                 'url' => $this->url . '/' . $linkRewrite,
                 'type' => 'category',
+                'parent_id' => (string) ($item['id_parent'] ?? '0'),
                 'meta_title' => $this->extractLangValue($item['meta_title'] ?? ''),
                 'meta_description' => $this->extractLangValue($item['meta_description'] ?? ''),
             ];

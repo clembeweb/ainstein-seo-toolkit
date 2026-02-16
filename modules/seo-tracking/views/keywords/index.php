@@ -118,7 +118,7 @@
     </div>
 
     <!-- Filters -->
-    <form method="GET" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+    <form method="GET" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
         <div class="flex flex-wrap items-center gap-4">
             <div class="flex-1 min-w-[200px]">
                 <input type="text" name="search" value="<?= e($filters['search']) ?>" placeholder="Cerca keyword..."
@@ -155,12 +155,19 @@
         </div>
     </form>
 
+    <!-- Results info -->
+    <?php if (!empty($keywords)): ?>
+    <div class="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
+        <span>Mostrando <span class="font-medium">1</span> - <span class="font-medium"><?= count($keywords) ?></span> di <span class="font-medium"><?= number_format($stats['total'] ?? count($keywords)) ?></span> keyword</span>
+    </div>
+    <?php endif; ?>
+
     <!-- Bulk Actions -->
     <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/bulk') ?>" method="POST" id="bulkForm">
         <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
             <!-- Bulk Actions Bar -->
-            <div class="px-6 py-3 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 flex items-center gap-4">
+            <div class="px-4 py-3 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 flex items-center gap-4">
                 <span class="text-sm text-slate-500 dark:text-slate-400" id="selectedCount">0 selezionate</span>
                 <select name="action" class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm">
                     <option value="">Azione...</option>
@@ -195,7 +202,7 @@
             <?php else: ?>
             <div class="overflow-x-auto">
                 <table class="w-full">
-                    <thead class="bg-slate-50 dark:bg-slate-800/50">
+                    <thead class="bg-slate-50 dark:bg-slate-700/50">
                         <tr>
                             <th class="px-4 py-3 text-left">
                                 <input type="checkbox" class="rounded border-slate-300 dark:border-slate-600" onclick="toggleAll(this)">
@@ -214,7 +221,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                         <?php foreach ($keywords as $kw): ?>
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                             <td class="px-4 py-3">
                                 <input type="checkbox" name="keyword_ids[]" value="<?= $kw['id'] ?>" class="rounded border-slate-300 dark:border-slate-600 keyword-checkbox" onchange="updateSelectedCount()">
                             </td>

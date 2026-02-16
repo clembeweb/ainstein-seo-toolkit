@@ -14,7 +14,7 @@
     </div>
 
     <!-- Manual Input Form -->
-    <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/store') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/store') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
         <div class="p-6 space-y-6">
             <!-- Keywords Input -->
@@ -118,7 +118,7 @@
     </form>
 
     <!-- CSV Import -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <h2 class="font-medium text-slate-900 dark:text-white">Importa da CSV</h2>
         </div>

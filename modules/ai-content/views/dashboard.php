@@ -46,7 +46,7 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4" data-tour="aic-stats">
         <!-- Keywords -->
-        <a href="<?= url($baseUrl . '/keywords') ?>" class="block bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all">
+        <a href="<?= url($baseUrl . '/keywords') ?>" class="block bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all">
             <div class="flex items-center gap-3">
                 <div class="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
                     <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -61,7 +61,7 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
         </a>
 
         <!-- Articles -->
-        <a href="<?= url($baseUrl . '/articles') ?>" class="block bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md hover:border-purple-300 dark:hover:border-purple-700 transition-all">
+        <a href="<?= url($baseUrl . '/articles') ?>" class="block bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md hover:border-purple-300 dark:hover:border-purple-700 transition-all">
             <div class="flex items-center gap-3">
                 <div class="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
                     <svg class="h-5 w-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -76,7 +76,7 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
         </a>
 
         <!-- Published -->
-        <a href="<?= url($baseUrl . '/articles?status=published') ?>" class="block bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-700 transition-all">
+        <a href="<?= url($baseUrl . '/articles?status=published') ?>" class="block bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-700 transition-all">
             <div class="flex items-center gap-3">
                 <div class="h-10 w-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
                     <svg class="h-5 w-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -92,7 +92,7 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
 
         <!-- WP Site (linked to project) -->
         <?php if (isset($project) && $project): ?>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center gap-3">
                 <div class="h-10 w-10 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
                     <svg class="h-5 w-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -125,7 +125,7 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
     <!-- Additional Stats Row -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Total Words -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Parole generate</p>
@@ -140,7 +140,7 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
         </div>
 
         <!-- Credits Used -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Crediti utilizzati</p>
@@ -158,7 +158,7 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
     <!-- Quick Actions + Recent Articles -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Quick Actions -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
             <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Azioni rapide</h2>
             <div class="space-y-3">
                 <a href="<?= url($baseUrl . '/keywords') ?>" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
@@ -215,7 +215,7 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
         </div>
 
         <!-- Recent Articles -->
-        <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Articoli recenti</h2>
                 <a href="<?= url($baseUrl . '/articles') ?>" class="text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700">
@@ -297,7 +297,7 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
     </div>
 
     <!-- Credits Info -->
-    <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-sm p-6 text-white">
+    <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-sm p-6 text-white">
         <div class="flex items-center justify-between">
             <div>
                 <h3 class="text-lg font-semibold">Costi Crediti</h3>

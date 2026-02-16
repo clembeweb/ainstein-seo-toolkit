@@ -12,7 +12,7 @@
 
     <!-- Form -->
     <form action="<?= url('/ai-content/projects/' . $project['id'] . '/auto/settings') ?>" method="POST"
-          class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700"
+          class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700"
           x-data="settingsForm()"
           @submit="prepareSubmit">
         <?= csrf_field() ?>

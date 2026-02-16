@@ -36,12 +36,17 @@ class CampaignCreatorController
         $keywords = CreatorKeyword::getByProject($id);
         $campaign = CreatorCampaign::getLatestByProject($id);
 
-        $currentStep = 1;
-        if ($kwGeneration) $currentStep = 2;
-        if ($campaignGeneration && $campaign) $currentStep = 3;
+        $currentStep = 0;
+        if ($kwGeneration) $currentStep = 1;
+        if ($campaignGeneration && $campaign) $currentStep = 2;
 
         // Conta keyword
         $kwCounts = CreatorKeyword::countByProject($id);
+
+        // Phase A/B per Step 0
+        $inputMode = $project['input_mode'] ?? 'url';
+        $hasScrapedData = !empty($project['scraped_content']);
+        $phaseAComplete = ($inputMode === 'brief') || $hasScrapedData;
 
         return View::render('ads-analyzer/campaign-creator/wizard', [
             'title' => $project['name'] . ' - Campaign Creator',
@@ -54,11 +59,159 @@ class CampaignCreatorController
             'campaign' => $campaign,
             'kwGeneration' => $kwGeneration,
             'campaignGeneration' => $campaignGeneration,
+            'phaseAComplete' => $phaseAComplete,
+            'scrapedContext' => $project['scraped_context'] ?? '',
+            'hasScrapedData' => $hasScrapedData,
         ]);
     }
 
     /**
-     * Scraping landing + keyword research AI (POST AJAX lungo)
+     * Analizza landing page: scraping + auto-brief (POST AJAX lungo)
+     */
+    public function analyzeLanding(int $id): void
+    {
+        ignore_user_abort(true);
+        set_time_limit(0);
+        ob_start();
+        header('Content-Type: application/json');
+
+        try {
+            $user = Auth::user();
+            $project = Project::findByUserAndId($user['id'], $id);
+
+            if (!$project || $project['type'] !== 'campaign-creator') {
+                ob_end_clean();
+                http_response_code(404);
+                echo json_encode(['error' => 'Progetto non trovato']);
+                exit;
+            }
+
+            if (empty($project['landing_url'])) {
+                ob_end_clean();
+                http_response_code(400);
+                echo json_encode(['error' => 'Nessun URL landing configurato']);
+                exit;
+            }
+
+            // Idempotente: se gia scraping fatto, ritorna dati esistenti
+            if (!empty($project['scraped_content'])) {
+                ob_end_clean();
+                echo json_encode([
+                    'success' => true,
+                    'scraped_context' => $project['scraped_context'] ?? '',
+                    'brief' => $project['brief'] ?? '',
+                    'is_auto_brief' => false,
+                    'already_done' => true,
+                ]);
+                exit;
+            }
+
+            $scrapeCost = CampaignCreatorService::getCost('scrape');
+
+            if (!Credits::hasEnough($user['id'], $scrapeCost)) {
+                ob_end_clean();
+                http_response_code(400);
+                echo json_encode(['error' => "Crediti insufficienti. Richiesti: {$scrapeCost}"]);
+                exit;
+            }
+
+            session_write_close();
+
+            // Scraping landing page
+            $extractor = new ContextExtractorService();
+            $scrapeResult = $extractor->extractFromUrl($user['id'], $project['landing_url'], 'campaign');
+
+            Database::reconnect();
+
+            if (!$scrapeResult['success']) {
+                ob_end_clean();
+                http_response_code(400);
+                echo json_encode(['error' => 'Errore scraping: ' . ($scrapeResult['error'] ?? 'Pagina non accessibile')]);
+                exit;
+            }
+
+            // Salva contenuto scraping nel progetto
+            Project::update($id, [
+                'scraped_content' => $scrapeResult['scraped_content'],
+                'scraped_context' => $scrapeResult['extracted_context'],
+            ]);
+
+            Credits::consume($user['id'], $scrapeCost, 'creator_scrape', 'ads-analyzer');
+
+            // Rileggi progetto
+            $project = Project::find($id);
+
+            // Auto-brief solo se input_mode 'url' e brief vuoto
+            $inputMode = $project['input_mode'] ?? 'url';
+            $isAutoBrief = false;
+
+            if ($inputMode === 'url' && empty($project['brief']) && !empty($project['scraped_context'])) {
+                $autoBrief = CampaignCreatorService::generateBriefFromContext(
+                    $user['id'],
+                    $project['scraped_context'],
+                    $project['scraped_content'] ?? '',
+                    $project['campaign_type_gads']
+                );
+
+                Database::reconnect();
+
+                if (!empty($autoBrief)) {
+                    Project::update($id, ['brief' => $autoBrief]);
+                    $project['brief'] = $autoBrief;
+                    $isAutoBrief = true;
+                }
+            }
+
+            ob_end_clean();
+            echo json_encode([
+                'success' => true,
+                'scraped_context' => $project['scraped_context'] ?? '',
+                'brief' => $project['brief'] ?? '',
+                'is_auto_brief' => $isAutoBrief,
+            ]);
+            exit;
+
+        } catch (\Exception $e) {
+            error_log("CampaignCreator analyzeLanding error: " . $e->getMessage());
+            ob_end_clean();
+            http_response_code(500);
+            echo json_encode(['error' => 'Errore interno: ' . $e->getMessage()]);
+            exit;
+        }
+    }
+
+    /**
+     * Salva brief editato dall'utente (POST AJAX rapido)
+     */
+    public function updateBrief(int $id): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = Project::findByUserAndId($user['id'], $id);
+
+        if (!$project || $project['type'] !== 'campaign-creator') {
+            http_response_code(404);
+            echo json_encode(['error' => 'Progetto non trovato']);
+            exit;
+        }
+
+        $brief = trim($_POST['brief'] ?? '');
+
+        if (mb_strlen($brief) < 20) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Il brief deve contenere almeno 20 caratteri']);
+            exit;
+        }
+
+        Project::update($id, ['brief' => $brief]);
+
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
+    /**
+     * Keyword Research AI (POST AJAX lungo)
      */
     public function generateKeywords(int $id): void
     {
@@ -78,48 +231,26 @@ class CampaignCreatorController
                 exit;
             }
 
-            // Costo: scraping (1) + keyword research (3) = 4
-            $scrapeCost = CampaignCreatorService::getCost('scrape');
-            $kwCost = CampaignCreatorService::getCost('keywords');
-            $totalCost = $scrapeCost + $kwCost;
-
-            if (!Credits::hasEnough($user['id'], $totalCost)) {
+            // Prerequisito: brief o scraped_context devono esistere
+            if (empty($project['brief']) && empty($project['scraped_context'])) {
                 ob_end_clean();
                 http_response_code(400);
-                echo json_encode(['error' => "Crediti insufficienti. Richiesti: {$totalCost}"]);
+                echo json_encode(['error' => 'Prima analizza la landing page o fornisci un brief']);
+                exit;
+            }
+
+            $kwCost = CampaignCreatorService::getCost('keywords');
+
+            if (!Credits::hasEnough($user['id'], $kwCost)) {
+                ob_end_clean();
+                http_response_code(400);
+                echo json_encode(['error' => "Crediti insufficienti. Richiesti: {$kwCost}"]);
                 exit;
             }
 
             session_write_close();
 
-            // Step 1: Scraping landing page
-            $needScrape = empty($project['scraped_content']);
-            if ($needScrape) {
-                $extractor = new ContextExtractorService();
-                $scrapeResult = $extractor->extractFromUrl($user['id'], $project['landing_url'], 'campaign');
-
-                Database::reconnect();
-
-                if (!$scrapeResult['success']) {
-                    ob_end_clean();
-                    http_response_code(400);
-                    echo json_encode(['error' => 'Errore scraping: ' . ($scrapeResult['error'] ?? 'Pagina non accessibile')]);
-                    exit;
-                }
-
-                // Salva contenuto scraping nel progetto
-                Project::update($id, [
-                    'scraped_content' => $scrapeResult['scraped_content'],
-                    'scraped_context' => $scrapeResult['extracted_context'],
-                ]);
-
-                Credits::consume($user['id'], $scrapeCost, 'creator_scrape', 'ads-analyzer');
-
-                // Rileggi progetto con dati aggiornati
-                $project = Project::find($id);
-            }
-
-            // Step 2: Keyword Research AI
+            // Keyword Research AI
             $generation = CreatorGeneration::create([
                 'project_id' => $id,
                 'user_id' => $user['id'],
@@ -417,16 +548,28 @@ class CampaignCreatorController
 
         $step = $_POST['step'] ?? 'keywords';
 
-        if ($step === 'keywords') {
-            // Rigenera tutto: cancella generation, keyword, campagna e scraping
-            CreatorGeneration::deleteByProject($id);
-            CreatorKeyword::deleteByProject($id);
-            CreatorCampaign::deleteByProject($id);
-            Project::update($id, [
+        if ($step === 'landing') {
+            // Rigenera landing: cancella scraping, brief auto (solo url mode), generations, keywords, campagne
+            $inputMode = $project['input_mode'] ?? 'url';
+            $updateData = [
                 'scraped_content' => null,
                 'scraped_context' => null,
                 'status' => 'draft',
-            ]);
+            ];
+            // Reset brief solo se auto-generato (input_mode url)
+            if ($inputMode === 'url') {
+                $updateData['brief'] = null;
+            }
+            CreatorGeneration::deleteByProject($id);
+            CreatorKeyword::deleteByProject($id);
+            CreatorCampaign::deleteByProject($id);
+            Project::update($id, $updateData);
+        } elseif ($step === 'keywords') {
+            // Rigenera keywords: cancella generation kw + campagna (preserva scraping e brief)
+            CreatorGeneration::deleteByProject($id);
+            CreatorKeyword::deleteByProject($id);
+            CreatorCampaign::deleteByProject($id);
+            Project::update($id, ['status' => 'draft']);
         } else {
             // Rigenera solo campagna
             CreatorGeneration::deleteByProjectAndStep($id, 'campaign');

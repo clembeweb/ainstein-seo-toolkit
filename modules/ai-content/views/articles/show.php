@@ -294,7 +294,7 @@ $baseUrl = !empty($article['project_id']) ? '/ai-content/projects/' . $article['
             </div>
 
             <!-- Content Area -->
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <!-- Preview Mode -->
                 <div x-show="viewMode === 'preview'" class="p-6 lg:p-8">
                     <?php if (empty($article['content'])): ?>
@@ -337,7 +337,7 @@ $baseUrl = !empty($article['project_id']) ? '/ai-content/projects/' . $article['
         <!-- Right Column: Sidebar (30%) -->
         <div class="lg:col-span-3 space-y-4">
             <!-- Metadata Card -->
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5 space-y-5">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 space-y-5">
                 <h3 class="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                     <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -434,7 +434,7 @@ $baseUrl = !empty($article['project_id']) ? '/ai-content/projects/' . $article['
             </div>
 
             <!-- Actions Card -->
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5 space-y-3">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 space-y-3">
                 <h3 class="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                     <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
@@ -495,7 +495,7 @@ $baseUrl = !empty($article['project_id']) ? '/ai-content/projects/' . $article['
 
             <!-- Sources Card -->
             <?php if (!empty($article['sources'])): ?>
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
                 <h3 class="font-semibold text-slate-900 dark:text-white flex items-center gap-2 mb-3">
                     <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>

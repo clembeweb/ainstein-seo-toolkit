@@ -157,7 +157,7 @@ $diffLabels = ['low' => 'Facile', 'medium' => 'Media', 'high' => 'Difficile'];
     $realYear = $startYear + intdiv($startMonth - 1 + $monthNum - 1, 12);
     $monthLabel = "Mese {$monthNum} — {$mesiIt[$realMonth]} {$realYear}";
     ?>
-    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <!-- Month Header -->
         <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -176,7 +176,7 @@ $diffLabels = ['low' => 'Facile', 'medium' => 'Media', 'high' => 'Difficile'];
 
         <!-- Articles Table -->
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+            <table class="w-full">
                 <thead class="bg-slate-50 dark:bg-slate-700/50">
                     <tr>
                         <?php if (!empty($aicProjects)): ?>
@@ -200,7 +200,7 @@ $diffLabels = ['low' => 'Facile', 'medium' => 'Media', 'high' => 'Difficile'];
                     $difLabel = $diffLabels[strtolower($item['difficulty'] ?? 'medium')] ?? 'Media';
                     $secondaryKw = json_decode($item['secondary_keywords'] ?? '[]', true);
                     ?>
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 <?= $item['sent_to_content'] ? 'opacity-60' : '' ?>">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors <?= $item['sent_to_content'] ? 'opacity-60' : '' ?>">
                         <?php if (!empty($aicProjects)): ?>
                         <td class="px-4 py-3">
                             <?php if (!$item['sent_to_content']): ?>
@@ -247,7 +247,7 @@ $diffLabels = ['low' => 'Facile', 'medium' => 'Media', 'high' => 'Difficile'];
     <?php endforeach; ?>
 
     <?php if (empty($itemsByMonth)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
         <p class="text-slate-500 dark:text-slate-400">Nessun articolo nel piano editoriale.</p>
     </div>
     <?php endif; ?>

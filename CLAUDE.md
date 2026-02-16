@@ -1,7 +1,7 @@
 # AINSTEIN - Istruzioni Claude Code
 
 > Questo file viene caricato automaticamente ad ogni sessione.
-> Ultimo aggiornamento: 2026-02-13 (Golden Rule #18: docs, #19: project-scoped links)
+> Ultimo aggiornamento: 2026-02-16 (Golden Rule #20: tabelle standard, uniformazione CSS tutti i moduli)
 
 ---
 
@@ -41,6 +41,7 @@
 17. ob_start() in AJAX lunghi    → Output buffering OBBLIGATORIO (vedi sezione dedicata)
 18. Aggiornare docs dopo sviluppo → Documentazione utente + Data Model (vedi sezione dedicata)
 19. Link project-scoped nelle view → MAI usare percorsi legacy dentro contesto progetto
+20. Tabelle standard CSS uniforme  → rounded-xl, px-4 py-3, bg-slate-700/50, componenti shared
 ```
 
 ---
@@ -121,11 +122,17 @@ seo-toolkit/
 │   ├── internal-links/
 │   ├── seo-tracking/
 │   └── keyword-research/    # AI Keyword Research
+├── core/
+│   └── Pagination.php       # Paginazione standard (make, sqlLimit)
 ├── shared/views/
 │   ├── layout.php
 │   └── components/
-│       ├── nav-items.php    # Sidebar con accordion
-│       └── import-tabs.php  # Componente import URL
+│       ├── nav-items.php            # Sidebar con accordion
+│       ├── import-tabs.php          # Componente import URL
+│       ├── table-pagination.php     # Paginazione tabelle (shared)
+│       ├── table-empty-state.php    # Empty state tabelle (shared)
+│       ├── table-helpers.php        # Sort headers, badges, bulk init
+│       └── table-bulk-bar.php       # Barra azioni bulk (shared)
 ├── docs/
 │   └── data-model.html      # Schema DB standalone (Mermaid.js ER diagrams)
 ├── shared/views/docs/        # Documentazione utente pubblica (/docs)
@@ -642,6 +649,143 @@ async startPolling() {
 
 ---
 
+## PATTERN TABELLE STANDARD
+
+### Componenti Shared
+
+Tutti i moduli DEVONO usare i componenti condivisi per tabelle:
+
+| Componente | File | Uso |
+|-----------|------|-----|
+| Pagination | `core/Pagination.php` | `Pagination::make($total, $page, $perPage)` |
+| Pagination HTML | `shared/views/components/table-pagination.php` | `View::partial('components/table-pagination', [...])` |
+| Empty State | `shared/views/components/table-empty-state.php` | `View::partial('components/table-empty-state', [...])` |
+| Sort Headers | `shared/views/components/table-helpers.php` | `table_sort_header($label, $field, ...)` |
+| Bulk Bar | `shared/views/components/table-bulk-bar.php` | `View::partial('components/table-bulk-bar', [...])` |
+
+### Struttura Dati Paginazione (Standard Unico)
+
+```php
+// Generata da Pagination::make() o dal model
+[
+    'current_page' => 1,
+    'last_page' => 10,
+    'total' => 250,
+    'per_page' => 25,
+    'from' => 1,    // 1-based
+    'to' => 25,
+]
+```
+
+### CSS Classi Standard Tabelle
+
+```html
+<!-- Wrapper -->
+<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead class="bg-slate-50 dark:bg-slate-700/50">
+        <tr>
+          <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+      </thead>
+      <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+          <td class="px-4 py-3 text-sm text-slate-900 dark:text-white">
+```
+
+**Standard stabiliti (Golden Rule #20):**
+- Bordo container: `rounded-xl` (NON `rounded-lg` ne `rounded-2xl`)
+- Tabella: `w-full` (NON `min-w-full`)
+- Padding celle th/td: `px-4 py-3` (NON `px-6 py-3`, `px-6 py-4`, `px-4 py-2`)
+- Header card: `px-4 py-3 border-b` (NON `px-6 py-4`)
+- Header th: `text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider`
+- Badge status: `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium`
+- Hover riga: `hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors` (NON `/30`)
+- Thead dark: `dark:bg-slate-700/50` (NON `dark:bg-slate-800/50`)
+
+**NON usare MAI nelle tabelle:**
+
+| Sbagliato | Corretto | Motivo |
+|-----------|----------|--------|
+| `rounded-2xl` / `rounded-lg` | `rounded-xl` | Standard uniforme container |
+| `px-6 py-3` / `px-6 py-4` | `px-4 py-3` | Padding compatto uniforme |
+| `dark:bg-slate-800/50` (thead) | `dark:bg-slate-700/50` | Contrasto corretto dark mode |
+| `dark:hover:bg-slate-700/30` | `dark:hover:bg-slate-700/50` | Hover visibile |
+| `min-w-full` | `w-full` | Evita overflow |
+| `font-medium` senza `text-xs uppercase tracking-wider` | `text-xs font-medium uppercase tracking-wider` | Header standard |
+| Paginazione inline copy-paste | `View::partial('components/table-pagination', [...])` | Componente shared |
+| Bulk selection vanilla JS | Alpine `selectedIds` + `table_bulk_init()` | Pattern unico |
+
+### Pattern Empty State
+
+```php
+// Nella view — usa View::partial
+<?= \Core\View::partial('components/table-empty-state', [
+    'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
+    'heading' => 'Nessun elemento trovato',
+    'message' => 'Inizia aggiungendo il primo elemento.',
+    'ctaText' => 'Aggiungi',         // opzionale
+    'ctaUrl' => url('/modulo/add'),   // opzionale
+]) ?>
+```
+
+### Pattern Sorting (Server-Side)
+
+```php
+// Nel controller
+$filters = [
+    'sort' => $_GET['sort'] ?? 'created_at',
+    'dir'  => $_GET['dir'] ?? 'desc',
+];
+
+// Nel model — allowlist obbligatoria
+$allowedSort = ['keyword', 'status', 'created_at'];
+$sortField = in_array($filters['sort'] ?? '', $allowedSort) ? $filters['sort'] : 'created_at';
+$sortDir = (strtolower($filters['dir'] ?? '') === 'asc') ? 'ASC' : 'DESC';
+```
+
+```php
+// Nella view — include helper + genera headers
+include __DIR__ . '/../../../../shared/views/components/table-helpers.php';
+$currentSort = $filters['sort'] ?? 'created_at';
+$currentDir = $filters['dir'] ?? 'desc';
+$baseUrl = url('/modulo/projects/' . $project['id'] . '/sezione');
+
+// Nell'header tabella
+<?= table_sort_header('Keyword', 'keyword', $currentSort, $currentDir, $baseUrl, $sortFilters) ?>
+<?= table_header('Azioni', 'right') ?> // non sortable
+```
+
+### Pattern Paginazione (View)
+
+```php
+// Nella view — usa View::partial (scope isolato, evita conflitti variabili)
+<?= \Core\View::partial('components/table-pagination', [
+    'pagination' => $pagination,
+    'baseUrl' => $baseUrl,
+    'filters' => $paginationFilters, // preserva sort/dir/status nei link
+]) ?>
+```
+
+### Pattern Bulk Operations
+
+```php
+// Nella view
+<?php include __DIR__ . '/../../../../shared/views/components/table-helpers.php'; ?>
+<div x-data="<?= table_bulk_init(array_column($items, 'id')) ?>">
+    <?= \Core\View::partial('components/table-bulk-bar', [
+        'actions' => [
+            ['label' => 'Elimina', 'action' => 'bulkDelete()', 'color' => 'red'],
+        ]
+    ]) ?>
+    <!-- Tabella con checkbox -->
+    <?= table_checkbox_header() ?>
+    <?= table_checkbox_cell($item['id']) ?>
+</div>
+```
+
+---
+
 ## ICONE HEROICONS (più usate)
 
 ```html
@@ -710,6 +854,9 @@ async startPolling() {
 [ ] Link nelle view usano percorsi project-scoped (MAI percorsi legacy dentro contesto progetto)
 [ ] Paginazione preserva contesto progetto
 [ ] Nessun valore hardcoded nelle view (crediti, limiti → Credits::getCost() dal controller)
+[ ] Tabelle usano componenti shared (table-pagination, table-helpers, table-empty-state)
+[ ] Container wrapper: rounded-xl (NON rounded-lg/rounded-2xl), w-full (NON min-w-full)
+[ ] Thead dark mode: bg-slate-700/50 (NON bg-slate-800/50)
 ```
 
 ---
@@ -755,6 +902,9 @@ async startPolling() {
 | Paginazione perde contesto progetto | Link hardcoded a percorso legacy | Usare `$paginationBase` project-aware (Golden Rule #19) |
 | Link articoli/keyword vanno a vista globale | Percorso legacy `/modulo/sezione` | Usare `$baseUrl` project-scoped: `/modulo/projects/{id}/sezione` |
 | Costi crediti sbagliati in dashboard | Valori hardcoded nella view | Passare `Credits::getCost()` dal controller |
+| Paginazione non uniforme | Componente inline | Usare `View::partial('components/table-pagination', ...)` |
+| Sort headers non funzionano | Manca include table-helpers | `include __DIR__ . '/../../../../shared/views/components/table-helpers.php'` |
+| Variabili paginazione in conflitto | `include` condivide scope | Usare `View::partial()` (scope isolato) |
 
 ---
 

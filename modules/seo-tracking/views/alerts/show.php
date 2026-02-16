@@ -52,7 +52,7 @@
     ?>
 
     <!-- Alert Card -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <div class="flex items-start gap-4">
             <div class="h-12 w-12 rounded-lg <?= $iconClass ?> flex items-center justify-center flex-shrink-0">
                 <?php if ($alert['alert_type'] === 'position_drop'): ?>
@@ -98,7 +98,7 @@
     <!-- Alert Data -->
     <?php if (!empty($alert['data'])): ?>
     <?php $data = json_decode($alert['data'], true); ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Dettagli</h3>
         </div>
@@ -183,7 +183,7 @@
 
     <!-- Related Keyword -->
     <?php if (!empty($alert['keyword_id']) && !empty($keyword)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Keyword correlata</h3>
         </div>

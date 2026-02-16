@@ -48,7 +48,7 @@ $config = json_encode([
 
     <?php if (empty($searchTermRuns)): ?>
     <!-- Empty State: nessun run con search terms -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
         <div class="mx-auto h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mb-4">
             <svg class="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
@@ -68,7 +68,7 @@ $config = json_encode([
     <?php else: ?>
 
     <!-- SEZIONE 1: Run Selector + Stats -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Termini di Ricerca</h2>
             <div class="flex items-center gap-3">
@@ -103,7 +103,7 @@ $config = json_encode([
     </div>
 
     <!-- SEZIONE 2: Search Terms Table -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700" x-show="adGroups.length > 0">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700" x-show="adGroups.length > 0">
         <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <button @click="showTerms = !showTerms" class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400">
                 <svg class="w-4 h-4 transition-transform" :class="showTerms && 'rotate-90'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -139,32 +139,32 @@ $config = json_encode([
 
             <!-- Terms list -->
             <div class="max-h-96 overflow-y-auto">
-                <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                <table class="w-full divide-y divide-slate-200 dark:divide-slate-700">
                     <thead class="bg-slate-50 dark:bg-slate-700/50 sticky top-0">
                         <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Termine</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-slate-500 dark:text-slate-400">Click</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-slate-500 dark:text-slate-400">Impression</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-slate-500 dark:text-slate-400">CTR</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-slate-500 dark:text-slate-400">Costo</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Termine</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Click</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Impression</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">CTR</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Costo</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                         <template x-for="term in filteredTerms" :key="term.id">
-                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                                <td class="px-4 py-2 text-sm text-slate-900 dark:text-white">
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                <td class="px-4 py-3 text-sm text-slate-900 dark:text-white">
                                     <span x-text="term.term"></span>
                                     <span x-show="term.is_zero_ctr" class="ml-1 px-1.5 py-0.5 rounded text-xs bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400">0 CTR</span>
                                 </td>
-                                <td class="px-4 py-2 text-sm text-right text-slate-700 dark:text-slate-300" x-text="term.clicks"></td>
-                                <td class="px-4 py-2 text-sm text-right text-slate-700 dark:text-slate-300" x-text="formatNumber(term.impressions)"></td>
-                                <td class="px-4 py-2 text-sm text-right" :class="term.ctr === 0 ? 'text-red-500' : 'text-slate-700 dark:text-slate-300'" x-text="term.ctr.toFixed(2) + '%'"></td>
-                                <td class="px-4 py-2 text-sm text-right text-slate-700 dark:text-slate-300" x-text="'€' + term.cost.toFixed(2)"></td>
+                                <td class="px-4 py-3 text-sm text-right text-slate-900 dark:text-white" x-text="term.clicks"></td>
+                                <td class="px-4 py-3 text-sm text-right text-slate-900 dark:text-white" x-text="formatNumber(term.impressions)"></td>
+                                <td class="px-4 py-3 text-sm text-right" :class="term.ctr === 0 ? 'text-red-500' : 'text-slate-900 dark:text-white'" x-text="term.ctr.toFixed(2) + '%'"></td>
+                                <td class="px-4 py-3 text-sm text-right text-slate-900 dark:text-white" x-text="'€' + term.cost.toFixed(2)"></td>
                             </tr>
                         </template>
                         <template x-if="filteredTerms.length === 0">
                             <tr>
-                                <td colspan="5" class="px-4 py-8 text-center text-sm text-slate-400">
+                                <td colspan="5" class="px-4 py-3 text-center text-sm text-slate-400">
                                     <span x-show="loadingRunData">Caricamento...</span>
                                     <span x-show="!loadingRunData">Nessun termine trovato</span>
                                 </td>
@@ -177,7 +177,7 @@ $config = json_encode([
     </div>
 
     <!-- SEZIONE 3: Contesto & Analisi -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6" x-show="adGroups.length > 0">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6" x-show="adGroups.length > 0">
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Analisi Keyword Negative</h2>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -292,7 +292,7 @@ $config = json_encode([
     </div>
 
     <!-- SEZIONE 4: Risultati -->
-    <div x-show="analysisResults !== null" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <div x-show="analysisResults !== null" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <!-- Header risultati -->
         <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
@@ -399,7 +399,7 @@ $config = json_encode([
     </div>
 
     <!-- Storico analisi precedenti -->
-    <div x-show="analyses.length > 0 && analysisResults === null" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div x-show="analyses.length > 0 && analysisResults === null" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Analisi Precedenti</h2>
         <div class="space-y-2">
             <template x-for="a in analyses" :key="a.id">

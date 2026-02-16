@@ -11,7 +11,7 @@
         <div class="flex items-center gap-3">
             <a href="<?= url("/internal-links/project/{$project['id']}/urls/import") ?>"
                class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-xl hover:bg-primary-700 transition shadow-lg shadow-primary-600/25">
-                <i data-lucide="upload" class="w-4 h-4"></i>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
                 <?= __('Import URLs') ?>
             </a>
         </div>
@@ -53,7 +53,7 @@
         <!-- Search -->
         <div class="relative w-full sm:w-80">
             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
             <input type="text"
                    id="urlSearch"
@@ -78,9 +78,9 @@
 
     <!-- URLs Table -->
     <?php if (empty($urls)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-12 text-center">
-        <div class="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <i data-lucide="file-text" class="w-8 h-8 text-slate-400"></i>
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-12 text-center">
+        <div class="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         </div>
         <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2"><?= __('No URLs found') ?></h3>
         <p class="text-slate-500 dark:text-slate-400 mb-6">
@@ -89,13 +89,13 @@
         <?php if (!($currentStatus ?? null)): ?>
         <a href="<?= url("/internal-links/project/{$project['id']}/urls/import") ?>"
            class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white font-medium rounded-xl hover:bg-primary-700 transition">
-            <i data-lucide="upload" class="w-5 h-5"></i>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
             <?= __('Import URLs') ?>
         </a>
         <?php endif; ?>
     </div>
     <?php else: ?>
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full data-table" data-sortable>
                 <thead>
@@ -103,17 +103,17 @@
                         <th class="w-12 text-center px-4 py-3">
                             <input type="checkbox" id="selectAll" class="rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
                         </th>
-                        <th class="sortable px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">URL</th>
-                        <th class="sortable w-40 px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"><?= __('Keyword') ?></th>
-                        <th class="sortable w-28 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"><?= __('Status') ?></th>
-                        <th class="sortable w-24 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"><?= __('HTTP') ?></th>
-                        <th class="sortable w-36 px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"><?= __('Last Scraped') ?></th>
-                        <th class="w-24 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"><?= __('Actions') ?></th>
+                        <th class="sortable px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">URL</th>
+                        <th class="sortable w-40 px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= __('Keyword') ?></th>
+                        <th class="sortable w-28 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= __('Status') ?></th>
+                        <th class="sortable w-24 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= __('HTTP') ?></th>
+                        <th class="sortable w-36 px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= __('Last Scraped') ?></th>
+                        <th class="w-24 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= __('Actions') ?></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <?php foreach ($urls as $url): ?>
-                    <tr class="url-row hover:bg-slate-50 dark:hover:bg-slate-700/50" data-url-id="<?= $url['id'] ?>">
+                    <tr class="url-row hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" data-url-id="<?= $url['id'] ?>">
                         <td class="text-center px-4 py-3">
                             <input type="checkbox" name="url_ids[]" value="<?= $url['id'] ?>" class="url-checkbox rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
                         </td>
@@ -176,7 +176,7 @@
                                 <a href="<?= url("/internal-links/project/{$project['id']}/links?source_url_id={$url['id']}") ?>"
                                    class="p-1.5 text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition"
                                    title="<?= __('View Links') ?>">
-                                    <i data-lucide="link" class="w-4 h-4"></i>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                                 </a>
                                 <?php endif; ?>
                                 <form action="<?= url("/internal-links/project/{$project['id']}/urls/delete/{$url['id']}") ?>" method="POST" class="inline"
@@ -185,7 +185,7 @@
                                     <button type="submit"
                                             class="p-1.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition"
                                             title="<?= __('Delete') ?>">
-                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                     </button>
                                 </form>
                             </div>
@@ -291,8 +291,4 @@ function executeBulkAction() {
     }
 }
 
-// Reinit Lucide icons
-if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
-}
 </script>

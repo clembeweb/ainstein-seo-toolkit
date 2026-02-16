@@ -3,7 +3,7 @@
 <div class="max-w-2xl mx-auto space-y-6">
 
     <!-- Form -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <form action="<?= url('/ads-analyzer/projects/' . $project['id'] . '/update') ?>" method="POST">
             <?= csrf_field() ?>
 
@@ -47,5 +47,21 @@
                 </div>
             </div>
         </form>
+    </div>
+
+    <!-- Zona pericolosa -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-red-200 dark:border-red-900/50 overflow-hidden">
+        <div class="p-6">
+            <h2 class="text-lg font-medium text-red-600 dark:text-red-400 mb-2">Zona pericolosa</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                Eliminando il progetto verranno cancellati tutti i dati, keyword, campagne generate e analisi. Questa azione non e reversibile.
+            </p>
+            <form action="<?= url('/ads-analyzer/projects/' . $project['id'] . '/delete') ?>" method="POST" x-data @submit.prevent="if(confirm('Sei sicuro di voler eliminare questo progetto? Tutti i dati verranno persi.')) $el.submit()">
+                <?= csrf_field() ?>
+                <button type="submit" class="px-4 py-2 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm">
+                    Elimina Progetto
+                </button>
+            </form>
+        </div>
     </div>
 </div>

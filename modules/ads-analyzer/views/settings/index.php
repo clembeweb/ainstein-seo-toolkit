@@ -12,7 +12,7 @@
     </div>
 
     <!-- Settings Form -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <form action="<?= url('/ads-analyzer/settings') ?>" method="POST">
             <?= csrf_field() ?>
 
@@ -120,7 +120,7 @@
 
     <!-- Saved Contexts -->
     <?php if (!empty($savedContexts)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Contesti Business Salvati</h2>
         <div class="space-y-3">
             <?php foreach ($savedContexts as $ctx): ?>

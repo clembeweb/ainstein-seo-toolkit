@@ -153,6 +153,13 @@ Router::post('/ai-content/projects/{id}/keywords/{kwId}/delete', function ($id, 
     return $controller->delete((int) $kwId, (int) $id);
 });
 
+Router::post('/ai-content/projects/{id}/keywords/bulk-delete', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new KeywordController();
+    return $controller->bulkDelete((int) $id);
+});
+
 // Wizard per generazione articolo
 Router::get('/ai-content/projects/{id}/keywords/{kwId}/wizard', function ($id, $kwId) {
     Middleware::auth();

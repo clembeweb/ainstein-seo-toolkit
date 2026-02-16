@@ -521,18 +521,15 @@ erDiagram
     <!-- ==================== SEO AUDIT ==================== -->
     <section id="sa" class="mb-16 print-break">
         <h2 class="text-2xl font-bold text-emerald-400 mb-6">SEO Audit (sa_)</h2>
-        <p class="text-slate-500 dark:text-slate-400 mb-6">12 tabelle. Crawling sito, rilevamento 50+ problemi, integrazione GSC, analisi AI.</p>
+        <p class="text-slate-500 dark:text-slate-400 mb-6">8 tabelle. Crawling sito, rilevamento 50+ problemi, Piano d'Azione AI con fix per pagina.</p>
 
         <div class="mermaid">
 erDiagram
     sa_projects ||--o{ sa_pages : "pagine"
     sa_projects ||--o{ sa_issues : "problemi"
     sa_projects ||--|| sa_site_config : "config"
-    sa_projects ||--|| sa_gsc_connections : "GSC OAuth"
-    sa_projects ||--o{ sa_gsc_performance : "performance"
-    sa_projects ||--o{ sa_gsc_coverage : "coverage"
-    sa_projects ||--o{ sa_gsc_core_web_vitals : "CWV"
-    sa_projects ||--o{ sa_ai_analyses : "analisi AI"
+    sa_projects ||--o{ sa_action_plans : "piani azione"
+    sa_action_plans ||--o{ sa_page_fixes : "fix pagina"
     sa_pages ||--o{ sa_issues : "problemi pagina"
     sa_projects {
         int id PK
@@ -563,7 +560,7 @@ erDiagram
         <details class="mt-6 bg-white dark:bg-slate-800 rounded-lg border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
             <summary class="p-4 font-semibold text-slate-900 dark:text-white">sa_projects</summary>
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300">
-                id(PK), user_id(FK&rarr;users), name, base_url, crawl_mode(sitemap/spider/both), max_pages, status(pending/crawling/analyzing/completed/failed), pages_found, pages_crawled, issues_count, health_score, gsc_connected, gsc_property, created_at, updated_at, completed_at
+                id(PK), user_id(FK&rarr;users), name, base_url, crawl_mode(sitemap/spider/both), max_pages, status(pending/crawling/analyzing/completed/failed), pages_found, pages_crawled, issues_count, health_score, created_at, updated_at, completed_at
             </div>
         </details>
         <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
@@ -575,20 +572,20 @@ erDiagram
         <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
             <summary class="p-4 font-semibold text-slate-900 dark:text-white">sa_issues</summary>
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300">
-                id(PK), project_id(FK), page_id(FK&rarr;sa_pages CASCADE), category, issue_type, severity(critical/warning/notice/info), title, description, affected_element, recommendation, source(crawler/gsc), created_at
+                id(PK), project_id(FK), page_id(FK&rarr;sa_pages CASCADE), category, issue_type, severity(critical/warning/notice/info), title, description, affected_element, recommendation, source(crawler), created_at
             </div>
         </details>
         <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
-            <summary class="p-4 font-semibold text-slate-900 dark:text-white">sa_gsc_* &middot; sa_site_config &middot; sa_ai_analyses &middot; sa_activity_logs</summary>
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">sa_action_plans &middot; sa_page_fixes</summary>
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
-                <div><strong class="text-slate-900 dark:text-white">sa_gsc_connections</strong>: id(PK), project_id(FK UK), user_id(FK), access_token, refresh_token, token_expires_at, property_url, property_type(URL_PREFIX/DOMAIN), is_active, last_sync_at</div>
-                <div><strong class="text-slate-900 dark:text-white">sa_gsc_performance</strong>: id(PK), project_id(FK), date, query, page, device, country, clicks, impressions, ctr, position</div>
-                <div><strong class="text-slate-900 dark:text-white">sa_gsc_coverage</strong>: id(PK), project_id(FK), url, coverage_state(11 valori ENUM), verdict(PASS/NEUTRAL/FAIL), robots_txt_state, indexing_state, google/user_canonical, last_crawl_time</div>
-                <div><strong class="text-slate-900 dark:text-white">sa_gsc_core_web_vitals</strong>: id(PK), project_id(FK), form_factor(PHONE/DESKTOP), metric_type(LCP/INP/CLS), good/needs_improvement/poor_percent, p75_value, p75_unit, date_range</div>
-                <div><strong class="text-slate-900 dark:text-white">sa_gsc_mobile_usability</strong>: id(PK), project_id(FK), url, issue_type(8 ENUM values), severity</div>
-                <div><strong class="text-slate-900 dark:text-white">sa_gsc_sync_log</strong>: id(PK), project_id(FK), sync_type, date_range, records_imported, status, error_message</div>
+                <div><strong class="text-slate-900 dark:text-white">sa_action_plans</strong>: id(PK), project_id(FK), session_id, total_pages, total_fixes, fixes_completed, health_current, health_expected, estimated_time_minutes, status(generating/ready/in_progress/completed), created_at, updated_at</div>
+                <div><strong class="text-slate-900 dark:text-white">sa_page_fixes</strong>: id(PK), plan_id(FK&rarr;sa_action_plans), project_id(FK), page_id(FK&rarr;sa_pages), issue_id(FK&rarr;sa_issues), fix_code(TEXT), fix_explanation(TEXT), priority, difficulty(facile/medio/difficile), time_estimate_minutes, impact_points, step_order, is_completed, completed_at</div>
+            </div>
+        </details>
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">sa_site_config &middot; sa_activity_logs</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
                 <div><strong class="text-slate-900 dark:text-white">sa_site_config</strong>: id(PK), project_id(FK UK), robots_txt, robots_allows/disallows(JSON), sitemap_urls(JSON), has_sitemap, has_robots, is_https, ssl_valid</div>
-                <div><strong class="text-slate-900 dark:text-white">sa_ai_analyses</strong>: id(PK), project_id(FK), type(overview/category), category, content(LONGTEXT), credits_used</div>
                 <div><strong class="text-slate-900 dark:text-white">sa_activity_logs</strong>: id(PK), project_id(FK), user_id(FK), action, details(JSON)</div>
             </div>
         </details>

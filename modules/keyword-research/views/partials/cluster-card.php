@@ -69,27 +69,27 @@ $intentColor = $intentColors[strtolower($cluster['intent'] ?? '')] ?? 'bg-slate-
             <table class="w-full text-sm">
                 <thead class="bg-slate-50 dark:bg-slate-700/50">
                     <tr>
-                        <th class="px-4 py-2 text-left cursor-pointer select-none" @click="toggleSort('text')">
+                        <th class="px-4 py-3 text-left cursor-pointer select-none" @click="toggleSort('text')">
                             <span class="inline-flex items-center text-xs font-medium text-slate-500 uppercase hover:text-slate-700 dark:hover:text-slate-200">
                                 Keyword <span x-html="krSortIcon('text', sortField, sortDir)"></span>
                             </span>
                         </th>
-                        <th class="px-4 py-2 text-right cursor-pointer select-none" @click="toggleSort('volume')">
+                        <th class="px-4 py-3 text-right cursor-pointer select-none" @click="toggleSort('volume')">
                             <span class="inline-flex items-center justify-end text-xs font-medium text-slate-500 uppercase hover:text-slate-700 dark:hover:text-slate-200">
                                 Volume <span x-html="krSortIcon('volume', sortField, sortDir)"></span>
                             </span>
                         </th>
-                        <th class="px-4 py-2 text-center cursor-pointer select-none" @click="toggleSort('competition_level')">
+                        <th class="px-4 py-3 text-center cursor-pointer select-none" @click="toggleSort('competition_level')">
                             <span class="inline-flex items-center text-xs font-medium text-slate-500 uppercase hover:text-slate-700 dark:hover:text-slate-200">
                                 Comp. <span x-html="krSortIcon('competition_level', sortField, sortDir)"></span>
                             </span>
                         </th>
-                        <th class="px-4 py-2 text-right cursor-pointer select-none" @click="toggleSort('high_bid')">
+                        <th class="px-4 py-3 text-right cursor-pointer select-none" @click="toggleSort('high_bid')">
                             <span class="inline-flex items-center justify-end text-xs font-medium text-slate-500 uppercase hover:text-slate-700 dark:hover:text-slate-200">
                                 CPC <span x-html="krSortIcon('high_bid', sortField, sortDir)"></span>
                             </span>
                         </th>
-                        <th class="px-4 py-2 text-center cursor-pointer select-none" @click="toggleSort('intent')">
+                        <th class="px-4 py-3 text-center cursor-pointer select-none" @click="toggleSort('intent')">
                             <span class="inline-flex items-center text-xs font-medium text-slate-500 uppercase hover:text-slate-700 dark:hover:text-slate-200">
                                 Intent <span x-html="krSortIcon('intent', sortField, sortDir)"></span>
                             </span>
@@ -98,8 +98,8 @@ $intentColor = $intentColors[strtolower($cluster['intent'] ?? '')] ?? 'bg-slate-
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
                     <template x-for="kw in sortedKeywords" :key="kw.text">
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30" :class="kw.is_main ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : ''">
-                        <td class="px-4 py-2 text-slate-900 dark:text-white">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" :class="kw.is_main ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : ''">
+                        <td class="px-4 py-3 text-slate-900 dark:text-white">
                             <template x-if="kw.is_main">
                                 <span class="inline-flex items-center gap-1">
                                     <svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
@@ -110,12 +110,12 @@ $intentColor = $intentColors[strtolower($cluster['intent'] ?? '')] ?? 'bg-slate-
                                 <span x-text="kw.text"></span>
                             </template>
                         </td>
-                        <td class="px-4 py-2 text-right text-slate-700 dark:text-slate-300 font-medium" x-text="(kw.volume || 0).toLocaleString()"></td>
-                        <td class="px-4 py-2 text-center">
+                        <td class="px-4 py-3 text-right text-slate-700 dark:text-slate-300 font-medium" x-text="(kw.volume || 0).toLocaleString()"></td>
+                        <td class="px-4 py-3 text-center">
                             <span class="text-xs" :class="krCompClass(kw.competition_level)" x-text="kw.competition_level ? kw.competition_level.charAt(0).toUpperCase() + kw.competition_level.slice(1) : '-'"></span>
                         </td>
-                        <td class="px-4 py-2 text-right text-slate-500 text-xs" x-text="kw.high_bid > 0 ? kw.high_bid.toFixed(2) : '-'"></td>
-                        <td class="px-4 py-2 text-center">
+                        <td class="px-4 py-3 text-right text-slate-500 text-xs" x-text="kw.high_bid > 0 ? kw.high_bid.toFixed(2) : '-'"></td>
+                        <td class="px-4 py-3 text-center">
                             <template x-if="kw.intent">
                                 <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs" :class="krIntentClass(kw.intent)" x-text="kw.intent.charAt(0).toUpperCase() + kw.intent.slice(1)"></span>
                             </template>

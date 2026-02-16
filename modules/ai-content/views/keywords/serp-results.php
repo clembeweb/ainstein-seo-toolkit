@@ -98,7 +98,7 @@ $baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- SERP Results -->
         <div class="lg:col-span-2 space-y-4">
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
                 <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                     <h2 class="font-semibold text-slate-900 dark:text-white">Risultati Organici (Top <?= count($keyword['serp_results']) ?>)</h2>
                     <p class="text-sm text-slate-500 dark:text-slate-400">Seleziona le fonti da cui estrarre contenuto per il brief</p>
@@ -106,7 +106,7 @@ $baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['
 
                 <div class="divide-y divide-slate-200 dark:divide-slate-700">
                     <?php foreach ($keyword['serp_results'] as $result): ?>
-                    <label class="flex items-start gap-4 p-4 hover:bg-slate-50 dark:hover:bg-slate-700/30 cursor-pointer transition-colors">
+                    <label class="flex items-start gap-4 p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors">
                         <input type="checkbox"
                                x-model="selectedSources"
                                value="<?= e($result['url']) ?>"
@@ -133,7 +133,7 @@ $baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['
             </div>
 
             <!-- Custom URL -->
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
                 <h3 class="font-medium text-slate-900 dark:text-white mb-3">Aggiungi URL personalizzato</h3>
                 <div class="flex gap-2">
                     <input type="url" x-model="customUrl" placeholder="https://example.com/article" class="flex-1 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm">
@@ -162,7 +162,7 @@ $baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['
 
         <!-- PAA Questions Sidebar -->
         <div class="space-y-4">
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
                 <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
                     <h2 class="font-semibold text-slate-900 dark:text-white">People Also Ask</h2>
                     <p class="text-xs text-slate-500 dark:text-slate-400">Domande correlate da Google</p>

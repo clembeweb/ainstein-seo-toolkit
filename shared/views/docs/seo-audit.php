@@ -90,8 +90,8 @@
             <div class="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">5</div>
                 <div>
-                    <h3 class="font-medium text-slate-900 dark:text-white">Richiedi l'analisi AI per raccomandazioni strategiche</h3>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">L'AI genera un'analisi panoramica o per singola categoria con fix prioritizzati e un action plan operativo.</p>
+                    <h3 class="font-medium text-slate-900 dark:text-white">Genera il Piano d'Azione AI</h3>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">L'AI analizza ogni pagina e genera fix concreti con codice, priorita e tempo stimato. Traccia il completamento e esporta in Markdown.</p>
                 </div>
                 <svg class="w-5 h-5 shrink-0 text-slate-300 dark:text-slate-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
@@ -148,30 +148,17 @@
                 <p class="text-sm text-slate-600 dark:text-slate-400">Basato su densita e severita dei problemi: Critical (-5pt), Warning (-1pt), Notice (-0.2pt).</p>
             </div>
 
-            <!-- GSC -->
+            <!-- Struttura Link -->
             <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="flex items-center gap-3 mb-2">
                     <div class="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center">
                         <svg class="w-4 h-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                         </svg>
                     </div>
-                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Integrazione Google Search Console</h3>
+                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Struttura link interni</h3>
                 </div>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Coverage, Core Web Vitals e mobile usability direttamente dalla tua property GSC.</p>
-            </div>
-
-            <!-- Analisi AI -->
-            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="w-8 h-8 rounded-lg bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center">
-                        <svg class="w-4 h-4 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                        </svg>
-                    </div>
-                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Analisi AI panoramica e per categoria</h3>
-                </div>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Raccomandazioni strategiche generate dall'intelligenza artificiale con prioritizzazione automatica.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Panoramica dei link interni, pagine orfane, distribuzione anchor text e grafo visuale della struttura.</p>
             </div>
 
             <!-- Action Plan -->
@@ -223,39 +210,26 @@
                         <td class="px-5 py-3 text-slate-700 dark:text-slate-300">
                             <div class="flex items-center gap-2">
                                 <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                 </svg>
-                                Analisi AI panoramica (Overview)
+                                Crawling per pagina
+                            </div>
+                        </td>
+                        <td class="px-5 py-3 text-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">0.2 crediti</span>
+                        </td>
+                    </tr>
+                    <tr class="bg-white dark:bg-slate-800">
+                        <td class="px-5 py-3 text-slate-700 dark:text-slate-300">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                </svg>
+                                Piano d'Azione AI (per progetto)
                             </div>
                         </td>
                         <td class="px-5 py-3 text-center">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">15 crediti</span>
-                        </td>
-                    </tr>
-                    <tr class="bg-white dark:bg-slate-800">
-                        <td class="px-5 py-3 text-slate-700 dark:text-slate-300">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                                </svg>
-                                Analisi AI per categoria
-                            </div>
-                        </td>
-                        <td class="px-5 py-3 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">3 crediti</span>
-                        </td>
-                    </tr>
-                    <tr class="bg-white dark:bg-slate-800">
-                        <td class="px-5 py-3 text-slate-700 dark:text-slate-300">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                </svg>
-                                Sincronizzazione GSC
-                            </div>
-                        </td>
-                        <td class="px-5 py-3 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">5 crediti</span>
                         </td>
                     </tr>
                 </tbody>
@@ -265,7 +239,7 @@
             <svg class="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            Il crawling e l'analisi dei problemi non consumano crediti. Solo le funzionalita AI e la sincronizzazione GSC richiedono crediti.
+            Il crawling consuma 0.2 crediti per pagina analizzata. Il Piano d'Azione AI consuma 15 crediti per generazione. Tutte le altre funzionalita (dashboard, issues, link, storico, export) sono gratuite.
         </p>
     </section>
 
@@ -312,8 +286,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Connetti Google Search Console</h3>
-                    <p class="mt-1 text-sm text-blue-800 dark:text-blue-300/80">Collegando GSC ottieni dati reali di indicizzazione, Core Web Vitals e mobile usability. Questi dati arricchiscono l'analisi e rendono le raccomandazioni AI molto piu precise.</p>
+                    <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Usa il Piano d'Azione AI</h3>
+                    <p class="mt-1 text-sm text-blue-800 dark:text-blue-300/80">Dopo aver risolto i problemi Critical, genera il Piano d'Azione AI. Riceverai fix concreti con codice pronto, priorita e tempo stimato per ogni pagina. Puoi tracciare il completamento e esportare tutto in Markdown.</p>
                 </div>
             </div>
         </div>

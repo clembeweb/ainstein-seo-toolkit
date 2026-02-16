@@ -26,7 +26,7 @@
     </nav>
 
     <!-- URL Info -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
         <div class="flex items-start justify-between">
             <div class="min-w-0 flex-1">
                 <h2 class="text-lg font-semibold text-slate-900 dark:text-white truncate">
@@ -69,7 +69,7 @@
     </div>
 
     <!-- SERP Preview -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <h3 class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">Anteprima SERP Google</h3>
 
         <div class="bg-white border border-slate-200 rounded-lg p-4 max-w-2xl">
@@ -103,7 +103,7 @@
     </div>
 
     <!-- Edit Form -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <h3 class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">Meta Tag Generati</h3>
 
         <div class="space-y-4">
@@ -184,7 +184,7 @@
 
     <!-- Page Content Preview -->
     <?php if ($metaTag['scraped_content']): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-sm font-medium text-slate-700 dark:text-slate-300">Contenuto Pagina (estratto)</h3>
             <span class="text-xs text-slate-400"><?= $metaTag['scraped_word_count'] ?> parole</span>

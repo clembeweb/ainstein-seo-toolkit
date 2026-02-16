@@ -40,7 +40,7 @@
         <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
         <div class="grid md:grid-cols-2 gap-6">
             <!-- Weekly Digest -->
-            <label class="report-type-card bg-white dark:bg-slate-800 rounded-lg shadow-sm border-2 border-slate-200 dark:border-slate-700 p-6 cursor-pointer hover:border-primary-500 transition-colors">
+            <label class="report-type-card bg-white dark:bg-slate-800 rounded-xl shadow-sm border-2 border-slate-200 dark:border-slate-700 p-6 cursor-pointer hover:border-primary-500 transition-colors">
                 <input type="radio" name="report_type" value="weekly_digest" class="sr-only" checked>
                 <div class="flex items-start gap-4">
                     <div class="h-12 w-12 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
@@ -74,7 +74,7 @@
             </label>
 
             <!-- Monthly Executive -->
-            <label class="report-type-card bg-white dark:bg-slate-800 rounded-lg shadow-sm border-2 border-slate-200 dark:border-slate-700 p-6 cursor-pointer hover:border-primary-500 transition-colors">
+            <label class="report-type-card bg-white dark:bg-slate-800 rounded-xl shadow-sm border-2 border-slate-200 dark:border-slate-700 p-6 cursor-pointer hover:border-primary-500 transition-colors">
                 <input type="radio" name="report_type" value="monthly_executive" class="sr-only">
                 <div class="flex items-start gap-4">
                     <div class="h-12 w-12 rounded-lg bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0">
@@ -108,7 +108,7 @@
             </label>
 
             <!-- Anomaly Analysis -->
-            <label class="report-type-card bg-white dark:bg-slate-800 rounded-lg shadow-sm border-2 border-slate-200 dark:border-slate-700 p-6 cursor-pointer hover:border-primary-500 transition-colors">
+            <label class="report-type-card bg-white dark:bg-slate-800 rounded-xl shadow-sm border-2 border-slate-200 dark:border-slate-700 p-6 cursor-pointer hover:border-primary-500 transition-colors">
                 <input type="radio" name="report_type" value="anomaly_analysis" class="sr-only">
                 <div class="flex items-start gap-4">
                     <div class="h-12 w-12 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
@@ -142,7 +142,7 @@
             </label>
 
             <!-- Custom Report -->
-            <label class="report-type-card bg-white dark:bg-slate-800 rounded-lg shadow-sm border-2 border-slate-200 dark:border-slate-700 p-6 cursor-pointer hover:border-primary-500 transition-colors">
+            <label class="report-type-card bg-white dark:bg-slate-800 rounded-xl shadow-sm border-2 border-slate-200 dark:border-slate-700 p-6 cursor-pointer hover:border-primary-500 transition-colors">
                 <input type="radio" name="report_type" value="custom" class="sr-only">
                 <div class="flex items-start gap-4">
                     <div class="h-12 w-12 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 flex items-center justify-center flex-shrink-0">
@@ -177,7 +177,7 @@
 
         <!-- Custom Question (shown only for custom type) -->
         <div id="custom-question-container" class="hidden mt-6">
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
                 <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                     La tua domanda
                 </label>

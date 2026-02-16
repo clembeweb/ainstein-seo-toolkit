@@ -14,7 +14,7 @@ $targetDomain = $defaultDomain ?: '';
 
     <?php if (!$serpApiConfigured): ?>
     <!-- Warning: Nessun provider SERP configurato -->
-    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
         <div class="flex">
             <svg class="w-5 h-5 text-amber-600 dark:text-amber-400 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
@@ -28,7 +28,7 @@ $targetDomain = $defaultDomain ?: '';
     <?php else: ?>
 
     <!-- Info Bar -->
-    <div class="flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+    <div class="flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
         <div class="flex items-center gap-6">
             <div>
                 <span class="text-sm text-slate-500 dark:text-slate-400">Crediti disponibili:</span>
@@ -152,9 +152,9 @@ $targetDomain = $defaultDomain ?: '';
                         <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Stato</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-200 dark:divide-slate-600">
+                <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <template x-for="(kw, index) in keywords" :key="kw.id">
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                             <td class="px-4 py-3">
                                 <input type="checkbox" x-model="kw.selected" class="rounded border-slate-300 dark:border-slate-600" :disabled="kw.checking">
                             </td>
@@ -203,19 +203,19 @@ $targetDomain = $defaultDomain ?: '';
     <!-- Stats -->
     <?php if ($stats['total_checks'] > 0): ?>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Check Totali</p>
             <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1"><?= $stats['total_checks'] ?></p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-emerald-200 dark:border-emerald-800 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-emerald-200 dark:border-emerald-800 p-4">
             <p class="text-sm text-emerald-600 dark:text-emerald-400">Trovati</p>
             <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1"><?= $stats['found_count'] ?></p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-blue-200 dark:border-blue-800 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-blue-200 dark:border-blue-800 p-4">
             <p class="text-sm text-blue-600 dark:text-blue-400">Top 10</p>
             <p class="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1"><?= $stats['top10_count'] ?></p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Pos. Media</p>
             <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1"><?= $stats['avg_position'] ? number_format($stats['avg_position'], 1) : '-' ?></p>
         </div>

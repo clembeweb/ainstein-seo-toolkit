@@ -11,7 +11,7 @@
         <div class="flex items-center gap-3">
             <a href="<?= url("/internal-links/project/{$project['id']}/export?type=juice") ?>"
                class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-xl hover:bg-primary-700 transition shadow-lg shadow-primary-600/25">
-                <i data-lucide="download" class="w-4 h-4"></i>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 <?= __('Esporta CSV') ?>
             </a>
         </div>
@@ -42,7 +42,7 @@
     </div>
 
     <!-- Legend -->
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
         <div class="flex flex-wrap items-center gap-6 text-sm">
             <span class="font-medium text-slate-700 dark:text-slate-300"><?= __('Comprendere il Juice Ratio') ?>:</span>
             <span class="flex items-center gap-2">
@@ -73,7 +73,7 @@
         <!-- Search -->
         <div class="relative w-full sm:w-80">
             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
             <input type="text"
                    id="juiceSearch"
@@ -96,9 +96,9 @@
 
     <!-- Pages Table -->
     <?php if (empty($pages)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-12 text-center">
-        <div class="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <i data-lucide="flask-conical" class="w-8 h-8 text-slate-400"></i>
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-12 text-center">
+        <div class="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
         </div>
         <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2"><?= __('Nessun Dato Disponibile') ?></h3>
         <p class="text-slate-500 dark:text-slate-400">
@@ -106,7 +106,7 @@
         </p>
     </div>
     <?php else: ?>
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full data-table" data-sortable>
                 <thead>
@@ -114,18 +114,18 @@
                         <th class="w-12 text-center px-4 py-3">
                             <input type="checkbox" id="selectAll" class="rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
                         </th>
-                        <th class="sortable px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"><?= __('URL') ?></th>
-                        <th class="sortable w-36 px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"><?= __('Keyword') ?></th>
-                        <th class="sortable w-28 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"><?= __('In Entrata') ?></th>
-                        <th class="sortable w-28 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"><?= __('In Uscita') ?></th>
-                        <th class="sortable w-24 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"><?= __('Score') ?></th>
-                        <th class="sortable w-28 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"><?= __('Juice Ratio') ?></th>
-                        <th class="w-32 px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"><?= __('Stato') ?></th>
+                        <th class="sortable px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= __('URL') ?></th>
+                        <th class="sortable w-36 px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= __('Keyword') ?></th>
+                        <th class="sortable w-28 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= __('In Entrata') ?></th>
+                        <th class="sortable w-28 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= __('In Uscita') ?></th>
+                        <th class="sortable w-24 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= __('Score') ?></th>
+                        <th class="sortable w-28 text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= __('Juice Ratio') ?></th>
+                        <th class="w-32 px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= __('Stato') ?></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <?php foreach ($pages as $page): ?>
-                    <tr class="juice-row hover:bg-slate-50 dark:hover:bg-slate-700/50" data-url="<?= e($page['url']) ?>">
+                    <tr class="juice-row hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" data-url="<?= e($page['url']) ?>">
                         <td class="text-center px-4 py-3">
                             <input type="checkbox" name="page_urls[]" value="<?= e($page['url']) ?>" class="juice-checkbox rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
                         </td>
@@ -236,9 +236,9 @@
     </div>
 
     <!-- Info Section -->
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
         <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <i data-lucide="info" class="w-5 h-5 text-primary-500"></i>
+            <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <?= __('Tipi di Pagina Spiegati') ?>
         </h3>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
@@ -318,8 +318,4 @@ function executeBulkAction() {
     window.ainstein.alert('Funzione in sviluppo', 'info');
 }
 
-// Reinit Lucide icons
-if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
-}
 </script>

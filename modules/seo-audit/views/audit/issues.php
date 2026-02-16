@@ -70,9 +70,7 @@ $severityLabels = [
                 <select name="category" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 text-sm focus:ring-2 focus:ring-primary-500">
                     <option value="">Tutte</option>
                     <?php foreach (Issue::CATEGORIES as $slug => $label): ?>
-                    <?php if (!Issue::isGscCategory($slug)): ?>
                     <option value="<?= $slug ?>" <?= ($filters['category'] ?? '') === $slug ? 'selected' : '' ?>><?= e($label) ?></option>
-                    <?php endif; ?>
                     <?php endforeach; ?>
                 </select>
             </div>
@@ -109,7 +107,7 @@ $severityLabels = [
             Tutte (<?= $issueCounts['total'] ?? 0 ?>)
         </a>
         <?php foreach ($categoryStats as $slug => $stats): ?>
-        <?php if ($stats['total'] > 0 && !Issue::isGscCategory($slug)): ?>
+        <?php if ($stats['total'] > 0): ?>
         <a href="<?= url('/seo-audit/project/' . $project['id'] . '/issues?category=' . $slug) ?>"
            class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors <?= ($filters['category'] ?? '') === $slug ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400 hover:bg-slate-200' ?>">
             <?= e(Issue::CATEGORIES[$slug] ?? $slug) ?> (<?= $stats['total'] ?>)
@@ -121,7 +119,7 @@ $severityLabels = [
 
     <!-- Issues Table -->
     <?php if (empty($issues)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-12 text-center">
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-12 text-center">
         <div class="mx-auto h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center mb-4">
             <svg class="h-8 w-8 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
@@ -137,39 +135,39 @@ $severityLabels = [
         </p>
     </div>
     <?php else: ?>
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead>
                     <tr class="bg-slate-50 dark:bg-slate-700/50">
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Gravità</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Categoria</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Problema</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pagina</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Elemento</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Azione</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Gravità</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Categoria</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Problema</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pagina</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Elemento</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Azione</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <?php foreach ($issues as $issue): ?>
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-4 py-3 whitespace-nowrap">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $severityColors[$issue['severity']] ?? $severityColors['info'] ?>">
                                 <?= $severityLabels[$issue['severity']] ?? $issue['severity'] ?>
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-4 py-3 whitespace-nowrap">
                             <a href="<?= url('/seo-audit/project/' . $project['id'] . '/category/' . $issue['category']) ?>" class="text-sm text-slate-600 dark:text-slate-300 hover:text-primary-600">
                                 <?= e(Issue::CATEGORIES[$issue['category']] ?? $issue['category']) ?>
                             </a>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-4 py-3">
                             <p class="font-medium text-slate-900 dark:text-white"><?= e($issue['title']) ?></p>
                             <?php if ($issue['recommendation']): ?>
                             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md truncate"><?= e(substr($issue['recommendation'], 0, 80)) ?>...</p>
                             <?php endif; ?>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-4 py-3">
                             <?php if ($issue['page_url']): ?>
                             <a href="<?= url('/seo-audit/project/' . $project['id'] . '/page/' . $issue['page_id']) ?>" class="text-sm text-slate-600 dark:text-slate-300 hover:text-primary-600 max-w-xs truncate block" title="<?= e($issue['page_url']) ?>">
                                 <?= e(strlen($issue['page_url']) > 40 ? '...' . substr($issue['page_url'], -37) : $issue['page_url']) ?>
@@ -178,7 +176,7 @@ $severityLabels = [
                             <span class="text-sm text-slate-400">Sito</span>
                             <?php endif; ?>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-4 py-3">
                             <?php if ($issue['affected_element']): ?>
                             <code class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded text-slate-600 dark:text-slate-300 max-w-xs truncate block">
                                 <?= e(substr($issue['affected_element'], 0, 50)) ?><?= strlen($issue['affected_element']) > 50 ? '...' : '' ?>
@@ -187,7 +185,7 @@ $severityLabels = [
                             <span class="text-slate-400">-</span>
                             <?php endif; ?>
                         </td>
-                        <td class="px-6 py-4 text-right">
+                        <td class="px-4 py-3 text-right">
                             <?php if ($issue['page_id']): ?>
                             <a href="<?= url('/seo-audit/project/' . $project['id'] . '/page/' . $issue['page_id']) ?>" class="text-primary-600 dark:text-primary-400 hover:text-primary-700 text-sm font-medium">
                                 Dettagli
@@ -200,31 +198,11 @@ $severityLabels = [
             </table>
         </div>
 
-        <!-- Pagination -->
-        <?php if ($pagination['last_page'] > 1): ?>
-        <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
-            <p class="text-sm text-slate-500 dark:text-slate-400">
-                Mostrando <?= $pagination['from'] ?>-<?= $pagination['to'] ?> di <?= $pagination['total'] ?>
-            </p>
-            <div class="flex items-center gap-2">
-                <?php if ($pagination['current_page'] > 1): ?>
-                <a href="<?= url('/seo-audit/project/' . $project['id'] . '/issues?' . http_build_query(array_merge($filters, ['page' => $pagination['current_page'] - 1]))) ?>"
-                   class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm hover:bg-slate-50 dark:hover:bg-slate-700">
-                    Precedente
-                </a>
-                <?php endif; ?>
-                <span class="px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400">
-                    Pagina <?= $pagination['current_page'] ?> di <?= $pagination['last_page'] ?>
-                </span>
-                <?php if ($pagination['current_page'] < $pagination['last_page']): ?>
-                <a href="<?= url('/seo-audit/project/' . $project['id'] . '/issues?' . http_build_query(array_merge($filters, ['page' => $pagination['current_page'] + 1]))) ?>"
-                   class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm hover:bg-slate-50 dark:hover:bg-slate-700">
-                    Successiva
-                </a>
-                <?php endif; ?>
-            </div>
-        </div>
-        <?php endif; ?>
+        <?= \Core\View::partial('components/table-pagination', [
+            'pagination' => $pagination,
+            'baseUrl' => url('/seo-audit/project/' . $project['id'] . '/issues'),
+            'filters' => $filters,
+        ]) ?>
     </div>
     <?php endif; ?>
 </div>

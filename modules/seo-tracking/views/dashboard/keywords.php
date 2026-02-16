@@ -13,30 +13,30 @@ $stats = $stats ?? [];
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Keywords</p>
             <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1"><?= number_format($stats['total_keywords'] ?? 0) ?></p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Click Totali</p>
             <p class="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1"><?= number_format($stats['total_clicks'] ?? 0) ?></p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Impressioni</p>
             <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1"><?= number_format($stats['total_impressions'] ?? 0) ?></p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">CTR Medio</p>
             <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1"><?= $stats['avg_ctr'] ?? 0 ?>%</p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Pos. Media</p>
             <p class="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1"><?= $stats['avg_position'] ?? 0 ?></p>
         </div>
     </div>
 
     <!-- Filtri GSC Style -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
         <form method="GET" class="space-y-4">
             <!-- Riga 1: Date + Ricerca -->
             <div class="flex flex-wrap gap-3 items-end">
@@ -110,7 +110,7 @@ $stats = $stats ?? [];
     </div>
 
     <!-- Bulk Actions Bar -->
-    <div id="bulkActionsBar" class="hidden bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-center justify-between">
+    <div id="bulkActionsBar" class="hidden bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-center justify-between">
         <span class="text-sm text-blue-700 dark:text-blue-300">
             <span id="selectedCount">0</span> elementi selezionati
         </span>
@@ -120,10 +120,10 @@ $stats = $stats ?? [];
     </div>
 
     <!-- Tabella Keywords -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full">
-                <thead class="bg-slate-50 dark:bg-slate-800/50">
+                <thead class="bg-slate-50 dark:bg-slate-700/50">
                     <tr>
                         <th class="w-10 px-3 py-3">
                             <input type="checkbox" id="selectAll" onchange="toggleSelectAll()"
@@ -151,7 +151,7 @@ $stats = $stats ?? [];
                         </tr>
                     <?php else: ?>
                         <?php foreach ($keywords as $kw): ?>
-                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50" data-id="<?= (int)($kw['id'] ?? 0) ?>">
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" data-id="<?= (int)($kw['id'] ?? 0) ?>">
                                 <td class="px-3 py-3">
                                     <input type="checkbox" class="row-checkbox rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-blue-500"
                                            value="<?= (int)($kw['id'] ?? 0) ?>" onchange="updateBulkBar()">

@@ -11,7 +11,7 @@ $customPrompt = $aiSettings['custom_prompt'] ?? '';
         <?= csrf_field() ?>
 
         <!-- Informazioni Base -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
             <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                 <h3 class="text-lg font-medium text-slate-900 dark:text-white">Informazioni Base</h3>
             </div>
@@ -73,7 +73,7 @@ $customPrompt = $aiSettings['custom_prompt'] ?? '';
         </div>
 
         <!-- Connettore CMS -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
             <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                 <h3 class="text-lg font-medium text-slate-900 dark:text-white">Connettore CMS</h3>
             </div>
@@ -94,7 +94,7 @@ $customPrompt = $aiSettings['custom_prompt'] ?? '';
         </div>
 
         <!-- Lunghezza Contenuto -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
             <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                 <h3 class="text-lg font-medium text-slate-900 dark:text-white">Lunghezza Contenuto</h3>
                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Override del numero minimo di parole per questo progetto (lascia vuoto per usare il default globale)</p>
@@ -113,7 +113,7 @@ $customPrompt = $aiSettings['custom_prompt'] ?? '';
         </div>
 
         <!-- Prompt Personalizzato -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
             <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                 <h3 class="text-lg font-medium text-slate-900 dark:text-white">Prompt Personalizzato</h3>
                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Istruzioni aggiuntive per l'AI (opzionale)</p>

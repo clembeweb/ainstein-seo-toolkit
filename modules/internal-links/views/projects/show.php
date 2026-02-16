@@ -23,7 +23,7 @@
 
     <!-- Quick Actions -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <a href="<?= url('/internal-links/project/' . $project['id'] . '/urls') ?>" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4 hover:shadow-md transition-shadow text-center">
+        <a href="<?= url('/internal-links/project/' . $project['id'] . '/urls') ?>" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 hover:shadow-md transition-shadow text-center">
             <div class="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 mx-auto flex items-center justify-center mb-2">
                 <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
@@ -33,7 +33,7 @@
             <p class="text-xs text-slate-500 dark:text-slate-400"><?= number_format($project['total_urls']) ?> URL</p>
         </a>
 
-        <a href="<?= url('/internal-links/project/' . $project['id'] . '/scrape') ?>" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4 hover:shadow-md transition-shadow text-center">
+        <a href="<?= url('/internal-links/project/' . $project['id'] . '/scrape') ?>" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 hover:shadow-md transition-shadow text-center">
             <div class="h-10 w-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 mx-auto flex items-center justify-center mb-2">
                 <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -43,7 +43,7 @@
             <p class="text-xs text-slate-500 dark:text-slate-400"><?= number_format($scrapingProgress['progress'], 0) ?>% completato</p>
         </a>
 
-        <a href="<?= url('/internal-links/project/' . $project['id'] . '/links') ?>" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4 hover:shadow-md transition-shadow text-center">
+        <a href="<?= url('/internal-links/project/' . $project['id'] . '/links') ?>" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 hover:shadow-md transition-shadow text-center">
             <div class="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/50 mx-auto flex items-center justify-center mb-2">
                 <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
@@ -53,7 +53,7 @@
             <p class="text-xs text-slate-500 dark:text-slate-400"><?= number_format($project['internal_links']) ?> link</p>
         </a>
 
-        <a href="<?= url('/internal-links/project/' . $project['id'] . '/analysis') ?>" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4 hover:shadow-md transition-shadow text-center">
+        <a href="<?= url('/internal-links/project/' . $project['id'] . '/analysis') ?>" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 hover:shadow-md transition-shadow text-center">
             <div class="h-10 w-10 rounded-lg bg-amber-100 dark:bg-amber-900/50 mx-auto flex items-center justify-center mb-2">
                 <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
@@ -66,7 +66,7 @@
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
             <div class="flex items-center justify-between">
                 <p class="text-sm font-medium text-slate-500 dark:text-slate-400">URL Totali</p>
                 <div class="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
@@ -79,7 +79,7 @@
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400"><?= number_format($project['scraped_urls']) ?> scrapped, <?= number_format($project['error_urls']) ?> errori</p>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
             <div class="flex items-center justify-between">
                 <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Link Interni</p>
                 <div class="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
@@ -92,7 +92,7 @@
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400"><?= number_format($project['external_links']) ?> esterni</p>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
             <div class="flex items-center justify-between">
                 <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Score Medio</p>
                 <div class="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
@@ -105,7 +105,7 @@
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400"><?= number_format($project['analyzed_links']) ?> link analizzati</p>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
             <div class="flex items-center justify-between">
                 <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Pagine Orfane</p>
                 <div class="h-8 w-8 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
@@ -124,7 +124,7 @@
     <!-- Score Distribution -->
     <?php if (!empty($scoreDistribution) && array_sum($scoreDistribution) > 0): ?>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Distribuzione Score</h3>
             <div class="space-y-3">
                 <?php
@@ -158,7 +158,7 @@
             </div>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Juice Flow</h3>
             <div class="space-y-3">
                 <?php
@@ -200,7 +200,7 @@
 
     <!-- Recent Activity -->
     <?php if (!empty($recentActivity)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Attivita Recente</h3>
         </div>

@@ -8,6 +8,7 @@ use Core\Router;
 use Core\Database;
 use Core\ModuleLoader;
 use Core\Credits;
+use Core\Pagination;
 use Modules\AiContent\Models\Project;
 use Modules\AiContent\Models\MetaTag;
 use Modules\AiContent\Models\WpSite;

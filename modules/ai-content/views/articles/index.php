@@ -1,6 +1,18 @@
 <?php
 // Base URL for project context
+include __DIR__ . '/../../../../shared/views/components/table-helpers.php';
 $baseUrl = !empty($projectId) ? '/ai-content/projects/' . $projectId : '/ai-content';
+$currentSort = $filters['sort'] ?? 'created_at';
+$currentDir = $filters['dir'] ?? 'desc';
+$artBaseUrl = url($baseUrl . '/articles');
+$artSortFilters = array_filter([
+    'status' => $currentStatus ?? '',
+], fn($v) => $v !== '' && $v !== null);
+$artPaginationFilters = array_filter([
+    'status' => $currentStatus ?? '',
+    'sort' => $filters['sort'] ?? '',
+    'dir' => $filters['dir'] ?? '',
+], fn($v) => $v !== '' && $v !== null);
 ?>
 
 <?php if (!empty($projectId) && !empty($project)): ?>
@@ -89,7 +101,7 @@ $baseUrl = !empty($projectId) ? '/ai-content/projects/' . $projectId : '/ai-cont
 
     <?php if (empty($articles)): ?>
     <!-- Empty State -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
         <div class="mx-auto h-16 w-16 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center mb-4">
             <svg class="h-8 w-8 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -122,23 +134,23 @@ $baseUrl = !empty($projectId) ? '/ai-content/projects/' . $projectId : '/ai-cont
     </div>
     <?php else: ?>
     <!-- Articles Table -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+            <table class="w-full">
                 <thead class="bg-slate-50 dark:bg-slate-700/50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Titolo</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Keyword</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Parole</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Data</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Azioni</th>
+                        <?= table_sort_header('Titolo', 'title', $currentSort, $currentDir, $artBaseUrl, $artSortFilters) ?>
+                        <?= table_sort_header('Keyword', 'keyword', $currentSort, $currentDir, $artBaseUrl, $artSortFilters) ?>
+                        <?= table_sort_header('Parole', 'word_count', $currentSort, $currentDir, $artBaseUrl, $artSortFilters) ?>
+                        <?= table_sort_header('Status', 'status', $currentSort, $currentDir, $artBaseUrl, $artSortFilters) ?>
+                        <?= table_sort_header('Data', 'created_at', $currentSort, $currentDir, $artBaseUrl, $artSortFilters) ?>
+                        <?= table_header('Azioni', 'right') ?>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <?php foreach ($articles as $article): ?>
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                        <td class="px-6 py-4">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <td class="px-4 py-3">
                             <div class="flex items-center gap-3">
                                 <div class="h-9 w-9 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center flex-shrink-0">
                                     <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -155,7 +167,7 @@ $baseUrl = !empty($projectId) ? '/ai-content/projects/' . $projectId : '/ai-cont
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-4 py-3">
                             <?php if (!empty($article['keyword'])): ?>
                             <a href="<?= url('/ai-content/keywords/' . $article['keyword_id'] . '/serp') ?>" class="inline-flex items-center gap-1 text-sm text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400">
                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -167,14 +179,14 @@ $baseUrl = !empty($projectId) ? '/ai-content/projects/' . $projectId : '/ai-cont
                             <span class="text-slate-400 dark:text-slate-500 text-sm">-</span>
                             <?php endif; ?>
                         </td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-4 py-3 text-center">
                             <?php if ($article['word_count'] > 0): ?>
                             <span class="text-sm font-medium text-slate-700 dark:text-slate-300"><?= number_format($article['word_count']) ?></span>
                             <?php else: ?>
                             <span class="text-slate-400 dark:text-slate-500 text-sm">-</span>
                             <?php endif; ?>
                         </td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-4 py-3 text-center">
                             <?php
                             $statusConfig = [
                                 'draft' => ['bg' => 'bg-slate-100 dark:bg-slate-700', 'text' => 'text-slate-600 dark:text-slate-400', 'label' => 'Bozza'],
@@ -195,10 +207,10 @@ $baseUrl = !empty($projectId) ? '/ai-content/projects/' . $projectId : '/ai-cont
                                 <?= $status['label'] ?>
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
+                        <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">
                             <?= date('d/m/Y H:i', strtotime($article['created_at'])) ?>
                         </td>
-                        <td class="px-6 py-4 text-right">
+                        <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-1">
                                 <!-- View -->
                                 <a href="<?= url($baseUrl . '/articles/' . $article['id']) ?>"
@@ -266,33 +278,11 @@ $baseUrl = !empty($projectId) ? '/ai-content/projects/' . $projectId : '/ai-cont
         </div>
 
         <!-- Pagination -->
-        <?php if ($pagination['last_page'] > 1): ?>
-        <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-700">
-            <div class="flex items-center justify-between">
-                <p class="text-sm text-slate-500 dark:text-slate-400">
-                    Pagina <?= $pagination['current_page'] ?> di <?= $pagination['last_page'] ?>
-                    (<?= $pagination['total'] ?> articoli)
-                </p>
-                <div class="flex gap-2">
-                    <?php
-                    $queryParams = $currentStatus ? '&status=' . $currentStatus : '';
-                    ?>
-                    <?php if ($pagination['current_page'] > 1): ?>
-                    <a href="<?= url($baseUrl . '/articles?page=' . ($pagination['current_page'] - 1) . $queryParams) ?>"
-                       class="px-3 py-1 rounded-lg border border-slate-300 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                        Precedente
-                    </a>
-                    <?php endif; ?>
-                    <?php if ($pagination['current_page'] < $pagination['last_page']): ?>
-                    <a href="<?= url($baseUrl . '/articles?page=' . ($pagination['current_page'] + 1) . $queryParams) ?>"
-                       class="px-3 py-1 rounded-lg border border-slate-300 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                        Successiva
-                    </a>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-        <?php endif; ?>
+        <?= \Core\View::partial('components/table-pagination', [
+            'pagination' => $pagination,
+            'baseUrl' => $artBaseUrl,
+            'filters' => $artPaginationFilters,
+        ]) ?>
     </div>
     <?php endif; ?>
 

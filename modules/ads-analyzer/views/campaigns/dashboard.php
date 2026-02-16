@@ -40,7 +40,7 @@ $trendLabels = [
 
     <?php if (empty($campaignRuns)): ?>
     <!-- No data: Configura Script -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
         <div class="mx-auto h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mb-4">
             <svg class="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
@@ -123,7 +123,7 @@ $trendLabels = [
         $changesSummary = $latestAiResponse['changes_summary'] ?? null;
         $evalType = ($latestEvalWithAi ?? $latestEval)['eval_type'] ?? 'manual';
         ?>
-        <div class="md:col-span-1 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="md:col-span-1 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex flex-col items-center text-center">
                 <div class="w-20 h-20 rounded-full flex items-center justify-center border-4 <?= scoreBorderClass($healthScore) ?> bg-white dark:bg-slate-900 mb-3">
                     <span class="text-2xl font-bold <?= scoreTextClass($healthScore) ?>"><?= number_format($healthScore, 1) ?></span>
@@ -147,7 +147,7 @@ $trendLabels = [
             </div>
         </div>
         <?php else: ?>
-        <div class="md:col-span-1 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="md:col-span-1 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex flex-col items-center text-center">
                 <div class="w-20 h-20 rounded-full flex items-center justify-center border-4 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 mb-3">
                     <span class="text-2xl font-bold text-slate-300 dark:text-slate-600">-</span>
@@ -173,7 +173,7 @@ $trendLabels = [
         $invertColor = $kpi['invert'] ?? false;
         $colorMap = ['blue' => 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400', 'red' => 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400', 'emerald' => 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400', 'amber' => 'bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400'];
         ?>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center justify-between mb-2">
                 <div class="h-8 w-8 rounded-lg <?= $colorMap[$kpi['color']] ?> flex items-center justify-center">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -217,7 +217,7 @@ $trendLabels = [
 
     <!-- Ultimo Run -->
     <?php if ($latestRun): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Ultimo Run</h2>
             <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns/' . $latestRun['id']) ?>" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700">
@@ -260,7 +260,7 @@ $trendLabels = [
 
     <!-- KPI Trend Chart -->
     <?php if (count($kpiTrend ?? []) >= 2): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Andamento KPI</h2>
             <select id="kpiMetricSelector" class="text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -279,7 +279,7 @@ $trendLabels = [
     <!-- Evaluations Timeline + Actions -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Valutazioni Timeline -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                 <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Valutazioni AI</h2>
             </div>
@@ -344,7 +344,7 @@ $trendLabels = [
         </div>
 
         <!-- Azioni rapide -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
             <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Azioni</h2>
             <div class="space-y-3">
                 <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns') ?>" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">

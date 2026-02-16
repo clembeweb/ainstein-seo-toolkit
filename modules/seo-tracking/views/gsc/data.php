@@ -43,7 +43,7 @@
 
     <?php if (empty($topQueries) && empty($topPages)): ?>
     <!-- Empty State -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
         <svg class="w-16 h-16 mx-auto text-slate-300 dark:text-slate-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>
@@ -59,7 +59,7 @@
     <?php else: ?>
 
     <!-- Filtri -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
         <form method="GET" class="flex flex-wrap items-end gap-4">
             <div>
                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Periodo</label>
@@ -92,7 +92,7 @@
     </div>
 
     <!-- Tabs -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="border-b border-slate-200 dark:border-slate-700">
             <nav class="flex -mb-px">
                 <button @click="activeTab = 'queries'" :class="activeTab === 'queries' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400'" class="px-6 py-3 text-sm font-medium border-b-2 transition-colors">
@@ -110,7 +110,7 @@
         <!-- Tab: Top Queries -->
         <div x-show="activeTab === 'queries'" class="overflow-x-auto">
             <table class="w-full">
-                <thead class="bg-slate-50 dark:bg-slate-800/50">
+                <thead class="bg-slate-50 dark:bg-slate-700/50">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Keyword</th>
                         <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Click</th>
@@ -123,7 +123,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <?php foreach ($topQueries as $q): ?>
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                         <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white"><?= e($q['query']) ?></td>
                         <td class="px-4 py-3 text-sm text-right font-semibold text-slate-900 dark:text-white"><?= number_format($q['total_clicks']) ?></td>
                         <td class="px-4 py-3 text-sm text-right text-slate-500 dark:text-slate-400"><?= number_format($q['total_impressions']) ?></td>
@@ -161,7 +161,7 @@
         <!-- Tab: Top Pagine -->
         <div x-show="activeTab === 'pages'" x-cloak class="overflow-x-auto">
             <table class="w-full">
-                <thead class="bg-slate-50 dark:bg-slate-800/50">
+                <thead class="bg-slate-50 dark:bg-slate-700/50">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">URL</th>
                         <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Click</th>
@@ -173,7 +173,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <?php foreach ($topPages as $p): ?>
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                         <td class="px-4 py-3 text-sm">
                             <a href="<?= e($p['page']) ?>" target="_blank" class="text-primary-600 dark:text-primary-400 hover:underline break-all max-w-md block truncate" title="<?= e($p['page']) ?>">
                                 <?= e(str_replace(['https://', 'http://'], '', $p['page'])) ?>

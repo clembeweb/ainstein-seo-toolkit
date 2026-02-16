@@ -11,7 +11,7 @@
     </div>
 
     <!-- Search Form -->
-    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <form action="<?= url('/keyword-research/quick-check/search') ?>" method="POST" class="flex gap-4 items-end" x-data="{ loading: false }" @submit="loading = true">
             <?= csrf_field() ?>
 
@@ -73,7 +73,7 @@
 
     <!-- Main Keyword Card -->
     <?php if ($main): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-semibold text-slate-900 dark:text-white">"<?= e($main['text'] ?? $keyword) ?>"</h2>
             <?php if (!empty($main['intent'])): ?>
@@ -128,9 +128,9 @@
     <!-- Related Keywords -->
     <?php if (!empty($results['related'])): ?>
     <?php include __DIR__ . '/../partials/table-helpers.php'; ?>
-    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"
          x-data="quickCheckTable()">
-        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
             <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
                 <h3 class="font-semibold text-slate-900 dark:text-white">
                     Keyword correlate
@@ -325,32 +325,32 @@
                             <input type="checkbox" @change="toggleAll($event)" :checked="isAllSelected"
                                    class="rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
                         </th>
-                        <th class="px-6 py-3 text-left cursor-pointer select-none" @click="toggleSort('text')">
+                        <th class="px-4 py-3 text-left cursor-pointer select-none" @click="toggleSort('text')">
                             <span class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase hover:text-slate-700 dark:hover:text-slate-200">
                                 Keyword <span x-html="krSortIcon('text', sortField, sortDir)"></span>
                             </span>
                         </th>
-                        <th class="px-6 py-3 text-right cursor-pointer select-none" @click="toggleSort('volume')">
+                        <th class="px-4 py-3 text-right cursor-pointer select-none" @click="toggleSort('volume')">
                             <span class="inline-flex items-center justify-end text-xs font-medium text-slate-500 dark:text-slate-400 uppercase hover:text-slate-700 dark:hover:text-slate-200">
                                 Volume <span x-html="krSortIcon('volume', sortField, sortDir)"></span>
                             </span>
                         </th>
-                        <th class="px-6 py-3 text-center cursor-pointer select-none" @click="toggleSort('competition_level')">
+                        <th class="px-4 py-3 text-center cursor-pointer select-none" @click="toggleSort('competition_level')">
                             <span class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase hover:text-slate-700 dark:hover:text-slate-200">
                                 Competition <span x-html="krSortIcon('competition_level', sortField, sortDir)"></span>
                             </span>
                         </th>
-                        <th class="px-6 py-3 text-right cursor-pointer select-none" @click="toggleSort('high_bid')">
+                        <th class="px-4 py-3 text-right cursor-pointer select-none" @click="toggleSort('high_bid')">
                             <span class="inline-flex items-center justify-end text-xs font-medium text-slate-500 dark:text-slate-400 uppercase hover:text-slate-700 dark:hover:text-slate-200">
                                 CPC <span x-html="krSortIcon('high_bid', sortField, sortDir)"></span>
                             </span>
                         </th>
-                        <th class="px-6 py-3 text-center cursor-pointer select-none" @click="toggleSort('intent')">
+                        <th class="px-4 py-3 text-center cursor-pointer select-none" @click="toggleSort('intent')">
                             <span class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase hover:text-slate-700 dark:hover:text-slate-200">
                                 Intent <span x-html="krSortIcon('intent', sortField, sortDir)"></span>
                             </span>
                         </th>
-                        <th class="px-6 py-3 text-right cursor-pointer select-none" @click="toggleSort('trend')">
+                        <th class="px-4 py-3 text-right cursor-pointer select-none" @click="toggleSort('trend')">
                             <span class="inline-flex items-center justify-end text-xs font-medium text-slate-500 dark:text-slate-400 uppercase hover:text-slate-700 dark:hover:text-slate-200">
                                 Trend <span x-html="krSortIcon('trend', sortField, sortDir)"></span>
                             </span>
@@ -359,19 +359,19 @@
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <template x-for="kw in paginatedKeywords" :key="kw.text">
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30"
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                         :class="selectedKeywords.includes(kw.text) ? 'bg-primary-50/50 dark:bg-primary-900/10' : ''">
                         <td class="px-4 py-3">
                             <input type="checkbox" :value="kw.text" x-model="selectedKeywords"
                                    class="rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
                         </td>
-                        <td class="px-6 py-3 text-slate-900 dark:text-white font-medium" x-text="kw.text"></td>
-                        <td class="px-6 py-3 text-right text-slate-700 dark:text-slate-300" x-text="(kw.volume || 0).toLocaleString()"></td>
-                        <td class="px-6 py-3 text-center">
+                        <td class="px-4 py-3 text-slate-900 dark:text-white font-medium" x-text="kw.text"></td>
+                        <td class="px-4 py-3 text-right text-slate-700 dark:text-slate-300" x-text="(kw.volume || 0).toLocaleString()"></td>
+                        <td class="px-4 py-3 text-center">
                             <span :class="krCompClass(kw.competition_level)" x-text="kw.competition_level ? kw.competition_level.charAt(0).toUpperCase() + kw.competition_level.slice(1) : 'N/A'"></span>
                         </td>
-                        <td class="px-6 py-3 text-right text-slate-700 dark:text-slate-300" x-text="kw.high_bid > 0 ? kw.high_bid.toFixed(2) + ' EUR' : '-'"></td>
-                        <td class="px-6 py-3 text-center">
+                        <td class="px-4 py-3 text-right text-slate-700 dark:text-slate-300" x-text="kw.high_bid > 0 ? kw.high_bid.toFixed(2) + ' EUR' : '-'"></td>
+                        <td class="px-4 py-3 text-center">
                             <template x-if="kw.intent">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" :class="krIntentClass(kw.intent)" x-text="kw.intent.charAt(0).toUpperCase() + kw.intent.slice(1)"></span>
                             </template>
@@ -379,7 +379,7 @@
                                 <span class="text-slate-400">-</span>
                             </template>
                         </td>
-                        <td class="px-6 py-3 text-right">
+                        <td class="px-4 py-3 text-right">
                             <span :class="kw.trend > 0 ? 'text-emerald-600 dark:text-emerald-400' : (kw.trend < 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-500')"
                                   x-text="(kw.trend > 0 ? '+' : '') + Math.round(kw.trend) + '%'"></span>
                         </td>

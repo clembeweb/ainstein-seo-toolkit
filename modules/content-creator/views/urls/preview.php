@@ -87,7 +87,7 @@ $wordCount = (int) ($url['ai_word_count'] ?? 0);
     </div>
 
     <!-- URL Info Header -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div class="min-w-0">
                 <div class="flex items-center gap-3">
@@ -150,7 +150,7 @@ $wordCount = (int) ($url['ai_word_count'] ?? 0);
 
     <?php if ($hasScrapedData): ?>
     <!-- Dati Originali (collapsible) -->
-    <details class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <details class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <summary class="px-5 py-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
             <span class="text-base font-semibold text-slate-900 dark:text-white inline-flex items-center gap-2">
                 <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -186,7 +186,7 @@ $wordCount = (int) ($url['ai_word_count'] ?? 0);
     <?php endif; ?>
 
     <!-- Contenuto AI Generato -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <h3 class="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

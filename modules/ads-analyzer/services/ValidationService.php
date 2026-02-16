@@ -96,20 +96,31 @@ class ValidationService
             $errors['name'] = 'Il nome non puo superare 255 caratteri';
         }
 
-        if (empty($data['brief']) || strlen(trim($data['brief'])) < 20) {
-            $errors['brief'] = 'Il brief deve essere almeno 20 caratteri';
-        } elseif (strlen($data['brief']) > 5000) {
-            $errors['brief'] = 'Il brief non puo superare 5000 caratteri';
-        }
-
         if (empty($data['campaign_type_gads']) || !in_array($data['campaign_type_gads'], ['search', 'pmax'])) {
             $errors['campaign_type_gads'] = 'Seleziona il tipo di campagna (Search o PMax)';
         }
 
-        if (empty($data['landing_url'])) {
-            $errors['landing_url'] = 'L\'URL della landing page e obbligatorio';
-        } elseif (!filter_var($data['landing_url'], FILTER_VALIDATE_URL)) {
-            $errors['landing_url'] = 'L\'URL inserito non e valido';
+        $inputMode = $data['input_mode'] ?? 'url';
+        if (!in_array($inputMode, ['url', 'brief', 'both'])) {
+            $inputMode = 'url';
+        }
+
+        // URL: richiesto se mode e 'url' o 'both'
+        if ($inputMode !== 'brief') {
+            if (empty($data['landing_url'])) {
+                $errors['landing_url'] = 'L\'URL della landing page e obbligatorio';
+            } elseif (!filter_var($data['landing_url'], FILTER_VALIDATE_URL)) {
+                $errors['landing_url'] = 'L\'URL inserito non e valido';
+            }
+        }
+
+        // Brief: richiesto se mode e 'brief' o 'both'
+        if ($inputMode !== 'url') {
+            if (empty($data['brief']) || strlen(trim($data['brief'])) < 20) {
+                $errors['brief'] = 'Il brief deve essere almeno 20 caratteri';
+            } elseif (strlen($data['brief']) > 5000) {
+                $errors['brief'] = 'Il brief non puo superare 5000 caratteri';
+            }
         }
 
         return $errors;

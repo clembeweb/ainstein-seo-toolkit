@@ -3,7 +3,7 @@
 /**
  * SEO Audit Module - Routes
  *
- * Modulo per audit SEO completo con Google Search Console e analisi AI
+ * Modulo per audit SEO completo con Piano d'Azione AI
  */
 
 use Core\Router;
@@ -15,7 +15,6 @@ use Core\ModuleLoader;
 use Modules\SeoAudit\Controllers\ProjectController;
 use Modules\SeoAudit\Controllers\CrawlController;
 use Modules\SeoAudit\Controllers\AuditController;
-use Modules\SeoAudit\Controllers\GscController;
 use Modules\SeoAudit\Controllers\ReportController;
 use Modules\SeoAudit\Controllers\ActionPlanController;
 
@@ -125,76 +124,6 @@ Router::post('/seo-audit/project/{id}/crawl/confirm-stop', function ($id) {
 });
 
 // ============================================
-// GSC (GOOGLE SEARCH CONSOLE) ROUTES
-// ============================================
-
-// Dashboard GSC
-Router::get('/seo-audit/project/{id}/gsc', function ($id) {
-    Middleware::auth();
-    $controller = new GscController();
-    return $controller->dashboard((int) $id);
-});
-
-// Pagina connessione GSC (mostra stato e pulsante connetti)
-Router::get('/seo-audit/project/{id}/gsc/connect', function ($id) {
-    Middleware::auth();
-    $controller = new GscController();
-    return $controller->connect((int) $id);
-});
-
-// Avvia OAuth (redirect diretto a Google) - opzionale per POST
-Router::get('/seo-audit/project/{id}/gsc/authorize', function ($id) {
-    Middleware::auth();
-    $controller = new GscController();
-    $controller->authorize((int) $id);
-});
-
-// Mock connect per modalità demo
-Router::get('/seo-audit/project/{id}/gsc/mock-connect', function ($id) {
-    Middleware::auth();
-    $controller = new GscController();
-    $controller->mockConnect((int) $id);
-});
-
-// Callback OAuth centralizzato - riceve redirect da /oauth/google/callback
-Router::get('/seo-audit/gsc/connected', function () {
-    Middleware::auth();
-    $controller = new GscController();
-    $controller->connected();
-});
-
-// Lista proprietà GSC
-Router::get('/seo-audit/project/{id}/gsc/properties', function ($id) {
-    Middleware::auth();
-    $controller = new GscController();
-    return $controller->properties((int) $id);
-});
-
-// Seleziona proprietà GSC
-Router::post('/seo-audit/project/{id}/gsc/select-property', function ($id) {
-    Middleware::auth();
-    Middleware::csrf();
-    $controller = new GscController();
-    $controller->selectProperty((int) $id);
-});
-
-// Sincronizza dati GSC
-Router::post('/seo-audit/project/{id}/gsc/sync', function ($id) {
-    Middleware::auth();
-    Middleware::csrf();
-    $controller = new GscController();
-    $controller->sync((int) $id);
-});
-
-// Disconnetti GSC
-Router::post('/seo-audit/project/{id}/gsc/disconnect', function ($id) {
-    Middleware::auth();
-    Middleware::csrf();
-    $controller = new GscController();
-    $controller->disconnect((int) $id);
-});
-
-// ============================================
 // AUDIT DASHBOARD & CATEGORIES ROUTES
 // ============================================
 
@@ -246,40 +175,6 @@ Router::get('/seo-audit/project/{id}/history', function ($id) {
     Middleware::auth();
     $controller = new AuditController();
     return $controller->history((int) $id);
-});
-
-// ============================================
-// AI ANALYSIS ROUTES
-// ============================================
-
-// Genera analisi AI panoramica
-Router::post('/seo-audit/project/{id}/analyze/overview', function ($id) {
-    Middleware::auth();
-    Middleware::csrf();
-    $controller = new AuditController();
-    $controller->analyzeOverview((int) $id);
-});
-
-// Genera analisi AI per categoria
-Router::post('/seo-audit/project/{id}/analyze/{category}', function ($id, $category) {
-    Middleware::auth();
-    Middleware::csrf();
-    $controller = new AuditController();
-    $controller->analyzeCategory((int) $id, $category);
-});
-
-// Pagina analisi AI
-Router::get('/seo-audit/project/{id}/analysis', function ($id) {
-    Middleware::auth();
-    $controller = new AuditController();
-    return $controller->analysis((int) $id);
-});
-
-// Analisi AI per categoria
-Router::get('/seo-audit/project/{id}/analysis/{category}', function ($id, $category) {
-    Middleware::auth();
-    $controller = new AuditController();
-    return $controller->analysisCategory((int) $id, $category);
 });
 
 // ============================================

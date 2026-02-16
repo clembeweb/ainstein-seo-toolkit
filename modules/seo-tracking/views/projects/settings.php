@@ -16,7 +16,7 @@
         <!-- Left Column: GSC Connection -->
         <div class="lg:col-span-1 space-y-6">
             <!-- GSC Connection -->
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <div class="p-5 border-b border-slate-200 dark:border-slate-700">
                     <div class="flex items-center gap-3">
                         <div class="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
@@ -75,7 +75,7 @@
 
         <!-- Right Column: Settings Form -->
         <div class="lg:col-span-2">
-            <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/settings') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+            <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/settings') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
                 <?= csrf_field() ?>
                 <!-- General Settings -->
                 <div class="p-6 space-y-6">
@@ -208,7 +208,7 @@
             </form>
 
             <!-- Danger Zone -->
-            <div class="mt-6 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-red-200 dark:border-red-900/50 overflow-hidden">
+            <div class="mt-6 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-red-200 dark:border-red-900/50 overflow-hidden">
                 <div class="p-6">
                     <h2 class="text-lg font-medium text-red-600 dark:text-red-400 mb-2">Zona pericolosa</h2>
                     <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">

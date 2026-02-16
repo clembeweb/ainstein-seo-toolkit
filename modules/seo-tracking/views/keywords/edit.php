@@ -12,7 +12,7 @@
     </div>
 
     <!-- Form -->
-    <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/' . $keyword['id'] . '/update') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/' . $keyword['id'] . '/update') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
         <input type="hidden" name="_method" value="PUT">
 
@@ -98,7 +98,7 @@
     </form>
 
     <!-- Danger Zone -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-red-200 dark:border-red-900/50 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-red-200 dark:border-red-900/50 overflow-hidden">
         <div class="p-6">
             <h2 class="text-lg font-medium text-red-600 dark:text-red-400 mb-2">Zona pericolosa</h2>
             <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">

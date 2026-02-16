@@ -15,7 +15,7 @@
         <!-- Main Panel -->
         <div class="lg:col-span-2 space-y-6">
             <!-- Progress Card -->
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Progresso Scraping</h3>
                     <span id="scrape-status" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300">
@@ -71,7 +71,7 @@
             </div>
 
             <!-- Live Log -->
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
                 <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Log Attività</h3>
                     <button type="button" id="btn-clear-log" class="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700">Pulisci</button>
@@ -85,7 +85,7 @@
         <!-- Sidebar -->
         <div class="space-y-6">
             <!-- Settings -->
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Impostazioni</h3>
 
                 <div class="space-y-4">
@@ -109,7 +109,7 @@
             </div>
 
             <!-- Credits Info -->
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Crediti</h3>
                 <div class="space-y-3">
                     <div class="flex justify-between">
@@ -128,7 +128,7 @@
             </div>
 
             <!-- Actions -->
-            <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Azioni</h3>
                 <div class="space-y-3">
                     <form action="<?= url('/internal-links/project/' . $project['id'] . '/urls/reset') ?>" method="POST"

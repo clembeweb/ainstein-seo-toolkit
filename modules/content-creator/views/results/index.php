@@ -11,29 +11,20 @@
  * - $currentPage: 'results'
  */
 
+// Include shared table helpers
+include __DIR__ . '/../../../../shared/views/components/table-helpers.php';
+
 $currentSort = $filters['sort'] ?? 'created_at';
 $currentDir = $filters['dir'] ?? 'desc';
-
-// Helper per generare URL di ordinamento
-$sortUrl = function(string $column) use ($currentSort, $currentDir, $filters, $project, $pagination) {
-    $newDir = ($currentSort === $column && $currentDir === 'asc') ? 'desc' : 'asc';
-    $params = ['sort' => $column, 'dir' => $newDir];
-    if (!empty($filters['status'])) $params['status'] = $filters['status'];
-    if (!empty($filters['search'])) $params['q'] = $filters['search'];
-    if (($pagination['current_page'] ?? 1) > 1) $params['page'] = $pagination['current_page'];
-    return url("/content-creator/projects/{$project['id']}/results") . '?' . http_build_query($params);
-};
-
-// Helper per icona freccia ordinamento
-$sortIcon = function(string $column) use ($currentSort, $currentDir) {
-    if ($currentSort !== $column) {
-        return '<svg class="w-3 h-3 ml-1 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>';
-    }
-    if ($currentDir === 'asc') {
-        return '<svg class="w-3 h-3 ml-1 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>';
-    }
-    return '<svg class="w-3 h-3 ml-1 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
-};
+$baseUrl = url("/content-creator/projects/{$project['id']}/results");
+$sortFilters = array_filter([
+    'status' => $filters['status'] ?? '',
+    'q' => $filters['search'] ?? '',
+]);
+$paginationFilters = array_merge($sortFilters, array_filter([
+    'sort' => $currentSort !== 'created_at' ? $currentSort : '',
+    'dir' => $currentDir !== 'desc' ? $currentDir : '',
+]));
 
 // Status configuration
 $statusColors = [
@@ -130,7 +121,7 @@ $statusTabs = [
 
     <!-- SSE Progress bar - Scraping -->
     <div x-show="scraping" x-cloak x-transition
-         class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+         class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
         <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-2">
                 <svg class="w-4 h-4 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -157,7 +148,7 @@ $statusTabs = [
 
     <!-- SSE Progress bar - Generazione AI -->
     <div x-show="generating" x-cloak x-transition
-         class="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+         class="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4">
         <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-2">
                 <svg class="w-4 h-4 text-purple-600 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -205,7 +196,7 @@ $statusTabs = [
     </div>
 
     <!-- Search bar -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
         <form method="GET" class="flex flex-wrap items-center gap-4">
             <div class="flex-1 min-w-[200px]">
                 <input type="text"
@@ -238,7 +229,7 @@ $statusTabs = [
 
     <!-- Bulk Actions Bar -->
     <div x-show="selectedIds.length > 0" x-cloak
-         class="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4">
+         class="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl p-4">
         <div class="flex items-center justify-between">
             <span class="text-sm font-medium text-primary-700 dark:text-primary-300">
                 <span x-text="selectedIds.length"></span> selezionati
@@ -269,7 +260,7 @@ $statusTabs = [
 
     <!-- Table -->
     <?php if (empty($urls)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-8 text-center">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-8 text-center">
         <div class="mx-auto h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mb-4">
             <svg class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -299,7 +290,7 @@ $statusTabs = [
         <?php endif; ?>
     </div>
     <?php else: ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead class="bg-slate-50 dark:bg-slate-700/50">
@@ -310,37 +301,13 @@ $statusTabs = [
                                    @change="toggleSelectAll()"
                                    class="rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
                         </th>
-                        <th class="px-4 py-3 text-left">
-                            <a href="<?= $sortUrl('url') ?>" class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200">
-                                URL <?= $sortIcon('url') ?>
-                            </a>
-                        </th>
-                        <th class="px-4 py-3 text-left">
-                            <a href="<?= $sortUrl('keyword') ?>" class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200">
-                                Keyword <?= $sortIcon('keyword') ?>
-                            </a>
-                        </th>
-                        <th class="px-4 py-3 text-left">
-                            <a href="<?= $sortUrl('ai_h1') ?>" class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200">
-                                Contenuto <?= $sortIcon('ai_h1') ?>
-                            </a>
-                        </th>
-                        <th class="px-4 py-3 text-center">
-                            <a href="<?= $sortUrl('ai_word_count') ?>" class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200">
-                                Parole <?= $sortIcon('ai_word_count') ?>
-                            </a>
-                        </th>
-                        <th class="px-4 py-3 text-left">
-                            <a href="<?= $sortUrl('status') ?>" class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200">
-                                Stato <?= $sortIcon('status') ?>
-                            </a>
-                        </th>
-                        <th class="px-4 py-3 text-left">
-                            <a href="<?= $sortUrl('created_at') ?>" class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200">
-                                Data <?= $sortIcon('created_at') ?>
-                            </a>
-                        </th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Azioni</th>
+                        <?= table_sort_header('URL', 'url', $currentSort, $currentDir, $baseUrl, $sortFilters) ?>
+                        <?= table_sort_header('Keyword', 'keyword', $currentSort, $currentDir, $baseUrl, $sortFilters) ?>
+                        <?= table_sort_header('Contenuto', 'ai_h1', $currentSort, $currentDir, $baseUrl, $sortFilters) ?>
+                        <?= table_sort_header('Parole', 'ai_word_count', $currentSort, $currentDir, $baseUrl, $sortFilters, 'center') ?>
+                        <?= table_sort_header('Stato', 'status', $currentSort, $currentDir, $baseUrl, $sortFilters) ?>
+                        <?= table_sort_header('Data', 'created_at', $currentSort, $currentDir, $baseUrl, $sortFilters) ?>
+                        <?= table_header('Azioni', 'right') ?>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
@@ -503,51 +470,11 @@ $statusTabs = [
         </div>
 
         <!-- Pagination -->
-        <?php if ($pagination['last_page'] > 1): ?>
-        <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
-            <p class="text-sm text-slate-500 dark:text-slate-400">
-                Mostrando <?= $pagination['from'] ?> - <?= $pagination['to'] ?> di <?= number_format($pagination['total']) ?> risultati
-            </p>
-            <div class="flex items-center gap-2">
-                <?php
-                $paginationParams = [];
-                if (!empty($filters['status'])) $paginationParams['status'] = $filters['status'];
-                if (!empty($filters['search'])) $paginationParams['q'] = $filters['search'];
-                if (!empty($filters['sort'])) $paginationParams['sort'] = $filters['sort'];
-                if (!empty($filters['dir'])) $paginationParams['dir'] = $filters['dir'];
-                $paginationQuery = $paginationParams ? '&' . http_build_query($paginationParams) : '';
-                ?>
-                <?php if ($pagination['current_page'] > 1): ?>
-                <a href="?page=<?= $pagination['current_page'] - 1 ?><?= $paginationQuery ?>"
-                   class="px-3 py-1.5 rounded border border-slate-300 dark:border-slate-600 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                    Precedente
-                </a>
-                <?php endif; ?>
-
-                <?php
-                // Page numbers
-                $startPage = max(1, $pagination['current_page'] - 2);
-                $endPage = min($pagination['last_page'], $pagination['current_page'] + 2);
-                for ($p = $startPage; $p <= $endPage; $p++):
-                ?>
-                <a href="?page=<?= $p ?><?= $paginationQuery ?>"
-                   class="px-3 py-1.5 rounded text-sm font-medium transition-colors
-                          <?= $p === $pagination['current_page']
-                              ? 'bg-primary-600 text-white'
-                              : 'border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700' ?>">
-                    <?= $p ?>
-                </a>
-                <?php endfor; ?>
-
-                <?php if ($pagination['current_page'] < $pagination['last_page']): ?>
-                <a href="?page=<?= $pagination['current_page'] + 1 ?><?= $paginationQuery ?>"
-                   class="px-3 py-1.5 rounded border border-slate-300 dark:border-slate-600 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                    Successivo
-                </a>
-                <?php endif; ?>
-            </div>
-        </div>
-        <?php endif; ?>
+        <?= \Core\View::partial('components/table-pagination', [
+            'pagination' => $pagination,
+            'baseUrl' => $baseUrl,
+            'filters' => $paginationFilters,
+        ]) ?>
     </div>
     <?php endif; ?>
 </div>

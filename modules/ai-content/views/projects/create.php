@@ -23,7 +23,7 @@
     </div>
 
     <!-- Form -->
-    <form action="<?= url('/ai-content/projects') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700" x-data="{ projectType: 'manual', submitting: false }" @submit="submitting = true">
+    <form action="<?= url('/ai-content/projects') ?>" method="POST" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700" x-data="{ projectType: 'manual', submitting: false }" @submit="submitting = true">
         <?= csrf_field() ?>
         <input type="hidden" name="type" x-model="projectType">
 

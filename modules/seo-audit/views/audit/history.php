@@ -52,18 +52,18 @@ $currentPage = 'history';
             <table class="w-full">
                 <thead class="bg-slate-50 dark:bg-slate-700/50">
                     <tr>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-slate-700 dark:text-slate-300">Data</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-slate-700 dark:text-slate-300">Stato</th>
-                        <th class="px-4 py-3 text-center text-sm font-medium text-slate-700 dark:text-slate-300">Pagine</th>
-                        <th class="px-4 py-3 text-center text-sm font-medium text-slate-700 dark:text-slate-300">Health</th>
-                        <th class="px-4 py-3 text-center text-sm font-medium text-slate-700 dark:text-slate-300">Critical</th>
-                        <th class="px-4 py-3 text-center text-sm font-medium text-slate-700 dark:text-slate-300">Warning</th>
-                        <th class="px-4 py-3 text-center text-sm font-medium text-slate-700 dark:text-slate-300">Notice</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Data</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stato</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pagine</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Health</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Critical</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Warning</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Notice</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <?php foreach ($sessions as $i => $session): ?>
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                         <td class="px-4 py-3">
                             <div class="text-sm font-medium text-slate-900 dark:text-white">
                                 <?= date('d/m/Y H:i', strtotime($session['created_at'])) ?>
@@ -159,7 +159,7 @@ $currentPage = 'history';
     </div>
 
     <!-- Legenda -->
-    <div class="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4">
+    <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
         <h4 class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Legenda Health Score</h4>
         <div class="flex flex-wrap gap-4 text-sm">
             <div class="flex items-center gap-2">

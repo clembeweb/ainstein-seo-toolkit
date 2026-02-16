@@ -85,7 +85,7 @@ if ($statusCode >= 200 && $statusCode < 300) {
     </div>
 
     <!-- Tabs -->
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <!-- Tab Headers -->
         <div class="border-b border-slate-200 dark:border-slate-700">
             <nav class="flex overflow-x-auto">
@@ -222,18 +222,18 @@ if ($statusCode >= 200 && $statusCode < 300) {
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
-                            <tr class="border-b border-slate-200 dark:border-slate-700">
-                                <th class="text-left py-2 px-3 font-medium text-slate-500">Sorgente</th>
-                                <th class="text-left py-2 px-3 font-medium text-slate-500">Alt</th>
-                                <th class="text-center py-2 px-3 font-medium text-slate-500">Stato</th>
+                            <tr class="bg-slate-50 dark:bg-slate-700/50">
+                                <th class="text-left px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Sorgente</th>
+                                <th class="text-left px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Alt</th>
+                                <th class="text-center px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stato</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                             <?php foreach (array_slice($imagesData, 0, 50) as $img): ?>
-                            <tr>
-                                <td class="py-2 px-3 max-w-xs truncate text-slate-600 dark:text-slate-300" title="<?= e($img['src'] ?? '') ?>"><?= e($img['src'] ?? '') ?></td>
-                                <td class="py-2 px-3 max-w-xs truncate text-slate-600 dark:text-slate-300"><?= e(($img['alt'] ?? '') ?: '-') ?></td>
-                                <td class="py-2 px-3 text-center">
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                <td class="px-4 py-3 max-w-xs truncate text-sm text-slate-900 dark:text-white" title="<?= e($img['src'] ?? '') ?>"><?= e($img['src'] ?? '') ?></td>
+                                <td class="px-4 py-3 max-w-xs truncate text-sm text-slate-900 dark:text-white"><?= e(($img['alt'] ?? '') ?: '-') ?></td>
+                                <td class="px-4 py-3 text-center">
                                     <?php if (empty($img['alt'] ?? '')): ?>
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300">Alt mancante</span>
                                     <?php else: ?>

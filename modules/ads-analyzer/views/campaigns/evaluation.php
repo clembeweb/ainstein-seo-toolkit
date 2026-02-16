@@ -70,7 +70,7 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
 
     <?php if ($isError): ?>
     <!-- Error State -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-red-200 dark:border-red-800 p-12">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-red-200 dark:border-red-800 p-12">
         <div class="text-center">
             <div class="mx-auto h-16 w-16 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center mb-4">
                 <svg class="h-8 w-8 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -92,7 +92,7 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
 
     <?php elseif ($isAnalyzing): ?>
     <!-- Analyzing State -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-amber-200 dark:border-amber-800 p-12">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-amber-200 dark:border-amber-800 p-12">
         <div class="text-center">
             <div class="mx-auto h-16 w-16 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center mb-4">
                 <svg class="h-8 w-8 text-amber-600 dark:text-amber-400 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -110,7 +110,7 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
 
     <?php elseif ($isNoChange): ?>
     <!-- No Change State -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-blue-200 dark:border-blue-800 p-8">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-blue-200 dark:border-blue-800 p-8">
         <div class="flex flex-col items-center text-center">
             <div class="mx-auto h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mb-4">
                 <svg class="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -136,7 +136,7 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
 
     <?php if ($noChangeDeltas): ?>
     <!-- Metric Deltas -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-4">Variazioni rilevate</h3>
         <?php
         $deltaLabels = [
@@ -200,7 +200,7 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
 
     <?php elseif (!$hasResults): ?>
     <!-- Empty State -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-12">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12">
         <div class="text-center">
             <div class="mx-auto h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mb-4">
                 <svg class="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -245,7 +245,7 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
     ?>
 
     <!-- Overall Score Card -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6 md:p-8">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 md:p-8">
         <div class="flex flex-col md:flex-row md:items-center gap-6">
             <!-- Score Circle -->
             <div class="flex-shrink-0 flex justify-center">
@@ -358,7 +358,7 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
 
     <!-- Metric Deltas (comparison with previous run) -->
     <?php if (!empty($metricDeltas)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
@@ -433,7 +433,7 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
 
     <!-- Top Recommendations -->
     <?php if (!empty($topRecommendations)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
@@ -468,7 +468,7 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
         $typeConf = $campaignTypeConfig[$campType] ?? ['bg' => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300', 'label' => $campType];
         $typeInsights = $campaign['type_specific_insights'] ?? '';
         ?>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"
              x-data="{ open: <?= $cIndex === 0 ? 'true' : 'false' ?>, openAdGroups: {} }">
 
             <!-- Campaign Header (Accordion Toggle) -->
@@ -613,7 +613,7 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
                             <div class="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
                                 <!-- Ad Group Header -->
                                 <button @click="openAdGroups[<?= $cIndex ?>*100+<?= $agIndex ?>] = !openAdGroups[<?= $cIndex ?>*100+<?= $agIndex ?>]"
-                                        class="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                                        class="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                                     <div class="flex items-center gap-2 min-w-0">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold <?= scoreBadgeBgClass($agScore) ?>">
                                             <?= number_format($agScore, 1) ?>
@@ -759,7 +759,7 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
     <!-- Extensions Evaluation -->
     <?php if (!empty($extensionsEval)): ?>
     <?php $extScore = (float)($extensionsEval['score'] ?? 0); ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -819,7 +819,7 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
     <!-- Landing Evaluation -->
     <?php if (!empty($landingEval)): ?>
     <?php $landScore = (float)($landingEval['overall_score'] ?? 0); ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -874,7 +874,7 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
     ];
     $priorityLabels = ['high' => 'Alta', 'medium' => 'Media', 'low' => 'Bassa'];
     ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
@@ -913,7 +913,7 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
 
     <!-- Landing Suggestions -->
     <?php if (!empty($landingSuggestions)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>

@@ -37,7 +37,7 @@
     </div>
 
     <!-- Tab: Sitemap -->
-    <div x-show="activeTab === 'sitemap'" x-transition class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div x-show="activeTab === 'sitemap'" x-transition class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
 
         <!-- Step 1: Site URL -->
         <div x-show="step === 1" class="p-6">
@@ -147,7 +147,7 @@
             <!-- URLs List -->
             <div class="max-h-80 overflow-y-auto">
                 <template x-for="(urlItem, idx) in filteredUrls" :key="idx">
-                    <label class="flex items-center px-6 py-3 border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30 cursor-pointer"
+                    <label class="flex items-center px-6 py-3 border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer"
                            :class="urlItem.exists ? 'opacity-50' : ''">
                         <input type="checkbox" :value="urlItem.url" x-model="selectedUrls" :disabled="urlItem.exists"
                                class="rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500 disabled:opacity-50">
@@ -201,7 +201,7 @@
     </div>
 
     <!-- Tab: Manual Input -->
-    <div x-show="activeTab === 'manual'" x-cloak x-transition class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div x-show="activeTab === 'manual'" x-cloak x-transition class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
         <form action="<?= url('/ai-content/projects/' . $project['id'] . '/internal-links/store-manual') ?>" method="POST">
             <?= csrf_field() ?>
 

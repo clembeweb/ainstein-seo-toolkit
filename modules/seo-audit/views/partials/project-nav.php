@@ -16,10 +16,8 @@ $tabs = [
     'dashboard' => ['path' => '/dashboard', 'label' => 'Dashboard', 'icon' => 'chart-bar'],
     'pages' => ['path' => '/pages', 'label' => 'Pagine', 'icon' => 'document-text'],
     'issues' => ['path' => '/issues', 'label' => 'Problemi', 'icon' => 'exclamation-triangle'],
-    'analysis' => ['path' => '/analysis', 'label' => 'Analisi AI', 'icon' => 'sparkles'],
     'links' => ['path' => '/links', 'label' => 'Struttura Link', 'icon' => 'link'],
     'action-plan' => ['path' => '/action-plan', 'label' => 'Action Plan', 'icon' => 'clipboard-list'],
-    'gsc' => ['path' => '/gsc', 'label' => 'Search Console', 'icon' => 'globe-alt'],
     'history' => ['path' => '/history', 'label' => 'Storico', 'icon' => 'clock'],
     'settings' => ['path' => '/settings', 'label' => 'Impostazioni', 'icon' => 'cog'],
 ];
@@ -31,10 +29,8 @@ function isActiveTabSa($tabKey, $currentPage) {
         'dashboard' => ['dashboard', 'overview'],
         'pages' => ['pages', 'page-detail', 'import'],
         'issues' => ['issues', 'category'],
-        'analysis' => ['analysis', 'analysis-category'],
         'links' => ['links', 'links-orphans', 'links-anchors', 'links-graph'],
         'action-plan' => ['action-plan'],
-        'gsc' => ['gsc', 'gsc-connect', 'gsc-properties', 'gsc-dashboard'],
         'history' => ['history'],
         'settings' => ['settings'],
     ];

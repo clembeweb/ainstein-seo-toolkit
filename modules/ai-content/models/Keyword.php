@@ -32,9 +32,14 @@ class Keyword
     /**
      * Get all keywords for a user
      */
-    public function allByUser(int $userId, int $page = 1, int $perPage = 20): array
+    public function allByUser(int $userId, int $page = 1, int $perPage = 20, array $filters = []): array
     {
         $offset = ($page - 1) * $perPage;
+
+        // Sorting
+        $allowedSort = ['keyword', 'language', 'created_at'];
+        $sortBy = in_array($filters['sort'] ?? '', $allowedSort) ? 'k.' . $filters['sort'] : 'k.created_at';
+        $sortDir = (strtolower($filters['dir'] ?? '') === 'asc') ? 'ASC' : 'DESC';
 
         $sql = "
             SELECT
@@ -46,7 +51,7 @@ class Keyword
             FROM {$this->table} k
             WHERE k.user_id = ?
             AND k.project_id IS NOT NULL
-            ORDER BY k.created_at DESC
+            ORDER BY {$sortBy} {$sortDir}
             LIMIT ? OFFSET ?
         ";
 
@@ -58,7 +63,9 @@ class Keyword
             'total' => $total,
             'current_page' => $page,
             'last_page' => (int) ceil($total / $perPage) ?: 1,
-            'per_page' => $perPage
+            'per_page' => $perPage,
+            'from' => $total > 0 ? $offset + 1 : 0,
+            'to' => min($offset + $perPage, $total),
         ];
     }
 
@@ -127,9 +134,14 @@ class Keyword
     /**
      * Get all keywords for a project
      */
-    public function allByProject(int $projectId, int $page = 1, int $perPage = 20): array
+    public function allByProject(int $projectId, int $page = 1, int $perPage = 20, array $filters = []): array
     {
         $offset = ($page - 1) * $perPage;
+
+        // Sorting
+        $allowedSort = ['keyword', 'language', 'created_at'];
+        $sortBy = in_array($filters['sort'] ?? '', $allowedSort) ? 'k.' . $filters['sort'] : 'k.created_at';
+        $sortDir = (strtolower($filters['dir'] ?? '') === 'asc') ? 'ASC' : 'DESC';
 
         $sql = "
             SELECT
@@ -140,7 +152,7 @@ class Keyword
                 (SELECT status FROM aic_articles WHERE keyword_id = k.id ORDER BY created_at DESC LIMIT 1) as article_status
             FROM {$this->table} k
             WHERE k.project_id = ?
-            ORDER BY k.created_at DESC
+            ORDER BY {$sortBy} {$sortDir}
             LIMIT ? OFFSET ?
         ";
 
@@ -152,7 +164,9 @@ class Keyword
             'total' => $total,
             'current_page' => $page,
             'last_page' => (int) ceil($total / $perPage) ?: 1,
-            'per_page' => $perPage
+            'per_page' => $perPage,
+            'from' => $total > 0 ? $offset + 1 : 0,
+            'to' => min($offset + $perPage, $total),
         ];
     }
 
