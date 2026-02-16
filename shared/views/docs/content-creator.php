@@ -294,7 +294,7 @@
                         </div>
                         <h3 class="font-medium text-slate-900 dark:text-white text-sm">PrestaShop</h3>
                     </div>
-                    <p class="text-sm text-slate-600 dark:text-slate-400">Richiede il plugin seo-toolkit-connector per PrestaShop. Configurazione analoga a WordPress.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-400">Integrazione nativa tramite PrestaShop Webservice API. Inserisci l'URL del sito e la API key generata dal backoffice (Parametri Avanzati &gt; Webservice). Supporta import di prodotti, categorie (con gerarchia completa) e pagine CMS.</p>
                 </div>
 
                 <!-- Magento -->
@@ -307,7 +307,7 @@
                         </div>
                         <h3 class="font-medium text-slate-900 dark:text-white text-sm">Magento</h3>
                     </div>
-                    <p class="text-sm text-slate-600 dark:text-slate-400">Richiede il plugin seo-toolkit-connector per Magento. Configurazione analoga a WordPress.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-400">Integrazione tramite API REST Magento 2. Inserisci l'URL del sito e un Integration Access Token generato dal pannello admin (System &gt; Integrations).</p>
                 </div>
             </div>
 
@@ -321,6 +321,19 @@
                 <div>
                     <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Configurazione WordPress</h3>
                     <p class="mt-1 text-sm text-blue-800 dark:text-blue-300/80">Per collegare WordPress: installa il plugin <strong>seo-toolkit-connector</strong> dal tuo pannello WordPress, attivalo, copia la API key generata automaticamente e incollala nella pagina Connettori di Content Creator. Il plugin gestisce sia l'import delle pagine che la pubblicazione dei contenuti.</p>
+                </div>
+            </div>
+
+            <!-- Category hierarchy callout -->
+            <div class="flex items-start gap-4 p-5 rounded-xl bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/50">
+                <div class="shrink-0 w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-medium text-violet-900 dark:text-violet-200 text-sm">Gerarchia categorie</h3>
+                    <p class="mt-1 text-sm text-violet-800 dark:text-violet-300/80">Quando importi categorie da PrestaShop, la gerarchia viene preservata automaticamente. Ogni categoria mostra il percorso completo (es. <strong>Ceramiche &gt; Arredo &gt; Piatti murali</strong>). Le categorie di sistema (Root, Home) vengono escluse automaticamente.</p>
                 </div>
             </div>
 

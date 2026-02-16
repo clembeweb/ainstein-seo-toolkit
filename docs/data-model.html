@@ -110,7 +110,7 @@
     </div>
     <div class="p-4">
         <p class="px-3 mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Data Model</p>
-        <p class="px-3 mb-3 text-xs text-slate-400 dark:text-slate-500">~70 tabelle &middot; 7 moduli</p>
+        <p class="px-3 mb-3 text-xs text-slate-400 dark:text-slate-500">~75 tabelle &middot; 8 moduli</p>
     </div>
     <div class="px-3 pb-3 space-y-1 text-sm">
         <a href="#overview" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 font-medium transition-colors">
@@ -146,6 +146,10 @@
         <a href="#ga" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 text-rose-600 dark:text-rose-400 transition-colors">
             <span class="w-2 h-2 rounded-full bg-rose-500"></span>
             Ads Analyzer (ga_)
+        </a>
+        <a href="#cc" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 text-orange-600 dark:text-orange-400 transition-colors">
+            <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+            Content Creator (cc_)
         </a>
     </div>
 </nav>
@@ -885,9 +889,106 @@ erDiagram
         </details>
     </section>
 
+    <!-- Content Creator (cc_) -->
+    <section id="cc" class="mb-16 print-break">
+        <h2 class="text-2xl font-bold text-orange-400 mb-6">Content Creator (cc_)</h2>
+        <p class="text-slate-500 dark:text-slate-400 mb-6">5 tabelle. Generazione massiva di contenuti HTML per pagine prodotto, categorie, servizi e articoli con AI. Import da CSV, Sitemap, CMS (WordPress, Shopify, PrestaShop, Magento) e Keyword Research. Export su CMS o CSV.</p>
+
+        <div class="mermaid">
+erDiagram
+    cc_projects ||--o{ cc_urls : "contiene"
+    cc_projects ||--o{ cc_jobs : "background jobs"
+    cc_projects ||--o{ cc_operations_log : "audit log"
+    cc_projects }o--o| cc_connectors : "connettore CMS"
+    cc_urls }o--o| cc_connectors : "importato da"
+    cc_urls ||--o{ cc_operations_log : "operazioni"
+
+    cc_projects {
+        int id PK
+        int user_id FK
+        varchar name
+        enum content_type "product/category/article/service/custom"
+        varchar language
+        varchar tone
+        json ai_settings
+        int connector_id FK
+        enum status "active/paused/archived"
+    }
+    cc_urls {
+        int id PK
+        int project_id FK
+        int user_id FK
+        varchar url
+        varchar keyword
+        json secondary_keywords
+        varchar intent
+        enum source_type "manual/csv/sitemap/cms/keyword_research"
+        longtext scraped_content
+        longtext ai_content
+        varchar ai_h1
+        enum status "pending/scraped/generated/approved/rejected/published/error"
+        int connector_id FK
+        varchar cms_entity_id
+        varchar cms_entity_type
+        datetime cms_synced_at
+    }
+    cc_connectors {
+        int id PK
+        int user_id FK
+        varchar name
+        enum type "wordpress/shopify/prestashop/magento/custom_api"
+        json config
+        tinyint is_active
+        enum last_test_status "success/error"
+        json categories_cache
+    }
+    cc_jobs {
+        int id PK
+        int project_id FK
+        int user_id FK
+        enum type "scrape/generate/cms_push"
+        enum status "pending/running/completed/error/cancelled"
+        int items_requested
+        int items_completed
+        decimal credits_used
+    }
+    cc_operations_log {
+        int id PK
+        int user_id FK
+        int project_id FK
+        int url_id FK
+        enum operation "scrape/ai_generate/cms_push/export"
+        decimal credits_used
+        enum status "success/error"
+        json details
+    }
+        </div>
+
+        <details class="mt-6 bg-white dark:bg-slate-800 rounded-lg border border-orange-200 dark:border-orange-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">Progetto e URL: cc_projects &middot; cc_urls</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
+                <div><strong class="text-slate-900 dark:text-white">cc_projects</strong>: id(PK), user_id(FK&rarr;users), name, description, base_url, content_type(ENUM product/category/article/service/custom), language(default:it), tone(default:professionale), ai_settings(JSON), connector_id(FK&rarr;cc_connectors NULL), status(active/paused/archived), created_at, updated_at</div>
+                <div><strong class="text-slate-900 dark:text-white">cc_urls</strong>: id(PK), project_id(FK), user_id(FK), url, slug, keyword, secondary_keywords(JSON), intent, source_type(ENUM manual/csv/sitemap/cms/keyword_research), category, scraped_title, scraped_h1, scraped_meta_title, scraped_meta_description, scraped_content(LONGTEXT), scraped_price, scraped_word_count, scraped_at, scrape_error, ai_content(LONGTEXT), ai_h1, ai_word_count, ai_generated_at, ai_error, status(ENUM pending/scraped/generated/approved/rejected/published/error), connector_id(FK&rarr;cc_connectors NULL), cms_entity_id, cms_entity_type, cms_synced_at, cms_sync_error, created_at, updated_at</div>
+            </div>
+        </details>
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-orange-200 dark:border-orange-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">Connettori CMS: cc_connectors</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
+                <div><strong class="text-slate-900 dark:text-white">cc_connectors</strong>: id(PK), user_id(FK&rarr;users), name, type(ENUM wordpress/shopify/prestashop/magento/custom_api), config(JSON &mdash; credenziali specifiche per tipo: url+api_key per PS/WP, store_domain+access_token per Shopify, etc.), api_key, is_active(default:1), last_test_at, last_test_status(success/error), last_sync_at, categories_cache(JSON), seo_plugin, created_at, updated_at</div>
+            </div>
+        </details>
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-orange-200 dark:border-orange-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">Jobs e Log: cc_jobs &middot; cc_operations_log</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
+                <div><strong class="text-slate-900 dark:text-white">cc_jobs</strong>: id(PK), project_id(FK), user_id(FK), type(ENUM scrape/generate/cms_push), status(ENUM pending/running/completed/error/cancelled), items_requested, items_completed, items_failed, credits_used(DECIMAL 8,2), current_item, current_item_id, error_message, started_at, completed_at, created_at</div>
+                <div><strong class="text-slate-900 dark:text-white">cc_operations_log</strong>: id(PK), user_id(FK), project_id(FK), url_id(FK NULL), operation(ENUM scrape/ai_generate/cms_push/export), credits_used(DECIMAL 8,2), status(ENUM success/error), details(JSON), created_at</div>
+            </div>
+        </details>
+    </section>
+
     <!-- Footer -->
     <footer class="mt-16 pt-8 border-t border-slate-200 dark:border-slate-700 text-center text-sm text-slate-500 dark:text-slate-500">
-        <p>Ainstein SEO Toolkit &mdash; Data Model v1.0 &mdash; Generato il 13 Febbraio 2026</p>
+        <p>Ainstein SEO Toolkit &mdash; Data Model v1.1 &mdash; Aggiornato il 16 Febbraio 2026</p>
         <p class="mt-1">Per stampare come PDF: Ctrl+P &rarr; Salva come PDF (layout A4 Landscape consigliato)</p>
     </footer>
 
