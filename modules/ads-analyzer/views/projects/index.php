@@ -8,7 +8,7 @@
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Gestisci le tue analisi e campagne Google Ads</p>
         </div>
         <div class="mt-4 sm:mt-0">
-            <a href="<?= url('/ads-analyzer/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors">
+            <a href="<?= url('/ads-analyzer/projects/create' . ($currentType ? '?type=' . $currentType : '')) ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -17,7 +17,31 @@
         </div>
     </div>
 
-    <?php if (empty($allProjects)): ?>
+    <!-- Tab Filtro -->
+    <div class="flex items-center gap-2 flex-wrap">
+        <a href="<?= url('/ads-analyzer/projects') ?>"
+           class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors <?= !$currentType ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700' ?>">
+            Tutti
+        </a>
+        <a href="<?= url('/ads-analyzer/projects?type=campaign') ?>"
+           class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors <?= $currentType === 'campaign' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700' ?>">
+            Analisi Campagne
+        </a>
+        <a href="<?= url('/ads-analyzer/projects?type=campaign-creator') ?>"
+           class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors <?= $currentType === 'campaign-creator' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700' ?>">
+            Crea Campagna AI
+        </a>
+    </div>
+
+    <?php
+        $showCreator = !$currentType || $currentType === 'campaign-creator';
+        $showCampaign = !$currentType || $currentType === 'campaign';
+        $visibleProjects = [];
+        if ($showCreator) $visibleProjects = array_merge($visibleProjects, $creatorProjects ?? []);
+        if ($showCampaign) $visibleProjects = array_merge($visibleProjects, $campaignProjects ?? []);
+    ?>
+
+    <?php if (empty($visibleProjects)): ?>
     <!-- Empty State -->
     <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
         <div class="mx-auto h-16 w-16 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center mb-4">
@@ -25,11 +49,11 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
             </svg>
         </div>
-        <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">Nessun progetto</h3>
+        <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">Nessun progetto<?= $currentType === 'campaign' ? ' di analisi campagne' : ($currentType === 'campaign-creator' ? ' di creazione campagne' : '') ?></h3>
         <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
             Crea il tuo primo progetto: analizza campagne esistenti o genera una campagna completa con AI.
         </p>
-        <a href="<?= url('/ads-analyzer/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors">
+        <a href="<?= url('/ads-analyzer/projects/create' . ($currentType ? '?type=' . $currentType : '')) ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors">
             <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -39,7 +63,7 @@
     <?php else: ?>
 
     <!-- Campaign Creator Projects -->
-    <?php if (!empty($creatorProjects)): ?>
+    <?php if ($showCreator && !empty($creatorProjects)): ?>
     <div>
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
             <div class="h-6 w-6 rounded bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
@@ -106,7 +130,7 @@
     <?php endif; ?>
 
     <!-- Campaign Analysis Projects -->
-    <?php if (!empty($campaignProjects)): ?>
+    <?php if ($showCampaign && !empty($campaignProjects)): ?>
     <div>
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
             <div class="h-6 w-6 rounded bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">

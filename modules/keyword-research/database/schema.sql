@@ -9,11 +9,13 @@ CREATE TABLE IF NOT EXISTS kr_projects (
     user_id INT NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
+    type ENUM('research', 'architecture', 'editorial') NOT NULL DEFAULT 'research',
     default_location VARCHAR(10) DEFAULT 'IT',
     default_language VARCHAR(10) DEFAULT 'it',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_user (user_id)
+    INDEX idx_user (user_id),
+    INDEX idx_user_type (user_id, type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Ricerche (research guidata + architettura sito)
@@ -21,7 +23,7 @@ CREATE TABLE IF NOT EXISTS kr_researches (
     id INT AUTO_INCREMENT PRIMARY KEY,
     project_id INT NOT NULL,
     user_id INT NOT NULL,
-    type ENUM('research', 'architecture') NOT NULL,
+    type ENUM('research', 'architecture', 'editorial') NOT NULL,
     status ENUM('draft', 'collecting', 'analyzing', 'completed', 'error') DEFAULT 'draft',
 
     -- Brief input (JSON)

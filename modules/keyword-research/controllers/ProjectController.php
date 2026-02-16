@@ -21,12 +21,23 @@ class ProjectController
     public function index(): string
     {
         $user = Auth::user();
-        $projects = $this->projectModel->allWithStats($user['id']);
+
+        $type = $_GET['type'] ?? null;
+        if ($type !== null && !in_array($type, Project::validTypes(), true)) {
+            $type = null;
+        }
+
+        $projects = $this->projectModel->allWithStats($user['id'], $type);
+
+        $typeConfig = $type ? Project::typeConfig($type) : null;
 
         return View::render('keyword-research::projects/index', [
-            'title' => 'Keyword Research - Progetti',
+            'title' => $type ? 'Progetti ' . $typeConfig['label'] : 'Tutti i Progetti - Keyword Research',
             'user' => $user,
             'projects' => $projects,
+            'currentType' => $type,
+            'typeConfig' => $typeConfig,
+            'allTypeConfigs' => Project::typeConfig(),
             'modules' => ModuleLoader::getUserModules($user['id']),
         ]);
     }
@@ -35,9 +46,16 @@ class ProjectController
     {
         $user = Auth::user();
 
+        $type = $_GET['type'] ?? 'research';
+        if (!in_array($type, Project::validTypes(), true)) {
+            $type = 'research';
+        }
+
         return View::render('keyword-research::projects/create', [
-            'title' => 'Nuovo Progetto - Keyword Research',
+            'title' => 'Nuovo Progetto - ' . Project::typeConfig($type)['label'],
             'user' => $user,
+            'currentType' => $type,
+            'typeConfig' => Project::typeConfig($type),
             'modules' => ModuleLoader::getUserModules($user['id']),
         ]);
     }
@@ -51,9 +69,14 @@ class ProjectController
         $location = trim($_POST['default_location'] ?? 'IT');
         $language = trim($_POST['default_language'] ?? 'it');
 
+        $type = $_POST['type'] ?? 'research';
+        if (!in_array($type, Project::validTypes(), true)) {
+            $type = 'research';
+        }
+
         if (empty($name)) {
             $_SESSION['_flash']['error'] = 'Il nome del progetto è obbligatorio.';
-            Router::redirect('/keyword-research/projects/create');
+            Router::redirect('/keyword-research/projects/create?type=' . $type);
             return;
         }
 
@@ -61,12 +84,15 @@ class ProjectController
             'user_id' => $userId,
             'name' => $name,
             'description' => $description ?: null,
+            'type' => $type,
             'default_location' => $location,
             'default_language' => $language,
         ]);
 
+        $routeSegment = Project::typeConfig($type)['route_segment'];
+
         $_SESSION['_flash']['success'] = 'Progetto creato con successo.';
-        Router::redirect('/keyword-research/project/' . $projectId . '/research');
+        Router::redirect('/keyword-research/project/' . $projectId . '/' . $routeSegment);
     }
 
     public function settings(int $id): string
@@ -79,6 +105,8 @@ class ProjectController
             Router::redirect('/keyword-research/projects');
             exit;
         }
+
+        $typeConfig = Project::typeConfig($project['type'] ?? 'research');
 
         // Statistiche progetto
         $stats = Database::fetch("
@@ -93,6 +121,7 @@ class ProjectController
             'user' => $user,
             'project' => $project,
             'stats' => $stats,
+            'typeConfig' => $typeConfig,
             'modules' => ModuleLoader::getUserModules($user['id']),
         ]);
     }
@@ -137,9 +166,10 @@ class ProjectController
             return;
         }
 
+        $type = $project['type'] ?? 'research';
         $this->projectModel->delete($id);
 
         $_SESSION['_flash']['success'] = 'Progetto eliminato.';
-        Router::redirect('/keyword-research/projects');
+        Router::redirect('/keyword-research/projects?type=' . $type);
     }
 }

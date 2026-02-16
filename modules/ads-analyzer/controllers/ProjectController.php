@@ -14,6 +14,12 @@ class ProjectController
     {
         $user = Auth::user();
 
+        $type = $_GET['type'] ?? null;
+        $validTypes = ['campaign', 'campaign-creator'];
+        if ($type !== null && !in_array($type, $validTypes, true)) {
+            $type = null;
+        }
+
         $projectsByType = Project::allGroupedByType($user['id']);
 
         return View::render('ads-analyzer/projects/index', [
@@ -22,6 +28,7 @@ class ProjectController
             'modules' => ModuleLoader::getUserModules($user['id']),
             'campaignProjects' => $projectsByType['campaign'] ?? [],
             'creatorProjects' => $projectsByType['campaign-creator'] ?? [],
+            'currentType' => $type,
         ]);
     }
 

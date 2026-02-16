@@ -55,13 +55,19 @@ $currentPage = $currentPage ?? 'dashboard';
 <div class="sm:flex sm:items-center sm:justify-between mb-4">
     <div>
         <div class="flex items-center gap-3">
-            <a href="<?= url('/ads-analyzer/projects?tab=' . $projectType) ?>" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" title="Torna ai progetti">
+            <a href="<?= url('/ads-analyzer/projects?type=' . $projectType) ?>" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" title="Torna ai progetti">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                 </svg>
             </a>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white"><?= e($project['name']) ?></h1>
-            <span class="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">CAMPAGNE</span>
+            <?php
+            $navTypeConfig = match($projectType) {
+                'campaign-creator' => ['label' => 'CREATOR', 'classes' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'],
+                default => ['label' => 'CAMPAGNE', 'classes' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'],
+            };
+            ?>
+            <span class="px-2 py-0.5 rounded text-xs font-medium <?= $navTypeConfig['classes'] ?>"><?= $navTypeConfig['label'] ?></span>
         </div>
         <?php if (!empty($project['description'])): ?>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400"><?= e($project['description']) ?></p>

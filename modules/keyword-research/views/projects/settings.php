@@ -4,7 +4,7 @@
         <nav class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2">
             <a href="<?= url('/keyword-research') ?>" class="hover:text-slate-700 dark:hover:text-slate-300">Keyword Research</a>
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            <a href="<?= url('/keyword-research/projects') ?>" class="hover:text-slate-700 dark:hover:text-slate-300">Progetti</a>
+            <a href="<?= url('/keyword-research/projects?type=' . ($project['type'] ?? 'research')) ?>" class="hover:text-slate-700 dark:hover:text-slate-300">Progetti</a>
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             <span class="text-slate-900 dark:text-white">Impostazioni</span>
         </nav>
@@ -96,7 +96,7 @@
 
         <!-- Footer -->
         <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
-            <a href="<?= url('/keyword-research/project/' . $project['id'] . '/research') ?>" class="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
+            <a href="<?= url('/keyword-research/project/' . $project['id'] . '/' . $typeConfig['route_segment']) ?>" class="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
                 Torna al progetto
             </a>
             <button type="submit" :disabled="submitting" class="px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center">

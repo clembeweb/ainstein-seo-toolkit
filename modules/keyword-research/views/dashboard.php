@@ -42,7 +42,7 @@ endif;
                 </div>
             </div>
             <div class="px-6 py-4 bg-slate-50 dark:bg-slate-700/50 border-t border-slate-200 dark:border-slate-700">
-                <a href="<?= url('/keyword-research/projects') ?>" class="inline-flex items-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700">
+                <a href="<?= url('/keyword-research/projects?type=research') ?>" class="inline-flex items-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700">
                     Vai ai progetti
                     <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -70,7 +70,7 @@ endif;
                 </div>
             </div>
             <div class="px-6 py-4 bg-slate-50 dark:bg-slate-700/50 border-t border-slate-200 dark:border-slate-700">
-                <a href="<?= url('/keyword-research/projects') ?>" class="inline-flex items-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700">
+                <a href="<?= url('/keyword-research/projects?type=architecture') ?>" class="inline-flex items-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700">
                     Vai ai progetti
                     <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -98,7 +98,7 @@ endif;
                 </div>
             </div>
             <div class="px-6 py-4 bg-slate-50 dark:bg-slate-700/50 border-t border-slate-200 dark:border-slate-700">
-                <a href="<?= url('/keyword-research/projects') ?>" class="inline-flex items-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700">
+                <a href="<?= url('/keyword-research/projects?type=editorial') ?>" class="inline-flex items-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700">
                     Vai ai progetti
                     <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -151,16 +151,23 @@ endif;
 
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div class="divide-y divide-slate-200 dark:divide-slate-700">
-                <?php foreach ($recentProjects as $project): ?>
+                <?php foreach ($recentProjects as $project):
+                    $tc = $typeConfigs[$project['type'] ?? 'research'] ?? $typeConfigs['research'];
+                ?>
                 <div class="px-6 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                     <div class="flex items-center gap-3">
-                        <div class="h-9 w-9 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-sm">
+                        <div class="h-9 w-9 rounded-lg bg-gradient-to-br <?= $tc['gradient'] ?> flex items-center justify-center shadow-sm">
                             <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $tc['icon'] ?>"/>
                             </svg>
                         </div>
                         <div>
-                            <h4 class="text-sm font-medium text-slate-900 dark:text-white"><?= e($project['name']) ?></h4>
+                            <div class="flex items-center gap-2">
+                                <h4 class="text-sm font-medium text-slate-900 dark:text-white"><?= e($project['name']) ?></h4>
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium <?= $tc['badge_bg'] ?>">
+                                    <?= $tc['label'] ?>
+                                </span>
+                            </div>
                             <div class="flex items-center gap-3 mt-0.5">
                                 <?php if (($project['total_clusters'] ?? 0) > 0): ?>
                                 <span class="text-xs text-slate-500 dark:text-slate-400"><?= $project['total_clusters'] ?> cluster</span>
@@ -174,7 +181,7 @@ endif;
                             </div>
                         </div>
                     </div>
-                    <a href="<?= url('/keyword-research/project/' . $project['id'] . '/research') ?>" class="inline-flex items-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700">
+                    <a href="<?= url('/keyword-research/project/' . $project['id'] . '/' . $tc['route_segment']) ?>" class="inline-flex items-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700">
                         Apri
                         <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>

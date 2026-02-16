@@ -36,6 +36,7 @@ class DashboardController
             'user' => $user,
             'recentProjects' => $recentProjects,
             'stats' => $stats,
+            'typeConfigs' => Project::typeConfig(),
             'modules' => ModuleLoader::getUserModules($user['id']),
         ]);
     }
