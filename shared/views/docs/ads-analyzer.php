@@ -108,7 +108,19 @@
                 </div>
                 <h3 class="font-medium text-slate-900 dark:text-white text-sm">Valutazione campagne AI</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Analisi delle performance con raccomandazioni AI su copy annunci, budget e strategie di ottimizzazione.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Analisi delle performance con raccomandazioni AI su copy annunci, budget e strategie di ottimizzazione. Con pulsanti "Genera con AI" per creare contenuti pronti da copiare.</p>
+        </div>
+        <!-- Genera con AI -->
+        <div class="p-4 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="shrink-0 w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                    </svg>
+                </div>
+                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Genera con AI</h3>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Dalla pagina valutazione, genera contenuti actionable per risolvere i problemi identificati: copy annunci (headline + description), estensioni mancanti (sitelink, callout, snippet, price, promotion) e keyword negative raggruppate per categoria. Contenuti pronti per copia/incolla in Google Ads.</p>
         </div>
         <!-- Keyword negative -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -224,6 +236,12 @@
                     <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Analisi bulk keyword negative (4+ ad group)</td>
                     <td class="px-4 py-3 text-right">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">1.5 crediti / gruppo</span>
+                    </td>
+                </tr>
+                <tr class="bg-white dark:bg-slate-800/50">
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Genera con AI (copy / estensioni / keyword)</td>
+                    <td class="px-4 py-3 text-right">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">1 credito / generazione</span>
                     </td>
                 </tr>
                 <tr class="bg-amber-50/50 dark:bg-amber-900/10">
