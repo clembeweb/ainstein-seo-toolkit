@@ -438,6 +438,89 @@ class CampaignController
             'project' => $project,
             'evaluation' => $evaluation,
             'aiResponse' => $aiResponse,
+            'generateUrl' => url("/ads-analyzer/projects/{$projectId}/campaigns/evaluations/{$evalId}/generate"),
         ]);
+    }
+
+    /**
+     * Genera contenuto AI per fix issue/suggerimento dalla valutazione (AJAX lungo)
+     */
+    public function generateFix(int $projectId, int $evalId): void
+    {
+        ignore_user_abort(true);
+        set_time_limit(0);
+
+        ob_start();
+        header('Content-Type: application/json');
+
+        try {
+            $user = Auth::user();
+            $project = Project::findByUserAndId($user['id'], $projectId);
+
+            if (!$project || ($project['type'] ?? 'negative-kw') !== 'campaign') {
+                ob_end_clean();
+                http_response_code(400);
+                echo json_encode(['error' => 'Progetto non valido']);
+                exit;
+            }
+
+            $evaluation = CampaignEvaluation::find($evalId);
+            if (!$evaluation || $evaluation['project_id'] != $projectId || $evaluation['status'] !== 'completed') {
+                ob_end_clean();
+                http_response_code(404);
+                echo json_encode(['error' => 'Valutazione non trovata']);
+                exit;
+            }
+
+            $type = $_POST['type'] ?? '';
+            $context = json_decode($_POST['context'] ?? '{}', true) ?: [];
+
+            $allowedTypes = ['extensions', 'copy', 'keywords'];
+            if (!in_array($type, $allowedTypes)) {
+                ob_end_clean();
+                http_response_code(400);
+                echo json_encode(['error' => 'Tipo generazione non valido']);
+                exit;
+            }
+
+            // AiService::complete() verifica e consuma crediti internamente
+            if (!Credits::hasEnough($user['id'], 1)) {
+                ob_end_clean();
+                echo json_encode(['error' => 'Crediti insufficienti. Necessario almeno 1 credito.']);
+                exit;
+            }
+
+            session_write_close();
+
+            // Carica dati campagna (stessi model usati in evaluate())
+            $runId = $evaluation['run_id'];
+            $campaignData = [
+                'campaigns' => Campaign::getByRun($runId),
+                'ads' => Ad::getByRun($runId),
+                'extensions' => Extension::getByRun($runId),
+                'keywords' => AdGroupKeyword::getByRun($runId),
+                'business_context' => $project['business_context'] ?? '',
+            ];
+
+            set_time_limit(0);
+
+            require_once __DIR__ . '/../services/EvaluationGeneratorService.php';
+            $service = new \Modules\AdsAnalyzer\Services\EvaluationGeneratorService();
+            $result = $service->generate($user['id'], $type, $context, $campaignData);
+
+            Database::reconnect();
+
+            ob_end_clean();
+            echo json_encode(['success' => true, 'content' => $result]);
+            exit;
+
+        } catch (\Exception $e) {
+            error_log("Evaluation generateFix error: " . $e->getMessage());
+
+            ob_end_clean();
+            http_response_code(500);
+            echo json_encode(['error' => 'Errore: ' . $e->getMessage()]);
+            exit;
+        }
     }
 }

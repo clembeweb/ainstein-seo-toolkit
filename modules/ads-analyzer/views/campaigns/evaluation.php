@@ -62,11 +62,45 @@ $isNoChange = !$hasResults && !$isError && !$isAnalyzing
     && (($evaluation['credits_used'] ?? 1) == 0);
 $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
     ? json_decode($evaluation['metric_deltas'], true) : null;
+
+// Aree per cui AI può generare contenuto
+$generatableAreas = ['copy', 'extensions', 'keywords'];
+
+// Helper: render area risultato AI inline
+function renderAiGenerator(string $key): string {
+    return <<<HTML
+<div x-show="generators['{$key}']?.loading" class="mt-3 flex items-center gap-2 text-xs text-primary-600 dark:text-primary-400">
+    <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+    Generazione in corso...
+</div>
+<div x-show="generators['{$key}']?.result" x-cloak class="mt-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+    <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+            </svg>
+            Contenuto generato
+        </span>
+        <button @click="copyResult('{$key}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-emerald-700 bg-emerald-100 hover:bg-emerald-200 dark:text-emerald-300 dark:bg-emerald-900/40 dark:hover:bg-emerald-900/60 transition-colors">
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+            </svg>
+            <span x-text="generators['{$key}']?.copied ? 'Copiato!' : 'Copia'"></span>
+        </button>
+    </div>
+    <pre x-text="generators['{$key}']?.result" class="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-sans leading-relaxed max-h-96 overflow-y-auto"></pre>
+</div>
+<div x-show="generators['{$key}']?.error" x-cloak class="mt-2 text-xs text-red-600 dark:text-red-400" x-text="generators['{$key}']?.error"></div>
+HTML;
+}
 ?>
 
 <?php $currentPage = 'evaluations'; include __DIR__ . '/../partials/project-nav.php'; ?>
 
-<div class="space-y-6" x-data="{ openCampaigns: {} }">
+<div class="space-y-6" x-data="evaluationFixes()">
 
     <?php if ($isError): ?>
     <!-- Error State -->
@@ -548,7 +582,7 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
                             Problemi Campagna
                         </h4>
                         <div class="space-y-3">
-                            <?php foreach ($issues as $issue): ?>
+                            <?php foreach ($issues as $iIndex => $issue): ?>
                             <?php
                             $severity = $issue['severity'] ?? 'low';
                             $area = $issue['area'] ?? '';
@@ -583,6 +617,27 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
                                         <p class="text-sm text-amber-800 dark:text-amber-300"><?= e($issue['recommendation']) ?></p>
                                     </div>
                                 </div>
+                                <?php endif; ?>
+                                <?php if (in_array($area, $generatableAreas)): ?>
+                                <?php $issueKey = "issue_{$cIndex}_{$iIndex}"; ?>
+                                <button @click="generateFix('<?= $area ?>', <?= e(json_encode([
+                                    'issue' => $issue['description'] ?? '',
+                                    'recommendation' => $issue['recommendation'] ?? '',
+                                    'campaign_name' => $campaign['campaign_name'] ?? '',
+                                ])) ?>, '<?= $issueKey ?>')"
+                                    :disabled="generators['<?= $issueKey ?>']?.loading"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg text-primary-700 bg-primary-50 hover:bg-primary-100 dark:text-primary-300 dark:bg-primary-900/30 dark:hover:bg-primary-900/50 disabled:opacity-50 transition-colors mt-2">
+                                    <template x-if="!generators['<?= $issueKey ?>']?.loading">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                                        </svg>
+                                    </template>
+                                    <template x-if="generators['<?= $issueKey ?>']?.loading">
+                                        <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    </template>
+                                    <span x-text="generators['<?= $issueKey ?>']?.loading ? 'Generazione...' : 'Genera con AI'"></span>
+                                </button>
+                                <?= renderAiGenerator($issueKey) ?>
                                 <?php endif; ?>
                             </div>
                             <?php endforeach; ?>
@@ -813,6 +868,25 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
             </div>
             <?php endif; ?>
         </div>
+
+        <?php if (!empty($extensionsEval['missing'])): ?>
+        <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+            <button @click="generateFix('extensions', <?= e(json_encode(['missing' => $extensionsEval['missing']])) ?>, 'ext_main')"
+                :disabled="generators['ext_main']?.loading"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg text-primary-700 bg-primary-50 hover:bg-primary-100 dark:text-primary-300 dark:bg-primary-900/30 dark:hover:bg-primary-900/50 disabled:opacity-50 transition-colors">
+                <template x-if="!generators['ext_main']?.loading">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                    </svg>
+                </template>
+                <template x-if="generators['ext_main']?.loading">
+                    <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                </template>
+                <span x-text="generators['ext_main']?.loading ? 'Generazione...' : 'Genera Estensioni Mancanti'"></span>
+            </button>
+            <?= renderAiGenerator('ext_main') ?>
+        </div>
+        <?php endif; ?>
     </div>
     <?php endif; ?>
 
@@ -882,11 +956,22 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
             Suggerimenti Miglioramento Campagne
         </h2>
         <div class="space-y-3">
-            <?php foreach ($campaignSuggestions as $cs): ?>
+            <?php foreach ($campaignSuggestions as $sIndex => $cs): ?>
             <?php
             $csPriority = $cs['priority'] ?? 'medium';
             $csPriorityClass = $priorityClasses[$csPriority] ?? $priorityClasses['medium'];
             $csPriorityLabel = $priorityLabels[$csPriority] ?? ucfirst($csPriority);
+            // Determina se il suggerimento è generabile dall'AI
+            $csAreaLower = strtolower($cs['area'] ?? '');
+            $csGenType = null;
+            if (str_contains($csAreaLower, 'copy') || str_contains($csAreaLower, 'annunci')) {
+                $csGenType = 'copy';
+            } elseif (str_contains($csAreaLower, 'keyword')) {
+                $csGenType = 'keywords';
+            } elseif (str_contains($csAreaLower, 'estension') || str_contains($csAreaLower, 'extension')) {
+                $csGenType = 'extensions';
+            }
+            $sugKey = "sug_{$sIndex}";
             ?>
             <div class="flex items-start gap-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg p-4">
                 <div class="flex flex-wrap gap-2 flex-shrink-0 pt-0.5">
@@ -903,6 +988,26 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
                     <p class="text-sm font-medium text-slate-700 dark:text-slate-300"><?= e($cs['suggestion'] ?? '') ?></p>
                     <?php if (!empty($cs['expected_impact'])): ?>
                     <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Impatto: <?= e($cs['expected_impact']) ?></p>
+                    <?php endif; ?>
+                    <?php if ($csGenType): ?>
+                    <button @click="generateFix('<?= $csGenType ?>', <?= e(json_encode([
+                        'suggestion' => $cs['suggestion'] ?? '',
+                        'expected_impact' => $cs['expected_impact'] ?? '',
+                        'campaign_name' => '',
+                    ])) ?>, '<?= $sugKey ?>')"
+                        :disabled="generators['<?= $sugKey ?>']?.loading"
+                        class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg text-primary-700 bg-primary-50 hover:bg-primary-100 dark:text-primary-300 dark:bg-primary-900/30 dark:hover:bg-primary-900/50 disabled:opacity-50 transition-colors mt-2">
+                        <template x-if="!generators['<?= $sugKey ?>']?.loading">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                            </svg>
+                        </template>
+                        <template x-if="generators['<?= $sugKey ?>']?.loading">
+                            <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        </template>
+                        <span x-text="generators['<?= $sugKey ?>']?.loading ? 'Generazione...' : 'Genera con AI'"></span>
+                    </button>
+                    <?= renderAiGenerator($sugKey) ?>
                     <?php endif; ?>
                 </div>
             </div>
@@ -964,3 +1069,72 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
 
     <?php endif; ?>
 </div>
+
+<?php if ($hasResults): ?>
+<script>
+function evaluationFixes() {
+    return {
+        generators: {},
+        generateUrl: '<?= e($generateUrl ?? '') ?>',
+        csrfToken: '<?= csrf_token() ?>',
+
+        async generateFix(type, context, key) {
+            this.generators[key] = { loading: true, result: null, error: null, copied: false };
+
+            try {
+                const formData = new FormData();
+                formData.append('_csrf_token', this.csrfToken);
+                formData.append('type', type);
+                formData.append('context', JSON.stringify(context));
+
+                const resp = await fetch(this.generateUrl, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!resp.ok) {
+                    if (resp.status === 502 || resp.status === 504) {
+                        this.generators[key] = { loading: false, result: null, error: 'Timeout del server. Riprova tra qualche istante.', copied: false };
+                        return;
+                    }
+                    const errData = await resp.json().catch(() => null);
+                    throw new Error(errData?.error || 'Errore HTTP ' + resp.status);
+                }
+
+                const data = await resp.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                this.generators[key] = { loading: false, result: data.content || '', error: null, copied: false };
+            } catch (e) {
+                this.generators[key] = { loading: false, result: null, error: e.message || 'Errore di connessione. Riprova.', copied: false };
+            }
+        },
+
+        async copyResult(key) {
+            const text = this.generators[key]?.result;
+            if (!text) return;
+
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch (_) {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.cssText = 'position:fixed;left:-999px';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            }
+
+            this.generators[key].copied = true;
+            setTimeout(() => {
+                if (this.generators[key]) this.generators[key].copied = false;
+            }, 2000);
+        }
+    };
+}
+</script>
+<?php endif; ?>

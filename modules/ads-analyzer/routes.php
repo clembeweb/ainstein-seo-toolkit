@@ -218,6 +218,14 @@ Router::get('/ads-analyzer/projects/{id}/campaigns/evaluations/{evalId}', functi
     return $controller->evaluationShow((int) $id, (int) $evalId);
 });
 
+// Genera contenuto AI per fix issue/suggerimento valutazione
+Router::post('/ads-analyzer/projects/{id}/campaigns/evaluations/{evalId}/generate', function ($id, $evalId) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new CampaignController();
+    return $controller->generateFix((int) $id, (int) $evalId);
+});
+
 // ============================================
 // ANALISI KEYWORD NEGATIVE (Campaign Projects)
 // ============================================
