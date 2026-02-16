@@ -168,7 +168,7 @@
                 </div>
                 <h3 class="font-medium text-slate-900 dark:text-white text-sm">Campaign Creator AI</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Genera campagne Google Ads complete (Search o PMax) con un wizard guidato: brief, scraping landing, keyword research AI, generazione copy e estensioni con rispetto dei limiti caratteri Google Ads.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Genera campagne Google Ads complete (Search o PMax) con un wizard guidato in 3 step: analisi landing page, keyword research con volumi reali da Google Keyword Insight API (3 fasi: AI seed &rarr; espansione API &rarr; organizzazione AI), generazione copy/asset completi con raccomandazione budget giornaliero a 3 livelli. Export CSV compatibile con Google Ads Editor.</p>
         </div>
         <!-- Asset completi -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">

@@ -841,6 +841,10 @@ erDiagram
         int generation_id FK
         text keyword
         enum match_type
+        int search_volume
+        decimal cpc
+        varchar competition_level
+        int competition_index
         tinyint is_negative
         tinyint is_selected
     }
@@ -883,7 +887,7 @@ erDiagram
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
                 <div><strong class="text-slate-900 dark:text-white">ga_projects (colonne aggiuntive)</strong>: landing_url(VARCHAR 2048), campaign_type_gads(ENUM search/pmax), brief(TEXT), scraped_content(LONGTEXT), scraped_context(TEXT)</div>
                 <div><strong class="text-slate-900 dark:text-white">ga_creator_generations</strong>: id(PK), project_id(FK), user_id(FK), step(ENUM keywords/campaign), status(pending/processing/completed/error), ai_response(LONGTEXT), credits_used(DECIMAL), error_message, completed_at</div>
-                <div><strong class="text-slate-900 dark:text-white">ga_creator_keywords</strong>: id(PK), project_id(FK), generation_id(FK), keyword(TEXT), match_type(ENUM broad/phrase/exact), ad_group_name, intent, is_negative, is_selected, reason, sort_order</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_creator_keywords</strong>: id(PK), project_id(FK), generation_id(FK), keyword(TEXT), match_type(ENUM broad/phrase/exact), ad_group_name, intent, is_negative, is_selected, reason, sort_order, search_volume(INT), cpc(DECIMAL 10,2), competition_level(VARCHAR 20), competition_index(INT)</div>
                 <div><strong class="text-slate-900 dark:text-white">ga_creator_campaigns</strong>: id(PK), project_id(FK), generation_id(FK), campaign_type(ENUM search/pmax), campaign_name, assets_json(LONGTEXT — JSON con headlines, descriptions, sitelinks, callouts, structured_snippets, display_paths, business_name)</div>
             </div>
         </details>

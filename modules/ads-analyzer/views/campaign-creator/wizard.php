@@ -284,10 +284,13 @@ $kwCost = \Modules\AdsAnalyzer\Services\CampaignCreatorService::getCost('keyword
                     <h2 class="text-lg font-semibold text-slate-900 dark:text-white">
                         <?= $isPmax ? 'Search Themes e Audience' : 'Keywords per Ad Group' ?>
                     </h2>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-3">
                         <span class="text-sm text-slate-500 dark:text-slate-400">
                             <span class="font-medium text-slate-900 dark:text-white" x-text="selectedPositive"></span> selezionate,
                             <span class="font-medium text-red-600 dark:text-red-400" x-text="selectedNegative"></span> negative
+                        </span>
+                        <span x-show="totalVolume > 0" class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                            Vol. totale: <span class="font-medium" x-text="totalVolume.toLocaleString('it-IT')"></span>
                         </span>
                     </div>
                 </div>
@@ -304,9 +307,13 @@ $kwCost = \Modules\AdsAnalyzer\Services\CampaignCreatorService::getCost('keyword
                                        class="rounded border-slate-300 dark:border-slate-600 text-amber-600 focus:ring-amber-500">
                                 <span class="text-sm text-slate-900 dark:text-white" x-text="kw.keyword"></span>
                             </label>
-                            <span class="text-xs px-2 py-0.5 rounded-full"
-                                  :class="kw.keyword.length <= 80 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'"
-                                  x-text="kw.keyword.length + '/80'"></span>
+                            <div class="flex items-center gap-2">
+                                <span x-show="kw.search_volume" class="text-xs text-slate-500 dark:text-slate-400" x-text="parseInt(kw.search_volume).toLocaleString('it-IT')"></span>
+                                <span x-show="kw.cpc > 0" class="text-xs text-amber-600 dark:text-amber-400" x-text="'€' + parseFloat(kw.cpc).toFixed(2)"></span>
+                                <span class="text-xs px-2 py-0.5 rounded-full"
+                                      :class="kw.keyword.length <= 80 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'"
+                                      x-text="kw.keyword.length + '/80'"></span>
+                            </div>
                         </div>
                     </template>
                 </div>
@@ -321,13 +328,15 @@ $kwCost = \Modules\AdsAnalyzer\Services\CampaignCreatorService::getCost('keyword
                             <div class="divide-y divide-slate-100 dark:divide-slate-700/50">
                                 <template x-for="kw in kws" :key="kw.id">
                                     <div class="flex items-center justify-between py-2 px-4">
-                                        <label class="flex items-center gap-3 flex-1 cursor-pointer">
+                                        <label class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
                                             <input type="checkbox" :checked="kw.is_selected == 1"
                                                    @change="toggleKw(kw)"
-                                                   class="rounded border-slate-300 dark:border-slate-600 text-amber-600 focus:ring-amber-500">
-                                            <span class="text-sm text-slate-900 dark:text-white" x-text="kw.keyword"></span>
+                                                   class="rounded border-slate-300 dark:border-slate-600 text-amber-600 focus:ring-amber-500 flex-shrink-0">
+                                            <span class="text-sm text-slate-900 dark:text-white truncate" x-text="kw.keyword"></span>
                                         </label>
-                                        <div class="flex items-center gap-2">
+                                        <div class="flex items-center gap-2 flex-shrink-0">
+                                            <span x-show="kw.search_volume" class="text-xs text-slate-500 dark:text-slate-400 tabular-nums" x-text="parseInt(kw.search_volume).toLocaleString('it-IT')"></span>
+                                            <span x-show="kw.cpc > 0" class="text-xs text-amber-600 dark:text-amber-400 tabular-nums" x-text="'€' + parseFloat(kw.cpc).toFixed(2)"></span>
                                             <span x-show="kw.intent" class="text-xs px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300" x-text="kw.intent"></span>
                                             <select @change="updateMatchType(kw, $event.target.value)"
                                                     :value="kw.match_type"
@@ -436,7 +445,7 @@ $kwCost = \Modules\AdsAnalyzer\Services\CampaignCreatorService::getCost('keyword
                             </svg>
                             Copia Tutto
                         </button>
-                        <a href="<?= url("/ads-analyzer/projects/{$projectId}/campaign-creator/export") ?>"
+                        <a :href="`<?= url("/ads-analyzer/projects/{$projectId}/campaign-creator/export") ?>?budget=${selectedBudget}`"
                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors">
                             <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -453,6 +462,68 @@ $kwCost = \Modules\AdsAnalyzer\Services\CampaignCreatorService::getCost('keyword
                     </div>
                 </div>
             </div>
+
+            <!-- Budget Giornaliero Consigliato -->
+            <template x-if="campaignAssets?.daily_budget">
+                <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                    <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-1">Budget Giornaliero Consigliato</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-4" x-text="campaignAssets.daily_budget.rationale || 'Basato su CPC e volumi delle keyword selezionate'"></p>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <!-- Conservativo -->
+                        <button type="button" @click="selectedBudget = 'conservative'"
+                                :class="selectedBudget === 'conservative'
+                                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 ring-1 ring-emerald-500'
+                                    : 'border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700'"
+                                class="relative p-4 rounded-xl border text-left transition-all">
+                            <div class="text-xs font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Conservativo</div>
+                            <div class="text-2xl font-bold text-slate-900 dark:text-white">
+                                <span x-text="'€' + Number(campaignAssets.daily_budget.conservative).toFixed(0)"></span>
+                                <span class="text-sm font-normal text-slate-500">/giorno</span>
+                            </div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Copertura parziale, minimo rischio</div>
+                            <div x-show="selectedBudget === 'conservative'" class="absolute top-2 right-2">
+                                <svg class="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                            </div>
+                        </button>
+                        <!-- Moderato -->
+                        <button type="button" @click="selectedBudget = 'moderate'"
+                                :class="selectedBudget === 'moderate'
+                                    ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 ring-1 ring-amber-500'
+                                    : 'border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-700'"
+                                class="relative p-4 rounded-xl border text-left transition-all">
+                            <div class="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1">Moderato</div>
+                            <div class="text-2xl font-bold text-slate-900 dark:text-white">
+                                <span x-text="'€' + Number(campaignAssets.daily_budget.moderate).toFixed(0)"></span>
+                                <span class="text-sm font-normal text-slate-500">/giorno</span>
+                            </div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Buon bilanciamento copertura/costo</div>
+                            <div x-show="selectedBudget === 'moderate'" class="absolute top-2 right-2">
+                                <svg class="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                            </div>
+                        </button>
+                        <!-- Aggressivo -->
+                        <button type="button" @click="selectedBudget = 'aggressive'"
+                                :class="selectedBudget === 'aggressive'
+                                    ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20 ring-1 ring-rose-500'
+                                    : 'border-slate-200 dark:border-slate-700 hover:border-rose-300 dark:hover:border-rose-700'"
+                                class="relative p-4 rounded-xl border text-left transition-all">
+                            <div class="text-xs font-medium text-rose-600 dark:text-rose-400 uppercase tracking-wider mb-1">Aggressivo</div>
+                            <div class="text-2xl font-bold text-slate-900 dark:text-white">
+                                <span x-text="'€' + Number(campaignAssets.daily_budget.aggressive).toFixed(0)"></span>
+                                <span class="text-sm font-normal text-slate-500">/giorno</span>
+                            </div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Massima copertura e impression share</div>
+                            <div x-show="selectedBudget === 'aggressive'" class="absolute top-2 right-2">
+                                <svg class="w-5 h-5 text-rose-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                            </div>
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-3">
+                        <span x-text="'Stima mensile: €' + (Number(campaignAssets.daily_budget[selectedBudget]) * 30.4).toFixed(0)"></span>
+                        — Il budget selezionato verra incluso nel CSV export.
+                    </p>
+                </div>
+            </template>
 
             <!-- Headlines -->
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
@@ -702,6 +773,7 @@ function campaignCreatorWizard() {
 
         // Campaign assets
         campaignAssets: <?= $campaignJson ?>,
+        selectedBudget: 'moderate',
 
         // Computed
         get positiveKeywords() {
@@ -724,6 +796,11 @@ function campaignCreatorWizard() {
                 groups[g].push(kw);
             });
             return groups;
+        },
+        get totalVolume() {
+            return this.positiveKeywords
+                .filter(k => parseInt(k.is_selected))
+                .reduce((sum, k) => sum + (parseInt(k.search_volume) || 0), 0);
         },
         get selectedKeywordsByGroup() {
             const groups = {};

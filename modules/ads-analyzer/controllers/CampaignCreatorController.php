@@ -211,7 +211,10 @@ class CampaignCreatorController
     }
 
     /**
-     * Keyword Research AI (POST AJAX lungo)
+     * Keyword Research a 3 fasi (POST AJAX lungo)
+     * 1. AI genera seed keywords
+     * 2. API espande seed → keyword reali con volumi
+     * 3. AI organizza in ad groups
      */
     public function generateKeywords(int $id): void
     {
@@ -250,7 +253,6 @@ class CampaignCreatorController
 
             session_write_close();
 
-            // Keyword Research AI
             $generation = CreatorGeneration::create([
                 'project_id' => $id,
                 'user_id' => $user['id'],
@@ -258,8 +260,33 @@ class CampaignCreatorController
                 'status' => 'processing',
             ]);
 
-            $kwResult = CampaignCreatorService::generateKeywordResearch($user['id'], $project);
+            // === FASE 1: AI genera seed keywords ===
+            $seedResult = CampaignCreatorService::generateSeedKeywords($user['id'], $project);
+            Database::reconnect();
 
+            $realKeywords = [];
+            $useRealVolumes = false;
+
+            if (!empty($seedResult['success']) && !empty($seedResult['seeds'])) {
+                // === FASE 2: API espande seed → keyword reali con volumi ===
+                $location = $seedResult['location'] ?? 'US';
+                $lang = $seedResult['lang'] ?? 'en';
+                error_log("CampaignCreator: Seeds=" . implode(', ', $seedResult['seeds']) . " | Market={$location}/{$lang}");
+                $expandResult = CampaignCreatorService::expandAndFilterKeywords($seedResult['seeds'], $location, $lang);
+                Database::reconnect();
+
+                if (!empty($expandResult['success']) && !empty($expandResult['keywords'])) {
+                    $realKeywords = $expandResult['keywords'];
+                    $useRealVolumes = true;
+                } else {
+                    error_log("CampaignCreator: API expand failed, fallback AI-only. Error: " . ($expandResult['error'] ?? 'empty'));
+                }
+            } else {
+                error_log("CampaignCreator: Seed generation failed, fallback AI-only. Error: " . ($seedResult['message'] ?? 'unknown'));
+            }
+
+            // === FASE 3: AI organizza keyword ===
+            $kwResult = CampaignCreatorService::generateKeywordResearch($user['id'], $project, $realKeywords);
             Database::reconnect();
 
             if (!empty($kwResult['error'])) {
@@ -278,9 +305,17 @@ class CampaignCreatorController
                 'credits_used' => $kwCost,
             ]);
 
-            // Cancella keyword precedenti e inserisci nuove
+            // Mappa keyword reali per lookup veloce (per recuperare volume/CPC)
+            $volumeMap = [];
+            if ($useRealVolumes) {
+                foreach ($realKeywords as $rk) {
+                    $volumeMap[mb_strtolower($rk['text'])] = $rk;
+                }
+            }
+
+            // Cancella keyword precedenti e inserisci nuove con volumi
             CreatorKeyword::deleteByProject($id);
-            $savedCount = self::saveKeywordsFromAiResponse($id, $generation, $kwResult['data'], $project['campaign_type_gads']);
+            $savedCount = self::saveKeywordsFromAiResponse($id, $generation, $kwResult['data'], $project['campaign_type_gads'], $volumeMap);
 
             Credits::consume($user['id'], $kwCost, 'creator_keywords', 'ads-analyzer');
 
@@ -291,6 +326,7 @@ class CampaignCreatorController
             echo json_encode([
                 'success' => true,
                 'keywords_count' => $savedCount,
+                'has_volumes' => $useRealVolumes,
                 'data' => $kwResult['data'],
             ]);
             exit;
@@ -519,7 +555,11 @@ class CampaignCreatorController
         }
 
         $keywords = CreatorKeyword::getSelectedByProject($id);
-        $csv = CampaignCreatorService::generateCsvExport($campaign, $project['campaign_type_gads'], $keywords);
+        $budgetLevel = $_GET['budget'] ?? 'moderate';
+        if (!in_array($budgetLevel, ['conservative', 'moderate', 'aggressive'])) {
+            $budgetLevel = 'moderate';
+        }
+        $csv = CampaignCreatorService::generateCsvExport($campaign, $project['campaign_type_gads'], $keywords, $project['landing_url'] ?? '', $budgetLevel);
 
         $filename = 'campaign_' . preg_replace('/[^a-zA-Z0-9_-]/', '_', $project['name']) . '_' . date('Ymd') . '.csv';
 
@@ -584,9 +624,9 @@ class CampaignCreatorController
     // ===== HELPER PRIVATI =====
 
     /**
-     * Salva keyword dalla risposta AI
+     * Salva keyword dalla risposta AI con volume reali (se disponibili)
      */
-    private static function saveKeywordsFromAiResponse(int $projectId, int $generationId, array $data, string $type): int
+    private static function saveKeywordsFromAiResponse(int $projectId, int $generationId, array $data, string $type, array $volumeMap = []): int
     {
         $count = 0;
         $order = 0;
@@ -596,13 +636,19 @@ class CampaignCreatorController
             foreach (($data['ad_groups'] ?? []) as $group) {
                 $groupName = $group['name'] ?? 'Generale';
                 foreach (($group['keywords'] ?? []) as $kw) {
+                    $kwText = $kw['text'] ?? $kw['keyword'] ?? '';
+                    $vol = $volumeMap[mb_strtolower($kwText)] ?? null;
                     CreatorKeyword::create([
                         'project_id' => $projectId,
                         'generation_id' => $generationId,
-                        'keyword' => $kw['text'] ?? $kw['keyword'] ?? '',
+                        'keyword' => $kwText,
                         'match_type' => $kw['match_type'] ?? 'broad',
                         'ad_group_name' => $groupName,
-                        'intent' => $kw['intent'] ?? null,
+                        'intent' => $kw['intent'] ?? ($vol['intent'] ?? null),
+                        'search_volume' => $vol['volume'] ?? null,
+                        'cpc' => $vol ? round(($vol['high_bid'] ?? $vol['low_bid'] ?? 0), 2) : null,
+                        'competition_level' => $vol['competition_level'] ?? null,
+                        'competition_index' => $vol['competition_index'] ?? null,
                         'is_negative' => 0,
                         'is_selected' => 1,
                         'sort_order' => $order++,
@@ -613,13 +659,19 @@ class CampaignCreatorController
         } else {
             // PMax: search themes
             foreach (($data['search_themes'] ?? []) as $theme) {
+                $kwText = $theme['text'] ?? $theme['keyword'] ?? '';
+                $vol = $volumeMap[mb_strtolower($kwText)] ?? null;
                 CreatorKeyword::create([
                     'project_id' => $projectId,
                     'generation_id' => $generationId,
-                    'keyword' => $theme['text'] ?? $theme['keyword'] ?? '',
+                    'keyword' => $kwText,
                     'match_type' => 'broad',
                     'ad_group_name' => null,
-                    'intent' => null,
+                    'intent' => $vol['intent'] ?? null,
+                    'search_volume' => $vol['volume'] ?? null,
+                    'cpc' => $vol ? round(($vol['high_bid'] ?? $vol['low_bid'] ?? 0), 2) : null,
+                    'competition_level' => $vol['competition_level'] ?? null,
+                    'competition_index' => $vol['competition_index'] ?? null,
                     'is_negative' => 0,
                     'is_selected' => 1,
                     'sort_order' => $order++,
@@ -628,7 +680,7 @@ class CampaignCreatorController
             }
         }
 
-        // Negative keywords (entrambi i tipi)
+        // Negative keywords (entrambi i tipi) — no volumi
         foreach (($data['negative_keywords'] ?? []) as $nk) {
             CreatorKeyword::create([
                 'project_id' => $projectId,
