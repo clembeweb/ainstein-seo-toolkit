@@ -105,6 +105,14 @@ Ogni modulo DEVE avere `settings_groups` nel suo `module.json` per organizzare l
 
 ```
 seo-toolkit/
+├── admin/                   # Area amministrazione
+│   ├── controllers/
+│   │   ├── AdminController.php    # Dashboard, utenti, piani, moduli, settings
+│   │   ├── FinanceController.php  # Dashboard finanziaria (4 tab)
+│   │   ├── AiLogsController.php   # Log chiamate AI
+│   │   └── ApiLogsController.php  # Log chiamate API
+│   ├── views/
+│   └── routes.php
 ├── core/                    # Framework (Router, Database, Auth, Credits)
 ├── services/                # Servizi CONDIVISI
 │   ├── AiService.php        # Claude API - USARE SEMPRE

@@ -231,7 +231,17 @@ Middleware::hasCredits(5);
 - Costi crediti per operazione
 - Config SMTP
 - Stripe keys
-- Free tier credits (default 50)
+- Free tier credits (default 30)
+
+### Finance (/admin/finance)
+- Dashboard finanziaria con 4 tab:
+  - **Panoramica**: KPI costi API/AI, crediti consumati/distribuiti, trend costi, provider doughnut, crediti per modulo
+  - **Costi API**: tabella provider, tabella modelli AI, trend giornaliero stacked, top 10 chiamate costose
+  - **Crediti & Utenti**: costo medio per credito, flusso crediti, top utenti, breakdown per modulo/azione
+  - **Piani & Revenue**: MRR/ARR proiettato, adozione piani, margine operativo, stato Stripe
+- Selettore periodo: 7g, 30g, 90g, Anno
+- Chart.js grafici con dark mode
+- Nessuna tabella DB aggiuntiva (query su api_logs, ai_logs, usage_log, credit_transactions, plans)
 
 ## STRIPE (PREDISPOSIZIONE)
 
@@ -289,8 +299,11 @@ Middleware::hasCredits(5);
 /admin                        # Dashboard admin
 /admin/users                  # Gestione utenti
 /admin/plans                  # Gestione piani
+/admin/finance                # Dashboard finanziaria
 /admin/modules                # Gestione moduli
 /admin/settings               # Impostazioni
+/admin/ai-logs                # Log chiamate AI
+/admin/api-logs               # Log chiamate API
 ```
 
 ## PRIMO STEP IMPLEMENTAZIONE

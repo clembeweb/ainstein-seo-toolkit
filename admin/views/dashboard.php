@@ -323,6 +323,18 @@ $providerNames = [
                 <p class="text-sm text-slate-500 dark:text-slate-400">Gestisci piani e abbonamenti</p>
             </div>
         </a>
+
+        <a href="<?= url('/admin/finance') ?>" class="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 hover:border-primary-300 dark:hover:border-primary-700 transition-colors group">
+            <div class="h-12 w-12 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center group-hover:bg-teal-100 dark:group-hover:bg-teal-900/50 transition-colors">
+                <svg class="h-6 w-6 text-teal-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="font-semibold text-slate-900 dark:text-white">Finance</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Costi, crediti, revenue, margini</p>
+            </div>
+        </a>
     </div>
 </div>
 
