@@ -2,6 +2,7 @@
 
 use Core\Router;
 use Admin\Controllers\AdminController;
+use Admin\Controllers\FinanceController;
 use Admin\Controllers\AiLogsController;
 use Admin\Controllers\ApiLogsController;
 
@@ -21,6 +22,9 @@ Router::post('/admin/modules/{id}/rename', [AdminController::class, 'moduleRenam
 Router::post('/admin/settings/branding', [AdminController::class, 'brandingUpdate']);
 Router::get('/admin/plans', [AdminController::class, 'plans']);
 Router::post('/admin/plans/{id}', [AdminController::class, 'planUpdate']);
+
+// Finance
+Router::get('/admin/finance', [FinanceController::class, 'index']);
 
 // AI Logs
 Router::get('/admin/ai-logs', [AiLogsController::class, 'index']);

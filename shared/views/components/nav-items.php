@@ -23,7 +23,10 @@ if (!function_exists('navLink')) {
 
 // Onboarding: moduli completati per icona "?" tour
 $onbCompletedModules = [];
-$onbModuleSlugs = ['ai-content', 'seo-audit', 'seo-tracking', 'keyword-research', 'internal-links', 'ads-analyzer', 'content-creator'];
+$onbModuleSlugs = array_intersect(
+    ['ai-content', 'seo-audit', 'seo-tracking', 'keyword-research', 'internal-links', 'ads-analyzer', 'content-creator'],
+    array_column($modules ?? [], 'slug')
+);
 if (isset($user['id']) && class_exists('\\Core\\OnboardingService')) {
     $onbCompletedModules = \Core\OnboardingService::getCompletedModules($user['id']);
 }
@@ -723,6 +726,8 @@ if (preg_match('#^/content-creator/projects/(\d+)#', $currentPath, $matches)) {
         <?= navLink('/admin/users', 'Utenti', '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>', $currentPath) ?>
 
         <?= navLink('/admin/plans', 'Piani', '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>', $currentPath) ?>
+
+        <?= navLink('/admin/finance', 'Finance', '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>', $currentPath) ?>
 
         <?= navLink('/admin/modules', 'Moduli', '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>', $currentPath) ?>
 
