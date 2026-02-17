@@ -11,6 +11,7 @@ use Modules\SeoTracking\Models\GscDaily;
 use Modules\SeoTracking\Models\Keyword;
 use Modules\SeoTracking\Models\Alert;
 use Services\AiService;
+use Core\Logger;
 
 /**
  * AiReportService
@@ -395,7 +396,7 @@ Rispondi in italiano con formattazione markdown.";
     private function callAI(int $userId, string $prompt, string $reportType): ?string
     {
         if (!$this->aiService->isConfigured()) {
-            error_log('AiReportService: AI non configurata');
+            Logger::channel('ai')->warning('AiReportService: AI non configurata');
             return null;
         }
 
@@ -414,13 +415,13 @@ Rispondi in italiano con formattazione markdown.";
             ]);
 
             if (isset($response['error'])) {
-                error_log('AiReportService: ' . ($response['message'] ?? 'Errore sconosciuto'));
+                Logger::channel('ai')->error('AiReportService: ' . ($response['message'] ?? 'Errore sconosciuto'));
                 return null;
             }
 
             return $response['result'] ?? null;
         } catch (\Exception $e) {
-            error_log('AiReportService: ' . $e->getMessage());
+            Logger::channel('ai')->error('AiReportService: ' . $e->getMessage(), ['error' => $e->getMessage()]);
             return null;
         }
     }

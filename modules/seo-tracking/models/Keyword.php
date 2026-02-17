@@ -3,6 +3,7 @@
 namespace Modules\SeoTracking\Models;
 
 use Core\Database;
+use Core\Logger;
 
 /**
  * Keyword Model
@@ -609,7 +610,7 @@ class Keyword
 
                 // Log del fallback
                 $errorMsg = $result['error'] ?? 'Nessun dato';
-                error_log("[Keyword] Provider {$providerName} fallito per location {$locationCode}: {$errorMsg}. Provo il successivo...");
+                Logger::channel('api')->warning("[Keyword] Provider {$providerName} fallito per location {$locationCode}: {$errorMsg}. Provo il successivo...");
             }
 
             if (!$result || !$result['success']) {

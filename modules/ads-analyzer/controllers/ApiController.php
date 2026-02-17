@@ -7,6 +7,7 @@ use Modules\AdsAnalyzer\Models\Project;
 use Modules\AdsAnalyzer\Models\ScriptRun;
 use Modules\AdsAnalyzer\Models\AutoEvalQueue;
 use Modules\AdsAnalyzer\Services\IngestService;
+use Core\Logger;
 
 /**
  * Controller per l'API pubblica (nessuna auth sessione, nessun CSRF).
@@ -129,7 +130,7 @@ class ApiController
             exit;
 
         } catch (\Exception $e) {
-            error_log("API Ingest Error: " . $e->getMessage());
+            Logger::channel('api')->error("API Ingest Error", ['error' => $e->getMessage()]);
 
             // Aggiorna run con errore se esiste
             if (isset($runId)) {
@@ -159,7 +160,7 @@ class ApiController
                 'scheduled_for' => date('Y-m-d H:i:s', strtotime("+{$delayMinutes} minutes")),
             ]);
         } catch (\Exception $e) {
-            error_log("Auto-eval queue error: " . $e->getMessage());
+            Logger::channel('api')->error("Auto-eval queue error", ['error' => $e->getMessage()]);
         }
     }
 

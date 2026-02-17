@@ -5,6 +5,7 @@ namespace Admin\Controllers;
 use Core\Database;
 use Core\View;
 use Core\Auth;
+use Core\Cache;
 use Core\Credits;
 use Core\ModuleLoader;
 use Core\Middleware;
@@ -254,6 +255,8 @@ class AdminController
             // Ignora chiavi non esistenti - previene iniezione di settings arbitrari
         }
 
+        Settings::clearCache();
+
         $_SESSION['_flash']['success'] = 'Impostazioni salvate con successo';
         \Core\Router::redirect('/admin/settings');
         return '';
@@ -282,10 +285,13 @@ class AdminController
             return View::json(['error' => 'Modulo non trovato']);
         }
 
-        $newStatus = $module['is_active'] ? 0 : 1;
-        Database::update('modules', ['is_active' => $newStatus], 'id = ?', [$id]);
-
-        $_SESSION['_flash']['success'] = $newStatus ? 'Modulo attivato' : 'Modulo disattivato';
+        if ($module['is_active']) {
+            ModuleLoader::disable($module['slug']);
+            $_SESSION['_flash']['success'] = 'Modulo disattivato';
+        } else {
+            ModuleLoader::enable($module['slug']);
+            $_SESSION['_flash']['success'] = 'Modulo attivato';
+        }
         \Core\Router::redirect('/admin/modules');
         return '';
     }
@@ -378,13 +384,8 @@ class AdminController
             }
         }
 
-        // Save to database
-        Database::update(
-            'modules',
-            ['settings' => json_encode($currentSettings)],
-            'id = ?',
-            [$id]
-        );
+        // Save to database (via ModuleLoader to invalidate cache)
+        ModuleLoader::updateModuleSettings($module['slug'], $currentSettings);
 
         $_SESSION['_flash']['success'] = 'Impostazioni modulo salvate';
         \Core\Router::redirect('/admin/modules/' . $id . '/settings');
@@ -447,6 +448,8 @@ class AdminController
         }
 
         Database::update('modules', ['name' => $newName], 'id = ?', [$id]);
+        Cache::delete("module_{$module['slug']}");
+        Cache::delete('active_modules');
 
         $_SESSION['_flash']['success'] = 'Nome modulo aggiornato';
         \Core\Router::redirect('/admin/modules/' . $id . '/settings');
@@ -545,6 +548,69 @@ class AdminController
 
         $_SESSION['_flash']['success'] = 'Aspetto aggiornato con successo';
         \Core\Router::redirect('/admin/settings?tab=branding');
+        return '';
+    }
+
+    // ─── Cache Management ──────────────────────────────
+
+    public function cache(): string
+    {
+        $stats = Cache::getStats();
+        $keys = Cache::getKnownKeys();
+
+        // Group keys
+        $groups = [];
+        foreach ($keys as $k) {
+            $groups[$k['group']][] = $k;
+        }
+
+        // Log files info
+        $logDir = __DIR__ . '/../../storage/logs';
+        $logFiles = [];
+        if (is_dir($logDir)) {
+            foreach (glob($logDir . '/*.log') as $file) {
+                $logFiles[] = [
+                    'name' => basename($file),
+                    'size' => filesize($file),
+                    'modified' => filemtime($file),
+                ];
+            }
+            usort($logFiles, fn($a, $b) => $b['modified'] - $a['modified']);
+        }
+
+        return View::render('admin/cache', [
+            'title' => 'Gestione Cache',
+            'user' => Auth::user(),
+            'modules' => ModuleLoader::getActiveModules(),
+            'stats' => $stats,
+            'groups' => $groups,
+            'logFiles' => $logFiles,
+        ]);
+    }
+
+    public function cacheClear(): string
+    {
+        Middleware::csrf();
+
+        Cache::clear();
+        Settings::clearCache();
+
+        $_SESSION['_flash']['success'] = 'Cache svuotata completamente';
+        \Core\Router::redirect('/admin/cache');
+        return '';
+    }
+
+    public function cacheClearKey(): string
+    {
+        Middleware::csrf();
+
+        $key = $_POST['key'] ?? '';
+        if ($key) {
+            Cache::delete($key);
+            $_SESSION['_flash']['success'] = "Cache '{$key}' invalidata";
+        }
+
+        \Core\Router::redirect('/admin/cache');
         return '';
     }
 }

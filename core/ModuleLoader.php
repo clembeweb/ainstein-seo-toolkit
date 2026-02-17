@@ -8,17 +8,21 @@ class ModuleLoader
 
     public static function getActiveModules(): array
     {
-        return Database::fetchAll(
-            "SELECT * FROM modules WHERE is_active = 1 ORDER BY name"
-        );
+        return Cache::get('active_modules', function () {
+            return Database::fetchAll(
+                "SELECT * FROM modules WHERE is_active = 1 ORDER BY name"
+            );
+        }, 300);
     }
 
     public static function getModule(string $slug): ?array
     {
-        return Database::fetch(
-            "SELECT * FROM modules WHERE slug = ?",
-            [$slug]
-        );
+        return Cache::get("module_{$slug}", function () use ($slug) {
+            return Database::fetch(
+                "SELECT * FROM modules WHERE slug = ?",
+                [$slug]
+            );
+        }, 300);
     }
 
     public static function isModuleActive(string $slug): bool
@@ -91,33 +95,45 @@ class ModuleLoader
 
     public static function enable(string $slug): bool
     {
-        return Database::update(
+        $result = Database::update(
             'modules',
             ['is_active' => true],
             'slug = ?',
             [$slug]
         ) > 0;
+
+        Cache::delete("module_{$slug}");
+        Cache::delete('active_modules');
+
+        return $result;
     }
 
     public static function disable(string $slug): bool
     {
-        return Database::update(
+        $result = Database::update(
             'modules',
             ['is_active' => false],
             'slug = ?',
             [$slug]
         ) > 0;
+
+        Cache::delete("module_{$slug}");
+        Cache::delete('active_modules');
+
+        return $result;
     }
 
     public static function getModuleSettings(string $slug): array
     {
-        $module = self::getModule($slug);
+        return Cache::get("ms_all_{$slug}", function () use ($slug) {
+            $module = self::getModule($slug);
 
-        if (!$module || !$module['settings']) {
-            return [];
-        }
+            if (!$module || !$module['settings']) {
+                return [];
+            }
 
-        return json_decode($module['settings'], true) ?? [];
+            return json_decode($module['settings'], true) ?? [];
+        }, 300);
     }
 
     /**
@@ -131,12 +147,17 @@ class ModuleLoader
 
     public static function updateModuleSettings(string $slug, array $settings): bool
     {
-        return Database::update(
+        $result = Database::update(
             'modules',
             ['settings' => json_encode($settings)],
             'slug = ?',
             [$slug]
         ) > 0;
+
+        // Invalidate all related caches (including cost_* which can't be enumerated)
+        Cache::clear();
+
+        return $result;
     }
 
     public static function getUserModules(?int $userId = null): array

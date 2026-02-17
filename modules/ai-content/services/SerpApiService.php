@@ -5,6 +5,7 @@ namespace Modules\AiContent\Services;
 use Core\Settings;
 use Services\ScraperService;
 use Services\ApiLoggerService;
+use Core\Logger;
 
 /**
  * SerpApiService
@@ -75,7 +76,7 @@ class SerpApiService
                 throw $primaryError;
             }
 
-            error_log("[SerpService] Primario ({$this->provider}) fallito: " . $primaryError->getMessage() . " - Provo fallback ({$this->fallbackProvider})");
+            Logger::channel('api')->warning("[SerpService] Primario ({$this->provider}) fallito - Provo fallback ({$this->fallbackProvider})", ['error' => $primaryError->getMessage()]);
 
             // Prova fallback
             try {

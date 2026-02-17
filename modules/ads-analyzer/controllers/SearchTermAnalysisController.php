@@ -18,6 +18,7 @@ use Modules\AdsAnalyzer\Models\ScriptRun;
 use Modules\AdsAnalyzer\Models\BusinessContext;
 use Modules\AdsAnalyzer\Services\KeywordAnalyzerService;
 use Modules\AdsAnalyzer\Services\ContextExtractorService;
+use Core\Logger;
 
 class SearchTermAnalysisController
 {
@@ -487,7 +488,7 @@ class SearchTermAnalysisController
             exit;
 
         } catch (\Exception $e) {
-            error_log("SearchTermAnalysis error: " . $e->getMessage());
+            Logger::channel('ai')->error("SearchTermAnalysis error", ['error' => $e->getMessage()]);
 
             if (isset($analysisId)) {
                 Database::reconnect();

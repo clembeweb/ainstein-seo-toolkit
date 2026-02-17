@@ -149,7 +149,7 @@ class RapidApiKeywordService
                 $this->saveToCache($keyword, $locationCode, $apiResult['data']);
             } else {
                 // Log errore ma continua con le altre keyword
-                error_log("[RapidApiKeyword] API error for '{$keyword}': " . ($apiResult['error'] ?? 'unknown'));
+                \Core\Logger::channel('api')->error('RapidApiKeyword API error', ['keyword' => $keyword, 'error' => $apiResult['error'] ?? 'unknown']);
             }
         }
 
@@ -474,7 +474,7 @@ class RapidApiKeywordService
             Database::execute($sql, [$keyword, $locationCode, json_encode($data)]);
         } catch (\Exception $e) {
             // Tabella non esiste ancora, ignora
-            error_log("[RapidApiKeyword] Cache save error: " . $e->getMessage());
+            \Core\Logger::channel('api')->warning('RapidApiKeyword cache save error', ['error' => $e->getMessage()]);
         }
     }
 

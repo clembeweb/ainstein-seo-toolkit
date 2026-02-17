@@ -4,6 +4,7 @@ namespace Modules\SeoTracking\Controllers;
 
 use Core\Database;
 use Modules\SeoTracking\Services\GscService;
+use Core\Logger;
 
 /**
  * CronController
@@ -78,7 +79,7 @@ class CronController
 
                 } catch (\Throwable $e) {
                     $result['gsc'] = ['success' => false, 'error' => $e->getMessage()];
-                    error_log("[Cron] GSC sync failed for project {$project['id']}: " . $e->getMessage());
+                    Logger::channel('cron')->error("[Cron] GSC sync failed for project {$project['id']}", ['error' => $e->getMessage()]);
                 }
             }
 

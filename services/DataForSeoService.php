@@ -93,7 +93,7 @@ class DataForSeoService
                 }
             } else {
                 // Log errore ma continua
-                error_log("[DataForSEO] API error: " . ($apiResult['error'] ?? 'unknown'));
+                \Core\Logger::channel('api')->error('DataForSEO API error', ['error' => $apiResult['error'] ?? 'unknown']);
             }
         }
 
@@ -246,7 +246,7 @@ class DataForSeoService
             Database::execute($sql, [$keyword, $locationCode, json_encode($data)]);
         } catch (\Exception $e) {
             // Tabella non esiste ancora, ignora
-            error_log("[DataForSEO] Cache save error: " . $e->getMessage());
+            \Core\Logger::channel('api')->warning('DataForSEO cache save error', ['error' => $e->getMessage()]);
         }
     }
 
@@ -433,14 +433,14 @@ class DataForSeoService
                                 $foundUrl = $resultUrl;
                                 $foundTitle = $item['title'] ?? '';
                                 $foundSnippet = $item['description'] ?? '';
-                                error_log("[DataForSEO SERP] Found target at position {$position}: {$resultUrl}");
+                                \Core\Logger::channel('api')->debug('DataForSEO SERP target found', ['position' => $position, 'url' => $resultUrl]);
                             }
                         }
                     }
                 }
             }
 
-            error_log("[DataForSEO SERP] Total organic results: " . count($organicResults) . ", Found: " . ($foundPosition ? "Yes at {$foundPosition}" : "No"));
+            \Core\Logger::channel('api')->debug('DataForSEO SERP results', ['organic_count' => count($organicResults), 'found' => $foundPosition !== null, 'position' => $foundPosition]);
 
             return [
                 'success' => true,

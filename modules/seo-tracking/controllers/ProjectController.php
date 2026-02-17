@@ -10,6 +10,7 @@ use Core\Database;
 use Modules\SeoTracking\Models\Project;
 use Modules\SeoTracking\Models\GscConnection;
 use Modules\SeoTracking\Models\AlertSettings;
+use Core\Logger;
 
 /**
  * ProjectController
@@ -249,7 +250,7 @@ class ProjectController
             'updated_at' => date('Y-m-d H:i:s')
         ], 'id = ?', [$projectId]);
 
-        error_log("[SeoTracking] Sync interrotto manualmente - project_id: {$projectId}, user_id: {$user['id']}");
+        Logger::channel('app')->info("[SeoTracking] Sync interrotto manualmente", ['project_id' => $projectId, 'user_id' => $user['id']]);
 
         $_SESSION['_flash']['success'] = 'Sincronizzazione interrotta';
         jsonResponse(['success' => true]);

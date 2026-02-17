@@ -3,6 +3,7 @@
 namespace Modules\AiContent\Services;
 
 use Services\AiService;
+use Core\Logger;
 
 /**
  * BriefBuilderService
@@ -824,7 +825,7 @@ PROMPT;
             );
 
             if (isset($result['error'])) {
-                error_log("AI Strategic Analysis error: " . ($result['message'] ?? 'Unknown'));
+                Logger::channel('ai')->error("AI Strategic Analysis error", ['error' => $result['message'] ?? 'Unknown']);
                 return [
                     'enabled' => false,
                     'reason' => $result['message'] ?? 'AI analysis failed'
@@ -849,7 +850,7 @@ PROMPT;
             ];
 
         } catch (\Exception $e) {
-            error_log("AI Strategic Analysis exception: " . $e->getMessage());
+            Logger::channel('ai')->error("AI Strategic Analysis exception", ['error' => $e->getMessage()]);
             return [
                 'enabled' => false,
                 'reason' => $e->getMessage()

@@ -126,7 +126,7 @@ class KeywordsEverywhereService
                 }
             } else {
                 // Log errore ma continua
-                error_log("[KeywordsEverywhere] API error: " . ($apiResult['error'] ?? 'unknown'));
+                \Core\Logger::channel('api')->error('KeywordsEverywhere API error', ['error' => $apiResult['error'] ?? 'unknown']);
             }
         }
 
@@ -379,7 +379,7 @@ class KeywordsEverywhereService
             Database::execute($sql, [$keyword, $locationCode, json_encode($data)]);
         } catch (\Exception $e) {
             // Tabella non esiste ancora, ignora
-            error_log("[KeywordsEverywhere] Cache save error: " . $e->getMessage());
+            \Core\Logger::channel('api')->warning('KeywordsEverywhere cache save error', ['error' => $e->getMessage()]);
         }
     }
 

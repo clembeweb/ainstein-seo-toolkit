@@ -3,6 +3,7 @@
 namespace Modules\SeoTracking\Models;
 
 use Core\Database;
+use Core\ModuleLoader;
 
 /**
  * RankQueue Model
@@ -275,14 +276,12 @@ class RankQueue
      */
     public function isRunScheduled(): bool
     {
-        // Leggi preset giorni dal modulo
-        $module = Database::fetch("SELECT settings FROM modules WHERE slug = 'seo-tracking'");
+        // Leggi preset giorni dal modulo (via cache)
+        $settings = ModuleLoader::getModuleSettings('seo-tracking');
 
-        if (!$module || empty($module['settings'])) {
+        if (empty($settings)) {
             return false;
         }
-
-        $settings = json_decode($module['settings'], true) ?? [];
 
         // Verifica se abilitato
         if (empty($settings['rank_auto_enabled'])) {

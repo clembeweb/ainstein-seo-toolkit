@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../../services/AiService.php';
 require_once __DIR__ . '/../../../services/ScraperService.php';
 
 use Core\Database;
+use Core\Logger;
 
 class ContextExtractorService
 {
@@ -25,14 +26,14 @@ class ContextExtractorService
      */
     public function extractFromUrl(int $userId, string $url, string $mode = 'negative-kw'): array
     {
-        error_log("=== ContextExtractor: START ===");
-        error_log("URL: $url | Mode: $mode");
+        Logger::channel('ai')->info("=== ContextExtractor: START ===");
+        Logger::channel('ai')->info("URL: $url | Mode: $mode");
 
         // Step 1: Scraping con Readability (ScraperService::scrape)
         try {
             $scrapeResult = $this->scraper->scrape($url);
         } catch (\Exception $e) {
-            error_log("Scraping error: " . $e->getMessage());
+            Logger::channel('ai')->error("Scraping error", ['error' => $e->getMessage()]);
             return [
                 'success' => false,
                 'error' => 'Impossibile accedere alla pagina: ' . $e->getMessage()
@@ -54,13 +55,13 @@ class ContextExtractorService
             ];
         }
 
-        error_log("Scraped content length: " . strlen($scrapedContent));
+        Logger::channel('ai')->info("Scraped content length: " . strlen($scrapedContent));
 
         // Step 2: AI estrae contesto (limitare a 8000 chars)
         $contentForPrompt = substr($scrapedContent, 0, 8000);
         $prompt = $this->buildExtractionPrompt($contentForPrompt, $mode);
 
-        error_log("Calling AI for context extraction...");
+        Logger::channel('ai')->info("Calling AI for context extraction...");
 
         $response = $this->aiService->analyze(
             $userId,
@@ -80,8 +81,8 @@ class ContextExtractorService
 
         $extractedContext = $this->parseContextResponse($response['result'] ?? '');
 
-        error_log("Extracted context length: " . strlen($extractedContext));
-        error_log("=== ContextExtractor: SUCCESS ===");
+        Logger::channel('ai')->info("Extracted context length: " . strlen($extractedContext));
+        Logger::channel('ai')->info("=== ContextExtractor: SUCCESS ===");
 
         return [
             'success' => true,

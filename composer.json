@@ -1,5 +1,7 @@
 {
     "require": {
-        "fivefilters/readability.php": ">=3.0"
+        "fivefilters/readability.php": ">=3.0",
+        "monolog/monolog": "^3.9",
+        "symfony/cache": "^6.4"
     }
 }

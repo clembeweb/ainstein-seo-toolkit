@@ -23,30 +23,32 @@ class KeywordAnalyzerService
         array $terms,
         int $maxTerms = 300
     ): array {
-        error_log("=== KeywordAnalyzerService::analyzeAdGroup START ===");
-        error_log("User ID: $userId");
-        error_log("Business Context length: " . strlen($businessContext));
-        error_log("Terms count: " . count($terms));
-        error_log("Max terms: $maxTerms");
+        \Core\Logger::channel('ai')->debug('KeywordAnalyzerService::analyzeAdGroup START', [
+            'user_id' => $userId,
+            'business_context_length' => strlen($businessContext),
+            'terms_count' => count($terms),
+            'max_terms' => $maxTerms,
+        ]);
 
         try {
             // Prepara termini per prompt (limita a maxTerms)
             $termsForPrompt = array_slice($terms, 0, $maxTerms);
-            error_log("Terms for prompt: " . count($termsForPrompt));
+            \Core\Logger::channel('ai')->debug('Terms for prompt', ['count' => count($termsForPrompt)]);
 
             $termsSummary = array_map(
                 fn($t) => "{$t['term']} | {$t['clicks']} clic | {$t['impressions']} imp",
                 $termsForPrompt
             );
             $termsText = implode("\n", $termsSummary);
-            error_log("Terms text length: " . strlen($termsText));
+            \Core\Logger::channel('ai')->debug('Terms text built', ['length' => strlen($termsText)]);
 
             // Costruisci prompt
             $prompt = $this->buildPrompt($businessContext, $termsText);
-            error_log("Prompt length: " . strlen($prompt));
-            error_log("Prompt preview (first 300 chars): " . substr($prompt, 0, 300) . "...");
-
-            error_log("Calling AiService->analyze()...");
+            \Core\Logger::channel('ai')->debug('Prompt built', [
+                'length' => strlen($prompt),
+                'preview' => substr($prompt, 0, 300),
+            ]);
+            \Core\Logger::channel('ai')->debug('Calling AiService->analyze()');
 
             // Chiama AI
             $response = $this->aiService->analyze(
@@ -56,30 +58,34 @@ class KeywordAnalyzerService
                 'ads-analyzer'
             );
 
-            error_log("AiService response keys: " . implode(', ', array_keys($response)));
+            \Core\Logger::channel('ai')->debug('AiService response received', ['keys' => array_keys($response)]);
 
             if (isset($response['error'])) {
-                error_log("AI ERROR: " . ($response['message'] ?? 'Unknown error'));
+                \Core\Logger::channel('ai')->error('AI returned error', ['message' => $response['message'] ?? 'Unknown error']);
                 throw new \Exception($response['message'] ?? 'Errore AI');
             }
 
-            error_log("AI Response result length: " . strlen($response['result'] ?? ''));
-            error_log("AI Response result preview: " . substr($response['result'] ?? '', 0, 500) . "...");
+            \Core\Logger::channel('ai')->debug('AI response result', [
+                'length' => strlen($response['result'] ?? ''),
+                'preview' => substr($response['result'] ?? '', 0, 500),
+            ]);
 
             // Parse risposta JSON
-            error_log("Parsing AI response...");
+            \Core\Logger::channel('ai')->debug('Parsing AI response');
             $result = $this->parseResponse($response['result']);
 
-            error_log("Parsed result - categories count: " . count($result['categories'] ?? []));
-            error_log("=== KeywordAnalyzerService::analyzeAdGroup SUCCESS ===");
+            \Core\Logger::channel('ai')->info('KeywordAnalyzerService::analyzeAdGroup SUCCESS', [
+                'categories_count' => count($result['categories'] ?? []),
+            ]);
 
             return $result;
 
         } catch (\Exception $e) {
-            error_log("=== KeywordAnalyzerService EXCEPTION ===");
-            error_log("Message: " . $e->getMessage());
-            error_log("File: " . $e->getFile() . ":" . $e->getLine());
-            error_log("Trace: " . $e->getTraceAsString());
+            \Core\Logger::channel('ai')->error('KeywordAnalyzerService EXCEPTION', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile() . ':' . $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             throw $e;
         }
     }

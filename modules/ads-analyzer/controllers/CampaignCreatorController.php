@@ -13,6 +13,7 @@ use Modules\AdsAnalyzer\Models\CreatorKeyword;
 use Modules\AdsAnalyzer\Models\CreatorCampaign;
 use Modules\AdsAnalyzer\Services\CampaignCreatorService;
 use Modules\AdsAnalyzer\Services\ContextExtractorService;
+use Core\Logger;
 
 class CampaignCreatorController
 {
@@ -172,7 +173,7 @@ class CampaignCreatorController
             exit;
 
         } catch (\Exception $e) {
-            error_log("CampaignCreator analyzeLanding error: " . $e->getMessage());
+            Logger::channel('ai')->error("CampaignCreator analyzeLanding error", ['error' => $e->getMessage()]);
             ob_end_clean();
             http_response_code(500);
             echo json_encode(['error' => 'Errore interno: ' . $e->getMessage()]);
@@ -271,7 +272,7 @@ class CampaignCreatorController
                 // === FASE 2: API espande seed → keyword reali con volumi ===
                 $location = $seedResult['location'] ?? 'US';
                 $lang = $seedResult['lang'] ?? 'en';
-                error_log("CampaignCreator: Seeds=" . implode(', ', $seedResult['seeds']) . " | Market={$location}/{$lang}");
+                Logger::channel('ai')->info("CampaignCreator: Seeds=" . implode(', ', $seedResult['seeds']) . " | Market={$location}/{$lang}");
                 $expandResult = CampaignCreatorService::expandAndFilterKeywords($seedResult['seeds'], $location, $lang);
                 Database::reconnect();
 
@@ -279,10 +280,10 @@ class CampaignCreatorController
                     $realKeywords = $expandResult['keywords'];
                     $useRealVolumes = true;
                 } else {
-                    error_log("CampaignCreator: API expand failed, fallback AI-only. Error: " . ($expandResult['error'] ?? 'empty'));
+                    Logger::channel('ai')->warning("CampaignCreator: API expand failed, fallback AI-only", ['error' => $expandResult['error'] ?? 'empty']);
                 }
             } else {
-                error_log("CampaignCreator: Seed generation failed, fallback AI-only. Error: " . ($seedResult['message'] ?? 'unknown'));
+                Logger::channel('ai')->warning("CampaignCreator: Seed generation failed, fallback AI-only", ['error' => $seedResult['message'] ?? 'unknown']);
             }
 
             // === FASE 3: AI organizza keyword ===
@@ -332,7 +333,7 @@ class CampaignCreatorController
             exit;
 
         } catch (\Exception $e) {
-            error_log("CampaignCreator generateKeywords error: " . $e->getMessage());
+            Logger::channel('ai')->error("CampaignCreator generateKeywords error", ['error' => $e->getMessage()]);
             ob_end_clean();
             http_response_code(500);
             echo json_encode(['error' => 'Errore interno: ' . $e->getMessage()]);
@@ -489,7 +490,7 @@ class CampaignCreatorController
             exit;
 
         } catch (\Exception $e) {
-            error_log("CampaignCreator generateCampaign error: " . $e->getMessage());
+            Logger::channel('ai')->error("CampaignCreator generateCampaign error", ['error' => $e->getMessage()]);
             ob_end_clean();
             http_response_code(500);
             echo json_encode(['error' => 'Errore interno: ' . $e->getMessage()]);

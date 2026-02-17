@@ -108,7 +108,7 @@ class ApiLoggerService
 
         } catch (\Exception $e) {
             // Non bloccare mai il flusso principale per errori di logging
-            error_log("[ApiLoggerService] Failed to log API call: " . $e->getMessage());
+            \Core\Logger::channel('api')->error('ApiLogger failed to log call', ['error' => $e->getMessage()]);
         }
     }
 
@@ -380,7 +380,7 @@ class ApiLoggerService
                 'by_provider' => $byProvider,
             ];
         } catch (\Exception $e) {
-            error_log("[ApiLoggerService] Failed to get stats: " . $e->getMessage());
+            \Core\Logger::channel('api')->error('ApiLogger failed to get stats', ['error' => $e->getMessage()]);
             return [
                 'last_24h' => ['total_calls' => 0, 'success_count' => 0, 'error_count' => 0, 'rate_limited_count' => 0, 'total_cost' => 0, 'avg_duration_ms' => 0],
                 'last_30d' => ['total_calls' => 0, 'total_cost' => 0, 'total_credits' => 0],

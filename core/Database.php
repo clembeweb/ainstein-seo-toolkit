@@ -61,9 +61,9 @@ class Database
                 self::$config['password'],
                 $options
             );
-            error_log("Database::connect() PDO created successfully");
+            Logger::channel('database')->debug('PDO connection created');
         } catch (\Exception $e) {
-            error_log("Database::connect() PDO FAILED: " . $e->getMessage());
+            Logger::channel('database')->error('PDO connection failed', ['error' => $e->getMessage()]);
             throw $e;
         }
     }
@@ -73,13 +73,13 @@ class Database
      */
     public static function reconnect(): void
     {
-        error_log("Database::reconnect() called");
+        Logger::channel('database')->debug('Reconnect requested');
         self::$pdo = null;
         try {
             self::connect();
-            error_log("Database::reconnect() successful");
+            Logger::channel('database')->info('Reconnect successful');
         } catch (\Exception $e) {
-            error_log("Database::reconnect() FAILED: " . $e->getMessage());
+            Logger::channel('database')->error('Reconnect failed', ['error' => $e->getMessage()]);
             throw $e;
         }
     }
@@ -122,7 +122,7 @@ class Database
 
         // Log per debug
         if ($isGoneAway) {
-            error_log("Database isGoneAway detected: code={$code}, msg={$msg}");
+            Logger::channel('database')->warning('Gone away detected', ['code' => $code, 'message' => $msg]);
         }
 
         return $isGoneAway;
@@ -145,8 +145,7 @@ class Database
                 $lastException = $e;
 
                 if (self::isGoneAway($e) && $attempt < self::$maxRetries) {
-                    // Log reconnect attempt
-                    error_log("Database reconnect attempt " . ($attempt + 1) . " after: " . $e->getMessage());
+                    Logger::channel('database')->info('Auto-reconnect attempt', ['attempt' => $attempt + 1, 'error' => $e->getMessage()]);
                     self::reconnect();
                     continue;
                 }
@@ -213,23 +212,22 @@ class Database
                 return (int) $pdo->lastInsertId();
             } catch (PDOException $e) {
                 $lastException = $e;
-                error_log("Database INSERT failed attempt " . ($attempt + 1) . ": " . $e->getMessage());
+                Logger::channel('database')->warning('INSERT failed', ['attempt' => $attempt + 1, 'table' => $table, 'error' => $e->getMessage()]);
                 if (self::isGoneAway($e) && $attempt < self::$maxRetries) {
-                    error_log("Database reconnect on INSERT attempt " . ($attempt + 1) . " - sleeping 1s before retry");
-                    sleep(1); // 1 secondo delay before reconnect
+                    Logger::channel('database')->info('Reconnect on INSERT', ['attempt' => $attempt + 1]);
+                    sleep(1);
                     try {
                         self::reconnect();
-                        // Warm up the connection
                         self::$pdo->query('SELECT 1');
-                        error_log("Database reconnect successful, connection verified");
+                        Logger::channel('database')->info('Reconnect verified after INSERT retry');
                     } catch (\Exception $reconnectError) {
-                        error_log("Database reconnect FAILED: " . $reconnectError->getMessage());
-                        sleep(2); // Wait longer and try again
+                        Logger::channel('database')->error('Reconnect failed on INSERT retry', ['error' => $reconnectError->getMessage()]);
+                        sleep(2);
                         self::reconnect();
                     }
                     continue;
                 }
-                error_log("Database INSERT giving up after attempt " . ($attempt + 1));
+                Logger::channel('database')->error('INSERT giving up', ['attempt' => $attempt + 1, 'table' => $table]);
                 throw $e;
             }
         }

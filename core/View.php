@@ -248,4 +248,14 @@ if (!function_exists('jsonResponse')) {
     }
 }
 
+if (!function_exists('logger')) {
+    /**
+     * Get a Monolog logger channel
+     */
+    function logger(string $channel = 'app'): \Monolog\Logger
+    {
+        return \Core\Logger::channel($channel);
+    }
+}
+
 } // end global namespace

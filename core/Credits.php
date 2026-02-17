@@ -17,21 +17,23 @@ class Credits
 
     public static function consume(int $userId, float $amount, string $action, ?string $moduleSlug = null, array $metadata = []): bool
     {
-        $currentBalance = self::getBalance($userId);
+        // Zero-cost operations always succeed (MySQL rowCount=0 for no-change UPDATE)
+        if ($amount <= 0) {
+            return true;
+        }
 
-        if ($currentBalance < $amount) {
+        // Atomic debit: prevents race condition with concurrent requests
+        $affected = Database::execute(
+            "UPDATE users SET credits = credits - ? WHERE id = ? AND credits >= ?",
+            [$amount, $userId, $amount]
+        );
+
+        if ($affected === 0) {
             return false;
         }
 
-        $newBalance = $currentBalance - $amount;
-
-        // Aggiorna saldo utente
-        Database::update(
-            'users',
-            ['credits' => $newBalance],
-            'id = ?',
-            [$userId]
-        );
+        // Read new balance after atomic update
+        $newBalance = self::getBalance($userId);
 
         // Log transazione
         Database::insert('credit_transactions', [
@@ -59,15 +61,13 @@ class Credits
 
     public static function add(int $userId, float $amount, string $type, string $description, ?int $adminId = null): void
     {
-        $currentBalance = self::getBalance($userId);
-        $newBalance = $currentBalance + $amount;
-
-        Database::update(
-            'users',
-            ['credits' => $newBalance],
-            'id = ?',
-            [$userId]
+        // Atomic credit addition (prevents race condition with concurrent requests)
+        Database::execute(
+            "UPDATE users SET credits = credits + ? WHERE id = ?",
+            [$amount, $userId]
         );
+
+        $newBalance = self::getBalance($userId);
 
         Database::insert('credit_transactions', [
             'user_id' => $userId,
@@ -90,40 +90,44 @@ class Credits
      */
     public static function getCost(string $operation, ?string $moduleSlug = null, float $default = 1): float
     {
-        // 1. Se specificato modulo, cerca in modules.settings JSON
-        if ($moduleSlug) {
-            $module = Database::fetch(
-                "SELECT settings FROM modules WHERE slug = ?",
-                [$moduleSlug]
-            );
+        $cacheKey = "cost_{$operation}_" . ($moduleSlug ?? 'global');
 
-            if ($module && !empty($module['settings'])) {
-                $settings = json_decode($module['settings'], true);
-                $key = 'cost_' . $operation;
-                if (isset($settings[$key])) {
-                    return (float) $settings[$key];
+        return Cache::get($cacheKey, function () use ($operation, $moduleSlug, $default) {
+            // 1. Se specificato modulo, cerca in modules.settings JSON
+            if ($moduleSlug) {
+                $module = Database::fetch(
+                    "SELECT settings FROM modules WHERE slug = ?",
+                    [$moduleSlug]
+                );
+
+                if ($module && !empty($module['settings'])) {
+                    $settings = json_decode($module['settings'], true);
+                    $key = 'cost_' . $operation;
+                    if (isset($settings[$key])) {
+                        return (float) $settings[$key];
+                    }
                 }
             }
-        }
 
-        // 2. Cerca in tabella settings (formato cost_X)
-        $setting = Database::fetch(
-            "SELECT value FROM settings WHERE key_name = ?",
-            ['cost_' . $operation]
-        );
+            // 2. Cerca in tabella settings (formato cost_X)
+            $setting = Database::fetch(
+                "SELECT value FROM settings WHERE key_name = ?",
+                ['cost_' . $operation]
+            );
 
-        if ($setting) {
-            return (float) $setting['value'];
-        }
+            if ($setting) {
+                return (float) $setting['value'];
+            }
 
-        // 3. Fallback a config/app.php
-        $config = require __DIR__ . '/../config/app.php';
-        if (isset($config['credit_costs'][$operation])) {
-            return (float) $config['credit_costs'][$operation];
-        }
+            // 3. Fallback a config/app.php
+            $config = require __DIR__ . '/../config/app.php';
+            if (isset($config['credit_costs'][$operation])) {
+                return (float) $config['credit_costs'][$operation];
+            }
 
-        // 4. Default value
-        return $default;
+            // 4. Default value
+            return $default;
+        }, 3600);
     }
 
     public static function getTransactionHistory(int $userId, int $limit = 50): array

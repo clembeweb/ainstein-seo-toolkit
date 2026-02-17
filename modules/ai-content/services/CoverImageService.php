@@ -287,11 +287,6 @@ PROMPT;
      */
     private function getOpenAiKey(): string
     {
-        try {
-            return Settings::get('openai_api_key', '');
-        } catch (\Exception $e) {
-            $result = Database::fetch("SELECT value FROM settings WHERE key_name = ?", ['openai_api_key']);
-            return $result['value'] ?? '';
-        }
+        return Settings::get('openai_api_key', '');
     }
 }

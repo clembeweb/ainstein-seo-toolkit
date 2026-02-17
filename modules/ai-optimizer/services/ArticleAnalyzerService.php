@@ -6,6 +6,7 @@ use Core\Database;
 use Core\Credits;
 use Core\Settings;
 use Services\ScraperService;
+use Core\Logger;
 
 require_once __DIR__ . '/../../../services/AiService.php';
 
@@ -123,7 +124,7 @@ class ArticleAnalyzerService
                         $competitorPages[] = $pageData;
                     }
                 } catch (\Exception $e) {
-                    error_log("Competitor scraping failed: " . $e->getMessage());
+                    Logger::channel('ai')->warning("Competitor scraping failed", ['error' => $e->getMessage()]);
                 }
 
                 // Stop quando raggiungiamo il max

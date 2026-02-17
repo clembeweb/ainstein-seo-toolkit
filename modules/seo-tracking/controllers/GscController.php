@@ -11,6 +11,7 @@ use Modules\SeoTracking\Models\Project;
 use Modules\SeoTracking\Models\GscConnection;
 use Modules\SeoTracking\Models\GscData;
 use Modules\SeoTracking\Services\GscService;
+use Core\Logger;
 
 /**
  * GscController
@@ -249,7 +250,7 @@ class GscController
             ]);
 
         } catch (\Exception $e) {
-            error_log("[GscController] Sync error project $id: " . $e->getMessage());
+            Logger::channel('api')->error("[GscController] Sync error project $id", ['error' => $e->getMessage()]);
             Database::reconnect();
             $this->project->updateSyncStatus($id, 'failed');
 
@@ -275,7 +276,7 @@ class GscController
      */
     public function syncWithProgress(int $id): void
     {
-        error_log("[SSE] syncWithProgress called for project $id");
+        Logger::channel('api')->info("[SSE] syncWithProgress called for project $id");
 
         // Disabilita TUTTI i buffer di output
         while (ob_get_level()) {
@@ -398,7 +399,7 @@ class GscController
             ]);
 
         } catch (\Throwable $e) {
-            error_log("GSC Sync SSE Error: " . $e->getMessage());
+            Logger::channel('api')->error("GSC Sync SSE Error", ['error' => $e->getMessage()]);
             $this->project->updateSyncStatus($id, 'failed');
             $this->sendSSE([
                 'status' => 'error',
@@ -558,7 +559,7 @@ class GscController
             fwrite($fp, $out);
             fclose($fp); // Chiude subito, non aspetta risposta
         } else {
-            error_log("[GscController] fireAndForget failed: {$errno} {$errstr} - {$url}");
+            Logger::channel('api')->error("[GscController] fireAndForget failed", ['errno' => $errno, 'errstr' => $errstr, 'url' => $url]);
         }
     }
 

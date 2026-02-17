@@ -17,6 +17,7 @@ use Modules\AdsAnalyzer\Models\AdGroupKeyword;
 use Modules\AdsAnalyzer\Models\CampaignEvaluation;
 use Modules\AdsAnalyzer\Services\CampaignEvaluatorService;
 use Modules\AdsAnalyzer\Services\MetricComparisonService;
+use Core\Logger;
 
 class CampaignController
 {
@@ -357,7 +358,7 @@ class CampaignController
             exit;
 
         } catch (\Exception $e) {
-            error_log("Campaign evaluation error: " . $e->getMessage());
+            Logger::channel('ai')->error("Campaign evaluation error", ['error' => $e->getMessage()]);
 
             if (isset($evalId)) {
                 Database::reconnect();
@@ -515,7 +516,7 @@ class CampaignController
             exit;
 
         } catch (\Exception $e) {
-            error_log("Evaluation generateFix error: " . $e->getMessage());
+            Logger::channel('ai')->error("Evaluation generateFix error", ['error' => $e->getMessage()]);
 
             ob_end_clean();
             http_response_code(500);

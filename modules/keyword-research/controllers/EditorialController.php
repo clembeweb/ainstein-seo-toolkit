@@ -14,6 +14,7 @@ use Modules\KeywordResearch\Models\Project;
 use Modules\KeywordResearch\Models\Research;
 use Modules\KeywordResearch\Models\EditorialItem;
 use Modules\KeywordResearch\Services\KeywordInsightService;
+use Core\Logger;
 
 class EditorialController
 {
@@ -180,7 +181,7 @@ class EditorialController
             $serpAvailable = true;
         } catch (\Exception $e) {
             // SERP non configurata: procediamo solo con keyword
-            error_log("[Editorial] SERP non disponibile: " . $e->getMessage());
+            Logger::channel('ai')->warning("[Editorial] SERP non disponibile", ['error' => $e->getMessage()]);
         }
 
         $sendEvent('started', [
@@ -263,7 +264,7 @@ class EditorialController
                         // Salva in cache
                         $this->saveSerpCache($serpQuery, $location, $lang, $serpData);
                     } catch (\Exception $e) {
-                        error_log("[Editorial] SERP error per '{$category}': " . $e->getMessage());
+                        Logger::channel('ai')->error("[Editorial] SERP error per '{$category}'", ['error' => $e->getMessage()]);
                         $serpData = ['organic' => [], 'paa' => [], 'related' => []];
                     }
                 }
@@ -541,7 +542,7 @@ class EditorialController
             exit;
 
         } catch (\Exception $e) {
-            error_log("[Editorial] aiAnalyze error: " . $e->getMessage());
+            Logger::channel('ai')->error("[Editorial] aiAnalyze error", ['error' => $e->getMessage()]);
             ob_end_clean();
             http_response_code(500);
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);

@@ -198,14 +198,14 @@ class RankCheckerService
                         return $primaryResult;
                     }
 
-                    error_log("[RankChecker] DataForSEO: keyword '{$keyword}' non trovata nelle prime 100 posizioni, provo fallback");
+                    \Core\Logger::channel('api')->warning('[RankChecker] DataForSEO: keyword non trovata nelle prime 100 posizioni, provo fallback', ['keyword' => $keyword]);
                 } else {
                     $lastError = $dataForSeoResult['error'] ?? 'Unknown DataForSEO error';
-                    error_log("[RankChecker] DataForSEO error: {$lastError}");
+                    \Core\Logger::channel('api')->error('[RankChecker] DataForSEO error', ['error' => $lastError]);
                 }
             } catch (\Exception $e) {
                 $lastError = $e->getMessage();
-                error_log("[RankChecker] DataForSEO exception: {$lastError}");
+                \Core\Logger::channel('api')->error('[RankChecker] DataForSEO exception', ['error' => $lastError]);
             }
         }
 
@@ -228,10 +228,10 @@ class RankCheckerService
                     $primaryResult = $serpApiResult;
                 }
 
-                error_log("[RankChecker] SERP API: keyword '{$keyword}' non trovata, provo fallback Serper.dev");
+                \Core\Logger::channel('api')->warning('[RankChecker] SERP API: keyword non trovata, provo fallback Serper.dev', ['keyword' => $keyword]);
             } catch (\Exception $e) {
                 $lastError = $e->getMessage();
-                error_log("[RankChecker] SERP API fallito: {$lastError}");
+                \Core\Logger::channel('api')->error('[RankChecker] SERP API fallito', ['error' => $lastError]);
             }
         }
 
@@ -246,7 +246,7 @@ class RankCheckerService
 
                 // Se trovato con fallback, ritorna questo risultato
                 if ($serperResult['found']) {
-                    error_log("[RankChecker] Serper.dev: keyword '{$keyword}' trovata in posizione " . $serperResult['position']);
+                    \Core\Logger::channel('api')->info('[RankChecker] Serper.dev: keyword trovata', ['keyword' => $keyword, 'position' => $serperResult['position']]);
                     return $serperResult;
                 }
 
@@ -256,7 +256,7 @@ class RankCheckerService
                 }
             } catch (\Exception $e) {
                 $lastError = $e->getMessage();
-                error_log("[RankChecker] Serper.dev fallback fallito: {$lastError}");
+                \Core\Logger::channel('api')->error('[RankChecker] Serper.dev fallback fallito', ['error' => $lastError]);
             }
         }
 
@@ -456,12 +456,12 @@ class RankCheckerService
         $organicResults = $allOrganicResults;
 
         // DEBUG: Log per diagnostica
-        error_log("[RankChecker DEBUG] Total organic results: " . count($organicResults));
-        error_log("[RankChecker DEBUG] Target domain: " . $targetDomain);
+        \Core\Logger::channel('api')->debug('[RankChecker DEBUG] Total organic results', ['count' => count($organicResults)]);
+        \Core\Logger::channel('api')->debug('[RankChecker DEBUG] Target domain', ['target_domain' => $targetDomain]);
         if (!empty($organicResults)) {
-            error_log("[RankChecker DEBUG] First result link: " . ($organicResults[0]['link'] ?? 'N/A'));
+            \Core\Logger::channel('api')->debug('[RankChecker DEBUG] First result link', ['link' => ($organicResults[0]['link'] ?? 'N/A')]);
             $firstDomain = $this->normalizeDomain(parse_url($organicResults[0]['link'] ?? '', PHP_URL_HOST) ?? '');
-            error_log("[RankChecker DEBUG] First result domain normalized: " . $firstDomain);
+            \Core\Logger::channel('api')->debug('[RankChecker DEBUG] First result domain normalized', ['domain' => $firstDomain]);
         }
 
         // Converti formato Serper al formato standard
@@ -495,7 +495,7 @@ class RankCheckerService
 
         // Log riepilogativo (solo se non trovato durante paginazione - altrimenti già loggato)
         if (!$result['found']) {
-            error_log("[RankChecker Serper] NOT FOUND: keyword='{$keyword}', target='{$targetDomain}', searched {$totalApiCalls} pages ({$totalApiCalls}0 results)");
+            \Core\Logger::channel('api')->warning('[RankChecker Serper] NOT FOUND', ['keyword' => $keyword, 'target' => $targetDomain, 'pages_searched' => $totalApiCalls, 'results_searched' => $totalApiCalls * 10]);
         }
 
         return [
@@ -691,7 +691,7 @@ class RankCheckerService
      */
     private function findDomainInResults(array $organicResults, string $targetDomain): array
     {
-        error_log("[RankChecker findDomain] Looking for target: '{$targetDomain}' in " . count($organicResults) . " results");
+        \Core\Logger::channel('api')->debug('[RankChecker findDomain] Looking for target', ['target_domain' => $targetDomain, 'results_count' => count($organicResults)]);
 
         foreach ($organicResults as $index => $result) {
             $resultUrl = $result['link'] ?? '';
@@ -703,7 +703,7 @@ class RankCheckerService
             // parse_url può restituire false per URL malformati
             $parsedHost = parse_url($resultUrl, PHP_URL_HOST);
             if ($parsedHost === false || $parsedHost === null) {
-                error_log("[RankChecker findDomain] Invalid URL at index {$index}: {$resultUrl}");
+                \Core\Logger::channel('api')->warning('[RankChecker findDomain] Invalid URL', ['index' => $index, 'url' => $resultUrl]);
                 continue;
             }
 
@@ -711,13 +711,13 @@ class RankCheckerService
 
             // DEBUG: Log per i primi 3 risultati
             if ($index < 3) {
-                error_log("[RankChecker findDomain] Result {$index}: '{$resultDomain}' vs target '{$targetDomain}'");
+                \Core\Logger::channel('api')->debug('[RankChecker findDomain] Result vs target', ['index' => $index, 'result_domain' => $resultDomain, 'target_domain' => $targetDomain]);
             }
 
             // Match esatto o sottodominio (case-insensitive)
             if ($resultDomain === $targetDomain ||
                 str_ends_with(strtolower($resultDomain), '.' . strtolower($targetDomain))) {
-                error_log("[RankChecker findDomain] MATCH FOUND at position " . ($result['position'] ?? $index + 1));
+                \Core\Logger::channel('api')->info('[RankChecker findDomain] MATCH FOUND', ['position' => ($result['position'] ?? $index + 1)]);
                 return [
                     'found' => true,
                     'position' => ($result['position'] ?? $index + 1),
@@ -728,7 +728,7 @@ class RankCheckerService
             }
         }
 
-        error_log("[RankChecker findDomain] NO MATCH found for '{$targetDomain}'");
+        \Core\Logger::channel('api')->warning('[RankChecker findDomain] NO MATCH found', ['target_domain' => $targetDomain]);
         return [
             'found' => false,
             'position' => null,
@@ -927,12 +927,12 @@ class RankCheckerService
                 }
 
                 // Non trovato - prova fallback se disponibile
-                error_log("[RankChecker FullResults] SERP API: keyword '{$keyword}' non trovata, provo fallback Serper.dev");
+                \Core\Logger::channel('api')->warning('[RankChecker FullResults] SERP API: keyword non trovata, provo fallback Serper.dev', ['keyword' => $keyword]);
             } catch (\Exception $e) {
                 if (!$this->hasSerper()) {
                     throw $e;
                 }
-                error_log("SERP API fallito, uso Serper.dev fallback: " . $e->getMessage());
+                \Core\Logger::channel('api')->error('[RankChecker FullResults] SERP API fallito, uso Serper.dev fallback', ['error' => $e->getMessage()]);
             }
         }
 
@@ -945,11 +945,11 @@ class RankCheckerService
 
                 // Se trovato con fallback, ritorna questo risultato
                 if ($fallbackResult['found']) {
-                    error_log("[RankChecker FullResults] Serper.dev fallback: keyword '{$keyword}' trovata in posizione " . $fallbackResult['position']);
+                    \Core\Logger::channel('api')->info('[RankChecker FullResults] Serper.dev fallback: keyword trovata', ['keyword' => $keyword, 'position' => $fallbackResult['position']]);
                     return $fallbackResult;
                 }
             } catch (\Exception $e) {
-                error_log("[RankChecker FullResults] Serper.dev fallback fallito: " . $e->getMessage());
+                \Core\Logger::channel('api')->error('[RankChecker FullResults] Serper.dev fallback fallito', ['error' => $e->getMessage()]);
             }
         }
 
@@ -1270,7 +1270,7 @@ class RankCheckerService
                 $saved++;
             } catch (\Exception $e) {
                 // Log error but continue
-                error_log("Error saving SERP result: " . $e->getMessage());
+                \Core\Logger::channel('api')->error('Error saving SERP result', ['error' => $e->getMessage()]);
             }
         }
 

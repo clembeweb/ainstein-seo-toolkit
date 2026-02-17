@@ -11,6 +11,7 @@ use Modules\SeoAudit\Models\Issue;
 use Modules\SeoAudit\Models\CrawlSession;
 use Modules\SeoAudit\Services\CrawlerService;
 use Modules\SeoAudit\Services\IssueDetector;
+use Core\Logger;
 
 /**
  * CrawlController
@@ -138,7 +139,7 @@ class CrawlController
             ]);
 
         } catch (\Exception $e) {
-            error_log("CRAWL ERROR: " . $e->getMessage());
+            Logger::channel('scraping')->error("CRAWL ERROR", ['error' => $e->getMessage()]);
 
             if (isset($sessionId)) {
                 $this->sessionModel->fail($sessionId, $e->getMessage());

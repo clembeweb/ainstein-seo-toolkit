@@ -3,6 +3,7 @@
 namespace Modules\SeoTracking\Models;
 
 use Core\Database;
+use Core\Logger;
 
 /**
  * Project Model
@@ -240,7 +241,7 @@ class Project
                 Database::execute("DELETE FROM {$table} WHERE project_id = ?", [$id]);
             } catch (\Exception $e) {
                 // Ignora errori se tabella non esiste o già vuota
-                error_log("[SeoTracking] Warning deleting from {$table}: " . $e->getMessage());
+                Logger::channel('database')->warning("[SeoTracking] Warning deleting from {$table}", ['error' => $e->getMessage()]);
             }
         }
 
@@ -268,13 +269,13 @@ class Project
 
             // Log progresso per tabelle grandi
             if ($deleted > 0 && $deleted % 50000 === 0) {
-                error_log("[SeoTracking] Deleted {$deleted} rows from {$table} for project {$projectId}");
+                Logger::channel('database')->info("[SeoTracking] Deleted {$deleted} rows from {$table} for project {$projectId}");
             }
 
         } while ($affectedRows > 0 && $iteration < $maxIterations);
 
         if ($deleted > 0) {
-            error_log("[SeoTracking] Total deleted from {$table}: {$deleted} rows for project {$projectId}");
+            Logger::channel('database')->info("[SeoTracking] Total deleted from {$table}: {$deleted} rows for project {$projectId}");
         }
     }
 

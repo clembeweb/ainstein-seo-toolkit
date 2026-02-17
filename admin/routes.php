@@ -5,6 +5,7 @@ use Admin\Controllers\AdminController;
 use Admin\Controllers\FinanceController;
 use Admin\Controllers\AiLogsController;
 use Admin\Controllers\ApiLogsController;
+use Admin\Controllers\JobsController;
 
 // Admin routes
 Router::get('/admin', [AdminController::class, 'dashboard']);
@@ -35,3 +36,14 @@ Router::post('/admin/ai-logs/cleanup', [AiLogsController::class, 'cleanup']);
 Router::get('/admin/api-logs', [ApiLogsController::class, 'index']);
 Router::get('/admin/api-logs/{id}', [ApiLogsController::class, 'show']);
 Router::post('/admin/api-logs/cleanup', [ApiLogsController::class, 'cleanup']);
+
+// Jobs Monitor
+Router::get('/admin/jobs', [JobsController::class, 'index']);
+Router::post('/admin/jobs/cancel', [JobsController::class, 'cancelJob']);
+Router::post('/admin/jobs/cancel-stuck', [JobsController::class, 'cancelStuck']);
+Router::post('/admin/jobs/cleanup', [JobsController::class, 'cleanup']);
+
+// Cache Management
+Router::get('/admin/cache', [AdminController::class, 'cache']);
+Router::post('/admin/cache/clear', [AdminController::class, 'cacheClear']);
+Router::post('/admin/cache/clear-key', [AdminController::class, 'cacheClearKey']);

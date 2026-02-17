@@ -12,6 +12,7 @@ use Modules\AiContent\Models\SerpResult;
 use Modules\AiContent\Models\Source;
 use Modules\AiContent\Services\BriefBuilderService;
 use Modules\AiContent\Services\ArticleGeneratorService;
+use Core\Logger;
 
 /**
  * WizardController
@@ -177,7 +178,7 @@ class WizardController
             ]);
 
         } catch (\Exception $e) {
-            error_log("WizardController::generateBrief error: " . $e->getMessage());
+            Logger::channel('ai')->error("WizardController::generateBrief error", ['error' => $e->getMessage()]);
             ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Errore generazione brief: ' . $e->getMessage()]);
         }
@@ -352,7 +353,7 @@ class WizardController
             ]);
 
         } catch (\Exception $e) {
-            error_log("WizardController::generateArticle error: " . $e->getMessage());
+            Logger::channel('ai')->error("WizardController::generateArticle error", ['error' => $e->getMessage()]);
             ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Errore generazione articolo: ' . $e->getMessage()]);
         }

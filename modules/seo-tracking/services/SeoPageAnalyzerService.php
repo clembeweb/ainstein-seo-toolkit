@@ -5,6 +5,7 @@ namespace Modules\SeoTracking\Services;
 use Core\Database;
 use Core\Credits;
 use Services\ScraperService;
+use Core\Logger;
 
 require_once __DIR__ . '/../../../services/AiService.php';
 
@@ -122,7 +123,7 @@ class SeoPageAnalyzerService
                     }
                 } catch (\Exception $e) {
                     // Skip competitor se scraping fallisce
-                    error_log("Competitor scraping failed: " . $e->getMessage());
+                    Logger::channel('api')->warning("Competitor scraping failed", ['error' => $e->getMessage()]);
                 }
             }
 
@@ -361,7 +362,7 @@ class SeoPageAnalyzerService
                 });
             }
         } catch (\Exception $e) {
-            error_log("SERP fetch failed: " . $e->getMessage());
+            Logger::channel('api')->error("SERP fetch failed", ['error' => $e->getMessage()]);
         }
 
         return [];

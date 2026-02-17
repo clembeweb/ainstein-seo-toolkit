@@ -12,6 +12,7 @@ use Modules\SeoTracking\Models\KeywordGroup;
 use Modules\SeoTracking\Services\AiReportService;
 use Modules\SeoTracking\Services\QuickWinsService;
 use Modules\SeoTracking\Services\SeoPageAnalyzerService;
+use Core\Logger;
 
 /**
  * AiController
@@ -442,7 +443,7 @@ class AiController
                 'credits_used' => $result['credits_used'],
             ]);
         } catch (\Exception $e) {
-            error_log("Page Analyzer Error: " . $e->getMessage());
+            Logger::channel('ai')->error("Page Analyzer Error", ['error' => $e->getMessage()]);
             return View::json(['error' => 'Errore durante l\'analisi: ' . $e->getMessage()], 500);
         }
     }

@@ -21,8 +21,13 @@ class Auth
         return true;
     }
 
-    public static function login(array $user, bool $remember = false): void
+    public static function login(array $user, bool $remember = false, bool $regenerateSession = true): void
     {
+        // Prevent session fixation attacks (skip on remember-me auto-login to avoid breaking concurrent AJAX)
+        if ($regenerateSession && session_status() === PHP_SESSION_ACTIVE) {
+            session_regenerate_id(true);
+        }
+
         $_SESSION['user_id'] = $user['id'];
         self::$user = $user;
 
@@ -83,7 +88,7 @@ class Auth
             );
 
             if ($user) {
-                self::login($user);
+                self::login($user, false, false);
                 return true;
             }
         }

@@ -21,10 +21,16 @@ class Settings
         }
 
         try {
-            $results = Database::fetchAll("SELECT key_name, value FROM settings");
-            foreach ($results as $row) {
-                self::$cache[$row['key_name']] = $row['value'];
-            }
+            $data = Cache::get('all_settings', function () {
+                $results = Database::fetchAll("SELECT key_name, value FROM settings");
+                $map = [];
+                foreach ($results as $row) {
+                    $map[$row['key_name']] = $row['value'];
+                }
+                return $map;
+            }, 300);
+
+            self::$cache = $data;
             self::$loaded = true;
         } catch (\Exception $e) {
             self::$loaded = true;
@@ -65,6 +71,7 @@ class Settings
             }
 
             self::$cache[$key] = $value;
+            Cache::delete('all_settings');
             return true;
         } catch (\Exception $e) {
             return false;
@@ -109,5 +116,6 @@ class Settings
     {
         self::$cache = [];
         self::$loaded = false;
+        Cache::delete('all_settings');
     }
 }

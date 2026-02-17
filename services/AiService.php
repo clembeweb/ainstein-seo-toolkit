@@ -120,7 +120,7 @@ class AiService
             }
         } catch (\Exception $e) {
             // Silently fail - use global settings
-            error_log("AiService: Failed to load module overrides for {$this->moduleSlug}: " . $e->getMessage());
+            \Core\Logger::channel('ai')->warning('Failed to load module overrides', ['module' => $this->moduleSlug, 'error' => $e->getMessage()]);
         }
     }
 
@@ -129,8 +129,7 @@ class AiService
      */
     private function getSettingDirect(string $key, string $default = ''): string
     {
-        $result = Database::fetch("SELECT value FROM settings WHERE key_name = ?", [$key]);
-        return $result['value'] ?? $default;
+        return Settings::get($key, $default);
     }
 
     /**
@@ -601,7 +600,7 @@ class AiService
             ]);
         } catch (\Exception $e) {
             // Silently fail logging - don't break the main flow
-            error_log("AiService::logCall failed: " . $e->getMessage());
+            \Core\Logger::channel('ai')->error('AI log call failed', ['error' => $e->getMessage()]);
         }
     }
 
@@ -788,15 +787,9 @@ class AiService
      */
     public static function isProviderConfigured(string $provider): bool
     {
-        try {
-            $key = $provider === 'openai' ? 'openai_api_key' : 'anthropic_api_key';
-            $value = Settings::get($key, '');
-            return !empty($value);
-        } catch (\Exception $e) {
-            $key = $provider === 'openai' ? 'openai_api_key' : 'anthropic_api_key';
-            $result = Database::fetch("SELECT value FROM settings WHERE key_name = ?", [$key]);
-            return !empty($result['value']);
-        }
+        $key = $provider === 'openai' ? 'openai_api_key' : 'anthropic_api_key';
+        $value = Settings::get($key, '');
+        return !empty($value);
     }
 
     /**

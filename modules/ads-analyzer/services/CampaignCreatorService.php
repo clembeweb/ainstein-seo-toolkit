@@ -5,6 +5,7 @@ namespace Modules\AdsAnalyzer\Services;
 use Services\AiService;
 use Core\Database;
 use Core\ModuleLoader;
+use Core\Logger;
 use Modules\KeywordResearch\Services\KeywordInsightService;
 
 class CampaignCreatorService
@@ -1016,7 +1017,7 @@ class CampaignCreatorService
 
         $data = json_decode($response, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            error_log("CampaignCreatorService: JSON parse error: " . json_last_error_msg() . " - Response: " . substr($response, 0, 500));
+            Logger::channel('ai')->error("CampaignCreatorService: JSON parse error", ['error' => json_last_error_msg(), 'response' => substr($response, 0, 500)]);
             return null;
         }
 
