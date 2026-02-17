@@ -16,24 +16,86 @@
         "content_refactor": 10,
         "full_optimization": 10
     },
+    "settings_groups": {
+        "ai_config": {
+            "label": "Configurazione AI",
+            "icon": "sparkles",
+            "description": "Provider e modello AI per questo modulo",
+            "order": 0
+        },
+        "general": {
+            "label": "Impostazioni Generali",
+            "icon": "cog",
+            "description": "Parametri di ottimizzazione",
+            "order": 1
+        },
+        "costs": {
+            "label": "Costi Operazioni",
+            "icon": "currency-euro",
+            "description": "Crediti per ogni operazione del modulo",
+            "order": 99,
+            "collapsed": true
+        }
+    },
     "settings": {
+        "ai_provider": {
+            "type": "select",
+            "label": "Provider AI",
+            "description": "Provider AI per questo modulo",
+            "default": "global",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"},
+                {"value": "anthropic", "label": "Anthropic (Claude)"},
+                {"value": "openai", "label": "OpenAI"}
+            ],
+            "group": "ai_config"
+        },
+        "ai_model": {
+            "type": "select",
+            "label": "Modello AI",
+            "description": "Modello AI per questo modulo",
+            "default": "global",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"},
+                {"value": "claude-sonnet-4-20250514", "label": "Claude Sonnet 4"},
+                {"value": "claude-haiku-4-20250414", "label": "Claude Haiku 4"},
+                {"value": "gpt-4o", "label": "GPT-4o"},
+                {"value": "gpt-4o-mini", "label": "GPT-4o Mini"}
+            ],
+            "group": "ai_config"
+        },
+        "ai_fallback_enabled": {
+            "type": "select",
+            "label": "Fallback AI",
+            "description": "Fallback automatico su altro provider se il primario fallisce",
+            "default": "global",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"},
+                {"value": "1", "label": "Abilitato"},
+                {"value": "0", "label": "Disabilitato"}
+            ],
+            "group": "ai_config"
+        },
         "default_language": {
             "type": "select",
             "label": "Lingua default",
             "options": ["it", "en", "es", "de", "fr"],
-            "default": "it"
+            "default": "it",
+            "group": "general"
         },
         "max_competitors": {
             "type": "number",
             "label": "Max competitor da analizzare",
             "default": 3,
             "min": 1,
-            "max": 5
+            "max": 5,
+            "group": "general"
         },
         "default_word_count_target": {
             "type": "number",
             "label": "Target parole articolo",
-            "default": 1500
+            "default": 1500,
+            "group": "general"
         },
         "cost_gap_analysis": {
             "type": "number",
@@ -42,16 +104,18 @@
             "default": 3,
             "min": 0,
             "step": 0.1,
-            "admin_only": true
+            "admin_only": true,
+            "group": "costs"
         },
         "cost_content_refactor": {
             "type": "number",
             "label": "Costo Riscrittura Contenuto",
-            "description": "Crediti per riscrittura AI dell'articolo",
+            "description": "Crediti per riscrittura AI dell'articolo (Premium)",
             "default": 10,
             "min": 0,
             "step": 0.1,
-            "admin_only": true
+            "admin_only": true,
+            "group": "costs"
         },
         "cost_full_optimization": {
             "type": "number",
@@ -60,7 +124,9 @@
             "default": 10,
             "min": 0,
             "step": 0.1,
-            "admin_only": true
+            "admin_only": true,
+            "group": "costs"
         }
-    }
+    },
+    "routes_prefix": "/ai-optimizer"
 }

@@ -310,6 +310,26 @@
             "step": 0.1,
             "admin_only": true,
             "group": "costs"
+        },
+        "cost_rank_check": {
+            "type": "number",
+            "label": "Rank Check",
+            "description": "Crediti per verifica posizione singola keyword (Base)",
+            "default": 1,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_alert_ai_insight": {
+            "type": "number",
+            "label": "Alert AI Insight",
+            "description": "Crediti per insight AI su alert (Base)",
+            "default": 1,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
         }
     },
     "routes_prefix": "/seo-tracking"

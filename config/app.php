@@ -20,16 +20,36 @@ return [
         // Base (1 cr) - operazioni singole leggere
         'scrape_url' => 1,
         'content_scrape' => 1,
+        'rank_check' => 1,
+        'volume_refresh' => 1,
+        'link_analysis' => 1,
 
         // Standard (3 cr) - operazioni AI singole
-        'ai_analysis_small' => 3,
-        'ai_analysis_medium' => 3,
-        'ai_analysis_large' => 3,
         'serp_extraction' => 3,
+        'brief_generation' => 3,
         'cover_image_generation' => 3,
+        'meta_generate' => 3,
+        'clustering' => 3,
+        'quick_wins' => 3,
+        'weekly_digest' => 3,
+        'keyword_analysis' => 3,
+        'anomaly_detection' => 3,
+        'page_analysis' => 3,
+        'gap_analysis' => 3,
+        'context_extraction' => 3,
+        'ad_group_analysis' => 3,
+        'ai_generate' => 3,
 
         // Premium (10 cr) - operazioni AI complesse multi-step
         'article_generation' => 10,
+        'gsc_full_sync' => 10,
+        'monthly_executive' => 10,
+        'action_plan_generate' => 10,
+        'architecture' => 10,
+        'editorial_plan' => 10,
+        'campaign_evaluation' => 10,
+        'creator_campaign' => 10,
+        'full_optimization' => 10,
     ],
 
     // Stripe (predisposizione)
