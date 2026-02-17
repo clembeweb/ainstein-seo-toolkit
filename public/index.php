@@ -271,6 +271,7 @@ Router::get('/docs', function () {
 Router::get('/docs/{slug}', function (string $slug) {
     $validPages = [
         'getting-started' => 'Primi Passi',
+        'modules-overview' => 'Panoramica Moduli',
         'ai-content' => 'AI Content Generator',
         'seo-audit' => 'SEO Audit',
         'seo-tracking' => 'SEO Tracking',

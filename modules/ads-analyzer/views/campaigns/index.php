@@ -122,7 +122,7 @@
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                     </template>
-                    <span x-text="loading ? 'Avvio valutazione...' : 'Valuta con AI'"></span>
+                    <span x-text="loading ? 'Analisi AI in corso...' : 'Valuta con AI'"></span>
                 </button>
                 <?php $evalCost = \Core\Credits::getCost('campaign_evaluation', 'ads-analyzer', 7); ?>
                 <div class="text-sm text-slate-500 dark:text-slate-400">
@@ -140,6 +140,20 @@
                 Configura Script
             </a>
         </div>
+
+        <!-- Loading banner -->
+        <template x-if="loading">
+            <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center gap-3">
+                <svg class="w-5 h-5 text-blue-500 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <div>
+                    <p class="text-sm font-medium text-blue-700 dark:text-blue-300">Analisi AI in corso</p>
+                    <p class="text-xs text-blue-600 dark:text-blue-400">L'analisi potrebbe richiedere 1-2 minuti. Non chiudere questa pagina.</p>
+                </div>
+            </div>
+        </template>
 
         <!-- Error message -->
         <template x-if="errorMsg">

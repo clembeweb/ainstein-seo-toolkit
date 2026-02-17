@@ -1,4 +1,9 @@
 <?php
+// Credit badge helper per costi dinamici
+include_once BASE_PATH . '/shared/views/components/credit-badge.php';
+$manualCost = ($creditCosts['serp'] ?? 3) + 3 + ($creditCosts['brief'] ?? 3) + ($creditCosts['article'] ?? 10);
+$metaCost = 1 + ($creditCosts['brief'] ?? 3);
+
 // Onboarding tour
 $onboardingConfig = require BASE_PATH . '/config/onboarding.php';
 $onboardingModuleSlug = 'ai-content';
@@ -58,9 +63,8 @@ endif;
                     Controllo totale con wizard 4 step: keyword, SERP, Brief AI, Articolo. Modifica brief e contenuto prima di pubblicare.
                 </p>
                 <div class="mt-3 flex items-center gap-2">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
-                        ~19 cr/articolo
-                    </span>
+                    <?= credit_badge($manualCost) ?>
+                    <span class="text-xs text-slate-400 dark:text-slate-500">/articolo</span>
                     <?php if ($stats['manual_count'] > 0): ?>
                     <span class="text-xs text-slate-400 dark:text-slate-500"><?= $stats['manual_count'] ?> progetti</span>
                     <?php endif; ?>
@@ -89,9 +93,8 @@ endif;
                     Elaborazione in bulk automatica. Aggiungi keyword alla coda e il sistema genera articoli uno dopo l'altro.
                 </p>
                 <div class="mt-3 flex items-center gap-2">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
-                        ~19 cr/articolo
-                    </span>
+                    <?= credit_badge($manualCost) ?>
+                    <span class="text-xs text-slate-400 dark:text-slate-500">/articolo</span>
                     <?php if ($stats['auto_count'] > 0): ?>
                     <span class="text-xs text-slate-400 dark:text-slate-500"><?= $stats['auto_count'] ?> progetti</span>
                     <?php endif; ?>
@@ -121,9 +124,8 @@ endif;
                     Scrapa pagine esistenti e genera title e description ottimizzati con AI. Pubblica direttamente su WordPress.
                 </p>
                 <div class="mt-3 flex items-center gap-2">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                        ~4 cr/pagina
-                    </span>
+                    <?= credit_badge($metaCost) ?>
+                    <span class="text-xs text-slate-400 dark:text-slate-500">/pagina</span>
                     <?php if ($stats['meta_count'] > 0): ?>
                     <span class="text-xs text-slate-400 dark:text-slate-500"><?= $stats['meta_count'] ?> progetti</span>
                     <?php endif; ?>

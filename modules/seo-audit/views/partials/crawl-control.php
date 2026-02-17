@@ -508,7 +508,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (data.complete || data.stopped) {
                 clearInterval(pollInterval);
-                window.location.reload();
+                const msg = data.stopped
+                    ? 'Scansione interrotta.'
+                    : 'Scansione completata! ' + (data.pages_analyzed || '') + ' pagine analizzate.';
+                if (window.ainstein && window.ainstein.toast) {
+                    window.ainstein.toast(msg, data.stopped ? 'warning' : 'success');
+                }
+                setTimeout(() => window.location.reload(), 1500);
                 return;
             }
 

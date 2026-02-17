@@ -127,11 +127,32 @@ $_accentShades = \Core\BrandingHelper::generateShades($_brandAccent);
 
                     <div class="flex items-center gap-x-4 lg:gap-x-6">
                         <!-- Credits badge -->
-                        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700">
-                            <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                        <?php
+                        $_userCredits = (float)($user['credits'] ?? 0);
+                        $_creditBgClass = 'bg-slate-100 dark:bg-slate-700';
+                        $_creditTextClass = 'text-slate-900 dark:text-white';
+                        $_creditIconClass = 'text-amber-500';
+                        if ($_userCredits < 3) {
+                            $_creditBgClass = 'bg-red-100 dark:bg-red-900/30';
+                            $_creditTextClass = 'text-red-700 dark:text-red-400';
+                            $_creditIconClass = 'text-red-500';
+                        } elseif ($_userCredits < 10) {
+                            $_creditBgClass = 'bg-amber-100 dark:bg-amber-900/30';
+                            $_creditTextClass = 'text-amber-700 dark:text-amber-400';
+                            $_creditIconClass = 'text-amber-600';
+                        }
+                        ?>
+                        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg <?= $_creditBgClass ?>">
+                            <?php if ($_userCredits < 10): ?>
+                            <svg class="w-4 h-4 <?= $_creditIconClass ?>" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                            </svg>
+                            <?php else: ?>
+                            <svg class="w-4 h-4 <?= $_creditIconClass ?>" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.736 6.979C9.208 6.193 9.696 6 10 6c.304 0 .792.193 1.264.979a1 1 0 001.715-1.029C12.279 4.784 11.232 4 10 4s-2.279.784-2.979 1.95c-.285.475-.507 1-.67 1.55H6a1 1 0 000 2h.013a9.358 9.358 0 000 1H6a1 1 0 100 2h.351c.163.55.385 1.075.67 1.55C7.721 15.216 8.768 16 10 16s2.279-.784 2.979-1.95a1 1 0 10-1.715-1.029c-.472.786-.96.979-1.264.979-.304 0-.792-.193-1.264-.979a4.265 4.265 0 01-.264-.521H10a1 1 0 100-2H8.017a7.36 7.36 0 010-1H10a1 1 0 100-2H8.472a4.265 4.265 0 01.264-.521z"/>
                             </svg>
-                            <span class="text-sm font-semibold text-slate-900 dark:text-white"><?= number_format((float)($user['credits'] ?? 0), 1) ?></span>
+                            <?php endif; ?>
+                            <span class="text-sm font-semibold <?= $_creditTextClass ?>"><?= number_format($_userCredits, 1) ?></span>
                         </div>
 
                         <!-- Dark mode toggle -->
