@@ -236,13 +236,16 @@ class FinanceController
         );
 
         // Top 10 most expensive calls (mix API + AI)
+        // COLLATE needed: api_logs uses utf8mb4_unicode_ci, ai_logs uses utf8mb4_0900_ai_ci
         $topExpensiveCalls = Database::fetchAll(
-            "(SELECT 'api' as type, id, provider, endpoint as detail, cost as cost_usd,
-                     duration_ms, module_slug, created_at
+            "(SELECT 'api' as type, id, provider COLLATE utf8mb4_unicode_ci as provider,
+                     endpoint COLLATE utf8mb4_unicode_ci as detail, cost as cost_usd,
+                     duration_ms, module_slug COLLATE utf8mb4_unicode_ci as module_slug, created_at
               FROM api_logs WHERE created_at >= ? AND cost > 0 ORDER BY cost DESC LIMIT 10)
              UNION ALL
-             (SELECT 'ai' as type, id, provider, model as detail, estimated_cost as cost_usd,
-                     duration_ms, module_slug, created_at
+             (SELECT 'ai' as type, id, provider COLLATE utf8mb4_unicode_ci as provider,
+                     model COLLATE utf8mb4_unicode_ci as detail, estimated_cost as cost_usd,
+                     duration_ms, module_slug COLLATE utf8mb4_unicode_ci as module_slug, created_at
               FROM ai_logs WHERE created_at >= ? AND estimated_cost > 0 ORDER BY estimated_cost DESC LIMIT 10)
              ORDER BY cost_usd DESC LIMIT 10",
             [$startDate, $startDate]
@@ -328,21 +331,39 @@ class FinanceController
     {
         $totalUsers = Database::count('users');
 
-        // Plan adoption
-        $planAdoption = Database::fetchAll(
-            "SELECT p.id, p.name, p.slug, p.price_monthly, p.price_yearly, p.credits_monthly,
-                    COUNT(u.id) as user_count
-             FROM plans p
-             LEFT JOIN users u ON u.plan_id = p.id
-             WHERE p.is_active = 1
-             GROUP BY p.id
-             ORDER BY p.price_monthly ASC"
-        );
+        // Check if users.plan_id column exists
+        $hasPlanId = false;
+        try {
+            $cols = Database::fetchAll("SHOW COLUMNS FROM users LIKE 'plan_id'");
+            $hasPlanId = !empty($cols);
+        } catch (\Exception $e) {
+            // Column doesn't exist
+        }
 
-        // Count users without plan_id (free by default)
-        $usersWithoutPlan = Database::fetch(
-            "SELECT COUNT(*) as total FROM users WHERE plan_id IS NULL"
-        );
+        if ($hasPlanId) {
+            // Plan adoption with user join
+            $planAdoption = Database::fetchAll(
+                "SELECT p.id, p.name, p.slug, p.price_monthly, p.price_yearly, p.credits_monthly,
+                        COUNT(u.id) as user_count
+                 FROM plans p
+                 LEFT JOIN users u ON u.plan_id = p.id
+                 WHERE p.is_active = 1
+                 GROUP BY p.id
+                 ORDER BY p.price_monthly ASC"
+            );
+
+            $usersWithoutPlan = Database::fetch(
+                "SELECT COUNT(*) as total FROM users WHERE plan_id IS NULL"
+            );
+        } else {
+            // plan_id not yet added - show plans with 0 users
+            $planAdoption = Database::fetchAll(
+                "SELECT id, name, slug, price_monthly, price_yearly, credits_monthly, 0 as user_count
+                 FROM plans WHERE is_active = 1
+                 ORDER BY price_monthly ASC"
+            );
+            $usersWithoutPlan = ['total' => $totalUsers];
+        }
 
         // MRR calculation
         $mrr = 0;
