@@ -102,11 +102,6 @@ $currentPage = $currentPage ?? 'dashboard';
     </div>
     <div class="mt-4 sm:mt-0 flex items-center gap-2">
         <!-- Link globali -->
-        <a href="<?= url('/ai-content/jobs') ?>"
-           class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-           title="Gestione Job">
-            <?= $icons['clipboard-list'] ?>
-        </a>
         <a href="<?= url('/ai-content/wordpress') ?>"
            class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
            title="Siti WordPress">

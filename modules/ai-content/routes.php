@@ -20,7 +20,6 @@ use Modules\AiContent\Controllers\ArticleController;
 use Modules\AiContent\Controllers\WordPressController;
 use Modules\AiContent\Controllers\WizardController;
 use Modules\AiContent\Controllers\AutoController;
-use Modules\AiContent\Controllers\JobController;
 use Modules\AiContent\Controllers\InternalLinksController;
 use Modules\AiContent\Controllers\MetaTagController;
 
@@ -577,49 +576,6 @@ Router::post('/ai-content/projects/{id}/auto/process/cancel', function ($id) {
     Middleware::csrf();
     $controller = new AutoController();
     return $controller->cancelProcess((int) $id);
-});
-
-// ============================================
-// JOB MANAGEMENT ROUTES
-// ============================================
-
-// Lista job
-Router::get('/ai-content/jobs', function () {
-    Middleware::auth();
-    $controller = new JobController();
-    return $controller->index();
-});
-
-// Cancella job (running/pending)
-Router::post('/ai-content/jobs/{id}/cancel', function ($id) {
-    Middleware::auth();
-    Middleware::csrf();
-    $controller = new JobController();
-    return $controller->cancel((int) $id);
-});
-
-// Elimina job (completed/error/cancelled)
-Router::post('/ai-content/jobs/{id}/delete', function ($id) {
-    Middleware::auth();
-    Middleware::csrf();
-    $controller = new JobController();
-    return $controller->delete((int) $id);
-});
-
-// Pulisci job vecchi
-Router::post('/ai-content/jobs/cleanup', function () {
-    Middleware::auth();
-    Middleware::csrf();
-    $controller = new JobController();
-    return $controller->cleanup();
-});
-
-// Cancella job bloccati
-Router::post('/ai-content/jobs/cancel-stuck', function () {
-    Middleware::auth();
-    Middleware::csrf();
-    $controller = new JobController();
-    return $controller->cancelStuck();
 });
 
 // ============================================
