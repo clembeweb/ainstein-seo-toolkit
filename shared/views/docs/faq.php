@@ -58,7 +58,7 @@
                 </button>
                 <div x-show="open === 2" x-cloak x-collapse>
                     <div class="px-5 pb-4 text-sm text-slate-600 dark:text-slate-400">
-                        Si, è necessario creare un account per accedere a tutte le funzionalità della piattaforma. La registrazione è completamente gratuita e include 50 crediti omaggio per iniziare a esplorare i moduli. Non è richiesta alcuna carta di credito per la registrazione. Puoi creare il tuo account dalla pagina <a href="<?= url('/register') ?>" class="text-primary-600 dark:text-primary-400 hover:underline">Registrazione</a>.
+                        Si, è necessario creare un account per accedere a tutte le funzionalità della piattaforma. La registrazione è completamente gratuita e include 30 crediti omaggio per iniziare a esplorare i moduli. Non è richiesta alcuna carta di credito per la registrazione. Puoi creare il tuo account dalla pagina <a href="<?= url('/register') ?>" class="text-primary-600 dark:text-primary-400 hover:underline">Registrazione</a>.
                     </div>
                 </div>
             </div>
@@ -160,7 +160,7 @@
                 </button>
                 <div x-show="open === 7" x-cloak x-collapse>
                     <div class="px-5 pb-4 text-sm text-slate-600 dark:text-slate-400">
-                        Assolutamente si! Alla registrazione ricevi 50 crediti gratuiti, sufficienti per provare tutti i moduli della piattaforma. Puoi ad esempio generare un articolo completo, eseguire un audit del sito, o analizzare una campagna Google Ads. Non è richiesta alcuna carta di credito. Per informazioni sui costi di ogni operazione, consulta la pagina <a href="<?= url('/docs/credits') ?>" class="text-primary-600 dark:text-primary-400 hover:underline">Sistema Crediti</a>.
+                        Assolutamente si! Alla registrazione ricevi 30 crediti gratuiti, sufficienti per provare tutti i moduli della piattaforma. Puoi ad esempio generare un articolo completo, eseguire un audit del sito, o analizzare una campagna Google Ads. Non è richiesta alcuna carta di credito. Per informazioni sui costi di ogni operazione, consulta la pagina <a href="<?= url('/docs/credits') ?>" class="text-primary-600 dark:text-primary-400 hover:underline">Sistema Crediti</a>.
                     </div>
                 </div>
             </div>

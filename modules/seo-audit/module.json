@@ -11,12 +11,12 @@
     },
     "credits": {
         "crawl_per_page": {
-            "cost": 0.2,
-            "description": "Scansione singola pagina"
+            "cost": 0,
+            "description": "Scansione singola pagina (Gratis)"
         },
         "action_plan_generate": {
-            "cost": 15,
-            "description": "Generazione Piano d'Azione AI completo"
+            "cost": 10,
+            "description": "Generazione Piano d'Azione AI completo (Premium)"
         }
     },
     "settings_groups": {
@@ -75,8 +75,8 @@
         "cost_action_plan_generate": {
             "type": "number",
             "label": "Costo Piano d'Azione AI",
-            "description": "Crediti per generazione Piano d'Azione AI",
-            "default": 15,
+            "description": "Crediti per generazione Piano d'Azione AI (Premium)",
+            "default": 10,
             "min": 0,
             "step": 0.1,
             "admin_only": true,

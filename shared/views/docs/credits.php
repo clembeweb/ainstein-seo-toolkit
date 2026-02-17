@@ -11,9 +11,49 @@
 <div class="mb-10">
     <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-4">Sistema Crediti</h1>
     <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
-        I crediti sono la valuta della piattaforma Ainstein. Ogni operazione che utilizza l'intelligenza artificiale o servizi esterni ha un costo in crediti, che viene sempre mostrato prima dell'esecuzione, in modo da avere pieno controllo sul consumo.
+        I crediti sono la valuta della piattaforma Ainstein. Ogni operazione ha un costo fisso che rientra in uno dei <strong class="text-slate-900 dark:text-white">4 livelli</strong> di prezzo, rendendo semplice e prevedibile il consumo.
     </p>
 </div>
+
+<!-- I 4 Livelli -->
+<section class="mb-12">
+    <h2 class="text-2xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-3">
+        <svg class="w-7 h-7 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+        </svg>
+        I 4 livelli di prezzo
+    </h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Gratis -->
+        <div class="p-5 rounded-xl border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 text-center">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 mb-3">Gratis</span>
+            <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400">0 cr</p>
+            <p class="mt-2 text-sm text-emerald-700 dark:text-emerald-400">Consultazione, export, Quick Check, navigazione</p>
+        </div>
+
+        <!-- Base -->
+        <div class="p-5 rounded-xl border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 text-center">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 mb-3">Base</span>
+            <p class="text-3xl font-bold text-blue-600 dark:text-blue-400">1 cr</p>
+            <p class="mt-2 text-sm text-blue-700 dark:text-blue-400">Scraping, rank check, volumi keyword, scan pagina</p>
+        </div>
+
+        <!-- Standard -->
+        <div class="p-5 rounded-xl border-2 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 text-center">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 mb-3">Standard</span>
+            <p class="text-3xl font-bold text-amber-600 dark:text-amber-400">3 cr</p>
+            <p class="mt-2 text-sm text-amber-700 dark:text-amber-400">Operazioni AI singole: brief, analisi, clustering, report</p>
+        </div>
+
+        <!-- Premium -->
+        <div class="p-5 rounded-xl border-2 border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/20 text-center">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 mb-3">Premium</span>
+            <p class="text-3xl font-bold text-purple-600 dark:text-purple-400">10 cr</p>
+            <p class="mt-2 text-sm text-purple-700 dark:text-purple-400">Operazioni AI complesse: articoli, report executive, piani</p>
+        </div>
+    </div>
+</section>
 
 <!-- Come funzionano -->
 <section class="mb-12">
@@ -29,7 +69,7 @@
             <svg class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
             </svg>
-            <p class="text-slate-600 dark:text-slate-400">Ogni operazione AI ha un <strong class="text-slate-900 dark:text-white">costo predefinito</strong> in crediti, visibile prima di confermare l'esecuzione.</p>
+            <p class="text-slate-600 dark:text-slate-400">Ogni operazione ha un <strong class="text-slate-900 dark:text-white">costo fisso</strong> in uno dei 4 livelli (Gratis, Base, Standard, Premium), visibile prima di confermare.</p>
         </div>
         <div class="flex items-start gap-3">
             <svg class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -47,7 +87,7 @@
             <svg class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
             </svg>
-            <p class="text-slate-600 dark:text-slate-400">Alcune operazioni base come la navigazione, il <strong class="text-slate-900 dark:text-white">Quick Check</strong> delle keyword e la visualizzazione dei report sono <strong class="text-slate-900 dark:text-white">gratuite</strong>.</p>
+            <p class="text-slate-600 dark:text-slate-400">Navigazione, export CSV e Quick Check keyword sono sempre <strong class="text-slate-900 dark:text-white">gratuiti</strong>.</p>
         </div>
     </div>
 </section>
@@ -83,35 +123,46 @@
                         <tr>
                             <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Estrazione SERP</td>
                             <td class="px-5 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">3 crediti</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">3 cr</span>
                             </td>
                         </tr>
                         <tr>
                             <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Scraping URL competitor</td>
                             <td class="px-5 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">1 credito/URL</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">1 cr/URL</span>
                             </td>
                         </tr>
                         <tr>
                             <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Generazione Brief strategico</td>
                             <td class="px-5 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">5 crediti</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">3 cr</span>
                             </td>
                         </tr>
                         <tr>
                             <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Generazione Articolo completo</td>
                             <td class="px-5 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">10 crediti</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">10 cr</span>
                             </td>
                         </tr>
                         <tr>
                             <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Immagine di copertina (DALL-E 3)</td>
                             <td class="px-5 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">3 crediti</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">3 cr</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Scraping + Meta Tag AI</td>
+                            <td class="px-5 py-3 text-right">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">1 cr</span>
+                                <span class="text-slate-400 mx-1">+</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">3 cr</span>
                             </td>
                         </tr>
                     </tbody>
                 </table>
+            </div>
+            <div class="px-5 py-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400">
+                Articolo completo end-to-end: SERP 3 + Scraping ~3 + Brief 3 + Articolo 10 + Cover 3 = <strong class="text-slate-700 dark:text-slate-300">~22 cr</strong>
             </div>
         </div>
 
@@ -133,21 +184,15 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
                         <tr>
-                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">AI Overview (analisi completa)</td>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Crawling sito</td>
                             <td class="px-5 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">15 crediti</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">Gratuito</span>
                             </td>
                         </tr>
                         <tr>
-                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">AI Category (analisi per categoria)</td>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Piano d'Azione AI (analisi completa)</td>
                             <td class="px-5 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">3 crediti</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Sincronizzazione GSC</td>
-                            <td class="px-5 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">5 crediti</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">10 cr</span>
                             </td>
                         </tr>
                     </tbody>
@@ -173,27 +218,57 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
                         <tr>
-                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">GSC Full Sync (sincronizzazione completa)</td>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Rank check (per keyword)</td>
                             <td class="px-5 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">10 crediti</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">1 cr</span>
                             </td>
                         </tr>
                         <tr>
-                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Quick Wins (opportunità rapide)</td>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Aggiornamento volumi keyword</td>
                             <td class="px-5 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">2 crediti</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">1 cr/kw</span>
                             </td>
                         </tr>
                         <tr>
-                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Report Settimanale</td>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">GSC Full Sync (16 mesi)</td>
                             <td class="px-5 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">5 crediti</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">10 cr</span>
                             </td>
                         </tr>
                         <tr>
-                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Report Mensile</td>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Quick Wins (opportunita rapide)</td>
                             <td class="px-5 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">15 crediti</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">3 cr</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Digest settimanale</td>
+                            <td class="px-5 py-3 text-right">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">3 cr</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Report Executive mensile</td>
+                            <td class="px-5 py-3 text-right">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">10 cr</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Analisi keyword AI</td>
+                            <td class="px-5 py-3 text-right">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">3 cr</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Analisi anomalie</td>
+                            <td class="px-5 py-3 text-right">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">3 cr</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Analisi pagina</td>
+                            <td class="px-5 py-3 text-right">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">3 cr</span>
                             </td>
                         </tr>
                     </tbody>
@@ -219,21 +294,21 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
                         <tr>
-                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Clustering AI (&lt; 100 keyword)</td>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Clustering AI</td>
                             <td class="px-5 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">2 crediti</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Clustering AI (&gt; 100 keyword)</td>
-                            <td class="px-5 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">5 crediti</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">3 cr</span>
                             </td>
                         </tr>
                         <tr>
                             <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Architettura Sito</td>
                             <td class="px-5 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">5 crediti</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">10 cr</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Piano Editoriale</td>
+                            <td class="px-5 py-3 text-right">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">10 cr</span>
                             </td>
                         </tr>
                         <tr>
@@ -266,24 +341,51 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
                         <tr>
-                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Estrazione contesto landing page</td>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Valutazione AI campagne</td>
                             <td class="px-5 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">3 crediti</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">10 cr</span>
                             </td>
                         </tr>
                         <tr>
-                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Analisi singola campagna</td>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Estrazione contesto business</td>
                             <td class="px-5 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">2 crediti</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">3 cr</span>
                             </td>
                         </tr>
                         <tr>
-                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Analisi in blocco (per campagna)</td>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Analisi keyword negative (per ad group)</td>
                             <td class="px-5 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">1.5 crediti</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">3 cr</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Genera con AI (copy, estensioni, keyword)</td>
+                            <td class="px-5 py-3 text-right">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">1 cr</span>
                             </td>
                         </tr>
                     </tbody>
+                </table>
+            </div>
+            <div class="px-5 py-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700">
+                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1">Campaign Creator</p>
+                <table class="w-full text-xs text-slate-500 dark:text-slate-400">
+                    <tr>
+                        <td class="py-0.5">Scraping landing page</td>
+                        <td class="text-right"><span class="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">1 cr</span></td>
+                    </tr>
+                    <tr>
+                        <td class="py-0.5">Keyword research AI</td>
+                        <td class="text-right"><span class="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">3 cr</span></td>
+                    </tr>
+                    <tr>
+                        <td class="py-0.5">Generazione campagna</td>
+                        <td class="text-right"><span class="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">10 cr</span></td>
+                    </tr>
+                    <tr class="border-t border-slate-200 dark:border-slate-700">
+                        <td class="py-1 font-medium text-slate-700 dark:text-slate-300">Totale Campaign Creator</td>
+                        <td class="text-right"><span class="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">~14 cr</span></td>
+                    </tr>
                 </table>
             </div>
         </div>
@@ -308,7 +410,53 @@
                         <tr>
                             <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Analisi link interni (per pagina)</td>
                             <td class="px-5 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">0.5 crediti</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">1 cr</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Suggerimenti AI</td>
+                            <td class="px-5 py-3 text-right">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">3 cr</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Content Creator -->
+        <div class="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div class="bg-slate-50 dark:bg-slate-800 px-5 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3">
+                <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+                <h3 class="font-semibold text-slate-900 dark:text-white">Content Creator</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-200 dark:border-slate-700">
+                            <th class="text-left px-5 py-3 font-medium text-slate-500 dark:text-slate-400">Operazione</th>
+                            <th class="text-right px-5 py-3 font-medium text-slate-500 dark:text-slate-400">Costo</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
+                        <tr>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Scraping pagina (per contesto)</td>
+                            <td class="px-5 py-3 text-right">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">1 cr/URL</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Generazione contenuto AI</td>
+                            <td class="px-5 py-3 text-right">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">3 cr</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-5 py-3 text-slate-700 dark:text-slate-300">Export CSV / Push CMS</td>
+                            <td class="px-5 py-3 text-right">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">Gratuito</span>
                             </td>
                         </tr>
                     </tbody>
@@ -319,48 +467,63 @@
     </div>
 </section>
 
-<!-- Ottenere crediti -->
+<!-- Piani -->
 <section class="mb-12">
     <h2 class="text-2xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-3">
         <svg class="w-7 h-7 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
         </svg>
-        Ottenere crediti
+        Piani e crediti
     </h2>
 
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <!-- Bonus registrazione -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Free -->
         <div class="p-5 rounded-xl border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20">
-            <div class="flex items-center gap-2 mb-3">
-                <svg class="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
-                </svg>
-                <h3 class="font-semibold text-emerald-800 dark:text-emerald-300">Bonus Registrazione</h3>
-            </div>
-            <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">50 crediti</p>
-            <p class="text-sm text-emerald-700 dark:text-emerald-400">Ricevi immediatamente 50 crediti gratuiti alla creazione dell'account. Nessuna carta di credito richiesta.</p>
+            <h3 class="font-semibold text-emerald-800 dark:text-emerald-300 mb-1">Free</h3>
+            <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">30 cr/mese</p>
+            <p class="text-sm text-emerald-700 dark:text-emerald-400 mb-3">Gratis per sempre</p>
+            <ul class="text-xs text-emerald-700 dark:text-emerald-400 space-y-1">
+                <li>3 articoli completi</li>
+                <li>10 analisi AI</li>
+                <li>30 rank check</li>
+            </ul>
         </div>
 
-        <!-- Piani abbonamento -->
+        <!-- Starter -->
         <div class="p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-            <div class="flex items-center gap-2 mb-3">
-                <svg class="w-6 h-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                </svg>
-                <h3 class="font-semibold text-slate-900 dark:text-white">Piani Abbonamento</h3>
-            </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Scegli il piano mensile o annuale piu adatto alle tue esigenze. I crediti del piano si rinnovano ogni mese.</p>
+            <h3 class="font-semibold text-slate-900 dark:text-white mb-1">Starter</h3>
+            <p class="text-3xl font-bold text-slate-900 dark:text-white mb-1">150 cr/mese</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-3">&euro;19/mese &middot; &euro;190/anno</p>
+            <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-1">
+                <li>15 articoli completi</li>
+                <li>50 analisi AI</li>
+                <li>150 rank check</li>
+            </ul>
         </div>
 
-        <!-- Bonus admin -->
+        <!-- Pro -->
+        <div class="p-5 rounded-xl border-2 border-primary-300 dark:border-primary-700 bg-primary-50 dark:bg-primary-900/20 relative">
+            <span class="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-primary-600 text-white">Consigliato</span>
+            <h3 class="font-semibold text-primary-800 dark:text-primary-300 mb-1">Pro</h3>
+            <p class="text-3xl font-bold text-primary-600 dark:text-primary-400 mb-1">500 cr/mese</p>
+            <p class="text-sm text-primary-600 dark:text-primary-400 mb-3">&euro;49/mese &middot; &euro;490/anno</p>
+            <ul class="text-xs text-primary-700 dark:text-primary-400 space-y-1">
+                <li>50 articoli completi</li>
+                <li>166 analisi AI</li>
+                <li>500 rank check</li>
+            </ul>
+        </div>
+
+        <!-- Agency -->
         <div class="p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-            <div class="flex items-center gap-2 mb-3">
-                <svg class="w-6 h-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                </svg>
-                <h3 class="font-semibold text-slate-900 dark:text-white">Bonus Speciali</h3>
-            </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Crediti bonus possono essere assegnati dall'amministratore per promozioni o riconoscimenti speciali. I bonus non scadono mai.</p>
+            <h3 class="font-semibold text-slate-900 dark:text-white mb-1">Agency</h3>
+            <p class="text-3xl font-bold text-slate-900 dark:text-white mb-1">1.500 cr/mese</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-3">&euro;99/mese &middot; &euro;990/anno</p>
+            <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-1">
+                <li>150 articoli completi</li>
+                <li>500 analisi AI</li>
+                <li>1.500 rank check</li>
+            </ul>
         </div>
     </div>
 </section>
@@ -384,7 +547,7 @@
             </div>
             <div>
                 <h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-1">Saldo nella barra superiore</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Il tuo saldo crediti è sempre visibile nel badge nella barra di navigazione superiore dell'applicazione. Cliccando sul badge puoi accedere rapidamente al riepilogo.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Il tuo saldo crediti e sempre visibile nel badge nella barra di navigazione superiore dell'applicazione. Cliccando sul badge puoi accedere rapidamente al riepilogo.</p>
             </div>
         </div>
 
@@ -410,7 +573,7 @@
             <div>
                 <p class="text-sm font-medium text-amber-800 dark:text-amber-300 mb-1">Crediti in esaurimento?</p>
                 <p class="text-sm text-amber-700 dark:text-amber-400">
-                    Quando il tuo saldo scende sotto i 10 crediti, il badge nella barra superiore diventa arancione per avvisarti. Assicurati di avere crediti sufficienti prima di avviare operazioni complesse come la generazione di articoli o report completi.
+                    Quando il tuo saldo scende sotto i 10 crediti, il badge nella barra superiore diventa arancione per avvisarti. Assicurati di avere crediti sufficienti prima di avviare operazioni complesse come la generazione di articoli o report.
                 </p>
             </div>
         </div>

@@ -217,25 +217,19 @@
                 <tr class="bg-white dark:bg-slate-800/50">
                     <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Valutazione AI campagne</td>
                     <td class="px-4 py-3 text-right">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">7 crediti</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">10 crediti</span>
                     </td>
                 </tr>
                 <tr class="bg-white dark:bg-slate-800/50">
                     <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Estrazione contesto business dal sito</td>
                     <td class="px-4 py-3 text-right">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">3 crediti</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">3 crediti</span>
                     </td>
                 </tr>
                 <tr class="bg-white dark:bg-slate-800/50">
                     <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Analisi keyword negative (per ad group)</td>
                     <td class="px-4 py-3 text-right">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">~2 crediti</span>
-                    </td>
-                </tr>
-                <tr class="bg-white dark:bg-slate-800/50">
-                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Analisi bulk keyword negative (4+ ad group)</td>
-                    <td class="px-4 py-3 text-right">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">1.5 crediti / gruppo</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">3 crediti</span>
                     </td>
                 </tr>
                 <tr class="bg-white dark:bg-slate-800/50">
@@ -262,13 +256,13 @@
                 <tr class="bg-white dark:bg-slate-800/50">
                     <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Generazione campagna completa</td>
                     <td class="px-4 py-3 text-right">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">5 crediti</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">10 crediti</span>
                     </td>
                 </tr>
                 <tr class="bg-amber-50/50 dark:bg-amber-900/10">
                     <td class="px-4 py-3 text-slate-700 dark:text-slate-300 font-medium">Totale Campaign Creator</td>
                     <td class="px-4 py-3 text-right">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200">9 crediti</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200">~14 crediti</span>
                     </td>
                 </tr>
             </tbody>

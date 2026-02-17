@@ -311,9 +311,8 @@ class ResearchController
             return;
         }
 
-        // Costo crediti
-        $costKey = count($keywords) > 100 ? 'cost_kr_ai_clustering_large' : 'cost_kr_ai_clustering';
-        $cost = (float) (ModuleLoader::getSetting('keyword-research', $costKey) ?? (count($keywords) > 100 ? 5 : 2));
+        // Costo crediti - livello Standard (3 cr) unificato per qualsiasi numero di keyword
+        $cost = (float) (ModuleLoader::getSetting('keyword-research', 'cost_kr_ai_clustering') ?? 3);
 
         if (!Credits::hasEnough($user['id'], $cost)) {
             echo json_encode(['success' => false, 'error' => "Crediti insufficienti. Richiesti: {$cost}"]);

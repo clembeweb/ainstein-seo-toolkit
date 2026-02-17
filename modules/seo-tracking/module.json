@@ -12,35 +12,35 @@
     "credits": {
         "rank_check": {
             "cost": 1,
-            "description": "Verifica posizione SERP singola keyword"
+            "description": "Verifica posizione SERP singola keyword (Base)"
         },
         "gsc_full_sync": {
             "cost": 10,
-            "description": "Sync storico completo GSC (16 mesi)"
+            "description": "Sync storico completo GSC 16 mesi (Premium)"
         },
         "weekly_digest": {
-            "cost": 5,
-            "description": "Report settimanale AI"
+            "cost": 3,
+            "description": "Report settimanale AI (Standard)"
         },
         "monthly_executive": {
-            "cost": 15,
-            "description": "Report mensile executive AI"
+            "cost": 10,
+            "description": "Report mensile executive AI (Premium)"
         },
         "keyword_analysis": {
-            "cost": 5,
-            "description": "Analisi keyword AI on-demand"
+            "cost": 3,
+            "description": "Analisi keyword AI on-demand (Standard)"
         },
         "anomaly_detection": {
-            "cost": 5,
-            "description": "Rilevamento anomalie AI"
+            "cost": 3,
+            "description": "Rilevamento anomalie AI (Standard)"
         },
         "alert_ai_insight": {
             "cost": 1,
-            "description": "Insight AI per alert"
+            "description": "Insight AI per alert (Base)"
         },
         "page_analysis": {
-            "cost": 2,
-            "description": "Analisi SEO pagina con competitor comparison"
+            "cost": 3,
+            "description": "Analisi SEO pagina con competitor (Standard)"
         }
     },
     "settings_groups": {
@@ -254,8 +254,8 @@
         "cost_quick_wins": {
             "type": "number",
             "label": "Analisi Quick Wins",
-            "description": "Crediti per analisi Quick Wins AI",
-            "default": 2,
+            "description": "Crediti per analisi Quick Wins AI (Standard)",
+            "default": 3,
             "min": 0,
             "step": 0.1,
             "admin_only": true,
@@ -264,8 +264,8 @@
         "cost_weekly_digest": {
             "type": "number",
             "label": "Report Settimanale",
-            "description": "Crediti per report settimanale AI",
-            "default": 5,
+            "description": "Crediti per report settimanale AI (Standard)",
+            "default": 3,
             "min": 0,
             "step": 0.1,
             "admin_only": true,
@@ -274,8 +274,8 @@
         "cost_monthly_executive": {
             "type": "number",
             "label": "Report Mensile",
-            "description": "Crediti per report mensile executive",
-            "default": 15,
+            "description": "Crediti per report mensile executive (Premium)",
+            "default": 10,
             "min": 0,
             "step": 0.1,
             "admin_only": true,
@@ -284,8 +284,8 @@
         "cost_keyword_analysis": {
             "type": "number",
             "label": "Analisi Keyword",
-            "description": "Crediti per analisi keyword AI on-demand",
-            "default": 5,
+            "description": "Crediti per analisi keyword AI on-demand (Standard)",
+            "default": 3,
             "min": 0,
             "step": 0.1,
             "admin_only": true,
@@ -294,8 +294,8 @@
         "cost_anomaly_detection": {
             "type": "number",
             "label": "Rilevamento Anomalie",
-            "description": "Crediti per rilevamento anomalie AI",
-            "default": 5,
+            "description": "Crediti per rilevamento anomalie AI (Standard)",
+            "default": 3,
             "min": 0,
             "step": 0.1,
             "admin_only": true,
@@ -304,8 +304,8 @@
         "cost_page_analysis": {
             "type": "number",
             "label": "Analisi Pagina SEO",
-            "description": "Crediti per analisi SEO pagina",
-            "default": 2,
+            "description": "Crediti per analisi SEO pagina (Standard)",
+            "default": 3,
             "min": 0,
             "step": 0.1,
             "admin_only": true,

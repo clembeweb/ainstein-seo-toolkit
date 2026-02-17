@@ -58,8 +58,8 @@ endif;
                     Controllo totale con wizard 4 step: keyword, SERP, Brief AI, Articolo. Modifica brief e contenuto prima di pubblicare.
                 </p>
                 <div class="mt-3 flex items-center gap-2">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-                        ~15 crediti/articolo
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                        ~19 cr/articolo
                     </span>
                     <?php if ($stats['manual_count'] > 0): ?>
                     <span class="text-xs text-slate-400 dark:text-slate-500"><?= $stats['manual_count'] ?> progetti</span>
@@ -89,8 +89,8 @@ endif;
                     Elaborazione in bulk automatica. Aggiungi keyword alla coda e il sistema genera articoli uno dopo l'altro.
                 </p>
                 <div class="mt-3 flex items-center gap-2">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">
-                        ~15 crediti/articolo
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                        ~19 cr/articolo
                     </span>
                     <?php if ($stats['auto_count'] > 0): ?>
                     <span class="text-xs text-slate-400 dark:text-slate-500"><?= $stats['auto_count'] ?> progetti</span>
@@ -121,8 +121,8 @@ endif;
                     Scrapa pagine esistenti e genera title e description ottimizzati con AI. Pubblica direttamente su WordPress.
                 </p>
                 <div class="mt-3 flex items-center gap-2">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
-                        ~3 crediti/pagina
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                        ~4 cr/pagina
                     </span>
                     <?php if ($stats['meta_count'] > 0): ?>
                     <span class="text-xs text-slate-400 dark:text-slate-500"><?= $stats['meta_count'] ?> progetti</span>

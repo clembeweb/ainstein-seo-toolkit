@@ -107,7 +107,7 @@
         "cost_kr_ai_clustering": {
             "type": "number",
             "label": "Costo clustering AI (< 100 kw)",
-            "default": 2,
+            "default": 3,
             "min": 0,
             "step": 0.5,
             "admin_only": true,
@@ -116,7 +116,7 @@
         "cost_kr_ai_clustering_large": {
             "type": "number",
             "label": "Costo clustering AI (> 100 kw)",
-            "default": 5,
+            "default": 3,
             "min": 0,
             "step": 0.5,
             "admin_only": true,
@@ -125,7 +125,7 @@
         "cost_kr_ai_architecture": {
             "type": "number",
             "label": "Costo architettura sito AI",
-            "default": 5,
+            "default": 10,
             "min": 0,
             "step": 0.5,
             "admin_only": true,
@@ -134,7 +134,7 @@
         "cost_kr_editorial_plan": {
             "type": "number",
             "label": "Costo piano editoriale AI",
-            "default": 5,
+            "default": 10,
             "min": 0,
             "step": 0.5,
             "admin_only": true,

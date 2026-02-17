@@ -9,21 +9,27 @@ return [
     'debug' => env('APP_DEBUG', false),
 
     // Crediti free tier
-    'free_credits' => 50,
+    'free_credits' => 30,
 
-    // Costi operazioni (crediti)
+    // Costi operazioni (crediti) - 4 livelli: Gratis(0), Base(1), Standard(3), Premium(10)
     'credit_costs' => [
-        'scrape_url' => 0.1,
-        'ai_analysis_small' => 1,
-        'ai_analysis_medium' => 2,
-        'ai_analysis_large' => 5,
+        // Gratis (0 cr) - consultazione, export, visualizzazione
         'export_csv' => 0,
-        'export_excel' => 0.5,
-        // AI Content module costs
-        'serp_extraction' => 3,
+        'export_excel' => 0,
+
+        // Base (1 cr) - operazioni singole leggere
+        'scrape_url' => 1,
         'content_scrape' => 1,
-        'article_generation' => 10,
+
+        // Standard (3 cr) - operazioni AI singole
+        'ai_analysis_small' => 3,
+        'ai_analysis_medium' => 3,
+        'ai_analysis_large' => 3,
+        'serp_extraction' => 3,
         'cover_image_generation' => 3,
+
+        // Premium (10 cr) - operazioni AI complesse multi-step
+        'article_generation' => 10,
     ],
 
     // Stripe (predisposizione)

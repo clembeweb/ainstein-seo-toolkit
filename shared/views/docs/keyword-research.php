@@ -198,21 +198,21 @@
             </thead>
             <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                 <tr class="bg-white dark:bg-slate-800/50">
-                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Clustering AI (&lt; 100 keyword)</td>
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Clustering AI</td>
                     <td class="px-4 py-3 text-right">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">2 crediti</span>
-                    </td>
-                </tr>
-                <tr class="bg-white dark:bg-slate-800/50">
-                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Clustering AI (&gt; 100 keyword)</td>
-                    <td class="px-4 py-3 text-right">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">5 crediti</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">3 crediti</span>
                     </td>
                 </tr>
                 <tr class="bg-white dark:bg-slate-800/50">
                     <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Architettura Sito</td>
                     <td class="px-4 py-3 text-right">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">5 crediti</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">10 crediti</span>
+                    </td>
+                </tr>
+                <tr class="bg-white dark:bg-slate-800/50">
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Piano Editoriale</td>
+                    <td class="px-4 py-3 text-right">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">10 crediti</span>
                     </td>
                 </tr>
                 <tr class="bg-white dark:bg-slate-800/50">

@@ -25,7 +25,7 @@
     </div>
     <div class="ml-14">
         <p class="text-slate-600 dark:text-slate-400 mb-4">
-            Per iniziare a usare Ainstein, registra il tuo account gratuito. Riceverai immediatamente <strong class="text-slate-900 dark:text-white">50 crediti omaggio</strong> per esplorare tutte le funzionalità della piattaforma.
+            Per iniziare a usare Ainstein, registra il tuo account gratuito. Riceverai immediatamente <strong class="text-slate-900 dark:text-white">30 crediti omaggio</strong> per esplorare tutte le funzionalità della piattaforma.
         </p>
         <div class="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl p-5">
             <div class="flex items-start gap-3">
@@ -241,9 +241,9 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 <div>
-                    <p class="text-sm font-medium text-amber-800 dark:text-amber-300 mb-1">50 crediti omaggio alla registrazione</p>
+                    <p class="text-sm font-medium text-amber-800 dark:text-amber-300 mb-1">30 crediti omaggio alla registrazione</p>
                     <p class="text-sm text-amber-700 dark:text-amber-400">
-                        Alla registrazione ricevi 50 crediti gratuiti, sufficienti per provare tutti i moduli. Per informazioni dettagliate sui costi di ogni operazione, consulta la pagina <a href="<?= url('/docs/credits') ?>" class="underline font-medium hover:text-amber-900 dark:hover:text-amber-200">Sistema Crediti</a>.
+                        Alla registrazione ricevi 30 crediti gratuiti, sufficienti per provare tutti i moduli. Per informazioni dettagliate sui costi di ogni operazione, consulta la pagina <a href="<?= url('/docs/credits') ?>" class="underline font-medium hover:text-amber-900 dark:hover:text-amber-200">Sistema Crediti</a>.
                     </p>
                 </div>
             </div>
@@ -304,7 +304,7 @@
 <!-- CTA -->
 <div class="mt-12 p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-primary-500 to-accent-500 text-center">
     <h2 class="text-2xl font-bold text-white mb-2">Pronto per iniziare?</h2>
-    <p class="text-primary-100 mb-6">Registrati gratuitamente e ricevi 50 crediti omaggio.</p>
+    <p class="text-primary-100 mb-6">Registrati gratuitamente e ricevi 30 crediti omaggio.</p>
     <a href="<?= url('/register') ?>" class="inline-flex items-center gap-2 px-6 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-primary-50 transition-colors shadow-lg">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>

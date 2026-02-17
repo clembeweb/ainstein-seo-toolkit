@@ -320,7 +320,7 @@ $baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['
                             <svg class="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            Costo: <span x-text="totalSources"></span> crediti scraping + 5 crediti AI
+                            Costo: <span x-text="totalSources"></span> cr scraping (Base) + 3 cr brief (Standard)
                         </p>
                     </div>
                 </div>
@@ -538,7 +538,7 @@ $baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['
                             <svg class="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            Costo: <span x-text="generateCover ? '13' : '10'">10</span> crediti
+                            Costo: <span x-text="generateCover ? '13' : '10'">10</span> cr (Articolo 10 Premium + Cover 3 Standard)
                         </p>
                     </div>
                 </div>

@@ -212,7 +212,7 @@
                 <tr class="bg-white dark:bg-slate-800/50">
                     <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Analisi link (per pagina)</td>
                     <td class="px-4 py-3 text-right">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">0.5 crediti</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">1 credito</span>
                     </td>
                 </tr>
             </tbody>

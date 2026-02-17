@@ -84,7 +84,7 @@
                        onchange="updateCostPreview()">
                 <div>
                     <span class="block text-sm font-medium text-slate-900 dark:text-white">Recupera dati automaticamente</span>
-                    <span class="block text-xs text-slate-500 dark:text-slate-400">Ottieni volume, CPC e competition per ogni keyword (0.5 crediti/kw)</span>
+                    <span class="block text-xs text-slate-500 dark:text-slate-400">Ottieni volume, CPC e competition per ogni keyword (1 cr/kw Base)</span>
                 </div>
             </label>
         </div>

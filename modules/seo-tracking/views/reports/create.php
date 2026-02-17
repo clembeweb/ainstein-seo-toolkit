@@ -51,7 +51,7 @@
                     <div class="flex-1">
                         <div class="flex items-center justify-between">
                             <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Digest Settimanale</h3>
-                            <span class="text-sm text-slate-500 dark:text-slate-400">~5 crediti</span>
+                            <span class="text-sm text-slate-500 dark:text-slate-400">~3 crediti</span>
                         </div>
                         <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
                             Riepilogo delle performance SEO degli ultimi 7 giorni con trend, keyword in movimento e suggerimenti.
@@ -85,7 +85,7 @@
                     <div class="flex-1">
                         <div class="flex items-center justify-between">
                             <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Executive Mensile</h3>
-                            <span class="text-sm text-slate-500 dark:text-slate-400">~10 crediti</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">10 cr</span>
                         </div>
                         <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
                             Report approfondito per stakeholder con analisi ROI, proiezioni e raccomandazioni strategiche.
@@ -119,7 +119,7 @@
                     <div class="flex-1">
                         <div class="flex items-center justify-between">
                             <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Analisi Anomalie</h3>
-                            <span class="text-sm text-slate-500 dark:text-slate-400">~3 crediti</span>
+                            <span class="text-sm text-slate-500 dark:text-slate-400">~3 cr</span>
                         </div>
                         <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
                             Analisi degli alert recenti con diagnosi delle cause e suggerimenti per il recupero.
@@ -153,7 +153,7 @@
                     <div class="flex-1">
                         <div class="flex items-center justify-between">
                             <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Report Personalizzato</h3>
-                            <span class="text-sm text-slate-500 dark:text-slate-400">~5 crediti</span>
+                            <span class="text-sm text-slate-500 dark:text-slate-400">~3 cr</span>
                         </div>
                         <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
                             Fai una domanda specifica sui dati e ottieni un'analisi personalizzata.

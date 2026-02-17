@@ -30,7 +30,7 @@
                     <h3 class="font-semibold text-slate-900 dark:text-white">Analisi Campagne</h3>
                     <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Collega Google Ads Script, raccogli dati e ottieni valutazioni AI sulle campagne esistenti.</p>
                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 mt-2">
-                        7 crediti/valutazione
+                        10 cr/valutazione
                     </span>
                 </div>
             </div>
@@ -50,7 +50,7 @@
                     <h3 class="font-semibold text-slate-900 dark:text-white">Crea Campagna AI</h3>
                     <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Genera da zero una campagna completa (Search o PMax) con keyword, copy ed estensioni.</p>
                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 mt-2">
-                        8-9 crediti totali
+                        ~14 cr totali
                     </span>
                 </div>
             </div>
@@ -237,26 +237,26 @@
 
                                 <!-- URL mode -->
                                 <ol x-show="inputMode === 'url'" class="list-decimal list-inside space-y-1">
-                                    <li>Scraping e analisi della landing page (1 credito)</li>
+                                    <li>Scraping e analisi della landing page (1 cr Base)</li>
                                     <li>Generazione automatica del brief dall'AI</li>
-                                    <li>Keyword research AI con ad group e negative (3 crediti)</li>
-                                    <li>Generazione completa: copy, estensioni, keyword (5 crediti)</li>
-                                    <li>Totale: <strong>9 crediti</strong></li>
+                                    <li>Keyword research AI con ad group e negative (3 cr Standard)</li>
+                                    <li>Generazione completa: copy, estensioni, keyword (10 cr Premium)</li>
+                                    <li>Totale: <strong>14 crediti</strong></li>
                                 </ol>
 
                                 <!-- Brief mode -->
                                 <ol x-show="inputMode === 'brief'" class="list-decimal list-inside space-y-1">
-                                    <li>Keyword research AI dal brief fornito (3 crediti)</li>
-                                    <li>Generazione completa: copy, estensioni, keyword (5 crediti)</li>
-                                    <li>Totale: <strong>8 crediti</strong></li>
+                                    <li>Keyword research AI dal brief fornito (3 cr Standard)</li>
+                                    <li>Generazione completa: copy, estensioni, keyword (10 cr Premium)</li>
+                                    <li>Totale: <strong>13 crediti</strong></li>
                                 </ol>
 
                                 <!-- Both mode -->
                                 <ol x-show="inputMode === 'both'" class="list-decimal list-inside space-y-1">
-                                    <li>Scraping e analisi della landing page (1 credito)</li>
-                                    <li>Keyword research AI con brief + contesto landing (3 crediti)</li>
-                                    <li>Generazione completa: copy, estensioni, keyword (5 crediti)</li>
-                                    <li>Totale: <strong>9 crediti</strong></li>
+                                    <li>Scraping e analisi della landing page (1 cr Base)</li>
+                                    <li>Keyword research AI con brief + contesto landing (3 cr Standard)</li>
+                                    <li>Generazione completa: copy, estensioni, keyword (10 cr Premium)</li>
+                                    <li>Totale: <strong>14 crediti</strong></li>
                                 </ol>
                             </div>
                         </div>

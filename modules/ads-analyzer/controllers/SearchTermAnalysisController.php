@@ -386,13 +386,10 @@ class SearchTermAnalysisController
                 exit;
             }
 
-            // Calcola crediti
+            // Calcola crediti - livello Standard (3 cr) per ogni ad group, nessuno sconto bulk
             $adGroupCount = count($adGroupsWithTerms);
-            $singleCost = Credits::getCost('ad_group_analysis', 'ads-analyzer', 2);
-            $bulkDiscount = Credits::getCost('bulk_analysis_discount', 'ads-analyzer', 0.75);
-            $creditsNeeded = $adGroupCount <= 3
-                ? $adGroupCount * $singleCost
-                : ceil($adGroupCount * $singleCost * $bulkDiscount);
+            $singleCost = Credits::getCost('ad_group_analysis', 'ads-analyzer', 3);
+            $creditsNeeded = $adGroupCount * $singleCost;
 
             if (!Credits::hasEnough($user['id'], $creditsNeeded)) {
                 ob_end_clean();

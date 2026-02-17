@@ -123,7 +123,7 @@
                 </div>
                 <div class="relative flex justify-center text-sm">
                     <span class="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">
-                        50 crediti gratuiti alla registrazione
+                        30 crediti gratuiti alla registrazione
                     </span>
                 </div>
             </div>

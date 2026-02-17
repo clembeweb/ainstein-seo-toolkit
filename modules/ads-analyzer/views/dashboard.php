@@ -47,7 +47,7 @@ endif;
                 </p>
                 <div class="mt-3 flex flex-wrap items-center gap-2">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-                        7 crediti/valutazione
+                        10 cr/valutazione
                     </span>
                     <?php if ($stats['campaign_count'] > 0): ?>
                     <span class="text-xs text-slate-400 dark:text-slate-500"><?= $stats['campaign_count'] ?> progetti</span>
@@ -78,7 +78,7 @@ endif;
                 </p>
                 <div class="mt-3 flex flex-wrap items-center gap-2">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
-                        9 crediti totali
+                        ~14 cr totali
                     </span>
                     <?php if ($stats['creator_count'] > 0): ?>
                     <span class="text-xs text-slate-400 dark:text-slate-500"><?= $stats['creator_count'] ?> progetti</span>

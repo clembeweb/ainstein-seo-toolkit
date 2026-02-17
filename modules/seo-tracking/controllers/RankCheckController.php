@@ -21,7 +21,8 @@ use Modules\SeoTracking\Services\RankCheckerService;
  */
 class RankCheckController
 {
-    private const CREDIT_COST = 1;
+    /** Costo crediti per rank check: livello Base (1 cr) */
+    private const CREDIT_COST = 1; // Allineato a livello Base - valore letto da getCost() dove possibile
     private const MAX_BULK_KEYWORDS = 10;
 
     /**

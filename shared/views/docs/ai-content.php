@@ -255,7 +255,7 @@
                             </div>
                         </td>
                         <td class="px-5 py-3 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">5 crediti</span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">3 crediti</span>
                         </td>
                     </tr>
                     <tr class="bg-white dark:bg-slate-800">

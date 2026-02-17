@@ -620,7 +620,7 @@ $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
                         </div>
                         <div>
                             <label for="free_credits" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Crediti nuovi utenti</label>
-                            <input type="number" name="free_credits" id="free_credits" value="<?= e($settings['free_credits']['value'] ?? '50') ?>"
+                            <input type="number" name="free_credits" id="free_credits" value="<?= e($settings['free_credits']['value'] ?? '30') ?>"
                                    class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm">
                             <p class="mt-1 text-xs text-slate-500">Assegnati automaticamente alla registrazione</p>
                         </div>

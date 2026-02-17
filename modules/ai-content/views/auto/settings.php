@@ -101,14 +101,14 @@
                     <div class="text-sm text-blue-700 dark:text-blue-300">
                         <p class="font-medium mb-1">Costi crediti</p>
                         <ul class="text-blue-600 dark:text-blue-400 space-y-1">
-                            <li>Estrazione SERP: 3 crediti</li>
-                            <li>Scraping fonti: 1 credito per fonte</li>
-                            <li>Generazione brief: 5 crediti</li>
-                            <li>Generazione articolo: 10 crediti</li>
-                            <li>Immagine di copertina: 3 crediti (opzionale)</li>
+                            <li>Estrazione SERP: 3 crediti (Standard)</li>
+                            <li>Scraping fonti: 1 credito per fonte (Base)</li>
+                            <li>Generazione brief: 3 crediti (Standard)</li>
+                            <li>Generazione articolo: 10 crediti (Premium)</li>
+                            <li>Immagine di copertina: 3 crediti (Standard, opzionale)</li>
                         </ul>
                         <p class="mt-2 text-xs">
-                            Totale stimato per articolo (3 fonti): ~21 crediti (+ 3 con copertina)
+                            Totale stimato per articolo (3 fonti): ~19 crediti (+ 3 con copertina)
                         </p>
                     </div>
                 </div>

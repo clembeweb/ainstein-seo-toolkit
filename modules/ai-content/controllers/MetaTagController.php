@@ -27,8 +27,10 @@ class MetaTagController
 {
     private Project $project;
     private MetaTag $metaTag;
+    /** Costo crediti scraping: livello Base (1 cr) */
     private const SCRAPE_CREDIT_COST = 1;
-    private const GENERATE_CREDIT_COST = 2;
+    /** Costo crediti generazione AI: livello Standard (3 cr) */
+    private const GENERATE_CREDIT_COST = 3;
 
     public function __construct()
     {

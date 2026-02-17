@@ -187,8 +187,8 @@ class KeywordController
             $dataForSeo = new \Services\DataForSeoService();
 
             if ($dataForSeo->isConfigured()) {
-                // Calcola costo (0.5 crediti/kw, 0.3 se 10+)
-                $cost = $added >= 10 ? $added * 0.3 : $added * 0.5;
+                // Calcola costo: 1 credito/kw (livello Base)
+                $cost = $added * 1;
 
                 if (Credits::hasEnough($user['id'], $cost)) {
                     // Aggiorna volumi solo per le keyword appena inserite
@@ -739,15 +739,15 @@ class KeywordController
     private function calculateRefreshCost(int $keywordCount, string $type = 'volumes'): float
     {
         if ($type === 'volumes') {
-            // 0.5 crediti/kw singolo, 0.3 crediti/kw per bulk (10+)
-            return $keywordCount >= 10 ? $keywordCount * 0.3 : $keywordCount * 0.5;
+            // 1 credito/kw (livello Base)
+            return $keywordCount * 1;
         } elseif ($type === 'positions') {
             // 1 credito/kw
             return $keywordCount * 1.0;
         } elseif ($type === 'all') {
-            // Somma di volumi bulk + posizioni
-            $volumeCost = $keywordCount >= 10 ? $keywordCount * 0.3 : $keywordCount * 0.5;
-            $positionCost = $keywordCount * 1.0;
+            // Somma di volumi (1 cr Base) + posizioni (1 cr Base)
+            $volumeCost = $keywordCount * 1;
+            $positionCost = $keywordCount * 1;
             return $volumeCost + $positionCost;
         }
         return 0;

@@ -255,7 +255,7 @@
                             </div>
                         </td>
                         <td class="px-5 py-3 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">2 crediti</span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">3 crediti</span>
                         </td>
                     </tr>
                     <tr class="bg-white dark:bg-slate-800">
@@ -268,7 +268,7 @@
                             </div>
                         </td>
                         <td class="px-5 py-3 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">5 crediti</span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">3 crediti</span>
                         </td>
                     </tr>
                     <tr class="bg-white dark:bg-slate-800">
@@ -281,7 +281,7 @@
                             </div>
                         </td>
                         <td class="px-5 py-3 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">15 crediti</span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">10 crediti</span>
                         </td>
                     </tr>
                 </tbody>
@@ -291,7 +291,7 @@
             <svg class="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            Il rank checking e il monitoraggio base non consumano crediti. Solo le sync GSC e i report AI richiedono crediti.
+            Il rank checking (1 cr/kw) e il monitoraggio base non consumano crediti. Le sync GSC e i report AI richiedono crediti.
         </p>
     </section>
 

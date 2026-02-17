@@ -36,8 +36,8 @@ endif;
                     Progetti SEO/Ads con clustering AI. Parti da seed keyword, espandi automaticamente e ottieni cluster semantici con intent e note strategiche.
                 </p>
                 <div class="mt-3">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
-                        2-5 crediti
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                        3 cr
                     </span>
                 </div>
             </div>
@@ -64,8 +64,8 @@ endif;
                     Struttura URL e slug per un nuovo sito. L'AI propone pagine, H1 e URL basati sui volumi di ricerca reali.
                 </p>
                 <div class="mt-3">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-                        5 crediti
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                        10 cr
                     </span>
                 </div>
             </div>
@@ -92,8 +92,8 @@ endif;
                     Piano editoriale mensile basato su keyword e analisi competitor. Esporta direttamente in AI Content.
                 </p>
                 <div class="mt-3">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300">
-                        5 crediti
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                        10 cr
                     </span>
                 </div>
             </div>

@@ -12,7 +12,7 @@
         "services": ["ai", "dataforseo"]
     },
     "credits": {
-        "audit_page": 2,
+        "audit_page": 1,
         "ai_suggestions": 3
     },
     "settings_groups": {
@@ -97,8 +97,8 @@
         "cost_audit_page": {
             "type": "number",
             "label": "Costo Audit (per pagina)",
-            "description": "Crediti per analisi singola pagina con DataForSEO",
-            "default": 2,
+            "description": "Crediti per analisi singola pagina con DataForSEO (Base)",
+            "default": 1,
             "min": 0,
             "step": 0.1,
             "admin_only": true,

@@ -14,8 +14,11 @@
     "credits": {
         "serp_extraction": 3,
         "scrape_per_url": 1,
+        "brief_generation": 3,
         "article_generation": 10,
         "cover_image_generation": 3,
+        "meta_scrape": 1,
+        "meta_generate": 3,
         "wp_publish": 0
     },
     "settings_groups": {
@@ -151,8 +154,8 @@
         "cost_brief_generation": {
             "type": "number",
             "label": "Costo Generazione Brief",
-            "description": "Crediti per generazione brief AI",
-            "default": 5,
+            "description": "Crediti per generazione brief AI (Standard)",
+            "default": 3,
             "min": 0,
             "step": 0.1,
             "admin_only": true,
