@@ -104,7 +104,16 @@ Router::get('/', function () {
     if (Auth::check()) {
         Router::redirect('/dashboard');
     }
-    // Landing page per visitatori non loggati
+    require BASE_PATH . '/public/landing4.php';
+    exit;
+});
+
+Router::get('/pricing', function () {
+    require BASE_PATH . '/public/pricing.php';
+    exit;
+});
+
+Router::get('/landing', function () {
     require BASE_PATH . '/public/landing.php';
     exit;
 });
@@ -198,6 +207,15 @@ Router::post('/register', function () {
     // Login automatico
     $user = Database::fetch("SELECT * FROM users WHERE id = ?", [$userId]);
     Auth::login($user);
+
+    // Email di benvenuto (non bloccante - errori loggati silenziosamente)
+    try {
+        $config = require BASE_PATH . '/config/app.php';
+        \Services\EmailService::sendWelcome($email, $name, $config['free_credits'] ?? 30);
+    } catch (\Exception $e) {
+        // Non bloccare la registrazione se l'email fallisce
+        error_log('Welcome email failed: ' . $e->getMessage());
+    }
 
     $_SESSION['_flash']['success'] = 'Registrazione completata! Benvenuto in SEO Toolkit.';
     Router::redirect('/dashboard');
