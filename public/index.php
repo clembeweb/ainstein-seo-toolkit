@@ -109,6 +109,16 @@ Router::get('/', function () {
     exit;
 });
 
+Router::get('/landing2', function () {
+    require BASE_PATH . '/public/landing2.php';
+    exit;
+});
+
+Router::get('/landing3', function () {
+    require BASE_PATH . '/public/landing3.php';
+    exit;
+});
+
 Router::get('/login', function () {
     Middleware::guest();
     return View::render('auth/login', ['title' => 'Login'], null);
@@ -311,29 +321,124 @@ Router::get('/dashboard', function () {
     Middleware::auth();
 
     $user = Auth::user();
-    $modules = ModuleLoader::getUserModules($user['id']);
+    $uid = $user['id'];
+    $modules = ModuleLoader::getUserModules($uid);
 
-    // Stats utilizzo
-    $usageToday = Database::fetch(
-        "SELECT COALESCE(SUM(credits_used), 0) as total FROM usage_log WHERE user_id = ? AND DATE(created_at) = CURDATE()",
-        [$user['id']]
+    // --- Stats compatte (solo per header) ---
+    $usageToday = (float) Database::fetch(
+        "SELECT COALESCE(SUM(credits_used), 0) as total FROM usage_log WHERE user_id = ? AND DATE(created_at) = CURDATE()", [$uid]
     )['total'];
 
-    $usageMonth = Database::fetch(
-        "SELECT COALESCE(SUM(credits_used), 0) as total FROM usage_log WHERE user_id = ? AND MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())",
-        [$user['id']]
+    $usageMonth = (float) Database::fetch(
+        "SELECT COALESCE(SUM(credits_used), 0) as total FROM usage_log WHERE user_id = ? AND MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())", [$uid]
     )['total'];
 
-    $projectsCount = Database::count('projects', 'user_id = ?', [$user['id']]);
+    // --- Pipeline data (per smart actions) ---
+    $pipelineData = ['kr_projects' => 0, 'aic_keywords' => 0, 'aic_articles' => 0, 'aic_published' => 0, 'aic_ready' => 0, 'wp_connected' => false];
+    try {
+        $pipelineData['kr_projects'] = (int) Database::fetch(
+            "SELECT COUNT(*) as cnt FROM kr_projects WHERE user_id = ?", [$uid]
+        )['cnt'];
+        $pipelineData['aic_keywords'] = (int) Database::fetch(
+            "SELECT COUNT(*) as cnt FROM aic_queue WHERE user_id = ?", [$uid]
+        )['cnt'];
+        $aicArtStats = Database::fetch(
+            "SELECT COUNT(*) as total,
+                    SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END) as published,
+                    SUM(CASE WHEN status = 'ready' THEN 1 ELSE 0 END) as ready
+             FROM aic_articles WHERE user_id = ?", [$uid]
+        );
+        $pipelineData['aic_articles'] = (int) ($aicArtStats['total'] ?? 0);
+        $pipelineData['aic_published'] = (int) ($aicArtStats['published'] ?? 0);
+        $pipelineData['aic_ready'] = (int) ($aicArtStats['ready'] ?? 0);
+        $pipelineData['wp_connected'] = (bool) Database::fetch(
+            "SELECT COUNT(*) as cnt FROM aic_wp_sites WHERE user_id = ? AND is_active = 1", [$uid]
+        )['cnt'];
+    } catch (\Exception $e) {}
 
-    $recentUsage = Database::fetchAll(
-        "SELECT * FROM usage_log WHERE user_id = ? ORDER BY created_at DESC LIMIT 10",
-        [$user['id']]
-    );
+    // --- Widget data per modulo (per smart actions + compact cards) ---
+    $widgetData = [];
 
-    // Onboarding status
-    $onboardingWelcomeCompleted = OnboardingService::isWelcomeCompleted($user['id']);
-    $onboardingCompletedModules = OnboardingService::getCompletedModules($user['id']);
+    // AI Content
+    try {
+        $aStats = Database::fetch(
+            "SELECT COUNT(*) as total, SUM(CASE WHEN status='ready' THEN 1 ELSE 0 END) as ready, SUM(CASE WHEN status='published' THEN 1 ELSE 0 END) as published FROM aic_articles WHERE user_id = ?", [$uid]
+        );
+        $widgetData['ai-content'] = [
+            'articles_total' => (int)($aStats['total'] ?? 0),
+            'articles_ready' => (int)($aStats['ready'] ?? 0),
+            'articles_published' => (int)($aStats['published'] ?? 0),
+        ];
+    } catch (\Exception $e) { $widgetData['ai-content'] = null; }
+
+    // SEO Tracking
+    try {
+        $stKw = Database::fetch(
+            "SELECT COUNT(k.id) as tracked FROM st_keywords k JOIN st_projects p ON k.project_id = p.id WHERE p.user_id = ?", [$uid]
+        );
+        $gscConnected = (int) Database::fetch(
+            "SELECT SUM(gsc_connected) as cnt FROM st_projects WHERE user_id = ?", [$uid]
+        )['cnt'];
+        $widgetData['seo-tracking'] = [
+            'keywords' => (int)($stKw['tracked'] ?? 0),
+            'gsc_connected' => $gscConnected > 0,
+        ];
+    } catch (\Exception $e) { $widgetData['seo-tracking'] = null; }
+
+    // SEO Audit
+    try {
+        $saLast = Database::fetch(
+            "SELECT health_score, issues_count FROM sa_projects WHERE user_id = ? AND status = 'completed' ORDER BY completed_at DESC LIMIT 1", [$uid]
+        );
+        $saCount = (int) Database::fetch(
+            "SELECT COUNT(*) as cnt FROM sa_projects WHERE user_id = ?", [$uid]
+        )['cnt'];
+        $widgetData['seo-audit'] = [
+            'projects' => $saCount,
+            'health_score' => $saLast ? (int)$saLast['health_score'] : null,
+            'issues' => $saLast ? (int)$saLast['issues_count'] : 0,
+        ];
+    } catch (\Exception $e) { $widgetData['seo-audit'] = null; }
+
+    // Keyword Research
+    try {
+        $krProjects = (int) Database::fetch(
+            "SELECT COUNT(*) as cnt FROM kr_projects WHERE user_id = ?", [$uid]
+        )['cnt'];
+        $widgetData['keyword-research'] = [
+            'projects' => $krProjects,
+        ];
+    } catch (\Exception $e) { $widgetData['keyword-research'] = null; }
+
+    // Ads Analyzer
+    try {
+        $gaTotal = (int) Database::fetch(
+            "SELECT COUNT(*) as cnt FROM ga_projects WHERE user_id = ?", [$uid]
+        )['cnt'];
+        $widgetData['ads-analyzer'] = [
+            'total' => $gaTotal,
+        ];
+    } catch (\Exception $e) { $widgetData['ads-analyzer'] = null; }
+
+    // Internal Links
+    try {
+        $ilProjects = (int) Database::fetch(
+            "SELECT COUNT(*) as cnt FROM il_projects WHERE user_id = ?", [$uid]
+        )['cnt'];
+        $widgetData['internal-links'] = [
+            'projects' => $ilProjects,
+        ];
+    } catch (\Exception $e) { $widgetData['internal-links'] = null; }
+
+    // --- Switch new/active user (derivato dai widget data) ---
+    $projectsCount = 0;
+    foreach ($widgetData as $wData) {
+        if (!$wData) continue;
+        $projectsCount += ($wData['projects'] ?? 0);
+        $projectsCount += ($wData['articles_total'] ?? 0);
+        $projectsCount += ($wData['keywords'] ?? 0);
+        $projectsCount += ($wData['total'] ?? 0);
+    }
 
     return View::render('dashboard', [
         'title' => 'Dashboard',
@@ -342,10 +447,8 @@ Router::get('/dashboard', function () {
         'usageToday' => $usageToday,
         'usageMonth' => $usageMonth,
         'projectsCount' => $projectsCount,
-        'recentUsage' => $recentUsage,
-        'onboardingWelcomeCompleted' => $onboardingWelcomeCompleted,
-        'onboardingCompletedModules' => $onboardingCompletedModules,
-        'onboardingConfig' => require BASE_PATH . '/config/onboarding.php',
+        'pipelineData' => $pipelineData,
+        'widgetData' => $widgetData,
     ]);
 });
 
