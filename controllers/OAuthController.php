@@ -116,12 +116,33 @@ class OAuthController
             return '';
         }
 
+        // Verifica se utente gia esiste (per decidere welcome email)
+        $existingUser = \Core\Database::fetch(
+            "SELECT id FROM users WHERE google_id = ? OR email = ?",
+            [$googleUser['sub'], $googleUser['email']]
+        );
+        $isNewUser = !$existingUser;
+
         // Trova o crea utente
         $user = Auth::findOrCreateFromGoogle($googleUser);
         if (!$user) {
             $_SESSION['_flash']['error'] = 'Errore durante la creazione dell\'account.';
             Router::redirect('/login');
             return '';
+        }
+
+        // Email di benvenuto per nuovi utenti Google
+        if ($isNewUser) {
+            try {
+                $config = require ROOT_PATH . '/config/app.php';
+                \Services\EmailService::sendWelcome(
+                    $user['email'],
+                    $user['name'] ?? 'Utente',
+                    $config['free_credits'] ?? 30
+                );
+            } catch (\Exception $e) {
+                error_log('Welcome email (Google OAuth) failed: ' . $e->getMessage());
+            }
         }
 
         // Login

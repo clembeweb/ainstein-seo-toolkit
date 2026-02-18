@@ -536,55 +536,138 @@ $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
             </div>
 
             <!-- SMTP -->
-            <div x-data="{ open: false }" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div x-data="{ open: false, testing: false, testResult: null, testSuccess: false, sending: false, sendResult: null, sendSuccess: false }" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <button type="button" @click="open = !open" class="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                     <div class="flex items-center gap-3">
-                        <div class="p-2 rounded-lg bg-slate-100 dark:bg-slate-700">
-                            <svg class="w-5 h-5 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        <div class="p-2 rounded-lg bg-sky-100 dark:bg-sky-900/30">
+                            <svg class="w-5 h-5 text-sky-600 dark:text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                         </div>
                         <div class="text-left">
                             <h3 class="font-semibold text-slate-900 dark:text-white">Email (SMTP)</h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">Invio notifiche email</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Invio email di benvenuto, reset password, notifiche</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
                         <?php if ($smtpConfigured): ?>
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Configurato</span>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                Configurato
+                            </span>
                         <?php else: ?>
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400">Opzionale</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">Da configurare</span>
                         <?php endif; ?>
                         <svg class="w-5 h-5 text-slate-400 transition-transform" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </div>
                 </button>
                 <div x-show="open" x-collapse>
-                    <div class="px-6 pb-6 pt-2 border-t border-slate-200 dark:border-slate-700">
+                    <div class="px-6 pb-6 pt-2 border-t border-slate-200 dark:border-slate-700 space-y-4">
+                        <!-- Server SMTP -->
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                             <div>
-                                <label for="smtp_host" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Host</label>
+                                <label for="smtp_host" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Host SMTP</label>
                                 <input type="text" name="smtp_host" id="smtp_host"
                                        value="<?= e($settings['smtp_host']['value'] ?? '') ?>"
-                                       placeholder="smtp.example.com"
-                                       class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-slate-500 focus:border-slate-500 text-sm">
+                                       placeholder="mail.esempio.it"
+                                       class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
                             </div>
                             <div>
-                                <label for="smtp_port" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Port</label>
+                                <label for="smtp_port" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Porta</label>
                                 <input type="number" name="smtp_port" id="smtp_port"
-                                       value="<?= e($settings['smtp_port']['value'] ?? '587') ?>"
-                                       class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-slate-500 focus:border-slate-500 text-sm">
+                                       value="<?= e($settings['smtp_port']['value'] ?? '465') ?>"
+                                       class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
+                                <p class="mt-1 text-xs text-slate-400">465 (SSL) o 587 (TLS)</p>
                             </div>
                             <div>
                                 <label for="smtp_username" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Username</label>
                                 <input type="text" name="smtp_username" id="smtp_username"
                                        value="<?= e($settings['smtp_username']['value'] ?? '') ?>"
-                                       class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-slate-500 focus:border-slate-500 text-sm">
+                                       placeholder="info@esempio.it"
+                                       class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
                             </div>
                             <div>
                                 <label for="smtp_password" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>
-                                <input type="password" name="smtp_password" id="smtp_password"
-                                       value="<?= e($settings['smtp_password']['value'] ?? '') ?>"
-                                       class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-slate-500 focus:border-slate-500 text-sm">
+                                <div class="relative">
+                                    <input type="password" name="smtp_password" id="smtp_password"
+                                           value="<?= e($settings['smtp_password']['value'] ?? '') ?>"
+                                           class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 pr-10 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
+                                    <button type="button" onclick="togglePassword('smtp_password')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
+
+                        <!-- Mittente -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="smtp_from_email" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email mittente</label>
+                                <input type="email" name="smtp_from_email" id="smtp_from_email"
+                                       value="<?= e($settings['smtp_from_email']['value'] ?? '') ?>"
+                                       placeholder="info@esempio.it"
+                                       class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
+                                <p class="mt-1 text-xs text-slate-400">Se vuoto, usa lo username</p>
+                            </div>
+                            <div>
+                                <label for="smtp_from_name" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nome mittente</label>
+                                <input type="text" name="smtp_from_name" id="smtp_from_name"
+                                       value="<?= e($settings['smtp_from_name']['value'] ?? 'Ainstein') ?>"
+                                       placeholder="Ainstein"
+                                       class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
+                            </div>
+                        </div>
+
+                        <!-- Test Buttons -->
+                        <div class="flex items-center gap-3 pt-2 border-t border-slate-200 dark:border-slate-700">
+                            <button type="button" @click="
+                                testing = true; testResult = null;
+                                fetch('<?= url('/admin/settings/test-smtp') ?>', {
+                                    method: 'POST',
+                                    headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-TOKEN': document.querySelector('[name=_csrf_token]').value},
+                                    body: '_csrf_token=' + document.querySelector('[name=_csrf_token]').value
+                                })
+                                .then(r => r.json())
+                                .then(d => { testResult = d.message; testSuccess = d.success; })
+                                .catch(() => { testResult = 'Errore di connessione'; testSuccess = false; })
+                                .finally(() => testing = false)
+                            " :disabled="testing"
+                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50">
+                                <svg x-show="!testing" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                <svg x-show="testing" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                <span x-text="testing ? 'Test in corso...' : 'Testa connessione'"></span>
+                            </button>
+
+                            <button type="button" @click="
+                                sending = true; sendResult = null;
+                                fetch('<?= url('/admin/settings/test-email') ?>', {
+                                    method: 'POST',
+                                    headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-TOKEN': document.querySelector('[name=_csrf_token]').value},
+                                    body: '_csrf_token=' + document.querySelector('[name=_csrf_token]').value
+                                })
+                                .then(r => r.json())
+                                .then(d => { sendResult = d.message; sendSuccess = d.success; })
+                                .catch(() => { sendResult = 'Errore di connessione'; sendSuccess = false; })
+                                .finally(() => sending = false)
+                            " :disabled="sending"
+                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-sky-300 dark:border-sky-700 text-sm font-medium text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors disabled:opacity-50">
+                                <svg x-show="!sending" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                <svg x-show="sending" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                <span x-text="sending ? 'Invio in corso...' : 'Invia email di test'"></span>
+                            </button>
+                        </div>
+
+                        <!-- Test Results -->
+                        <template x-if="testResult">
+                            <div :class="testSuccess ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400' : 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400'"
+                                 class="p-3 rounded-lg border text-sm">
+                                <span x-text="testResult"></span>
+                            </div>
+                        </template>
+                        <template x-if="sendResult">
+                            <div :class="sendSuccess ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400' : 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400'"
+                                 class="p-3 rounded-lg border text-sm">
+                                <span x-text="sendResult"></span>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </div>

@@ -272,13 +272,98 @@ Router::post('/forgot-password', function () {
         ], null);
     }
 
-    // Crea token (anche se email non esiste, per sicurezza)
-    Auth::createPasswordResetToken($email);
+    // Crea token (ritorna null se email non esiste)
+    $token = Auth::createPasswordResetToken($email);
 
+    // Invia email con link di reset (solo se token creato = email esiste)
+    if ($token) {
+        try {
+            \Services\EmailService::sendPasswordReset($email, $token);
+        } catch (\Exception $e) {
+            error_log('Password reset email failed: ' . $e->getMessage());
+        }
+    }
+
+    // Messaggio generico per sicurezza (non rivelare se email esiste)
     return View::render('auth/forgot-password', [
         'title' => 'Password dimenticata',
-        'success' => 'Se l\'email esiste, riceverai un link per il reset.',
+        'success' => 'Se l\'email esiste nel sistema, riceverai un link per reimpostare la password.',
     ], null);
+});
+
+// --- Password Reset (completamento) ---
+
+Router::get('/reset-password', function () {
+    Middleware::guest();
+
+    $token = $_GET['token'] ?? '';
+
+    if (empty($token)) {
+        $_SESSION['_flash']['error'] = 'Link di reset non valido.';
+        Router::redirect('/forgot-password');
+        return;
+    }
+
+    // Valida token
+    $email = Auth::validatePasswordResetToken($token);
+
+    if (!$email) {
+        return View::render('auth/reset-password', [
+            'title' => 'Reimposta Password',
+            'error' => 'Il link di reset e scaduto o non valido. Richiedi un nuovo link.',
+            'token' => '',
+        ], null);
+    }
+
+    return View::render('auth/reset-password', [
+        'title' => 'Reimposta Password',
+        'token' => $token,
+        'email' => $email,
+    ], null);
+});
+
+Router::post('/reset-password', function () {
+    Middleware::guest();
+    Middleware::csrf();
+
+    $token = $_POST['token'] ?? '';
+    $password = $_POST['password'] ?? '';
+    $passwordConfirmation = $_POST['password_confirmation'] ?? '';
+
+    // Validazione
+    $errors = [];
+
+    if (empty($token)) {
+        $errors[] = 'Token mancante';
+    }
+    if (strlen($password) < 8) {
+        $errors[] = 'La password deve essere di almeno 8 caratteri';
+    }
+    if ($password !== $passwordConfirmation) {
+        $errors[] = 'Le password non coincidono';
+    }
+
+    if (!empty($errors)) {
+        return View::render('auth/reset-password', [
+            'title' => 'Reimposta Password',
+            'error' => implode('<br>', $errors),
+            'token' => $token,
+        ], null);
+    }
+
+    // Reset password
+    $success = Auth::resetPassword($token, $password);
+
+    if (!$success) {
+        return View::render('auth/reset-password', [
+            'title' => 'Reimposta Password',
+            'error' => 'Il link di reset e scaduto o non valido. Richiedi un nuovo link.',
+            'token' => '',
+        ], null);
+    }
+
+    $_SESSION['_flash']['success'] = 'Password reimpostata con successo. Puoi effettuare il login.';
+    Router::redirect('/login');
 });
 
 // --- Documentation Routes (Public) ---

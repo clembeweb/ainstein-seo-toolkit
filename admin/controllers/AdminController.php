@@ -262,6 +262,43 @@ class AdminController
         return '';
     }
 
+    /**
+     * Test connessione SMTP (AJAX)
+     */
+    public function testSmtp(): string
+    {
+        Middleware::csrf();
+
+        $result = \Services\EmailService::testConnection();
+
+        header('Content-Type: application/json');
+        return json_encode($result);
+    }
+
+    /**
+     * Invia email di test (AJAX)
+     */
+    public function testEmail(): string
+    {
+        Middleware::csrf();
+
+        $adminEmail = Auth::user()['email'] ?? '';
+
+        if (empty($adminEmail)) {
+            header('Content-Type: application/json');
+            return json_encode(['success' => false, 'message' => 'Email admin non trovata']);
+        }
+
+        $result = \Services\EmailService::sendTestEmail($adminEmail);
+
+        if ($result['success']) {
+            $result['message'] = "Email di test inviata a {$adminEmail}";
+        }
+
+        header('Content-Type: application/json');
+        return json_encode($result);
+    }
+
     public function modules(): string
     {
         $modules = Database::fetchAll("SELECT * FROM modules ORDER BY name");

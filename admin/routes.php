@@ -21,6 +21,8 @@ Router::get('/admin/modules/{id}/settings', [AdminController::class, 'moduleSett
 Router::post('/admin/modules/{id}/settings', [AdminController::class, 'moduleSettingsUpdate']);
 Router::post('/admin/modules/{id}/rename', [AdminController::class, 'moduleRename']);
 Router::post('/admin/settings/branding', [AdminController::class, 'brandingUpdate']);
+Router::post('/admin/settings/test-smtp', [AdminController::class, 'testSmtp']);
+Router::post('/admin/settings/test-email', [AdminController::class, 'testEmail']);
 Router::get('/admin/plans', [AdminController::class, 'plans']);
 Router::post('/admin/plans/{id}', [AdminController::class, 'planUpdate']);
 
