@@ -136,8 +136,9 @@ $navItems = [
                             </svg>
                         </button>
 
-                        <a href="<?= url('/login') ?>" class="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Accedi</a>
-                        <a href="<?= url('/register') ?>" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors shadow-sm">Registrati</a>
+                        <!-- Login/Register temporaneamente nascosti (coming soon) -->
+                        <!-- <a href="<?= url('/login') ?>" class="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Accedi</a>
+                        <a href="<?= url('/register') ?>" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors shadow-sm">Registrati</a> -->
                     </div>
                 </div>
             </div>

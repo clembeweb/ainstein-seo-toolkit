@@ -104,6 +104,14 @@ Router::get('/', function () {
     if (Auth::check()) {
         Router::redirect('/dashboard');
     }
+    require BASE_PATH . '/public/coming-soon.php';
+    exit;
+});
+
+Router::get('/home', function () {
+    if (Auth::check()) {
+        Router::redirect('/dashboard');
+    }
     require BASE_PATH . '/public/landing4.php';
     exit;
 });
@@ -644,6 +652,47 @@ Router::get('/onboarding/status', function () {
         'welcome_completed' => OnboardingService::isWelcomeCompleted($userId),
         'completed_modules' => OnboardingService::getCompletedModules($userId),
     ]);
+});
+
+// --- Global Projects Routes ---
+Router::get('/projects', function () {
+    $controller = new Controllers\GlobalProjectController();
+    $controller->index();
+});
+
+Router::get('/projects/create', function () {
+    $controller = new Controllers\GlobalProjectController();
+    $controller->create();
+});
+
+Router::post('/projects', function () {
+    $controller = new Controllers\GlobalProjectController();
+    $controller->store();
+});
+
+Router::get('/projects/{id}', function ($id) {
+    $controller = new Controllers\GlobalProjectController();
+    $controller->dashboard((int) $id);
+});
+
+Router::get('/projects/{id}/settings', function ($id) {
+    $controller = new Controllers\GlobalProjectController();
+    $controller->settings((int) $id);
+});
+
+Router::post('/projects/{id}/settings', function ($id) {
+    $controller = new Controllers\GlobalProjectController();
+    $controller->update((int) $id);
+});
+
+Router::post('/projects/{id}/activate-module', function ($id) {
+    $controller = new Controllers\GlobalProjectController();
+    $controller->activateModule((int) $id);
+});
+
+Router::post('/projects/{id}/delete', function ($id) {
+    $controller = new Controllers\GlobalProjectController();
+    $controller->destroy((int) $id);
 });
 
 // --- OAuth Routes (centralizzati) ---
