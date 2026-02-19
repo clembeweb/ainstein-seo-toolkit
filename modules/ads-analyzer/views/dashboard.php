@@ -14,6 +14,55 @@ if ($showTour && isset($onboardingConfig[$onboardingModuleSlug])):
 endif;
 ?>
 
+<!-- Hero Value Block -->
+<div x-data="{ show: !localStorage.getItem('ainstein_hero_ads_analyzer') }" x-show="show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="mb-6">
+    <div class="relative overflow-hidden rounded-xl border border-rose-500/20 bg-gradient-to-br from-rose-950 via-slate-900 to-slate-900">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-rose-500/5 rounded-full -translate-y-1/2 translate-x-1/3"></div>
+        <div class="absolute bottom-0 left-0 w-48 h-48 bg-rose-500/5 rounded-full translate-y-1/2 -translate-x-1/4"></div>
+
+        <div class="relative p-6 sm:p-8">
+            <button @click="show = false; localStorage.setItem('ainstein_hero_ads_analyzer', '1')" class="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+
+            <div class="max-w-3xl">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-500/20 text-rose-300 mb-3">
+                    Come funziona
+                </span>
+                <h2 class="text-xl sm:text-2xl font-bold text-white mb-2">Le tue campagne Google Ads, analizzate e create dall'AI</h2>
+                <p class="text-slate-300 text-sm mb-6">Carica i dati delle tue campagne per scoprire dove stai sprecando budget. Oppure crea una campagna completa da zero, pronta da importare in Google Ads Editor.</p>
+
+                <!-- Dual mode -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white/5 rounded-lg p-4 border border-white/10">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="h-8 w-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                            </div>
+                            <h3 class="text-sm font-semibold text-white">Analisi</h3>
+                        </div>
+                        <p class="text-xs text-slate-400">Esamina ogni termine di ricerca, identifica pattern di spreco, trova le keyword negative nascoste e valuta la struttura delle campagne.</p>
+                    </div>
+                    <div class="bg-white/5 rounded-lg p-4 border border-white/10">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="h-8 w-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </div>
+                            <h3 class="text-sm font-semibold text-white">Creazione</h3>
+                        </div>
+                        <p class="text-xs text-slate-400">Analizza la landing page, studia il mercato, seleziona le keyword migliori e crea una campagna completa pronta per Google Ads Editor.</p>
+                    </div>
+                </div>
+
+                <a href="<?= url('/ads-analyzer/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-rose-500 text-white text-sm font-medium hover:bg-rose-600 transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Nuovo Progetto
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="space-y-8">
     <!-- Header -->
     <div class="sm:flex sm:items-center sm:justify-between" data-tour="aa-header">

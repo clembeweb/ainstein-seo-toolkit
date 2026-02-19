@@ -269,4 +269,55 @@ class Project
     {
         return Database::count($this->table, 'user_id = ?', [$userId]);
     }
+
+    /**
+     * KPI standardizzati per il progetto (usato da GlobalProject hub).
+     *
+     * @return array{metrics: array, lastActivity: ?string}
+     */
+    public function getProjectKpi(int $projectId): array
+    {
+        // Stats da il_project_stats
+        $stats = Database::fetch("
+            SELECT scraped_urls, total_links, avg_relevance_score
+            FROM il_project_stats
+            WHERE project_id = ?
+        ", [$projectId]);
+
+        // Ultima attivita
+        $lastAct = null;
+        try {
+            $row = Database::fetch(
+                "SELECT MAX(created_at) as last_at FROM il_urls WHERE project_id = ?",
+                [$projectId]
+            );
+            $lastAct = $row['last_at'] ?? null;
+        } catch (\Exception $e) {
+            // Graceful degradation
+        }
+
+        // Relevance: se 0-1 mostra come percentuale, altrimenti valore diretto
+        $relevance = $stats['avg_relevance_score'] ?? null;
+        $relevanceDisplay = 0;
+        if ($relevance !== null) {
+            $relevanceVal = (float) $relevance;
+            // Se il valore e tra 0 e 1, e una scala 0-1 → converti in percentuale
+            if ($relevanceVal > 0 && $relevanceVal <= 1) {
+                $relevanceDisplay = round($relevanceVal * 100, 1);
+            } else {
+                $relevanceDisplay = round($relevanceVal, 1);
+            }
+        }
+
+        $metrics = [
+            ['label' => 'Pagine analizzate', 'value' => (int) ($stats['scraped_urls'] ?? 0)],
+            ['label' => 'Link interni', 'value' => (int) ($stats['total_links'] ?? 0)],
+            ['label' => 'Relevance media', 'value' => $relevanceDisplay],
+        ];
+
+        return [
+            'metrics' => $metrics,
+            'lastActivity' => $lastAct,
+        ];
+    }
 }

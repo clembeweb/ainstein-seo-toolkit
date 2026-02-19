@@ -263,4 +263,73 @@ class Project
             'campaign_filter' => '',
         ], $config);
     }
+
+    /**
+     * KPI standardizzati per il progetto (usato da GlobalProject hub).
+     *
+     * @return array{metrics: array, lastActivity: ?string}
+     */
+    public static function getProjectKpi(int $projectId): array
+    {
+        // Campagne e valutazioni
+        $campaignCount = 0;
+        try {
+            $cRow = Database::fetch(
+                "SELECT COUNT(DISTINCT id) as cnt FROM ga_campaigns WHERE project_id = ?",
+                [$projectId]
+            );
+            $campaignCount = (int) ($cRow['cnt'] ?? 0);
+        } catch (\Exception $e) {
+            // Graceful degradation
+        }
+
+        $evalStats = Database::fetch("
+            SELECT
+                COUNT(*) as eval_count,
+                MAX(created_at) as last_activity
+            FROM ga_campaign_evaluations
+            WHERE project_id = ? AND status = 'completed'
+        ", [$projectId]);
+
+        // Ultimo score con delta rispetto al precedente
+        $lastScoreMetric = ['label' => 'Ultimo score', 'value' => 0];
+        try {
+            $recentEvals = Database::fetchAll("
+                SELECT ai_response
+                FROM ga_campaign_evaluations
+                WHERE project_id = ? AND status = 'completed'
+                ORDER BY created_at DESC
+                LIMIT 2
+            ", [$projectId]);
+
+            if (!empty($recentEvals)) {
+                $latestAi = json_decode($recentEvals[0]['ai_response'] ?? '{}', true);
+                $latestScore = (float) ($latestAi['overall_score'] ?? 0);
+                $lastScoreMetric['value'] = $latestScore;
+
+                if (count($recentEvals) >= 2) {
+                    $prevAi = json_decode($recentEvals[1]['ai_response'] ?? '{}', true);
+                    $prevScore = (float) ($prevAi['overall_score'] ?? 0);
+                    if ($prevScore > 0) {
+                        $delta = round($latestScore - $prevScore, 1);
+                        $lastScoreMetric['delta'] = $delta;
+                        $lastScoreMetric['deltaGood'] = $delta >= 0;
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Graceful degradation
+        }
+
+        $metrics = [
+            ['label' => 'Campagne', 'value' => $campaignCount],
+            ['label' => 'Valutazioni', 'value' => (int) ($evalStats['eval_count'] ?? 0)],
+            $lastScoreMetric,
+        ];
+
+        return [
+            'metrics' => $metrics,
+            'lastActivity' => $evalStats['last_activity'] ?? null,
+        ];
+    }
 }

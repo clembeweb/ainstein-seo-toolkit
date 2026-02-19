@@ -551,6 +551,13 @@ Router::get('/dashboard', function () {
         $projectsCount += ($wData['total'] ?? 0);
     }
 
+    // --- Global Projects ---
+    $globalProjects = [];
+    try {
+        $gpModel = new \Core\Models\GlobalProject();
+        $globalProjects = $gpModel->allWithModuleStats($uid);
+    } catch (\Exception $e) {}
+
     return View::render('dashboard', [
         'title' => 'Dashboard',
         'user' => $user,
@@ -560,6 +567,7 @@ Router::get('/dashboard', function () {
         'projectsCount' => $projectsCount,
         'pipelineData' => $pipelineData,
         'widgetData' => $widgetData,
+        'globalProjects' => $globalProjects,
     ]);
 });
 
@@ -657,12 +665,12 @@ Router::get('/onboarding/status', function () {
 // --- Global Projects Routes ---
 Router::get('/projects', function () {
     $controller = new Controllers\GlobalProjectController();
-    $controller->index();
+    return $controller->index();
 });
 
 Router::get('/projects/create', function () {
     $controller = new Controllers\GlobalProjectController();
-    $controller->create();
+    return $controller->create();
 });
 
 Router::post('/projects', function () {
@@ -672,12 +680,12 @@ Router::post('/projects', function () {
 
 Router::get('/projects/{id}', function ($id) {
     $controller = new Controllers\GlobalProjectController();
-    $controller->dashboard((int) $id);
+    return $controller->dashboard((int) $id);
 });
 
 Router::get('/projects/{id}/settings', function ($id) {
     $controller = new Controllers\GlobalProjectController();
-    $controller->settings((int) $id);
+    return $controller->settings((int) $id);
 });
 
 Router::post('/projects/{id}/settings', function ($id) {

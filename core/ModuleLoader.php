@@ -97,7 +97,7 @@ class ModuleLoader
     {
         $result = Database::update(
             'modules',
-            ['is_active' => true],
+            ['is_active' => 1],
             'slug = ?',
             [$slug]
         ) > 0;
@@ -112,7 +112,7 @@ class ModuleLoader
     {
         $result = Database::update(
             'modules',
-            ['is_active' => false],
+            ['is_active' => 0],
             'slug = ?',
             [$slug]
         ) > 0;

@@ -383,4 +383,43 @@ class Project
     {
         return $this->find($projectId, $userId) !== null;
     }
+
+    /**
+     * KPI standardizzati per il progetto (usato da GlobalProject hub).
+     *
+     * @return array{metrics: array, lastActivity: ?string}
+     */
+    public function getProjectKpi(int $projectId): array
+    {
+        $stats = Database::fetch("
+            SELECT
+                COUNT(*) as articles_total,
+                COALESCE(SUM(word_count), 0) as total_words,
+                MAX(created_at) as last_activity
+            FROM aic_articles
+            WHERE project_id = ?
+        ", [$projectId]);
+
+        $queuePending = 0;
+        try {
+            $qRow = Database::fetch(
+                "SELECT COUNT(*) as cnt FROM aic_queue WHERE project_id = ? AND status = 'pending'",
+                [$projectId]
+            );
+            $queuePending = (int) ($qRow['cnt'] ?? 0);
+        } catch (\Exception $e) {
+            // Tabella aic_queue potrebbe non esistere
+        }
+
+        $metrics = [
+            ['label' => 'Articoli totali', 'value' => (int) ($stats['articles_total'] ?? 0)],
+            ['label' => 'In coda', 'value' => $queuePending],
+            ['label' => 'Parole generate', 'value' => (int) ($stats['total_words'] ?? 0)],
+        ];
+
+        return [
+            'metrics' => $metrics,
+            'lastActivity' => $stats['last_activity'] ?? null,
+        ];
+    }
 }

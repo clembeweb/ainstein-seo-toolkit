@@ -152,4 +152,33 @@ class Project
     {
         return Database::count($this->table, 'user_id = ?', [$userId]);
     }
+
+    /**
+     * KPI standardizzati per il progetto (usato da GlobalProject hub).
+     *
+     * @return array{metrics: array, lastActivity: ?string}
+     */
+    public function getProjectKpi(int $projectId): array
+    {
+        $stats = Database::fetch("
+            SELECT
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'generated' THEN 1 ELSE 0 END) as generated,
+                SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END) as published,
+                MAX(updated_at) as last_activity
+            FROM cc_urls
+            WHERE project_id = ?
+        ", [$projectId]);
+
+        $metrics = [
+            ['label' => 'Contenuti totali', 'value' => (int) ($stats['total'] ?? 0)],
+            ['label' => 'Generati', 'value' => (int) ($stats['generated'] ?? 0)],
+            ['label' => 'Pubblicati', 'value' => (int) ($stats['published'] ?? 0)],
+        ];
+
+        return [
+            'metrics' => $metrics,
+            'lastActivity' => $stats['last_activity'] ?? null,
+        ];
+    }
 }

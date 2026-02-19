@@ -150,4 +150,45 @@ class Project
         Database::delete('kr_researches', 'project_id = ?', [$id]);
         Database::delete($this->table, 'id = ?', [$id]);
     }
+
+    /**
+     * KPI standardizzati per il progetto (usato da GlobalProject hub).
+     *
+     * @return array{metrics: array, lastActivity: ?string}
+     */
+    public function getProjectKpi(int $projectId): array
+    {
+        $researchStats = Database::fetch("
+            SELECT
+                COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_count,
+                COALESCE(SUM(CASE WHEN status = 'completed' THEN filtered_keywords_count ELSE 0 END), 0) as total_keywords,
+                MAX(created_at) as last_activity
+            FROM kr_researches
+            WHERE project_id = ?
+        ", [$projectId]);
+
+        $clusterCount = 0;
+        try {
+            $cRow = Database::fetch("
+                SELECT COUNT(*) as cnt
+                FROM kr_clusters c
+                INNER JOIN kr_researches r ON c.research_id = r.id
+                WHERE r.project_id = ?
+            ", [$projectId]);
+            $clusterCount = (int) ($cRow['cnt'] ?? 0);
+        } catch (\Exception $e) {
+            // Graceful degradation
+        }
+
+        $metrics = [
+            ['label' => 'Ricerche completate', 'value' => (int) ($researchStats['completed_count'] ?? 0)],
+            ['label' => 'Keyword totali', 'value' => (int) ($researchStats['total_keywords'] ?? 0)],
+            ['label' => 'Cluster', 'value' => $clusterCount],
+        ];
+
+        return [
+            'metrics' => $metrics,
+            'lastActivity' => $researchStats['last_activity'] ?? null,
+        ];
+    }
 }

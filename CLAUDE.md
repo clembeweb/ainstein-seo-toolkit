@@ -42,6 +42,7 @@
 18. Aggiornare docs dopo sviluppo → Documentazione utente + Data Model (vedi sezione dedicata)
 19. Link project-scoped nelle view → MAI usare percorsi legacy dentro contesto progetto
 20. Tabelle standard CSS uniforme  → rounded-xl, px-4 py-3, bg-slate-700/50, componenti shared
+21. return View::render() SEMPRE   → Controller E route handler devono ritornare il risultato
 ```
 
 ---
@@ -332,20 +333,39 @@ use Core\Middleware;
 
 class NomeController
 {
-    public function index()
+    // IMPORTANTE: return type DEVE essere string (non void!)
+    public function index(): string
     {
         Middleware::auth();
         $user = Auth::user();
-        
+
         // logica...
-        
-        View::render('nome-modulo::vista', [
+
+        // IMPORTANTE: SEMPRE return View::render() (non solo View::render()!)
+        return View::render('nome-modulo::vista', [
             'data' => $data,
             'modules' => \Core\ModuleLoader::getActiveModules()
         ]);
     }
 }
 ```
+
+**CRITICO - Pattern return nelle route:**
+```php
+// In public/index.php - le route GET che renderizzano view DEVONO usare return
+Router::get('/percorso', function () {
+    $controller = new Controllers\NomeController();
+    return $controller->index();  // ← RETURN obbligatorio!
+});
+
+// Le route POST che fanno solo redirect NON servono return
+Router::post('/percorso', function () {
+    $controller = new Controllers\NomeController();
+    $controller->store();  // ← OK senza return (fa redirect)
+});
+```
+
+**Perche:** Il Router fa `echo $handler()`. Se la funzione non ritorna la stringa HTML, la pagina sara vuota (blank page). `View::render()` ritorna una stringa, non la stampa direttamente.
 
 ### Chiamata AI
 ```php
@@ -865,6 +885,7 @@ $baseUrl = url('/modulo/projects/' . $project['id'] . '/sezione');
 [ ] Tabelle usano componenti shared (table-pagination, table-helpers, table-empty-state)
 [ ] Container wrapper: rounded-xl (NON rounded-lg/rounded-2xl), w-full (NON min-w-full)
 [ ] Thead dark mode: bg-slate-700/50 (NON bg-slate-800/50)
+[ ] Controller: `return View::render(...)` (NON solo `View::render(...)`) + route handler: `return $controller->method()`
 ```
 
 ---
@@ -913,6 +934,7 @@ $baseUrl = url('/modulo/projects/' . $project['id'] . '/sezione');
 | Paginazione non uniforme | Componente inline | Usare `View::partial('components/table-pagination', ...)` |
 | Sort headers non funzionano | Manca include table-helpers | `include __DIR__ . '/../../../../shared/views/components/table-helpers.php'` |
 | Variabili paginazione in conflitto | `include` condivide scope | Usare `View::partial()` (scope isolato) |
+| Pagina vuota (blank page) | Manca `return` in controller o route handler | Controller: `return View::render(...)`, Route: `return $controller->method()` (Golden Rule #21) |
 
 ---
 

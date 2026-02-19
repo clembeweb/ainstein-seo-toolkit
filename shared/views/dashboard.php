@@ -309,6 +309,90 @@ $_moduleSlugs = array_column($modules ?? [], 'slug');
     </div>
     <?php endif; ?>
 
+    <!-- === SEZIONE: I tuoi progetti === -->
+    <?php $_gp = $globalProjects ?? []; ?>
+    <div>
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                </svg>
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-white">I tuoi progetti</h2>
+            </div>
+            <?php if (!empty($_gp)): ?>
+            <a href="<?= url('/projects') ?>" class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:underline">Vedi tutti</a>
+            <?php endif; ?>
+        </div>
+
+        <?php if (!empty($_gp)): ?>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <?php foreach (array_slice($_gp, 0, 6) as $gp):
+                $gpColor = $gp['color'] ?? '#3B82F6';
+                $gpModules = (int)($gp['active_modules_count'] ?? 0);
+                $gpLastAct = $gp['last_module_activity'] ?? null;
+                if ($gpLastAct) {
+                    $diff = time() - strtotime($gpLastAct);
+                    if ($diff < 3600) $gpTimeAgo = max(1, intdiv($diff, 60)) . ' min fa';
+                    elseif ($diff < 86400) $gpTimeAgo = intdiv($diff, 3600) . ' ore fa';
+                    elseif ($diff < 604800) $gpTimeAgo = intdiv($diff, 86400) . ' giorni fa';
+                    else $gpTimeAgo = date('d/m/Y', strtotime($gpLastAct));
+                } else {
+                    $gpTimeAgo = null;
+                }
+            ?>
+            <a href="<?= url('/projects/' . $gp['id']) ?>"
+               class="group flex items-center gap-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 shadow-sm hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all duration-200">
+                <!-- Color dot -->
+                <div class="h-9 w-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: <?= htmlspecialchars($gpColor) ?>20">
+                    <div class="w-3 h-3 rounded-full" style="background-color: <?= htmlspecialchars($gpColor) ?>"></div>
+                </div>
+
+                <!-- Info -->
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate"><?= htmlspecialchars($gp['name']) ?></p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                        <?= $gpModules ?> <?= $gpModules == 1 ? 'modulo' : 'moduli' ?>
+                        <?php if ($gpTimeAgo): ?>
+                        <span class="mx-1 text-slate-300 dark:text-slate-600">&middot;</span>
+                        <?= $gpTimeAgo ?>
+                        <?php endif; ?>
+                    </p>
+                </div>
+
+                <!-- Arrow -->
+                <svg class="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-primary-500 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+            <?php endforeach; ?>
+
+            <?php if (count($_gp) > 6): ?>
+            <a href="<?= url('/projects') ?>"
+               class="flex items-center justify-center gap-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 px-4 py-3 text-sm text-slate-500 dark:text-slate-400 hover:border-primary-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                </svg>
+                Vedi tutti i <?= count($_gp) ?> progetti
+            </a>
+            <?php endif; ?>
+        </div>
+        <?php else: ?>
+        <!-- CTA per creare il primo progetto -->
+        <a href="<?= url('/projects/create') ?>"
+           class="group flex items-center gap-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 px-5 py-4 hover:border-primary-400 dark:hover:border-primary-500 hover:bg-white dark:hover:bg-slate-800 transition-all duration-200">
+            <div class="h-10 w-10 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+            </div>
+            <div>
+                <p class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Crea il tuo primo progetto</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Raggruppa i tuoi strumenti sotto un unico progetto per cliente o sito web.</p>
+            </div>
+        </a>
+        <?php endif; ?>
+    </div>
+
     <!-- === SEZIONE: I tuoi strumenti === -->
     <?php if (!empty($modules)): ?>
     <div>

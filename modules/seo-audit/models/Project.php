@@ -335,4 +335,44 @@ class Project
 
         return Database::fetchAll($sql, [$projectId, $limit]);
     }
+
+    /**
+     * KPI standardizzati per il progetto (usato da GlobalProject hub).
+     *
+     * @return array{metrics: array, lastActivity: ?string}
+     */
+    public function getProjectKpi(int $projectId): array
+    {
+        $project = Database::fetch(
+            "SELECT health_score, pages_crawled, completed_at FROM {$this->table} WHERE id = ?",
+            [$projectId]
+        );
+
+        $criticalCount = 0;
+        try {
+            $row = Database::fetch(
+                "SELECT COUNT(*) as cnt FROM sa_issues WHERE project_id = ? AND severity = 'critical'",
+                [$projectId]
+            );
+            $criticalCount = (int) ($row['cnt'] ?? 0);
+        } catch (\Exception $e) {
+            // Graceful degradation
+        }
+
+        $healthScore = (int) ($project['health_score'] ?? 0);
+
+        $metrics = [
+            [
+                'label' => 'Health Score',
+                'value' => $healthScore,
+            ],
+            ['label' => 'Issues critiche', 'value' => $criticalCount],
+            ['label' => 'Pagine analizzate', 'value' => (int) ($project['pages_crawled'] ?? 0)],
+        ];
+
+        return [
+            'metrics' => $metrics,
+            'lastActivity' => $project['completed_at'] ?? null,
+        ];
+    }
 }

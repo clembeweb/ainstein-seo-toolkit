@@ -367,4 +367,60 @@ class Project
 
         return strtolower($domain);
     }
+
+    /**
+     * KPI standardizzati per il progetto (usato da GlobalProject hub).
+     *
+     * @return array{metrics: array, lastActivity: ?string}
+     */
+    public function getProjectKpi(int $projectId): array
+    {
+        // Keyword monitorate e top 10
+        $kwStats = Database::fetch("
+            SELECT
+                COUNT(*) as tracked,
+                SUM(CASE WHEN last_position <= 10 AND last_position IS NOT NULL THEN 1 ELSE 0 END) as top10
+            FROM st_keywords
+            WHERE project_id = ? AND is_tracked = 1
+        ", [$projectId]);
+
+        // Posizione media (ultimo check per ogni keyword)
+        $avgPos = Database::fetch("
+            SELECT AVG(latest.serp_position) as avg_position
+            FROM (
+                SELECT rc1.keyword, rc1.serp_position
+                FROM st_rank_checks rc1
+                WHERE rc1.project_id = ?
+                  AND rc1.serp_position IS NOT NULL
+                  AND rc1.checked_at = (
+                      SELECT MAX(rc2.checked_at)
+                      FROM st_rank_checks rc2
+                      WHERE rc2.project_id = rc1.project_id
+                        AND rc2.keyword = rc1.keyword
+                        AND rc2.serp_position IS NOT NULL
+                  )
+            ) latest
+        ", [$projectId]);
+
+        // Ultima attivita
+        $lastCheck = Database::fetch(
+            "SELECT MAX(checked_at) as last_at FROM st_rank_checks WHERE project_id = ?",
+            [$projectId]
+        );
+
+        $avgPosition = $avgPos && $avgPos['avg_position'] !== null
+            ? round((float) $avgPos['avg_position'], 1)
+            : 0;
+
+        $metrics = [
+            ['label' => 'Keyword monitorate', 'value' => (int) ($kwStats['tracked'] ?? 0)],
+            ['label' => 'Posizione media', 'value' => $avgPosition],
+            ['label' => 'In Top 10', 'value' => (int) ($kwStats['top10'] ?? 0)],
+        ];
+
+        return [
+            'metrics' => $metrics,
+            'lastActivity' => $lastCheck['last_at'] ?? null,
+        ];
+    }
 }

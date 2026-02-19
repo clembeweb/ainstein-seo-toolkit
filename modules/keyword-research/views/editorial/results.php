@@ -115,6 +115,29 @@ $diffLabels = ['low' => 'Facile', 'medium' => 'Media', 'high' => 'Difficile'];
     </div>
     <?php endif; ?>
 
+    <!-- Cross-module CTA: Send to AI Content banner -->
+    <?php if ($sentCount === 0 && !empty($aicProjects) && $totalArticles > 0): ?>
+    <div class="relative overflow-hidden rounded-xl border border-amber-500/20 bg-gradient-to-r from-amber-950 via-slate-900 to-slate-900 p-5">
+        <div class="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 rounded-full -translate-y-1/2 translate-x-1/3"></div>
+        <div class="relative flex items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="h-12 w-12 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-base font-semibold text-white">Piano pronto! Trasformalo in articoli</h3>
+                    <p class="text-sm text-slate-300 mt-0.5">Seleziona gli articoli e inviali ad AI Content Generator. Ainstein scrivera articoli completi per ogni keyword.</p>
+                </div>
+            </div>
+            <div class="flex-shrink-0">
+                <span class="inline-flex items-center px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 text-xs font-medium">
+                    Seleziona gli articoli nella tabella sotto
+                </span>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <?php if (!empty($aicProjects)): ?>
     <!-- Send to AI Content Bar -->
     <div x-show="selectedItems.length > 0"
