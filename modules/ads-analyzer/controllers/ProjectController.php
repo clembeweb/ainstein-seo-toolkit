@@ -71,7 +71,7 @@ class ProjectController
             if (!empty($errors)) {
                 $_SESSION['flash_error'] = implode(', ', $errors);
                 $_SESSION['old_input'] = $data;
-                header('Location: ' . url('/ads-analyzer/projects/create?type=campaign-creator'));
+                header('Location: ' . url('/projects/create'));
                 exit;
             }
 
@@ -95,7 +95,7 @@ class ProjectController
         if (!empty($errors)) {
             $_SESSION['flash_error'] = implode(', ', $errors);
             $_SESSION['old_input'] = $data;
-            header('Location: ' . url('/ads-analyzer/projects/create'));
+            header('Location: ' . url('/projects/create'));
             exit;
         }
 

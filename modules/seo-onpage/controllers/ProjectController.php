@@ -78,7 +78,7 @@ class ProjectController
 
         if (!empty($errors)) {
             $_SESSION['_flash']['error'] = implode('. ', $errors);
-            Router::redirect('/seo-onpage/projects/create');
+            Router::redirect('/projects/create');
             return;
         }
 
@@ -98,7 +98,7 @@ class ProjectController
 
         } catch (\Exception $e) {
             $_SESSION['_flash']['error'] = 'Errore nella creazione: ' . $e->getMessage();
-            Router::redirect('/seo-onpage/projects/create');
+            Router::redirect('/projects/create');
         }
     }
 

@@ -76,7 +76,7 @@ class ProjectController
 
         if (empty($name)) {
             $_SESSION['_flash']['error'] = 'Il nome del progetto è obbligatorio.';
-            Router::redirect('/keyword-research/projects/create?type=' . $type);
+            Router::redirect('/projects/create');
             return;
         }
 

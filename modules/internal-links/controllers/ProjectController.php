@@ -89,7 +89,7 @@ class ProjectController
 
         if (!empty($errors)) {
             $_SESSION['flash_error'] = implode('. ', $errors);
-            header('Location: ' . url('/internal-links/projects/create'));
+            header('Location: ' . url('/projects/create'));
             exit;
         }
 
@@ -109,7 +109,7 @@ class ProjectController
 
         } catch (\Exception $e) {
             $_SESSION['flash_error'] = 'Errore nella creazione: ' . $e->getMessage();
-            header('Location: ' . url('/internal-links/projects/create'));
+            header('Location: ' . url('/projects/create'));
             exit;
         }
     }

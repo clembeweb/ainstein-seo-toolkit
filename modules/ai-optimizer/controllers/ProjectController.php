@@ -73,7 +73,7 @@ class ProjectController
 
         if (empty($name)) {
             $_SESSION['_flash']['error'] = 'Il nome del progetto è obbligatorio';
-            header('Location: ' . url('/ai-optimizer/projects/create'));
+            header('Location: ' . url('/projects/create'));
             exit;
         }
 
