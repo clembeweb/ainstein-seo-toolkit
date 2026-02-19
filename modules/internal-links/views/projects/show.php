@@ -21,6 +21,8 @@
         </div>
     </div>
 
+    <?= \Core\View::partial('components/orphaned-project-notice', ['project' => $project]) ?>
+
     <!-- Quick Actions -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <a href="<?= url('/internal-links/project/' . $project['id'] . '/urls') ?>" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 hover:shadow-md transition-shadow text-center">

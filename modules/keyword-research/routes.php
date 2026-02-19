@@ -41,9 +41,7 @@ Router::get('/keyword-research/projects', function () {
 });
 
 Router::get('/keyword-research/projects/create', function () {
-    Middleware::auth();
-    $controller = new ProjectController();
-    return $controller->create();
+    \Core\Router::redirect('/projects/create');
 });
 
 Router::post('/keyword-research/projects', function () {

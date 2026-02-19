@@ -57,9 +57,7 @@ Router::get('/ads-analyzer/projects', function () {
 
 // Nuovo progetto (form)
 Router::get('/ads-analyzer/projects/create', function () {
-    Middleware::auth();
-    $controller = new ProjectController();
-    return $controller->create();
+    \Core\Router::redirect('/projects/create');
 });
 
 // Salva nuovo progetto

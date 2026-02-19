@@ -38,9 +38,7 @@ Router::get('/seo-audit', function () {
 
 // Nuovo progetto - form
 Router::get('/seo-audit/create', function () {
-    Middleware::auth();
-    $controller = new ProjectController();
-    return $controller->create();
+    \Core\Router::redirect('/projects/create');
 });
 
 // Nuovo progetto - store

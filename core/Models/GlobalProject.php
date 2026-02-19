@@ -71,6 +71,59 @@ class GlobalProject
     ];
 
     /**
+     * Sotto-tipi per moduli che supportano varianti.
+     * Solo i moduli qui elencati mostreranno un modal di selezione tipo durante l'attivazione.
+     */
+    private const MODULE_TYPES = [
+        'ai-content' => [
+            'manual' => [
+                'label' => 'Articoli Manuali',
+                'description' => 'Aggiungi keyword una alla volta e controlla ogni articolo',
+                'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+            ],
+            'auto' => [
+                'label' => 'Articoli Automatici',
+                'description' => 'Genera articoli in batch da una lista di keyword',
+                'icon' => 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15',
+            ],
+            'meta-tag' => [
+                'label' => 'SEO Meta Tags',
+                'description' => 'Genera title e description ottimizzati per le tue pagine',
+                'icon' => 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z',
+            ],
+        ],
+        'keyword-research' => [
+            'research' => [
+                'label' => 'Research Guidata',
+                'description' => 'Clustering AI con volumi di ricerca e intent',
+                'icon' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z',
+            ],
+            'architecture' => [
+                'label' => 'Architettura Sito',
+                'description' => 'Struttura URL e gerarchia pagine ottimizzata',
+                'icon' => 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z',
+            ],
+            'editorial' => [
+                'label' => 'Piano Editoriale',
+                'description' => 'Piano contenuti mensile basato su keyword strategiche',
+                'icon' => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+            ],
+        ],
+        'ads-analyzer' => [
+            'campaign' => [
+                'label' => 'Analisi Campagne',
+                'description' => 'Analizza keyword negative e valuta performance campagne',
+                'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+            ],
+            'campaign-creator' => [
+                'label' => 'Crea Campagna AI',
+                'description' => 'Genera una campagna Google Ads completa con AI',
+                'icon' => 'M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z',
+            ],
+        ],
+    ];
+
+    /**
      * Ritorna la configurazione di tutti i moduli.
      */
     public function getModuleConfig(): array
@@ -84,6 +137,17 @@ class GlobalProject
     public function getModuleConfigBySlug(string $slug): ?array
     {
         return self::MODULE_CONFIG[$slug] ?? null;
+    }
+
+    /**
+     * Ritorna i tipi disponibili per un modulo, o tutti i moduli tipizzati.
+     */
+    public function getModuleTypes(?string $slug = null): array
+    {
+        if ($slug !== null) {
+            return self::MODULE_TYPES[$slug] ?? [];
+        }
+        return self::MODULE_TYPES;
     }
 
     // ─────────────────────────────────────────────

@@ -39,6 +39,8 @@ sort($uniqueIntents);
         </div>
     </div>
 
+    <?= \Core\View::partial('components/orphaned-project-notice', ['project' => $project]) ?>
+
     <!-- Stats Grid -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 text-center">

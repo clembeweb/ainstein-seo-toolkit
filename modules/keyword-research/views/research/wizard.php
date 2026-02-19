@@ -12,6 +12,8 @@
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Keyword research con clustering AI automatico</p>
     </div>
 
+    <?= \Core\View::partial('components/orphaned-project-notice', ['project' => $project]) ?>
+
     <!-- Progress Steps -->
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <div class="flex items-center justify-between">

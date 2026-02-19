@@ -27,10 +27,9 @@ Router::get('/seo-onpage', function () {
     return (new ProjectController())->index();
 });
 
-// Crea progetto
+// Crea progetto → redirect a Global Projects
 Router::get('/seo-onpage/projects/create', function () {
-    Middleware::auth();
-    return (new ProjectController())->create();
+    \Core\Router::redirect('/projects/create');
 });
 
 Router::post('/seo-onpage/projects', function () {

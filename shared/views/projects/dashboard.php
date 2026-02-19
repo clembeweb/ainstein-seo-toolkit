@@ -159,12 +159,17 @@ $systemActiveSlugs = array_column($availableModules, 'slug');
     ?>
 
     <?php if (!empty($nonActivated)): ?>
-    <div>
+    <?php
+    // Tipi modulo per modal selezione
+    $_moduleTypes = $moduleTypes ?? [];
+    ?>
+    <div x-data="activationModal()">
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Moduli disponibili</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <?php foreach ($nonActivated as $slug => $config):
                 $color = $config['color'] ?? 'blue';
                 $colors = $colorMap[$color] ?? $colorMap['blue'];
+                $hasTypes = isset($_moduleTypes[$slug]);
             ?>
             <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 p-4 hover:border-slate-400 dark:hover:border-slate-500 transition-colors">
                 <div class="flex items-center gap-3 mb-3">
@@ -175,6 +180,17 @@ $systemActiveSlugs = array_column($availableModules, 'slug');
                     </div>
                     <span class="font-medium text-slate-700 dark:text-slate-300 text-sm"><?= htmlspecialchars($config['label'] ?? $slug) ?></span>
                 </div>
+                <?php if ($hasTypes): ?>
+                <!-- Modulo con tipi: apre modal -->
+                <button type="button" @click="openTypeModal('<?= $slug ?>')"
+                        class="inline-flex items-center text-sm font-medium <?= $colors['text'] ?> hover:underline">
+                    <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Attiva modulo
+                </button>
+                <?php else: ?>
+                <!-- Modulo senza tipi: attivazione diretta -->
                 <form method="POST" action="<?= url('/projects/' . $project['id'] . '/activate-module') ?>">
                     <?= csrf_field() ?>
                     <input type="hidden" name="module" value="<?= htmlspecialchars($slug) ?>">
@@ -185,10 +201,90 @@ $systemActiveSlugs = array_column($availableModules, 'slug');
                         Attiva modulo
                     </button>
                 </form>
+                <?php endif; ?>
             </div>
             <?php endforeach; ?>
         </div>
+
+        <!-- Modal selezione tipo -->
+        <template x-teleport="body">
+            <div x-show="open" x-cloak class="fixed inset-0 z-50" @keydown.escape.window="open = false">
+                <!-- Backdrop -->
+                <div x-show="open" @click="open = false"
+                     class="fixed inset-0 bg-black/50"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0"></div>
+                <!-- Panel -->
+                <div class="fixed inset-0 flex items-center justify-center p-4">
+                    <div x-show="open"
+                         @click.away="open = false"
+                         class="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-lg w-full"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95">
+                        <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white" x-text="'Attiva ' + moduleLabel"></h3>
+                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Seleziona il tipo di progetto da creare</p>
+                        </div>
+                        <div class="p-5 space-y-3">
+                            <template x-for="(typeInfo, typeKey) in types" :key="typeKey">
+                                <form method="POST" action="<?= url('/projects/' . $project['id'] . '/activate-module') ?>">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="module" :value="moduleSlug">
+                                    <input type="hidden" name="type" :value="typeKey">
+                                    <button type="submit"
+                                            class="w-full text-left p-4 rounded-lg border-2 border-slate-200 dark:border-slate-600 hover:border-primary-500 dark:hover:border-primary-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all group">
+                                        <div class="flex items-start gap-3">
+                                            <div class="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-100 dark:group-hover:bg-primary-900/30 transition-colors">
+                                                <svg class="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="typeInfo.icon"/>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p class="font-medium text-slate-900 dark:text-white" x-text="typeInfo.label"></p>
+                                                <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5" x-text="typeInfo.description"></p>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </form>
+                            </template>
+                        </div>
+                        <div class="px-5 py-3 border-t border-slate-200 dark:border-slate-700">
+                            <button @click="open = false" class="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
+                                Annulla
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
     </div>
+
+    <script>
+    function activationModal() {
+        const allTypes = <?= json_encode($_moduleTypes) ?>;
+        const labels = <?= json_encode(array_combine(array_keys($moduleConfig), array_column($moduleConfig, 'label'))) ?>;
+        return {
+            open: false,
+            moduleSlug: '',
+            moduleLabel: '',
+            types: {},
+            openTypeModal(slug) {
+                this.moduleSlug = slug;
+                this.moduleLabel = labels[slug] || slug;
+                this.types = allTypes[slug] || {};
+                this.open = true;
+            }
+        };
+    }
+    </script>
     <?php endif; ?>
 
     <!-- Project Description (if set) -->

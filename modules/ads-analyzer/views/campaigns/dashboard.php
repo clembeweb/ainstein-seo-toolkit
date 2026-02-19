@@ -1,7 +1,11 @@
 <?php
 $currentPage = 'dashboard';
 include __DIR__ . '/../partials/project-nav.php';
+?>
 
+<?= \Core\View::partial('components/orphaned-project-notice', ['project' => $project]) ?>
+
+<?php
 // Helper: delta color/arrow
 function deltaClass(float $percent, bool $invertColor = false): string {
     if (abs($percent) < 0.5) return 'text-slate-400 dark:text-slate-500';

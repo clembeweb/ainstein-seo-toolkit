@@ -3,6 +3,8 @@
     <!-- Header + Navigation -->
     <?php include __DIR__ . '/../partials/project-nav.php'; ?>
 
+    <?= \Core\View::partial('components/orphaned-project-notice', ['project' => $project]) ?>
+
     <!-- ROW 1: KPI Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Keywords Tracciate -->

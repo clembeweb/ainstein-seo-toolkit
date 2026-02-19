@@ -32,9 +32,7 @@ Router::get('/content-creator', function () {
 });
 
 Router::get('/content-creator/projects/create', function () {
-    Middleware::auth();
-    $controller = new ProjectController();
-    return $controller->create();
+    \Core\Router::redirect('/projects/create');
 });
 
 Router::post('/content-creator/projects', function () {

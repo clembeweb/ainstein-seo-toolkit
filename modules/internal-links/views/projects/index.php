@@ -22,7 +22,7 @@ endif;
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Gestisci i tuoi progetti di analisi link interni</p>
         </div>
         <div class="mt-4 sm:mt-0">
-            <a href="<?= url('/internal-links/projects/create') ?>" data-tour="il-newproject" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
+            <a href="<?= url('/projects/create') ?>" data-tour="il-newproject" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -44,7 +44,7 @@ endif;
             Crea il tuo primo progetto per iniziare ad analizzare la struttura dei link interni del tuo sito.
         </p>
         <div class="mt-6">
-            <a href="<?= url('/internal-links/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
+            <a href="<?= url('/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>

@@ -138,6 +138,8 @@ class GlobalProjectController
         $availableModules = ModuleLoader::getActiveModules();
         $moduleConfig = $this->project->getModuleConfig();
 
+        $moduleTypes = $this->project->getModuleTypes();
+
         return View::render('projects/dashboard', [
             'title' => $project['name'],
             'user' => $user,
@@ -147,6 +149,7 @@ class GlobalProjectController
             'moduleStats' => $moduleStats,
             'availableModules' => $availableModules,
             'moduleConfig' => $moduleConfig,
+            'moduleTypes' => $moduleTypes,
         ]);
     }
 
@@ -278,8 +281,15 @@ class GlobalProjectController
             }
         }
 
+        // Prepara dati extra (tipo per moduli tipizzati)
+        $extraData = [];
+        $type = trim($_POST['type'] ?? '');
+        if (!empty($type)) {
+            $extraData['type'] = $type;
+        }
+
         // Attiva il modulo
-        $moduleProjectId = $this->project->activateModule($id, $moduleSlug, $user['id']);
+        $moduleProjectId = $this->project->activateModule($id, $moduleSlug, $user['id'], $extraData);
 
         if ($moduleProjectId) {
             $_SESSION['_flash']['success'] = $moduleConfig[$moduleSlug]['label'] . ' attivato con successo!';

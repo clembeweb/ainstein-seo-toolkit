@@ -58,6 +58,8 @@ $statusTabs = [
 
 <?php include __DIR__ . '/../partials/project-nav.php'; ?>
 
+<?= \Core\View::partial('components/orphaned-project-notice', ['project' => $project]) ?>
+
 <div class="space-y-6" x-data="dashboardManager()">
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">

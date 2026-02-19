@@ -8,7 +8,7 @@
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Gestisci le tue analisi e campagne Google Ads</p>
         </div>
         <div class="mt-4 sm:mt-0">
-            <a href="<?= url('/ads-analyzer/projects/create' . ($currentType ? '?type=' . $currentType : '')) ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors">
+            <a href="<?= url('/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -53,7 +53,7 @@
         <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
             Crea il tuo primo progetto: analizza campagne esistenti o genera una campagna completa con AI.
         </p>
-        <a href="<?= url('/ads-analyzer/projects/create' . ($currentType ? '?type=' . $currentType : '')) ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors">
+        <a href="<?= url('/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors">
             <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>

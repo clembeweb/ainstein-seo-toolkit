@@ -41,9 +41,7 @@ Router::get('/internal-links', function () {
 
 // Nuovo progetto - form
 Router::get('/internal-links/projects/create', function () {
-    Middleware::auth();
-    $controller = new ProjectController();
-    return $controller->create();
+    \Core\Router::redirect('/projects/create');
 });
 
 // Nuovo progetto - store

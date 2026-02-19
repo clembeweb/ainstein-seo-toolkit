@@ -50,9 +50,7 @@ Router::get('/ai-content/projects', function () {
 
 // Form nuovo progetto
 Router::get('/ai-content/projects/create', function () {
-    Middleware::auth();
-    $controller = new ProjectController();
-    return $controller->create();
+    \Core\Router::redirect('/projects/create');
 });
 
 // Salva nuovo progetto

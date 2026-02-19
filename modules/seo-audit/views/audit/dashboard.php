@@ -46,6 +46,8 @@ $categoryColors = [
 <?php $currentPage = 'dashboard'; ?>
 <?php include __DIR__ . '/../partials/project-nav.php'; ?>
 
+<?= \Core\View::partial('components/orphaned-project-notice', ['project' => $project]) ?>
+
 <div class="space-y-6">
     <!-- Header con Health Score -->
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">

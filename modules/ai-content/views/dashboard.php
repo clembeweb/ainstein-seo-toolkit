@@ -22,6 +22,7 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
 <?php if (isset($project) && $project): ?>
 <?php $currentPage = 'dashboard'; ?>
 <?php include __DIR__ . '/partials/project-nav.php'; ?>
+<?= \Core\View::partial('components/orphaned-project-notice', ['project' => $project]) ?>
 <?php endif; ?>
 
 <div class="space-y-6">

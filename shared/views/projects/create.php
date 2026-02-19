@@ -13,7 +13,7 @@
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
             <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
                 <h1 class="text-lg font-semibold text-slate-900 dark:text-white">Nuovo Progetto</h1>
-                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Crea un progetto per raggruppare i moduli di un cliente o sito web.</p>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Crea un progetto per raggruppare i moduli di un cliente o sito web. Dopo la creazione, potrai attivare i moduli dalla dashboard del progetto.</p>
             </div>
 
             <form method="POST" action="<?= url('/projects') ?>" class="p-5 space-y-5" x-data="{ selectedColor: '#3B82F6' }">

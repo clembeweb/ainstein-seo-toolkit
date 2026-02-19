@@ -37,8 +37,7 @@ Router::get('/seo-tracking', function () {
 
 // Crea progetto
 Router::get('/seo-tracking/project/create', function () {
-    Middleware::auth();
-    return (new ProjectController())->create();
+    \Core\Router::redirect('/projects/create');
 });
 
 Router::post('/seo-tracking/project/store', function () {

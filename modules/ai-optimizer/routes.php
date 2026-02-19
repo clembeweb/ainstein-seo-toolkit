@@ -20,11 +20,9 @@ Router::get('/ai-optimizer', function () {
     return $controller->index();
 });
 
-// Form creazione progetto
+// Form creazione progetto → redirect a Global Projects
 Router::get('/ai-optimizer/projects/create', function () {
-    Middleware::auth();
-    $controller = new \Modules\AiOptimizer\Controllers\ProjectController();
-    return $controller->create();
+    \Core\Router::redirect('/projects/create');
 });
 
 // Salva nuovo progetto
