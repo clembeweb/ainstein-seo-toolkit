@@ -678,6 +678,12 @@ Router::post('/projects', function () {
     $controller->store();
 });
 
+// Download plugin WordPress (MUST be before /projects/{id} to avoid :id matching "download-plugin")
+Router::get('/projects/download-plugin/wordpress', function () {
+    $controller = new Controllers\GlobalProjectController();
+    $controller->downloadPlugin();
+});
+
 Router::get('/projects/{id}', function ($id) {
     $controller = new Controllers\GlobalProjectController();
     return $controller->dashboard((int) $id);
@@ -701,6 +707,22 @@ Router::post('/projects/{id}/activate-module', function ($id) {
 Router::post('/projects/{id}/delete', function ($id) {
     $controller = new Controllers\GlobalProjectController();
     $controller->destroy((int) $id);
+});
+
+// CMS Connector management
+Router::post('/projects/{id}/connectors', function ($id) {
+    $controller = new Controllers\GlobalProjectController();
+    $controller->addConnector((int) $id);
+});
+
+Router::post('/projects/{id}/connectors/test', function ($id) {
+    $controller = new Controllers\GlobalProjectController();
+    $controller->testConnector((int) $id);
+});
+
+Router::post('/projects/{id}/connectors/remove', function ($id) {
+    $controller = new Controllers\GlobalProjectController();
+    $controller->removeConnector((int) $id);
 });
 
 // --- OAuth Routes (centralizzati) ---

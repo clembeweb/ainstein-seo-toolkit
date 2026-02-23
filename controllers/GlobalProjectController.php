@@ -149,6 +149,10 @@ class GlobalProjectController
             }
         }
 
+        // Load CMS connectors for this project
+        $connectorModel = new \Core\Models\ProjectConnector();
+        $connectors = $connectorModel->getByProject($id);
+
         return View::render('projects/dashboard', [
             'title' => $project['name'],
             'user' => $user,
@@ -161,6 +165,7 @@ class GlobalProjectController
             'moduleTypes' => $moduleTypes,
             'remainingTypes' => $remainingTypes,
             'activeTypesPerModule' => $activeTypesPerModule,
+            'connectors' => $connectors,
         ]);
     }
 
@@ -330,6 +335,175 @@ class GlobalProjectController
             $_SESSION['_flash']['error'] = 'Errore nell\'attivazione del modulo';
             Router::redirect('/projects/' . $id);
         }
+    }
+
+    /**
+     * Aggiunge connettore CMS al progetto
+     * POST /projects/{id}/connectors
+     */
+    public function addConnector(int $id): void
+    {
+        Middleware::auth();
+        Middleware::csrf();
+        $user = Auth::user();
+
+        $project = $this->project->find($id, $user['id']);
+        if (!$project) {
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
+            Router::redirect('/projects');
+            return;
+        }
+
+        $type = trim($_POST['type'] ?? '');
+        $name = trim($_POST['name'] ?? '');
+        $url = trim($_POST['url'] ?? '');
+        $apiKey = trim($_POST['api_key'] ?? '');
+
+        if (empty($type) || empty($name) || empty($url) || empty($apiKey)) {
+            $_SESSION['_flash']['error'] = 'Compilare tutti i campi obbligatori';
+            Router::redirect('/projects/' . $id);
+            return;
+        }
+
+        // Test connection before saving
+        try {
+            $connector = new \Services\Connectors\WordPressSeoConnector([
+                'url' => $url,
+                'api_key' => $apiKey,
+            ]);
+            $testResult = $connector->test();
+
+            if (!$testResult['success']) {
+                $_SESSION['_flash']['error'] = 'Connessione fallita: ' . ($testResult['message'] ?? 'Errore sconosciuto');
+                Router::redirect('/projects/' . $id);
+                return;
+            }
+
+            $connectorModel = new \Core\Models\ProjectConnector();
+            $connectorModel->create([
+                'project_id' => $id,
+                'user_id' => $user['id'],
+                'type' => $type,
+                'name' => $name,
+                'config' => ['url' => $url, 'api_key' => $apiKey],
+                'seo_plugin' => $testResult['seo_plugin'] ?? null,
+                'wp_version' => $testResult['wp_version'] ?? null,
+                'plugin_version' => $testResult['plugin_version'] ?? null,
+            ]);
+
+            $_SESSION['_flash']['success'] = 'Connettore WordPress aggiunto con successo';
+        } catch (\Exception $e) {
+            $_SESSION['_flash']['error'] = 'Errore: ' . $e->getMessage();
+        }
+
+        Router::redirect('/projects/' . $id);
+    }
+
+    /**
+     * Testa connessione di un connettore esistente (AJAX)
+     * POST /projects/{id}/connectors/test
+     */
+    public function testConnector(int $id): void
+    {
+        Middleware::auth();
+        Middleware::csrf();
+        $user = Auth::user();
+
+        header('Content-Type: application/json');
+
+        $connectorId = (int) ($_POST['connector_id'] ?? 0);
+        $connectorModel = new \Core\Models\ProjectConnector();
+        $connector = $connectorModel->findForUser($connectorId, $user['id']);
+
+        if (!$connector || $connector['project_id'] != $id) {
+            echo json_encode(['success' => false, 'message' => 'Connettore non trovato']);
+            exit;
+        }
+
+        $config = json_decode($connector['config'], true);
+
+        try {
+            $service = new \Services\Connectors\WordPressSeoConnector($config);
+            $result = $service->test();
+
+            // Update test status in DB
+            $connectorModel->updateTestStatus(
+                $connectorId,
+                $result['success'] ? 'success' : 'error',
+                $result['message'] ?? null,
+                $result['success'] ? [
+                    'seo_plugin' => $result['seo_plugin'] ?? null,
+                    'wp_version' => $result['wp_version'] ?? null,
+                    'plugin_version' => $result['plugin_version'] ?? null,
+                ] : null
+            );
+
+            echo json_encode($result);
+        } catch (\Exception $e) {
+            $connectorModel->updateTestStatus($connectorId, 'error', $e->getMessage());
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+
+        exit;
+    }
+
+    /**
+     * Rimuove connettore dal progetto
+     * POST /projects/{id}/connectors/remove
+     */
+    public function removeConnector(int $id): void
+    {
+        Middleware::auth();
+        Middleware::csrf();
+        $user = Auth::user();
+
+        $connectorId = (int) ($_POST['connector_id'] ?? 0);
+        $connectorModel = new \Core\Models\ProjectConnector();
+        $connector = $connectorModel->findForUser($connectorId, $user['id']);
+
+        if (!$connector || $connector['project_id'] != $id) {
+            $_SESSION['_flash']['error'] = 'Connettore non trovato';
+            Router::redirect('/projects/' . $id);
+            return;
+        }
+
+        $connectorModel->delete($connectorId);
+        $_SESSION['_flash']['success'] = 'Connettore rimosso';
+        Router::redirect('/projects/' . $id);
+    }
+
+    /**
+     * Download plugin WordPress come ZIP
+     * GET /projects/download-plugin/wordpress
+     */
+    public function downloadPlugin(): void
+    {
+        Middleware::auth();
+
+        $pluginDir = __DIR__ . '/../storage/plugins/seo-toolkit-connector';
+        $zipFile = tempnam(sys_get_temp_dir(), 'seo-toolkit-connector') . '.zip';
+
+        $zip = new \ZipArchive();
+        if ($zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            $_SESSION['_flash']['error'] = 'Errore nella creazione del pacchetto';
+            Router::redirect('/projects');
+            return;
+        }
+
+        $files = glob($pluginDir . '/*');
+        foreach ($files as $file) {
+            if (is_file($file)) {
+                $zip->addFile($file, 'seo-toolkit-connector/' . basename($file));
+            }
+        }
+        $zip->close();
+
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="seo-toolkit-connector.zip"');
+        header('Content-Length: ' . filesize($zipFile));
+        readfile($zipFile);
+        unlink($zipFile);
+        exit;
     }
 
     /**
