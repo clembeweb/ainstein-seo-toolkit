@@ -110,7 +110,7 @@
     </div>
     <div class="p-4">
         <p class="px-3 mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Data Model</p>
-        <p class="px-3 mb-3 text-xs text-slate-400 dark:text-slate-500">~75 tabelle &middot; 8 moduli</p>
+        <p class="px-3 mb-3 text-xs text-slate-400 dark:text-slate-500">~77 tabelle &middot; 8 moduli</p>
     </div>
     <div class="px-3 pb-3 space-y-1 text-sm">
         <a href="#overview" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 font-medium transition-colors">
@@ -120,7 +120,7 @@
         <div class="pt-3 pb-1 px-3 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Core</div>
         <a href="#core" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors">
             <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
-            Tabelle Core (12)
+            Tabelle Core (13)
         </a>
         <div class="pt-3 pb-1 px-3 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Moduli</div>
         <a href="#aic" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 text-amber-600 dark:text-amber-400 transition-colors">
@@ -172,10 +172,10 @@
     <!-- Header -->
     <div class="mb-12">
         <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Ainstein SEO Toolkit &mdash; Data Model</h1>
-        <p class="text-slate-500 dark:text-slate-400">Documentazione completa dello schema database. Generato il <strong class="text-slate-700 dark:text-slate-300">13 Febbraio 2026</strong>.</p>
+        <p class="text-slate-500 dark:text-slate-400">Documentazione completa dello schema database. Generato il <strong class="text-slate-700 dark:text-slate-300">23 Febbraio 2026</strong>.</p>
         <div class="flex flex-wrap gap-3 mt-4 text-sm">
-            <span class="px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">~70 tabelle</span>
-            <span class="px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">7 moduli</span>
+            <span class="px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">~77 tabelle</span>
+            <span class="px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">8 moduli</span>
             <span class="px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">MySQL 8.0 / InnoDB</span>
             <span class="px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">utf8mb4</span>
         </div>
@@ -196,6 +196,7 @@
         <div class="mermaid">
 erDiagram
     users ||--o{ projects : "possiede"
+    projects ||--o{ project_connectors : "connettori CMS"
     projects ||--o{ aic_projects : "attiva"
     projects ||--o{ sa_projects : "attiva"
     projects ||--o{ st_projects : "attiva"
@@ -250,6 +251,7 @@ erDiagram
     users ||--o{ ai_logs : "log AI"
     settings ||--o{ users : "updated_by"
     users ||--o{ projects : "hub progetti"
+    projects ||--o{ project_connectors : "connettori CMS"
     projects {
         int id PK
         int user_id FK
@@ -321,6 +323,16 @@ erDiagram
         varchar model
         int tokens_total
         decimal estimated_cost
+    }
+    project_connectors {
+        int id PK
+        int project_id FK
+        int user_id FK
+        enum type "wordpress/shopify/prestashop/magento"
+        varchar name
+        json config
+        tinyint is_active
+        enum last_test_status "success/error"
     }
         </div>
 
@@ -478,6 +490,38 @@ erDiagram
                 </table>
             </div>
         </details>
+
+        <details class="mb-4 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+            <summary class="bg-slate-50 dark:bg-slate-800 px-4 py-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 font-medium text-slate-900 dark:text-white">
+                project_connectors (Connettori CMS)
+            </summary>
+            <div class="p-4 overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead><tr class="border-b border-slate-200 dark:border-slate-700">
+                        <th class="text-left py-2 px-3 text-slate-500 dark:text-slate-400">Colonna</th>
+                        <th class="text-left py-2 px-3 text-slate-500 dark:text-slate-400">Tipo</th>
+                        <th class="text-left py-2 px-3 text-slate-500 dark:text-slate-400">Note</th>
+                    </tr></thead>
+                    <tbody class="text-slate-700 dark:text-slate-300">
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">id</td><td class="py-1.5 px-3">INT AUTO_INCREMENT</td><td class="py-1.5 px-3"><span class="text-amber-500 font-semibold">PK</span></td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">project_id</td><td class="py-1.5 px-3">INT</td><td class="py-1.5 px-3"><span class="text-blue-500 font-semibold">FK</span> &rarr; projects.id CASCADE</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">user_id</td><td class="py-1.5 px-3">INT</td><td class="py-1.5 px-3"><span class="text-blue-500 font-semibold">FK</span> &rarr; users.id</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">type</td><td class="py-1.5 px-3">ENUM('wordpress','shopify','prestashop','magento')</td><td class="py-1.5 px-3">Tipo CMS</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">name</td><td class="py-1.5 px-3">VARCHAR(255)</td><td class="py-1.5 px-3">Nome connettore</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">config</td><td class="py-1.5 px-3">JSON</td><td class="py-1.5 px-3">Configurazione (url, api_key, etc.)</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">is_active</td><td class="py-1.5 px-3">TINYINT(1)</td><td class="py-1.5 px-3">DEFAULT 1</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">last_test_at</td><td class="py-1.5 px-3">DATETIME</td><td class="py-1.5 px-3">NULL</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">last_test_status</td><td class="py-1.5 px-3">ENUM('success','error')</td><td class="py-1.5 px-3">NULL</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">last_test_message</td><td class="py-1.5 px-3">VARCHAR(500)</td><td class="py-1.5 px-3">NULL</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">seo_plugin</td><td class="py-1.5 px-3">VARCHAR(100)</td><td class="py-1.5 px-3">Plugin SEO rilevato (yoast, rankmath, etc.)</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">wp_version</td><td class="py-1.5 px-3">VARCHAR(20)</td><td class="py-1.5 px-3">Versione WordPress</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">plugin_version</td><td class="py-1.5 px-3">VARCHAR(20)</td><td class="py-1.5 px-3">Versione plugin Ainstein</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">created_at</td><td class="py-1.5 px-3">TIMESTAMP</td><td class="py-1.5 px-3">DEFAULT CURRENT_TIMESTAMP</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">updated_at</td><td class="py-1.5 px-3">TIMESTAMP</td><td class="py-1.5 px-3">ON UPDATE CURRENT_TIMESTAMP</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </details>
     </section>
 
     <!-- ==================== AI CONTENT ==================== -->
@@ -578,7 +622,7 @@ erDiagram
     <!-- ==================== SEO AUDIT ==================== -->
     <section id="sa" class="mb-16 print-break">
         <h2 class="text-2xl font-bold text-emerald-400 mb-6">SEO Audit (sa_)</h2>
-        <p class="text-slate-500 dark:text-slate-400 mb-6">8 tabelle. Crawling sito, rilevamento 50+ problemi, Piano d'Azione AI con fix per pagina.</p>
+        <p class="text-slate-500 dark:text-slate-400 mb-6">9 tabelle. Crawling sito e import WordPress, rilevamento 50+ problemi, Piano d'Azione AI con fix per pagina.</p>
 
         <div class="mermaid">
 erDiagram
@@ -586,8 +630,10 @@ erDiagram
     sa_projects ||--o{ sa_issues : "problemi"
     sa_projects ||--|| sa_site_config : "config"
     sa_projects ||--o{ sa_action_plans : "piani azione"
+    sa_projects ||--o{ sa_crawl_jobs : "ha"
     sa_action_plans ||--o{ sa_page_fixes : "fix pagina"
     sa_pages ||--o{ sa_issues : "problemi pagina"
+    sa_crawl_sessions ||--o{ sa_crawl_jobs : "associata"
     sa_projects {
         int id PK
         int user_id FK
@@ -603,6 +649,7 @@ erDiagram
         int status_code
         varchar title
         int word_count
+        enum source "scraper/wordpress"
     }
     sa_issues {
         int id PK
@@ -611,6 +658,18 @@ erDiagram
         varchar category
         enum severity
         varchar title
+    }
+    sa_crawl_jobs {
+        int id PK
+        int project_id FK
+        int session_id FK
+        int user_id
+        enum type "crawl/wordpress"
+        enum status "pending/running/completed/error/cancelled"
+        json config
+        int items_total
+        int items_completed
+        int items_failed
     }
         </div>
 
@@ -637,6 +696,31 @@ erDiagram
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
                 <div><strong class="text-slate-900 dark:text-white">sa_action_plans</strong>: id(PK), project_id(FK), session_id, total_pages, total_fixes, fixes_completed, health_current, health_expected, estimated_time_minutes, status(generating/ready/in_progress/completed), created_at, updated_at</div>
                 <div><strong class="text-slate-900 dark:text-white">sa_page_fixes</strong>: id(PK), plan_id(FK&rarr;sa_action_plans), project_id(FK), page_id(FK&rarr;sa_pages), issue_id(FK&rarr;sa_issues), fix_code(TEXT), fix_explanation(TEXT), priority, difficulty(facile/medio/difficile), time_estimate_minutes, impact_points, step_order, is_completed, completed_at</div>
+            </div>
+        </details>
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">sa_crawl_jobs</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead><tr class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700"><th class="pb-2">Colonna</th><th class="pb-2">Tipo</th><th class="pb-2">Note</th></tr></thead>
+                    <tbody class="text-slate-600 dark:text-slate-300">
+                        <tr><td class="py-1 pk">id</td><td>INT AUTO_INCREMENT</td><td>PRIMARY KEY</td></tr>
+                        <tr><td class="py-1 fk">project_id</td><td>INT</td><td>FK &rarr; sa_projects(id) CASCADE</td></tr>
+                        <tr><td class="py-1 fk">session_id</td><td>INT</td><td>FK &rarr; sa_crawl_sessions(id) SET NULL</td></tr>
+                        <tr><td class="py-1 fk">user_id</td><td>INT</td><td>FK &rarr; users(id)</td></tr>
+                        <tr><td class="py-1">type</td><td>ENUM('crawl','wordpress')</td><td>DEFAULT 'crawl'</td></tr>
+                        <tr><td class="py-1">status</td><td>ENUM('pending','running','completed','error','cancelled')</td><td>DEFAULT 'pending'</td></tr>
+                        <tr><td class="py-1">config</td><td>JSON</td><td>Configurazione job (crawl_mode, max_pages, connector_id, etc.)</td></tr>
+                        <tr><td class="py-1">items_total</td><td>INT</td><td>DEFAULT 0</td></tr>
+                        <tr><td class="py-1">items_completed</td><td>INT</td><td>DEFAULT 0</td></tr>
+                        <tr><td class="py-1">items_failed</td><td>INT</td><td>DEFAULT 0</td></tr>
+                        <tr><td class="py-1">current_item</td><td>VARCHAR(500)</td><td>URL in lavorazione</td></tr>
+                        <tr><td class="py-1">error_message</td><td>TEXT</td><td>Messaggio errore</td></tr>
+                        <tr><td class="py-1">started_at</td><td>TIMESTAMP</td><td>NULL</td></tr>
+                        <tr><td class="py-1">completed_at</td><td>TIMESTAMP</td><td>NULL</td></tr>
+                        <tr><td class="py-1">created_at</td><td>TIMESTAMP</td><td>DEFAULT CURRENT_TIMESTAMP</td></tr>
+                    </tbody>
+                </table>
             </div>
         </details>
         <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
@@ -1045,7 +1129,7 @@ erDiagram
 
     <!-- Footer -->
     <footer class="mt-16 pt-8 border-t border-slate-200 dark:border-slate-700 text-center text-sm text-slate-500 dark:text-slate-500">
-        <p>Ainstein SEO Toolkit &mdash; Data Model v1.1 &mdash; Aggiornato il 16 Febbraio 2026</p>
+        <p>Ainstein SEO Toolkit &mdash; Data Model v1.2 &mdash; Aggiornato il 23 Febbraio 2026</p>
         <p class="mt-1">Per stampare come PDF: Ctrl+P &rarr; Salva come PDF (layout A4 Landscape consigliato)</p>
     </footer>
 

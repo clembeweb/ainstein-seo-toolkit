@@ -24,7 +24,7 @@
         </h2>
         <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
             <p class="text-slate-700 dark:text-slate-300 leading-relaxed">
-                Analisi tecnica SEO completa del tuo sito web. Identifica oltre 50 tipologie di problemi in 10 categorie, calcola un punteggio di salute da 0 a 100 e fornisce raccomandazioni AI prioritizzate. Ogni scansione viene archiviata per permettere il confronto nel tempo e misurare i progressi.
+                Analisi tecnica SEO completa del tuo sito web. Identifica oltre 50 tipologie di problemi in 10 categorie, calcola un punteggio di salute da 0 a 100 e fornisce raccomandazioni AI prioritizzate. Se il tuo sito usa WordPress, puoi installare il plugin Ainstein per analizzare le pagine direttamente dal CMS, senza scraping. Ogni scansione viene archiviata per permettere il confronto nel tempo e misurare i progressi.
             </p>
         </div>
     </section>
@@ -174,6 +174,19 @@
                 <p class="text-sm text-slate-600 dark:text-slate-400">Piano d'azione con fix prioritizzati, ordinati per impatto e facilita di implementazione.</p>
             </div>
 
+            <!-- Audit via WordPress -->
+            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Audit via WordPress</h3>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Se hai il plugin WP installato, analizza direttamente dal CMS senza scraping. Piu veloce e affidabile.</p>
+            </div>
+
             <!-- Storico -->
             <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 sm:col-span-2">
                 <div class="flex items-center gap-3 mb-2">
@@ -223,6 +236,19 @@
                         <td class="px-5 py-3 text-slate-700 dark:text-slate-300">
                             <div class="flex items-center gap-2">
                                 <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Analisi via WordPress (per pagina)
+                            </div>
+                        </td>
+                        <td class="px-5 py-3 text-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">Gratuito</span>
+                        </td>
+                    </tr>
+                    <tr class="bg-white dark:bg-slate-800">
+                        <td class="px-5 py-3 text-slate-700 dark:text-slate-300">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                                 </svg>
                                 Piano d'Azione AI (per progetto)
@@ -239,7 +265,7 @@
             <svg class="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            Il crawling e gratuito. Il Piano d'Azione AI costa 10 crediti per generazione. Tutte le altre funzionalita (dashboard, issues, link, storico, export) sono gratuite.
+            Il crawling e l'analisi via WordPress sono gratuiti. Il Piano d'Azione AI costa 10 crediti per generazione. Tutte le altre funzionalita (dashboard, issues, link, storico, export) sono gratuite.
         </p>
     </section>
 
@@ -288,6 +314,19 @@
                 <div>
                     <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Usa il Piano d'Azione AI</h3>
                     <p class="mt-1 text-sm text-blue-800 dark:text-blue-300/80">Dopo aver risolto i problemi Critical, genera il Piano d'Azione AI. Riceverai fix concreti con codice pronto, priorita e tempo stimato per ogni pagina. Puoi tracciare il completamento e esportare tutto in Markdown.</p>
+                </div>
+            </div>
+
+            <!-- Tip 4 -->
+            <div class="flex items-start gap-4 p-5 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50">
+                <div class="shrink-0 w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-medium text-emerald-900 dark:text-emerald-200 text-sm">Integrazione WordPress</h3>
+                    <p class="mt-1 text-sm text-emerald-800 dark:text-emerald-300/80">Se il tuo sito usa WordPress, installa il plugin Ainstein SEO Toolkit Connector dalla dashboard del progetto. Potrai eseguire l'audit senza scraping, ottenendo risultati piu rapidi e dati piu completi direttamente dal CMS.</p>
                 </div>
             </div>
         </div>
