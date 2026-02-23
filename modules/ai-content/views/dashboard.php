@@ -45,83 +45,38 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
     <?php endif; ?>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4" data-tour="aic-stats">
-        <!-- Keywords -->
-        <a href="<?= url($baseUrl . '/keywords') ?>" class="block bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all">
-            <div class="flex items-center gap-3">
-                <div class="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-                    <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($stats['keywords']) ?></p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">Keywords</p>
-                </div>
-            </div>
-        </a>
-
-        <!-- Articles -->
-        <a href="<?= url($baseUrl . '/articles') ?>" class="block bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md hover:border-purple-300 dark:hover:border-purple-700 transition-all">
-            <div class="flex items-center gap-3">
-                <div class="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
-                    <svg class="h-5 w-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($stats['articles']) ?></p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">Articoli</p>
-                </div>
-            </div>
-        </a>
-
-        <!-- Published -->
-        <a href="<?= url($baseUrl . '/articles?status=published') ?>" class="block bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-700 transition-all">
-            <div class="flex items-center gap-3">
-                <div class="h-10 w-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
-                    <svg class="h-5 w-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($stats['published']) ?></p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">Pubblicati</p>
-                </div>
-            </div>
-        </a>
-
-        <!-- WP Site (linked to project) -->
-        <?php if (isset($project) && $project): ?>
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
-            <div class="flex items-center gap-3">
-                <div class="h-10 w-10 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
-                    <svg class="h-5 w-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
-                    </svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <?php if (!empty($linkedWpSite)): ?>
-                    <p class="font-medium text-slate-900 dark:text-white truncate"><?= e($linkedWpSite['name']) ?></p>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 truncate"><?= e($linkedWpSite['url']) ?></p>
-                    <?php else: ?>
-                    <p class="font-medium text-slate-500 dark:text-slate-400">Nessun sito collegato</p>
-                    <a href="<?= url('/ai-content/projects/' . $project['id'] . '/settings') ?>" class="text-xs text-primary-600 hover:text-primary-700">Configura nelle impostazioni</a>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
-                <a href="<?= url('/ai-content/wordpress') ?>" class="text-xs text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400 flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    Gestisci tutti i siti WP
-                </a>
-            </div>
-        </div>
-        <?php endif; ?>
-    </div>
+    <?= \Core\View::partial('components/dashboard-stats-row', [
+        'dataTour' => 'aic-stats',
+        'cards' => [
+            [
+                'label' => 'Keywords',
+                'value' => $stats['keywords'] ?? 0,
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>',
+                'color' => 'blue',
+                'url' => url($baseUrl . '/keywords'),
+            ],
+            [
+                'label' => 'Articoli',
+                'value' => $stats['articles'] ?? 0,
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
+                'color' => 'purple',
+                'url' => url($baseUrl . '/articles'),
+            ],
+            [
+                'label' => 'Pubblicati',
+                'value' => $stats['articles_published'] ?? 0,
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',
+                'color' => 'emerald',
+                'url' => url($baseUrl . '/articles?status=published'),
+            ],
+            [
+                'label' => 'Parole generate',
+                'value' => $stats['total_words'] ?? 0,
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>',
+                'color' => 'amber',
+            ],
+        ],
+    ]) ?>
 
     <!-- Additional Stats Row -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -300,6 +255,17 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
             <?php endif; ?>
         </div>
     </div>
+
+    <!-- Come funziona -->
+    <?= \Core\View::partial('components/dashboard-how-it-works', [
+        'color' => 'amber',
+        'steps' => [
+            ['title' => 'Aggiungi Keyword', 'description' => 'Inserisci la keyword target'],
+            ['title' => 'Analisi SERP', 'description' => 'AI analizza i competitor'],
+            ['title' => 'Genera Articolo', 'description' => 'AI scrive il contenuto SEO'],
+            ['title' => 'Pubblica', 'description' => 'Invia a WordPress'],
+        ],
+    ]) ?>
 
     <!-- Credits Info -->
     <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-sm p-6 text-white">
