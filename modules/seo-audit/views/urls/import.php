@@ -309,7 +309,7 @@ https://esempio.it/pagina-specifica
             </div>
 
             <!-- ==================== PROGRESS SECTION ==================== -->
-            <div x-show="importing || completed" x-cloak
+            <div x-show="importing || completed || cancelled || errorMsg" x-cloak
                  class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <div class="p-6 space-y-6">
                     <!-- Header -->
