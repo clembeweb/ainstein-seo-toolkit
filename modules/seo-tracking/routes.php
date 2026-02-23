@@ -364,7 +364,13 @@ Router::get('/seo-tracking/project/{id}/keywords/{keywordId}/chart', function ($
 // KEYWORD DETAIL - WILDCARD ROUTES (must be LAST)
 // =============================================
 
-// Dettaglio keyword
+// Modifica keyword (form)
+Router::get('/seo-tracking/project/{id}/keywords/{keywordId}/edit', function ($id, $keywordId) {
+    Middleware::auth();
+    return (new KeywordController())->edit((int) $keywordId);
+});
+
+// Dettaglio keyword (wildcard - must be AFTER specific routes)
 Router::get('/seo-tracking/project/{id}/keywords/{keywordId}', function ($id, $keywordId) {
     Middleware::auth();
     return (new KeywordController())->detail((int) $id, (int) $keywordId);
