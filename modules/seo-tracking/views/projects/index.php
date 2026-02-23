@@ -15,55 +15,21 @@ endif;
 ?>
 
 <!-- Hero Value Block -->
-<div x-data="{ show: !localStorage.getItem('ainstein_hero_seo_tracking') }" x-show="show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="mb-6">
-    <div class="relative overflow-hidden rounded-xl border border-blue-500/20 bg-gradient-to-br from-blue-950 via-slate-900 to-slate-900">
-        <div class="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/3"></div>
-        <div class="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/5 rounded-full translate-y-1/2 -translate-x-1/4"></div>
-
-        <div class="relative p-6 sm:p-8">
-            <button @click="show = false; localStorage.setItem('ainstein_hero_seo_tracking', '1')" class="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-
-            <div class="max-w-3xl">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 mb-3">
-                    Come funziona
-                </span>
-                <h2 class="text-xl sm:text-2xl font-bold text-white mb-2">Le tue posizioni su Google, con i dati reali</h2>
-                <p class="text-slate-300 text-sm mb-6">Ainstein monitora le posizioni per le tue keyword e, collegando Google Search Console, incrocia i dati per mostrarti quanti click reali riceve ogni keyword, il CTR e le tendenze. Report periodici con insight e anomalie.</p>
-
-                <!-- 3-step workflow -->
-                <div class="grid grid-cols-3 gap-3 sm:gap-4 mb-6">
-                    <div class="text-center">
-                        <div class="h-12 w-12 rounded-xl bg-blue-500/20 flex items-center justify-center mx-auto mb-2">
-                            <svg class="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        </div>
-                        <p class="text-xs font-medium text-white">Aggiungi keyword</p>
-                        <p class="text-xs text-slate-400 mt-0.5">Le keyword da monitorare</p>
-                    </div>
-                    <div class="text-center">
-                        <div class="h-12 w-12 rounded-xl bg-blue-500/20 flex items-center justify-center mx-auto mb-2">
-                            <svg class="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                        </div>
-                        <p class="text-xs font-medium text-white">Collega GSC</p>
-                        <p class="text-xs text-slate-400 mt-0.5">Click e CTR reali</p>
-                    </div>
-                    <div class="text-center">
-                        <div class="h-12 w-12 rounded-xl bg-blue-500/20 flex items-center justify-center mx-auto mb-2">
-                            <svg class="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        </div>
-                        <p class="text-xs font-medium text-white">Report AI</p>
-                        <p class="text-xs text-slate-400 mt-0.5">Insight e anomalie</p>
-                    </div>
-                </div>
-
-                <a href="<?= url('/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 transition-colors">
-                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    Crea il primo progetto
-                </a>
-            </div>
-        </div>
-    </div>
+<div class="mb-6">
+<?= \Core\View::partial('components/dashboard-hero-banner', [
+    'title' => 'Le tue posizioni su Google, con i dati reali',
+    'description' => 'Ainstein monitora le posizioni per le tue keyword e, collegando Google Search Console, incrocia i dati per mostrarti quanti click reali riceve ogni keyword, il CTR e le tendenze. Report periodici con insight e anomalie.',
+    'color' => 'blue',
+    'badge' => 'Come funziona',
+    'storageKey' => 'ainstein_hero_seo_tracking',
+    'steps' => [
+        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>', 'title' => 'Aggiungi keyword', 'subtitle' => 'Le keyword da monitorare'],
+        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>', 'title' => 'Collega GSC', 'subtitle' => 'Click e CTR reali'],
+        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>', 'title' => 'Report AI', 'subtitle' => 'Insight e anomalie'],
+    ],
+    'ctaText' => 'Crea il primo progetto',
+    'ctaUrl' => url('/projects/create'),
+]) ?>
 </div>
 
 <div class="space-y-6">
