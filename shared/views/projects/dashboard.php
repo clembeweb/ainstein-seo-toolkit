@@ -491,6 +491,236 @@ endif;
 
     </div><!-- /x-data activationModal -->
 
+    <!-- CMS Connector Section -->
+    <div x-data="connectorManager()" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <!-- Section Header -->
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-slate-900 dark:text-white text-sm">Connessione CMS</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Collega il tuo WordPress per analisi dirette senza scraping</p>
+                </div>
+            </div>
+            <?php if (!empty($connectors)): ?>
+            <button @click="showForm = !showForm" class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors">
+                <span x-text="showForm ? 'Chiudi' : 'Aggiungi'"></span>
+            </button>
+            <?php endif; ?>
+        </div>
+
+        <?php if (!empty($connectors)): ?>
+        <!-- Existing Connectors -->
+        <div class="space-y-3 mb-4">
+            <?php foreach ($connectors as $conn):
+                $connConfig = json_decode($conn['config'], true) ?: [];
+                $connUrl = $connConfig['url'] ?? '';
+                $connDomain = parse_url($connUrl, PHP_URL_HOST) ?: $connUrl;
+                $isSuccess = ($conn['last_test_status'] ?? '') === 'success';
+                $isError = ($conn['last_test_status'] ?? '') === 'error';
+                $hasTest = !empty($conn['last_test_at']);
+            ?>
+            <div class="bg-slate-50 dark:bg-slate-700/30 rounded-xl p-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-start gap-3 min-w-0">
+                        <!-- WP Icon -->
+                        <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 1.5c4.687 0 8.5 3.813 8.5 8.5 0 4.687-3.813 8.5-8.5 8.5-4.687 0-8.5-3.813-8.5-8.5 0-4.687 3.813-8.5 8.5-8.5zM4.356 12c0 1.357.353 2.633.972 3.742L4.09 9.26A8.458 8.458 0 004.356 12zm7.644 8c-1.21 0-2.363-.26-3.406-.724l3.617-10.504 3.705 10.148a.56.56 0 00.043.077A7.965 7.965 0 0112 20zm1.31-11.744l2.98 8.868 1.072-3.215c.428-1.054.77-1.87.77-2.558 0-.978-.352-1.653-.653-2.18-.404-.655-.78-1.207-.78-1.86 0-.73.552-1.408 1.332-1.408.035 0 .068.004.103.007A7.965 7.965 0 0012 4c-2.178 0-4.153.87-5.597 2.28.157.005.305.008.432.008.702 0 1.79-.085 1.79-.085.362-.021.405.51.043.553 0 0-.364.043-.77.064l3.412 10.146z"/>
+                            </svg>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <p class="font-medium text-sm text-slate-900 dark:text-white truncate"><?= htmlspecialchars($conn['name']) ?></p>
+                                <span class="text-xs text-slate-500 dark:text-slate-400">(<?= htmlspecialchars($connDomain) ?>)</span>
+                            </div>
+                            <!-- CMS details -->
+                            <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                <?php if (!empty($conn['seo_plugin'])): ?>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
+                                    <?= htmlspecialchars(ucwords(str_replace('-', ' ', $conn['seo_plugin']))) ?>
+                                </span>
+                                <?php endif; ?>
+                                <?php if (!empty($conn['wp_version'])): ?>
+                                <span class="text-xs text-slate-500 dark:text-slate-400">WP <?= htmlspecialchars($conn['wp_version']) ?></span>
+                                <?php endif; ?>
+                                <?php if (!empty($conn['plugin_version'])): ?>
+                                <span class="text-xs text-slate-500 dark:text-slate-400">Plugin v<?= htmlspecialchars($conn['plugin_version']) ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <!-- Test status -->
+                            <div class="flex items-center gap-2 mt-1.5">
+                                <?php if ($hasTest): ?>
+                                <span class="text-xs <?= $isSuccess ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' ?>">
+                                    <?php if ($isSuccess): ?>
+                                        <svg class="w-3.5 h-3.5 inline -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        Connesso
+                                    <?php else: ?>
+                                        <svg class="w-3.5 h-3.5 inline -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                        </svg>
+                                        Errore
+                                    <?php endif; ?>
+                                </span>
+                                <span class="text-xs text-slate-400 dark:text-slate-500">&middot; <?= _dashboard_time_ago($conn['last_test_at']) ?></span>
+                                <?php else: ?>
+                                <span class="text-xs text-slate-400 dark:text-slate-500">Mai testato</span>
+                                <?php endif; ?>
+                            </div>
+                            <!-- AJAX test result -->
+                            <template x-if="testResults[<?= $conn['id'] ?>]">
+                                <div class="mt-1.5">
+                                    <span x-show="testResults[<?= $conn['id'] ?>]?.success" class="text-xs text-emerald-600 dark:text-emerald-400">
+                                        <svg class="w-3.5 h-3.5 inline -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        Connessione riuscita
+                                    </span>
+                                    <span x-show="!testResults[<?= $conn['id'] ?>]?.success" class="text-xs text-red-600 dark:text-red-400">
+                                        <svg class="w-3.5 h-3.5 inline -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                        <span x-text="testResults[<?= $conn['id'] ?>]?.message || 'Errore'"></span>
+                                    </span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <!-- Actions -->
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button @click="testConnection(<?= $conn['id'] ?>)"
+                                :disabled="testing[<?= $conn['id'] ?>]"
+                                class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-medium bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors disabled:opacity-50">
+                            <template x-if="testing[<?= $conn['id'] ?>]">
+                                <svg class="animate-spin w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                            </template>
+                            <template x-if="!testing[<?= $conn['id'] ?>]">
+                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                            </template>
+                            Testa
+                        </button>
+                        <button @click="confirmRemove(<?= $conn['id'] ?>)"
+                                class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-medium bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+
+        <!-- Add Connector Form -->
+        <div x-show="showForm" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+            <?php if (!empty($connectors)): ?>
+            <div class="border-t border-slate-200 dark:border-slate-700 pt-4 mb-3">
+                <p class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Aggiungi connettore</p>
+            </div>
+            <?php endif; ?>
+            <form method="POST" action="<?= url('/projects/' . $project['id'] . '/connectors') ?>" class="space-y-3">
+                <?= csrf_field() ?>
+                <input type="hidden" name="type" value="wordpress">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label for="conn_name" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Nome sito</label>
+                        <input type="text" id="conn_name" name="name" required placeholder="Il Mio Blog"
+                               class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors">
+                    </div>
+                    <div>
+                        <label for="conn_url" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">URL sito</label>
+                        <input type="url" id="conn_url" name="url" required placeholder="https://esempio.com"
+                               class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors">
+                    </div>
+                    <div>
+                        <label for="conn_api_key" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">API Key</label>
+                        <input type="password" id="conn_api_key" name="api_key" required placeholder="stk_..."
+                               class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors">
+                    </div>
+                </div>
+                <div class="flex items-center justify-between pt-1">
+                    <a href="<?= url('/projects/download-plugin/wordpress') ?>" class="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        Scarica Plugin WordPress
+                    </a>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors shadow-sm">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                        </svg>
+                        Connetti WordPress
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    function connectorManager() {
+        return {
+            showForm: <?= empty($connectors) ? 'true' : 'false' ?>,
+            testing: {},
+            testResults: {},
+
+            async testConnection(connectorId) {
+                this.testing[connectorId] = true;
+                this.testResults[connectorId] = null;
+                try {
+                    const formData = new FormData();
+                    formData.append('_csrf_token', '<?= csrf_token() ?>');
+                    formData.append('connector_id', connectorId);
+                    const resp = await fetch('<?= url('/projects/' . $project['id'] . '/connectors/test') ?>', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if (!resp.ok) {
+                        this.testResults[connectorId] = { success: false, message: 'Errore del server (' + resp.status + ')' };
+                    } else {
+                        const data = await resp.json();
+                        this.testResults[connectorId] = data;
+                    }
+                } catch (e) {
+                    this.testResults[connectorId] = { success: false, message: 'Errore di connessione' };
+                }
+                this.testing[connectorId] = false;
+            },
+
+            confirmRemove(connectorId) {
+                if (confirm('Rimuovere questo connettore? L\'azione non puo essere annullata.')) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '<?= url('/projects/' . $project['id'] . '/connectors/remove') ?>';
+                    const csrf = document.createElement('input');
+                    csrf.type = 'hidden';
+                    csrf.name = '_csrf_token';
+                    csrf.value = '<?= csrf_token() ?>';
+                    const id = document.createElement('input');
+                    id.type = 'hidden';
+                    id.name = 'connector_id';
+                    id.value = connectorId;
+                    form.appendChild(csrf);
+                    form.appendChild(id);
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            }
+        };
+    }
+    </script>
+
     <!-- Project Description (if set) -->
     <?php if (!empty($project['description'])): ?>
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
