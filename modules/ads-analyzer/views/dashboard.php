@@ -15,52 +15,21 @@ endif;
 ?>
 
 <!-- Hero Value Block -->
-<div x-data="{ show: !localStorage.getItem('ainstein_hero_ads_analyzer') }" x-show="show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="mb-6">
-    <div class="relative overflow-hidden rounded-xl border border-rose-500/20 bg-gradient-to-br from-rose-950 via-slate-900 to-slate-900">
-        <div class="absolute top-0 right-0 w-64 h-64 bg-rose-500/5 rounded-full -translate-y-1/2 translate-x-1/3"></div>
-        <div class="absolute bottom-0 left-0 w-48 h-48 bg-rose-500/5 rounded-full translate-y-1/2 -translate-x-1/4"></div>
-
-        <div class="relative p-6 sm:p-8">
-            <button @click="show = false; localStorage.setItem('ainstein_hero_ads_analyzer', '1')" class="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-
-            <div class="max-w-3xl">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-500/20 text-rose-300 mb-3">
-                    Come funziona
-                </span>
-                <h2 class="text-xl sm:text-2xl font-bold text-white mb-2">Le tue campagne Google Ads, analizzate e create dall'AI</h2>
-                <p class="text-slate-300 text-sm mb-6">Carica i dati delle tue campagne per scoprire dove stai sprecando budget. Oppure crea una campagna completa da zero, pronta da importare in Google Ads Editor.</p>
-
-                <!-- Dual mode -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                    <div class="bg-white/5 rounded-lg p-4 border border-white/10">
-                        <div class="flex items-center gap-2 mb-2">
-                            <div class="h-8 w-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                            </div>
-                            <h3 class="text-sm font-semibold text-white">Analisi</h3>
-                        </div>
-                        <p class="text-xs text-slate-400">Esamina ogni termine di ricerca, identifica pattern di spreco, trova le keyword negative nascoste e valuta la struttura delle campagne.</p>
-                    </div>
-                    <div class="bg-white/5 rounded-lg p-4 border border-white/10">
-                        <div class="flex items-center gap-2 mb-2">
-                            <div class="h-8 w-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                            </div>
-                            <h3 class="text-sm font-semibold text-white">Creazione</h3>
-                        </div>
-                        <p class="text-xs text-slate-400">Analizza la landing page, studia il mercato, seleziona le keyword migliori e crea una campagna completa pronta per Google Ads Editor.</p>
-                    </div>
-                </div>
-
-                <a href="<?= url('/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-rose-500 text-white text-sm font-medium hover:bg-rose-600 transition-colors">
-                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    Nuovo Progetto
-                </a>
-            </div>
-        </div>
-    </div>
+<div class="mb-6">
+<?= \Core\View::partial('components/dashboard-hero-banner', [
+    'title' => 'Le tue campagne Google Ads, analizzate e create dall\'AI',
+    'description' => 'Carica i dati delle tue campagne per scoprire dove stai sprecando budget. Oppure crea una campagna completa da zero, pronta da importare in Google Ads Editor.',
+    'color' => 'rose',
+    'badge' => 'Come funziona',
+    'storageKey' => 'ainstein_hero_ads_analyzer',
+    'steps' => [
+        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>', 'title' => 'Importa', 'subtitle' => 'Dati da Google Ads'],
+        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>', 'title' => 'Analizza', 'subtitle' => 'AI valuta performance'],
+        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>', 'title' => 'Ottimizza', 'subtitle' => 'Suggerimenti AI'],
+    ],
+    'ctaText' => 'Nuovo Progetto',
+    'ctaUrl' => url('/projects/create'),
+]) ?>
 </div>
 
 <div class="space-y-8">
@@ -82,67 +51,29 @@ endif;
 
     <!-- Mode Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl" data-tour="aa-modes">
-        <!-- Analisi Campagne -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
-            <div class="p-6">
-                <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm mb-4">
-                    <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Analisi Campagne</h3>
-                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                    Collega Google Ads Script, raccogli dati sulle campagne, ottieni valutazioni AI e analizza keyword negative.
-                </p>
-                <div class="mt-3 flex flex-wrap items-center gap-2">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-                        10 cr/valutazione
-                    </span>
-                    <?php if ($stats['campaign_count'] > 0): ?>
-                    <span class="text-xs text-slate-400 dark:text-slate-500"><?= $stats['campaign_count'] ?> progetti</span>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <div class="px-6 py-4 bg-slate-50 dark:bg-slate-700/50 border-t border-slate-200 dark:border-slate-700">
-                <a href="<?= url('/projects/create') ?>" class="inline-flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700">
-                    Nuovo progetto
-                    <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
-            </div>
-        </div>
+        <?= \Core\View::partial('components/dashboard-mode-card', [
+            'title' => 'Analisi Campagne',
+            'description' => 'Collega Google Ads Script, raccogli dati sulle campagne, ottieni valutazioni AI e analizza keyword negative.',
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>',
+            'gradient' => 'from-blue-500 to-indigo-600',
+            'url' => url('/projects/create'),
+            'ctaText' => 'Nuovo progetto',
+            'cost' => '10 cr/valutazione',
+            'costColor' => 'amber',
+            'badge' => ($stats['campaign_count'] > 0) ? $stats['campaign_count'] . ' progetti' : null,
+        ]) ?>
 
-        <!-- Campaign Creator -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
-            <div class="p-6">
-                <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-sm mb-4">
-                    <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Crea Campagna AI</h3>
-                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                    Genera da zero una campagna Google Ads completa (Search o PMax) con keyword, copy ed estensioni.
-                </p>
-                <div class="mt-3 flex flex-wrap items-center gap-2">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
-                        ~14 cr totali
-                    </span>
-                    <?php if ($stats['creator_count'] > 0): ?>
-                    <span class="text-xs text-slate-400 dark:text-slate-500"><?= $stats['creator_count'] ?> progetti</span>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <div class="px-6 py-4 bg-slate-50 dark:bg-slate-700/50 border-t border-slate-200 dark:border-slate-700">
-                <a href="<?= url('/projects/create') ?>" class="inline-flex items-center text-sm font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700">
-                    Nuovo progetto
-                    <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
-            </div>
-        </div>
+        <?= \Core\View::partial('components/dashboard-mode-card', [
+            'title' => 'Crea Campagna AI',
+            'description' => 'Genera da zero una campagna Google Ads completa (Search o PMax) con keyword, copy ed estensioni.',
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>',
+            'gradient' => 'from-amber-500 to-orange-600',
+            'url' => url('/projects/create'),
+            'ctaText' => 'Nuovo progetto',
+            'cost' => '~14 cr totali',
+            'costColor' => 'amber',
+            'badge' => ($stats['creator_count'] > 0) ? $stats['creator_count'] . ' progetti' : null,
+        ]) ?>
     </div>
 
     <!-- Progetti recenti -->
@@ -158,7 +89,7 @@ endif;
             </a>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div class="divide-y divide-slate-200 dark:divide-slate-700">
                 <?php foreach ($recentProjects as $project):
                     if (($project['type'] ?? 'negative-kw') === 'negative-kw') continue;
