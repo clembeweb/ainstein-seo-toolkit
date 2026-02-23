@@ -48,6 +48,37 @@
     </div>
     <?php endif; ?>
 
+    <!-- KPI Stats -->
+    <?= \Core\View::partial('components/dashboard-stats-row', [
+        'cards' => [
+            [
+                'label' => 'In coda',
+                'value' => $stats['pending'] ?? 0,
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>',
+                'color' => 'amber',
+            ],
+            [
+                'label' => 'Completate oggi',
+                'value' => $todayStats['completed_today'] ?? 0,
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',
+                'color' => 'emerald',
+            ],
+            [
+                'label' => 'Totale completate',
+                'value' => $stats['completed'] ?? 0,
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
+                'color' => 'purple',
+                'url' => url('/ai-content/projects/' . $project['id'] . '/articles'),
+            ],
+            [
+                'label' => 'Errori',
+                'value' => $stats['errors'] ?? 0,
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+                'color' => 'red',
+            ],
+        ],
+    ]) ?>
+
     <!-- Process Status Panel (hidden by default) -->
     <div id="process-panel" class="hidden bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <div class="flex items-center justify-between mb-4">
@@ -116,66 +147,6 @@
                 <div>
                     <p class="font-medium text-red-700 dark:text-red-400">Errore durante l'elaborazione</p>
                     <p class="text-sm text-red-600 dark:text-red-300" id="process-error-text"></p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- In Coda -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">In Coda</p>
-                    <p class="mt-1 text-3xl font-bold text-slate-900 dark:text-white"><?= number_format($stats['pending'] ?? 0) ?></p>
-                </div>
-                <div class="h-12 w-12 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                    </svg>
-                </div>
-            </div>
-            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                keyword da elaborare
-            </p>
-        </div>
-
-        <!-- Completate Oggi -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Completate Oggi</p>
-                    <p class="mt-1 text-3xl font-bold text-emerald-600 dark:text-emerald-400"><?= number_format($todayStats['completed_today'] ?? 0) ?></p>
-                </div>
-                <div class="h-12 w-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
-                    <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-            </div>
-            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                articoli generati oggi
-            </p>
-        </div>
-
-        <!-- Prossima Schedulata -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Prossima</p>
-                    <?php if (!empty($stats['next_scheduled'])): ?>
-                    <p class="mt-1 text-xl font-bold text-slate-900 dark:text-white"><?= date('H:i', strtotime($stats['next_scheduled'])) ?></p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400"><?= date('d/m/Y', strtotime($stats['next_scheduled'])) ?></p>
-                    <?php else: ?>
-                    <p class="mt-1 text-xl font-bold text-slate-400 dark:text-slate-500">--:--</p>
-                    <p class="text-sm text-slate-400 dark:text-slate-500">nessuna</p>
-                    <?php endif; ?>
-                </div>
-                <div class="h-12 w-12 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
-                    <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
                 </div>
             </div>
         </div>
@@ -295,6 +266,17 @@
         </ul>
     </div>
     <?php endif; ?>
+
+    <!-- Come funziona -->
+    <?= \Core\View::partial('components/dashboard-how-it-works', [
+        'color' => 'amber',
+        'steps' => [
+            ['title' => 'Importa Keyword', 'description' => 'Lista keyword da elaborare'],
+            ['title' => 'Schedula', 'description' => 'Imposta cron automatico'],
+            ['title' => 'AI Genera', 'description' => 'Articoli creati in batch'],
+            ['title' => 'Pubblica', 'description' => 'Invio automatico a WP'],
+        ],
+    ]) ?>
 
 </div>
 
