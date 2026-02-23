@@ -1,13 +1,4 @@
 <div class="space-y-6" x-data="{ activeTab: '<?= e($activeTab) ?>' }">
-    <!-- Breadcrumbs -->
-    <nav class="flex" aria-label="Breadcrumb">
-        <ol class="flex items-center space-x-2 text-sm">
-            <li>
-                <span class="text-slate-900 dark:text-white font-medium">AI Content</span>
-            </li>
-        </ol>
-    </nav>
-
     <!-- Header -->
     <div class="sm:flex sm:items-center sm:justify-between" data-tour="aic-header">
         <div>

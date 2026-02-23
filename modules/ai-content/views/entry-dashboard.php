@@ -19,6 +19,24 @@ if ($showTour && isset($onboardingConfig[$onboardingModuleSlug])):
 endif;
 ?>
 
+<!-- Hero Value Block -->
+<div class="mb-6">
+<?= \Core\View::partial('components/dashboard-hero-banner', [
+    'title' => 'Genera articoli SEO e meta tag con l\'AI',
+    'description' => 'Dalla keyword all\'articolo pubblicato: l\'AI analizza la SERP, genera un brief strategico, scrive contenuti ottimizzati e crea meta tag per le pagine esistenti. Programmazione automatica e pubblicazione su WordPress.',
+    'color' => 'amber',
+    'badge' => 'Come funziona',
+    'storageKey' => 'ainstein_hero_ai_content',
+    'steps' => [
+        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>', 'title' => 'Scegli keyword', 'subtitle' => 'Brief AI strategico'],
+        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>', 'title' => 'Genera contenuto', 'subtitle' => 'Articolo o meta tag'],
+        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>', 'title' => 'Pubblica', 'subtitle' => 'WordPress automatico'],
+    ],
+    'ctaText' => 'Nuovo Progetto',
+    'ctaUrl' => url('/projects/create'),
+]) ?>
+</div>
+
 <div class="space-y-8">
     <!-- Header -->
     <div class="sm:flex sm:items-center sm:justify-between" data-tour="aic-header">
