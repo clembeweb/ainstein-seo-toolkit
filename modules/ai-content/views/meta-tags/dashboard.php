@@ -9,32 +9,34 @@
 
 <div class="space-y-6">
     <!-- Stats Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
-            <div class="text-2xl font-bold text-slate-900 dark:text-white"><?= $stats['total'] ?></div>
-            <div class="text-sm text-slate-500 dark:text-slate-400">Totale URL</div>
-        </div>
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
-            <div class="text-2xl font-bold text-amber-600"><?= $stats['pending'] ?></div>
-            <div class="text-sm text-slate-500 dark:text-slate-400">Da scrapare</div>
-        </div>
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
-            <div class="text-2xl font-bold text-blue-600"><?= $stats['scraped'] ?></div>
-            <div class="text-sm text-slate-500 dark:text-slate-400">Scrappate</div>
-        </div>
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
-            <div class="text-2xl font-bold text-purple-600"><?= $stats['generated'] ?></div>
-            <div class="text-sm text-slate-500 dark:text-slate-400">Generate</div>
-        </div>
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
-            <div class="text-2xl font-bold text-emerald-600"><?= $stats['approved'] ?></div>
-            <div class="text-sm text-slate-500 dark:text-slate-400">Approvate</div>
-        </div>
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
-            <div class="text-2xl font-bold text-green-600"><?= $stats['published'] ?></div>
-            <div class="text-sm text-slate-500 dark:text-slate-400">Pubblicate</div>
-        </div>
-    </div>
+    <?= \Core\View::partial('components/dashboard-stats-row', [
+        'cards' => [
+            [
+                'label' => 'Totale URL',
+                'value' => $stats['total'] ?? 0,
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>',
+                'color' => 'blue',
+            ],
+            [
+                'label' => 'Scrappate',
+                'value' => $stats['scraped'] ?? 0,
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>',
+                'color' => 'cyan',
+            ],
+            [
+                'label' => 'Generate',
+                'value' => $stats['generated'] ?? 0,
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>',
+                'color' => 'purple',
+            ],
+            [
+                'label' => 'Pubblicate',
+                'value' => $stats['published'] ?? 0,
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',
+                'color' => 'emerald',
+            ],
+        ],
+    ]) ?>
 
     <?php if ($stats['errors'] > 0): ?>
     <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
@@ -219,46 +221,16 @@
     <?php endif; ?>
 
     <!-- Workflow Guide -->
-    <div class="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-6">
-        <h3 class="font-semibold text-slate-900 dark:text-white mb-4">Come funziona</h3>
-        <div class="grid md:grid-cols-5 gap-4">
-            <div class="text-center">
-                <div class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mx-auto mb-2">
-                    <span class="text-blue-600 dark:text-blue-400 font-bold">1</span>
-                </div>
-                <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Importa</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">URL da WP/Sitemap/CSV</p>
-            </div>
-            <div class="text-center">
-                <div class="h-10 w-10 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center mx-auto mb-2">
-                    <span class="text-amber-600 dark:text-amber-400 font-bold">2</span>
-                </div>
-                <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Scrape</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Analizza contenuto</p>
-            </div>
-            <div class="text-center">
-                <div class="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center mx-auto mb-2">
-                    <span class="text-purple-600 dark:text-purple-400 font-bold">3</span>
-                </div>
-                <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Genera</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">AI crea title/desc</p>
-            </div>
-            <div class="text-center">
-                <div class="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center mx-auto mb-2">
-                    <span class="text-emerald-600 dark:text-emerald-400 font-bold">4</span>
-                </div>
-                <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Approva</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Rivedi e modifica</p>
-            </div>
-            <div class="text-center">
-                <div class="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center mx-auto mb-2">
-                    <span class="text-green-600 dark:text-green-400 font-bold">5</span>
-                </div>
-                <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Pubblica</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Su WordPress</p>
-            </div>
-        </div>
-    </div>
+    <?= \Core\View::partial('components/dashboard-how-it-works', [
+        'color' => 'amber',
+        'steps' => [
+            ['title' => 'Importa', 'description' => 'URL da WP/Sitemap/CSV'],
+            ['title' => 'Scrape', 'description' => 'Analizza contenuto pagine'],
+            ['title' => 'Genera', 'description' => 'AI crea title e description'],
+            ['title' => 'Approva', 'description' => 'Rivedi e modifica'],
+            ['title' => 'Pubblica', 'description' => 'Invia a WordPress'],
+        ],
+    ]) ?>
 </div>
 
 <!-- Progress Modal con SSE -->
