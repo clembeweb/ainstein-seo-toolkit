@@ -62,27 +62,34 @@ $statusTabs = [
 
 <div class="space-y-6" x-data="dashboardManager()">
     <!-- Stats Cards -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
-        <?php
-        $statCards = [
-            ['label' => 'Totale URL', 'value' => $stats['total'], 'color' => 'slate'],
-            ['label' => 'In Attesa', 'value' => $stats['pending'], 'color' => 'amber'],
-            ['label' => 'Scrappate', 'value' => $stats['scraped'], 'color' => 'blue'],
-            ['label' => 'Generate', 'value' => $stats['generated'], 'color' => 'purple'],
-            ['label' => 'Approvate', 'value' => $stats['approved'], 'color' => 'teal'],
-            ['label' => 'Pubblicate', 'value' => $stats['published'], 'color' => 'emerald'],
-            ['label' => 'Errori', 'value' => $stats['errors'], 'color' => 'red'],
-        ];
-        foreach ($statCards as $card):
-        ?>
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 text-center">
-            <p class="text-2xl font-bold text-<?= $card['color'] ?>-600 dark:text-<?= $card['color'] ?>-400">
-                <?= number_format($card['value']) ?>
-            </p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1"><?= $card['label'] ?></p>
-        </div>
-        <?php endforeach; ?>
-    </div>
+    <?= \Core\View::partial('components/dashboard-stats-row', [
+        'cards' => [
+            [
+                'label' => 'URL totali',
+                'value' => $stats['total'] ?? 0,
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>',
+                'color' => 'orange',
+            ],
+            [
+                'label' => 'Scrappate',
+                'value' => $stats['scraped'] ?? 0,
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>',
+                'color' => 'blue',
+            ],
+            [
+                'label' => 'Generate',
+                'value' => $stats['generated'] ?? 0,
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>',
+                'color' => 'purple',
+            ],
+            [
+                'label' => 'Approvate',
+                'value' => $stats['approved'] ?? 0,
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',
+                'color' => 'emerald',
+            ],
+        ],
+    ]) ?>
 
     <?php if ($stats['total'] > 0): ?>
     <!-- Progress Bar -->
@@ -398,6 +405,17 @@ $statusTabs = [
     </div>
 
     <?php endif; ?>
+
+    <!-- Come funziona -->
+    <?= \Core\View::partial('components/dashboard-how-it-works', [
+        'color' => 'orange',
+        'steps' => [
+            ['title' => 'Configura', 'description' => 'Template e CMS target'],
+            ['title' => 'Importa URL', 'description' => 'Pagine da riscrivere'],
+            ['title' => 'Genera', 'description' => 'AI crea i contenuti HTML'],
+            ['title' => 'Pubblica', 'description' => 'Invia al CMS'],
+        ],
+    ]) ?>
 </div>
 
 <script>
