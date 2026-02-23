@@ -15,55 +15,21 @@ endif;
 ?>
 
 <!-- Hero Value Block -->
-<div x-data="{ show: !localStorage.getItem('ainstein_hero_seo_audit') }" x-show="show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="mb-6">
-    <div class="relative overflow-hidden rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-900">
-        <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full -translate-y-1/2 translate-x-1/3"></div>
-        <div class="absolute bottom-0 left-0 w-48 h-48 bg-emerald-500/5 rounded-full translate-y-1/2 -translate-x-1/4"></div>
-
-        <div class="relative p-6 sm:p-8">
-            <button @click="show = false; localStorage.setItem('ainstein_hero_seo_audit', '1')" class="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-
-            <div class="max-w-3xl">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-300 mb-3">
-                    Come funziona
-                </span>
-                <h2 class="text-xl sm:text-2xl font-bold text-white mb-2">Audit SEO completo con piano d'azione</h2>
-                <p class="text-slate-300 text-sm mb-6">Ainstein scansiona il sito, analizza struttura, performance, contenuti e fattori tecnici. Non si limita a segnalare i problemi: li mette in ordine di impatto e crea un piano d'azione con priorita chiare.</p>
-
-                <!-- 3-step workflow -->
-                <div class="grid grid-cols-3 gap-3 sm:gap-4 mb-6">
-                    <div class="text-center">
-                        <div class="h-12 w-12 rounded-xl bg-emerald-500/20 flex items-center justify-center mx-auto mb-2">
-                            <svg class="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
-                        </div>
-                        <p class="text-xs font-medium text-white">Inserisci l'URL</p>
-                        <p class="text-xs text-slate-400 mt-0.5">Scansione completa</p>
-                    </div>
-                    <div class="text-center">
-                        <div class="h-12 w-12 rounded-xl bg-emerald-500/20 flex items-center justify-center mx-auto mb-2">
-                            <svg class="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                        </div>
-                        <p class="text-xs font-medium text-white">Analisi AI</p>
-                        <p class="text-xs text-slate-400 mt-0.5">Problemi e opportunita</p>
-                    </div>
-                    <div class="text-center">
-                        <div class="h-12 w-12 rounded-xl bg-emerald-500/20 flex items-center justify-center mx-auto mb-2">
-                            <svg class="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        </div>
-                        <p class="text-xs font-medium text-white">Piano d'azione</p>
-                        <p class="text-xs text-slate-400 mt-0.5">Priorita per impatto</p>
-                    </div>
-                </div>
-
-                <a href="<?= url('/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-emerald-500 text-white text-sm font-medium hover:bg-emerald-600 transition-colors">
-                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    Nuovo Audit
-                </a>
-            </div>
-        </div>
-    </div>
+<div class="mb-6">
+<?= \Core\View::partial('components/dashboard-hero-banner', [
+    'title' => 'Audit SEO completo con piano d\'azione',
+    'description' => 'Ainstein scansiona il sito, analizza struttura, performance, contenuti e fattori tecnici. Non si limita a segnalare i problemi: li mette in ordine di impatto e crea un piano d\'azione con priorita chiare.',
+    'color' => 'emerald',
+    'badge' => 'Come funziona',
+    'storageKey' => 'ainstein_hero_seo_audit',
+    'steps' => [
+        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>', 'title' => 'Inserisci l\'URL', 'subtitle' => 'Scansione completa'],
+        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>', 'title' => 'Analisi AI', 'subtitle' => 'Problemi e opportunita'],
+        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>', 'title' => 'Piano d\'azione', 'subtitle' => 'Priorita per impatto'],
+    ],
+    'ctaText' => 'Nuovo Audit',
+    'ctaUrl' => url('/projects/create'),
+]) ?>
 </div>
 
 <div class="space-y-6">
