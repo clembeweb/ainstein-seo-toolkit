@@ -276,11 +276,25 @@ class ProjectController
             exit;
         }
 
-        // Carica connettore WordPress se il progetto è collegato a un progetto globale
+        // Carica sito WordPress collegato al progetto globale (da aic_wp_sites)
         $wpConnector = null;
         if (!empty($project['global_project_id'])) {
-            $connectorModel = new \Core\Models\ProjectConnector();
-            $wpConnector = $connectorModel->getActiveByProject($project['global_project_id'], 'wordpress');
+            $wpSiteModel = new \Modules\AiContent\Models\WpSite();
+            $wpSite = $wpSiteModel->getActiveByProject($project['global_project_id']);
+            if ($wpSite) {
+                // Mappa campi aic_wp_sites → formato atteso dalla view import
+                $wpConnector = [
+                    'id' => $wpSite['id'],
+                    'name' => $wpSite['name'],
+                    'type' => 'wordpress',
+                    'config' => json_encode(['url' => $wpSite['url'], 'api_key' => $wpSite['api_key']]),
+                    'is_active' => $wpSite['is_active'],
+                    'url' => $wpSite['url'],
+                    'seo_plugin' => null,
+                    'last_test_at' => $wpSite['last_sync_at'] ?? null,
+                    'last_test_status' => $wpSite['is_active'] ? 'success' : null,
+                ];
+            }
         }
 
         return View::render('seo-audit/urls/import', [

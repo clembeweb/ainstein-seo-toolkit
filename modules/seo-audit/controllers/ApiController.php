@@ -9,7 +9,7 @@ use Modules\SeoAudit\Models\Page;
 use Modules\SeoAudit\Models\CrawlSession;
 use Modules\SeoAudit\Models\CrawlJob;
 use Modules\SeoAudit\Services\IssueDetector;
-use Core\Models\ProjectConnector;
+
 use Services\Connectors\WordPressSeoConnector;
 
 /**
@@ -268,17 +268,17 @@ class ApiController
             exit;
         }
 
-        // Recupera connettore WordPress attivo
-        $connectorModel = new ProjectConnector();
-        $connector = $connectorModel->getActiveByProject($globalProjectId, 'wordpress');
-        if (!$connector) {
-            $this->sendSseEvent('error', ['message' => 'Nessun connettore WordPress configurato']);
+        // Recupera sito WordPress attivo collegato al progetto (da aic_wp_sites)
+        $wpSiteModel = new \Modules\AiContent\Models\WpSite();
+        $wpSite = $wpSiteModel->getActiveByProject($globalProjectId);
+        if (!$wpSite) {
+            $this->sendSseEvent('error', ['message' => 'Nessun sito WordPress collegato al progetto']);
             exit;
         }
 
-        $config = json_decode($connector['config'], true);
+        $config = ['url' => $wpSite['url'], 'api_key' => $wpSite['api_key']];
         if (empty($config['url']) || empty($config['api_key'])) {
-            $this->sendSseEvent('error', ['message' => 'Configurazione connettore incompleta']);
+            $this->sendSseEvent('error', ['message' => 'Configurazione sito WordPress incompleta']);
             exit;
         }
 

@@ -386,11 +386,12 @@ Router::post('/ai-content/projects/{id}/wordpress/sites', function ($id) {
 // WORDPRESS ROUTES (globali/legacy)
 // ============================================
 
-// Lista siti WordPress
+// Lista siti WordPress → redirect a progetti (gestione WP centralizzata)
 Router::get('/ai-content/wordpress', function () {
     Middleware::auth();
-    $controller = new WordPressController();
-    return $controller->index();
+    $_SESSION['_flash']['info'] = 'I siti WordPress si gestiscono ora dalla dashboard progetto.';
+    header('Location: ' . url('/projects'));
+    exit;
 });
 
 // Aggiungi sito WordPress

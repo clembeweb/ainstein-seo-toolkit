@@ -66,13 +66,19 @@ class WpSite
      */
     public function create(array $data): int
     {
-        return Database::insert($this->table, [
+        $insert = [
             'user_id' => $data['user_id'],
             'name' => $data['name'],
             'url' => rtrim($data['url'], '/'),
             'api_key' => $data['api_key'],
-            'is_active' => $data['is_active'] ?? true
-        ]);
+            'is_active' => $data['is_active'] ?? true,
+        ];
+
+        if (!empty($data['global_project_id'])) {
+            $insert['global_project_id'] = (int) $data['global_project_id'];
+        }
+
+        return Database::insert($this->table, $insert);
     }
 
     /**
@@ -168,5 +174,90 @@ class WpSite
         ";
 
         return Database::fetchAll($sql, [$articleId]);
+    }
+
+    // ─────────────────────────────────────────────
+    // Project-scoped methods (Global Projects hub)
+    // ─────────────────────────────────────────────
+
+    /**
+     * Trova sito WP attivo collegato a un progetto globale
+     */
+    public function getActiveByProject(int $globalProjectId): ?array
+    {
+        $site = Database::fetch(
+            "SELECT * FROM {$this->table}
+             WHERE global_project_id = ? AND is_active = 1
+             ORDER BY created_at DESC LIMIT 1",
+            [$globalProjectId]
+        );
+
+        if ($site && $site['categories_cache']) {
+            $site['categories'] = json_decode($site['categories_cache'], true);
+        }
+
+        return $site;
+    }
+
+    /**
+     * Tutti i siti WP collegati a un progetto globale
+     */
+    public function getAllByProject(int $globalProjectId): array
+    {
+        $sites = Database::fetchAll(
+            "SELECT * FROM {$this->table}
+             WHERE global_project_id = ?
+             ORDER BY name ASC",
+            [$globalProjectId]
+        );
+
+        foreach ($sites as &$site) {
+            if ($site['categories_cache']) {
+                $site['categories'] = json_decode($site['categories_cache'], true);
+            }
+        }
+
+        return $sites;
+    }
+
+    /**
+     * Collega sito WP a un progetto globale
+     */
+    public function linkToProject(int $siteId, int $globalProjectId, int $userId): bool
+    {
+        return Database::update($this->table, [
+            'global_project_id' => $globalProjectId,
+        ], 'id = ? AND user_id = ?', [$siteId, $userId]) > 0;
+    }
+
+    /**
+     * Scollega sito WP dal progetto (senza eliminarlo)
+     */
+    public function unlinkFromProject(int $siteId, int $userId): bool
+    {
+        return Database::update($this->table, [
+            'global_project_id' => null,
+        ], 'id = ? AND user_id = ?', [$siteId, $userId]) > 0;
+    }
+
+    /**
+     * Siti WP dell'utente non collegati a nessun progetto
+     */
+    public function getUnlinkedByUser(int $userId): array
+    {
+        $sites = Database::fetchAll(
+            "SELECT * FROM {$this->table}
+             WHERE user_id = ? AND global_project_id IS NULL AND is_active = 1
+             ORDER BY name ASC",
+            [$userId]
+        );
+
+        foreach ($sites as &$site) {
+            if ($site['categories_cache']) {
+                $site['categories'] = json_decode($site['categories_cache'], true);
+            }
+        }
+
+        return $sites;
     }
 }

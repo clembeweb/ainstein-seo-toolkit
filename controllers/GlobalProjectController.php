@@ -149,9 +149,10 @@ class GlobalProjectController
             }
         }
 
-        // Load CMS connectors for this project
-        $connectorModel = new \Core\Models\ProjectConnector();
-        $connectors = $connectorModel->getByProject($id);
+        // Load WordPress sites linked to this project
+        $wpSiteModel = new \Modules\AiContent\Models\WpSite();
+        $wpSites = $wpSiteModel->getAllByProject($id);
+        $unlinkedWpSites = $wpSiteModel->getUnlinkedByUser($user['id']);
 
         return View::render('projects/dashboard', [
             'title' => $project['name'],
@@ -165,7 +166,8 @@ class GlobalProjectController
             'moduleTypes' => $moduleTypes,
             'remainingTypes' => $remainingTypes,
             'activeTypesPerModule' => $activeTypesPerModule,
-            'connectors' => $connectors,
+            'wpSites' => $wpSites,
+            'unlinkedWpSites' => $unlinkedWpSites,
         ]);
     }
 
@@ -338,10 +340,10 @@ class GlobalProjectController
     }
 
     /**
-     * Aggiunge connettore CMS al progetto
-     * POST /projects/{id}/connectors
+     * Aggiunge nuovo sito WordPress e lo collega al progetto
+     * POST /projects/{id}/wp-sites
      */
-    public function addConnector(int $id): void
+    public function addWpSite(int $id): void
     {
         Middleware::auth();
         Middleware::csrf();
@@ -354,18 +356,32 @@ class GlobalProjectController
             return;
         }
 
-        $type = trim($_POST['type'] ?? '');
         $name = trim($_POST['name'] ?? '');
         $url = trim($_POST['url'] ?? '');
         $apiKey = trim($_POST['api_key'] ?? '');
 
-        if (empty($type) || empty($name) || empty($url) || empty($apiKey)) {
+        if (empty($name) || empty($url) || empty($apiKey)) {
             $_SESSION['_flash']['error'] = 'Compilare tutti i campi obbligatori';
             Router::redirect('/projects/' . $id);
             return;
         }
 
-        // Test connection before saving
+        // Normalizza URL
+        $url = rtrim($url, '/');
+        if (!preg_match('#^https?://#', $url)) {
+            $url = 'https://' . $url;
+        }
+
+        $wpSiteModel = new \Modules\AiContent\Models\WpSite();
+
+        // Verifica duplicato
+        if ($wpSiteModel->urlExists($url, $user['id'])) {
+            $_SESSION['_flash']['error'] = 'Questo sito WordPress è già collegato';
+            Router::redirect('/projects/' . $id);
+            return;
+        }
+
+        // Test connessione
         try {
             $connector = new \Services\Connectors\WordPressSeoConnector([
                 'url' => $url,
@@ -379,19 +395,15 @@ class GlobalProjectController
                 return;
             }
 
-            $connectorModel = new \Core\Models\ProjectConnector();
-            $connectorModel->create([
-                'project_id' => $id,
+            $wpSiteModel->create([
                 'user_id' => $user['id'],
-                'type' => $type,
+                'global_project_id' => $id,
                 'name' => $name,
-                'config' => ['url' => $url, 'api_key' => $apiKey],
-                'seo_plugin' => $testResult['seo_plugin'] ?? null,
-                'wp_version' => $testResult['wp_version'] ?? null,
-                'plugin_version' => $testResult['plugin_version'] ?? null,
+                'url' => $url,
+                'api_key' => $apiKey,
             ]);
 
-            $_SESSION['_flash']['success'] = 'Connettore WordPress aggiunto con successo';
+            $_SESSION['_flash']['success'] = 'Sito WordPress collegato con successo';
         } catch (\Exception $e) {
             $_SESSION['_flash']['error'] = 'Errore: ' . $e->getMessage();
         }
@@ -400,10 +412,67 @@ class GlobalProjectController
     }
 
     /**
-     * Testa connessione di un connettore esistente (AJAX)
-     * POST /projects/{id}/connectors/test
+     * Collega sito WordPress esistente al progetto
+     * POST /projects/{id}/wp-sites/link
      */
-    public function testConnector(int $id): void
+    public function linkWpSite(int $id): void
+    {
+        Middleware::auth();
+        Middleware::csrf();
+        $user = Auth::user();
+
+        $project = $this->project->find($id, $user['id']);
+        if (!$project) {
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
+            Router::redirect('/projects');
+            return;
+        }
+
+        $siteId = (int) ($_POST['site_id'] ?? 0);
+        $wpSiteModel = new \Modules\AiContent\Models\WpSite();
+        $site = $wpSiteModel->find($siteId, $user['id']);
+
+        if (!$site) {
+            $_SESSION['_flash']['error'] = 'Sito WordPress non trovato';
+            Router::redirect('/projects/' . $id);
+            return;
+        }
+
+        $wpSiteModel->linkToProject($siteId, $id, $user['id']);
+        $_SESSION['_flash']['success'] = 'Sito "' . $site['name'] . '" collegato al progetto';
+        Router::redirect('/projects/' . $id);
+    }
+
+    /**
+     * Scollega sito WordPress dal progetto (senza eliminarlo)
+     * POST /projects/{id}/wp-sites/unlink
+     */
+    public function unlinkWpSite(int $id): void
+    {
+        Middleware::auth();
+        Middleware::csrf();
+        $user = Auth::user();
+
+        $siteId = (int) ($_POST['site_id'] ?? 0);
+        $wpSiteModel = new \Modules\AiContent\Models\WpSite();
+        $site = $wpSiteModel->find($siteId, $user['id']);
+
+        if (!$site || (int) ($site['global_project_id'] ?? 0) !== $id) {
+            $_SESSION['_flash']['error'] = 'Sito non trovato';
+            Router::redirect('/projects/' . $id);
+            return;
+        }
+
+        $wpSiteModel->unlinkFromProject($siteId, $user['id']);
+        $_SESSION['_flash']['success'] = 'Sito scollegato dal progetto';
+        Router::redirect('/projects/' . $id);
+    }
+
+    /**
+     * Testa connessione di un sito WordPress (AJAX)
+     * POST /projects/{id}/wp-sites/test
+     */
+    public function testWpSite(int $id): void
     {
         Middleware::auth();
         Middleware::csrf();
@@ -411,65 +480,35 @@ class GlobalProjectController
 
         header('Content-Type: application/json');
 
-        $connectorId = (int) ($_POST['connector_id'] ?? 0);
-        $connectorModel = new \Core\Models\ProjectConnector();
-        $connector = $connectorModel->findForUser($connectorId, $user['id']);
+        $siteId = (int) ($_POST['site_id'] ?? 0);
+        $wpSiteModel = new \Modules\AiContent\Models\WpSite();
+        $site = $wpSiteModel->find($siteId, $user['id']);
 
-        if (!$connector || $connector['project_id'] != $id) {
-            echo json_encode(['success' => false, 'message' => 'Connettore non trovato']);
+        if (!$site) {
+            echo json_encode(['success' => false, 'message' => 'Sito non trovato']);
             exit;
         }
 
-        $config = json_decode($connector['config'], true);
-
         try {
-            $service = new \Services\Connectors\WordPressSeoConnector($config);
-            $result = $service->test();
+            $connector = new \Services\Connectors\WordPressSeoConnector([
+                'url' => $site['url'],
+                'api_key' => $site['api_key'],
+            ]);
+            $result = $connector->test();
 
-            // Update test status in DB
-            $connectorModel->updateTestStatus(
-                $connectorId,
-                $result['success'] ? 'success' : 'error',
-                $result['message'] ?? null,
-                $result['success'] ? [
-                    'seo_plugin' => $result['seo_plugin'] ?? null,
-                    'wp_version' => $result['wp_version'] ?? null,
-                    'plugin_version' => $result['plugin_version'] ?? null,
-                ] : null
-            );
+            // Aggiorna last_sync_at su successo
+            if ($result['success']) {
+                $wpSiteModel->update($siteId, [
+                    'last_sync_at' => date('Y-m-d H:i:s'),
+                ], $user['id']);
+            }
 
             echo json_encode($result);
         } catch (\Exception $e) {
-            $connectorModel->updateTestStatus($connectorId, 'error', $e->getMessage());
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
 
         exit;
-    }
-
-    /**
-     * Rimuove connettore dal progetto
-     * POST /projects/{id}/connectors/remove
-     */
-    public function removeConnector(int $id): void
-    {
-        Middleware::auth();
-        Middleware::csrf();
-        $user = Auth::user();
-
-        $connectorId = (int) ($_POST['connector_id'] ?? 0);
-        $connectorModel = new \Core\Models\ProjectConnector();
-        $connector = $connectorModel->findForUser($connectorId, $user['id']);
-
-        if (!$connector || $connector['project_id'] != $id) {
-            $_SESSION['_flash']['error'] = 'Connettore non trovato';
-            Router::redirect('/projects/' . $id);
-            return;
-        }
-
-        $connectorModel->delete($connectorId);
-        $_SESSION['_flash']['success'] = 'Connettore rimosso';
-        Router::redirect('/projects/' . $id);
     }
 
     /**

@@ -466,7 +466,7 @@ if (preg_match('#^/content-creator/projects/(\d+)#', $currentPath, $matches)) {
                 </div>
             <?php elseif ($module['slug'] === 'ai-content'): ?>
                 <!-- AI Content Module with Accordion -->
-                <?php $aiContentExpanded = $aiContentProjectId || str_starts_with($currentPath, '/ai-content/wordpress'); ?>
+                <?php $aiContentExpanded = (bool) $aiContentProjectId; ?>
                 <div x-data="{ expanded: <?= $aiContentExpanded ? 'true' : 'false' ?> }">
                     <!-- Module Link -->
                     <div class="flex items-center">
@@ -529,12 +529,7 @@ if (preg_match('#^/content-creator/projects/(\d+)#', $currentPath, $matches)) {
                         </div>
                     <?php endif; ?>
 
-                        <!-- Global Links (sempre visibili) -->
-                        <div class="<?= $aiContentProjectId ? 'pt-1 mt-1 border-t border-slate-200 dark:border-slate-700' : '' ?>">
-                            <div class="px-2 py-1 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Globale</div>
-                            <?= navSubLink("/ai-content/wordpress", 'Siti WordPress', '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/></svg>', $currentPath) ?>
-
-                        </div>
+                        <!-- Global Links removed: WP sites now managed at project level -->
                     </div>
                 </div>
             <?php elseif ($module['slug'] === 'keyword-research'): ?>
@@ -656,7 +651,7 @@ if (preg_match('#^/content-creator/projects/(\d+)#', $currentPath, $matches)) {
                 </div>
             <?php elseif ($module['slug'] === 'content-creator'): ?>
                 <!-- Content Creator Module with Accordion -->
-                <?php $ccExpanded = $ccProjectId || str_starts_with($currentPath, '/content-creator/connectors'); ?>
+                <?php $ccExpanded = (bool) $ccProjectId; ?>
                 <div x-data="{ expanded: <?= $ccExpanded ? 'true' : 'false' ?> }">
                     <!-- Module Link -->
                     <div class="flex items-center">
@@ -695,10 +690,7 @@ if (preg_match('#^/content-creator/projects/(\d+)#', $currentPath, $matches)) {
                         </div>
                     <?php endif; ?>
 
-                        <!-- Connettori CMS (sempre visibile) -->
-                        <div class="<?= $ccProjectId ? 'pt-1 mt-1 border-t border-slate-200 dark:border-slate-700' : '' ?>">
-                            <?= navSubLink("/content-creator/connectors", 'Connettori CMS', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>', $currentPath) ?>
-                        </div>
+                        <!-- Connettori CMS removed: managed at project level -->
                     </div>
                 </div>
             <?php else: ?>

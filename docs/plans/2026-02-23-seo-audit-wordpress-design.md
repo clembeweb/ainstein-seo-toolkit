@@ -300,6 +300,78 @@ L'analisi via WordPress e gratuita come il crawl standard. Il valore aggiunto e 
 
 ---
 
+## Fix: Crawl in Background (Bug attuale)
+
+### Problema
+
+Il crawl attuale dipende interamente dal frontend:
+- `setInterval` ogni 1.5s chiama `POST /crawl/batch`
+- Navigando via dalla pagina, il JS viene distrutto e il crawl si ferma
+- Tornando sulla pagina, il polling riparte e il crawl continua
+- Nessun background processing, nessun cron
+
+### Soluzione: Pattern Background Job (come seo-tracking)
+
+Convertiamo il crawl da frontend-driven a backend-driven:
+
+**Nuova tabella `sa_crawl_jobs`:**
+
+```sql
+CREATE TABLE sa_crawl_jobs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    project_id INT NOT NULL,
+    session_id INT NOT NULL,
+    user_id INT NOT NULL,
+    status ENUM('pending','running','completed','error','cancelled') DEFAULT 'pending',
+    config JSON NULL,                    -- batch_size, crawl_mode, max_pages, etc.
+    items_total INT DEFAULT 0,
+    items_completed INT DEFAULT 0,
+    items_failed INT DEFAULT 0,
+    current_item VARCHAR(500) NULL,
+    started_at TIMESTAMP NULL,
+    completed_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_status (status),
+    INDEX idx_project (project_id),
+    FOREIGN KEY (session_id) REFERENCES sa_crawl_sessions(id) ON DELETE CASCADE
+);
+```
+
+**Flusso rivisto:**
+
+1. Utente clicca "Avvia Crawl"
+2. Backend crea `sa_crawl_sessions` + `sa_crawl_jobs` (status=pending)
+3. Frontend apre SSE stream (`GET /crawl/stream?job_id=X`)
+4. Backend processa batch nel SSE handler:
+   - `ignore_user_abort(true)` + `set_time_limit(0)` → il crawl continua anche se l'utente naviga via
+   - Per ogni URL: scrape → save → detect issues → SSE event
+   - Salva progress nel DB ad ogni step
+5. Se SSE si disconnette (utente naviga via):
+   - Il backend continua a processare (ignore_user_abort)
+   - Salva risultati nel DB
+6. Utente torna sulla pagina:
+   - Controlla `sa_crawl_jobs.status`
+   - Se `running`: riconnette SSE o usa polling (`GET /crawl/job-status?job_id=X`)
+   - Se `completed`: mostra risultati dalla dashboard
+7. **Cron dispatcher** (opzionale, per robustezza):
+   - `modules/seo-audit/cron/crawl-dispatcher.php` eseguito ogni 5 minuti
+   - Riprende job `pending` o `running` rimasti bloccati (crash recovery)
+
+**File aggiuntivi per questa fix:**
+
+| File | Azione |
+|------|--------|
+| `modules/seo-audit/database/migrations/007_create_crawl_jobs.sql` | Schema sa_crawl_jobs |
+| `modules/seo-audit/models/CrawlJob.php` | Model job (create, updateProgress, cancel, isCancelled) |
+| `modules/seo-audit/controllers/CrawlController.php` | Refactor: start crea job, stream() per SSE, jobStatus() per polling, cancel() |
+| `modules/seo-audit/views/partials/crawl-control.php` | Refactor JS: SSE + polling fallback (rimuovere setInterval/processBatch) |
+| `modules/seo-audit/cron/crawl-dispatcher.php` | Cron per riprendere job bloccati |
+
+Questo fix si applica sia al crawl classico (scraping) che all'import WordPress. Entrambi usano lo stesso pattern job.
+
+---
+
 ## Fasi future
 
 ### Fase 2: Migrazione cc_connectors

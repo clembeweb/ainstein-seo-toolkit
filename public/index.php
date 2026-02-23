@@ -709,20 +709,25 @@ Router::post('/projects/{id}/delete', function ($id) {
     $controller->destroy((int) $id);
 });
 
-// CMS Connector management
-Router::post('/projects/{id}/connectors', function ($id) {
+// WordPress site management (unified via aic_wp_sites)
+Router::post('/projects/{id}/wp-sites', function ($id) {
     $controller = new Controllers\GlobalProjectController();
-    $controller->addConnector((int) $id);
+    $controller->addWpSite((int) $id);
 });
 
-Router::post('/projects/{id}/connectors/test', function ($id) {
+Router::post('/projects/{id}/wp-sites/link', function ($id) {
     $controller = new Controllers\GlobalProjectController();
-    $controller->testConnector((int) $id);
+    $controller->linkWpSite((int) $id);
 });
 
-Router::post('/projects/{id}/connectors/remove', function ($id) {
+Router::post('/projects/{id}/wp-sites/unlink', function ($id) {
     $controller = new Controllers\GlobalProjectController();
-    $controller->removeConnector((int) $id);
+    $controller->unlinkWpSite((int) $id);
+});
+
+Router::post('/projects/{id}/wp-sites/test', function ($id) {
+    $controller = new Controllers\GlobalProjectController();
+    $controller->testWpSite((int) $id);
 });
 
 // --- OAuth Routes (centralizzati) ---

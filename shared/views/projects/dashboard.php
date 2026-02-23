@@ -491,8 +491,22 @@ endif;
 
     </div><!-- /x-data activationModal -->
 
-    <!-- CMS Connector Section -->
-    <div x-data="connectorManager()" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+    <!-- WordPress Sites Section -->
+    <?php
+        // Domain match suggestion: find unlinked sites matching project domain
+        $suggestedSite = null;
+        $projectDomain = $project['domain'] ?? '';
+        if (!empty($projectDomain) && !empty($unlinkedWpSites)) {
+            foreach ($unlinkedWpSites as $uSite) {
+                $siteDomain = parse_url($uSite['url'], PHP_URL_HOST) ?: '';
+                if ($siteDomain && stripos($siteDomain, $projectDomain) !== false) {
+                    $suggestedSite = $uSite;
+                    break;
+                }
+            }
+        }
+    ?>
+    <div x-data="wpSiteManager()" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
         <!-- Section Header -->
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
@@ -502,27 +516,51 @@ endif;
                     </svg>
                 </div>
                 <div>
-                    <h3 class="font-semibold text-slate-900 dark:text-white text-sm">Connessione CMS</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Collega il tuo WordPress per analisi dirette senza scraping</p>
+                    <h3 class="font-semibold text-slate-900 dark:text-white text-sm">Siti WordPress</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Collega il tuo WordPress per pubblicazione e analisi SEO dirette</p>
                 </div>
             </div>
-            <?php if (!empty($connectors)): ?>
+            <?php if (!empty($wpSites)): ?>
             <button @click="showForm = !showForm" class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors">
                 <span x-text="showForm ? 'Chiudi' : 'Aggiungi'"></span>
             </button>
             <?php endif; ?>
         </div>
 
-        <?php if (!empty($connectors)): ?>
-        <!-- Existing Connectors -->
+        <?php if (!empty($suggestedSite) && empty($wpSites)): ?>
+        <!-- Domain match suggestion -->
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-4">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-blue-800 dark:text-blue-200">
+                        Hai gi&agrave; collegato <strong><?= htmlspecialchars($suggestedSite['name']) ?></strong> (<?= htmlspecialchars(parse_url($suggestedSite['url'], PHP_URL_HOST)) ?>)
+                    </p>
+                    <p class="text-xs text-blue-600 dark:text-blue-300 mt-1">Corrisponde al dominio di questo progetto. Vuoi collegarlo?</p>
+                    <form method="POST" action="<?= url('/projects/' . $project['id'] . '/wp-sites/link') ?>" class="mt-2">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="site_id" value="<?= $suggestedSite['id'] ?>">
+                        <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors">
+                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                            </svg>
+                            Collega al progetto
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if (!empty($wpSites)): ?>
+        <!-- Linked WordPress Sites -->
         <div class="space-y-3 mb-4">
-            <?php foreach ($connectors as $conn):
-                $connConfig = json_decode($conn['config'], true) ?: [];
-                $connUrl = $connConfig['url'] ?? '';
-                $connDomain = parse_url($connUrl, PHP_URL_HOST) ?: $connUrl;
-                $isSuccess = ($conn['last_test_status'] ?? '') === 'success';
-                $isError = ($conn['last_test_status'] ?? '') === 'error';
-                $hasTest = !empty($conn['last_test_at']);
+            <?php foreach ($wpSites as $site):
+                $siteDomain = parse_url($site['url'], PHP_URL_HOST) ?: $site['url'];
+                $catCount = !empty($site['categories']) ? count($site['categories']) : 0;
+                $apiKeyPreview = substr($site['api_key'], 0, 8) . '...' . substr($site['api_key'], -4);
             ?>
             <div class="bg-slate-50 dark:bg-slate-700/30 rounded-xl p-4">
                 <div class="flex items-start justify-between gap-3">
@@ -530,63 +568,40 @@ endif;
                         <!-- WP Icon -->
                         <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 mt-0.5">
                             <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 1.5c4.687 0 8.5 3.813 8.5 8.5 0 4.687-3.813 8.5-8.5 8.5-4.687 0-8.5-3.813-8.5-8.5 0-4.687 3.813-8.5 8.5-8.5zM4.356 12c0 1.357.353 2.633.972 3.742L4.09 9.26A8.458 8.458 0 004.356 12zm7.644 8c-1.21 0-2.363-.26-3.406-.724l3.617-10.504 3.705 10.148a.56.56 0 00.043.077A7.965 7.965 0 0112 20zm1.31-11.744l2.98 8.868 1.072-3.215c.428-1.054.77-1.87.77-2.558 0-.978-.352-1.653-.653-2.18-.404-.655-.78-1.207-.78-1.86 0-.73.552-1.408 1.332-1.408.035 0 .068.004.103.007A7.965 7.965 0 0012 4c-2.178 0-4.153.87-5.597 2.28.157.005.305.008.432.008.702 0 1.79-.085 1.79-.085.362-.021.405.51.043.553 0 0-.364.043-.77.064l3.412 10.146z"/>
+                                <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 1.5c4.687 0 8.5 3.813 8.5 8.5 0 4.687-3.813 8.5-8.5 8.5-4.687 0-8.5-3.813-8.5-8.5 0-4.687 3.813-8.5 8.5-8.5z"/>
                             </svg>
                         </div>
                         <div class="min-w-0">
                             <div class="flex items-center gap-2 flex-wrap">
-                                <p class="font-medium text-sm text-slate-900 dark:text-white truncate"><?= htmlspecialchars($conn['name']) ?></p>
-                                <span class="text-xs text-slate-500 dark:text-slate-400">(<?= htmlspecialchars($connDomain) ?>)</span>
-                            </div>
-                            <!-- CMS details -->
-                            <div class="flex items-center gap-2 mt-1 flex-wrap">
-                                <?php if (!empty($conn['seo_plugin'])): ?>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
-                                    <?= htmlspecialchars(ucwords(str_replace('-', ' ', $conn['seo_plugin']))) ?>
+                                <p class="font-medium text-sm text-slate-900 dark:text-white truncate"><?= htmlspecialchars($site['name']) ?></p>
+                                <a href="<?= htmlspecialchars($site['url']) ?>" target="_blank" class="text-xs text-indigo-500 dark:text-indigo-400 hover:underline"><?= htmlspecialchars($siteDomain) ?></a>
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium <?= $site['is_active'] ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-400' ?>">
+                                    <?= $site['is_active'] ? 'Attivo' : 'Disattivato' ?>
                                 </span>
-                                <?php endif; ?>
-                                <?php if (!empty($conn['wp_version'])): ?>
-                                <span class="text-xs text-slate-500 dark:text-slate-400">WP <?= htmlspecialchars($conn['wp_version']) ?></span>
-                                <?php endif; ?>
-                                <?php if (!empty($conn['plugin_version'])): ?>
-                                <span class="text-xs text-slate-500 dark:text-slate-400">Plugin v<?= htmlspecialchars($conn['plugin_version']) ?></span>
-                                <?php endif; ?>
                             </div>
-                            <!-- Test status -->
-                            <div class="flex items-center gap-2 mt-1.5">
-                                <?php if ($hasTest): ?>
-                                <span class="text-xs <?= $isSuccess ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' ?>">
-                                    <?php if ($isSuccess): ?>
-                                        <svg class="w-3.5 h-3.5 inline -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                        </svg>
-                                        Connesso
-                                    <?php else: ?>
-                                        <svg class="w-3.5 h-3.5 inline -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-                                        </svg>
-                                        Errore
-                                    <?php endif; ?>
-                                </span>
-                                <span class="text-xs text-slate-400 dark:text-slate-500">&middot; <?= _dashboard_time_ago($conn['last_test_at']) ?></span>
-                                <?php else: ?>
-                                <span class="text-xs text-slate-400 dark:text-slate-500">Mai testato</span>
+                            <div class="flex items-center gap-3 mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                <?php if ($catCount > 0): ?>
+                                <span><?= $catCount ?> categorie</span>
                                 <?php endif; ?>
+                                <?php if (!empty($site['last_sync_at'])): ?>
+                                <span>Ultimo sync: <?= _dashboard_time_ago($site['last_sync_at']) ?></span>
+                                <?php endif; ?>
+                                <span class="font-mono text-xs"><?= htmlspecialchars($apiKeyPreview) ?></span>
                             </div>
                             <!-- AJAX test result -->
-                            <template x-if="testResults[<?= $conn['id'] ?>]">
+                            <template x-if="testResults[<?= $site['id'] ?>]">
                                 <div class="mt-1.5">
-                                    <span x-show="testResults[<?= $conn['id'] ?>]?.success" class="text-xs text-emerald-600 dark:text-emerald-400">
+                                    <span x-show="testResults[<?= $site['id'] ?>]?.success" class="text-xs text-emerald-600 dark:text-emerald-400">
                                         <svg class="w-3.5 h-3.5 inline -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                         </svg>
                                         Connessione riuscita
                                     </span>
-                                    <span x-show="!testResults[<?= $conn['id'] ?>]?.success" class="text-xs text-red-600 dark:text-red-400">
+                                    <span x-show="!testResults[<?= $site['id'] ?>]?.success" class="text-xs text-red-600 dark:text-red-400">
                                         <svg class="w-3.5 h-3.5 inline -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                         </svg>
-                                        <span x-text="testResults[<?= $conn['id'] ?>]?.message || 'Errore'"></span>
+                                        <span x-text="testResults[<?= $site['id'] ?>]?.message || 'Errore'"></span>
                                     </span>
                                 </div>
                             </template>
@@ -594,26 +609,26 @@ endif;
                     </div>
                     <!-- Actions -->
                     <div class="flex items-center gap-2 flex-shrink-0">
-                        <button @click="testConnection(<?= $conn['id'] ?>)"
-                                :disabled="testing[<?= $conn['id'] ?>]"
+                        <button @click="testSite(<?= $site['id'] ?>)"
+                                :disabled="testing[<?= $site['id'] ?>]"
                                 class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-medium bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors disabled:opacity-50">
-                            <template x-if="testing[<?= $conn['id'] ?>]">
+                            <template x-if="testing[<?= $site['id'] ?>]">
                                 <svg class="animate-spin w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                                 </svg>
                             </template>
-                            <template x-if="!testing[<?= $conn['id'] ?>]">
+                            <template x-if="!testing[<?= $site['id'] ?>]">
                                 <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                 </svg>
                             </template>
                             Testa
                         </button>
-                        <button @click="confirmRemove(<?= $conn['id'] ?>)"
-                                class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-medium bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors">
+                        <button @click="confirmUnlink(<?= $site['id'] ?>, '<?= htmlspecialchars(addslashes($site['name']), ENT_QUOTES) ?>')"
+                                class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-medium bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors" title="Scollega dal progetto">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                             </svg>
                         </button>
                     </div>
@@ -623,30 +638,55 @@ endif;
         </div>
         <?php endif; ?>
 
-        <!-- Add Connector Form -->
+        <!-- Link existing site or Add new -->
         <div x-show="showForm" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
-            <?php if (!empty($connectors)): ?>
+            <?php if (!empty($wpSites)): ?>
             <div class="border-t border-slate-200 dark:border-slate-700 pt-4 mb-3">
-                <p class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Aggiungi connettore</p>
+                <p class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Aggiungi sito WordPress</p>
             </div>
             <?php endif; ?>
-            <form method="POST" action="<?= url('/projects/' . $project['id'] . '/connectors') ?>" class="space-y-3">
+
+            <?php if (!empty($unlinkedWpSites)): ?>
+            <!-- Link existing WP site -->
+            <div class="bg-blue-50 dark:bg-blue-900/10 rounded-xl p-4 mb-3">
+                <p class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Collega un sito esistente</p>
+                <form method="POST" action="<?= url('/projects/' . $project['id'] . '/wp-sites/link') ?>" class="flex items-end gap-3">
+                    <?= csrf_field() ?>
+                    <div class="flex-1">
+                        <select name="site_id" required class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors">
+                            <?php foreach ($unlinkedWpSites as $uSite): ?>
+                            <option value="<?= $uSite['id'] ?>"><?= htmlspecialchars($uSite['name']) ?> (<?= htmlspecialchars(parse_url($uSite['url'], PHP_URL_HOST)) ?>)</option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors shadow-sm">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                        </svg>
+                        Collega
+                    </button>
+                </form>
+            </div>
+            <p class="text-xs text-center text-slate-400 dark:text-slate-500 my-3">oppure</p>
+            <?php endif; ?>
+
+            <!-- Add new WP site form -->
+            <form method="POST" action="<?= url('/projects/' . $project['id'] . '/wp-sites') ?>" class="space-y-3">
                 <?= csrf_field() ?>
-                <input type="hidden" name="type" value="wordpress">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                        <label for="conn_name" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Nome sito</label>
-                        <input type="text" id="conn_name" name="name" required placeholder="Il Mio Blog"
+                        <label for="wp_name" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Nome sito</label>
+                        <input type="text" id="wp_name" name="name" required placeholder="Il Mio Blog"
                                class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors">
                     </div>
                     <div>
-                        <label for="conn_url" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">URL sito</label>
-                        <input type="url" id="conn_url" name="url" required placeholder="https://esempio.com"
+                        <label for="wp_url" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">URL sito</label>
+                        <input type="url" id="wp_url" name="url" required placeholder="https://esempio.com"
                                class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors">
                     </div>
                     <div>
-                        <label for="conn_api_key" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">API Key</label>
-                        <input type="password" id="conn_api_key" name="api_key" required placeholder="stk_..."
+                        <label for="wp_api_key" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">API Key</label>
+                        <input type="password" id="wp_api_key" name="api_key" required placeholder="stk_..."
                                class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors">
                     </div>
                 </div>
@@ -659,9 +699,9 @@ endif;
                     </a>
                     <button type="submit" class="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors shadow-sm">
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                         </svg>
-                        Connetti WordPress
+                        Aggiungi e collega
                     </button>
                 </div>
             </form>
@@ -669,48 +709,47 @@ endif;
     </div>
 
     <script>
-    function connectorManager() {
+    function wpSiteManager() {
         return {
-            showForm: <?= empty($connectors) ? 'true' : 'false' ?>,
+            showForm: <?= empty($wpSites) ? 'true' : 'false' ?>,
             testing: {},
             testResults: {},
 
-            async testConnection(connectorId) {
-                this.testing[connectorId] = true;
-                this.testResults[connectorId] = null;
+            async testSite(siteId) {
+                this.testing[siteId] = true;
+                this.testResults[siteId] = null;
                 try {
                     const formData = new FormData();
                     formData.append('_csrf_token', '<?= csrf_token() ?>');
-                    formData.append('connector_id', connectorId);
-                    const resp = await fetch('<?= url('/projects/' . $project['id'] . '/connectors/test') ?>', {
+                    formData.append('site_id', siteId);
+                    const resp = await fetch('<?= url('/projects/' . $project['id'] . '/wp-sites/test') ?>', {
                         method: 'POST',
                         body: formData
                     });
                     if (!resp.ok) {
-                        this.testResults[connectorId] = { success: false, message: 'Errore del server (' + resp.status + ')' };
+                        this.testResults[siteId] = { success: false, message: 'Errore del server (' + resp.status + ')' };
                     } else {
-                        const data = await resp.json();
-                        this.testResults[connectorId] = data;
+                        this.testResults[siteId] = await resp.json();
                     }
                 } catch (e) {
-                    this.testResults[connectorId] = { success: false, message: 'Errore di connessione' };
+                    this.testResults[siteId] = { success: false, message: 'Errore di connessione' };
                 }
-                this.testing[connectorId] = false;
+                this.testing[siteId] = false;
             },
 
-            confirmRemove(connectorId) {
-                if (confirm('Rimuovere questo connettore? L\'azione non puo essere annullata.')) {
+            confirmUnlink(siteId, siteName) {
+                if (confirm('Scollegare "' + siteName + '" da questo progetto? Il sito non verr\u00e0 eliminato.')) {
                     const form = document.createElement('form');
                     form.method = 'POST';
-                    form.action = '<?= url('/projects/' . $project['id'] . '/connectors/remove') ?>';
+                    form.action = '<?= url('/projects/' . $project['id'] . '/wp-sites/unlink') ?>';
                     const csrf = document.createElement('input');
                     csrf.type = 'hidden';
                     csrf.name = '_csrf_token';
                     csrf.value = '<?= csrf_token() ?>';
                     const id = document.createElement('input');
                     id.type = 'hidden';
-                    id.name = 'connector_id';
-                    id.value = connectorId;
+                    id.name = 'site_id';
+                    id.value = siteId;
                     form.appendChild(csrf);
                     form.appendChild(id);
                     document.body.appendChild(form);
