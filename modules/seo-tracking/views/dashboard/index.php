@@ -6,80 +6,35 @@
     <?= \Core\View::partial('components/orphaned-project-notice', ['project' => $project]) ?>
 
     <!-- ROW 1: KPI Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Keywords Tracciate -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-3xl font-bold text-slate-900 dark:text-white"><?= number_format($kpiStats['tracked_keywords']) ?></p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">Keywords Tracciate</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Posizione Media -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-3xl font-bold text-slate-900 dark:text-white">
-                        <?= $kpiStats['avg_position'] ? number_format($kpiStats['avg_position'], 1) : '-' ?>
-                    </p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">Posizione Media</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- In Top 10 -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-3xl font-bold text-slate-900 dark:text-white"><?= number_format($kpiStats['top10_count']) ?></p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">In Top 10</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Variazioni 7gg -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
-                    </svg>
-                </div>
-                <div class="flex items-baseline gap-3">
-                    <div class="flex items-center gap-1">
-                        <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
-                        </svg>
-                        <span class="text-lg font-bold text-emerald-600 dark:text-emerald-400"><?= $kpiStats['improved_7d'] ?></span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <svg class="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
-                        </svg>
-                        <span class="text-lg font-bold text-red-600 dark:text-red-400"><?= $kpiStats['declined_7d'] ?></span>
-                    </div>
-                </div>
-            </div>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">Variazioni 7gg</p>
-        </div>
-    </div>
+    <?= \Core\View::partial('components/dashboard-stats-row', [
+        'dataTour' => 'st-stats',
+        'cards' => [
+            [
+                'label' => 'Keywords tracciate',
+                'value' => $kpiStats['tracked_keywords'] ?? 0,
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>',
+                'color' => 'blue',
+            ],
+            [
+                'label' => 'Posizione media',
+                'value' => $kpiStats['avg_position'] ? number_format($kpiStats['avg_position'], 1) : '--',
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>',
+                'color' => 'amber',
+            ],
+            [
+                'label' => 'In Top 10',
+                'value' => $kpiStats['top10_count'] ?? 0,
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>',
+                'color' => 'emerald',
+            ],
+            [
+                'label' => 'Variazioni 7gg',
+                'value' => ($kpiStats['improved_7d'] ?? 0) . '/' . ($kpiStats['declined_7d'] ?? 0),
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>',
+                'color' => 'purple',
+            ],
+        ],
+    ]) ?>
 
     <!-- ROW 2: Charts -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -350,6 +305,17 @@
             </a>
         </div>
     </div>
+
+    <!-- Come funziona -->
+    <?= \Core\View::partial('components/dashboard-how-it-works', [
+        'color' => 'blue',
+        'steps' => [
+            ['title' => 'Aggiungi Keyword', 'description' => 'Le keyword da monitorare'],
+            ['title' => 'Rank Check', 'description' => 'Verifica posizioni SERP'],
+            ['title' => 'Monitora Trend', 'description' => 'Storico e variazioni'],
+            ['title' => 'Report AI', 'description' => 'Analisi e suggerimenti'],
+        ],
+    ]) ?>
 </div>
 
 <!-- Chart.js -->
