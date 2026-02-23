@@ -276,12 +276,20 @@ class ProjectController
             exit;
         }
 
+        // Carica connettore WordPress se il progetto è collegato a un progetto globale
+        $wpConnector = null;
+        if (!empty($project['global_project_id'])) {
+            $connectorModel = new \Core\Models\ProjectConnector();
+            $wpConnector = $connectorModel->getActiveByProject($project['global_project_id'], 'wordpress');
+        }
+
         return View::render('seo-audit/urls/import', [
             'title' => $project['name'] . ' - Importa URL',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
             'currentPage' => 'import',
+            'wpConnector' => $wpConnector,
         ]);
     }
 }
