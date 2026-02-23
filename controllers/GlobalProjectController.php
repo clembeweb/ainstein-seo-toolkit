@@ -139,6 +139,15 @@ class GlobalProjectController
         $moduleConfig = $this->project->getModuleConfig();
 
         $moduleTypes = $this->project->getModuleTypes();
+        $remainingTypes = $this->project->getRemainingTypes($id);
+
+        // Tipi attivi per modulo (per filtrare la modal)
+        $activeTypesPerModule = [];
+        foreach ($activeModules as $m) {
+            if (!empty($m['type'])) {
+                $activeTypesPerModule[$m['slug']][] = $m['type'];
+            }
+        }
 
         return View::render('projects/dashboard', [
             'title' => $project['name'],
@@ -150,6 +159,8 @@ class GlobalProjectController
             'availableModules' => $availableModules,
             'moduleConfig' => $moduleConfig,
             'moduleTypes' => $moduleTypes,
+            'remainingTypes' => $remainingTypes,
+            'activeTypesPerModule' => $activeTypesPerModule,
         ]);
     }
 
@@ -271,10 +282,23 @@ class GlobalProjectController
         }
 
         // Verifica se il modulo è già attivo per questo progetto
+        $type = trim($_POST['type'] ?? '');
         $activeModules = $this->project->getActiveModules($id);
         foreach ($activeModules as $active) {
             if ($active['slug'] === $moduleSlug) {
-                // Già attivo, redirect alla pagina del modulo
+                // Per moduli tipizzati, verificare anche il tipo
+                $moduleTypes = $this->project->getModuleTypes();
+                if (isset($moduleTypes[$moduleSlug]) && !empty($type)) {
+                    // Tipizzato: blocca solo se stesso tipo già attivo
+                    if (($active['type'] ?? '') === $type) {
+                        $routePrefix = $moduleConfig[$moduleSlug]['route_prefix'];
+                        Router::redirect($routePrefix . '/' . $active['module_project_id']);
+                        return;
+                    }
+                    // Tipo diverso: lascia passare per attivazione
+                    continue;
+                }
+                // Non tipizzato: già attivo, redirect
                 $routePrefix = $moduleConfig[$moduleSlug]['route_prefix'];
                 Router::redirect($routePrefix . '/' . $active['module_project_id']);
                 return;
@@ -283,7 +307,6 @@ class GlobalProjectController
 
         // Prepara dati extra (tipo per moduli tipizzati)
         $extraData = [];
-        $type = trim($_POST['type'] ?? '');
         if (!empty($type)) {
             $extraData['type'] = $type;
         }

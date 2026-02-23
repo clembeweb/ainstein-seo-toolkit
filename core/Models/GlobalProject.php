@@ -273,7 +273,7 @@ class GlobalProject
      * Ottieni tutti i moduli attivi per un progetto globale.
      * Controlla tutte le 7 tabelle modulo per record con global_project_id = $id.
      *
-     * @return array<int, array{slug: string, module_project_id: int, label: string, table: string, color: string, route_prefix: string}>
+     * @return array<int, array{slug: string, module_project_id: int, label: string, table: string, color: string, route_prefix: string, type: ?string, type_label: ?string}>
      */
     public function getActiveModules(int $id): array
     {
@@ -281,12 +281,20 @@ class GlobalProject
 
         foreach (self::MODULE_CONFIG as $slug => $config) {
             try {
-                $rows = Database::fetchAll(
-                    "SELECT id FROM {$config['table']} WHERE global_project_id = ?",
-                    [$id]
-                );
+                $hasTypes = isset(self::MODULE_TYPES[$slug]);
+                $sql = $hasTypes
+                    ? "SELECT id, type FROM {$config['table']} WHERE global_project_id = ?"
+                    : "SELECT id FROM {$config['table']} WHERE global_project_id = ?";
+
+                $rows = Database::fetchAll($sql, [$id]);
 
                 foreach ($rows as $row) {
+                    $type = $row['type'] ?? null;
+                    $typeLabel = null;
+                    if ($type && $hasTypes && isset(self::MODULE_TYPES[$slug][$type])) {
+                        $typeLabel = self::MODULE_TYPES[$slug][$type]['label'];
+                    }
+
                     $active[] = [
                         'slug' => $slug,
                         'module_project_id' => (int) $row['id'],
@@ -295,6 +303,8 @@ class GlobalProject
                         'color' => $config['color'],
                         'icon' => $config['icon'],
                         'route_prefix' => $config['route_prefix'],
+                        'type' => $type,
+                        'type_label' => $typeLabel,
                     ];
                 }
             } catch (\Exception $e) {
@@ -331,6 +341,7 @@ class GlobalProject
         foreach ($activeModules as $module) {
             $slug = $module['slug'];
             $moduleProjectId = $module['module_project_id'];
+            $key = $module['type'] ? "{$slug}:{$module['type']}" : $slug;
 
             if (!isset($modelMap[$slug])) {
                 continue;
@@ -341,14 +352,14 @@ class GlobalProject
 
                 // ads-analyzer usa metodi statici
                 if ($slug === 'ads-analyzer') {
-                    $stats[$slug] = $modelClass::getProjectKpi($moduleProjectId);
+                    $stats[$key] = $modelClass::getProjectKpi($moduleProjectId);
                 } else {
                     $model = new $modelClass();
-                    $stats[$slug] = $model->getProjectKpi($moduleProjectId);
+                    $stats[$key] = $model->getProjectKpi($moduleProjectId);
                 }
             } catch (\Exception $e) {
                 // Modulo potrebbe non essere disponibile
-                $stats[$slug] = [
+                $stats[$key] = [
                     'metrics' => [],
                     'lastActivity' => null,
                     'error' => $e->getMessage(),
@@ -357,6 +368,48 @@ class GlobalProject
         }
 
         return $stats;
+    }
+
+    /**
+     * Ritorna i tipi NON ancora attivati per ogni modulo tipizzato.
+     * Usato dalla dashboard per mostrare il bottone "+ Aggiungi tipo".
+     *
+     * @return array<string, array> Tipi rimanenti indicizzati per slug modulo
+     */
+    public function getRemainingTypes(int $id): array
+    {
+        $remaining = [];
+
+        foreach (self::MODULE_TYPES as $slug => $allTypes) {
+            if (!isset(self::MODULE_CONFIG[$slug])) {
+                continue;
+            }
+
+            $table = self::MODULE_CONFIG[$slug]['table'];
+
+            try {
+                $rows = Database::fetchAll(
+                    "SELECT DISTINCT type FROM {$table} WHERE global_project_id = ? AND type IS NOT NULL",
+                    [$id]
+                );
+                $activeTypes = array_column($rows, 'type');
+            } catch (\Exception $e) {
+                $activeTypes = [];
+            }
+
+            $notActivated = [];
+            foreach ($allTypes as $typeKey => $typeInfo) {
+                if (!in_array($typeKey, $activeTypes, true)) {
+                    $notActivated[$typeKey] = $typeInfo;
+                }
+            }
+
+            if (!empty($notActivated)) {
+                $remaining[$slug] = $notActivated;
+            }
+        }
+
+        return $remaining;
     }
 
     // ─────────────────────────────────────────────
