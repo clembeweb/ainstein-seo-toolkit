@@ -10,6 +10,16 @@ $colorMap = [
     'orange'  => ['bg' => 'bg-orange-100 dark:bg-orange-900/30',   'text' => 'text-orange-600 dark:text-orange-400',   'border' => '#F97316'],
 ];
 
+// Helper: build module project URL (appends type if module requires it in route)
+function _dashboard_module_link(array $mod, array $moduleConfig): string {
+    $slug = $mod['slug'];
+    $link = $mod['route_prefix'] . '/' . $mod['module_project_id'];
+    if (!empty($moduleConfig[$slug]['type_in_route']) && !empty($mod['type'])) {
+        $link .= '/' . $mod['type'];
+    }
+    return url($link);
+}
+
 // Slugs dei moduli attivi per quick-check
 $activeSlugs = array_unique(array_column($activeModules, 'slug'));
 
@@ -123,7 +133,7 @@ endif;
                 $statsKey = $slug;
                 $stats = $moduleStats[$statsKey] ?? ['metrics' => [], 'lastActivity' => null];
                 $metrics = $stats['metrics'] ?? [];
-                $moduleLink = url($firstMod['route_prefix'] . '/' . $firstMod['module_project_id']);
+                $moduleLink = _dashboard_module_link($firstMod, $moduleConfig);
             ?>
             <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5" style="border-left: 4px solid <?= htmlspecialchars($colors['border']) ?>">
                 <div class="flex items-center justify-between mb-3">
@@ -178,7 +188,7 @@ endif;
                 $statsKey = $mod['type'] ? $slug . ':' . $mod['type'] : $slug;
                 $stats = $moduleStats[$statsKey] ?? ['metrics' => [], 'lastActivity' => null];
                 $metrics = $stats['metrics'] ?? [];
-                $moduleLink = url($mod['route_prefix'] . '/' . $mod['module_project_id']);
+                $moduleLink = _dashboard_module_link($mod, $moduleConfig);
                 $configLabel = $moduleConfig[$slug]['label'] ?? $slug;
             ?>
             <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5" style="border-left: 4px solid <?= htmlspecialchars($colors['border']) ?>">
@@ -266,7 +276,7 @@ endif;
                         $statsKey = $mod['type'] ? $slug . ':' . $mod['type'] : $slug;
                         $stats = $moduleStats[$statsKey] ?? ['metrics' => [], 'lastActivity' => null];
                         $metrics = $stats['metrics'] ?? [];
-                        $moduleLink = url($mod['route_prefix'] . '/' . $mod['module_project_id']);
+                        $moduleLink = _dashboard_module_link($mod, $moduleConfig);
                     ?>
                     <div class="bg-slate-50 dark:bg-slate-700/30 rounded-xl p-4">
                         <div class="flex items-center justify-between mb-2">

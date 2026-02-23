@@ -292,7 +292,11 @@ class GlobalProjectController
                     // Tipizzato: blocca solo se stesso tipo già attivo
                     if (($active['type'] ?? '') === $type) {
                         $routePrefix = $moduleConfig[$moduleSlug]['route_prefix'];
-                        Router::redirect($routePrefix . '/' . $active['module_project_id']);
+                        $routeUrl = $routePrefix . '/' . $active['module_project_id'];
+                        if (!empty($moduleConfig[$moduleSlug]['type_in_route'])) {
+                            $routeUrl .= '/' . $type;
+                        }
+                        Router::redirect($routeUrl);
                         return;
                     }
                     // Tipo diverso: lascia passare per attivazione
@@ -317,7 +321,11 @@ class GlobalProjectController
         if ($moduleProjectId) {
             $_SESSION['_flash']['success'] = $moduleConfig[$moduleSlug]['label'] . ' attivato con successo!';
             $routePrefix = $moduleConfig[$moduleSlug]['route_prefix'];
-            Router::redirect($routePrefix . '/' . $moduleProjectId);
+            $routeUrl = $routePrefix . '/' . $moduleProjectId;
+            if (!empty($moduleConfig[$moduleSlug]['type_in_route']) && !empty($type)) {
+                $routeUrl .= '/' . $type;
+            }
+            Router::redirect($routeUrl);
         } else {
             $_SESSION['_flash']['error'] = 'Errore nell\'attivazione del modulo';
             Router::redirect('/projects/' . $id);
