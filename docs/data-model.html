@@ -195,6 +195,13 @@
         <p class="text-slate-500 dark:text-slate-400 mb-6">Relazioni principali tra la tabella <code class="text-amber-400">users</code> e le tabelle progetto di ogni modulo.</p>
         <div class="mermaid">
 erDiagram
+    users ||--o{ projects : "possiede"
+    projects ||--o{ aic_projects : "attiva"
+    projects ||--o{ sa_projects : "attiva"
+    projects ||--o{ st_projects : "attiva"
+    projects ||--o{ kr_projects : "attiva"
+    projects ||--o{ il_projects : "attiva"
+    projects ||--o{ ga_projects : "attiva"
     users ||--o{ aic_projects : "possiede"
     users ||--o{ sa_projects : "possiede"
     users ||--o{ st_projects : "possiede"
@@ -205,6 +212,14 @@ erDiagram
     users ||--o{ usage_log : "registra"
     users ||--o{ subscriptions : "sottoscrive"
     subscriptions }o--|| plans : "piano"
+    projects {
+        int id PK
+        int user_id FK
+        varchar name
+        varchar domain
+        varchar color
+        enum status
+    }
     users {
         int id PK
         varchar email UK
@@ -234,6 +249,18 @@ erDiagram
     subscriptions }o--|| plans : "piano"
     users ||--o{ ai_logs : "log AI"
     settings ||--o{ users : "updated_by"
+    users ||--o{ projects : "hub progetti"
+    projects {
+        int id PK
+        int user_id FK
+        varchar name
+        varchar domain
+        text description
+        varchar color
+        enum status
+        timestamp created_at
+        timestamp updated_at
+    }
     users {
         int id PK
         varchar email UK
@@ -423,6 +450,32 @@ erDiagram
                 <div><strong class="text-slate-900 dark:text-white">modules</strong>: id(PK), slug(UK), name, description, version, is_active, settings(JSON), created_at, updated_at</div>
                 <div><strong class="text-slate-900 dark:text-white">ai_logs</strong>: id(PK), user_id(FK), module_slug, provider, model, request_payload, response_payload, tokens_input, tokens_output, tokens_total(GENERATED), duration_ms, status, error_message, fallback_from, estimated_cost, credits_used, created_at</div>
                 <div><strong class="text-slate-900 dark:text-white">password_resets</strong>: id(PK), email, token, created_at</div>
+            </div>
+        </details>
+
+        <details class="mb-4 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+            <summary class="bg-slate-50 dark:bg-slate-800 px-4 py-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 font-medium text-slate-900 dark:text-white">
+                projects (Hub Progetti Globali)
+            </summary>
+            <div class="p-4 overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead><tr class="border-b border-slate-200 dark:border-slate-700">
+                        <th class="text-left py-2 px-3 text-slate-500 dark:text-slate-400">Colonna</th>
+                        <th class="text-left py-2 px-3 text-slate-500 dark:text-slate-400">Tipo</th>
+                        <th class="text-left py-2 px-3 text-slate-500 dark:text-slate-400">Note</th>
+                    </tr></thead>
+                    <tbody class="text-slate-700 dark:text-slate-300">
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">id</td><td class="py-1.5 px-3">INT AUTO_INCREMENT</td><td class="py-1.5 px-3"><span class="text-amber-500 font-semibold">PK</span></td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">user_id</td><td class="py-1.5 px-3">INT</td><td class="py-1.5 px-3"><span class="text-blue-500 font-semibold">FK</span> &rarr; users.id</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">name</td><td class="py-1.5 px-3">VARCHAR(255)</td><td class="py-1.5 px-3">Nome progetto</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">domain</td><td class="py-1.5 px-3">VARCHAR(500)</td><td class="py-1.5 px-3">Dominio sito (nullable)</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">description</td><td class="py-1.5 px-3">TEXT</td><td class="py-1.5 px-3">Descrizione (nullable)</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">color</td><td class="py-1.5 px-3">VARCHAR(7)</td><td class="py-1.5 px-3">Colore hex (#3B82F6)</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">status</td><td class="py-1.5 px-3">ENUM('active','archived')</td><td class="py-1.5 px-3">Default: active</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">created_at</td><td class="py-1.5 px-3">TIMESTAMP</td><td class="py-1.5 px-3">DEFAULT CURRENT_TIMESTAMP</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">updated_at</td><td class="py-1.5 px-3">TIMESTAMP</td><td class="py-1.5 px-3">ON UPDATE CURRENT_TIMESTAMP</td></tr>
+                    </tbody>
+                </table>
             </div>
         </details>
     </section>

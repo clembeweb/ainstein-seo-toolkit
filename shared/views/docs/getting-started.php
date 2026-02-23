@@ -162,7 +162,7 @@
     </div>
     <div class="ml-14">
         <p class="text-slate-600 dark:text-slate-400 mb-6">
-            Ogni modulo lavora con i <strong class="text-slate-900 dark:text-white">progetti</strong>. Un progetto corrisponde solitamente a un sito web o a una campagna specifica. Ecco come creare il tuo primo progetto in 4 semplici passaggi:
+            Ainstein utilizza i <strong class="text-slate-900 dark:text-white">Progetti</strong> per organizzare il lavoro. Un progetto corrisponde a un sito web o un cliente, e raggruppa tutti i moduli attivati sotto un'unica dashboard.
         </p>
 
         <div class="space-y-4">
@@ -170,12 +170,12 @@
             <div class="flex items-start gap-4 p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
                 <div class="shrink-0 w-8 h-8 rounded-lg bg-accent-100 dark:bg-accent-900/30 flex items-center justify-center">
                     <svg class="w-5 h-5 text-accent-600 dark:text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white">1. Scegli il modulo</h3>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Dalla sidebar, seleziona il modulo che vuoi utilizzare. Ogni modulo ha la propria sezione progetti.</p>
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white">1. Crea un progetto</h3>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Dalla sidebar clicca su "Progetti", poi "Nuovo Progetto". Inserisci il nome del sito, il dominio e scegli un colore per identificarlo rapidamente.</p>
                 </div>
             </div>
 
@@ -183,12 +183,12 @@
             <div class="flex items-start gap-4 p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
                 <div class="shrink-0 w-8 h-8 rounded-lg bg-accent-100 dark:bg-accent-900/30 flex items-center justify-center">
                     <svg class="w-5 h-5 text-accent-600 dark:text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white">2. Crea un nuovo progetto</h3>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Clicca su "Nuovo progetto" e inserisci il nome del sito e l'URL di base. Puoi aggiungere dettagli come la lingua e il settore di riferimento.</p>
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white">2. Attiva i moduli</h3>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Dalla dashboard del progetto, attiva i moduli che ti servono con un click. Per moduli come AI Content o Keyword Research, potrai scegliere il tipo di progetto (es. articoli manuali, piano editoriale).</p>
                 </div>
             </div>
 
@@ -201,8 +201,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white">3. Configura il progetto</h3>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Importa gli URL del tuo sito (da sitemap, CSV o manualmente), collega Google Search Console se necessario, e personalizza le impostazioni del modulo.</p>
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white">3. Configura e lavora</h3>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Ogni modulo attivato ha la sua area dedicata. Importa URL, collega Google Search Console, aggiungi keyword o avvia analisi in base al modulo scelto.</p>
                 </div>
             </div>
 
@@ -210,13 +210,12 @@
             <div class="flex items-start gap-4 p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
                 <div class="shrink-0 w-8 h-8 rounded-lg bg-accent-100 dark:bg-accent-900/30 flex items-center justify-center">
                     <svg class="w-5 h-5 text-accent-600 dark:text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white">4. Avvia l'analisi</h3>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Lancia la prima analisi o generazione. L'intelligenza artificiale elaborerà i dati e ti fornirà risultati dettagliati con suggerimenti pratici.</p>
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white">4. Monitora dalla dashboard</h3>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">La dashboard del progetto mostra una panoramica di tutti i moduli attivi con le statistiche principali. Tutto il lavoro per un cliente in un'unica vista.</p>
                 </div>
             </div>
         </div>

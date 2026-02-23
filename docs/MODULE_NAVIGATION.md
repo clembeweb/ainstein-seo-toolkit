@@ -292,6 +292,44 @@ Keyword Research ▼
 
 ---
 
+## Global Projects (Hub Centralizzato)
+
+Il sistema Global Projects è l'entry point unico per la creazione progetti. I moduli si attivano dalla dashboard del progetto globale.
+
+### Routes Global Projects
+
+| Route | Metodo | Controller | Descrizione |
+|-------|--------|------------|-------------|
+| `/projects` | GET | `GlobalProjectController@index` | Lista progetti globali |
+| `/projects/create` | GET | `GlobalProjectController@create` | Form creazione progetto |
+| `/projects` | POST | `GlobalProjectController@store` | Salva nuovo progetto |
+| `/projects/{id}` | GET | `GlobalProjectController@dashboard` | Dashboard con moduli attivi/disponibili |
+| `/projects/{id}/settings` | GET | `GlobalProjectController@settings` | Impostazioni progetto |
+| `/projects/{id}/settings` | POST | `GlobalProjectController@update` | Aggiorna impostazioni |
+| `/projects/{id}/activate-module` | POST | `GlobalProjectController@activateModule` | Attiva modulo per progetto |
+| `/projects/{id}/delete` | POST | `GlobalProjectController@destroy` | Elimina progetto |
+
+### Regole "Nuovo Progetto"
+
+- **Tutti i bottoni "Nuovo Progetto" nei moduli** → `url('/projects/create')`
+- **Route GET create dei moduli** → redirect a `/projects/create`
+- **Controller store() dei moduli** → redirect errori validazione a `url('/projects/create')`
+- **MAI** creare link a URL modulo-specifiche per la creazione progetto
+
+### Moduli con Tipi
+
+Quando l'utente attiva un modulo con sotto-tipi dalla dashboard progetto, appare una modal di selezione:
+
+| Modulo | Tipi disponibili |
+|--------|-----------------|
+| ai-content | manual, auto, meta-tag |
+| keyword-research | research, architecture, editorial |
+| ads-analyzer | campaign, campaign-creator |
+
+I moduli senza tipi (seo-audit, seo-tracking, internal-links, content-creator) si attivano con un click diretto.
+
+---
+
 ## Regole Consistenza View (Project-Scoped)
 
 Quando una view è dentro un contesto progetto (`/modulo/projects/{id}/sezione`), **tutti i link interni** devono mantenere il contesto progetto.

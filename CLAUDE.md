@@ -47,6 +47,46 @@
 
 ---
 
+## GLOBAL PROJECTS (Hub Centralizzato)
+
+Il sistema Global Projects (`/projects`) è l'hub centralizzato per la gestione progetti. Un progetto globale raggruppa i moduli di un singolo cliente/sito.
+
+### Architettura
+
+| Livello | Tabella | Route | Esempio |
+|---------|---------|-------|---------|
+| Globale | `projects` | `/projects/{id}` | Dashboard progetto, attivazione moduli |
+| Modulo | `{prefix}_projects` | `/modulo/projects/{id}/sezione` | Funzionalità specifiche del modulo |
+| FK | `global_project_id` | — | Collega modulo ↔ progetto globale (nullable) |
+
+### Flusso creazione progetto
+
+1. Utente va a `/projects/create` → crea progetto globale (nome, dominio, colore)
+2. Dashboard progetto (`/projects/{id}`) → mostra moduli disponibili
+3. "Attiva modulo" → per moduli CON tipi (ai-content, keyword-research, ads-analyzer) apre modal selezione tipo
+4. POST a `/projects/{id}/activate-module` → crea record in `{prefix}_projects` con `global_project_id`
+
+### File chiave
+
+| File | Ruolo |
+|------|-------|
+| `core/Models/GlobalProject.php` | Model con `MODULE_CONFIG`, `MODULE_TYPES`, `activateModule()` |
+| `controllers/GlobalProjectController.php` | CRUD progetti + attivazione moduli |
+| `shared/views/projects/dashboard.php` | Dashboard con moduli attivi/disponibili + modal tipo |
+| `shared/views/projects/create.php` | Form creazione progetto |
+| `shared/views/components/orphaned-project-notice.php` | Banner per progetti modulo senza global_project_id |
+
+### Regole
+
+- **"Nuovo Progetto" nei moduli** → DEVE puntare a `url('/projects/create')`, MAI a URL modulo-specifiche
+- **Route GET create dei moduli** → DEVE fare redirect a `/projects/create`
+- **Controller store() dei moduli** → Redirect errori validazione verso `url('/projects/create')`
+- **Moduli con tipi**: ai-content (manual/auto/meta-tag), keyword-research (research/architecture/editorial), ads-analyzer (campaign/campaign-creator)
+- **Progetti orfani** (senza `global_project_id`) → Funzionano normalmente + banner informativo amber
+- **KPI dashboard**: ogni modulo implementa `getProjectKpi($moduleProjectId)` nel proprio model
+
+---
+
 ## STATO MODULI
 
 | Modulo | Slug | Prefisso DB | Stato | Note |
