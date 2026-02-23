@@ -50,7 +50,7 @@ $categoryColors = [
 
 <div class="space-y-6">
     <!-- Header con Health Score -->
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <!-- Info Progetto -->
             <div class="flex-1">
@@ -333,5 +333,16 @@ $categoryColors = [
         </a>
     </div>
     <?php endif; ?>
+
+    <!-- Come funziona -->
+    <?= \Core\View::partial('components/dashboard-how-it-works', [
+        'color' => 'emerald',
+        'steps' => [
+            ['title' => 'Inserisci URL', 'description' => 'Il sito da analizzare'],
+            ['title' => 'Crawl Sito', 'description' => 'Scansione pagine e risorse'],
+            ['title' => 'Analisi AI', 'description' => 'Identifica problemi SEO'],
+            ['title' => 'Piano d\'Azione', 'description' => 'Suggerimenti prioritizzati'],
+        ],
+    ]) ?>
 
 </div>
