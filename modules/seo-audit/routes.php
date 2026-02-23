@@ -121,6 +121,26 @@ Router::post('/seo-audit/project/{id}/crawl/confirm-stop', function ($id) {
     return $controller->confirmStop((int) $id);
 });
 
+// Background job routes (SSE crawl processing)
+Router::get('/seo-audit/project/{id}/crawl/stream', function ($id) {
+    Middleware::auth();
+    $controller = new CrawlController();
+    $controller->processStream((int) $id);
+});
+
+Router::get('/seo-audit/project/{id}/crawl/job-status', function ($id) {
+    Middleware::auth();
+    $controller = new CrawlController();
+    $controller->jobStatus((int) $id);
+});
+
+Router::post('/seo-audit/project/{id}/crawl/cancel-job', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new CrawlController();
+    $controller->cancelJob((int) $id);
+});
+
 // ============================================
 // AUDIT DASHBOARD & CATEGORIES ROUTES
 // ============================================

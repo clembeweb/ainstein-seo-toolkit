@@ -3,12 +3,14 @@
 namespace Modules\SeoAudit\Controllers;
 
 use Core\Auth;
+use Core\Middleware;
 use Core\Credits;
 use Core\Database;
 use Modules\SeoAudit\Models\Project;
 use Modules\SeoAudit\Models\Page;
 use Modules\SeoAudit\Models\Issue;
 use Modules\SeoAudit\Models\CrawlSession;
+use Modules\SeoAudit\Models\CrawlJob;
 use Modules\SeoAudit\Services\CrawlerService;
 use Modules\SeoAudit\Services\IssueDetector;
 use Core\Logger;
@@ -122,9 +124,27 @@ class CrawlController
             // Aggiorna sessione con pagine trovate
             $this->sessionModel->setPagesFound($sessionId, count($urls));
 
+            // Conta pagine pending per il job
+            $pendingCount = Database::fetch(
+                "SELECT COUNT(*) as cnt FROM sa_pages WHERE project_id = ? AND status = 'pending'",
+                [$id]
+            )['cnt'] ?? count($urls);
+
+            // Crea background job per SSE processing
+            $jobModel = new CrawlJob();
+            $jobId = $jobModel->create([
+                'project_id' => $id,
+                'session_id' => $sessionId,
+                'user_id' => $user['id'],
+                'type' => 'crawl',
+                'items_total' => (int) $pendingCount,
+                'config' => json_encode($config),
+            ]);
+
             // Log activity
             $this->projectModel->logActivity($id, $user['id'], 'crawl_started', [
                 'session_id' => $sessionId,
+                'job_id' => $jobId,
                 'urls_found' => count($urls),
                 'crawl_mode' => $config['crawl_mode'],
             ]);
@@ -132,6 +152,7 @@ class CrawlController
             jsonResponse([
                 'success' => true,
                 'session_id' => $sessionId,
+                'job_id' => $jobId,
                 'phase' => 'discovery',
                 'urls_found' => count($urls),
                 'config' => $config,
@@ -151,6 +172,8 @@ class CrawlController
 
     /**
      * Crawl batch di pagine (chiamato via polling AJAX)
+     *
+     * @deprecated Usare processStream() con SSE. Mantenuto per backward compatibility.
      */
     public function crawlBatch(int $id): void
     {
@@ -382,6 +405,10 @@ class CrawlController
         $sessionStats = $session ? $this->sessionModel->getStats($session['id']) : null;
         $issueStats = $this->issueModel->countBySeverity($id);
 
+        // Cerca job attivo per SSE
+        $jobModel = new CrawlJob();
+        $activeJob = $jobModel->findActiveByProject($id);
+
         // Riconnetti DB per operazioni lunghe
         Database::reconnect();
 
@@ -390,6 +417,7 @@ class CrawlController
             'session' => $sessionStats,
             'issues' => $issueStats,
             'health_score' => $project['health_score'],
+            'active_job_id' => $activeJob ? (int) $activeJob['id'] : null,
             'progress' => $sessionStats ? [
                 'pages_found' => $sessionStats['pages_found'],
                 'pages_crawled' => $sessionStats['pages_crawled'],
@@ -483,6 +511,236 @@ class CrawlController
     }
 
     /**
+     * SSE stream per il crawl in background
+     * GET /seo-audit/project/{id}/crawl/stream?job_id=X
+     *
+     * CRITICAL: ignore_user_abort(true) garantisce che il crawl continui
+     * anche se l'utente naviga via dalla pagina.
+     */
+    public function processStream(int $id): void
+    {
+        // SSE headers
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache');
+        header('Connection: keep-alive');
+        header('X-Accel-Buffering: no');
+
+        // CRITICAL: Continua esecuzione anche se proxy chiude connessione
+        ignore_user_abort(true);
+        set_time_limit(0);
+
+        // CRITICAL: Chiudi sessione prima del loop (non blocca altre request)
+        session_write_close();
+
+        $jobId = (int) ($_GET['job_id'] ?? 0);
+
+        $jobModel = new CrawlJob();
+        $job = $jobModel->find($jobId);
+
+        if (!$job || (int) $job['project_id'] !== $id) {
+            $this->sendEvent('error', ['message' => 'Job non trovato']);
+            exit;
+        }
+
+        // Avvia il job
+        $jobModel->start($jobId);
+
+        $crawlerService = new CrawlerService();
+        $crawlerService->init($id, (int) $job['user_id']);
+        $crawlerService->setSessionId((int) $job['session_id']);
+
+        // Inizializza configurazione dal job
+        $config = json_decode($job['config'] ?? '{}', true) ?: [];
+        if (!empty($config)) {
+            $crawlerService->setConfig($config);
+        }
+
+        $issueDetector = new IssueDetector();
+        $issueDetector->init($id);
+        $issueDetector->setSessionId((int) $job['session_id']);
+
+        $this->sendEvent('started', [
+            'total' => (int) $job['items_total'],
+            'job_id' => $jobId,
+        ]);
+
+        $completed = 0;
+        $totalIssuesFound = 0;
+
+        while (true) {
+            Database::reconnect();
+
+            // Verifica cancellazione dal DB (fresco)
+            if ($jobModel->isCancelled($jobId)) {
+                $this->sessionModel->requestStop((int) $job['session_id']);
+                $this->finalizeCrawl($id, (int) $job['user_id'], true);
+                $this->sessionModel->stop((int) $job['session_id']);
+                $this->projectModel->update($id, ['status' => 'stopped']);
+
+                $this->sendEvent('cancelled', $jobModel->getJobResponse($jobId));
+                break;
+            }
+
+            // Prossima pagina pending
+            $pendingPage = Database::fetch(
+                "SELECT id, url FROM sa_pages WHERE project_id = ? AND session_id = ? AND status = 'pending' LIMIT 1",
+                [$id, (int) $job['session_id']]
+            );
+
+            if (!$pendingPage) {
+                // Tutte le pagine processate - finalizza
+                // CRITICO: Salvare nel DB PRIMA dell'evento completed (polling fallback)
+                Database::reconnect();
+                $this->finalizeCrawl($id, (int) $job['user_id']);
+                $jobModel->complete($jobId);
+                $this->sessionModel->complete((int) $job['session_id']);
+
+                $this->sendEvent('completed', $jobModel->getJobResponse($jobId));
+                break;
+            }
+
+            try {
+                // Segna pagina come in scraping
+                Database::execute(
+                    "UPDATE sa_pages SET status = 'scraping' WHERE id = ?",
+                    [$pendingPage['id']]
+                );
+
+                // Crawl la pagina
+                $pageData = $crawlerService->crawlPage($pendingPage['url']);
+                Database::reconnect();
+
+                if ($pageData && empty($pageData['error'])) {
+                    // Salva dati pagina
+                    $pageId = $crawlerService->savePage($pageData);
+
+                    // Rileva issues
+                    $issueCount = $issueDetector->analyzeAndSave($pageData, $pageId);
+                    Database::reconnect();
+
+                    $completed++;
+                    $totalIssuesFound += $issueCount;
+                    $jobModel->incrementCompleted($jobId);
+                    $jobModel->updateProgress($jobId, $completed, $pendingPage['url']);
+
+                    // Aggiorna conteggio progetto
+                    $this->projectModel->update($id, [
+                        'pages_crawled' => $completed,
+                    ]);
+
+                    // Aggiorna sessione
+                    $this->sessionModel->updateProgress(
+                        (int) $job['session_id'],
+                        $completed,
+                        $pendingPage['url'],
+                        $totalIssuesFound
+                    );
+
+                    $this->sendEvent('page_completed', [
+                        'url' => $pendingPage['url'],
+                        'completed' => $completed,
+                        'total' => (int) $job['items_total'],
+                        'issues' => $issueCount,
+                        'percent' => round(($completed / max((int) $job['items_total'], 1)) * 100, 1),
+                    ]);
+                } else {
+                    // Pagina con errore durante lo scraping
+                    Database::execute(
+                        "UPDATE sa_pages SET status = 'error' WHERE id = ?",
+                        [$pendingPage['id']]
+                    );
+                    $jobModel->incrementFailed($jobId);
+
+                    $this->sendEvent('page_error', [
+                        'url' => $pendingPage['url'],
+                        'error' => $pageData['error'] ?? 'Errore durante lo scraping',
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Database::reconnect();
+                Database::execute(
+                    "UPDATE sa_pages SET status = 'error' WHERE id = ?",
+                    [$pendingPage['id']]
+                );
+                $jobModel->incrementFailed($jobId);
+
+                $this->sendEvent('page_error', [
+                    'url' => $pendingPage['url'],
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            // Rate limiting (dal config)
+            $delay = $config['request_delay'] ?? 200;
+            usleep($delay * 1000);
+        }
+
+        exit;
+    }
+
+    /**
+     * Polling fallback per stato job
+     * GET /seo-audit/project/{id}/crawl/job-status?job_id=X
+     */
+    public function jobStatus(int $id): void
+    {
+        header('Content-Type: application/json');
+
+        $jobId = (int) ($_GET['job_id'] ?? 0);
+        $jobModel = new CrawlJob();
+
+        // Usa find() per verificare project_id (getJobResponse non lo include)
+        $rawJob = $jobModel->find($jobId);
+        if (!$rawJob || (int) $rawJob['project_id'] !== $id) {
+            echo json_encode(['success' => false, 'message' => 'Job non trovato']);
+            exit;
+        }
+
+        $jobResponse = $jobModel->getJobResponse($jobId);
+
+        // Aggiungi info sessione per progress dettagliato
+        $sessionStats = null;
+        if (!empty($rawJob['session_id'])) {
+            $sessionStats = $this->sessionModel->getStats((int) $rawJob['session_id']);
+        }
+
+        echo json_encode([
+            'success' => true,
+            'job' => $jobResponse,
+            'session' => $sessionStats,
+            'issues' => $this->issueModel->countBySeverity($id),
+        ]);
+        exit;
+    }
+
+    /**
+     * Annulla un job di crawl
+     * POST /seo-audit/project/{id}/crawl/cancel-job
+     */
+    public function cancelJob(int $id): void
+    {
+        Middleware::auth();
+        Middleware::csrf();
+        header('Content-Type: application/json');
+
+        $jobId = (int) ($_POST['job_id'] ?? 0);
+        $jobModel = new CrawlJob();
+
+        // Leggi job PRIMA di cancellarlo per ottenere session_id
+        $job = $jobModel->find($jobId);
+        if ($job && !empty($job['session_id'])) {
+            $this->sessionModel->requestStop((int) $job['session_id']);
+        }
+
+        // Cancella il job (il processStream lo rileverà via isCancelled)
+        $jobModel->cancel($jobId);
+        $this->projectModel->update($id, ['status' => 'stopping']);
+
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
+    /**
      * Finalizza crawl: check a livello progetto e calcolo score
      */
     private function finalizeCrawl(int $projectId, int $userId, bool $stopped = false): void
@@ -514,5 +772,16 @@ class CrawlController
         $_SESSION['_flash']['success'] = $message;
 
         $this->projectModel->logActivity($projectId, $userId, $stopped ? 'crawl_stopped' : 'crawl_completed');
+    }
+
+    /**
+     * Helper SSE: invia evento al client
+     */
+    private function sendEvent(string $event, array $data): void
+    {
+        echo "event: {$event}\n";
+        echo "data: " . json_encode($data) . "\n\n";
+        if (ob_get_level()) ob_flush();
+        flush();
     }
 }
