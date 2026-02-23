@@ -57,39 +57,42 @@ class IssueDetector
 
     /**
      * Analizza pagina e rileva issues
+     *
+     * @param array $pageData Dati pagina, con 'source' = 'crawl'|'wordpress'
      */
     public function analyzePage(array $pageData): array
     {
         $issues = [];
+        $source = $pageData['source'] ?? 'crawl';
 
-        // Meta Tags
+        // Questi check funzionano sia con dati crawl che WordPress
         $issues = array_merge($issues, $this->checkMetaTags($pageData));
-
-        // Headings
         $issues = array_merge($issues, $this->checkHeadings($pageData));
-
-        // Images
         $issues = array_merge($issues, $this->checkImages($pageData));
-
-        // Links
         $issues = array_merge($issues, $this->checkLinks($pageData));
-
-        // Content
         $issues = array_merge($issues, $this->checkContent($pageData));
-
-        // Technical
-        $issues = array_merge($issues, $this->checkTechnical($pageData));
-
-        // Schema
         $issues = array_merge($issues, $this->checkSchema($pageData));
+
+        // Technical checks - alcuni richiedono accesso HTTP
+        if ($source === 'crawl') {
+            // Check tecnici completi (include quelli HTTP-dependent)
+            $issues = array_merge($issues, $this->checkTechnical($pageData));
+        } else {
+            // Fonte WordPress: solo check canonical (dati disponibili da WP API)
+            $issues = array_merge($issues, $this->checkCanonical($pageData));
+        }
 
         return $issues;
     }
 
     /**
      * Salva issues nel database
+     *
+     * @param int $pageId ID pagina
+     * @param array $issues Issues da salvare
+     * @param string $source Sorgente dati: 'crawler' o 'wordpress'
      */
-    public function saveIssues(int $pageId, array $issues): int
+    public function saveIssues(int $pageId, array $issues, string $source = 'crawler'): int
     {
         $saved = 0;
 
@@ -105,7 +108,7 @@ class IssueDetector
                 'description' => $issue['description'] ?? null,
                 'affected_element' => $issue['element'] ?? null,
                 'recommendation' => $issue['recommendation'] ?? null,
-                'source' => 'crawler',
+                'source' => $source,
             ]);
             $saved++;
         }
@@ -119,7 +122,8 @@ class IssueDetector
     public function analyzeAndSave(array $pageData, int $pageId): int
     {
         $issues = $this->analyzePage($pageData);
-        return $this->saveIssues($pageId, $issues);
+        $source = ($pageData['source'] ?? 'crawl') === 'wordpress' ? 'wordpress' : 'crawler';
+        return $this->saveIssues($pageId, $issues, $source);
     }
 
     /**
@@ -274,19 +278,44 @@ class IssueDetector
     }
 
     /**
+     * Check Canonical URL (shared between crawl and WordPress sources)
+     */
+    private function checkCanonical(array $data): array
+    {
+        $issues = [];
+
+        $canonical = $data['canonical_url'] ?? '';
+        $url = $data['url'] ?? '';
+
+        if (empty($canonical)) {
+            $issues[] = $this->createIssue('missing_canonical');
+        } elseif (!filter_var($canonical, FILTER_VALIDATE_URL)) {
+            $issues[] = $this->createIssue('wrong_canonical', $canonical);
+        } elseif ($canonical !== $url && rtrim($canonical, '/') !== rtrim($url, '/')) {
+            $issues[] = [
+                'type' => 'non_self_canonical',
+                'category' => 'technical',
+                'severity' => 'notice',
+                'title' => 'Canonical punta a URL diversa',
+                'recommendation' => 'Verifica che il canonical sia corretto. Se intenzionale, la pagina potrebbe non apparire nei risultati di ricerca.',
+                'element' => $canonical,
+            ];
+        }
+
+        return $issues;
+    }
+
+    /**
      * Check Technical SEO
      */
     private function checkTechnical(array $data): array
     {
         $issues = [];
 
-        // Canonical
-        if (empty($data['canonical_url'])) {
-            $issues[] = $this->createIssue('missing_canonical');
-        } elseif (!filter_var($data['canonical_url'], FILTER_VALIDATE_URL)) {
-            $issues[] = $this->createIssue('wrong_canonical', $data['canonical_url']);
-        }
+        // Canonical checks (shared with WordPress source)
+        $issues = array_merge($issues, $this->checkCanonical($data));
 
+        // HTTP-dependent checks (only available for crawl source)
         // Robots noindex in sitemap (da verificare a livello progetto)
         // Questo check è fatto separatamente
 
@@ -465,6 +494,80 @@ class IssueDetector
             'recommendation' => $typeInfo['recommendation'],
             'element' => $element,
         ];
+    }
+
+    /**
+     * Analizza info sito da plugin WordPress
+     * Crea issues a livello progetto (page_id = NULL)
+     *
+     * @param array $siteInfo Dati site_info dal plugin WP
+     * @param int $projectId ID progetto sa_projects
+     * @param int $sessionId ID sessione audit
+     * @return int Numero issues create
+     */
+    public function analyzeSiteInfo(array $siteInfo, int $projectId, int $sessionId): int
+    {
+        $issues = [];
+
+        // Check robots.txt
+        if (empty($siteInfo['has_robots_txt'])) {
+            $issues[] = [
+                'category' => 'robots',
+                'issue_type' => 'missing_robots_txt',
+                'severity' => 'warning',
+                'title' => 'File robots.txt mancante',
+                'description' => 'Il sito non ha un file robots.txt.',
+                'affected_element' => '',
+                'recommendation' => 'Crea un file robots.txt nella root del sito per guidare i crawler.',
+            ];
+        }
+
+        // Check sitemap
+        if (empty($siteInfo['has_sitemap'])) {
+            $issues[] = [
+                'category' => 'sitemap',
+                'issue_type' => 'missing_sitemap',
+                'severity' => 'warning',
+                'title' => 'Sitemap XML mancante',
+                'description' => 'Non e stata trovata una sitemap XML.',
+                'affected_element' => '',
+                'recommendation' => 'Crea una sitemap XML e dichiarala nel robots.txt.',
+            ];
+        }
+
+        // Check SSL
+        if (empty($siteInfo['has_ssl'])) {
+            $issues[] = [
+                'category' => 'security',
+                'issue_type' => 'not_https',
+                'severity' => 'critical',
+                'title' => 'Sito non HTTPS',
+                'description' => 'Il sito non utilizza HTTPS.',
+                'affected_element' => $siteInfo['url'] ?? '',
+                'recommendation' => 'Attiva un certificato SSL e forza il redirect a HTTPS.',
+            ];
+        }
+
+        // Salva issues a livello progetto (page_id = NULL)
+        $count = 0;
+        foreach ($issues as $issue) {
+            Database::insert('sa_issues', [
+                'project_id' => $projectId,
+                'page_id' => null,
+                'session_id' => $sessionId,
+                'category' => $issue['category'],
+                'issue_type' => $issue['issue_type'],
+                'severity' => $issue['severity'],
+                'title' => $issue['title'],
+                'description' => $issue['description'],
+                'affected_element' => $issue['affected_element'],
+                'recommendation' => $issue['recommendation'],
+                'source' => 'wordpress',
+            ]);
+            $count++;
+        }
+
+        return $count;
     }
 
     /**
