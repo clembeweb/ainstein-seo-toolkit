@@ -87,6 +87,50 @@ Il sistema Global Projects (`/projects`) è l'hub centralizzato per la gestione 
 
 ---
 
+## LANDING PAGE PATTERN ("Scopri cosa puoi fare")
+
+Ogni modulo DEVE avere la sezione "Scopri cosa puoi fare" nella pagina landing/index, con 7 sezioni in ordine fisso.
+
+### Reference
+
+**File:** `modules/keyword-research/views/dashboard.php` (da linea 150)
+
+### Struttura obbligatoria (7 sezioni)
+
+| # | Sezione | Descrizione |
+|---|---------|-------------|
+| 1 | **Separator divider** | Linea gradient con label "Scopri cosa puoi fare" centrata |
+| 2 | **Hero educativo** | Sfondo gradient, grid 2 colonne (testo + mockup visuale), badge modulo, CTA |
+| 3 | **Come funziona** | 3 step card con badge numerico (`-top-4`), icona e descrizione |
+| 4 | **Feature blocks (3x)** | Alternanza: testo SX/visual DX (white bg) → visual SX/testo DX (slate bg) → testo SX/visual DX (white bg) |
+| 5 | **Cosa puoi fare** | Grid 6 card con icona, titolo e descrizione |
+| 6 | **FAQ accordion** | Alpine.js `x-data="{ openFaq: null }"`, 5-6 domande |
+| 7 | **CTA finale** | Banner gradient con cerchi decorativi, titolo e pulsante |
+
+### Colori per modulo
+
+| Modulo | Colore primario | Gradient CTA |
+|--------|----------------|--------------|
+| ai-content | amber | amber-500 → orange-500 |
+| seo-audit | emerald | emerald-500 → teal-500 |
+| seo-tracking | blue | blue-500 → indigo-500 |
+| keyword-research | purple | purple-500 → indigo-500 |
+| ads-analyzer | rose | rose-500 → orange-500 |
+| internal-links | cyan | cyan-500 → blue-500 |
+
+### Regole
+
+- **Lingua**: italiano (come tutta la UI)
+- **Icone**: solo Heroicons SVG inline
+- **Visual mockup**: HTML/CSS-only con dati finti (NON screenshot). Mockup che illustrano la feature con dati realistici
+- **FAQ**: Alpine.js accordion con transizioni (`x-transition`, `x-cloak`)
+- **CTA links**: SEMPRE `url('/projects/create')`
+- **Dark mode**: ogni elemento DEVE avere varianti `dark:`
+- **Alternanza feature blocks**: bianco (Feature 1, 3) → slate-50 (Feature 2) — NON invertire l'ordine
+- **Inserire DOPO** il contenuto operativo (project grid, empty state, info box) — la sezione educativa va in fondo
+
+---
+
 ## STATO MODULI
 
 | Modulo | Slug | Prefisso DB | Stato | Note |
