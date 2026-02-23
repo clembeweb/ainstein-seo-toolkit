@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) exit;
 class SEOToolkitConnector {
 
     private $option_name = 'seo_toolkit_api_key';
-    private $version = '1.0.0';
+    private $version = '1.1.0';
 
     public function __construct() {
         add_action('admin_menu', [$this, 'addAdminMenu']);
@@ -306,6 +306,18 @@ class SEOToolkitConnector {
             'methods' => ['PATCH', 'POST'],
             'callback' => [$this, 'updateSeoMeta'],
             'permission_callback' => [$this, 'verifyApiKey']
+        ]);
+
+        // SEO Audit - Full page data extraction for scraping-free audit
+        register_rest_route('seo-toolkit/v1', '/seo-audit', [
+            'methods'  => 'GET',
+            'callback' => [$this, 'handleSeoAudit'],
+            'permission_callback' => [$this, 'verifyApiKey'],
+            'args' => [
+                'per_page' => ['default' => 50, 'sanitize_callback' => 'absint'],
+                'page'     => ['default' => 1, 'sanitize_callback' => 'absint'],
+                'type'     => ['default' => 'post,page', 'sanitize_callback' => 'sanitize_text_field'],
+            ],
         ]);
     }
 
@@ -745,6 +757,370 @@ class SEOToolkitConnector {
             'method' => $method,
             'post_url' => get_permalink($post_id)
         ]);
+    }
+
+    // =========================================================================
+    // SEO Audit Endpoint
+    // =========================================================================
+
+    /**
+     * SEO Audit - Returns complete SEO data for all published pages/posts.
+     * Pre-extracted server-side to allow scraping-free audit from Ainstein.
+     */
+    public function handleSeoAudit($request): \WP_REST_Response {
+        $per_page = min($request->get_param('per_page') ?: 50, 100);
+        $page = max($request->get_param('page') ?: 1, 1);
+        $types = array_map('trim', explode(',', $request->get_param('type') ?: 'post,page'));
+
+        // Validate post types
+        $valid_types = get_post_types(['public' => true], 'names');
+        $types = array_intersect($types, $valid_types);
+        if (empty($types)) {
+            $types = ['post', 'page'];
+        }
+
+        // Query posts
+        $args = [
+            'post_type'      => $types,
+            'post_status'    => 'publish',
+            'posts_per_page' => $per_page,
+            'paged'          => $page,
+            'orderby'        => 'ID',
+            'order'          => 'ASC',
+        ];
+
+        $query = new \WP_Query($args);
+
+        $pages = [];
+        foreach ($query->posts as $post) {
+            $pages[] = $this->extractPageSeoData($post);
+        }
+
+        $response = [
+            'total'        => (int) $query->found_posts,
+            'total_pages'  => (int) $query->max_num_pages,
+            'current_page' => $page,
+            'per_page'     => $per_page,
+            'pages'        => $pages,
+        ];
+
+        // Include site_info on first page only
+        if ($page === 1) {
+            $response['site_info'] = $this->getSiteInfo();
+        }
+
+        return rest_ensure_response($response);
+    }
+
+    /**
+     * Extract all SEO-relevant data from a single WordPress post.
+     */
+    private function extractPageSeoData($post): array {
+        $url = get_permalink($post);
+        $content = apply_filters('the_content', $post->post_content);
+
+        // Get SEO meta using existing plugin detection
+        $seo_title = $this->getAuditSeoMeta($post->ID, 'title');
+        $seo_desc = $this->getAuditSeoMeta($post->ID, 'description');
+
+        // Parse HTML content for structured data
+        $headings = $this->extractHeadings($content);
+        $images = $this->extractImages($content);
+        $links = $this->extractLinks($content, home_url());
+
+        // Canonical
+        $canonical = wp_get_canonical_url($post->ID);
+        if (!$canonical) {
+            $canonical = $url;
+        }
+
+        // Robots meta
+        $robots_meta = $this->getRobotsMeta($post->ID);
+
+        // Open Graph
+        $og = $this->getOgTags($post->ID);
+
+        // Schema JSON-LD
+        $schema = $this->extractSchemaJsonLd($post->ID);
+
+        // Word count
+        $word_count = str_word_count(wp_strip_all_tags($post->post_content));
+
+        return [
+            'id'                => $post->ID,
+            'type'              => $post->post_type,
+            'status'            => $post->post_status,
+            'url'               => $url,
+            'title_tag'         => $seo_title ?: get_the_title($post),
+            'meta_description'  => $seo_desc ?: '',
+            'canonical'         => $canonical,
+            'robots_meta'       => $robots_meta,
+            'og_title'          => $og['title'] ?? '',
+            'og_description'    => $og['description'] ?? '',
+            'og_image'          => $og['image'] ?? '',
+            'headings'          => $headings,
+            'images'            => $images,
+            'internal_links'    => $links['internal'],
+            'external_links'    => $links['external'],
+            'schema_json_ld'    => $schema,
+            'word_count'        => $word_count,
+            'modified_at'       => $post->post_modified_gmt,
+        ];
+    }
+
+    /**
+     * Get SEO meta (title or description) for audit, detecting active SEO plugin.
+     * Reuses detectSeoPlugin() logic for consistent plugin detection.
+     */
+    private function getAuditSeoMeta(int $post_id, string $field): string {
+        $seo_plugin = $this->detectSeoPlugin();
+
+        if ($field === 'title') {
+            switch ($seo_plugin) {
+                case 'yoast':
+                    return get_post_meta($post_id, '_yoast_wpseo_title', true) ?: '';
+                case 'rankmath':
+                    return get_post_meta($post_id, 'rank_math_title', true) ?: '';
+                case 'aioseo':
+                    return get_post_meta($post_id, '_aioseo_title', true) ?: '';
+                default:
+                    return get_post_meta($post_id, '_seo_toolkit_title', true) ?: '';
+            }
+        }
+
+        if ($field === 'description') {
+            switch ($seo_plugin) {
+                case 'yoast':
+                    return get_post_meta($post_id, '_yoast_wpseo_metadesc', true) ?: '';
+                case 'rankmath':
+                    return get_post_meta($post_id, 'rank_math_description', true) ?: '';
+                case 'aioseo':
+                    return get_post_meta($post_id, '_aioseo_description', true) ?: '';
+                default:
+                    return get_post_meta($post_id, '_seo_toolkit_description', true) ?: '';
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Extract headings (H1-H6) from HTML content.
+     */
+    private function extractHeadings(string $html): array {
+        if (empty($html)) return [];
+
+        $headings = [];
+        if (preg_match_all('/<h([1-6])[^>]*>(.*?)<\/h\1>/si', $html, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $headings[] = [
+                    'level' => (int) $match[1],
+                    'text'  => wp_strip_all_tags($match[2]),
+                ];
+            }
+        }
+        return $headings;
+    }
+
+    /**
+     * Extract images with src, alt, width, height from HTML content.
+     */
+    private function extractImages(string $html): array {
+        if (empty($html)) return [];
+
+        $images = [];
+        if (preg_match_all('/<img[^>]+>/si', $html, $matches)) {
+            foreach ($matches[0] as $img_tag) {
+                $src = '';
+                $alt = '';
+                $width = 0;
+                $height = 0;
+
+                if (preg_match('/src=["\']([^"\']+)/i', $img_tag, $m)) $src = $m[1];
+                if (preg_match('/alt=["\']([^"\']*)/i', $img_tag, $m)) $alt = $m[1];
+                if (preg_match('/width=["\']?(\d+)/i', $img_tag, $m)) $width = (int) $m[1];
+                if (preg_match('/height=["\']?(\d+)/i', $img_tag, $m)) $height = (int) $m[1];
+
+                if ($src) {
+                    $images[] = [
+                        'src'    => $src,
+                        'alt'    => $alt,
+                        'width'  => $width,
+                        'height' => $height,
+                    ];
+                }
+            }
+        }
+        return $images;
+    }
+
+    /**
+     * Extract internal and external links from HTML content.
+     */
+    private function extractLinks(string $html, string $site_url): array {
+        if (empty($html)) return ['internal' => [], 'external' => []];
+
+        $internal = [];
+        $external = [];
+        $site_host = wp_parse_url($site_url, PHP_URL_HOST);
+
+        // Match full <a>...</a> tags to get anchor text
+        if (preg_match_all('/<a\s[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)<\/a>/si', $html, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $href = $match[1];
+                $anchor = wp_strip_all_tags($match[2]);
+                $nofollow = (bool) preg_match('/rel=["\'][^"\']*nofollow/i', $match[0]);
+
+                // Skip anchors, javascript, mailto
+                if (strpos($href, '#') === 0 || strpos($href, 'javascript:') === 0 || strpos($href, 'mailto:') === 0) {
+                    continue;
+                }
+
+                // Make relative URLs absolute
+                if (strpos($href, '/') === 0) {
+                    $href = rtrim($site_url, '/') . $href;
+                }
+
+                $link_host = wp_parse_url($href, PHP_URL_HOST);
+                $link_data = [
+                    'url'      => $href,
+                    'anchor'   => trim($anchor),
+                    'nofollow' => $nofollow,
+                ];
+
+                if ($link_host && $link_host !== $site_host && $link_host !== 'www.' . $site_host && 'www.' . $link_host !== $site_host) {
+                    $external[] = $link_data;
+                } else {
+                    $internal[] = $link_data;
+                }
+            }
+        }
+
+        return ['internal' => $internal, 'external' => $external];
+    }
+
+    /**
+     * Get robots meta directives for a post, reading from detected SEO plugin.
+     */
+    private function getRobotsMeta(int $post_id): string {
+        $seo_plugin = $this->detectSeoPlugin();
+
+        switch ($seo_plugin) {
+            case 'yoast':
+                $robots = get_post_meta($post_id, '_yoast_wpseo_meta-robots-noindex', true);
+                $nofollow = get_post_meta($post_id, '_yoast_wpseo_meta-robots-nofollow', true);
+                $parts = [];
+                $parts[] = ($robots === '1') ? 'noindex' : 'index';
+                $parts[] = ($nofollow === '1') ? 'nofollow' : 'follow';
+                return implode(', ', $parts);
+
+            case 'rankmath':
+                $robots = get_post_meta($post_id, 'rank_math_robots', true);
+                if (is_array($robots)) return implode(', ', $robots);
+                return $robots ?: 'index, follow';
+
+            case 'aioseo':
+                $robots_default = get_post_meta($post_id, '_aioseo_noindex', true);
+                $nofollow = get_post_meta($post_id, '_aioseo_nofollow', true);
+                $parts = [];
+                $parts[] = $robots_default ? 'noindex' : 'index';
+                $parts[] = $nofollow ? 'nofollow' : 'follow';
+                return implode(', ', $parts);
+
+            default:
+                return 'index, follow';
+        }
+    }
+
+    /**
+     * Get Open Graph tags for a post from detected SEO plugin.
+     */
+    private function getOgTags(int $post_id): array {
+        $seo_plugin = $this->detectSeoPlugin();
+
+        switch ($seo_plugin) {
+            case 'yoast':
+                return [
+                    'title'       => get_post_meta($post_id, '_yoast_wpseo_opengraph-title', true) ?: '',
+                    'description' => get_post_meta($post_id, '_yoast_wpseo_opengraph-description', true) ?: '',
+                    'image'       => get_post_meta($post_id, '_yoast_wpseo_opengraph-image', true) ?: '',
+                ];
+
+            case 'rankmath':
+                return [
+                    'title'       => get_post_meta($post_id, 'rank_math_facebook_title', true) ?: '',
+                    'description' => get_post_meta($post_id, 'rank_math_facebook_description', true) ?: '',
+                    'image'       => get_post_meta($post_id, 'rank_math_facebook_image', true) ?: '',
+                ];
+
+            case 'aioseo':
+                return [
+                    'title'       => get_post_meta($post_id, '_aioseo_og_title', true) ?: '',
+                    'description' => get_post_meta($post_id, '_aioseo_og_description', true) ?: '',
+                    'image'       => get_post_meta($post_id, '_aioseo_og_image', true) ?: '',
+                ];
+
+            default:
+                return ['title' => '', 'description' => '', 'image' => ''];
+        }
+    }
+
+    /**
+     * Extract Schema.org JSON-LD data from SEO plugin meta.
+     */
+    private function extractSchemaJsonLd(int $post_id): array {
+        $seo_plugin = $this->detectSeoPlugin();
+        $schemas = [];
+
+        switch ($seo_plugin) {
+            case 'yoast':
+                // Yoast generates schema dynamically via wp_head, difficult to extract per-post
+                break;
+
+            case 'rankmath':
+                $schema = get_post_meta($post_id, 'rank_math_schema_Article', true);
+                if ($schema) {
+                    $schemas[] = is_string($schema) ? json_decode($schema, true) : $schema;
+                }
+                break;
+        }
+
+        return array_filter($schemas);
+    }
+
+    /**
+     * Get site-wide info for SEO audit (robots.txt, sitemap, SSL, etc.)
+     * Only included on the first page of results.
+     */
+    private function getSiteInfo(): array {
+        // Check robots.txt
+        $robots_url = home_url('/robots.txt');
+        $robots_response = wp_remote_get($robots_url, ['timeout' => 5, 'sslverify' => false]);
+        $has_robots = !is_wp_error($robots_response) && wp_remote_retrieve_response_code($robots_response) === 200;
+        $robots_content = $has_robots ? wp_remote_retrieve_body($robots_response) : '';
+
+        // Check sitemap
+        $sitemap_locations = ['/sitemap.xml', '/sitemap_index.xml', '/wp-sitemap.xml'];
+        $has_sitemap = false;
+        foreach ($sitemap_locations as $path) {
+            $resp = wp_remote_head(home_url($path), ['timeout' => 5, 'sslverify' => false]);
+            if (!is_wp_error($resp) && wp_remote_retrieve_response_code($resp) === 200) {
+                $has_sitemap = true;
+                break;
+            }
+        }
+
+        return [
+            'name'               => get_bloginfo('name'),
+            'url'                => home_url('/'),
+            'wp_version'         => get_bloginfo('version'),
+            'seo_plugin'         => $this->detectSeoPlugin(),
+            'plugin_version'     => $this->version,
+            'has_ssl'            => is_ssl(),
+            'has_robots_txt'     => $has_robots,
+            'robots_txt_content' => $robots_content,
+            'has_sitemap'        => $has_sitemap,
+        ];
     }
 }
 
