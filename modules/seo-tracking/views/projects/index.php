@@ -585,10 +585,12 @@ endif;
         </div>
     </div>
 
-    <!-- Cosa puoi fare -->
-    <div class="mt-20">
-        <div class="text-center mb-12">
-            <h3 class="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">Cosa puoi fare con SEO Tracking</h3>
+</div><!-- /space-y-0 feature blocks -->
+
+<!-- Cosa puoi fare -->
+<div class="mt-20">
+    <div class="text-center mb-12">
+        <h3 class="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">Cosa puoi fare con SEO Tracking</h3>
             <p class="mt-3 text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">Dal monitoraggio posizioni ai report automatici con insight AI</p>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -742,5 +744,3 @@ endif;
             </div>
         </div>
     </div>
-
-</div>
