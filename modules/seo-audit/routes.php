@@ -343,6 +343,13 @@ Router::post('/seo-audit/project/{id}/urls/store', function ($id) {
     $controller->storeUrls((int) $id);
 });
 
+// WordPress import SSE stream
+Router::get('/seo-audit/project/{id}/import/wordpress/stream', function ($id) {
+    Middleware::auth();
+    $controller = new \Modules\SeoAudit\Controllers\ApiController();
+    $controller->importWordPress((int) $id);
+});
+
 // ============================================
 // API ROUTES
 // ============================================
