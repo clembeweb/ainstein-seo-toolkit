@@ -66,12 +66,18 @@ class Project
     }
 
     /**
-     * Tutti i progetti di un utente
+     * Tutti i progetti di un utente (propri + condivisi)
      */
     public function allByUser(int $userId, ?string $status = null): array
     {
-        $sql = "SELECT * FROM {$this->table} WHERE user_id = ?";
-        $params = [$userId];
+        $ids = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'content-creator', $this->table);
+        if (empty($ids)) {
+            return [];
+        }
+        $in = \Services\ProjectAccessService::sqlInClause($ids);
+
+        $sql = "SELECT * FROM {$this->table} WHERE id IN {$in['sql']}";
+        $params = $in['params'];
 
         if ($status) {
             $sql .= " AND status = ?";
@@ -84,12 +90,19 @@ class Project
     }
 
     /**
-     * Tutti i progetti con statistiche URL
+     * Tutti i progetti con statistiche URL (propri + condivisi)
      */
     public function allWithStats(int $userId): array
     {
+        $ids = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'content-creator', $this->table);
+        if (empty($ids)) {
+            return [];
+        }
+        $in = \Services\ProjectAccessService::sqlInClause($ids);
+
         return Database::fetchAll(
             "SELECT p.*,
+                CASE WHEN p.user_id = ? THEN 'owner' ELSE 'shared' END as access_role,
                 (SELECT COUNT(*) FROM cc_urls WHERE project_id = p.id) as total_urls,
                 (SELECT COUNT(*) FROM cc_urls WHERE project_id = p.id AND status = 'pending') as pending_urls,
                 (SELECT COUNT(*) FROM cc_urls WHERE project_id = p.id AND status = 'scraped') as scraped_urls,
@@ -98,9 +111,9 @@ class Project
                 (SELECT COUNT(*) FROM cc_urls WHERE project_id = p.id AND status = 'published') as published_urls,
                 (SELECT COUNT(*) FROM cc_urls WHERE project_id = p.id AND status = 'error') as error_urls
              FROM {$this->table} p
-             WHERE p.user_id = ?
+             WHERE p.id IN {$in['sql']}
              ORDER BY p.created_at DESC",
-            [$userId]
+            array_merge([$userId], $in['params'])
         );
     }
 

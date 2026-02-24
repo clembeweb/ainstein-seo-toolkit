@@ -68,12 +68,18 @@ class Project
     }
 
     /**
-     * Ottieni tutti i progetti di un utente
+     * Ottieni tutti i progetti di un utente (propri + condivisi)
      */
     public function allByUser(int $userId, ?string $status = null): array
     {
-        $sql = "SELECT * FROM {$this->table} WHERE user_id = ?";
-        $params = [$userId];
+        $ids = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'seo-audit', $this->table);
+        if (empty($ids)) {
+            return [];
+        }
+        $in = \Services\ProjectAccessService::sqlInClause($ids);
+
+        $sql = "SELECT * FROM {$this->table} WHERE id IN {$in['sql']}";
+        $params = $in['params'];
 
         if ($status) {
             $sql .= " AND status = ?";
@@ -86,43 +92,52 @@ class Project
     }
 
     /**
-     * Ottieni tutti i progetti con statistiche
+     * Ottieni tutti i progetti con statistiche (propri + condivisi)
      */
     public function allWithStats(int $userId): array
     {
+        $ids = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'seo-audit', $this->table);
+        if (empty($ids)) {
+            return [];
+        }
+        $in = \Services\ProjectAccessService::sqlInClause($ids);
+
         $sql = "
             SELECT
                 p.*,
+                CASE WHEN p.user_id = ? THEN 'owner' ELSE 'shared' END as access_role,
                 (SELECT COUNT(*) FROM sa_issues WHERE project_id = p.id AND severity = 'critical') as critical_issues,
                 (SELECT COUNT(*) FROM sa_issues WHERE project_id = p.id AND severity = 'warning') as warning_issues,
                 (SELECT COUNT(*) FROM sa_issues WHERE project_id = p.id AND severity = 'notice') as notice_issues
             FROM {$this->table} p
-            WHERE p.user_id = ?
+            WHERE p.id IN {$in['sql']}
             ORDER BY p.created_at DESC
         ";
 
-        return Database::fetchAll($sql, [$userId]);
+        return Database::fetchAll($sql, array_merge([$userId], $in['params']));
     }
 
     /**
-     * Ottieni progetto con statistiche dettagliate
+     * Ottieni progetto con statistiche dettagliate (owner o condiviso)
      */
     public function findWithStats(int $id, int $userId): ?array
     {
-        $sql = "
-            SELECT
-                p.*,
-                (SELECT COUNT(*) FROM sa_pages WHERE project_id = p.id) as total_pages,
-                (SELECT COUNT(*) FROM sa_issues WHERE project_id = p.id) as total_issues,
-                (SELECT COUNT(*) FROM sa_issues WHERE project_id = p.id AND severity = 'critical') as critical_issues,
-                (SELECT COUNT(*) FROM sa_issues WHERE project_id = p.id AND severity = 'warning') as warning_issues,
-                (SELECT COUNT(*) FROM sa_issues WHERE project_id = p.id AND severity = 'notice') as notice_issues,
-                (SELECT COUNT(*) FROM sa_issues WHERE project_id = p.id AND severity = 'info') as info_issues
-            FROM {$this->table} p
-            WHERE p.id = ? AND p.user_id = ?
-        ";
+        $project = $this->findAccessible($id, $userId);
+        if (!$project) {
+            return null;
+        }
 
-        return Database::fetch($sql, [$id, $userId]);
+        $stats = Database::fetch("
+            SELECT
+                (SELECT COUNT(*) FROM sa_pages WHERE project_id = ?) as total_pages,
+                (SELECT COUNT(*) FROM sa_issues WHERE project_id = ?) as total_issues,
+                (SELECT COUNT(*) FROM sa_issues WHERE project_id = ? AND severity = 'critical') as critical_issues,
+                (SELECT COUNT(*) FROM sa_issues WHERE project_id = ? AND severity = 'warning') as warning_issues,
+                (SELECT COUNT(*) FROM sa_issues WHERE project_id = ? AND severity = 'notice') as notice_issues,
+                (SELECT COUNT(*) FROM sa_issues WHERE project_id = ? AND severity = 'info') as info_issues
+        ", [$id, $id, $id, $id, $id, $id]);
+
+        return array_merge($project, $stats ?: []);
     }
 
     /**

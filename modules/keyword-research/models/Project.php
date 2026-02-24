@@ -106,38 +106,57 @@ class Project
 
     public function allByUser(int $userId): array
     {
-        $sql = "SELECT * FROM {$this->table} WHERE user_id = ? ORDER BY created_at DESC";
-        return Database::fetchAll($sql, [$userId]);
+        $ids = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'keyword-research', $this->table);
+        if (empty($ids)) {
+            return [];
+        }
+        $in = \Services\ProjectAccessService::sqlInClause($ids);
+        return Database::fetchAll(
+            "SELECT * FROM {$this->table} WHERE id IN {$in['sql']} ORDER BY created_at DESC",
+            $in['params']
+        );
     }
 
     public function getRecentByUser(int $userId, int $limit = 5): array
     {
+        $ids = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'keyword-research', $this->table);
+        if (empty($ids)) {
+            return [];
+        }
+        $in = \Services\ProjectAccessService::sqlInClause($ids);
         $sql = "
             SELECT p.*,
+                CASE WHEN p.user_id = ? THEN 'owner' ELSE 'shared' END as access_role,
                 (SELECT COUNT(*) FROM kr_researches WHERE project_id = p.id AND status = 'completed') as researches_count,
                 (SELECT SUM(filtered_keywords_count) FROM kr_researches WHERE project_id = p.id AND status = 'completed') as total_keywords,
                 (SELECT COUNT(*) FROM kr_clusters c JOIN kr_researches r ON c.research_id = r.id WHERE r.project_id = p.id) as total_clusters,
                 (SELECT MAX(r2.created_at) FROM kr_researches r2 WHERE r2.project_id = p.id) as last_research_at
             FROM {$this->table} p
-            WHERE p.user_id = ?
+            WHERE p.id IN {$in['sql']}
             ORDER BY p.updated_at DESC
             LIMIT ?
         ";
-        return Database::fetchAll($sql, [$userId, $limit]);
+        return Database::fetchAll($sql, array_merge([$userId], $in['params'], [$limit]));
     }
 
     public function allWithStats(int $userId, ?string $type = null): array
     {
+        $ids = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'keyword-research', $this->table);
+        if (empty($ids)) {
+            return [];
+        }
+        $in = \Services\ProjectAccessService::sqlInClause($ids);
         $sql = "
             SELECT p.*,
+                CASE WHEN p.user_id = ? THEN 'owner' ELSE 'shared' END as access_role,
                 (SELECT COUNT(*) FROM kr_researches WHERE project_id = p.id) as researches_count,
                 (SELECT COUNT(*) FROM kr_researches WHERE project_id = p.id AND status = 'completed') as completed_count,
                 (SELECT SUM(filtered_keywords_count) FROM kr_researches WHERE project_id = p.id AND status = 'completed') as total_keywords,
                 (SELECT COUNT(*) FROM kr_clusters c JOIN kr_researches r ON c.research_id = r.id WHERE r.project_id = p.id) as total_clusters
             FROM {$this->table} p
-            WHERE p.user_id = ?
+            WHERE p.id IN {$in['sql']}
         ";
-        $params = [$userId];
+        $params = array_merge([$userId], $in['params']);
 
         if ($type !== null && in_array($type, self::validTypes(), true)) {
             $sql .= " AND p.type = ?";

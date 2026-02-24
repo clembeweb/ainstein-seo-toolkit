@@ -67,115 +67,111 @@ class Project
     }
 
     /**
-     * Get all projects for a user
+     * Get all projects for a user (propri + condivisi)
      */
     public function allByUser(int $userId): array
     {
-        $sql = "SELECT * FROM {$this->table} WHERE user_id = ? ORDER BY created_at DESC";
-        return Database::fetchAll($sql, [$userId]);
+        $ids = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'ai-content', $this->table);
+        if (empty($ids)) {
+            return [];
+        }
+        $in = \Services\ProjectAccessService::sqlInClause($ids);
+        return Database::fetchAll(
+            "SELECT * FROM {$this->table} WHERE id IN {$in['sql']} ORDER BY created_at DESC",
+            $in['params']
+        );
     }
 
     /**
-     * Get all projects with stats (keywords count, articles count)
+     * Get all projects with stats (propri + condivisi)
      */
     public function allWithStats(int $userId): array
     {
+        $ids = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'ai-content', $this->table);
+        if (empty($ids)) {
+            return [];
+        }
+        $in = \Services\ProjectAccessService::sqlInClause($ids);
+
         $sql = "
             SELECT
                 p.*,
+                CASE WHEN p.user_id = ? THEN 'owner' ELSE 'shared' END as access_role,
                 (SELECT COUNT(*) FROM aic_keywords WHERE project_id = p.id) as keywords_count,
                 (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id) as articles_count,
                 (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id AND status = 'ready') as articles_ready,
                 (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id AND status = 'published') as articles_published
             FROM {$this->table} p
-            WHERE p.user_id = ?
+            WHERE p.id IN {$in['sql']}
             ORDER BY p.updated_at DESC
         ";
 
-        return Database::fetchAll($sql, [$userId]);
+        return Database::fetchAll($sql, array_merge([$userId], $in['params']));
     }
 
     /**
-     * Get all projects grouped by type with type-specific stats
+     * Get all projects grouped by type with type-specific stats (propri + condivisi)
      */
     public function allGroupedByType(int $userId): array
     {
-        // Check which tables exist
+        $allIds = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'ai-content', $this->table);
+        if (empty($allIds)) {
+            return ['manual' => [], 'auto' => [], 'meta-tag' => []];
+        }
+        $in = \Services\ProjectAccessService::sqlInClause($allIds);
+
         $queueExists = $this->tableExists('aic_queue');
         $metaTagsExists = $this->tableExists('aic_meta_tags');
 
-        // Progetti Manual: stats articoli senza queue
-        $sqlManual = "
-            SELECT
-                p.*,
+        // Progetti Manual
+        $manualProjects = Database::fetchAll("
+            SELECT p.*,
+                CASE WHEN p.user_id = ? THEN 'owner' ELSE 'shared' END as access_role,
                 (SELECT COUNT(*) FROM aic_keywords WHERE project_id = p.id) as keywords_count,
                 (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id) as articles_count,
                 (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id AND status = 'ready') as articles_ready,
                 (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id AND status = 'published') as articles_published
             FROM {$this->table} p
-            WHERE p.user_id = ? AND p.type = 'manual'
+            WHERE p.id IN {$in['sql']} AND p.type = 'manual'
             ORDER BY p.updated_at DESC
-        ";
-        $manualProjects = Database::fetchAll($sqlManual, [$userId]);
+        ", array_merge([$userId], $in['params']));
 
-        // Progetti Auto: stats articoli + queue (se esiste)
-        if ($queueExists) {
-            $sqlAuto = "
-                SELECT
-                    p.*,
-                    (SELECT COUNT(*) FROM aic_keywords WHERE project_id = p.id) as keywords_count,
-                    (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id) as articles_count,
-                    (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id AND status = 'ready') as articles_ready,
-                    (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id AND status = 'published') as articles_published,
-                    (SELECT COUNT(*) FROM aic_queue WHERE project_id = p.id AND status = 'pending') as queue_pending,
-                    (SELECT COUNT(*) FROM aic_queue WHERE project_id = p.id AND status = 'processing') as queue_processing
-                FROM {$this->table} p
-                WHERE p.user_id = ? AND p.type = 'auto'
-                ORDER BY p.updated_at DESC
-            ";
-        } else {
-            $sqlAuto = "
-                SELECT
-                    p.*,
-                    (SELECT COUNT(*) FROM aic_keywords WHERE project_id = p.id) as keywords_count,
-                    (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id) as articles_count,
-                    (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id AND status = 'ready') as articles_ready,
-                    (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id AND status = 'published') as articles_published,
-                    0 as queue_pending,
-                    0 as queue_processing
-                FROM {$this->table} p
-                WHERE p.user_id = ? AND p.type = 'auto'
-                ORDER BY p.updated_at DESC
-            ";
-        }
-        $autoProjects = Database::fetchAll($sqlAuto, [$userId]);
+        // Progetti Auto
+        $queueCols = $queueExists
+            ? "(SELECT COUNT(*) FROM aic_queue WHERE project_id = p.id AND status = 'pending') as queue_pending,
+               (SELECT COUNT(*) FROM aic_queue WHERE project_id = p.id AND status = 'processing') as queue_processing"
+            : "0 as queue_pending, 0 as queue_processing";
 
-        // Progetti Meta-Tag: stats meta tags (se tabella esiste)
-        $metaTagProjects = [];
-        if ($metaTagsExists) {
-            $sqlMetaTags = "
-                SELECT
-                    p.*,
-                    (SELECT COUNT(*) FROM aic_meta_tags WHERE project_id = p.id) as urls_count,
-                    (SELECT COUNT(*) FROM aic_meta_tags WHERE project_id = p.id AND status = 'scraped') as urls_scraped,
-                    (SELECT COUNT(*) FROM aic_meta_tags WHERE project_id = p.id AND status = 'generated') as urls_generated,
-                    (SELECT COUNT(*) FROM aic_meta_tags WHERE project_id = p.id AND status = 'approved') as urls_approved,
-                    (SELECT COUNT(*) FROM aic_meta_tags WHERE project_id = p.id AND status = 'published') as urls_published
-                FROM {$this->table} p
-                WHERE p.user_id = ? AND p.type = 'meta-tag'
-                ORDER BY p.updated_at DESC
-            ";
-            $metaTagProjects = Database::fetchAll($sqlMetaTags, [$userId]);
-        } else {
-            // Se tabella non esiste, prendi comunque i progetti meta-tag senza stats
-            $sqlMetaTags = "
-                SELECT p.*, 0 as urls_count, 0 as urls_scraped, 0 as urls_generated, 0 as urls_approved, 0 as urls_published
-                FROM {$this->table} p
-                WHERE p.user_id = ? AND p.type = 'meta-tag'
-                ORDER BY p.updated_at DESC
-            ";
-            $metaTagProjects = Database::fetchAll($sqlMetaTags, [$userId]);
-        }
+        $autoProjects = Database::fetchAll("
+            SELECT p.*,
+                CASE WHEN p.user_id = ? THEN 'owner' ELSE 'shared' END as access_role,
+                (SELECT COUNT(*) FROM aic_keywords WHERE project_id = p.id) as keywords_count,
+                (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id) as articles_count,
+                (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id AND status = 'ready') as articles_ready,
+                (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id AND status = 'published') as articles_published,
+                {$queueCols}
+            FROM {$this->table} p
+            WHERE p.id IN {$in['sql']} AND p.type = 'auto'
+            ORDER BY p.updated_at DESC
+        ", array_merge([$userId], $in['params']));
+
+        // Progetti Meta-Tag
+        $metaCols = $metaTagsExists
+            ? "(SELECT COUNT(*) FROM aic_meta_tags WHERE project_id = p.id) as urls_count,
+               (SELECT COUNT(*) FROM aic_meta_tags WHERE project_id = p.id AND status = 'scraped') as urls_scraped,
+               (SELECT COUNT(*) FROM aic_meta_tags WHERE project_id = p.id AND status = 'generated') as urls_generated,
+               (SELECT COUNT(*) FROM aic_meta_tags WHERE project_id = p.id AND status = 'approved') as urls_approved,
+               (SELECT COUNT(*) FROM aic_meta_tags WHERE project_id = p.id AND status = 'published') as urls_published"
+            : "0 as urls_count, 0 as urls_scraped, 0 as urls_generated, 0 as urls_approved, 0 as urls_published";
+
+        $metaTagProjects = Database::fetchAll("
+            SELECT p.*,
+                CASE WHEN p.user_id = ? THEN 'owner' ELSE 'shared' END as access_role,
+                {$metaCols}
+            FROM {$this->table} p
+            WHERE p.id IN {$in['sql']} AND p.type = 'meta-tag'
+            ORDER BY p.updated_at DESC
+        ", array_merge([$userId], $in['params']));
 
         return [
             'manual' => $manualProjects,
@@ -306,14 +302,23 @@ class Project
     }
 
     /**
-     * Get global stats across all user projects (for entry dashboard)
+     * Get global stats across all accessible projects (propri + condivisi)
      */
     public function getGlobalStats(int $userId): array
     {
-        $metaTagsExists = $this->tableExists('aic_meta_tags');
-        $queueExists = $this->tableExists('aic_queue');
+        $allIds = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'ai-content', $this->table);
+        $empty = [
+            'manual_count' => 0, 'auto_count' => 0, 'meta_count' => 0,
+            'total_projects' => 0, 'total_keywords' => 0, 'total_articles' => 0,
+            'published' => 0, 'total_words' => 0, 'total_meta_tags' => 0,
+        ];
+        if (empty($allIds)) {
+            return $empty;
+        }
+        $in = \Services\ProjectAccessService::sqlInClause($allIds);
 
-        // Conteggio progetti per tipo
+        $metaTagsExists = $this->tableExists('aic_meta_tags');
+
         $projectCounts = Database::fetch("
             SELECT
                 SUM(CASE WHEN type = 'manual' THEN 1 ELSE 0 END) as manual_count,
@@ -321,37 +326,27 @@ class Project
                 SUM(CASE WHEN type = 'meta-tag' THEN 1 ELSE 0 END) as meta_count,
                 COUNT(*) as total_projects
             FROM {$this->table}
-            WHERE user_id = ?
-        ", [$userId]);
+            WHERE id IN {$in['sql']}
+        ", $in['params']);
 
-        // Stats articoli globali
         $articleStats = Database::fetch("
             SELECT
                 COUNT(*) as total_articles,
                 SUM(CASE WHEN a.status = 'published' THEN 1 ELSE 0 END) as published,
                 SUM(COALESCE(a.word_count, 0)) as total_words
             FROM aic_articles a
-            INNER JOIN {$this->table} p ON a.project_id = p.id
-            WHERE p.user_id = ?
-        ", [$userId]);
+            WHERE a.project_id IN {$in['sql']}
+        ", $in['params']);
 
-        // Keywords totali
         $kwCount = Database::fetch("
-            SELECT COUNT(*) as cnt
-            FROM aic_keywords k
-            INNER JOIN {$this->table} p ON k.project_id = p.id
-            WHERE p.user_id = ?
-        ", [$userId]);
+            SELECT COUNT(*) as cnt FROM aic_keywords WHERE project_id IN {$in['sql']}
+        ", $in['params']);
 
-        // Meta tags totali
         $metaCount = 0;
         if ($metaTagsExists) {
             $metaRow = Database::fetch("
-                SELECT COUNT(*) as cnt
-                FROM aic_meta_tags mt
-                INNER JOIN {$this->table} p ON mt.project_id = p.id
-                WHERE p.user_id = ?
-            ", [$userId]);
+                SELECT COUNT(*) as cnt FROM aic_meta_tags WHERE project_id IN {$in['sql']}
+            ", $in['params']);
             $metaCount = (int) ($metaRow['cnt'] ?? 0);
         }
 
@@ -369,27 +364,30 @@ class Project
     }
 
     /**
-     * Get recent projects (all types) for entry dashboard
+     * Get recent projects (all types) for entry dashboard (propri + condivisi)
      */
     public function getRecentProjects(int $userId, int $limit = 6): array
     {
+        $allIds = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'ai-content', $this->table);
+        if (empty($allIds)) {
+            return [];
+        }
+        $in = \Services\ProjectAccessService::sqlInClause($allIds);
         $metaTagsExists = $this->tableExists('aic_meta_tags');
 
-        $sql = "
+        $projects = Database::fetchAll("
             SELECT
                 p.*,
+                CASE WHEN p.user_id = ? THEN 'owner' ELSE 'shared' END as access_role,
                 (SELECT COUNT(*) FROM aic_keywords WHERE project_id = p.id) as keywords_count,
                 (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id) as articles_count,
                 (SELECT COUNT(*) FROM aic_articles WHERE project_id = p.id AND status = 'published') as articles_published
             FROM {$this->table} p
-            WHERE p.user_id = ?
+            WHERE p.id IN {$in['sql']}
             ORDER BY p.updated_at DESC
             LIMIT ?
-        ";
+        ", array_merge([$userId], $in['params'], [$limit]));
 
-        $projects = Database::fetchAll($sql, [$userId, $limit]);
-
-        // Aggiungi meta tags count per i progetti meta-tag
         if ($metaTagsExists) {
             foreach ($projects as &$project) {
                 if ($project['type'] === 'meta-tag') {

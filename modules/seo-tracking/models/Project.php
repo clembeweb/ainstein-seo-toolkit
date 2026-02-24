@@ -112,33 +112,47 @@ class Project
     }
 
     /**
-     * Tutti i progetti di un utente
+     * Tutti i progetti di un utente (propri + condivisi)
      */
     public function allByUser(int $userId): array
     {
-        $sql = "SELECT * FROM {$this->table} WHERE user_id = ? ORDER BY created_at DESC";
-        return Database::fetchAll($sql, [$userId]);
+        $ids = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'seo-tracking', $this->table);
+        if (empty($ids)) {
+            return [];
+        }
+        $in = \Services\ProjectAccessService::sqlInClause($ids);
+        return Database::fetchAll(
+            "SELECT * FROM {$this->table} WHERE id IN {$in['sql']} ORDER BY created_at DESC",
+            $in['params']
+        );
     }
 
     /**
-     * Progetti con statistiche (basato su rank checker, non GSC)
+     * Progetti con statistiche (propri + condivisi)
      */
     public function allWithStats(int $userId): array
     {
+        $ids = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'seo-tracking', $this->table);
+        if (empty($ids)) {
+            return [];
+        }
+        $in = \Services\ProjectAccessService::sqlInClause($ids);
+
         $sql = "
             SELECT
                 p.*,
+                CASE WHEN p.user_id = ? THEN 'owner' ELSE 'shared' END as access_role,
                 (SELECT COUNT(*) FROM st_keywords WHERE project_id = p.id AND is_tracked = 1) as keyword_count,
                 (SELECT COUNT(DISTINCT keyword) FROM st_rank_checks WHERE project_id = p.id) as checked_count,
                 (SELECT COUNT(*) FROM st_alerts WHERE project_id = p.id AND status = 'new') as alerts_count,
                 gsc.property_url as gsc_property
             FROM {$this->table} p
             LEFT JOIN st_gsc_connections gsc ON p.id = gsc.project_id AND gsc.is_active = 1
-            WHERE p.user_id = ?
+            WHERE p.id IN {$in['sql']}
             ORDER BY p.created_at DESC
         ";
 
-        $projects = Database::fetchAll($sql, [$userId]);
+        $projects = Database::fetchAll($sql, array_merge([$userId], $in['params']));
 
         // Aggiungi avg_position da ultimo rank check per ogni progetto
         foreach ($projects as &$project) {

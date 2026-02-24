@@ -248,6 +248,56 @@ class ProjectAccessService
     }
 
     /**
+     * Ottieni tutti gli ID di progetto modulo accessibili da un utente (propri + condivisi).
+     * Usato dai moduli per le liste progetti (dashboard, indici).
+     *
+     * @param string $moduleTable Nome tabella modulo (es. 'ga_projects', 'st_projects')
+     * @param string $moduleSlug  Slug modulo (es. 'ads-analyzer', 'seo-tracking')
+     * @return int[]
+     */
+    public static function getAccessibleModuleProjectIds(int $userId, string $moduleSlug, string $moduleTable): array
+    {
+        // 1. Progetti propri
+        $owned = Database::fetchAll(
+            "SELECT id FROM {$moduleTable} WHERE user_id = ?",
+            [$userId]
+        );
+
+        // 2. Progetti condivisi (global_project_id → project_members → project_member_modules)
+        $shared = Database::fetchAll(
+            "SELECT mp.id
+             FROM {$moduleTable} mp
+             JOIN projects p ON p.id = mp.global_project_id
+             JOIN project_members pm ON pm.project_id = p.id
+             JOIN project_member_modules pmm ON pmm.member_id = pm.id
+             WHERE pm.user_id = ? AND pm.accepted_at IS NOT NULL
+               AND pmm.module_slug = ?",
+            [$userId, $moduleSlug]
+        );
+
+        return array_unique(array_merge(
+            array_column($owned, 'id'),
+            array_column($shared, 'id')
+        ));
+    }
+
+    /**
+     * Genera clausola SQL IN (...) con placeholder sicuri.
+     * @return array{sql: string, params: int[]}
+     */
+    public static function sqlInClause(array $ids): array
+    {
+        if (empty($ids)) {
+            return ['sql' => '(0)', 'params' => []];
+        }
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        return [
+            'sql' => "({$placeholders})",
+            'params' => array_map('intval', array_values($ids)),
+        ];
+    }
+
+    /**
      * Ottieni i moduli a cui un membro ha accesso per un progetto.
      *
      * @return array Array di module slug (es. ['seo-tracking', 'seo-audit'])

@@ -68,12 +68,18 @@ class Project
     }
 
     /**
-     * Get all projects for a user
+     * Get all projects for a user (propri + condivisi)
      */
     public function allByUser(int $userId, string $status = null): array
     {
-        $sql = "SELECT * FROM {$this->table} WHERE user_id = ?";
-        $params = [$userId];
+        $ids = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'internal-links', $this->table);
+        if (empty($ids)) {
+            return [];
+        }
+        $in = \Services\ProjectAccessService::sqlInClause($ids);
+
+        $sql = "SELECT * FROM {$this->table} WHERE id IN {$in['sql']}";
+        $params = $in['params'];
 
         if ($status) {
             $sql .= " AND status = ?";
@@ -86,13 +92,20 @@ class Project
     }
 
     /**
-     * Get all projects with stats for a user
+     * Get all projects with stats for a user (propri + condivisi)
      */
     public function allWithStats(int $userId): array
     {
+        $ids = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'internal-links', $this->table);
+        if (empty($ids)) {
+            return [];
+        }
+        $in = \Services\ProjectAccessService::sqlInClause($ids);
+
         $sql = "
             SELECT
                 p.*,
+                CASE WHEN p.user_id = ? THEN 'owner' ELSE 'shared' END as access_role,
                 COALESCE(ps.total_urls, 0) as total_urls,
                 COALESCE(ps.scraped_urls, 0) as scraped_urls,
                 COALESCE(ps.error_urls, 0) as error_urls,
@@ -100,21 +113,25 @@ class Project
                 ps.avg_relevance_score
             FROM {$this->table} p
             LEFT JOIN il_project_stats ps ON p.id = ps.project_id
-            WHERE p.user_id = ?
+            WHERE p.id IN {$in['sql']}
             ORDER BY p.created_at DESC
         ";
 
-        return Database::fetchAll($sql, [$userId]);
+        return Database::fetchAll($sql, array_merge([$userId], $in['params']));
     }
 
     /**
-     * Get project with stats
+     * Get project with stats (owner o condiviso)
      */
     public function findWithStats(int $id, int $userId): ?array
     {
-        $sql = "
+        $project = $this->findAccessible($id, $userId);
+        if (!$project) {
+            return null;
+        }
+
+        $stats = Database::fetch("
             SELECT
-                p.*,
                 COALESCE(ps.total_urls, 0) as total_urls,
                 COALESCE(ps.scraped_urls, 0) as scraped_urls,
                 COALESCE(ps.error_urls, 0) as error_urls,
@@ -124,12 +141,11 @@ class Project
                 COALESCE(ps.analyzed_links, 0) as analyzed_links,
                 ps.avg_relevance_score,
                 COALESCE(ps.orphan_pages, 0) as orphan_pages
-            FROM {$this->table} p
-            LEFT JOIN il_project_stats ps ON p.id = ps.project_id
-            WHERE p.id = ? AND p.user_id = ?
-        ";
+            FROM il_project_stats ps
+            WHERE ps.project_id = ?
+        ", [$id]);
 
-        return Database::fetch($sql, [$id, $userId]);
+        return array_merge($project, $stats ?: []);
     }
 
     /**

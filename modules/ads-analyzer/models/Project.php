@@ -6,55 +6,6 @@ use Core\Database;
 
 class Project
 {
-    /**
-     * Ottieni tutti gli ID ga_projects accessibili dall'utente (propri + condivisi).
-     * Usato internamente per dashboard, liste, stats.
-     */
-    private static function getAccessibleProjectIds(int $userId, ?string $type = null): array
-    {
-        // 1. Progetti propri
-        $ownedSql = "SELECT id FROM ga_projects WHERE user_id = ?";
-        $ownedParams = [$userId];
-        if ($type) {
-            $ownedSql .= " AND type = ?";
-            $ownedParams[] = $type;
-        }
-        $owned = Database::fetchAll($ownedSql, $ownedParams);
-
-        // 2. Progetti condivisi (via global_project_id → project_members → project_member_modules)
-        $sharedSql = "SELECT gp.id
-             FROM ga_projects gp
-             JOIN projects p ON p.id = gp.global_project_id
-             JOIN project_members pm ON pm.project_id = p.id
-             JOIN project_member_modules pmm ON pmm.member_id = pm.id
-             WHERE pm.user_id = ? AND pm.accepted_at IS NOT NULL
-               AND pmm.module_slug = 'ads-analyzer'";
-        $sharedParams = [$userId];
-        if ($type) {
-            $sharedSql .= " AND gp.type = ?";
-            $sharedParams[] = $type;
-        }
-        $shared = Database::fetchAll($sharedSql, $sharedParams);
-
-        return array_unique(array_merge(
-            array_column($owned, 'id'),
-            array_column($shared, 'id')
-        ));
-    }
-
-    /**
-     * Genera una clausola SQL IN (...) sicura con placeholder.
-     * @return array{sql: string, params: array}
-     */
-    private static function inClause(array $ids): array
-    {
-        if (empty($ids)) {
-            return ['sql' => '(0)', 'params' => []];
-        }
-        $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        return ['sql' => "({$placeholders})", 'params' => array_values($ids)];
-    }
-
     public static function create(array $data): int
     {
         $record = [
@@ -135,8 +86,14 @@ class Project
 
     public static function getAllByUser(int $userId, ?string $status = null, ?string $type = null): array
     {
-        $sql = "SELECT * FROM ga_projects WHERE user_id = ?";
-        $params = [$userId];
+        $ids = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'ads-analyzer', 'ga_projects');
+        if (empty($ids)) {
+            return [];
+        }
+        $in = \Services\ProjectAccessService::sqlInClause($ids);
+
+        $sql = "SELECT * FROM ga_projects WHERE id IN {$in['sql']}";
+        $params = $in['params'];
 
         if ($type) {
             $sql .= " AND type = ?";
@@ -158,37 +115,32 @@ class Project
      */
     public static function allGroupedByType(int $userId): array
     {
-        $campaignIds = self::getAccessibleProjectIds($userId, 'campaign');
-        $creatorIds = self::getAccessibleProjectIds($userId, 'campaign-creator');
-
-        $campaign = [];
-        if (!empty($campaignIds)) {
-            $in = self::inClause($campaignIds);
-            $campaign = Database::fetchAll("
-                SELECT p.*,
-                    CASE WHEN p.user_id = ? THEN 'owner' ELSE 'shared' END as access_role,
-                    (SELECT COUNT(*) FROM ga_script_runs WHERE project_id = p.id AND status = 'completed') as total_runs,
-                    (SELECT COUNT(DISTINCT c.id) FROM ga_campaigns c WHERE c.project_id = p.id) as total_campaigns,
-                    (SELECT COUNT(*) FROM ga_campaign_evaluations WHERE project_id = p.id AND status = 'completed') as total_evaluations
-                FROM ga_projects p
-                WHERE p.id IN {$in['sql']}
-                ORDER BY p.updated_at DESC
-            ", array_merge([$userId], $in['params']));
+        $allIds = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'ads-analyzer', 'ga_projects');
+        if (empty($allIds)) {
+            return ['campaign' => [], 'campaign-creator' => []];
         }
+        $in = \Services\ProjectAccessService::sqlInClause($allIds);
 
-        $creator = [];
-        if (!empty($creatorIds)) {
-            $in = self::inClause($creatorIds);
-            $creator = Database::fetchAll("
-                SELECT p.*,
-                    CASE WHEN p.user_id = ? THEN 'owner' ELSE 'shared' END as access_role,
-                    (SELECT COUNT(*) FROM ga_creator_generations WHERE project_id = p.id AND step = 'keywords' AND status = 'completed') as kw_generations,
-                    (SELECT COUNT(*) FROM ga_creator_campaigns WHERE project_id = p.id) as campaigns_generated
-                FROM ga_projects p
-                WHERE p.id IN {$in['sql']}
-                ORDER BY p.updated_at DESC
-            ", array_merge([$userId], $in['params']));
-        }
+        $campaign = Database::fetchAll("
+            SELECT p.*,
+                CASE WHEN p.user_id = ? THEN 'owner' ELSE 'shared' END as access_role,
+                (SELECT COUNT(*) FROM ga_script_runs WHERE project_id = p.id AND status = 'completed') as total_runs,
+                (SELECT COUNT(DISTINCT c.id) FROM ga_campaigns c WHERE c.project_id = p.id) as total_campaigns,
+                (SELECT COUNT(*) FROM ga_campaign_evaluations WHERE project_id = p.id AND status = 'completed') as total_evaluations
+            FROM ga_projects p
+            WHERE p.id IN {$in['sql']} AND p.type = 'campaign'
+            ORDER BY p.updated_at DESC
+        ", array_merge([$userId], $in['params']));
+
+        $creator = Database::fetchAll("
+            SELECT p.*,
+                CASE WHEN p.user_id = ? THEN 'owner' ELSE 'shared' END as access_role,
+                (SELECT COUNT(*) FROM ga_creator_generations WHERE project_id = p.id AND step = 'keywords' AND status = 'completed') as kw_generations,
+                (SELECT COUNT(*) FROM ga_creator_campaigns WHERE project_id = p.id) as campaigns_generated
+            FROM ga_projects p
+            WHERE p.id IN {$in['sql']} AND p.type = 'campaign-creator'
+            ORDER BY p.updated_at DESC
+        ", array_merge([$userId], $in['params']));
 
         return [
             'campaign' => $campaign,
@@ -201,7 +153,7 @@ class Project
      */
     public static function getGlobalStats(int $userId): array
     {
-        $allIds = self::getAccessibleProjectIds($userId);
+        $allIds = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'ads-analyzer', 'ga_projects');
 
         if (empty($allIds)) {
             return [
@@ -211,7 +163,7 @@ class Project
             ];
         }
 
-        $in = self::inClause($allIds);
+        $in = \Services\ProjectAccessService::sqlInClause($allIds);
 
         $counts = Database::fetch("
             SELECT
@@ -304,11 +256,11 @@ class Project
 
     public static function getRecent(int $userId, int $limit = 5): array
     {
-        $allIds = self::getAccessibleProjectIds($userId);
+        $allIds = \Services\ProjectAccessService::getAccessibleModuleProjectIds($userId, 'ads-analyzer', 'ga_projects');
         if (empty($allIds)) {
             return [];
         }
-        $in = self::inClause($allIds);
+        $in = \Services\ProjectAccessService::sqlInClause($allIds);
         return Database::fetchAll(
             "SELECT p.*, CASE WHEN p.user_id = ? THEN 'owner' ELSE 'shared' END as access_role
              FROM ga_projects p
