@@ -1,6 +1,6 @@
 # AINSTEIN - Istruzioni Claude Code
 
-> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-02-24
+> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-02-24 (notifiche)
 
 ---
 
@@ -100,6 +100,23 @@ Progetti condivisibili tra utenti con 3 ruoli: Owner, Editor, Viewer.
 
 **Crediti**: sempre scalati dall'owner via `ProjectAccessService::getOwnerId()`.
 
+### Sistema Notifiche In-App
+
+| Tabella | Scopo |
+|---------|-------|
+| `notifications` | Notifiche in-app (tipo, titolo, read_at, action_url) |
+| `notification_preferences` | Preferenze email per tipo notifica |
+
+**Service**: `NotificationService::send($userId, $type, $title, $options)`
+
+**Tipi v1**: `project_invite`, `project_invite_accepted`, `project_invite_declined`, `operation_completed`, `operation_failed`
+
+**Polling**: `/notifications/unread-count` ogni 30s, Alpine.js `notificationBell()` in layout.php
+
+**Pagina**: `/notifications` — lista completa con filtri e paginazione
+
+**Preferenze**: Toggle email in `/profile`, salvate in `notification_preferences`
+
 ---
 
 ## STRUTTURA PROGETTO
@@ -126,6 +143,7 @@ seo-toolkit/
 │   ├── RapidApiKeywordService.php # Keyword volumes
 │   ├── KeywordsEverywhereService.php # Volume fallback
 │   ├── SitemapService.php, CsvImportService.php
+│   ├── NotificationService.php     # Notifiche in-app + email
 │   ├── EmailService.php, ExportService.php
 │   └── connectors/                # CMS connectors (WP, Shopify, etc.)
 ├── modules/

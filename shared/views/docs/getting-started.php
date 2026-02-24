@@ -215,7 +215,7 @@
                 </div>
                 <div>
                     <h3 class="text-sm font-semibold text-slate-900 dark:text-white">4. Monitora dalla dashboard</h3>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">La dashboard del progetto mostra una panoramica di tutti i moduli attivi con le statistiche principali. Tutto il lavoro per un cliente in un'unica vista.</p>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">La dashboard del progetto mostra una panoramica di tutti i moduli attivi con le statistiche principali. Tutto il lavoro per un cliente in un'unica vista. Riceverai <strong class="text-slate-900 dark:text-white">notifiche in-app</strong> per inviti progetto e completamento operazioni &mdash; cerca l'icona campanella nella barra superiore.</p>
                 </div>
             </div>
         </div>
