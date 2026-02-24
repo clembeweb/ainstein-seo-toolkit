@@ -138,11 +138,32 @@ class CrawlController
             // Aggiorna sessione con pagine trovate
             $this->sessionModel->setPagesFound($sessionId, count($urls));
 
-            // Conta pagine pending per il job
-            $pendingCount = Database::fetch(
-                "SELECT COUNT(*) as cnt FROM sa_pages WHERE project_id = ? AND status = 'pending'",
-                [$id]
-            )['cnt'] ?? count($urls);
+            // Inserisci URL scoperti in sa_pages come pending (per processStream SSE)
+            // Necessario perché discoverUrls() salva in sa_site_config ma processStream
+            // legge da sa_pages filtrato per session_id
+            $pendingCount = 0;
+            foreach ($urls as $url) {
+                $exists = Database::fetch(
+                    "SELECT id FROM sa_pages WHERE project_id = ? AND url = ?",
+                    [$id, $url]
+                );
+                if (!$exists) {
+                    Database::insert('sa_pages', [
+                        'project_id' => $id,
+                        'session_id' => $sessionId,
+                        'url' => $url,
+                        'status' => 'pending',
+                    ]);
+                    $pendingCount++;
+                } else {
+                    // Pagina esiste già, aggiorna session_id e status
+                    Database::execute(
+                        "UPDATE sa_pages SET session_id = ?, status = 'pending' WHERE id = ?",
+                        [$sessionId, $exists['id']]
+                    );
+                    $pendingCount++;
+                }
+            }
 
             // Crea background job per SSE processing
             $jobModel = new CrawlJob();
