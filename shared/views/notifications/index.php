@@ -98,7 +98,8 @@ $iconPaths = [
                     $iconPath = $iconPaths[$icon] ?? $iconPaths['bell'];
                     $isUnread = empty($notification['read_at']);
                 ?>
-                <a href="<?= e($notification['action_url'] ?? '#') ?>" class="block">
+                <a href="<?= e($notification['action_url'] ?? '#') ?>" class="block"
+                   <?php if ($isUnread): ?>onclick="markNotifRead(<?= (int)$notification['id'] ?>)"<?php endif; ?>>
                     <div class="flex items-start gap-4 p-4 rounded-xl transition-colors
                                 <?= $isUnread
                                     ? 'bg-blue-900/10 border-l-4 border-blue-500 hover:bg-blue-900/20'
@@ -148,3 +149,13 @@ $iconPaths = [
         <?php endif; ?>
     <?php endif; ?>
 </div>
+
+<script>
+function markNotifRead(id) {
+    const token = document.querySelector('meta[name="csrf-token"]')?.content
+                  || document.querySelector('input[name="_csrf_token"]')?.value || '';
+    const fd = new FormData();
+    fd.append('_csrf_token', token);
+    navigator.sendBeacon('/notifications/' + id + '/read', fd);
+}
+</script>

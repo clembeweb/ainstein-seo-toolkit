@@ -50,7 +50,7 @@ class NotificationService
     {
         $body      = $options['body'] ?? null;
         $icon      = $options['icon'] ?? null;
-        $color     = $options['color'] ?? null;
+        $color     = $options['color'] ?? 'blue';
         $actionUrl = $options['action_url'] ?? null;
         $data      = $options['data'] ?? null;
         $skipEmail = $options['skip_email'] ?? false;
@@ -108,8 +108,12 @@ class NotificationService
         $count = 0;
 
         foreach ($userIds as $userId) {
-            self::send((int) $userId, $type, $title, $options);
-            $count++;
+            try {
+                self::send((int) $userId, $type, $title, $options);
+                $count++;
+            } catch (\Throwable $e) {
+                // Continua con gli altri destinatari
+            }
         }
 
         return $count;

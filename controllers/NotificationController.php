@@ -89,7 +89,7 @@ class NotificationController
     }
 
     /**
-     * Segna tutte le notifiche come lette (JSON)
+     * Segna tutte le notifiche come lette (JSON o redirect)
      * POST /notifications/read-all
      */
     public function markAllRead(): string
@@ -99,8 +99,16 @@ class NotificationController
 
         $count = \Services\NotificationService::markAllAsRead(Auth::id());
 
-        header('Content-Type: application/json');
-        echo json_encode(['success' => true, 'count' => $count]);
-        exit;
+        // AJAX: ritorna JSON
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) ||
+            str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json')) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'count' => $count]);
+            exit;
+        }
+
+        // Form standard: redirect
+        $_SESSION['_flash']['success'] = 'Tutte le notifiche segnate come lette';
+        \Core\Router::redirect('/notifications');
     }
 }

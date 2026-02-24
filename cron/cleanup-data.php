@@ -55,7 +55,7 @@ $config = [
     'cc_operations_log_days'    => 90,   // Operations log: 90 giorni
 
     // --- Notifications ---
-    'notifications_days'        => 90,   // Notifiche lette: 90 giorni
+    'notifications_days'        => 90,   // Notifiche: 90 giorni (tutte)
 ];
 
 $logFile = BASE_PATH . '/storage/logs/data-cleanup.log';
