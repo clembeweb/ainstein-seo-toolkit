@@ -102,6 +102,11 @@ class CrawlController
             // Pulisci dati crawl precedente per fresh start
             Database::delete('sa_pages', 'project_id = ?', [$id]);
             Database::delete('sa_issues', 'project_id = ?', [$id]);
+            // Pulisci URL cached in sa_site_config per forzare re-discovery con nuovo max_pages
+            Database::execute(
+                "UPDATE sa_site_config SET discovered_urls = NULL WHERE project_id = ?",
+                [$id]
+            );
 
             // Crea sessione
             $sessionId = $this->sessionModel->create($id, $config);
