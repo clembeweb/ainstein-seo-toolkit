@@ -63,9 +63,32 @@ class KeywordController
             'position_max' => $_GET['position'] ?? null,
         ];
 
-        $keywords = $this->keyword->allWithPositions($projectId, 30, $filters);
+        // Date range comparison
+        $dateFrom = $_GET['date_from'] ?? null;
+        $dateTo = $_GET['date_to'] ?? null;
+        $compareMode = ($dateFrom && $dateTo);
+
+        if ($compareMode) {
+            $keywords = $this->keyword->allWithPositionComparison($projectId, $dateFrom, $dateTo, $filters);
+        } else {
+            $keywords = $this->keyword->allWithPositions($projectId, 30, $filters);
+        }
+
         $groups = $this->keyword->getGroups($projectId);
         $stats = $this->keyword->getStats($projectId);
+
+        // Available date range for date picker
+        $dateRange = null;
+        if ($compareMode || isset($_GET['compare'])) {
+            $minMax = Database::fetch(
+                "SELECT MIN(date) as min_date, MAX(date) as max_date FROM st_keyword_positions WHERE project_id = ?",
+                [$projectId]
+            );
+            $dateRange = [
+                'min_date' => $minMax['min_date'] ?? date('Y-m-d', strtotime('-16 months')),
+                'max_date' => $minMax['max_date'] ?? date('Y-m-d'),
+            ];
+        }
 
         // Check for active rank check job
         $rankJob = new RankJob();
@@ -80,6 +103,10 @@ class KeywordController
             'groups' => $groups,
             'stats' => $stats,
             'filters' => $filters,
+            'compareMode' => $compareMode,
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+            'dateRange' => $dateRange,
             'userCredits' => Credits::getBalance($user['id']),
             'activeJob' => $activeJob,
         ]);
