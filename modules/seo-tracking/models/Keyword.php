@@ -152,6 +152,104 @@ class Keyword
     }
 
     /**
+     * Keyword con confronto posizioni tra due date
+     * Per ogni keyword trova la posizione più vicina a dateStart e dateEnd (entro +-3 giorni)
+     * e calcola il delta e lo status di confronto.
+     *
+     * @param int $projectId ID del progetto
+     * @param string $dateStart Data inizio confronto (Y-m-d)
+     * @param string $dateEnd Data fine confronto (Y-m-d)
+     * @param array $filters Filtri: is_tracked, group_name, search, position_max
+     * @return array Keywords con position_start, position_end, position_delta, compare_status
+     */
+    public function allWithPositionComparison(int $projectId, string $dateStart, string $dateEnd, array $filters = []): array
+    {
+        $sql = "
+            SELECT
+                k.*,
+                kp_start.avg_position AS position_start,
+                kp_start.date AS date_start_actual,
+                kp_end.avg_position AS position_end,
+                kp_end.date AS date_end_actual,
+                kp_end.total_clicks AS period_clicks,
+                kp_end.total_impressions AS period_impressions,
+                CASE
+                    WHEN kp_start.avg_position IS NOT NULL AND kp_end.avg_position IS NOT NULL
+                        THEN ROUND(kp_start.avg_position - kp_end.avg_position, 1)
+                    ELSE NULL
+                END AS position_delta,
+                CASE
+                    WHEN kp_start.avg_position IS NULL AND kp_end.avg_position IS NOT NULL THEN 'new'
+                    WHEN kp_start.avg_position IS NOT NULL AND kp_end.avg_position IS NULL THEN 'lost'
+                    WHEN kp_start.avg_position IS NOT NULL AND kp_end.avg_position IS NOT NULL
+                        AND (kp_start.avg_position - kp_end.avg_position) >= 1 THEN 'improved'
+                    WHEN kp_start.avg_position IS NOT NULL AND kp_end.avg_position IS NOT NULL
+                        AND (kp_start.avg_position - kp_end.avg_position) <= -1 THEN 'declined'
+                    WHEN kp_start.avg_position IS NOT NULL AND kp_end.avg_position IS NOT NULL THEN 'stable'
+                    ELSE NULL
+                END AS compare_status
+            FROM {$this->table} k
+            LEFT JOIN st_keyword_positions kp_start ON kp_start.keyword_id = k.id
+                AND kp_start.date = (
+                    SELECT date FROM st_keyword_positions
+                    WHERE keyword_id = k.id AND project_id = ?
+                    AND date BETWEEN DATE_SUB(?, INTERVAL 3 DAY) AND DATE_ADD(?, INTERVAL 3 DAY)
+                    ORDER BY ABS(DATEDIFF(date, ?)) ASC
+                    LIMIT 1
+                )
+            LEFT JOIN st_keyword_positions kp_end ON kp_end.keyword_id = k.id
+                AND kp_end.date = (
+                    SELECT date FROM st_keyword_positions
+                    WHERE keyword_id = k.id AND project_id = ?
+                    AND date BETWEEN DATE_SUB(?, INTERVAL 3 DAY) AND DATE_ADD(?, INTERVAL 3 DAY)
+                    ORDER BY ABS(DATEDIFF(date, ?)) ASC
+                    LIMIT 1
+                )
+            WHERE k.project_id = ?
+        ";
+
+        $params = [
+            $projectId, $dateStart, $dateStart, $dateStart,
+            $projectId, $dateEnd, $dateEnd, $dateEnd,
+            $projectId
+        ];
+
+        // Filtri (stessi di allWithPositions)
+        if (isset($filters['is_tracked']) && $filters['is_tracked'] !== '' && $filters['is_tracked'] !== null) {
+            $sql .= " AND k.is_tracked = ?";
+            $params[] = (int) $filters['is_tracked'];
+        }
+
+        if (!empty($filters['group_name'])) {
+            $sql .= " AND k.group_name = ?";
+            $params[] = $filters['group_name'];
+        }
+
+        if (!empty($filters['search'])) {
+            $sql .= " AND k.keyword LIKE ?";
+            $params[] = '%' . $filters['search'] . '%';
+        }
+
+        if (!empty($filters['position_max'])) {
+            $sql .= " AND (kp_end.avg_position IS NOT NULL AND kp_end.avg_position <= ?)";
+            $params[] = (int) $filters['position_max'];
+        }
+
+        // Ordinamento: keyword con posizione end prima (ASC), poi lost, poi senza dati
+        $sql .= "
+            ORDER BY
+                CASE
+                    WHEN kp_end.avg_position IS NOT NULL THEN 0
+                    WHEN kp_start.avg_position IS NOT NULL AND kp_end.avg_position IS NULL THEN 1
+                    ELSE 2
+                END ASC,
+                kp_end.avg_position ASC
+        ";
+
+        return Database::fetchAll($sql, $params);
+    }
+
+    /**
      * Gruppi keyword distinti con conteggio
      */
     public function getGroups(int $projectId): array
