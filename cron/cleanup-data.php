@@ -827,6 +827,20 @@ function cleanupCcOperationsLog(array $config, int $batchSize): int
 }
 
 // ============================================
+// 23. project_invitations → DELETE scaduti non accettati
+// ============================================
+
+function cleanupExpiredInvitations(): int
+{
+    if (!tableExists('project_invitations')) {
+        logMsg("  Tabella project_invitations non trovata, skip");
+        return 0;
+    }
+
+    return \Services\ProjectSharingService::cleanupExpiredInvitations();
+}
+
+// ============================================
 // ESECUZIONE PRINCIPALE
 // ============================================
 
@@ -862,6 +876,9 @@ $sections = [
     // --- Nuovi (21-22): content-creator ---
     ['cc_jobs (> 7gg)',               'cleanupCcJobs',           [$config, $deleteBatchSize]],
     ['cc_operations_log (> 90gg)',    'cleanupCcOperationsLog',  [$config, $deleteBatchSize]],
+
+    // --- 23: project sharing ---
+    ['project_invitations (scaduti)', 'cleanupExpiredInvitations', []],
 ];
 
 foreach ($sections as [$label, $func, $args]) {
