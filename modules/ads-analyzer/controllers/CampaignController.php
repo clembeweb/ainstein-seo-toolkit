@@ -613,10 +613,14 @@ class CampaignController
         $dateStr = date('Y-m-d', strtotime($evaluation['created_at'] ?? 'now'));
         $filename = "report-{$slug}-{$dateStr}.pdf";
 
+        // Pulisci buffer output per garantire header puliti
+        while (ob_get_level()) ob_end_clean();
+
         header('Content-Type: application/pdf');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         header('Content-Length: ' . strlen($pdfContent));
         header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Pragma: public');
 
         echo $pdfContent;
         exit;
@@ -658,9 +662,15 @@ class CampaignController
         };
         $filename = "ads-editor-{$typeLabel}-" . date('Y-m-d') . '.csv';
 
+        // Pulisci buffer output per garantire header puliti
+        while (ob_get_level()) ob_end_clean();
+
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         header('Content-Length: ' . strlen($csv));
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Pragma: public');
+
         echo $csv;
         exit;
     }
