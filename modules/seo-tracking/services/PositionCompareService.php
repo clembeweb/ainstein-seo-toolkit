@@ -130,7 +130,7 @@ class PositionCompareService
                   SELECT date FROM st_keyword_positions
                   WHERE keyword_id = kp.keyword_id AND project_id = ?
                     AND date BETWEEN DATE_SUB(?, INTERVAL 3 DAY) AND DATE_ADD(?, INTERVAL 3 DAY)
-                  ORDER BY ABS(DATEDIFF(date, ?))
+                  ORDER BY ABS(DATEDIFF(date, ?)) ASC, date DESC
                   LIMIT 1
               )
         ";

@@ -194,7 +194,7 @@ class Keyword
                     SELECT date FROM st_keyword_positions
                     WHERE keyword_id = k.id AND project_id = ?
                     AND date BETWEEN DATE_SUB(?, INTERVAL 3 DAY) AND DATE_ADD(?, INTERVAL 3 DAY)
-                    ORDER BY ABS(DATEDIFF(date, ?)) ASC
+                    ORDER BY ABS(DATEDIFF(date, ?)) ASC, date DESC
                     LIMIT 1
                 )
             LEFT JOIN st_keyword_positions kp_end ON kp_end.keyword_id = k.id
@@ -202,7 +202,7 @@ class Keyword
                     SELECT date FROM st_keyword_positions
                     WHERE keyword_id = k.id AND project_id = ?
                     AND date BETWEEN DATE_SUB(?, INTERVAL 3 DAY) AND DATE_ADD(?, INTERVAL 3 DAY)
-                    ORDER BY ABS(DATEDIFF(date, ?)) ASC
+                    ORDER BY ABS(DATEDIFF(date, ?)) ASC, date DESC
                     LIMIT 1
                 )
             WHERE k.project_id = ?

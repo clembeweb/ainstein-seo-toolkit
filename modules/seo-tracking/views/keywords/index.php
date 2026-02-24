@@ -172,7 +172,7 @@
                             Confronto periodo: <?= e($dateFrom) ?> &mdash; <?= e($dateTo) ?>
                         </p>
                         <p class="text-xs text-blue-600 dark:text-blue-400">
-                            <?= $dateRange ?> giorni di confronto
+                            <?= (int) round((strtotime($dateTo) - strtotime($dateFrom)) / 86400) ?> giorni di confronto
                         </p>
                     </div>
                 </div>
@@ -609,6 +609,57 @@
         </div>
     </form>
 </div>
+
+<script>
+// ============================================================
+// ALPINE.JS: DATE RANGE COMPARE COMPONENT
+// ============================================================
+function dateRangeCompare() {
+    return {
+        open: false,
+        compareActive: <?= !empty($compareMode) ? 'true' : 'false' ?>,
+        preset: 'custom',
+        dateFrom: '<?= e($dateFrom ?? date('Y-m-d', strtotime('-28 days'))) ?>',
+        dateTo: '<?= e($dateTo ?? date('Y-m-d')) ?>',
+
+        init() {
+            // Detect active preset from current dates
+            if (this.compareActive) {
+                const diffDays = Math.round((new Date(this.dateTo) - new Date(this.dateFrom)) / (1000 * 60 * 60 * 24));
+                if (diffDays === 7) this.preset = '7d';
+                else if (diffDays === 14) this.preset = '14d';
+                else if (diffDays === 28) this.preset = '28d';
+                else if (diffDays >= 89 && diffDays <= 92) this.preset = '3m';
+                else this.preset = 'custom';
+            }
+        },
+
+        applyPreset(key) {
+            this.preset = key;
+            const today = new Date();
+            const to = today.toISOString().split('T')[0];
+            this.dateTo = to;
+
+            let from = new Date(today);
+            switch (key) {
+                case '7d':
+                    from.setDate(from.getDate() - 7);
+                    break;
+                case '14d':
+                    from.setDate(from.getDate() - 14);
+                    break;
+                case '28d':
+                    from.setDate(from.getDate() - 28);
+                    break;
+                case '3m':
+                    from.setMonth(from.getMonth() - 3);
+                    break;
+            }
+            this.dateFrom = from.toISOString().split('T')[0];
+        }
+    };
+}
+</script>
 
 <script>
 // ============================================================
