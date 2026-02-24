@@ -157,29 +157,48 @@ class ProjectAccessService
      */
     public static function getPendingInvitations(int $userId): array
     {
-        // Recupera email utente
-        $user = Database::fetch(
-            "SELECT email FROM users WHERE id = ?",
+        $results = [];
+
+        // 1. Inviti interni (utente gia registrato → project_members con accepted_at NULL)
+        $internal = Database::fetchAll(
+            "SELECT pm.id, pm.project_id, pm.role, pm.created_at,
+                    p.name AS project_name, p.domain AS project_domain, p.color AS project_color,
+                    u.name AS invited_by_name, u.email AS invited_by_email,
+                    'internal' AS invite_type
+             FROM project_members pm
+             JOIN projects p ON p.id = pm.project_id
+             JOIN users u ON u.id = pm.invited_by
+             WHERE pm.user_id = ? AND pm.accepted_at IS NULL
+             ORDER BY pm.created_at DESC",
             [$userId]
         );
-
-        if (!$user) {
-            return [];
+        foreach ($internal as $row) {
+            $results[] = $row;
         }
 
-        return Database::fetchAll(
-            "SELECT pi.id, pi.project_id, pi.role, pi.modules, pi.token, pi.created_at, pi.expires_at,
-                    p.name AS project_name, p.domain AS project_domain, p.color AS project_color,
-                    u.name AS invited_by_name, u.email AS invited_by_email
-             FROM project_invitations pi
-             JOIN projects p ON p.id = pi.project_id
-             JOIN users u ON u.id = pi.invited_by
-             WHERE pi.email = ?
-               AND pi.accepted_at IS NULL
-               AND pi.expires_at > NOW()
-             ORDER BY pi.created_at DESC",
-            [$user['email']]
-        );
+        // 2. Inviti via email (utente si e registrato dopo l'invito → project_invitations)
+        $user = Database::fetch("SELECT email FROM users WHERE id = ?", [$userId]);
+        if ($user) {
+            $email = Database::fetchAll(
+                "SELECT pi.id, pi.project_id, pi.role, pi.token, pi.created_at, pi.expires_at,
+                        p.name AS project_name, p.domain AS project_domain, p.color AS project_color,
+                        u.name AS invited_by_name, u.email AS invited_by_email,
+                        'email' AS invite_type
+                 FROM project_invitations pi
+                 JOIN projects p ON p.id = pi.project_id
+                 JOIN users u ON u.id = pi.invited_by
+                 WHERE pi.email = ?
+                   AND pi.accepted_at IS NULL
+                   AND pi.expires_at > NOW()
+                 ORDER BY pi.created_at DESC",
+                [$user['email']]
+            );
+            foreach ($email as $row) {
+                $results[] = $row;
+            }
+        }
+
+        return $results;
     }
 
     /**

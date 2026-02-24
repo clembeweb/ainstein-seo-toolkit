@@ -37,18 +37,26 @@
                 </div>
             </div>
             <div class="flex gap-2 flex-shrink-0">
-                <form method="POST" action="<?= url('/invite/' . $invite['id'] . '/accept') ?>">
-                    <?= csrf_field() ?>
-                    <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm rounded-lg transition">
+                <?php if (($invite['invite_type'] ?? 'internal') === 'email'): ?>
+                    <!-- Invito email: accetta tramite token -->
+                    <a href="<?= url('/invite/accept?token=' . urlencode($invite['token'])) ?>" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm rounded-lg transition inline-block">
                         Accetta
-                    </button>
-                </form>
-                <form method="POST" action="<?= url('/invite/' . $invite['id'] . '/decline') ?>">
-                    <?= csrf_field() ?>
-                    <button type="submit" class="px-3 py-1.5 bg-slate-600 hover:bg-slate-500 text-white text-sm rounded-lg transition">
-                        Rifiuta
-                    </button>
-                </form>
+                    </a>
+                <?php else: ?>
+                    <!-- Invito interno: accetta/rifiuta tramite POST -->
+                    <form method="POST" action="<?= url('/invite/' . $invite['id'] . '/accept') ?>">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm rounded-lg transition">
+                            Accetta
+                        </button>
+                    </form>
+                    <form method="POST" action="<?= url('/invite/' . $invite['id'] . '/decline') ?>">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="px-3 py-1.5 bg-slate-600 hover:bg-slate-500 text-white text-sm rounded-lg transition">
+                            Rifiuta
+                        </button>
+                    </form>
+                <?php endif; ?>
             </div>
         </div>
         <?php endforeach; ?>

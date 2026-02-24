@@ -26,7 +26,8 @@ $catLabel = $categoryLabels[$catKey] ?? ucfirst($catKey);
     <?= e(json_encode($template['subject'])) ?>,
     <?= e(json_encode($template['body_html'])) ?>,
     <?= e(json_encode($template['slug'])) ?>,
-    <?= e(json_encode(csrf_token())) ?>
+    <?= e(json_encode(csrf_token())) ?>,
+    <?= e(json_encode(url('/admin/email-templates'))) ?>
 )" class="space-y-6">
 
     <!-- Back link -->
@@ -217,12 +218,13 @@ $catLabel = $categoryLabels[$catKey] ?? ucfirst($catKey);
 </div>
 
 <script>
-function emailEditor(initialSubject, initialBody, slug, csrfToken) {
+function emailEditor(initialSubject, initialBody, slug, csrfToken, baseUrl) {
     return {
         subject: initialSubject,
         bodyHtml: initialBody,
         slug: slug,
         csrfToken: csrfToken,
+        baseUrl: baseUrl,
         previewTimeout: null,
         sending: false,
 
@@ -244,7 +246,7 @@ function emailEditor(initialSubject, initialBody, slug, csrfToken) {
             formData.append('_csrf_token', this.csrfToken);
 
             try {
-                const resp = await fetch('/admin/email-templates/' + this.slug + '/preview', {
+                const resp = await fetch(this.baseUrl + '/' + this.slug + '/preview', {
                     method: 'POST',
                     body: formData
                 });
@@ -276,7 +278,7 @@ function emailEditor(initialSubject, initialBody, slug, csrfToken) {
             try {
                 const formData = new FormData();
                 formData.append('_csrf_token', this.csrfToken);
-                const resp = await fetch('/admin/email-templates/' + this.slug + '/test', {
+                const resp = await fetch(this.baseUrl + '/' + this.slug + '/test', {
                     method: 'POST',
                     body: formData
                 });
@@ -306,7 +308,7 @@ function emailEditor(initialSubject, initialBody, slug, csrfToken) {
             try {
                 const formData = new FormData();
                 formData.append('_csrf_token', this.csrfToken);
-                const resp = await fetch('/admin/email-templates/' + this.slug + '/reset', {
+                const resp = await fetch(this.baseUrl + '/' + this.slug + '/reset', {
                     method: 'POST',
                     body: formData
                 });
