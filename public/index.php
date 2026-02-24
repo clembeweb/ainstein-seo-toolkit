@@ -679,6 +679,13 @@ Router::get('/onboarding/status', function () {
     ]);
 });
 
+// --- Notifications Routes ---
+Router::get('/notifications/unread-count', fn() => (new Controllers\NotificationController())->unreadCount());
+Router::get('/notifications/recent', fn() => (new Controllers\NotificationController())->recent());
+Router::get('/notifications', fn() => (new Controllers\NotificationController())->index());
+Router::post('/notifications/read-all', fn() => (new Controllers\NotificationController())->markAllRead());
+Router::post('/notifications/{id}/read', fn($id) => (new Controllers\NotificationController())->markRead((int) $id));
+
 // --- Global Projects Routes ---
 Router::get('/projects', function () {
     $controller = new Controllers\GlobalProjectController();
