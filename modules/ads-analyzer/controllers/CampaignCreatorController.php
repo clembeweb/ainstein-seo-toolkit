@@ -23,7 +23,7 @@ class CampaignCreatorController
     public function wizard(int $id): string
     {
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $id);
+        $project = Project::findAccessible($user['id'], $id);
 
         if (!$project || $project['type'] !== 'campaign-creator') {
             $_SESSION['flash_error'] = 'Progetto non trovato';

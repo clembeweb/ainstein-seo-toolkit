@@ -120,7 +120,7 @@ class ProjectController
     public function show(int $id): string
     {
         $user = Auth::user();
-        $project = $this->project->findWithStats($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
@@ -131,10 +131,14 @@ class ProjectController
         // Force stats update if cache seems out of sync
         // (e.g., total_urls is 0 but we have URLs in the database)
         $actualUrlCount = $this->url->countByProject($id);
-        if ((int) $project['total_urls'] !== $actualUrlCount) {
+        if ((int) ($project['total_urls'] ?? 0) !== $actualUrlCount) {
             $this->project->updateStats($id);
-            // Refresh project data with updated stats
-            $project = $this->project->findWithStats($id, $user['id']);
+            // Refresh project data — keep access_role
+            $accessRole = $project['access_role'] ?? 'owner';
+            $project = $this->project->findWithStats($id, (int)$project['user_id']);
+            if ($project) {
+                $project['access_role'] = $accessRole;
+            }
         }
 
         $scrapingProgress = $this->project->getScrapingProgress($id);
@@ -162,11 +166,18 @@ class ProjectController
     public function settings(int $id): string
     {
         $user = Auth::user();
-        $project = $this->project->findWithStats($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
             header('Location: ' . url('/internal-links'));
+            exit;
+        }
+
+        // Settings: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['flash_error'] = 'Non hai i permessi per questa operazione';
+            header('Location: ' . url('/internal-links/project/' . $id));
             exit;
         }
 
@@ -184,11 +195,18 @@ class ProjectController
     public function update(int $id): void
     {
         $user = Auth::user();
-        $project = $this->project->find($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
             header('Location: ' . url('/internal-links'));
+            exit;
+        }
+
+        // Update: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['flash_error'] = 'Non hai i permessi per questa operazione';
+            header('Location: ' . url('/internal-links/project/' . $id . '/settings'));
             exit;
         }
 
@@ -246,11 +264,18 @@ class ProjectController
     public function delete(int $id): void
     {
         $user = Auth::user();
-        $project = $this->project->find($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
             header('Location: ' . url('/internal-links'));
+            exit;
+        }
+
+        // Delete: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['flash_error'] = 'Non hai i permessi per questa operazione';
+            header('Location: ' . url('/internal-links/project/' . $id . '/settings'));
             exit;
         }
 

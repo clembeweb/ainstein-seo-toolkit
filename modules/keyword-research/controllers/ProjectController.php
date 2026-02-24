@@ -98,12 +98,20 @@ class ProjectController
     public function settings(int $id): string
     {
         $user = Auth::user();
-        $project = $this->projectModel->find($id, $user['id']);
+        $project = $this->projectModel->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato.';
             Router::redirect('/keyword-research/projects');
             exit;
+        }
+
+        // Settings: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            $routeSegment = \Modules\KeywordResearch\Models\Project::typeConfig($project['type'] ?? 'research')['route_segment'];
+            Router::redirect('/keyword-research/project/' . $id . '/' . $routeSegment);
+            return '';
         }
 
         $typeConfig = Project::typeConfig($project['type'] ?? 'research');
@@ -129,11 +137,18 @@ class ProjectController
     public function updateSettings(int $id): void
     {
         $user = Auth::user();
-        $project = $this->projectModel->find($id, $user['id']);
+        $project = $this->projectModel->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato.';
             Router::redirect('/keyword-research/projects');
+            return;
+        }
+
+        // Update settings: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/keyword-research/project/' . $id . '/settings');
             return;
         }
 
@@ -158,11 +173,18 @@ class ProjectController
     public function destroy(int $id): void
     {
         $user = Auth::user();
-        $project = $this->projectModel->find($id, $user['id']);
+        $project = $this->projectModel->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato.';
             Router::redirect('/keyword-research/projects');
+            return;
+        }
+
+        // Delete: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/keyword-research/project/' . $id . '/settings');
             return;
         }
 

@@ -40,9 +40,9 @@ class DashboardController
         $user = Auth::user();
         $project = null;
 
-        // Se projectId specificato, verifica appartenga all'utente
+        // Se projectId specificato, verifica appartenga all'utente o sia condiviso
         if ($projectId !== null) {
-            $project = $this->project->find($projectId, $user['id']);
+            $project = $this->project->findAccessible($projectId, $user['id']);
 
             if (!$project) {
                 $_SESSION['_flash']['error'] = 'Progetto non trovato';

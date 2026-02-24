@@ -107,12 +107,19 @@ class ProjectController
     public function settings(int $id): string
     {
         $user = Auth::user();
-        $project = $this->project->findWithConnections($id, $user['id']);
+        $project = $this->project->findWithConnectionsAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
             Router::redirect('/seo-tracking');
             exit;
+        }
+
+        // Settings: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/seo-tracking/project/' . $id . '/dashboard');
+            return '';
         }
 
         // Genera redirect URI per GSC OAuth
@@ -136,11 +143,18 @@ class ProjectController
     public function updateSettings(int $id): void
     {
         $user = Auth::user();
-        $project = $this->project->find($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
             Router::redirect('/seo-tracking');
+            return;
+        }
+
+        // Update settings: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/seo-tracking/project/' . $id . '/settings');
             return;
         }
 
@@ -211,11 +225,18 @@ class ProjectController
     public function destroy(int $id): void
     {
         $user = Auth::user();
-        $project = $this->project->find($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
             Router::redirect('/seo-tracking');
+            return;
+        }
+
+        // Delete: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/seo-tracking/project/' . $id . '/settings');
             return;
         }
 

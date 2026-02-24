@@ -121,7 +121,7 @@ class ProjectController
     public function show(int $id): string
     {
         $user = Auth::user();
-        $project = $this->project->findByUser($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -169,12 +169,19 @@ class ProjectController
     public function settings(int $id): string
     {
         $user = Auth::user();
-        $project = $this->project->findByUser($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
             Router::redirect('/content-creator');
             exit;
+        }
+
+        // Settings: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/content-creator/projects/' . $id);
+            return '';
         }
 
         $connectorModel = new Connector();
@@ -200,11 +207,18 @@ class ProjectController
     public function update(int $id): void
     {
         $user = Auth::user();
-        $project = $this->project->findByUser($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
             Router::redirect('/content-creator');
+            return;
+        }
+
+        // Update: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/content-creator/projects/' . $id . '/settings');
             return;
         }
 
@@ -268,11 +282,18 @@ class ProjectController
     public function destroy(int $id): void
     {
         $user = Auth::user();
-        $project = $this->project->findByUser($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
             Router::redirect('/content-creator');
+            return;
+        }
+
+        // Delete: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/content-creator/projects/' . $id . '/settings');
             return;
         }
 

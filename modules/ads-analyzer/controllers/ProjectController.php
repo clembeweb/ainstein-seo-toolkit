@@ -110,11 +110,18 @@ class ProjectController
     public function edit(int $id): string
     {
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $id);
+        $project = Project::findAccessible($user['id'], $id);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
             header('Location: ' . url('/ads-analyzer'));
+            exit;
+        }
+
+        // Edit: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['flash_error'] = 'Non hai i permessi per questa operazione';
+            header('Location: ' . url("/ads-analyzer/projects/{$id}"));
             exit;
         }
 
@@ -130,11 +137,18 @@ class ProjectController
     public function update(int $id): void
     {
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $id);
+        $project = Project::findAccessible($user['id'], $id);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
             header('Location: ' . url('/ads-analyzer'));
+            exit;
+        }
+
+        // Update: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['flash_error'] = 'Non hai i permessi per questa operazione';
+            header('Location: ' . url("/ads-analyzer/projects/{$id}/edit"));
             exit;
         }
 

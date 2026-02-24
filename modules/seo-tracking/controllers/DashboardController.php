@@ -44,7 +44,7 @@ class DashboardController
     public function index(int $id): string
     {
         $user = Auth::user();
-        $project = $this->project->findWithConnections($id, $user['id']);
+        $project = $this->project->findWithConnectionsAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -283,7 +283,7 @@ class DashboardController
     public function keywords(int $id): string
     {
         $user = Auth::user();
-        $project = $this->project->find($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';

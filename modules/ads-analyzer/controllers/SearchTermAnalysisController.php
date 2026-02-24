@@ -28,7 +28,7 @@ class SearchTermAnalysisController
     private function requireCampaignProject(int $projectId): array
     {
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $projectId);
+        $project = Project::findAccessible($user['id'], $projectId);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
@@ -50,7 +50,7 @@ class SearchTermAnalysisController
     private function requireCampaignProjectJson(int $projectId): array
     {
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $projectId);
+        $project = Project::findAccessible($user['id'], $projectId);
 
         if (!$project) {
             http_response_code(404);

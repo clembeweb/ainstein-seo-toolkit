@@ -167,13 +167,23 @@ class ProjectController
     public function settings(int $id): string
     {
         $user = Auth::user();
-        $project = $this->project->findWithStats($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
             Router::redirect('/ai-content');
             exit;
         }
+
+        // Settings: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/ai-content/projects/' . $id);
+            return '';
+        }
+
+        // Reload with stats for settings view
+        $project = array_merge($project, ['stats' => $this->project->getStats($id)]);
 
         // Load user's WP sites for dropdown selection
         $wpSiteModel = new WpSite();
@@ -194,11 +204,18 @@ class ProjectController
     public function update(int $id): void
     {
         $user = Auth::user();
-        $project = $this->project->find($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
             Router::redirect('/ai-content');
+            return;
+        }
+
+        // Update: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/ai-content/projects/' . $id . '/settings');
             return;
         }
 
@@ -254,11 +271,18 @@ class ProjectController
     public function destroy(int $id): void
     {
         $user = Auth::user();
-        $project = $this->project->find($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
             Router::redirect('/ai-content');
+            return;
+        }
+
+        // Delete: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/ai-content/projects/' . $id . '/settings');
             return;
         }
 

@@ -161,11 +161,18 @@ class ProjectController
     public function settings(int $id): string
     {
         $user = Auth::user();
-        $project = $this->project->findWithStats($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/seo-audit'));
+            exit;
+        }
+
+        // Settings: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            header('Location: ' . url('/seo-audit/project/' . $id . '/dashboard'));
             exit;
         }
 
@@ -189,11 +196,18 @@ class ProjectController
     public function updateSettings(int $id): void
     {
         $user = Auth::user();
-        $project = $this->project->find($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/seo-audit'));
+            exit;
+        }
+
+        // Update settings: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            header('Location: ' . url('/seo-audit/project/' . $id . '/settings'));
             exit;
         }
 
@@ -241,11 +255,18 @@ class ProjectController
     public function destroy(int $id): void
     {
         $user = Auth::user();
-        $project = $this->project->find($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/seo-audit'));
+            exit;
+        }
+
+        // Delete: solo owner
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            header('Location: ' . url('/seo-audit/project/' . $id . '/settings'));
             exit;
         }
 
@@ -268,7 +289,7 @@ class ProjectController
     public function import(int $id): string
     {
         $user = Auth::user();
-        $project = $this->project->findWithStats($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';

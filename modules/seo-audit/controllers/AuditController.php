@@ -40,7 +40,7 @@ class AuditController
     public function dashboard(int $id): string
     {
         $user = Auth::user();
-        $project = $this->projectModel->findWithStats($id, $user['id']);
+        $project = $this->projectModel->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';

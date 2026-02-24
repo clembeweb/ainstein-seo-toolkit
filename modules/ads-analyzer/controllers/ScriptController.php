@@ -19,7 +19,7 @@ class ScriptController
     public function setup(int $projectId): string
     {
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $projectId);
+        $project = Project::findAccessible($user['id'], $projectId);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';

@@ -33,7 +33,7 @@ class ResearchController
     public function wizard(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->projectModel->find($projectId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato.';
@@ -287,10 +287,16 @@ class ResearchController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->projectModel->find($projectId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato.']);
+            return;
+        }
+
+        // Write operation: viewer non autorizzato
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            echo json_encode(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
             return;
         }
 
@@ -314,7 +320,16 @@ class ResearchController
         // Costo crediti - livello Standard (3 cr) unificato per qualsiasi numero di keyword
         $cost = (float) (ModuleLoader::getSetting('keyword-research', 'cost_kr_ai_clustering') ?? 3);
 
-        if (!Credits::hasEnough($user['id'], $cost)) {
+        // Owner billing per progetti condivisi
+        $creditUserId = $user['id'];
+        if (!empty($project['global_project_id'])) {
+            $ownerId = \Services\ProjectAccessService::getOwnerId((int)$project['global_project_id']);
+            if ($ownerId) {
+                $creditUserId = $ownerId;
+            }
+        }
+
+        if (!Credits::hasEnough($creditUserId, $cost)) {
             echo json_encode(['success' => false, 'error' => "Crediti insufficienti. Richiesti: {$cost}"]);
             return;
         }
@@ -461,8 +476,8 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
             ]);
         }
 
-        // Consuma crediti
-        Credits::consume($user['id'], $cost, 'kr_ai_clustering', 'keyword-research', [
+        // Consuma crediti (owner billing per progetti condivisi)
+        Credits::consume($creditUserId, $cost, 'kr_ai_clustering', 'keyword-research', [
             'research_id' => $researchId,
             'keywords_count' => count($keywords),
         ]);
@@ -492,7 +507,7 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
     public function results(int $projectId, int $researchId): string
     {
         $user = Auth::user();
-        $project = $this->projectModel->find($projectId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato.';
