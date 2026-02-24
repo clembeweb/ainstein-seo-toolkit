@@ -52,12 +52,26 @@ class CrawlController
         // Verifica che non ci sia già una sessione attiva
         $activeSession = $this->sessionModel->findActiveByProject($id);
         if ($activeSession) {
-            jsonResponse([
-                'error' => true,
-                'message' => 'Crawl già in corso',
-                'session_id' => $activeSession['id'],
-            ]);
-            return;
+            // Auto-clean: se la sessione è running da >30 min senza job attivo, è orfana
+            $jobModel = new CrawlJob();
+            $activeJob = $jobModel->findActiveByProject($id);
+            $sessionAge = $activeSession['started_at']
+                ? (time() - strtotime($activeSession['started_at']))
+                : 0;
+
+            if (!$activeJob && $sessionAge > 1800) {
+                // Sessione orfana — reset automatico
+                $this->sessionModel->fail($activeSession['id'], 'Timeout - sessione orfana resettata automaticamente');
+                $this->projectModel->update($id, ['status' => 'idle', 'current_session_id' => null]);
+                // Continua con la nuova scansione
+            } else {
+                jsonResponse([
+                    'error' => true,
+                    'message' => 'Crawl già in corso',
+                    'session_id' => $activeSession['id'],
+                ]);
+                return;
+            }
         }
 
         // Leggi configurazione da POST o usa defaults
@@ -409,11 +423,29 @@ class CrawlController
         $jobModel = new CrawlJob();
         $activeJob = $jobModel->findActiveByProject($id);
 
+        // Self-heal: se progetto è in crawling ma nessun job attivo e sessione >30 min, reset
+        $projectStatus = $project['status'];
+        if (in_array($projectStatus, ['crawling', 'stopping']) && !$activeJob && $session) {
+            $sessionAge = $session['started_at']
+                ? (time() - strtotime($session['started_at']))
+                : 0;
+
+            if ($sessionAge > 1800) {
+                $this->sessionModel->fail($session['id'], 'Timeout - auto-recovery durante status check');
+                $this->projectModel->update($id, ['status' => 'stopped', 'current_session_id' => null]);
+                $projectStatus = 'stopped';
+
+                // Refresh session stats after reset
+                $session = $this->sessionModel->findLatestByProject($id);
+                $sessionStats = $session ? $this->sessionModel->getStats($session['id']) : null;
+            }
+        }
+
         // Riconnetti DB per operazioni lunghe
         Database::reconnect();
 
         jsonResponse([
-            'status' => $project['status'],
+            'status' => $projectStatus,
             'session' => $sessionStats,
             'issues' => $issueStats,
             'health_score' => $project['health_score'],

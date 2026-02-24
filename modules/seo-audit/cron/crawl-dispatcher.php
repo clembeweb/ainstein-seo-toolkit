@@ -58,7 +58,41 @@ try {
         }
     }
 
-    // 2. Pulizia job vecchi (mantieni ultimi 20 per progetto)
+    // 2. Reset orphaned sessions (running >30 min senza job attivo)
+    $cutoffTime = date('Y-m-d H:i:s', time() - (30 * 60));
+    $orphanedSessions = Database::fetchAll(
+        "SELECT s.id, s.project_id
+         FROM sa_crawl_sessions s
+         WHERE s.status IN ('pending', 'running', 'paused', 'stopping')
+           AND s.started_at < ?
+           AND NOT EXISTS (
+               SELECT 1 FROM sa_crawl_jobs j
+               WHERE j.session_id = s.id AND j.status IN ('pending', 'running')
+           )",
+        [$cutoffTime]
+    );
+
+    $orphansFixed = 0;
+    foreach ($orphanedSessions as $row) {
+        $sessionId = (int) $row['id'];
+        $projectId = (int) $row['project_id'];
+
+        $sessionModel->fail($sessionId, 'Timeout - sessione orfana senza job attivo');
+
+        // Reset anche lo stato del progetto
+        Database::update('sa_projects', [
+            'status' => 'stopped',
+            'current_session_id' => null,
+        ], 'id = ? AND status IN (?, ?)', [$projectId, 'crawling', 'stopping']);
+
+        $orphansFixed++;
+    }
+
+    if ($orphansFixed > 0) {
+        error_log("{$prefix} Reset {$orphansFixed} sessione/i orfana/e e relativi progetti");
+    }
+
+    // 3. Pulizia job vecchi (mantieni ultimi 20 per progetto)
     $cleanedCount = $jobModel->cleanOldJobs(20);
 
     if ($cleanedCount > 0) {
@@ -66,8 +100,8 @@ try {
     }
 
     // Log riepilogativo solo se ci sono state operazioni
-    if ($resetCount > 0 || $cleanedCount > 0) {
-        error_log("{$prefix} Completato: reset={$resetCount}, cleaned={$cleanedCount}");
+    if ($resetCount > 0 || $cleanedCount > 0 || $orphansFixed > 0) {
+        error_log("{$prefix} Completato: reset={$resetCount}, orphans={$orphansFixed}, cleaned={$cleanedCount}");
     }
 
 } catch (\Exception $e) {

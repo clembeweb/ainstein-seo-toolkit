@@ -221,6 +221,22 @@ if ($isStopping) {
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Caricamento risultati parziali...</p>
             </div>
 
+            <!-- Stuck state (sessione orfana senza job) -->
+            <div class="text-center py-4" x-show="status === 'stuck'">
+                <svg class="w-12 h-12 mx-auto mb-2 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+                <p class="text-sm font-medium text-amber-600 dark:text-amber-400">Scansione interrotta</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-3">La scansione precedente si e interrotta. Resetta per avviarne una nuova.</p>
+                <button type="button" @click="resetStuckCrawl()"
+                        class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 transition-colors">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Resetta e riprova
+                </button>
+            </div>
+
             <!-- Error state -->
             <div class="text-center py-4" x-show="status === 'error'">
                 <svg class="w-12 h-12 mx-auto mb-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -510,8 +526,8 @@ window.crawlJob = function() {
                             this.startTimer();
                             this.connectSSE();
                         } else {
-                            // No active job but server thought we were crawling - refresh
-                            this.status = 'idle';
+                            // No active job but server thought we were crawling - stuck state
+                            this.status = 'stuck';
                         }
                     }
                 } catch (e) {
@@ -744,6 +760,35 @@ window.crawlJob = function() {
             } catch (e) {
                 this.showError('Errore durante l\'annullamento');
                 this.status = 'running'; // Revert, let SSE/polling handle it
+            }
+        },
+
+        /**
+         * Reset a stuck crawl (orphaned session without active job).
+         * Calls POST /crawl/stop which resets project to idle.
+         */
+        async resetStuckCrawl() {
+            try {
+                const formData = new FormData();
+                formData.append('_csrf_token', csrfToken);
+
+                const resp = await fetch(baseUrl + '/crawl/stop', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (resp.ok) {
+                    this.status = 'idle';
+                    if (window.ainstein && window.ainstein.toast) {
+                        window.ainstein.toast('Scansione resettata. Puoi avviarne una nuova.', 'success');
+                    }
+                    // Reload to get fresh state
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    this.showError('Errore durante il reset');
+                }
+            } catch (e) {
+                this.showError('Errore di connessione');
             }
         },
 
