@@ -1,6 +1,6 @@
 # AINSTEIN - Istruzioni Claude Code
 
-> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-02-23
+> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-02-24
 
 ---
 
@@ -83,6 +83,22 @@ Hub `/projects` che raggruppa moduli per cliente/sito.
 - Route GET create dei moduli → redirect a `/projects/create`
 - Progetti orfani → funzionano + banner amber (`shared/views/components/orphaned-project-notice.php`)
 - KPI dashboard: ogni modulo implementa `getProjectKpi($moduleProjectId)`
+
+### Condivisione Progetti
+
+Progetti condivisibili tra utenti con 3 ruoli: Owner, Editor, Viewer.
+
+| Tabella | Scopo |
+|---------|-------|
+| `project_members` | Membri condivisi (ruolo, accettazione) |
+| `project_member_modules` | Moduli accessibili per membro |
+| `project_invitations` | Inviti via email (token, scadenza) |
+
+**Services**: `ProjectAccessService` (autorizzazione), `ProjectSharingService` (operazioni)
+
+**Pattern**: `findAccessible($id, $userId)` sostituisce `find($id, $userId)` nei controller per supportare accesso condiviso.
+
+**Crediti**: sempre scalati dall'owner via `ProjectAccessService::getOwnerId()`.
 
 ---
 

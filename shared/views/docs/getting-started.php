@@ -250,10 +250,90 @@
     </div>
 </section>
 
-<!-- Step 5: Supporto -->
-<section class="mb-8">
+<!-- Step 5: Condivisione Progetti -->
+<section class="mb-12">
     <div class="flex items-start gap-4 mb-4">
         <div class="shrink-0 w-10 h-10 rounded-full bg-primary-500 text-white flex items-center justify-center font-bold text-lg">5</div>
+        <div>
+            <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">Condivisione Progetti</h2>
+        </div>
+    </div>
+    <div class="ml-14">
+        <p class="text-slate-600 dark:text-slate-400 mb-6">
+            Ainstein ti permette di <strong class="text-slate-900 dark:text-white">condividere i tuoi progetti</strong> con altri utenti, ideale per team di lavoro e agenzie che collaborano sui clienti.
+        </p>
+
+        <!-- Ruoli -->
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">Ruoli disponibili</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <div class="flex items-center gap-2 mb-2">
+                    <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                    <span class="font-semibold text-slate-900 dark:text-white">Proprietario</span>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Gestisce tutto: impostazioni, moduli, membri e crediti. E il creatore del progetto.</p>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <div class="flex items-center gap-2 mb-2">
+                    <svg class="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    <span class="font-semibold text-slate-900 dark:text-white">Editor</span>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Puo modificare contenuti, lanciare analisi e lavorare sui moduli a cui ha accesso.</p>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <div class="flex items-center gap-2 mb-2">
+                    <svg class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    <span class="font-semibold text-slate-900 dark:text-white">Visualizzatore</span>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Accesso in sola lettura: puo consultare dati e report senza effettuare modifiche.</p>
+            </div>
+        </div>
+
+        <!-- Come invitare -->
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">Come invitare collaboratori</h3>
+        <div class="space-y-3 mb-6">
+            <div class="flex items-start gap-3 p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                <div class="shrink-0 w-7 h-7 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-xs font-bold text-primary-600 dark:text-primary-400">1</div>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Dalla dashboard del progetto, vai su <strong class="text-slate-900 dark:text-white">Impostazioni</strong> e seleziona la tab <strong class="text-slate-900 dark:text-white">Condivisione</strong>.</p>
+            </div>
+            <div class="flex items-start gap-3 p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                <div class="shrink-0 w-7 h-7 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-xs font-bold text-primary-600 dark:text-primary-400">2</div>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Inserisci l'<strong class="text-slate-900 dark:text-white">email</strong> dell'utente, scegli il <strong class="text-slate-900 dark:text-white">ruolo</strong> (Editor o Visualizzatore) e seleziona i <strong class="text-slate-900 dark:text-white">moduli</strong> a cui avra accesso.</p>
+            </div>
+            <div class="flex items-start gap-3 p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                <div class="shrink-0 w-7 h-7 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-xs font-bold text-primary-600 dark:text-primary-400">3</div>
+                <p class="text-sm text-slate-600 dark:text-slate-400">L'utente ricevera una <strong class="text-slate-900 dark:text-white">notifica</strong>: se e gia registrato su Ainstein, la vedra nell'applicazione. Se non e registrato, ricevera un'<strong class="text-slate-900 dark:text-white">email di invito</strong> con un link per accettare.</p>
+            </div>
+        </div>
+
+        <!-- Note importanti -->
+        <div class="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl p-5">
+            <div class="flex items-start gap-3">
+                <svg class="w-6 h-6 text-primary-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div>
+                    <p class="text-sm font-medium text-primary-800 dark:text-primary-300 mb-1">Informazioni sui crediti</p>
+                    <p class="text-sm text-primary-700 dark:text-primary-400">
+                        I crediti per tutte le operazioni (analisi AI, rank check, audit, ecc.) sono <strong>sempre a carico del proprietario</strong> del progetto, indipendentemente da chi le esegue. I collaboratori non consumano i propri crediti quando lavorano su un progetto condiviso.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Step 6: Supporto -->
+<section class="mb-8">
+    <div class="flex items-start gap-4 mb-4">
+        <div class="shrink-0 w-10 h-10 rounded-full bg-primary-500 text-white flex items-center justify-center font-bold text-lg">6</div>
         <div>
             <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">Supporto</h2>
         </div>

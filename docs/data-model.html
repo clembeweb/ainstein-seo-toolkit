@@ -203,6 +203,11 @@ erDiagram
     projects ||--o{ kr_projects : "attiva"
     projects ||--o{ il_projects : "attiva"
     projects ||--o{ ga_projects : "attiva"
+    projects ||--o{ project_members : "has members"
+    projects ||--o{ project_invitations : "has invitations"
+    users ||--o{ project_members : "is member of"
+    users ||--o{ project_invitations : "invited by"
+    project_members ||--o{ project_member_modules : "has module access"
     users ||--o{ aic_projects : "possiede"
     users ||--o{ sa_projects : "possiede"
     users ||--o{ st_projects : "possiede"
@@ -234,6 +239,29 @@ erDiagram
         int credits_monthly
         decimal price_monthly
     }
+    project_members {
+        int id PK
+        int project_id FK
+        int user_id FK
+        enum role "editor, viewer"
+        int invited_by FK
+        timestamp accepted_at
+    }
+    project_member_modules {
+        int id PK
+        int member_id FK
+        varchar module_slug
+    }
+    project_invitations {
+        int id PK
+        int project_id FK
+        varchar email
+        enum role "editor, viewer"
+        json modules
+        varchar token
+        int invited_by FK
+        timestamp expires_at
+    }
         </div>
     </section>
 
@@ -251,6 +279,11 @@ erDiagram
     users ||--o{ ai_logs : "log AI"
     settings ||--o{ users : "updated_by"
     users ||--o{ projects : "hub progetti"
+    projects ||--o{ project_members : "has members"
+    projects ||--o{ project_invitations : "has invitations"
+    users ||--o{ project_members : "is member of"
+    users ||--o{ project_invitations : "invited by"
+    project_members ||--o{ project_member_modules : "has module access"
     projects {
         int id PK
         int user_id FK
@@ -322,6 +355,33 @@ erDiagram
         varchar model
         int tokens_total
         decimal estimated_cost
+    }
+    project_members {
+        int id PK
+        int project_id FK
+        int user_id FK
+        enum role "editor, viewer"
+        int invited_by FK
+        timestamp accepted_at
+        timestamp created_at
+    }
+    project_member_modules {
+        int id PK
+        int member_id FK
+        varchar module_slug
+        timestamp created_at
+    }
+    project_invitations {
+        int id PK
+        int project_id FK
+        varchar email
+        enum role "editor, viewer"
+        json modules
+        varchar token
+        int invited_by FK
+        timestamp accepted_at
+        timestamp expires_at
+        timestamp created_at
     }
     %% project_connectors DROPPED - unificato in aic_wp_sites
         </div>
@@ -482,6 +542,85 @@ erDiagram
         </details>
 
         <!-- project_connectors DROPPED - unificato in aic_wp_sites (commit 8f96346) -->
+
+        <!-- project_members -->
+        <details class="mb-4 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+            <summary class="bg-slate-50 dark:bg-slate-800 px-4 py-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 font-medium text-slate-900 dark:text-white">
+                project_members (Condivisione Progetti)
+            </summary>
+            <div class="p-4 overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead><tr class="border-b border-slate-200 dark:border-slate-700">
+                        <th class="text-left py-2 px-3 text-slate-500 dark:text-slate-400">Colonna</th>
+                        <th class="text-left py-2 px-3 text-slate-500 dark:text-slate-400">Tipo</th>
+                        <th class="text-left py-2 px-3 text-slate-500 dark:text-slate-400">Note</th>
+                    </tr></thead>
+                    <tbody class="text-slate-700 dark:text-slate-300">
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">id</td><td class="py-1.5 px-3">INT AUTO_INCREMENT</td><td class="py-1.5 px-3"><span class="text-amber-500 font-semibold">PK</span></td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">project_id</td><td class="py-1.5 px-3">INT</td><td class="py-1.5 px-3"><span class="text-blue-500 font-semibold">FK</span> &rarr; projects.id CASCADE</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">user_id</td><td class="py-1.5 px-3">INT</td><td class="py-1.5 px-3"><span class="text-blue-500 font-semibold">FK</span> &rarr; users.id CASCADE</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">role</td><td class="py-1.5 px-3">ENUM('editor','viewer')</td><td class="py-1.5 px-3">Ruolo del membro nel progetto</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">invited_by</td><td class="py-1.5 px-3">INT</td><td class="py-1.5 px-3"><span class="text-blue-500 font-semibold">FK</span> &rarr; users.id SET NULL</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">accepted_at</td><td class="py-1.5 px-3">TIMESTAMP</td><td class="py-1.5 px-3">NULL = invito in attesa</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">created_at</td><td class="py-1.5 px-3">TIMESTAMP</td><td class="py-1.5 px-3">DEFAULT CURRENT_TIMESTAMP</td></tr>
+                    </tbody>
+                </table>
+                <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">UNIQUE(project_id, user_id) &mdash; Un utente puo essere membro di un progetto una sola volta.</p>
+            </div>
+        </details>
+
+        <!-- project_member_modules -->
+        <details class="mb-4 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+            <summary class="bg-slate-50 dark:bg-slate-800 px-4 py-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 font-medium text-slate-900 dark:text-white">
+                project_member_modules (Accesso Moduli per Membro)
+            </summary>
+            <div class="p-4 overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead><tr class="border-b border-slate-200 dark:border-slate-700">
+                        <th class="text-left py-2 px-3 text-slate-500 dark:text-slate-400">Colonna</th>
+                        <th class="text-left py-2 px-3 text-slate-500 dark:text-slate-400">Tipo</th>
+                        <th class="text-left py-2 px-3 text-slate-500 dark:text-slate-400">Note</th>
+                    </tr></thead>
+                    <tbody class="text-slate-700 dark:text-slate-300">
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">id</td><td class="py-1.5 px-3">INT AUTO_INCREMENT</td><td class="py-1.5 px-3"><span class="text-amber-500 font-semibold">PK</span></td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">member_id</td><td class="py-1.5 px-3">INT</td><td class="py-1.5 px-3"><span class="text-blue-500 font-semibold">FK</span> &rarr; project_members.id CASCADE</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">module_slug</td><td class="py-1.5 px-3">VARCHAR(100)</td><td class="py-1.5 px-3">Slug del modulo (es. seo-audit, ai-content)</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">created_at</td><td class="py-1.5 px-3">TIMESTAMP</td><td class="py-1.5 px-3">DEFAULT CURRENT_TIMESTAMP</td></tr>
+                    </tbody>
+                </table>
+                <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">UNIQUE(member_id, module_slug) &mdash; Il proprietario sceglie quali moduli condividere con ogni membro.</p>
+            </div>
+        </details>
+
+        <!-- project_invitations -->
+        <details class="mb-4 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+            <summary class="bg-slate-50 dark:bg-slate-800 px-4 py-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 font-medium text-slate-900 dark:text-white">
+                project_invitations (Inviti Progetto)
+            </summary>
+            <div class="p-4 overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead><tr class="border-b border-slate-200 dark:border-slate-700">
+                        <th class="text-left py-2 px-3 text-slate-500 dark:text-slate-400">Colonna</th>
+                        <th class="text-left py-2 px-3 text-slate-500 dark:text-slate-400">Tipo</th>
+                        <th class="text-left py-2 px-3 text-slate-500 dark:text-slate-400">Note</th>
+                    </tr></thead>
+                    <tbody class="text-slate-700 dark:text-slate-300">
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">id</td><td class="py-1.5 px-3">INT AUTO_INCREMENT</td><td class="py-1.5 px-3"><span class="text-amber-500 font-semibold">PK</span></td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">project_id</td><td class="py-1.5 px-3">INT</td><td class="py-1.5 px-3"><span class="text-blue-500 font-semibold">FK</span> &rarr; projects.id CASCADE</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">email</td><td class="py-1.5 px-3">VARCHAR(255)</td><td class="py-1.5 px-3">Email del destinatario</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">role</td><td class="py-1.5 px-3">ENUM('editor','viewer')</td><td class="py-1.5 px-3">Ruolo assegnato all'invitato</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">modules</td><td class="py-1.5 px-3">JSON</td><td class="py-1.5 px-3">Array di module_slug accessibili</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">token</td><td class="py-1.5 px-3">VARCHAR(255)</td><td class="py-1.5 px-3">UNIQUE &mdash; Token per accettazione via link</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">invited_by</td><td class="py-1.5 px-3">INT</td><td class="py-1.5 px-3"><span class="text-blue-500 font-semibold">FK</span> &rarr; users.id SET NULL</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">accepted_at</td><td class="py-1.5 px-3">TIMESTAMP</td><td class="py-1.5 px-3">NULL = in attesa, valorizzato = accettato</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">expires_at</td><td class="py-1.5 px-3">TIMESTAMP</td><td class="py-1.5 px-3">Scadenza invito (7 giorni default)</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">created_at</td><td class="py-1.5 px-3">TIMESTAMP</td><td class="py-1.5 px-3">DEFAULT CURRENT_TIMESTAMP</td></tr>
+                    </tbody>
+                </table>
+                <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">Se l'utente invitato e gia registrato, riceve notifica interna. Se non registrato, riceve email con link di invito.</p>
+            </div>
+        </details>
+
     </section>
 
     <!-- ==================== AI CONTENT ==================== -->
