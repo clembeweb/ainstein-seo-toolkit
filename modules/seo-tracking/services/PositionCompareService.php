@@ -45,6 +45,25 @@ class PositionCompareService
     }
 
     /**
+     * Confronta posizioni da st_keyword_positions (keyword tracciate)
+     * Usa una singola data inizio e una data fine (non due periodi)
+     *
+     * @param string $dateStart Data iniziale (periodo precedente)
+     * @param string $dateEnd Data finale (periodo attuale)
+     * @param array $filters Filtri opzionali ['keyword' => '']
+     * @return array
+     */
+    public function compareFromPositions(
+        string $dateStart,
+        string $dateEnd,
+        array $filters = []
+    ): array {
+        $periodA = $this->getPositionData($dateStart, $filters);
+        $periodB = $this->getPositionData($dateEnd, $filters);
+        return $this->calculateDifferences($periodA, $periodB);
+    }
+
+    /**
      * Ottiene dati aggregati per un periodo
      */
     private function getPeriodData(string $dateFrom, string $dateTo, array $filters): array
@@ -83,6 +102,59 @@ class PositionCompareService
         // Indicizza per keyword per lookup veloce
         $indexed = [];
         foreach ($results as $row) {
+            $indexed[$row['keyword']] = $row;
+        }
+
+        return $indexed;
+    }
+
+    /**
+     * Ottiene posizioni da st_keyword_positions per una data specifica
+     * Cerca la data piu vicina entro +-3 giorni
+     */
+    private function getPositionData(string $date, array $filters): array
+    {
+        $sql = "
+            SELECT
+                k.keyword,
+                kp.avg_position,
+                kp.total_clicks,
+                kp.total_impressions,
+                ROUND(kp.total_clicks / NULLIF(kp.total_impressions, 0) * 100, 2) as ctr,
+                kp.top_pages as url
+            FROM st_keyword_positions kp
+            JOIN st_keywords k ON kp.keyword_id = k.id
+            WHERE kp.project_id = ?
+              AND k.is_tracked = 1
+              AND kp.date = (
+                  SELECT date FROM st_keyword_positions
+                  WHERE keyword_id = kp.keyword_id AND project_id = ?
+                    AND date BETWEEN DATE_SUB(?, INTERVAL 3 DAY) AND DATE_ADD(?, INTERVAL 3 DAY)
+                  ORDER BY ABS(DATEDIFF(date, ?))
+                  LIMIT 1
+              )
+        ";
+
+        $params = [$this->projectId, $this->projectId, $date, $date, $date];
+
+        if (!empty($filters['keyword'])) {
+            $sql .= " AND k.keyword LIKE ?";
+            $params[] = '%' . $filters['keyword'] . '%';
+        }
+
+        $results = Database::fetchAll($sql, $params);
+
+        // Indicizza per keyword
+        $indexed = [];
+        foreach ($results as $row) {
+            // Parse top_pages JSON per ottenere URL
+            $url = $row['url'];
+            if ($url && str_starts_with($url, '[')) {
+                $pages = json_decode($url, true);
+                $url = $pages[0]['page'] ?? $pages[0] ?? '';
+            }
+            $row['url'] = $url ?: '';
+            $row['avg_position'] = round((float)$row['avg_position'], 1);
             $indexed[$row['keyword']] = $row;
         }
 
