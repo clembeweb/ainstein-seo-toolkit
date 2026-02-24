@@ -23,6 +23,7 @@ $_accentShades = \Core\BrandingHelper::generateShades($_brandAccent);
     <link rel="icon" type="image/<?= $__favExt === 'svg' ? 'svg+xml' : ($__favExt === 'ico' ? 'x-icon' : 'png') ?>" href="<?= url('/' . $_brandFavicon) ?>">
     <link rel="apple-touch-icon" href="<?= url('/' . $_brandFavicon) ?>">
     <meta name="theme-color" content="<?= e($_brandPrimary) ?>">
+    <meta name="csrf-token" content="<?= csrf_token() ?>">
 
     <!-- Tailwind CSS with Typography plugin -->
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
@@ -165,6 +166,95 @@ $_accentShades = \Core\BrandingHelper::generateShades($_brandAccent);
                             </svg>
                         </button>
 
+                        <!-- Notification bell -->
+                        <div class="relative" x-data="notificationBell()" x-init="startPolling()" @keydown.escape.window="open = false">
+                            <button @click="togglePanel()" class="relative p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                                </svg>
+                                <span x-show="unreadCount > 0" x-cloak
+                                      class="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold text-white bg-red-500 ring-2 ring-white dark:ring-slate-800"
+                                      x-text="unreadCount > 9 ? '9+' : unreadCount"></span>
+                            </button>
+
+                            <!-- Notification dropdown panel -->
+                            <div x-show="open" @click.away="open = false" x-cloak
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 translate-y-1"
+                                 x-transition:enter-end="opacity-100 translate-y-0"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100 translate-y-0"
+                                 x-transition:leave-end="opacity-0 translate-y-1"
+                                 class="absolute right-0 z-10 mt-2 w-96 origin-top-right rounded-xl bg-white dark:bg-slate-800 shadow-xl ring-1 ring-slate-200 dark:ring-slate-700">
+
+                                <!-- Header -->
+                                <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+                                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Notifiche</h3>
+                                    <button x-show="unreadCount > 0" @click="markAllRead()" class="text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium">
+                                        Segna tutte come lette
+                                    </button>
+                                </div>
+
+                                <!-- Notification list -->
+                                <div class="max-h-[400px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700">
+                                    <template x-if="loaded && notifications.length === 0">
+                                        <div class="px-4 py-8 text-center">
+                                            <svg class="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                                            </svg>
+                                            <p class="text-sm text-slate-500 dark:text-slate-400">Nessuna notifica</p>
+                                        </div>
+                                    </template>
+
+                                    <template x-if="!loaded">
+                                        <div class="px-4 py-8 text-center">
+                                            <svg class="w-5 h-5 mx-auto text-slate-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                            </svg>
+                                        </div>
+                                    </template>
+
+                                    <template x-for="n in notifications" :key="n.id">
+                                        <a :href="n.action_url || '#'" @click="markRead(n.id)"
+                                           class="flex gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                                           :class="{ 'bg-primary-50/50 dark:bg-primary-900/10': !n.read_at }">
+                                            <!-- Icon -->
+                                            <div class="flex-shrink-0 mt-0.5">
+                                                <div class="w-8 h-8 rounded-full flex items-center justify-center"
+                                                     :class="{
+                                                         'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400': n.color === 'blue',
+                                                         'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400': n.color === 'emerald',
+                                                         'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400': n.color === 'amber',
+                                                         'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400': n.color === 'red',
+                                                         'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400': !n.color || !['blue','emerald','amber','red'].includes(n.color)
+                                                     }">
+                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" x-html="getIconPath(n.icon)"></svg>
+                                                </div>
+                                            </div>
+                                            <!-- Content -->
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-medium text-slate-900 dark:text-white truncate" x-text="n.title"></p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5" x-text="n.body"></p>
+                                                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1" x-text="n.time_ago"></p>
+                                            </div>
+                                            <!-- Unread dot -->
+                                            <div class="flex-shrink-0 self-center" x-show="!n.read_at">
+                                                <div class="w-2 h-2 rounded-full bg-primary-500"></div>
+                                            </div>
+                                        </a>
+                                    </template>
+                                </div>
+
+                                <!-- Footer -->
+                                <div class="border-t border-slate-100 dark:border-slate-700">
+                                    <a href="<?= url('/notifications') ?>" class="block px-4 py-2.5 text-center text-xs font-medium text-primary-600 dark:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-b-xl transition-colors">
+                                        Vedi tutte le notifiche
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- User dropdown -->
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open" class="flex items-center gap-x-2 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
@@ -286,6 +376,85 @@ $_accentShades = \Core\BrandingHelper::generateShades($_brandAccent);
 
     <!-- Global Modals (alert/confirm) -->
     <?= \Core\View::partial('components/global-modals') ?>
+
+    <!-- Notification bell Alpine component -->
+    <script>
+    function notificationBell() {
+        return {
+            open: false,
+            unreadCount: 0,
+            notifications: [],
+            loaded: false,
+            csrfToken: document.querySelector('meta[name="csrf-token"]')?.content || '',
+
+            startPolling() {
+                this.fetchCount();
+                setInterval(() => {
+                    if (!document.hidden) this.fetchCount();
+                }, 30000);
+            },
+
+            async fetchCount() {
+                try {
+                    const r = await fetch('<?= url('/notifications/unread-count') ?>');
+                    if (r.ok) {
+                        const d = await r.json();
+                        this.unreadCount = d.count;
+                    }
+                } catch(e) {}
+            },
+
+            async togglePanel() {
+                this.open = !this.open;
+                if (this.open) await this.fetchRecent();
+            },
+
+            async fetchRecent() {
+                try {
+                    const r = await fetch('<?= url('/notifications/recent') ?>');
+                    if (r.ok) {
+                        this.notifications = await r.json();
+                        this.loaded = true;
+                    }
+                } catch(e) {}
+            },
+
+            async markRead(id) {
+                const fd = new FormData();
+                fd.append('_csrf_token', this.csrfToken);
+                try {
+                    await fetch('<?= url('/notifications') ?>/' + id + '/read', { method: 'POST', body: fd });
+                    const n = this.notifications.find(x => x.id == id);
+                    if (n && !n.read_at) {
+                        n.read_at = new Date().toISOString();
+                        this.unreadCount = Math.max(0, this.unreadCount - 1);
+                    }
+                } catch(e) {}
+            },
+
+            async markAllRead() {
+                const fd = new FormData();
+                fd.append('_csrf_token', this.csrfToken);
+                try {
+                    await fetch('<?= url('/notifications/read-all') ?>', { method: 'POST', body: fd });
+                    this.notifications.forEach(n => n.read_at = n.read_at || new Date().toISOString());
+                    this.unreadCount = 0;
+                } catch(e) {}
+            },
+
+            getIconPath(icon) {
+                const icons = {
+                    'user-plus': '<path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m3-3h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />',
+                    'check-circle': '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />',
+                    'x-circle': '<path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />',
+                    'exclamation-triangle': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />',
+                    'bell': '<path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />'
+                };
+                return icons[icon] || icons['bell'];
+            }
+        }
+    }
+    </script>
 
     <!-- Onboarding Welcome (primo accesso) -->
     <?php if (isset($user) && $user && isset($onboardingWelcomeCompleted) && !$onboardingWelcomeCompleted && !empty($onboardingConfig)): ?>
