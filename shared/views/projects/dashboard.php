@@ -94,12 +94,19 @@ endif;
                 <div class="flex items-center gap-3">
                     <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: <?= htmlspecialchars($project['color'] ?? '#3B82F6') ?>"></span>
                     <h1 class="text-2xl font-bold text-slate-900 dark:text-white"><?= htmlspecialchars($project['name']) ?></h1>
+                    <?php if (($access_role ?? 'owner') !== 'owner'): ?>
+                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                 <?= ($access_role ?? 'owner') === 'editor' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-500/20 text-slate-400' ?>">
+                        <?= ($access_role ?? 'owner') === 'editor' ? 'Editor' : 'Sola lettura' ?>
+                    </span>
+                    <?php endif; ?>
                 </div>
                 <?php if (!empty($project['domain'])): ?>
                 <p class="mt-1 text-sm text-slate-500 dark:text-slate-400 ml-6"><?= htmlspecialchars($project['domain']) ?></p>
                 <?php endif; ?>
             </div>
         </div>
+        <?php if (($access_role ?? 'owner') === 'owner'): ?>
         <div class="mt-4 sm:mt-0">
             <a href="<?= url('/projects/' . $project['id'] . '/settings') ?>" class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -109,6 +116,7 @@ endif;
                 Impostazioni
             </a>
         </div>
+        <?php endif; ?>
     </div>
 
     <div x-data="activationModal()">
@@ -245,7 +253,7 @@ endif;
                 </p>
                 <?php endif; ?>
 
-                <?php if ($hasRemaining): ?>
+                <?php if ($hasRemaining && ($access_role ?? 'owner') === 'owner'): ?>
                 <div class="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
                     <button type="button" @click="openTypeModal('<?= $slug ?>')"
                             class="inline-flex items-center text-sm font-medium <?= $colors['text'] ?> hover:underline">
@@ -325,7 +333,7 @@ endif;
                     <?php endforeach; ?>
                 </div>
 
-                <?php if ($hasRemaining): ?>
+                <?php if ($hasRemaining && ($access_role ?? 'owner') === 'owner'): ?>
                 <div class="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
                     <button type="button" @click="openTypeModal('<?= $slug ?>')"
                             class="inline-flex items-center text-sm font-medium <?= $colors['text'] ?> hover:underline">
@@ -355,8 +363,8 @@ endif;
     </div>
     <?php endif; ?>
 
-    <!-- Available (non-activated) Modules -->
-    <?php if (!empty($nonActivated)): ?>
+    <!-- Available (non-activated) Modules — owner only -->
+    <?php if (!empty($nonActivated) && ($access_role ?? 'owner') === 'owner'): ?>
     <div>
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Moduli disponibili</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -402,7 +410,8 @@ endif;
     </div>
     <?php endif; ?>
 
-    <!-- Modal selezione tipo -->
+    <!-- Modal selezione tipo — owner only -->
+    <?php if (($access_role ?? 'owner') === 'owner'): ?>
     <template x-teleport="body">
         <div x-show="open" x-cloak class="fixed inset-0 z-50" @keydown.escape.window="open = false">
             <!-- Backdrop -->
@@ -461,9 +470,11 @@ endif;
             </div>
         </div>
     </template>
+    <?php endif; ?><!-- /owner-only modal -->
 
     <script>
     function activationModal() {
+        <?php if (($access_role ?? 'owner') === 'owner'): ?>
         const allTypes = <?= json_encode($_moduleTypes) ?>;
         const labels = <?= json_encode(array_combine(array_keys($moduleConfig), array_column($moduleConfig, 'label'))) ?>;
         const activeTypesMap = <?= json_encode($activeTypesPerModule ?? []) ?>;
@@ -486,12 +497,16 @@ endif;
                 this.open = true;
             }
         };
+        <?php else: ?>
+        return { open: false, moduleSlug: '', moduleLabel: '', types: {}, openTypeModal() {} };
+        <?php endif; ?>
     }
     </script>
 
     </div><!-- /x-data activationModal -->
 
-    <!-- WordPress Sites Section -->
+    <!-- WordPress Sites Section — owner only -->
+    <?php if (($access_role ?? 'owner') === 'owner'): ?>
     <?php
         // Domain match suggestion: find unlinked sites matching project domain
         $suggestedSite = null;
@@ -759,6 +774,7 @@ endif;
         };
     }
     </script>
+    <?php endif; ?><!-- /owner-only WordPress Sites -->
 
     <!-- Project Description (if set) -->
     <?php if (!empty($project['description'])): ?>
