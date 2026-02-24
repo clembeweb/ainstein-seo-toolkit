@@ -210,10 +210,45 @@ if (preg_match('#^/content-creator/projects/(\d+)#', $currentPath, $matches)) {
 </div>
 
 <?php if (!empty($modules)): ?>
+<?php
+// Shared access filtering: detect global_project_id from any active module project
+$_navGlobalProjectId = null;
+$_navModuleProjects = [
+    $internalLinksProject ?? null,
+    $seoAuditProject ?? null,
+    $seoTrackingProject ?? null,
+    $aiOptimizerProject ?? null,
+    $aiContentProject ?? null,
+    $krProject ?? null,
+    $adsAnalyzerProject ?? null,
+    $ccProject ?? null,
+];
+foreach ($_navModuleProjects as $_mp) {
+    if ($_mp && !empty($_mp['global_project_id'])) {
+        $_navGlobalProjectId = (int) $_mp['global_project_id'];
+        break;
+    }
+}
+
+// Filter modules for shared members (non-owners)
+$_navAllowedSlugs = null; // null = no filtering (owner or no project context)
+if ($_navGlobalProjectId && isset($user['id'])) {
+    $_navRole = \Services\ProjectAccessService::getRole($_navGlobalProjectId, (int) $user['id']);
+    if ($_navRole !== null && $_navRole !== 'owner') {
+        $_navAllowedSlugs = \Services\ProjectAccessService::getMemberModules($_navGlobalProjectId, (int) $user['id']);
+    }
+}
+?>
 <div class="mt-6">
     <p class="px-3 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Moduli</p>
     <div class="mt-2 space-y-1">
         <?php foreach ($modules as $module): ?>
+            <?php
+            // Skip modules that shared members don't have access to
+            if ($_navAllowedSlugs !== null && !in_array($module['slug'], $_navAllowedSlugs, true)) {
+                continue;
+            }
+            ?>
             <?php if ($module['slug'] === 'internal-links'): ?>
                 <!-- Internal Links Module with Accordion -->
                 <div x-data="{ expanded: <?= $internalLinksProjectId ? 'true' : 'false' ?> }">
