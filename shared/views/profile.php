@@ -95,4 +95,36 @@
             </div>
         </div>
     </div>
+
+    <!-- Preferenze Notifiche Email -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white">Preferenze Notifiche Email</h3>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Scegli per quali notifiche ricevere anche un'email. Le notifiche in-app sono sempre attive.</p>
+
+            <form action="<?= \Core\Router::url('/profile/notification-preferences') ?>" method="POST" class="mt-6">
+                <?= csrf_field() ?>
+
+                <div class="space-y-4">
+                    <?php foreach ($notificationPrefs as $type => $pref): ?>
+                    <label class="flex items-center justify-between py-2 cursor-pointer">
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300"><?= htmlspecialchars($pref['label']) ?></span>
+                        <div class="relative">
+                            <input type="checkbox" name="notif_<?= $type ?>" value="1"
+                                   <?= $pref['email_enabled'] ? 'checked' : '' ?>
+                                   class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                        </div>
+                    </label>
+                    <?php endforeach; ?>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button type="submit" class="inline-flex justify-center rounded-md border border-transparent bg-primary-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                        Salva preferenze
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>

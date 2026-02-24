@@ -597,6 +597,7 @@ Router::get('/profile', function () {
         'title' => 'Profilo',
         'user' => $user,
         'modules' => ModuleLoader::getUserModules($user['id']),
+        'notificationPrefs' => \Services\NotificationService::getPreferences($user['id']),
     ]);
 });
 
@@ -644,6 +645,23 @@ Router::post('/profile/password', function () {
     Auth::updatePassword($user['id'], $newPassword);
 
     $_SESSION['_flash']['success'] = 'Password aggiornata';
+    Router::redirect('/profile');
+});
+
+Router::post('/profile/notification-preferences', function () {
+    Middleware::auth();
+    Middleware::csrf();
+
+    $prefs = [];
+    $types = ['project_invite', 'project_invite_accepted', 'project_invite_declined', 'operation_completed', 'operation_failed'];
+
+    foreach ($types as $type) {
+        $prefs[$type] = isset($_POST['notif_' . $type]);
+    }
+
+    \Services\NotificationService::updatePreferences(Auth::id(), $prefs);
+
+    $_SESSION['_flash']['success'] = 'Preferenze notifiche aggiornate';
     Router::redirect('/profile');
 });
 
