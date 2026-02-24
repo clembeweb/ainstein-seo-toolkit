@@ -906,6 +906,22 @@ class RankCheckController
                     'completed' => $completed,
                     'message' => 'Job annullato dall\'utente',
                 ]);
+
+                // Notifica annullamento
+                try {
+                    Database::reconnect();
+                    \Services\NotificationService::send($user['id'], 'operation_failed',
+                        'Rank check annullato', [
+                        'icon' => 'exclamation-triangle',
+                        'color' => 'red',
+                        'action_url' => '/seo-tracking/projects/' . $projectId . '/keywords',
+                        'body' => 'Il rank check e stato annullato dall\'utente.',
+                        'data' => ['module' => 'seo-tracking', 'project_id' => $projectId],
+                    ]);
+                } catch (\Exception $e) {
+                    // silently fail
+                }
+
                 break;
             }
 
@@ -922,6 +938,23 @@ class RankCheckController
                     'total_found' => $found,
                     'credits_used' => $creditsUsed,
                 ]);
+
+                // Notifica completamento
+                try {
+                    Database::reconnect();
+                    $projectName = $project['domain'] ?? "Progetto #{$projectId}";
+                    \Services\NotificationService::send($user['id'], 'operation_completed',
+                        "Rank check completato per {$projectName}", [
+                        'icon' => 'check-circle',
+                        'color' => 'emerald',
+                        'action_url' => '/seo-tracking/projects/' . $projectId . '/keywords',
+                        'body' => "Verificate {$completed} keyword, {$found} trovate in SERP.",
+                        'data' => ['module' => 'seo-tracking', 'project_id' => $projectId],
+                    ]);
+                } catch (\Exception $e) {
+                    // Non-blocking: notification failure should not affect the operation
+                }
+
                 break;
             }
 

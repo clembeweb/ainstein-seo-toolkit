@@ -237,6 +237,22 @@ class ResearchController
             'api_time_ms' => $totalApiTime,
             'keywords' => $filtered,
         ]);
+
+        // Notifica completamento raccolta keyword
+        try {
+            Database::reconnect();
+            $projectName = $project['name'] ?? "Progetto #{$projectId}";
+            \Services\NotificationService::send($user['id'], 'operation_completed',
+                "Ricerca keyword completata per {$projectName}", [
+                'icon' => 'check-circle',
+                'color' => 'emerald',
+                'action_url' => '/keyword-research/project/' . $projectId . '/research/' . $researchId,
+                'body' => "Raccolte " . count($allKeywords) . " keyword, " . count($filtered) . " dopo il filtro.",
+                'data' => ['module' => 'keyword-research', 'project_id' => $projectId, 'research_id' => $researchId],
+            ]);
+        } catch (\Exception $e) {
+            // Non-blocking: notification failure should not affect the operation
+        }
     }
 
     /**
@@ -395,6 +411,21 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
 
         if (isset($aiResult['error']) && $aiResult['error']) {
             $this->researchModel->updateStatus($researchId, 'error');
+
+            // Notifica errore AI clustering
+            try {
+                \Services\NotificationService::send($user['id'], 'operation_failed',
+                    'Ricerca keyword fallita', [
+                    'icon' => 'exclamation-triangle',
+                    'color' => 'red',
+                    'action_url' => '/keyword-research/project/' . $projectId . '/research',
+                    'body' => 'Si e verificato un errore durante l\'analisi AI.',
+                    'data' => ['module' => 'keyword-research', 'project_id' => $projectId],
+                ]);
+            } catch (\Exception $e) {
+                // silently fail
+            }
+
             echo json_encode(['success' => false, 'error' => $aiResult['message'] ?? 'Errore AI.']);
             return;
         }
@@ -490,6 +521,22 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
             'ai_time_ms' => $aiElapsed,
             'status' => 'completed',
         ]);
+
+        // Notifica clustering completato
+        try {
+            Database::reconnect();
+            $projectName = $project['name'] ?? "Progetto #{$projectId}";
+            \Services\NotificationService::send($user['id'], 'operation_completed',
+                "Analisi keyword completata per {$projectName}", [
+                'icon' => 'check-circle',
+                'color' => 'emerald',
+                'action_url' => '/keyword-research/project/' . $projectId . '/research/' . $researchId,
+                'body' => "Creati " . count($clusters) . " cluster, escluse " . count($excluded) . " keyword.",
+                'data' => ['module' => 'keyword-research', 'project_id' => $projectId, 'research_id' => $researchId],
+            ]);
+        } catch (\Exception $e) {
+            // Non-blocking: notification failure should not affect the operation
+        }
 
         echo json_encode([
             'success' => true,

@@ -381,6 +381,21 @@ function runDispatcher(): void
             $totalArticles++;
             logDispatcher("  COMPLETATO! Articolo ID: {$result['article_id']}");
 
+            // Notifica completamento
+            try {
+                Database::reconnect();
+                \Services\NotificationService::send($userId, 'operation_completed',
+                    "Articolo AI generato: {$keyword}", [
+                    'icon' => 'check-circle',
+                    'color' => 'emerald',
+                    'action_url' => '/ai-content/projects/' . $projectId . '/articles/' . $result['article_id'],
+                    'body' => "L'articolo per \"{$keyword}\" e stato generato con successo.",
+                    'data' => ['module' => 'ai-content', 'project_id' => $projectId, 'article_id' => $result['article_id']],
+                ]);
+            } catch (\Exception $e) {
+                logDispatcher("  Notifica non inviata: " . $e->getMessage(), 'WARN');
+            }
+
             // Auto-publish se configurato
             if (!empty($config['auto_publish']) && !empty($config['wp_site_id'])) {
                 logDispatcher("  Pubblicazione WordPress...");
@@ -398,6 +413,21 @@ function runDispatcher(): void
 
             $totalErrors++;
             logDispatcher("  ERRORE: {$result['error']}", 'ERROR');
+
+            // Notifica errore
+            try {
+                Database::reconnect();
+                \Services\NotificationService::send($userId, 'operation_failed',
+                    'Generazione AI fallita', [
+                    'icon' => 'exclamation-triangle',
+                    'color' => 'red',
+                    'action_url' => '/ai-content/projects/' . $projectId . '/queue',
+                    'body' => "Errore durante la generazione per \"{$keyword}\": {$result['error']}",
+                    'data' => ['module' => 'ai-content', 'project_id' => $projectId],
+                ]);
+            } catch (\Exception $e) {
+                logDispatcher("  Notifica non inviata: " . $e->getMessage(), 'WARN');
+            }
         }
     }
 

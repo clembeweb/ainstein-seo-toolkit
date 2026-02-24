@@ -636,6 +636,22 @@ class CrawlController
                 $this->projectModel->update($id, ['status' => 'stopped']);
 
                 $this->sendEvent('cancelled', $jobModel->getJobResponse($jobId));
+
+                // Notifica annullamento
+                try {
+                    Database::reconnect();
+                    \Services\NotificationService::send((int) $job['user_id'], 'operation_failed',
+                        'Analisi SEO interrotta', [
+                        'icon' => 'exclamation-triangle',
+                        'color' => 'red',
+                        'action_url' => '/seo-audit/projects/' . $id . '/results',
+                        'body' => 'La scansione e stata annullata dall\'utente.',
+                        'data' => ['module' => 'seo-audit', 'project_id' => $id],
+                    ]);
+                } catch (\Exception $e) {
+                    // silently fail
+                }
+
                 break;
             }
 
@@ -654,6 +670,24 @@ class CrawlController
                 $this->sessionModel->complete((int) $job['session_id']);
 
                 $this->sendEvent('completed', $jobModel->getJobResponse($jobId));
+
+                // Notifica completamento
+                try {
+                    Database::reconnect();
+                    $projectData = $this->projectModel->find($id);
+                    $projectName = $projectData['domain'] ?? "Progetto #{$id}";
+                    \Services\NotificationService::send((int) $job['user_id'], 'operation_completed',
+                        "Analisi SEO completata per {$projectName}", [
+                        'icon' => 'check-circle',
+                        'color' => 'emerald',
+                        'action_url' => '/seo-audit/projects/' . $id . '/results',
+                        'body' => "Scansionate {$completed} pagine, trovati {$totalIssuesFound} problemi.",
+                        'data' => ['module' => 'seo-audit', 'project_id' => $id],
+                    ]);
+                } catch (\Exception $e) {
+                    // Non-blocking: notification failure should not affect the operation
+                }
+
                 break;
             }
 
