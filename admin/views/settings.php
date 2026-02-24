@@ -986,6 +986,56 @@ $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
             </div>
         </div>
 
+        <!-- Email Branding -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3">
+                <div class="p-2 rounded-lg bg-teal-100 dark:bg-teal-900/30">
+                    <svg class="w-5 h-5 text-teal-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Branding Email</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Personalizza l'aspetto delle email inviate dalla piattaforma</p>
+                </div>
+            </div>
+            <div class="p-6 space-y-6">
+                <!-- URL Logo Email -->
+                <div class="max-w-lg">
+                    <label for="email_logo_url" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">URL Logo Email</label>
+                    <input type="text" name="email_logo_url" id="email_logo_url"
+                           value="<?= htmlspecialchars($settings['email_logo_url']['value'] ?? '') ?>"
+                           placeholder="https://esempio.com/logo.png"
+                           class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">URL di un'immagine da usare come logo nell'header delle email. Lascia vuoto per usare il nome testuale.</p>
+                </div>
+
+                <!-- Colore Primario Email -->
+                <div class="max-w-lg">
+                    <label for="email_brand_color" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Colore Primario Email</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="email_brand_color" id="email_brand_color"
+                               value="<?= htmlspecialchars($settings['email_brand_color']['value'] ?? '#006e96') ?>"
+                               class="h-10 w-14 rounded-lg border border-slate-300 dark:border-slate-600 cursor-pointer"
+                               oninput="document.getElementById('email_brand_color_text').value = this.value">
+                        <input type="text" id="email_brand_color_text" readonly
+                               value="<?= htmlspecialchars($settings['email_brand_color']['value'] ?? '#006e96') ?>"
+                               class="w-24 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-300 py-2 px-3 text-sm font-mono">
+                    </div>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Colore utilizzato per pulsanti e link nelle email. Default: #006e96</p>
+                </div>
+
+                <!-- Testo Footer Email -->
+                <div class="max-w-lg">
+                    <label for="email_footer_text" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Testo Footer Email</label>
+                    <textarea name="email_footer_text" id="email_footer_text" rows="3"
+                              placeholder="Es: Ainstein SEO Toolkit - La piattaforma SEO all-in-one per professionisti"
+                              class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"><?= htmlspecialchars($settings['email_footer_text']['value'] ?? '') ?></textarea>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Testo aggiuntivo mostrato nel footer di ogni email, prima del copyright.</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Save Button -->
         <div class="flex justify-end pt-2">
             <button type="submit" class="inline-flex items-center px-6 py-3 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors shadow-sm">

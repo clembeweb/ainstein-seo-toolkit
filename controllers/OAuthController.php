@@ -138,7 +138,8 @@ class OAuthController
                 \Services\EmailService::sendWelcome(
                     $user['email'],
                     $user['name'] ?? 'Utente',
-                    $config['free_credits'] ?? 30
+                    $config['free_credits'] ?? 30,
+                    $user['id']
                 );
             } catch (\Exception $e) {
                 error_log('Welcome email (Google OAuth) failed: ' . $e->getMessage());

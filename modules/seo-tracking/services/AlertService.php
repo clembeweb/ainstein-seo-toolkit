@@ -180,29 +180,49 @@ class AlertService
             return false;
         }
 
-        // Costruisci email
-        $subject = "[SEO Tracking] {$project['name']} - " . count($alerts) . " nuovi alert";
-
-        $body = "Ciao,\n\n";
-        $body .= "Ecco gli alert per il progetto {$project['name']} ({$project['domain']}):\n\n";
-
+        // Costruisci tabella HTML alert
+        $alertsHtml = '<table style="width:100%;border-collapse:collapse;margin:16px 0;">';
         foreach ($alerts as $alert) {
             $icon = match($alert['alert_type']) {
                 'position_gain' => '📈',
                 'position_drop' => '📉',
                 'traffic_drop' => '⚠️',
-                'revenue_drop' => '💰',
                 default => '🔔',
             };
-            $body .= "{$icon} [{$alert['severity']}] {$alert['message']}\n";
+            $severityColor = match($alert['severity'] ?? 'info') {
+                'critical' => '#ef4444',
+                'warning' => '#f59e0b',
+                'info' => '#3b82f6',
+                default => '#64748b',
+            };
+            $alertsHtml .= '<tr><td style="padding:8px;border-bottom:1px solid #e2e8f0;">'
+                . $icon . ' <span style="color:' . $severityColor . ';font-weight:600;">'
+                . '[' . htmlspecialchars($alert['severity'] ?? 'info') . ']</span> '
+                . htmlspecialchars($alert['message'])
+                . '</td></tr>';
         }
+        $alertsHtml .= '</table>';
 
-        $body .= "\n---\n";
-        $body .= "Visualizza tutti gli alert: " . url('/seo-tracking/project/' . $projectId . '/alerts') . "\n";
+        $dashboardUrl = url('/seo-tracking/project/' . $projectId . '/alerts');
+        $subject = "[SEO Tracking] {$project['name']} - " . count($alerts) . " nuovi alert";
 
-        // Invia email (usa la funzione mail di PHP o un servizio esterno)
+        $data = [
+            'project_name' => $project['name'],
+            'domain' => $project['domain'] ?? '',
+            'alert_count' => count($alerts),
+            'alerts_html' => $alertsHtml,
+            'dashboard_url' => $dashboardUrl,
+            'period' => 'Ultimo periodo',
+            'user_name' => 'Utente',
+        ];
+
+        // Invia email via EmailService (SMTP centralizzato)
+        $success = true;
         foreach ($emails as $email) {
-            @mail($email, $subject, $body, "From: noreply@" . $_SERVER['HTTP_HOST']);
+            $result = \Services\EmailService::sendTemplate(
+                trim($email), $subject, 'seo-alert', $data
+            );
+            if (!$result['success']) $success = false;
         }
 
         // Marca come letti

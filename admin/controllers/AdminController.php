@@ -520,6 +520,22 @@ class AdminController
             Settings::set('brand_font', $font, $userId);
         }
 
+        // 2b. Salva impostazioni branding email
+        if (isset($_POST['email_brand_color'])) {
+            $emailColor = trim($_POST['email_brand_color']);
+            if (preg_match('/^#[0-9a-fA-F]{6}$/', $emailColor)) {
+                Settings::set('email_brand_color', $emailColor, $userId);
+            }
+        }
+        if (isset($_POST['email_logo_url'])) {
+            $emailLogoUrl = trim($_POST['email_logo_url']);
+            Settings::set('email_logo_url', $emailLogoUrl, $userId);
+        }
+        if (isset($_POST['email_footer_text'])) {
+            $emailFooterText = trim($_POST['email_footer_text']);
+            Settings::set('email_footer_text', $emailFooterText, $userId);
+        }
+
         // 3. Gestisci upload loghi
         $uploadDir = \ROOT_PATH . '/public/assets/images/branding';
         if (!is_dir($uploadDir)) {

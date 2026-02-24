@@ -10,6 +10,20 @@
  * - $preheader (string, opzionale) - Testo preview email
  */
 $preheader = $preheader ?? '';
+
+// Branding settings
+$brandColor = \Core\Settings::get('email_brand_color', '#006e96');
+$logoUrl = \Core\Settings::get('email_logo_url', '');
+$customFooterText = \Core\Settings::get('email_footer_text', '');
+
+// Darken brand color by ~15% for hover state
+$brandColorHover = (function($hex) {
+    $hex = ltrim($hex, '#');
+    $r = max(0, intval(hexdec(substr($hex, 0, 2)) * 0.85));
+    $g = max(0, intval(hexdec(substr($hex, 2, 2)) * 0.85));
+    $b = max(0, intval(hexdec(substr($hex, 4, 2)) * 0.85));
+    return sprintf('#%02x%02x%02x', $r, $g, $b);
+})($brandColor);
 ?>
 <!DOCTYPE html>
 <html lang="it">
@@ -50,7 +64,7 @@ $preheader = $preheader ?? '';
         }
 
         .email-header a {
-            color: #006e96;
+            color: <?= htmlspecialchars($brandColor) ?>;
             text-decoration: none;
             font-size: 24px;
             font-weight: 700;
@@ -80,7 +94,7 @@ $preheader = $preheader ?? '';
         .btn {
             display: inline-block;
             padding: 14px 32px;
-            background-color: #006e96;
+            background-color: <?= htmlspecialchars($brandColor) ?>;
             color: #ffffff !important;
             text-decoration: none;
             border-radius: 8px;
@@ -91,7 +105,7 @@ $preheader = $preheader ?? '';
         }
 
         .btn:hover {
-            background-color: #005a7a;
+            background-color: <?= htmlspecialchars($brandColorHover) ?>;
         }
 
         /* Typography */
@@ -141,7 +155,11 @@ $preheader = $preheader ?? '';
         <div class="email-container">
             <!-- Header -->
             <div class="email-header">
-                <a href="<?= htmlspecialchars($appUrl) ?>"><?= htmlspecialchars($appName) ?></a>
+                <?php if (!empty($logoUrl)): ?>
+                    <a href="<?= htmlspecialchars($appUrl) ?>"><img src="<?= htmlspecialchars($logoUrl) ?>" alt="<?= htmlspecialchars($appName) ?>" style="max-height:40px;"></a>
+                <?php else: ?>
+                    <a href="<?= htmlspecialchars($appUrl) ?>"><?= htmlspecialchars($appName) ?></a>
+                <?php endif; ?>
             </div>
 
             <!-- Body -->
@@ -151,6 +169,11 @@ $preheader = $preheader ?? '';
 
             <!-- Footer -->
             <div class="email-footer">
+                <?php if (!empty($customFooterText)): ?>
+                    <p style="margin: 0 0 12px; color: #64748b; font-size: 13px;">
+                        <?= htmlspecialchars($customFooterText) ?>
+                    </p>
+                <?php endif; ?>
                 <p style="margin: 0 0 8px;">
                     &copy; <?= $year ?> <?= htmlspecialchars($appName) ?>. Tutti i diritti riservati.
                 </p>

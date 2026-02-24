@@ -118,6 +118,25 @@ Progetti condivisibili tra utenti con 3 ruoli: Owner, Editor, Viewer.
 
 **Preferenze**: Toggle email in `/profile`, salvate in `notification_preferences`
 
+### Sistema Email Admin-Customizzabile
+
+| Tabella | Scopo |
+|---------|-------|
+| `email_templates` | Template email editabili dall'admin (subject + body HTML con `{{placeholder}}`) |
+| `email_unsubscribe_tokens` | Token per pagina gestione preferenze email (no login) |
+
+**Rendering**: `EmailService::sendTemplate()` cerca prima in DB, poi fallback a file PHP in `shared/views/emails/`.
+
+**Admin panel**: `/admin/email-templates` — lista, modifica con textarea + preview live, test, ripristina default.
+
+**Template categories**: auth (welcome, password-reset, password-changed, email-changed), notification (project-invite, notification), module (seo-alert), report (admin-report)
+
+**Branding**: `email_logo_url`, `email_brand_color`, `email_footer_text` in admin settings → applicati a `base.php`
+
+**Unsubscribe**: ogni email include link a `/email/preferences?token=XXX` (pagina pubblica senza login)
+
+**Cron**: `cron/admin-report.php` settimanale (Lunedi 8:00) — report piattaforma per admin
+
 ---
 
 ## STRUTTURA PROGETTO
@@ -391,6 +410,7 @@ modules/seo-tracking/cron/rank-dispatcher.php      # Every 5 Min
 modules/seo-tracking/cron/gsc-sync-dispatcher.php  # Hourly
 modules/seo-audit/cron/crawl-dispatcher.php        # Every 5 Min
 modules/seo-tracking/cron/ai-report-dispatcher.php # Hourly
+cron/admin-report.php                              # Weekly (0 8 * * 1)
 ```
 
 ---

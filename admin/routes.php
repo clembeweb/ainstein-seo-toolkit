@@ -6,6 +6,7 @@ use Admin\Controllers\FinanceController;
 use Admin\Controllers\AiLogsController;
 use Admin\Controllers\ApiLogsController;
 use Admin\Controllers\JobsController;
+use Admin\Controllers\EmailTemplateController;
 
 // Admin routes
 Router::get('/admin', [AdminController::class, 'dashboard']);
@@ -23,6 +24,15 @@ Router::post('/admin/modules/{id}/rename', [AdminController::class, 'moduleRenam
 Router::post('/admin/settings/branding', [AdminController::class, 'brandingUpdate']);
 Router::post('/admin/settings/test-smtp', [AdminController::class, 'testSmtp']);
 Router::post('/admin/settings/test-email', [AdminController::class, 'testEmail']);
+
+// Email Templates
+Router::get('/admin/email-templates', [EmailTemplateController::class, 'index']);
+Router::get('/admin/email-templates/{slug}', [EmailTemplateController::class, 'edit']);
+Router::post('/admin/email-templates/{slug}', [EmailTemplateController::class, 'update']);
+Router::post('/admin/email-templates/{slug}/preview', [EmailTemplateController::class, 'preview']);
+Router::post('/admin/email-templates/{slug}/test', [EmailTemplateController::class, 'sendTest']);
+Router::post('/admin/email-templates/{slug}/reset', [EmailTemplateController::class, 'resetDefault']);
+Router::post('/admin/email-templates/{slug}/toggle', [EmailTemplateController::class, 'toggle']);
 Router::get('/admin/plans', [AdminController::class, 'plans']);
 Router::post('/admin/plans/{id}', [AdminController::class, 'planUpdate']);
 

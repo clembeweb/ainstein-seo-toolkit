@@ -136,6 +136,73 @@ Router::get('/landing3', function () {
     exit;
 });
 
+// Email preferences (unsubscribe) — public, no login required
+Router::get('/email/preferences', function () {
+    $token = $_GET['token'] ?? '';
+    if (empty($token)) {
+        Router::redirect('/login');
+        return '';
+    }
+
+    $tokenRecord = Database::fetch(
+        "SELECT user_id FROM email_unsubscribe_tokens WHERE token = ?",
+        [$token]
+    );
+
+    if (!$tokenRecord) {
+        return View::render('email-preferences', [
+            'title' => 'Preferenze Email',
+            'error' => 'Link non valido o scaduto.',
+            'token' => '',
+            'preferences' => [],
+            'success' => null,
+        ], null);
+    }
+
+    $preferences = \Services\NotificationService::getPreferences($tokenRecord['user_id']);
+
+    return View::render('email-preferences', [
+        'title' => 'Preferenze Email',
+        'token' => $token,
+        'preferences' => $preferences,
+        'error' => null,
+        'success' => null,
+    ], null);
+});
+
+Router::post('/email/preferences', function () {
+    Middleware::csrf();
+
+    $token = $_POST['token'] ?? '';
+    $tokenRecord = Database::fetch(
+        "SELECT user_id FROM email_unsubscribe_tokens WHERE token = ?",
+        [$token]
+    );
+
+    if (!$tokenRecord) {
+        Router::redirect('/login');
+        return '';
+    }
+
+    $prefs = [];
+    $types = ['project_invite', 'project_invite_accepted', 'project_invite_declined', 'operation_completed', 'operation_failed'];
+    foreach ($types as $type) {
+        $prefs[$type] = isset($_POST['email_' . $type]);
+    }
+
+    \Services\NotificationService::updatePreferences($tokenRecord['user_id'], $prefs);
+
+    $preferences = \Services\NotificationService::getPreferences($tokenRecord['user_id']);
+
+    return View::render('email-preferences', [
+        'title' => 'Preferenze Email',
+        'token' => $token,
+        'preferences' => $preferences,
+        'error' => null,
+        'success' => 'Preferenze salvate con successo.',
+    ], null);
+});
+
 Router::get('/login', function () {
     Middleware::guest();
     return View::render('auth/login', ['title' => 'Login'], null);
@@ -227,7 +294,7 @@ Router::post('/register', function () {
     // Email di benvenuto (non bloccante - errori loggati silenziosamente)
     try {
         $config = require BASE_PATH . '/config/app.php';
-        \Services\EmailService::sendWelcome($email, $name, $config['free_credits'] ?? 30);
+        \Services\EmailService::sendWelcome($email, $name, $config['free_credits'] ?? 30, $userId);
     } catch (\Exception $e) {
         // Non bloccare la registrazione se l'email fallisce
         error_log('Welcome email failed: ' . $e->getMessage());
@@ -643,6 +710,23 @@ Router::post('/profile/password', function () {
     }
 
     Auth::updatePassword($user['id'], $newPassword);
+
+    // Notifica cambio password via email
+    try {
+        \Services\EmailService::sendTemplate(
+            $user['email'],
+            'Password modificata',
+            'password-changed',
+            [
+                'user_name' => $user['name'],
+                'user_email' => $user['email'],
+                'changed_at' => date('d/m/Y H:i'),
+            ],
+            $user['id']
+        );
+    } catch (\Exception $e) {
+        error_log('Password changed email failed: ' . $e->getMessage());
+    }
 
     $_SESSION['_flash']['success'] = 'Password aggiornata';
     Router::redirect('/profile');

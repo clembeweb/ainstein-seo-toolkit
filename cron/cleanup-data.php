@@ -863,6 +863,22 @@ function cleanupOldNotifications(array $config): int
 }
 
 // ============================================
+// 25. email_unsubscribe_tokens → DELETE orfani (user eliminato)
+// ============================================
+
+function cleanupOrphanedUnsubscribeTokens(): int
+{
+    if (!tableExists('email_unsubscribe_tokens')) {
+        logMsg("  Tabella email_unsubscribe_tokens non trovata, skip");
+        return 0;
+    }
+
+    return Database::execute(
+        "DELETE t FROM email_unsubscribe_tokens t LEFT JOIN users u ON t.user_id = u.id WHERE u.id IS NULL"
+    );
+}
+
+// ============================================
 // ESECUZIONE PRINCIPALE
 // ============================================
 
@@ -904,6 +920,9 @@ $sections = [
 
     // --- 24: notifications ---
     ['notifications (> 90gg)',        'cleanupOldNotifications', [$config]],
+
+    // --- 25: email unsubscribe tokens ---
+    ['email_unsubscribe_tokens (orfani)', 'cleanupOrphanedUnsubscribeTokens', []],
 ];
 
 foreach ($sections as [$label, $func, $args]) {
