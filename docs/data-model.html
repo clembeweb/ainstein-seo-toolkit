@@ -196,7 +196,7 @@
         <div class="mermaid">
 erDiagram
     users ||--o{ projects : "possiede"
-    projects ||--o{ project_connectors : "connettori CMS"
+    projects ||--o{ aic_wp_sites : "connettori WP"
     projects ||--o{ aic_projects : "attiva"
     projects ||--o{ sa_projects : "attiva"
     projects ||--o{ st_projects : "attiva"
@@ -251,7 +251,6 @@ erDiagram
     users ||--o{ ai_logs : "log AI"
     settings ||--o{ users : "updated_by"
     users ||--o{ projects : "hub progetti"
-    projects ||--o{ project_connectors : "connettori CMS"
     projects {
         int id PK
         int user_id FK
@@ -324,16 +323,7 @@ erDiagram
         int tokens_total
         decimal estimated_cost
     }
-    project_connectors {
-        int id PK
-        int project_id FK
-        int user_id FK
-        enum type "wordpress/shopify/prestashop/magento"
-        varchar name
-        json config
-        tinyint is_active
-        enum last_test_status "success/error"
-    }
+    %% project_connectors DROPPED - unificato in aic_wp_sites
         </div>
 
         <!-- users -->
@@ -491,37 +481,7 @@ erDiagram
             </div>
         </details>
 
-        <details class="mb-4 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
-            <summary class="bg-slate-50 dark:bg-slate-800 px-4 py-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 font-medium text-slate-900 dark:text-white">
-                project_connectors (Connettori CMS)
-            </summary>
-            <div class="p-4 overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead><tr class="border-b border-slate-200 dark:border-slate-700">
-                        <th class="text-left py-2 px-3 text-slate-500 dark:text-slate-400">Colonna</th>
-                        <th class="text-left py-2 px-3 text-slate-500 dark:text-slate-400">Tipo</th>
-                        <th class="text-left py-2 px-3 text-slate-500 dark:text-slate-400">Note</th>
-                    </tr></thead>
-                    <tbody class="text-slate-700 dark:text-slate-300">
-                        <tr><td class="py-1.5 px-3 font-mono text-xs">id</td><td class="py-1.5 px-3">INT AUTO_INCREMENT</td><td class="py-1.5 px-3"><span class="text-amber-500 font-semibold">PK</span></td></tr>
-                        <tr><td class="py-1.5 px-3 font-mono text-xs">project_id</td><td class="py-1.5 px-3">INT</td><td class="py-1.5 px-3"><span class="text-blue-500 font-semibold">FK</span> &rarr; projects.id CASCADE</td></tr>
-                        <tr><td class="py-1.5 px-3 font-mono text-xs">user_id</td><td class="py-1.5 px-3">INT</td><td class="py-1.5 px-3"><span class="text-blue-500 font-semibold">FK</span> &rarr; users.id</td></tr>
-                        <tr><td class="py-1.5 px-3 font-mono text-xs">type</td><td class="py-1.5 px-3">ENUM('wordpress','shopify','prestashop','magento')</td><td class="py-1.5 px-3">Tipo CMS</td></tr>
-                        <tr><td class="py-1.5 px-3 font-mono text-xs">name</td><td class="py-1.5 px-3">VARCHAR(255)</td><td class="py-1.5 px-3">Nome connettore</td></tr>
-                        <tr><td class="py-1.5 px-3 font-mono text-xs">config</td><td class="py-1.5 px-3">JSON</td><td class="py-1.5 px-3">Configurazione (url, api_key, etc.)</td></tr>
-                        <tr><td class="py-1.5 px-3 font-mono text-xs">is_active</td><td class="py-1.5 px-3">TINYINT(1)</td><td class="py-1.5 px-3">DEFAULT 1</td></tr>
-                        <tr><td class="py-1.5 px-3 font-mono text-xs">last_test_at</td><td class="py-1.5 px-3">DATETIME</td><td class="py-1.5 px-3">NULL</td></tr>
-                        <tr><td class="py-1.5 px-3 font-mono text-xs">last_test_status</td><td class="py-1.5 px-3">ENUM('success','error')</td><td class="py-1.5 px-3">NULL</td></tr>
-                        <tr><td class="py-1.5 px-3 font-mono text-xs">last_test_message</td><td class="py-1.5 px-3">VARCHAR(500)</td><td class="py-1.5 px-3">NULL</td></tr>
-                        <tr><td class="py-1.5 px-3 font-mono text-xs">seo_plugin</td><td class="py-1.5 px-3">VARCHAR(100)</td><td class="py-1.5 px-3">Plugin SEO rilevato (yoast, rankmath, etc.)</td></tr>
-                        <tr><td class="py-1.5 px-3 font-mono text-xs">wp_version</td><td class="py-1.5 px-3">VARCHAR(20)</td><td class="py-1.5 px-3">Versione WordPress</td></tr>
-                        <tr><td class="py-1.5 px-3 font-mono text-xs">plugin_version</td><td class="py-1.5 px-3">VARCHAR(20)</td><td class="py-1.5 px-3">Versione plugin Ainstein</td></tr>
-                        <tr><td class="py-1.5 px-3 font-mono text-xs">created_at</td><td class="py-1.5 px-3">TIMESTAMP</td><td class="py-1.5 px-3">DEFAULT CURRENT_TIMESTAMP</td></tr>
-                        <tr><td class="py-1.5 px-3 font-mono text-xs">updated_at</td><td class="py-1.5 px-3">TIMESTAMP</td><td class="py-1.5 px-3">ON UPDATE CURRENT_TIMESTAMP</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </details>
+        <!-- project_connectors DROPPED - unificato in aic_wp_sites (commit 8f96346) -->
     </section>
 
     <!-- ==================== AI CONTENT ==================== -->
@@ -610,7 +570,7 @@ erDiagram
         <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-amber-200 dark:border-amber-900/50 shadow-sm">
             <summary class="p-4 font-semibold text-slate-900 dark:text-white">aic_wp_sites &middot; aic_wp_publish_log &middot; aic_meta_tags &middot; aic_internal_links_pool &middot; aic_process_jobs</summary>
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
-                <div><strong class="text-slate-900 dark:text-white">aic_wp_sites</strong>: id(PK), user_id(FK), name, url, api_key, is_active, last_sync_at, categories_cache(JSON)</div>
+                <div><strong class="text-slate-900 dark:text-white">aic_wp_sites</strong>: id(PK), user_id(FK), global_project_id(FK&rarr;projects, nullable), name, url, api_key, is_active, last_sync_at, categories_cache(JSON) &mdash; <em>Single source of truth per connettori WordPress (unificato con project_connectors)</em></div>
                 <div><strong class="text-slate-900 dark:text-white">aic_wp_publish_log</strong>: id(PK), article_id(FK), wp_site_id(FK), wp_post_id, status(success/failed), response_data(JSON)</div>
                 <div><strong class="text-slate-900 dark:text-white">aic_meta_tags</strong>: id(PK), project_id(FK), user_id, url(UK con project), original_title, original_h1, current_meta_title/desc, generated_title/desc, scraped_content, status(pending/scraped/generated/approved/published/error), wp_site_id, wp_post_id, wp_post_type, scrape/generation/publish_error, timestamps</div>
                 <div><strong class="text-slate-900 dark:text-white">aic_internal_links_pool</strong>: id(PK), project_id(FK), url(UK con project), title, description, sitemap_source, scrape_status, is_active</div>
@@ -726,7 +686,7 @@ erDiagram
         <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
             <summary class="p-4 font-semibold text-slate-900 dark:text-white">sa_site_config &middot; sa_activity_logs</summary>
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
-                <div><strong class="text-slate-900 dark:text-white">sa_site_config</strong>: id(PK), project_id(FK UK), robots_txt, robots_allows/disallows(JSON), sitemap_urls(JSON), has_sitemap, has_robots, is_https, ssl_valid</div>
+                <div><strong class="text-slate-900 dark:text-white">sa_site_config</strong>: id(PK), project_id(FK UK), robots_txt, robots_allows/disallows(JSON), sitemap_urls(JSON), discovered_urls(JSON), has_sitemap, has_robots, is_https, ssl_valid</div>
                 <div><strong class="text-slate-900 dark:text-white">sa_activity_logs</strong>: id(PK), project_id(FK), user_id(FK), action, details(JSON)</div>
             </div>
         </details>

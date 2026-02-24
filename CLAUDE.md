@@ -320,8 +320,20 @@ mysql -u u6iaaermphtha -pexkwryfz7ieh dbj0xoiwysdlk1 -e "SHOW TABLES LIKE 'prefi
 mysql -u root seo_toolkit -e "SHOW TABLES;"
 
 # Test locale
-# URL: http://localhost/seo-toolkit | Email: admin@seo-toolkit.local | Pass: admin123
+# URL: http://localhost/seo-toolkit
+# Email: admin@seo-toolkit.local | Pass: admin123
+
+# Test produzione
+# URL: https://ainstein.it
+# Email: clementeborghetti@gmail.com | Pass: (accesso via Google OAuth)
 ```
+
+### Credenziali Admin per Test
+
+| Ambiente | URL | Email | Password |
+|----------|-----|-------|----------|
+| Locale | `http://localhost/seo-toolkit` | `admin@seo-toolkit.local` | `admin123` |
+| Produzione | `https://ainstein.it` | `clementeborghetti@gmail.com` | Google OAuth |
 
 ### Cron Jobs SiteGround
 
@@ -335,6 +347,7 @@ modules/ai-content/cron/dispatcher.php             # Every Min
 modules/ads-analyzer/cron/auto-evaluate.php        # Every 5 Min
 modules/seo-tracking/cron/rank-dispatcher.php      # Every 5 Min
 modules/seo-tracking/cron/gsc-sync-dispatcher.php  # Hourly
+modules/seo-audit/cron/crawl-dispatcher.php        # Every 5 Min
 modules/seo-tracking/cron/ai-report-dispatcher.php # Hourly
 ```
 

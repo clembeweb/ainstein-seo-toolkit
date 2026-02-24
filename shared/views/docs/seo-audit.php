@@ -55,7 +55,7 @@
                 <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">2</div>
                 <div>
                     <h3 class="font-medium text-slate-900 dark:text-white">Avvia il crawling</h3>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Scegli tra crawling da sitemap (piu rapido) o spider (esplora i link interni). Il sistema analizzera ogni pagina trovata.</p>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Scegli un preset (Veloce, Bilanciato o Completo) o configura manualmente il numero di pagine e la profondita. Lo spider esplora i link interni automaticamente.</p>
                 </div>
                 <svg class="w-5 h-5 shrink-0 text-slate-300 dark:text-slate-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -117,9 +117,9 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
                     </div>
-                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Crawling sitemap e spider</h3>
+                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Spider crawling intelligente</h3>
                 </div>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Due modalita di scansione con tracking sessione per monitorare il progresso in tempo reale.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Esplora il sito seguendo i link interni con 3 preset (Veloce, Bilanciato, Completo) e progresso in tempo reale.</p>
             </div>
 
             <!-- 50+ controlli -->
@@ -229,7 +229,7 @@
                             </div>
                         </td>
                         <td class="px-5 py-3 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">Gratuito</span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">1 credito</span>
                         </td>
                     </tr>
                     <tr class="bg-white dark:bg-slate-800">
@@ -265,7 +265,7 @@
             <svg class="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            Il crawling e l'analisi via WordPress sono gratuiti. Il Piano d'Azione AI costa 10 crediti per generazione. Tutte le altre funzionalita (dashboard, issues, link, storico, export) sono gratuite.
+            Il crawling costa 1 credito per pagina analizzata. L'analisi via WordPress e gratuita. Il Piano d'Azione AI costa 10 crediti per generazione. Tutte le altre funzionalita (dashboard, issues, link, storico, export) sono gratuite.
         </p>
     </section>
 
@@ -286,8 +286,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Inizia con il crawling sitemap</h3>
-                    <p class="mt-1 text-sm text-blue-800 dark:text-blue-300/80">Il crawling da sitemap e piu rapido e copre tutte le pagine indicizzate. Usalo per una panoramica iniziale del sito, poi valuta il crawling spider per scoprire pagine non in sitemap.</p>
+                    <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Inizia con il preset Veloce</h3>
+                    <p class="mt-1 text-sm text-blue-800 dark:text-blue-300/80">Il preset Veloce (100 pagine, profondita 2) e ideale per una panoramica iniziale del sito. Poi usa Bilanciato (500 pagine) o Completo (2000 pagine) per un'analisi piu approfondita.</p>
                 </div>
             </div>
 

@@ -155,6 +155,156 @@
         </div>
     </form>
 
+    <!-- Confronta Periodo -->
+    <div x-data="dateRangeCompare()" class="relative">
+        <?php if (!empty($compareMode)): ?>
+        <!-- Compare mode active banner -->
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="flex-shrink-0">
+                        <svg class="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-blue-800 dark:text-blue-200">
+                            Confronto periodo: <?= e($dateFrom) ?> &mdash; <?= e($dateTo) ?>
+                        </p>
+                        <p class="text-xs text-blue-600 dark:text-blue-400">
+                            <?= $dateRange ?> giorni di confronto
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button @click="open = !open" class="text-xs px-3 py-1.5 rounded-lg bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors">
+                        Modifica periodo
+                    </button>
+                    <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords' . (($filters['search'] || $filters['is_tracked'] !== null || $filters['group_name'] || $filters['position_max']) ? '?' . http_build_query(array_filter(['search' => $filters['search'], 'tracked' => $filters['is_tracked'], 'group' => $filters['group_name'], 'position' => $filters['position_max']], fn($v) => $v !== null && $v !== '')) : '')) ?>"
+                       class="text-xs px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                        Chiudi confronto
+                    </a>
+                </div>
+            </div>
+
+            <!-- Expandable date range panel -->
+            <div x-show="open" x-collapse class="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
+                <form method="GET" class="flex flex-wrap items-end gap-3">
+                    <!-- Preserve current filters -->
+                    <?php if ($filters['search']): ?>
+                    <input type="hidden" name="search" value="<?= e($filters['search']) ?>">
+                    <?php endif; ?>
+                    <?php if ($filters['is_tracked'] !== null): ?>
+                    <input type="hidden" name="tracked" value="<?= e($filters['is_tracked']) ?>">
+                    <?php endif; ?>
+                    <?php if ($filters['group_name']): ?>
+                    <input type="hidden" name="group" value="<?= e($filters['group_name']) ?>">
+                    <?php endif; ?>
+                    <?php if ($filters['position_max']): ?>
+                    <input type="hidden" name="position" value="<?= e($filters['position_max']) ?>">
+                    <?php endif; ?>
+
+                    <!-- Preset buttons -->
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-xs text-blue-600 dark:text-blue-400 font-medium mr-1">Periodo:</span>
+                        <button type="button" @click="applyPreset('7d')" :class="preset === '7d' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600'"
+                                class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors">7gg</button>
+                        <button type="button" @click="applyPreset('14d')" :class="preset === '14d' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600'"
+                                class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors">14gg</button>
+                        <button type="button" @click="applyPreset('28d')" :class="preset === '28d' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600'"
+                                class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors">28gg</button>
+                        <button type="button" @click="applyPreset('3m')" :class="preset === '3m' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600'"
+                                class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors">3 mesi</button>
+                    </div>
+
+                    <!-- Date inputs -->
+                    <div class="flex items-center gap-2">
+                        <div>
+                            <label class="block text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">Da</label>
+                            <input type="date" name="date_from" x-model="dateFrom"
+                                   class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">A</label>
+                            <input type="date" name="date_to" x-model="dateTo"
+                                   class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="px-4 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">
+                        Confronta
+                    </button>
+                </form>
+            </div>
+        </div>
+        <?php else: ?>
+        <!-- Toggle button to enter compare mode -->
+        <div>
+            <button @click="open = !open" class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                <svg class="w-4 h-4 mr-1.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                Confronta periodo
+                <svg class="w-4 h-4 ml-1.5 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+
+            <!-- Expandable date range panel -->
+            <div x-show="open" x-collapse class="mt-3">
+                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+                    <form method="GET" class="flex flex-wrap items-end gap-3">
+                        <!-- Preserve current filters -->
+                        <?php if ($filters['search']): ?>
+                        <input type="hidden" name="search" value="<?= e($filters['search']) ?>">
+                        <?php endif; ?>
+                        <?php if ($filters['is_tracked'] !== null): ?>
+                        <input type="hidden" name="tracked" value="<?= e($filters['is_tracked']) ?>">
+                        <?php endif; ?>
+                        <?php if ($filters['group_name']): ?>
+                        <input type="hidden" name="group" value="<?= e($filters['group_name']) ?>">
+                        <?php endif; ?>
+                        <?php if ($filters['position_max']): ?>
+                        <input type="hidden" name="position" value="<?= e($filters['position_max']) ?>">
+                        <?php endif; ?>
+
+                        <!-- Preset buttons -->
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mr-1">Periodo:</span>
+                            <button type="button" @click="applyPreset('7d')" :class="preset === '7d' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600'"
+                                    class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors">7gg</button>
+                            <button type="button" @click="applyPreset('14d')" :class="preset === '14d' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600'"
+                                    class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors">14gg</button>
+                            <button type="button" @click="applyPreset('28d')" :class="preset === '28d' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600'"
+                                    class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors">28gg</button>
+                            <button type="button" @click="applyPreset('3m')" :class="preset === '3m' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600'"
+                                    class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors">3 mesi</button>
+                        </div>
+
+                        <!-- Date inputs -->
+                        <div class="flex items-center gap-2">
+                            <div>
+                                <label class="block text-xs text-slate-500 dark:text-slate-400 font-medium mb-1">Da</label>
+                                <input type="date" name="date_from" x-model="dateFrom"
+                                       class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-500 dark:text-slate-400 font-medium mb-1">A</label>
+                                <input type="date" name="date_to" x-model="dateTo"
+                                       class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="px-4 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">
+                            Confronta
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+    </div>
+
     <!-- Results info -->
     <?php if (!empty($keywords)): ?>
     <div class="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
@@ -208,6 +358,14 @@
                                 <input type="checkbox" class="rounded border-slate-300 dark:border-slate-600" onclick="toggleAll(this)">
                             </th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Keyword</th>
+                            <?php if (!empty($compareMode)): ?>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Pos. Inizio</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Pos. Fine</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Delta</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Volume</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Gruppo</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Stato</th>
+                            <?php else: ?>
                             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase" title="Location">Loc</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Posizione</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Volume</th>
@@ -217,6 +375,7 @@
                             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase" title="Stagionalit&agrave;">Stagion.</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Aggiornato</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Azioni</th>
+                            <?php endif; ?>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
@@ -228,11 +387,92 @@
                             <td class="px-4 py-3">
                                 <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/' . $kw['id']) ?>" class="block">
                                     <p class="text-sm font-medium text-slate-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400"><?= e($kw['keyword']) ?></p>
-                                    <?php if ($kw['group_name']): ?>
+                                    <?php if (empty($compareMode) && $kw['group_name']): ?>
                                     <span class="text-xs text-slate-500 dark:text-slate-400"><?= e($kw['group_name']) ?></span>
                                     <?php endif; ?>
                                 </a>
                             </td>
+                            <?php if (!empty($compareMode)): ?>
+                            <!-- Compare mode columns -->
+                            <td class="px-4 py-3 text-right">
+                                <?php $posStart = $kw['position_start'] ?? 0; ?>
+                                <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+                                    <?= $posStart > 0 ? number_format($posStart, 1) : '-' ?>
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <?php
+                                $posEnd = $kw['position_end'] ?? 0;
+                                $posEndClass = $posEnd <= 3 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' :
+                                              ($posEnd <= 10 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' :
+                                              ($posEnd <= 20 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'));
+                                ?>
+                                <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium <?= $posEndClass ?>">
+                                    <?= $posEnd > 0 ? number_format($posEnd, 1) : '-' ?>
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <?php
+                                $compareStatus = $kw['compare_status'] ?? 'stable';
+                                $delta = $kw['position_delta'] ?? 0;
+                                ?>
+                                <?php if ($compareStatus === 'improved'): ?>
+                                <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                                    </svg>
+                                    +<?= abs($delta) ?>
+                                </span>
+                                <?php elseif ($compareStatus === 'declined'): ?>
+                                <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300">
+                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                                    </svg>
+                                    <?= $delta ?>
+                                </span>
+                                <?php elseif ($compareStatus === 'new'): ?>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                                    NUOVA
+                                </span>
+                                <?php elseif ($compareStatus === 'lost'): ?>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+                                    PERSA
+                                </span>
+                                <?php else: ?>
+                                <span class="text-sm text-slate-400 dark:text-slate-500">-</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-4 py-3 text-right text-sm text-slate-900 dark:text-white">
+                                <?php if (!empty($kw['search_volume'])): ?>
+                                    <?= number_format($kw['search_volume']) ?>
+                                <?php else: ?>
+                                    <span class="text-slate-400 dark:text-slate-500">-</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-4 py-3 text-left text-sm text-slate-500 dark:text-slate-400">
+                                <?= e($kw['group_name'] ?? '-') ?>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <?php
+                                $statusLabel = match($compareStatus) {
+                                    'improved' => 'Migliorata',
+                                    'declined' => 'Peggiorata',
+                                    'new' => 'Nuova',
+                                    'lost' => 'Persa',
+                                    default => 'Stabile'
+                                };
+                                $statusClass = match($compareStatus) {
+                                    'improved' => 'text-emerald-600 dark:text-emerald-400',
+                                    'declined' => 'text-red-600 dark:text-red-400',
+                                    'new' => 'text-blue-600 dark:text-blue-400',
+                                    'lost' => 'text-slate-500 dark:text-slate-400',
+                                    default => 'text-slate-500 dark:text-slate-400'
+                                };
+                                ?>
+                                <span class="text-xs font-medium <?= $statusClass ?>"><?= $statusLabel ?></span>
+                            </td>
+                            <?php else: ?>
+                            <!-- Normal mode columns -->
                             <td class="px-4 py-3 text-center" title="<?= e($kw['location_code'] ?? 'IT') ?>">
                                 <span class="inline-flex items-center justify-center w-6 h-4 rounded-sm bg-slate-100 dark:bg-slate-700 text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase">
                                     <?= e($kw['location_code'] ?? 'IT') ?>
@@ -359,6 +599,7 @@
                                     </button>
                                 </div>
                             </td>
+                            <?php endif; ?>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
