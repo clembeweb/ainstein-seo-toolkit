@@ -63,11 +63,14 @@ class NotificationController
         $result = \Services\NotificationService::getAll($user['id'], $page, 20, $filter);
 
         return View::render('notifications/index', [
+            'title' => 'Notifiche',
+            'user' => $user,
             'notifications' => $result['notifications'],
             'total' => $result['total'],
             'page' => $result['page'],
             'perPage' => $result['perPage'],
             'filter' => $filter,
+            'unreadCount' => \Services\NotificationService::getUnreadCount($user['id']),
             'modules' => ModuleLoader::getActiveModules()
         ]);
     }

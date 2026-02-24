@@ -632,9 +632,21 @@ class GlobalProjectController
 
         $members = \Services\ProjectAccessService::getProjectMembers($id);
         $invitations = \Services\ProjectAccessService::getProjectInvitations($id);
-        $activeModules = $this->project->getActiveModules($id);
+
+        // Deduplica moduli per slug (getActiveModules puo avere piu righe per moduli con tipi)
+        $allModules = $this->project->getActiveModules($id);
+        $activeModules = [];
+        $seen = [];
+        foreach ($allModules as $mod) {
+            if (!isset($seen[$mod['slug']])) {
+                $seen[$mod['slug']] = true;
+                $activeModules[] = $mod;
+            }
+        }
 
         return View::render('projects/sharing', [
+            'title' => 'Condivisione - ' . ($project['name'] ?? ''),
+            'user' => $user,
             'project' => $project,
             'members' => $members,
             'invitations' => $invitations,
