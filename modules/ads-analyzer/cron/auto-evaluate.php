@@ -212,7 +212,7 @@ try {
                     try {
                         $scraped = $scraper->scrape($url);
                         Database::reconnect();
-                        if (!empty($scraped['success']) && !empty($scraped['content'])) {
+                        if (!empty($scraped['content'])) {
                             $content = mb_substr($scraped['content'], 0, 3000);
                             $landingContexts[$url] = "Titolo: " . ($scraped['title'] ?? 'N/D')
                                 . "\nWord count: " . ($scraped['word_count'] ?? 0)

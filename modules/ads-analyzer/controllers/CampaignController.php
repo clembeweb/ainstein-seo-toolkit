@@ -332,7 +332,7 @@ class CampaignController
                     try {
                         $scraped = $scraper->scrape($url);
                         Database::reconnect();
-                        if (!empty($scraped['success']) && !empty($scraped['content'])) {
+                        if (!empty($scraped['content'])) {
                             // Limita contenuto per non esplodere il prompt
                             $content = mb_substr($scraped['content'], 0, 3000);
                             $landingContexts[$url] = "Titolo: " . ($scraped['title'] ?? 'N/D')
