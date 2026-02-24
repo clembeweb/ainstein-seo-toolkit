@@ -208,9 +208,9 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
                     </div>
-                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Confronto periodi e snapshot</h3>
+                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Confronto periodi</h3>
                 </div>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Confronta le performance tra periodi diversi e salva snapshot per analisi retrospettive.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Seleziona due date nella pagina Keywords per confrontare le posizioni: vedi delta, keyword migliorate, peggiorate, nuove e perse. Nella pagina Trend puoi scegliere tra dati GSC o keyword tracciate.</p>
             </div>
         </div>
     </section>
