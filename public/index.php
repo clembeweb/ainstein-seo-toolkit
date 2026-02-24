@@ -157,6 +157,14 @@ Router::post('/login', function () {
     $remember = isset($_POST['remember']);
 
     if (Auth::attempt($email, $password, $remember)) {
+        // Check for pending invite token (project sharing)
+        if (!empty($_SESSION['invite_token'])) {
+            $token = $_SESSION['invite_token'];
+            unset($_SESSION['invite_token']);
+            Router::redirect('/invite/accept?token=' . urlencode($token));
+            return '';
+        }
+
         $intended = $_SESSION['_intended_url'] ?? '/dashboard';
         unset($_SESSION['_intended_url']);
         Router::redirect($intended);
@@ -226,6 +234,15 @@ Router::post('/register', function () {
     }
 
     $_SESSION['_flash']['success'] = 'Registrazione completata! Benvenuto in SEO Toolkit.';
+
+    // Check for pending invite token (project sharing)
+    if (!empty($_SESSION['invite_token'])) {
+        $token = $_SESSION['invite_token'];
+        unset($_SESSION['invite_token']);
+        Router::redirect('/invite/accept?token=' . urlencode($token));
+        return '';
+    }
+
     Router::redirect('/dashboard');
 });
 

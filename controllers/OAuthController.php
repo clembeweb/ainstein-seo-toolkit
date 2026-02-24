@@ -148,6 +148,15 @@ class OAuthController
         // Login
         Auth::login($user, true);
 
+        // Check for pending invite token (project sharing)
+        if (!empty($_SESSION['invite_token'])) {
+            $token = $_SESSION['invite_token'];
+            unset($_SESSION['invite_token']);
+            $_SESSION['_flash']['success'] = 'Benvenuto, ' . htmlspecialchars($user['name'] ?? 'utente') . '!';
+            Router::redirect('/invite/accept?token=' . urlencode($token));
+            return '';
+        }
+
         // Redirect
         $intended = $stateData['intended'] ?? '/dashboard';
         $_SESSION['_flash']['success'] = 'Benvenuto, ' . htmlspecialchars($user['name'] ?? 'utente') . '!';
