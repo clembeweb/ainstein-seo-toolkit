@@ -42,6 +42,7 @@
 19. Link project-scoped nelle view  → MAI percorsi legacy in contesto progetto
 20. Tabelle standard CSS uniforme   → rounded-xl, px-4 py-3, bg-slate-700/50
 21. return View::render() SEMPRE    → Controller E route handler ritornano il risultato
+22. 'user' => $user in View::render → SEMPRE per pagine con layout (sidebar dipende da $user)
 ```
 
 ---
@@ -187,13 +188,16 @@ seo-toolkit/
 
 ## PATTERN DI SVILUPPO
 
-### Controller (Golden Rule #21)
+### Controller (Golden Rules #21, #22)
 
 ```php
-// Controller DEVE ritornare string
+// Controller DEVE ritornare string E passare $user per la sidebar
 public function index(): string {
     Middleware::auth();
+    $user = Auth::user();
     return View::render('modulo::vista', [  // ← RETURN obbligatorio!
+        'title' => 'Titolo Pagina',
+        'user' => $user,                    // ← OBBLIGATORIO per sidebar! (GR #22)
         'data' => $data,
         'modules' => \Core\ModuleLoader::getActiveModules()
     ]);
@@ -202,6 +206,8 @@ public function index(): string {
 // Route handler DEVE ritornare
 Router::get('/path', fn() => (new Controller())->index());  // ← return implicito
 ```
+
+**ATTENZIONE**: Senza `'user' => $user` il layout.php salta l'intero blocco sidebar+header (`if (isset($user) && $user)`). La pagina renderizza ma SENZA sidebar.
 
 ### Chiamata AI
 
@@ -359,7 +365,7 @@ mysql -u root seo_toolkit -e "SHOW TABLES;"
 
 # Test produzione
 # URL: https://ainstein.it
-# Email: clementeborghetti@gmail.com | Pass: (accesso via Google OAuth)
+# Email: admin@seo-toolkit.local | Pass: admin123
 ```
 
 ### Credenziali Admin per Test
@@ -367,7 +373,9 @@ mysql -u root seo_toolkit -e "SHOW TABLES;"
 | Ambiente | URL | Email | Password |
 |----------|-----|-------|----------|
 | Locale | `http://localhost/seo-toolkit` | `admin@seo-toolkit.local` | `admin123` |
-| Produzione | `https://ainstein.it` | `clementeborghetti@gmail.com` | Google OAuth |
+| Produzione | `https://ainstein.it` | `admin@seo-toolkit.local` | `admin123` |
+
+**IMPORTANTE**: MAI usare l'email personale dell'utente per test automatici.
 
 ### Cron Jobs SiteGround
 
@@ -403,6 +411,7 @@ modules/seo-tracking/cron/ai-report-dispatcher.php # Hourly
 [ ] php -l su file modificati
 [ ] Operazioni lunghe: SSE o pattern AJAX lungo (ob_start + ignore_user_abort)
 [ ] return View::render() nel controller + return nel route handler
+[ ] 'user' => $user passato a View::render() per tutte le pagine con layout
 [ ] Tabelle: componenti shared, rounded-xl, px-4 py-3, dark:bg-slate-700/50
 [ ] Link project-scoped (MAI percorsi legacy)
 [ ] Docs aggiornate se feature significativa
@@ -417,7 +426,7 @@ modules/seo-tracking/cron/ai-report-dispatcher.php # Hourly
 | Pagina vuota (blank page) | Manca `return` in controller/route handler (GR #21) |
 | 500 Error | `php -l file.php` per errori sintassi |
 | "MySQL gone away" | `Database::reconnect()` dopo operazioni lunghe |
-| Sidebar non appare | `$modules` non passato a `View::render()` |
+| Sidebar non appare | `$user` non passato a `View::render()` — layout.php controlla `isset($user)` (GR #22) |
 | "Errore di connessione" AJAX | CSRF: usare `_csrf_token` (con underscore!) |
 | AJAX lungo: processo muore | Manca `ob_start()` → warning corrompe JSON (GR #17) |
 | AJAX lungo: JSON corrotto | `ob_end_clean()` prima di `echo json_encode()` + `exit` |

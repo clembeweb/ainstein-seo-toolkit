@@ -1,6 +1,6 @@
 # AINSTEIN - Golden Rules
 
-**13 regole INVIOLABILI per lo sviluppo**
+**14 regole INVIOLABILI per lo sviluppo**
 
 Queste regole garantiscono consistenza, manutenibilità e qualità del codice.
 
@@ -363,6 +363,41 @@ if ($page === 1 || $error) {
 
 ---
 
+## 2️⃣2️⃣ `'user' => $user` SEMPRE in View::render()
+
+**OGNI pagina con layout DEVE passare `$user` a `View::render()`:**
+
+```php
+// ✅ CORRETTO
+public function index(): string {
+    Middleware::auth();
+    $user = Auth::user();
+    return View::render('vista', [
+        'title' => 'Titolo',
+        'user' => $user,        // ← OBBLIGATORIO!
+        'modules' => ModuleLoader::getActiveModules()
+    ]);
+}
+
+// ❌ VIETATO - Sidebar e header NON appaiono!
+public function index(): string {
+    Middleware::auth();
+    return View::render('vista', [
+        'modules' => ModuleLoader::getActiveModules()
+        // Manca 'user' → layout.php salta il blocco sidebar
+    ]);
+}
+```
+
+**Perche:** Il layout.php controlla `if (isset($user) && $user)` prima di renderizzare sidebar, header e top bar. Senza `$user` nel data array, la pagina mostra solo il contenuto grezzo senza layout.
+
+**Parametri minimi obbligatori per View::render() con layout:**
+- `'user' => $user` — per sidebar e header
+- `'modules' => ModuleLoader::getActiveModules()` — per il menu moduli nella sidebar
+- `'title' => 'Titolo'` — per il tag `<title>` nel `<head>`
+
+---
+
 ## 📋 CHECKLIST PRE-COMMIT
 
 Prima di ogni commit, verifica:
@@ -376,6 +411,7 @@ Prima di ogni commit, verifica:
 - [ ] Query SQL con prepared statements
 - [ ] CSRF token su form POST
 - [ ] `Database::reconnect()` dopo chiamate lunghe
+- [ ] `'user' => $user` passato a `View::render()` per tutte le pagine con layout
 - [ ] Scraping usa `ScraperService::scrape()` con Readability
 - [ ] Chiamate API esterne loggano con `ApiLoggerService::log()`
 
@@ -391,6 +427,7 @@ Prima di ogni commit, verifica:
 | SQL injection | `grep -r "query\(.*\$" modules/` | Usare prepare() |
 | Scraping custom | `grep -r "DOMDocument\|loadHTML" modules/` | Usare ScraperService::scrape() |
 | Chiamata API senza log | `grep -r "curl_exec\|file_get_contents.*api" services/` | Aggiungere ApiLoggerService::log() |
+| Sidebar mancante | `View::render()` senza `'user' => $user` | Aggiungere `$user = Auth::user()` e passarlo al render |
 
 ---
 
