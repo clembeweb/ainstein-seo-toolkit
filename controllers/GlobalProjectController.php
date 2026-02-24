@@ -23,7 +23,7 @@ class GlobalProjectController
     }
 
     /**
-     * Lista progetti globali
+     * Lista progetti globali (propri + condivisi)
      * GET /projects
      */
     public function index(): string
@@ -31,14 +31,64 @@ class GlobalProjectController
         Middleware::auth();
         $user = Auth::user();
 
-        $projects = $this->project->allWithModuleStats($user['id']);
+        // Recupera progetti propri e condivisi
+        $projectData = $this->project->allWithShared($user['id']);
+        $pendingInvitations = \Services\ProjectAccessService::getPendingInvitations($user['id']);
+
+        // Arricchisci progetti propri con statistiche moduli (come faceva allWithModuleStats)
+        $ownedProjects = $this->enrichWithModuleStats($projectData['owned']);
+        $sharedProjects = $this->enrichWithModuleStats($projectData['shared']);
+
+        // Mantieni compatibilita: $projects = owned per viste esistenti
+        $projects = $ownedProjects;
 
         return View::render('projects/index', [
             'title' => 'Progetti',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'projects' => $projects,
+            'ownedProjects' => $ownedProjects,
+            'sharedProjects' => $sharedProjects,
+            'pendingInvitations' => $pendingInvitations,
         ]);
+    }
+
+    /**
+     * Arricchisci array progetti con active_modules_count e last_module_activity.
+     * Replica la logica di allWithModuleStats() senza duplicare la query iniziale.
+     */
+    private function enrichWithModuleStats(array $projects): array
+    {
+        $moduleConfig = $this->project->getModuleConfig();
+
+        foreach ($projects as &$project) {
+            $activeCount = 0;
+            $lastActivity = null;
+
+            foreach ($moduleConfig as $slug => $config) {
+                try {
+                    $row = \Core\Database::fetch(
+                        "SELECT COUNT(*) as cnt, MAX(created_at) as last_at FROM {$config['table']} WHERE global_project_id = ?",
+                        [$project['id']]
+                    );
+
+                    if ($row && (int) $row['cnt'] > 0) {
+                        $activeCount++;
+                        if ($row['last_at'] && ($lastActivity === null || $row['last_at'] > $lastActivity)) {
+                            $lastActivity = $row['last_at'];
+                        }
+                    }
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+
+            $project['active_modules_count'] = $activeCount;
+            $project['last_module_activity'] = $lastActivity;
+        }
+        unset($project);
+
+        return $projects;
     }
 
     /**
@@ -125,7 +175,7 @@ class GlobalProjectController
         Middleware::auth();
         $user = Auth::user();
 
-        $project = $this->project->find($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -159,6 +209,7 @@ class GlobalProjectController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
+            'access_role' => $project['access_role'],
             'activeModules' => $activeModules,
             'moduleStats' => $moduleStats,
             'availableModules' => $availableModules,
@@ -172,7 +223,7 @@ class GlobalProjectController
     }
 
     /**
-     * Impostazioni progetto
+     * Impostazioni progetto (solo owner)
      * GET /projects/{id}/settings
      */
     public function settings(int $id): string
@@ -180,11 +231,11 @@ class GlobalProjectController
         Middleware::auth();
         $user = Auth::user();
 
-        $project = $this->project->find($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
-        if (!$project) {
-            $_SESSION['_flash']['error'] = 'Progetto non trovato';
-            Router::redirect('/projects');
+        if (!$project || $project['access_role'] !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Solo il proprietario puo modificare le impostazioni';
+            Router::redirect('/projects/' . $id);
             return '';
         }
 
@@ -193,11 +244,12 @@ class GlobalProjectController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
+            'access_role' => $project['access_role'],
         ]);
     }
 
     /**
-     * Aggiorna progetto
+     * Aggiorna progetto (solo owner)
      * POST /projects/{id}/settings
      */
     public function update(int $id): void
@@ -206,11 +258,11 @@ class GlobalProjectController
         Middleware::csrf();
         $user = Auth::user();
 
-        $project = $this->project->find($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
-        if (!$project) {
-            $_SESSION['_flash']['error'] = 'Progetto non trovato';
-            Router::redirect('/projects');
+        if (!$project || $project['access_role'] !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Solo il proprietario puo modificare le impostazioni';
+            Router::redirect('/projects/' . $id);
             return;
         }
 
@@ -261,7 +313,7 @@ class GlobalProjectController
     }
 
     /**
-     * Attiva modulo per progetto globale
+     * Attiva modulo per progetto globale (solo owner)
      * POST /projects/{id}/activate-module
      */
     public function activateModule(int $id): void
@@ -270,11 +322,11 @@ class GlobalProjectController
         Middleware::csrf();
         $user = Auth::user();
 
-        $project = $this->project->find($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
-        if (!$project) {
-            $_SESSION['_flash']['error'] = 'Progetto non trovato';
-            Router::redirect('/projects');
+        if (!$project || $project['access_role'] !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Solo il proprietario puo attivare moduli';
+            Router::redirect('/projects/' . $id);
             return;
         }
 
@@ -340,7 +392,7 @@ class GlobalProjectController
     }
 
     /**
-     * Aggiunge nuovo sito WordPress e lo collega al progetto
+     * Aggiunge nuovo sito WordPress e lo collega al progetto (solo owner)
      * POST /projects/{id}/wp-sites
      */
     public function addWpSite(int $id): void
@@ -349,10 +401,10 @@ class GlobalProjectController
         Middleware::csrf();
         $user = Auth::user();
 
-        $project = $this->project->find($id, $user['id']);
-        if (!$project) {
-            $_SESSION['_flash']['error'] = 'Progetto non trovato';
-            Router::redirect('/projects');
+        $project = $this->project->findAccessible($id, $user['id']);
+        if (!$project || $project['access_role'] !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Solo il proprietario puo gestire i siti WordPress';
+            Router::redirect('/projects/' . $id);
             return;
         }
 
@@ -412,7 +464,7 @@ class GlobalProjectController
     }
 
     /**
-     * Collega sito WordPress esistente al progetto
+     * Collega sito WordPress esistente al progetto (solo owner)
      * POST /projects/{id}/wp-sites/link
      */
     public function linkWpSite(int $id): void
@@ -421,10 +473,10 @@ class GlobalProjectController
         Middleware::csrf();
         $user = Auth::user();
 
-        $project = $this->project->find($id, $user['id']);
-        if (!$project) {
-            $_SESSION['_flash']['error'] = 'Progetto non trovato';
-            Router::redirect('/projects');
+        $project = $this->project->findAccessible($id, $user['id']);
+        if (!$project || $project['access_role'] !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Solo il proprietario puo gestire i siti WordPress';
+            Router::redirect('/projects/' . $id);
             return;
         }
 
@@ -444,7 +496,7 @@ class GlobalProjectController
     }
 
     /**
-     * Scollega sito WordPress dal progetto (senza eliminarlo)
+     * Scollega sito WordPress dal progetto (solo owner)
      * POST /projects/{id}/wp-sites/unlink
      */
     public function unlinkWpSite(int $id): void
@@ -452,6 +504,13 @@ class GlobalProjectController
         Middleware::auth();
         Middleware::csrf();
         $user = Auth::user();
+
+        $project = $this->project->findAccessible($id, $user['id']);
+        if (!$project || $project['access_role'] !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Solo il proprietario puo gestire i siti WordPress';
+            Router::redirect('/projects/' . $id);
+            return;
+        }
 
         $siteId = (int) ($_POST['site_id'] ?? 0);
         $wpSiteModel = new \Modules\AiContent\Models\WpSite();
@@ -469,7 +528,7 @@ class GlobalProjectController
     }
 
     /**
-     * Testa connessione di un sito WordPress (AJAX)
+     * Testa connessione di un sito WordPress (AJAX, solo owner)
      * POST /projects/{id}/wp-sites/test
      */
     public function testWpSite(int $id): void
@@ -479,6 +538,12 @@ class GlobalProjectController
         $user = Auth::user();
 
         header('Content-Type: application/json');
+
+        $project = $this->project->findAccessible($id, $user['id']);
+        if (!$project || $project['access_role'] !== 'owner') {
+            echo json_encode(['success' => false, 'message' => 'Accesso non autorizzato']);
+            exit;
+        }
 
         $siteId = (int) ($_POST['site_id'] ?? 0);
         $wpSiteModel = new \Modules\AiContent\Models\WpSite();
@@ -759,7 +824,7 @@ class GlobalProjectController
     }
 
     /**
-     * Elimina progetto
+     * Elimina progetto (solo owner)
      * POST /projects/{id}/delete
      */
     public function destroy(int $id): void
@@ -768,11 +833,11 @@ class GlobalProjectController
         Middleware::csrf();
         $user = Auth::user();
 
-        $project = $this->project->find($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
-        if (!$project) {
-            $_SESSION['_flash']['error'] = 'Progetto non trovato';
-            Router::redirect('/projects');
+        if (!$project || $project['access_role'] !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Solo il proprietario puo eliminare il progetto';
+            Router::redirect('/projects/' . $id);
             return;
         }
 
