@@ -2,9 +2,12 @@
 /**
  * Temporary migration runner - DELETE after use
  */
-require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/config/environment.php';
 
-$pdo = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NAME, DB_USER, DB_PASS);
+$config = require __DIR__ . '/config/database.php';
+
+$dsn = 'mysql:host=' . $config['host'] . ';dbname=' . $config['dbname'] . ';charset=' . ($config['charset'] ?? 'utf8mb4');
+$pdo = new PDO($dsn, $config['username'], $config['password']);
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 $files = [
