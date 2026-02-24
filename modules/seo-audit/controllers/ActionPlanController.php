@@ -130,7 +130,7 @@ class ActionPlanController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->projectModel->find($id, $user['id']);
+        $project = $this->projectModel->findAccessible($id, $user['id']);
 
         if (!$project) {
             http_response_code(404);
@@ -158,7 +158,7 @@ class ActionPlanController
     public function export(int $id): void
     {
         $user = Auth::user();
-        $project = $this->projectModel->find($id, $user['id']);
+        $project = $this->projectModel->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -196,7 +196,7 @@ class ActionPlanController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->projectModel->find($id, $user['id']);
+        $project = $this->projectModel->findAccessible($id, $user['id']);
 
         if (!$project) {
             http_response_code(404);
@@ -235,7 +235,7 @@ class ActionPlanController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->projectModel->find($id, $user['id']);
+        $project = $this->projectModel->findAccessible($id, $user['id']);
 
         if (!$project) {
             http_response_code(404);

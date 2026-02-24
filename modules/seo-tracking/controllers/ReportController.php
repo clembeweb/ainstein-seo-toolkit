@@ -33,7 +33,7 @@ class ReportController
     public function index(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -72,7 +72,7 @@ class ReportController
             exit;
         }
 
-        $project = $this->project->find($report['project_id'], $user['id']);
+        $project = $this->project->findAccessible($report['project_id'], $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -95,7 +95,7 @@ class ReportController
     public function create(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -123,7 +123,7 @@ class ReportController
     public function generate(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -167,7 +167,7 @@ class ReportController
             return;
         }
 
-        $project = $this->project->find($report['project_id'], $user['id']);
+        $project = $this->project->findAccessible($report['project_id'], $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -195,7 +195,7 @@ class ReportController
             return;
         }
 
-        $project = $this->project->find($report['project_id'], $user['id']);
+        $project = $this->project->findAccessible($report['project_id'], $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';

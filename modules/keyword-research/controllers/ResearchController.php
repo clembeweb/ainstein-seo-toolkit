@@ -61,7 +61,7 @@ class ResearchController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->projectModel->find($projectId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato.']);
@@ -104,7 +104,7 @@ class ResearchController
     public function collectionStream(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->projectModel->find($projectId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             header('Content-Type: application/json');
@@ -113,7 +113,7 @@ class ResearchController
         }
 
         $researchId = (int) ($_GET['research_id'] ?? 0);
-        $research = $this->researchModel->find($researchId, $user['id']);
+        $research = $this->researchModel->find($researchId);
 
         if (!$research || $research['project_id'] !== $projectId) {
             header('Content-Type: application/json');
@@ -264,7 +264,7 @@ class ResearchController
 
         $user = Auth::user();
         $researchId = (int) ($_GET['research_id'] ?? 0);
-        $research = $this->researchModel->find($researchId, $user['id']);
+        $research = $this->researchModel->find($researchId);
 
         if (!$research || $research['project_id'] !== $projectId) {
             echo json_encode(['success' => false, 'error' => 'Ricerca non trovata.']);
@@ -317,7 +317,7 @@ class ResearchController
         }
 
         $researchId = (int) ($_POST['research_id'] ?? 0);
-        $research = $this->researchModel->find($researchId, $user['id']);
+        $research = $this->researchModel->find($researchId);
 
         if (!$research || $research['project_id'] !== $projectId) {
             echo json_encode(['success' => false, 'error' => 'Ricerca non trovata.']);
@@ -562,7 +562,7 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
             exit;
         }
 
-        $research = $this->researchModel->find($researchId, $user['id']);
+        $research = $this->researchModel->find($researchId);
 
         if (!$research || $research['project_id'] !== $projectId) {
             $_SESSION['_flash']['error'] = 'Ricerca non trovata.';
@@ -609,8 +609,8 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
     public function exportCsv(int $projectId, int $researchId): void
     {
         $user = Auth::user();
-        $project = $this->projectModel->find($projectId, $user['id']);
-        $research = $this->researchModel->find($researchId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
+        $research = $this->researchModel->find($researchId);
 
         if (!$project || !$research || $research['project_id'] !== $projectId) {
             $_SESSION['_flash']['error'] = 'Dati non trovati.';

@@ -317,7 +317,7 @@ class AuditController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->projectModel->find($id, $user['id']);
+        $project = $this->projectModel->findAccessible($id, $user['id']);
 
         if (!$project) {
             echo json_encode(['error' => true, 'message' => 'Progetto non trovato']);
@@ -383,7 +383,7 @@ class AuditController
     public function history(int $id): string
     {
         $user = Auth::user();
-        $project = $this->projectModel->find($id, $user['id']);
+        $project = $this->projectModel->findAccessible($id, $user['id']);
 
         if (!$project) {
             Router::redirect('/seo-audit');

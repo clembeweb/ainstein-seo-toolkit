@@ -50,7 +50,7 @@ class WordPressController
         // If projectId specified, verify ownership
         if ($projectId !== null) {
             $projectModel = new Project();
-            $project = $projectModel->find($projectId, $user['id']);
+            $project = $projectModel->findAccessible($projectId, $user['id']);
 
             if (!$project) {
                 $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -317,8 +317,8 @@ class WordPressController
             $this->jsonResponse(['success' => false, 'error' => 'Seleziona un sito WordPress']);
         }
 
-        // Verify article ownership and status
-        $article = $this->article->find($articleId, $user['id']);
+        // Verify article exists and status
+        $article = $this->article->find($articleId);
 
         if (!$article) {
             $this->jsonResponse(['success' => false, 'error' => 'Articolo non trovato']);
@@ -335,8 +335,8 @@ class WordPressController
             $this->jsonResponse(['success' => false, 'error' => 'L\'articolo non ha contenuto']);
         }
 
-        // Verify WordPress site ownership
-        $wpSite = $this->wpSite->find($wpSiteId, $user['id']);
+        // Verify WordPress site exists
+        $wpSite = $this->wpSite->find($wpSiteId);
 
         if (!$wpSite) {
             $this->jsonResponse(['success' => false, 'error' => 'Sito WordPress non trovato']);

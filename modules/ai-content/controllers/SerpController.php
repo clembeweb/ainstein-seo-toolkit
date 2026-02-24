@@ -36,7 +36,7 @@ class SerpController
         $user = Auth::user();
 
         // Find keyword
-        $keyword = $this->keyword->find($id, $user['id']);
+        $keyword = $this->keyword->find($id);
 
         if (!$keyword) {
             echo json_encode(['success' => false, 'error' => 'Keyword non trovata']);
@@ -104,7 +104,7 @@ class SerpController
         $user = Auth::user();
 
         // Get keyword with SERP data
-        $keyword = $this->keyword->findWithSerp($id, $user['id']);
+        $keyword = $this->keyword->findWithSerp($id);
 
         if (!$keyword) {
             $_SESSION['_flash']['error'] = 'Keyword non trovata';

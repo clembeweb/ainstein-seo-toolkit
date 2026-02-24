@@ -50,7 +50,7 @@ class ArticleController
         // Se projectId specificato, verifica ownership e filtra
         if ($projectId !== null) {
             $projectModel = new Project();
-            $project = $projectModel->find($projectId, $user['id']);
+            $project = $projectModel->findAccessible($projectId, $user['id']);
 
             if (!$project) {
                 $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -95,7 +95,7 @@ class ArticleController
         // Se projectId specificato, verifica ownership
         if ($projectId !== null) {
             $projectModel = new Project();
-            $project = $projectModel->find($projectId, $user['id']);
+            $project = $projectModel->findAccessible($projectId, $user['id']);
 
             if (!$project) {
                 $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -104,7 +104,7 @@ class ArticleController
             }
         }
 
-        $article = $this->article->findWithRelations($id, $user['id']);
+        $article = $this->article->findWithRelations($id);
 
         if (!$article) {
             $_SESSION['_flash']['error'] = 'Articolo non trovato';
@@ -163,8 +163,8 @@ class ArticleController
             exit;
         }
 
-        // Verify keyword ownership
-        $keyword = $this->keyword->find($keywordId, $user['id']);
+        // Verify keyword exists
+        $keyword = $this->keyword->find($keywordId);
         if (!$keyword) {
             echo json_encode(['success' => false, 'error' => 'Keyword non trovata']);
             exit;
@@ -258,7 +258,7 @@ class ArticleController
         $user = Auth::user();
 
         // Verify ownership
-        $article = $this->article->find($id, $user['id']);
+        $article = $this->article->find($id);
         if (!$article) {
             http_response_code(404);
             exit;
@@ -333,7 +333,7 @@ class ArticleController
         $user = Auth::user();
 
         // Verify ownership
-        $article = $this->article->find($id, $user['id']);
+        $article = $this->article->find($id);
         if (!$article) {
             if ($this->isAjax()) {
                 header('Content-Type: application/json');
@@ -369,7 +369,7 @@ class ArticleController
                 'meta_description' => $metaDescription,
                 'word_count' => str_word_count(strip_tags($content)),
                 'updated_at' => date('Y-m-d H:i:s')
-            ], $user['id']);
+            ]);
 
             if ($this->isAjax()) {
                 header('Content-Type: application/json');
@@ -400,7 +400,7 @@ class ArticleController
         $user = Auth::user();
 
         // Verify ownership
-        $article = $this->article->find($id, $user['id']);
+        $article = $this->article->find($id);
 
         // Get project_id for redirect (before deletion)
         $projectId = $article['project_id'] ?? null;
@@ -426,7 +426,7 @@ class ArticleController
             $this->source->deleteByArticle($id);
 
             // Delete article
-            $this->article->delete($id, $user['id']);
+            $this->article->delete($id);
 
             $_SESSION['_flash']['success'] = 'Articolo eliminato';
 
@@ -450,7 +450,7 @@ class ArticleController
         $user = Auth::user();
 
         // Verify ownership
-        $article = $this->article->find($id, $user['id']);
+        $article = $this->article->find($id);
         if (!$article) {
             echo json_encode(['success' => false, 'error' => 'Articolo non trovato']);
             exit;
@@ -565,7 +565,7 @@ class ArticleController
         $user = Auth::user();
 
         // Verify ownership
-        $article = $this->article->find($id, $user['id']);
+        $article = $this->article->find($id);
         if (!$article) {
             echo json_encode(['success' => false, 'error' => 'Articolo non trovato']);
             exit;
@@ -694,7 +694,7 @@ class ArticleController
 
         $user = Auth::user();
 
-        $article = $this->article->findWithRelations($id, $user['id']);
+        $article = $this->article->findWithRelations($id);
         if (!$article) {
             echo json_encode(['success' => false, 'error' => 'Articolo non trovato']);
             exit;
@@ -774,7 +774,7 @@ class ArticleController
 
         $user = Auth::user();
 
-        $article = $this->article->find($id, $user['id']);
+        $article = $this->article->find($id);
         if (!$article) {
             echo json_encode(['success' => false, 'error' => 'Articolo non trovato']);
             exit;
@@ -802,7 +802,7 @@ class ArticleController
     {
         $user = Auth::user();
 
-        $article = $this->article->find($id, $user['id']);
+        $article = $this->article->find($id);
         if (!$article || empty($article['cover_image_path'])) {
             http_response_code(404);
             exit;

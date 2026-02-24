@@ -41,7 +41,7 @@ class AutoController
      */
     private function getAutoProject(int $id, int $userId): ?array
     {
-        $project = $this->project->find($id, $userId);
+        $project = $this->project->findAccessible($id, $userId);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -366,7 +366,7 @@ class AutoController
         }
 
         try {
-            $deleted = $this->queue->delete($queueId, $user['id']);
+            $deleted = $this->queue->delete($queueId);
 
             if ($deleted) {
                 $_SESSION['_flash']['success'] = 'Keyword rimossa dalla coda';
@@ -425,7 +425,7 @@ class AutoController
             return;
         }
 
-        $item = $this->queue->find($queueId, $user['id']);
+        $item = $this->queue->find($queueId);
 
         if (!$item || $item['status'] !== 'error') {
             $_SESSION['_flash']['error'] = 'Item non trovato o non in stato di errore';
@@ -466,7 +466,7 @@ class AutoController
         // Verifica che l'item appartenga al progetto e sia pending
         $item = $this->queue->findById($queueId);
 
-        if (!$item || $item['project_id'] !== $id || $item['user_id'] !== $user['id']) {
+        if (!$item || $item['project_id'] !== $id) {
             echo json_encode(['success' => false, 'error' => 'Item non trovato']);
             return;
         }
@@ -507,7 +507,7 @@ class AutoController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project || $project['type'] !== 'auto') {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -571,7 +571,7 @@ class AutoController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project || $project['type'] !== 'auto') {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -654,7 +654,7 @@ class AutoController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project || $project['type'] !== 'auto') {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -720,7 +720,7 @@ class AutoController
         $userId = $user['id'];
 
         // Verifica progetto
-        $project = $this->project->find($id, $userId);
+        $project = $this->project->findAccessible($id, $userId);
         if (!$project || $project['type'] !== 'auto') {
             // Possiamo ancora usare la sessione qui per errori
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -745,7 +745,7 @@ class AutoController
         // Load WP site for publishing (richiede userId)
         $wpSite = null;
         if ($autoPublish && $wpSiteId) {
-            $wpSite = $this->wpSite->find($wpSiteId, $userId);
+            $wpSite = $this->wpSite->find($wpSiteId);
         }
 
         // ===========================================

@@ -72,7 +72,7 @@ Router::post('/ads-analyzer/projects/store', function () {
 Router::get('/ads-analyzer/projects/{id}', function ($id) {
     Middleware::auth();
     $user = \Core\Auth::user();
-    $project = \Modules\AdsAnalyzer\Models\Project::findByUserAndId($user['id'], (int) $id);
+    $project = \Modules\AdsAnalyzer\Models\Project::findAccessible($user['id'], (int) $id);
 
     if (!$project) {
         $_SESSION['flash_error'] = 'Progetto non trovato';

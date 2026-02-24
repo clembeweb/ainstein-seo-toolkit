@@ -142,7 +142,7 @@ Router::post('/internal-links/project/{id}/urls/import', function ($id) {
 
     $user = Auth::user();
     $projectModel = new Project();
-    $project = $projectModel->find((int) $id, $user['id']);
+    $project = $projectModel->findAccessible((int) $id, $user['id']);
 
     if (!$project) {
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
@@ -204,7 +204,7 @@ Router::post('/internal-links/url/{id}/delete', function ($id) {
 
     // Verify ownership via project
     $projectModel = new Project();
-    $project = $projectModel->find($url['project_id'], $user['id']);
+    $project = $projectModel->findAccessible($url['project_id'], $user['id']);
 
     if (!$project) {
         header('Location: ' . url('/internal-links'));
@@ -263,7 +263,7 @@ Router::post('/internal-links/project/{id}/scrape/start', function ($id) {
 
     $user = Auth::user();
     $projectModel = new Project();
-    $project = $projectModel->find((int) $id, $user['id']);
+    $project = $projectModel->findAccessible((int) $id, $user['id']);
 
     if (!$project) {
         echo json_encode(['error' => 'Progetto non trovato']);
@@ -301,7 +301,7 @@ Router::get('/internal-links/project/{id}/scrape/status', function ($id) {
 
     $user = Auth::user();
     $projectModel = new Project();
-    $project = $projectModel->find((int) $id, $user['id']);
+    $project = $projectModel->findAccessible((int) $id, $user['id']);
 
     if (!$project) {
         echo json_encode(['error' => 'Progetto non trovato']);
@@ -327,7 +327,7 @@ Router::post('/internal-links/project/{id}/scrape/batch', function ($id) {
     try {
         $user = Auth::user();
         $projectModel = new Project();
-        $project = $projectModel->find((int) $id, $user['id']);
+        $project = $projectModel->findAccessible((int) $id, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -416,7 +416,7 @@ Router::post('/internal-links/project/{id}/scrape/reset', function ($id) {
 
     $user = Auth::user();
     $projectModel = new Project();
-    $project = $projectModel->find((int) $id, $user['id']);
+    $project = $projectModel->findAccessible((int) $id, $user['id']);
 
     if (!$project) {
         $_SESSION['flash_error'] = 'Progetto non trovato';
@@ -554,7 +554,7 @@ Router::post('/internal-links/project/{id}/analysis/start', function ($id) {
 
     $user = Auth::user();
     $projectModel = new Project();
-    $project = $projectModel->find((int) $id, $user['id']);
+    $project = $projectModel->findAccessible((int) $id, $user['id']);
 
     if (!$project) {
         echo json_encode(['error' => 'Progetto non trovato']);
@@ -767,7 +767,7 @@ Router::post('/internal-links/project/{id}/urls/store', function ($id) {
 
     $user = Auth::user();
     $projectModel = new Project();
-    $project = $projectModel->find((int) $id, $user['id']);
+    $project = $projectModel->findAccessible((int) $id, $user['id']);
 
     if (!$project) {
         $_SESSION['flash_error'] = 'Progetto non trovato';
@@ -848,7 +848,7 @@ Router::post('/internal-links/project/{id}/urls/delete/{urlId}', function ($id, 
 
     $user = Auth::user();
     $projectModel = new Project();
-    $project = $projectModel->find((int) $id, $user['id']);
+    $project = $projectModel->findAccessible((int) $id, $user['id']);
 
     if (!$project) {
         $_SESSION['flash_error'] = 'Progetto non trovato';
@@ -884,7 +884,7 @@ Router::post('/internal-links/project/{id}/urls/bulk', function ($id) {
     try {
         $user = Auth::user();
         $projectModel = new Project();
-        $project = $projectModel->find((int) $id, $user['id']);
+        $project = $projectModel->findAccessible((int) $id, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1247,7 +1247,7 @@ Router::post('/internal-links/project/{id}/compare/create', function ($id) {
 
     $user = Auth::user();
     $projectModel = new Project();
-    $project = $projectModel->find((int) $id, $user['id']);
+    $project = $projectModel->findAccessible((int) $id, $user['id']);
 
     if (!$project) {
         $_SESSION['flash_error'] = 'Progetto non trovato';
@@ -1287,7 +1287,7 @@ Router::post('/internal-links/project/{id}/compare/delete/{snapshotId}', functio
 
     $user = Auth::user();
     $projectModel = new Project();
-    $project = $projectModel->find((int) $id, $user['id']);
+    $project = $projectModel->findAccessible((int) $id, $user['id']);
 
     if (!$project) {
         $_SESSION['flash_error'] = 'Progetto non trovato';
@@ -1296,7 +1296,7 @@ Router::post('/internal-links/project/{id}/compare/delete/{snapshotId}', functio
     }
 
     $snapshotModel = new Snapshot();
-    $snapshot = $snapshotModel->find((int) $snapshotId, $user['id']);
+    $snapshot = $snapshotModel->find((int) $snapshotId);
 
     if (!$snapshot || $snapshot['project_id'] != $id) {
         $_SESSION['flash_error'] = __('Snapshot not found');
@@ -1410,7 +1410,7 @@ Router::post('/internal-links/api/sitemap-discover', function () {
     $projectId = (int) ($_POST['project_id'] ?? json_decode(file_get_contents('php://input'), true)['project_id'] ?? 0);
 
     $projectModel = new Project();
-    $project = $projectModel->find($projectId, $user['id']);
+    $project = $projectModel->findAccessible($projectId, $user['id']);
 
     if (!$project) {
         echo json_encode(['error' => 'Progetto non trovato']);
@@ -1440,7 +1440,7 @@ Router::post('/internal-links/api/sitemap', function () {
         $action = $input['action'] ?? 'preview';
 
         $projectModel = new Project();
-        $project = $projectModel->find($projectId, $user['id']);
+        $project = $projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1519,7 +1519,7 @@ Router::post('/internal-links/api/analyze', function () {
     $batchSize = min((int) ($input['batch_size'] ?? 25), 50);
 
     $projectModel = new Project();
-    $project = $projectModel->find($projectId, $user['id']);
+    $project = $projectModel->findAccessible($projectId, $user['id']);
 
     if (!$project) {
         echo json_encode(['error' => 'Progetto non trovato']);
@@ -1617,7 +1617,7 @@ Router::post('/internal-links/project/{id}/links/delete/{linkId}', function ($id
 
     $user = Auth::user();
     $projectModel = new Project();
-    $project = $projectModel->find((int) $id, $user['id']);
+    $project = $projectModel->findAccessible((int) $id, $user['id']);
 
     if (!$project) {
         $_SESSION['flash_error'] = 'Progetto non trovato';
@@ -1653,7 +1653,7 @@ Router::post('/internal-links/project/{id}/links/bulk', function ($id) {
     try {
         $user = Auth::user();
         $projectModel = new Project();
-        $project = $projectModel->find((int) $id, $user['id']);
+        $project = $projectModel->findAccessible((int) $id, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1709,7 +1709,7 @@ Router::post('/internal-links/project/{id}/links/bulk-anchors', function ($id) {
     try {
         $user = Auth::user();
         $projectModel = new Project();
-        $project = $projectModel->find((int) $id, $user['id']);
+        $project = $projectModel->findAccessible((int) $id, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1757,7 +1757,7 @@ Router::get('/internal-links/project/{id}/export', function ($id) {
 
     $user = Auth::user();
     $projectModel = new Project();
-    $project = $projectModel->find((int) $id, $user['id']);
+    $project = $projectModel->findAccessible((int) $id, $user['id']);
 
     if (!$project) {
         $_SESSION['flash_error'] = 'Progetto non trovato';

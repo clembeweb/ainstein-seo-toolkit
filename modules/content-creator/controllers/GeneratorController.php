@@ -38,7 +38,7 @@ class GeneratorController
      */
     private function getProject(int $id, int $userId): ?array
     {
-        $project = $this->project->findByUser($id, $userId);
+        $project = $this->project->findAccessible($id, $userId);
         if (!$project) {
             return null;
         }

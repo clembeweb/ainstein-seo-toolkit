@@ -191,7 +191,7 @@ class ProjectController
     public function duplicate(int $id): void
     {
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $id);
+        $project = Project::findAccessible($user['id'], $id);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
@@ -219,7 +219,7 @@ class ProjectController
     public function toggleArchive(int $id): void
     {
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $id);
+        $project = Project::findAccessible($user['id'], $id);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';

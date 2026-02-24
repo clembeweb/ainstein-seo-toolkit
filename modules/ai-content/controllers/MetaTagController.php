@@ -43,7 +43,7 @@ class MetaTagController
      */
     private function getProject(int $id, int $userId): ?array
     {
-        $project = $this->project->find($id, $userId);
+        $project = $this->project->findAccessible($id, $userId);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -81,7 +81,7 @@ class MetaTagController
         $wpSite = null;
         if ($project['wp_site_id']) {
             $wpSiteModel = new WpSite();
-            $wpSite = $wpSiteModel->find($project['wp_site_id'], $user['id']);
+            $wpSite = $wpSiteModel->find($project['wp_site_id']);
         }
 
         return View::render('ai-content/meta-tags/dashboard', [
@@ -179,7 +179,7 @@ class MetaTagController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -236,7 +236,7 @@ class MetaTagController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -283,7 +283,7 @@ class MetaTagController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -300,7 +300,7 @@ class MetaTagController
         }
 
         $wpSiteModel = new WpSite();
-        $wpSite = $wpSiteModel->find($wpSiteId, $user['id']);
+        $wpSite = $wpSiteModel->find($wpSiteId);
 
         if (!$wpSite) {
             echo json_encode(['success' => false, 'error' => 'Sito WordPress non trovato']);
@@ -397,7 +397,7 @@ class MetaTagController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -483,7 +483,7 @@ class MetaTagController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -554,7 +554,7 @@ class MetaTagController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -647,7 +647,7 @@ class MetaTagController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -860,7 +860,7 @@ PROMPT;
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -906,7 +906,7 @@ PROMPT;
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -942,7 +942,7 @@ PROMPT;
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -979,7 +979,7 @@ PROMPT;
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1004,7 +1004,7 @@ PROMPT;
         }
 
         $wpSiteModel = new WpSite();
-        $wpSite = $wpSiteModel->find($metaTag['wp_site_id'], $user['id']);
+        $wpSite = $wpSiteModel->find($metaTag['wp_site_id']);
 
         if (!$wpSite) {
             echo json_encode(['success' => false, 'error' => 'Sito WordPress non trovato']);
@@ -1079,7 +1079,7 @@ PROMPT;
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1140,7 +1140,7 @@ PROMPT;
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1177,7 +1177,7 @@ PROMPT;
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1208,7 +1208,7 @@ PROMPT;
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1236,7 +1236,7 @@ PROMPT;
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1268,7 +1268,7 @@ PROMPT;
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1340,7 +1340,7 @@ PROMPT;
             exit('Unauthorized');
         }
 
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
         if (!$project) {
             header('HTTP/1.1 404 Not Found');
             exit('Progetto non trovato');
@@ -1521,7 +1521,7 @@ PROMPT;
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1557,7 +1557,7 @@ PROMPT;
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1604,7 +1604,7 @@ PROMPT;
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1685,7 +1685,7 @@ PROMPT;
             exit('Unauthorized');
         }
 
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
         if (!$project) {
             header('HTTP/1.1 404 Not Found');
             exit('Progetto non trovato');
@@ -1875,7 +1875,7 @@ PROMPT;
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1911,7 +1911,7 @@ PROMPT;
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);

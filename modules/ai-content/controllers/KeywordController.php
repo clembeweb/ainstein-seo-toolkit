@@ -42,7 +42,7 @@ class KeywordController
         $user = Auth::user();
 
         // Load keyword with ownership check
-        $keyword = $this->keyword->find($id, $user['id']);
+        $keyword = $this->keyword->find($id);
 
         // Redirect URL
         $redirectUrl = $projectId
@@ -64,7 +64,7 @@ class KeywordController
         $project = null;
         if ($projectId !== null) {
             $projectModel = new Project();
-            $project = $projectModel->find($projectId, $user['id']);
+            $project = $projectModel->findAccessible($projectId, $user['id']);
         }
 
         // Load SERP results
@@ -251,7 +251,7 @@ class KeywordController
         // Se projectId specificato, verifica ownership e filtra per progetto
         if ($projectId !== null) {
             $projectModel = new Project();
-            $project = $projectModel->find($projectId, $user['id']);
+            $project = $projectModel->findAccessible($projectId, $user['id']);
 
             if (!$project) {
                 $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -340,7 +340,7 @@ class KeywordController
         $user = Auth::user();
 
         // Check if keyword has articles
-        $keyword = $this->keyword->find($id, $user['id']);
+        $keyword = $this->keyword->find($id);
 
         // Redirect URL
         $redirectUrl = $projectId
@@ -370,7 +370,7 @@ class KeywordController
         }
 
         try {
-            $this->keyword->delete($id, $user['id']);
+            $this->keyword->delete($id);
             $_SESSION['_flash']['success'] = 'Keyword eliminata';
         } catch (\Exception $e) {
             $_SESSION['_flash']['error'] = 'Errore durante l\'eliminazione';
@@ -400,7 +400,7 @@ class KeywordController
 
         foreach ($ids as $id) {
             $id = (int) $id;
-            $keyword = $this->keyword->find($id, $user['id']);
+            $keyword = $this->keyword->find($id);
             if (!$keyword) continue;
 
             // Skip keywords with articles
@@ -410,7 +410,7 @@ class KeywordController
                 continue;
             }
 
-            $this->keyword->delete($id, $user['id']);
+            $this->keyword->delete($id);
             $deleted++;
         }
 

@@ -150,7 +150,7 @@ class QuickCheckController
 
         // Verifica ownership progetto
         $stProject = new \Modules\SeoTracking\Models\Project();
-        $project = $stProject->find($projectId, $user['id']);
+        $project = $stProject->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato.']);
@@ -218,7 +218,7 @@ class QuickCheckController
         }
 
         $stProject = new \Modules\SeoTracking\Models\Project();
-        $project = $stProject->find($projectId, $user['id']);
+        $project = $stProject->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => true, 'groups' => []]);

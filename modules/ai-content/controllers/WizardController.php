@@ -52,7 +52,7 @@ class WizardController
         $input = json_decode($rawInput, true) ?? [];
 
         // Find keyword
-        $keyword = $this->keyword->find($keywordId, $user['id']);
+        $keyword = $this->keyword->find($keywordId);
         if (!$keyword) {
             echo json_encode(['success' => false, 'error' => 'Keyword non trovata']);
             exit;
@@ -207,7 +207,7 @@ class WizardController
         $briefData = $input['briefData'] ?? [];
 
         // Find keyword
-        $keyword = $this->keyword->find($keywordId, $user['id']);
+        $keyword = $this->keyword->find($keywordId);
         if (!$keyword) {
             echo json_encode(['success' => false, 'error' => 'Keyword non trovata']);
             exit;
@@ -224,7 +224,7 @@ class WizardController
 
         try {
             // Get article
-            $article = $articleId ? $this->article->find($articleId, $user['id']) : null;
+            $article = $articleId ? $this->article->find($articleId) : null;
             if (!$article) {
                 echo json_encode(['success' => false, 'error' => 'Articolo non trovato. Genera prima il brief.']);
                 exit;

@@ -435,7 +435,7 @@ Router::get('/seo-tracking/project/{id}/debug-serp', function ($id) {
     Middleware::auth();
 
     $user = \Core\Auth::user();
-    $project = (new \Modules\SeoTracking\Models\Project())->find((int) $id, $user['id']);
+    $project = (new \Modules\SeoTracking\Models\Project())->findAccessible((int) $id, $user['id']);
 
     if (!$project) {
         return \Core\View::json(['error' => 'Progetto non trovato'], 404);

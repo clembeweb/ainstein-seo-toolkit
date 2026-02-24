@@ -368,7 +368,7 @@ Router::post('/seo-audit/api/sitemap-discover', function () {
     $projectId = (int) ($input['project_id'] ?? 0);
 
     $projectModel = new Project();
-    $project = $projectModel->find($projectId, $user['id']);
+    $project = $projectModel->findAccessible($projectId, $user['id']);
 
     if (!$project) {
         echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -398,7 +398,7 @@ Router::post('/seo-audit/api/sitemap', function () {
         $action = $input['action'] ?? 'preview';
 
         $projectModel = new Project();
-        $project = $projectModel->find($projectId, $user['id']);
+        $project = $projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -487,7 +487,7 @@ Router::post('/seo-audit/api/spider', function () {
         $userAgent = $userAgents[$userAgentSetting] ?? $userAgentSetting;
 
         $projectModel = new Project();
-        $project = $projectModel->find($projectId, $user['id']);
+        $project = $projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);

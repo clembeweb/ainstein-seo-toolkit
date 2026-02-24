@@ -34,7 +34,7 @@ class ExportController
     public function keywords(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -67,7 +67,7 @@ class ExportController
     public function gscData(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -102,7 +102,7 @@ class ExportController
     public function full(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';

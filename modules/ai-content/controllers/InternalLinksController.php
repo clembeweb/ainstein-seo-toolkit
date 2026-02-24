@@ -37,7 +37,7 @@ class InternalLinksController
      */
     private function getProject(int $id, int $userId): ?array
     {
-        $project = $this->project->find($id, $userId);
+        $project = $this->project->findAccessible($id, $userId);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -127,7 +127,7 @@ class InternalLinksController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -184,7 +184,7 @@ class InternalLinksController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -233,7 +233,7 @@ class InternalLinksController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -271,7 +271,7 @@ class InternalLinksController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -394,7 +394,7 @@ class InternalLinksController
     public function update(int $projectId, int $linkId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -433,7 +433,7 @@ class InternalLinksController
     public function delete(int $projectId, int $linkId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -468,7 +468,7 @@ class InternalLinksController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -503,7 +503,7 @@ class InternalLinksController
     public function bulk(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -557,7 +557,7 @@ class InternalLinksController
     public function resetErrors(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -586,7 +586,7 @@ class InternalLinksController
     public function clear(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -611,7 +611,7 @@ class InternalLinksController
     public function storeCsv(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -705,7 +705,7 @@ class InternalLinksController
     public function storeManual(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';

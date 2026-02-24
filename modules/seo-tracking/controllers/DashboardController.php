@@ -476,7 +476,7 @@ class DashboardController
     public function deleteKeyword(int $projectId, int $keywordId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $this->jsonResponse(['success' => false, 'error' => 'Progetto non trovato'], 404);
@@ -497,7 +497,7 @@ class DashboardController
     public function bulkDeleteKeywords(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $this->jsonResponse(['success' => false, 'error' => 'Progetto non trovato'], 404);

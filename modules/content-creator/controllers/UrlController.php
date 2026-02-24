@@ -38,7 +38,7 @@ class UrlController
      */
     private function getProject(int $id, int $userId): ?array
     {
-        $project = $this->project->findByUser($id, $userId);
+        $project = $this->project->findAccessible($id, $userId);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -85,7 +85,7 @@ class UrlController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->findByUser($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -182,7 +182,7 @@ class UrlController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->findByUser($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -229,7 +229,7 @@ class UrlController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->findByUser($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -315,7 +315,7 @@ class UrlController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->findByUser($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -384,7 +384,7 @@ class UrlController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->findByUser($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -441,7 +441,7 @@ class UrlController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->findByUser($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -478,7 +478,7 @@ class UrlController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->findByUser($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -515,7 +515,7 @@ class UrlController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->findByUser($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -543,7 +543,7 @@ class UrlController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->findByUser($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -571,7 +571,7 @@ class UrlController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->findByUser($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -624,7 +624,7 @@ class UrlController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->findByUser($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -655,7 +655,7 @@ class UrlController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->findByUser($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -686,7 +686,7 @@ class UrlController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->findByUser($id, $user['id']);
+        $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);

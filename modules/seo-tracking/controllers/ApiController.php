@@ -37,7 +37,7 @@ class ApiController
     private function checkProject(int $id): ?array
     {
         $user = Auth::user();
-        return $this->project->find($id, $user['id']);
+        return $this->project->findAccessible($id, $user['id']);
     }
 
     /**

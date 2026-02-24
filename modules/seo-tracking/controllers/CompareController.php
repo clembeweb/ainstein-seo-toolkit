@@ -21,7 +21,7 @@ class CompareController
     {
         $user = Auth::user();
         $projectModel = new Project();
-        $project = $projectModel->find($projectId, $user['id']);
+        $project = $projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
@@ -86,7 +86,7 @@ class CompareController
 
         $user = Auth::user();
         $projectModel = new Project();
-        $project = $projectModel->find($projectId, $user['id']);
+        $project = $projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['error' => 'Progetto non trovato']);
@@ -128,7 +128,7 @@ class CompareController
     {
         $user = Auth::user();
         $projectModel = new Project();
-        $project = $projectModel->find($projectId, $user['id']);
+        $project = $projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';

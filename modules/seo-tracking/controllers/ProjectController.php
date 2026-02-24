@@ -258,7 +258,7 @@ class ProjectController
     public function stopSync(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             jsonResponse(['success' => false, 'error' => 'Progetto non trovato']);

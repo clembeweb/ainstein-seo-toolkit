@@ -36,7 +36,7 @@ class AlertController
     public function index(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -78,7 +78,7 @@ class AlertController
             exit;
         }
 
-        $project = $this->project->find($alert['project_id'], $user['id']);
+        $project = $this->project->findAccessible($alert['project_id'], $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -112,7 +112,7 @@ class AlertController
             return View::json(['error' => 'Alert non trovato'], 404);
         }
 
-        $project = $this->project->find($alert['project_id'], $user['id']);
+        $project = $this->project->findAccessible($alert['project_id'], $user['id']);
 
         if (!$project) {
             return View::json(['error' => 'Accesso negato'], 403);
@@ -129,7 +129,7 @@ class AlertController
     public function markAllRead(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -155,7 +155,7 @@ class AlertController
             return View::json(['error' => 'Alert non trovato'], 404);
         }
 
-        $project = $this->project->find($alert['project_id'], $user['id']);
+        $project = $this->project->findAccessible($alert['project_id'], $user['id']);
 
         if (!$project) {
             return View::json(['error' => 'Accesso negato'], 403);
@@ -172,7 +172,7 @@ class AlertController
     public function runCheck(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -197,7 +197,7 @@ class AlertController
     public function unreadCount(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             return View::json(['error' => 'Progetto non trovato'], 404);

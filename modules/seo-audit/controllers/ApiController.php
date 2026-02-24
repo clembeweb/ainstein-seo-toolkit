@@ -34,7 +34,7 @@ class ApiController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->projectModel->find($projectId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);

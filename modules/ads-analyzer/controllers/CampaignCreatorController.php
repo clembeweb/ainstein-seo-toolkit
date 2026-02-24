@@ -78,7 +78,7 @@ class CampaignCreatorController
 
         try {
             $user = Auth::user();
-            $project = Project::findByUserAndId($user['id'], $id);
+            $project = Project::findAccessible($user['id'], $id);
 
             if (!$project || $project['type'] !== 'campaign-creator') {
                 ob_end_clean();
@@ -189,7 +189,7 @@ class CampaignCreatorController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $id);
+        $project = Project::findAccessible($user['id'], $id);
 
         if (!$project || $project['type'] !== 'campaign-creator') {
             http_response_code(404);
@@ -226,7 +226,7 @@ class CampaignCreatorController
 
         try {
             $user = Auth::user();
-            $project = Project::findByUserAndId($user['id'], $id);
+            $project = Project::findAccessible($user['id'], $id);
 
             if (!$project || $project['type'] !== 'campaign-creator') {
                 ob_end_clean();
@@ -349,7 +349,7 @@ class CampaignCreatorController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $id);
+        $project = Project::findAccessible($user['id'], $id);
         if (!$project || $project['type'] !== 'campaign-creator') {
             http_response_code(404);
             echo json_encode(['error' => 'Progetto non trovato']);
@@ -378,7 +378,7 @@ class CampaignCreatorController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $id);
+        $project = Project::findAccessible($user['id'], $id);
         if (!$project || $project['type'] !== 'campaign-creator') {
             http_response_code(404);
             echo json_encode(['error' => 'Progetto non trovato']);
@@ -410,7 +410,7 @@ class CampaignCreatorController
 
         try {
             $user = Auth::user();
-            $project = Project::findByUserAndId($user['id'], $id);
+            $project = Project::findAccessible($user['id'], $id);
 
             if (!$project || $project['type'] !== 'campaign-creator') {
                 ob_end_clean();
@@ -506,7 +506,7 @@ class CampaignCreatorController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $id);
+        $project = Project::findAccessible($user['id'], $id);
 
         if (!$project || $project['type'] !== 'campaign-creator') {
             http_response_code(404);
@@ -540,7 +540,7 @@ class CampaignCreatorController
     public function exportCsv(int $id): void
     {
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $id);
+        $project = Project::findAccessible($user['id'], $id);
 
         if (!$project || $project['type'] !== 'campaign-creator') {
             $_SESSION['flash_error'] = 'Progetto non trovato';
@@ -579,7 +579,7 @@ class CampaignCreatorController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $id);
+        $project = Project::findAccessible($user['id'], $id);
 
         if (!$project || $project['type'] !== 'campaign-creator') {
             http_response_code(404);

@@ -42,7 +42,7 @@ class CrawlController
     public function start(int $id): void
     {
         $user = Auth::user();
-        $project = $this->projectModel->find($id, $user['id']);
+        $project = $this->projectModel->findAccessible($id, $user['id']);
 
         if (!$project) {
             jsonResponse(['error' => true, 'message' => 'Progetto non trovato'], 404);
@@ -218,7 +218,7 @@ class CrawlController
     public function crawlBatch(int $id): void
     {
         $user = Auth::user();
-        $project = $this->projectModel->find($id, $user['id']);
+        $project = $this->projectModel->findAccessible($id, $user['id']);
 
         if (!$project) {
             jsonResponse(['error' => true, 'message' => 'Progetto non trovato']);
@@ -432,7 +432,7 @@ class CrawlController
     public function status(int $id): void
     {
         $user = Auth::user();
-        $project = $this->projectModel->find($id, $user['id']);
+        $project = $this->projectModel->findAccessible($id, $user['id']);
 
         if (!$project) {
             jsonResponse(['error' => true, 'message' => 'Progetto non trovato'], 404);
@@ -492,7 +492,7 @@ class CrawlController
     public function stop(int $id): void
     {
         $user = Auth::user();
-        $project = $this->projectModel->find($id, $user['id']);
+        $project = $this->projectModel->findAccessible($id, $user['id']);
 
         if (!$project) {
             jsonResponse(['error' => true, 'message' => 'Progetto non trovato'], 404);
@@ -543,7 +543,7 @@ class CrawlController
     public function confirmStop(int $id): void
     {
         $user = Auth::user();
-        $project = $this->projectModel->find($id, $user['id']);
+        $project = $this->projectModel->findAccessible($id, $user['id']);
 
         if (!$project) {
             jsonResponse(['error' => true, 'message' => 'Progetto non trovato'], 404);

@@ -68,7 +68,7 @@ class ScriptController
     public function regenerateToken(int $projectId): void
     {
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $projectId);
+        $project = Project::findAccessible($user['id'], $projectId);
 
         if (!$project) {
             jsonResponse(['error' => 'Non autorizzato'], 403);
@@ -89,7 +89,7 @@ class ScriptController
     public function updateConfig(int $projectId): void
     {
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $projectId);
+        $project = Project::findAccessible($user['id'], $projectId);
 
         if (!$project) {
             jsonResponse(['error' => 'Non autorizzato'], 403);
@@ -125,7 +125,7 @@ class ScriptController
     public function runs(int $projectId): string
     {
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $projectId);
+        $project = Project::findAccessible($user['id'], $projectId);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';

@@ -32,7 +32,7 @@ class RankCheckController
     {
         $user = Auth::user();
         $projectModel = new Project();
-        $project = $projectModel->find($projectId, $user['id']);
+        $project = $projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
@@ -80,7 +80,7 @@ class RankCheckController
 
         $user = Auth::user();
         $projectModel = new Project();
-        $project = $projectModel->find($projectId, $user['id']);
+        $project = $projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -223,7 +223,7 @@ class RankCheckController
 
         $user = Auth::user();
         $projectModel = new Project();
-        $project = $projectModel->find($projectId, $user['id']);
+        $project = $projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -391,7 +391,7 @@ class RankCheckController
     {
         $user = Auth::user();
         $projectModel = new Project();
-        $project = $projectModel->find($projectId, $user['id']);
+        $project = $projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
@@ -493,7 +493,7 @@ class RankCheckController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = (new Project())->find($projectId, $user['id']);
+        $project = (new Project())->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['error' => 'Progetto non trovato']);
@@ -548,7 +548,7 @@ class RankCheckController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = (new Project())->find($projectId, $user['id']);
+        $project = (new Project())->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['error' => 'Progetto non trovato']);
@@ -666,7 +666,7 @@ class RankCheckController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = (new Project())->find($projectId, $user['id']);
+        $project = (new Project())->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -753,7 +753,7 @@ class RankCheckController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = (new Project())->find($projectId, $user['id']);
+        $project = (new Project())->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -839,7 +839,7 @@ class RankCheckController
             exit('Unauthorized');
         }
 
-        $project = (new Project())->find($projectId, $user['id']);
+        $project = (new Project())->findAccessible($projectId, $user['id']);
         if (!$project) {
             header('HTTP/1.1 404 Not Found');
             exit('Progetto non trovato');
@@ -1091,7 +1091,7 @@ class RankCheckController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = (new Project())->find($projectId, $user['id']);
+        $project = (new Project())->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1128,7 +1128,7 @@ class RankCheckController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = (new Project())->find($projectId, $user['id']);
+        $project = (new Project())->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1172,7 +1172,7 @@ class RankCheckController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = (new Project())->find($projectId, $user['id']);
+        $project = (new Project())->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);

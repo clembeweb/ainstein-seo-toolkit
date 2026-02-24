@@ -36,7 +36,7 @@ class GroupController
     public function index(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -79,7 +79,7 @@ class GroupController
     public function create(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -105,7 +105,7 @@ class GroupController
     public function store(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -155,7 +155,7 @@ class GroupController
     public function show(int $projectId, int $groupId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -199,7 +199,7 @@ class GroupController
     public function edit(int $projectId, int $groupId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -236,7 +236,7 @@ class GroupController
     public function update(int $projectId, int $groupId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -291,7 +291,7 @@ class GroupController
     public function destroy(int $projectId, int $groupId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -319,7 +319,7 @@ class GroupController
     public function addKeyword(int $projectId, int $groupId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             return View::json(['error' => 'Progetto non trovato'], 404);
@@ -359,7 +359,7 @@ class GroupController
     public function removeKeyword(int $projectId, int $groupId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             return View::json(['error' => 'Progetto non trovato'], 404);
@@ -393,7 +393,7 @@ class GroupController
     public function trendChart(int $projectId, int $groupId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             return View::json(['error' => 'Progetto non trovato'], 404);
@@ -452,7 +452,7 @@ class GroupController
     public function syncFromKeywords(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             return View::json(['error' => 'Progetto non trovato'], 404);

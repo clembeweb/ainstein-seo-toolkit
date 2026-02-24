@@ -41,7 +41,7 @@ class AiController
     public function generateWeekly(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -77,7 +77,7 @@ class AiController
     public function generateMonthly(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -113,7 +113,7 @@ class AiController
     public function generateKeywordAnalysis(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -150,7 +150,7 @@ class AiController
     public function generateRevenueAttribution(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -187,7 +187,7 @@ class AiController
     public function generate(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             return View::json(['error' => 'Progetto non trovato'], 404);
@@ -233,7 +233,7 @@ class AiController
     public function quickWins(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -264,7 +264,7 @@ class AiController
     public function analyzeQuickWins(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             return View::json(['error' => 'Progetto non trovato'], 404);
@@ -296,7 +296,7 @@ class AiController
     public function quickWinsGroup(int $projectId, int $groupId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -335,7 +335,7 @@ class AiController
     public function analyzeQuickWinsGroup(int $projectId, int $groupId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             return View::json(['error' => 'Progetto non trovato'], 404);
@@ -384,7 +384,7 @@ class AiController
     public function analyzePage(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             return View::json(['error' => 'Progetto non trovato'], 404);
@@ -454,7 +454,7 @@ class AiController
     public function getPageAnalysis(int $projectId, int $analysisId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             return View::json(['error' => 'Progetto non trovato'], 404);
@@ -478,7 +478,7 @@ class AiController
     public function listPageAnalyses(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             return View::json(['error' => 'Progetto non trovato'], 404);
@@ -499,7 +499,7 @@ class AiController
     public function getPageAnalysisCost(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             return View::json(['error' => 'Progetto non trovato'], 404);
@@ -525,7 +525,7 @@ class AiController
     public function pageAnalyzerView(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';

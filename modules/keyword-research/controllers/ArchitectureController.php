@@ -30,7 +30,7 @@ class ArchitectureController
     public function wizard(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->projectModel->find($projectId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato.';
@@ -54,7 +54,7 @@ class ArchitectureController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->projectModel->find($projectId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato.']);
@@ -88,7 +88,7 @@ class ArchitectureController
     public function collectionStream(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->projectModel->find($projectId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             header('Content-Type: application/json');
@@ -97,7 +97,7 @@ class ArchitectureController
         }
 
         $researchId = (int) ($_GET['research_id'] ?? 0);
-        $research = $this->researchModel->find($researchId, $user['id']);
+        $research = $this->researchModel->find($researchId);
 
         if (!$research || $research['project_id'] !== $projectId) {
             header('Content-Type: application/json');
@@ -215,7 +215,7 @@ class ArchitectureController
 
         $user = Auth::user();
         $researchId = (int) ($_GET['research_id'] ?? 0);
-        $research = $this->researchModel->find($researchId, $user['id']);
+        $research = $this->researchModel->find($researchId);
 
         if (!$research || $research['project_id'] !== $projectId) {
             echo json_encode(['success' => false, 'error' => 'Ricerca non trovata.']);
@@ -248,7 +248,7 @@ class ArchitectureController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->projectModel->find($projectId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato.']);
@@ -256,7 +256,7 @@ class ArchitectureController
         }
 
         $researchId = (int) ($_POST['research_id'] ?? 0);
-        $research = $this->researchModel->find($researchId, $user['id']);
+        $research = $this->researchModel->find($researchId);
 
         if (!$research || $research['project_id'] !== $projectId) {
             echo json_encode(['success' => false, 'error' => 'Ricerca non trovata.']);
@@ -454,7 +454,7 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
     public function results(int $projectId, int $researchId): string
     {
         $user = Auth::user();
-        $project = $this->projectModel->find($projectId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato.';
@@ -462,7 +462,7 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
             exit;
         }
 
-        $research = $this->researchModel->find($researchId, $user['id']);
+        $research = $this->researchModel->find($researchId);
 
         if (!$research || $research['project_id'] !== $projectId) {
             $_SESSION['_flash']['error'] = 'Ricerca non trovata.';
@@ -516,8 +516,8 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->projectModel->find($projectId, $user['id']);
-        $research = $this->researchModel->find($researchId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
+        $research = $this->researchModel->find($researchId);
 
         if (!$project || !$research || $research['project_id'] !== $projectId) {
             echo json_encode(['success' => false, 'error' => 'Dati non trovati.']);

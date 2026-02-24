@@ -75,7 +75,7 @@ class DashboardController
         $linkedWpSite = null;
         if ($project && !empty($project['wp_site_id'])) {
             $wpSiteModel = new WpSite();
-            $linkedWpSite = $wpSiteModel->find($project['wp_site_id'], $user['id']);
+            $linkedWpSite = $wpSiteModel->find($project['wp_site_id']);
         }
 
         $title = $project ? $project['name'] : 'AI SEO Content Generator';

@@ -127,7 +127,7 @@ class KeywordController
     public function create(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -154,7 +154,7 @@ class KeywordController
     public function store(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -270,7 +270,7 @@ class KeywordController
             exit;
         }
 
-        $project = $this->project->find($keyword['project_id'], $user['id']);
+        $project = $this->project->findAccessible($keyword['project_id'], $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -312,7 +312,7 @@ class KeywordController
             exit;
         }
 
-        $project = $this->project->find($keyword['project_id'], $user['id']);
+        $project = $this->project->findAccessible($keyword['project_id'], $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -338,7 +338,7 @@ class KeywordController
     public function update(int $projectId, int $keywordId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -394,7 +394,7 @@ class KeywordController
             return null;
         }
 
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             if ($isAjax) {
@@ -428,7 +428,7 @@ class KeywordController
             return View::json(['error' => 'Keyword non trovata'], 404);
         }
 
-        $project = $this->project->find($keyword['project_id'], $user['id']);
+        $project = $this->project->findAccessible($keyword['project_id'], $user['id']);
 
         if (!$project) {
             return View::json(['error' => 'Progetto non trovato'], 403);
@@ -448,7 +448,7 @@ class KeywordController
     public function bulkAction(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -522,7 +522,7 @@ class KeywordController
             return View::json(['error' => 'Keyword non trovata'], 404);
         }
 
-        $project = $this->project->find($keyword['project_id'], $user['id']);
+        $project = $this->project->findAccessible($keyword['project_id'], $user['id']);
 
         if (!$project) {
             return View::json(['error' => 'Progetto non trovato'], 403);
@@ -561,7 +561,7 @@ class KeywordController
     public function import(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -624,7 +624,7 @@ class KeywordController
     public function add(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -651,7 +651,7 @@ class KeywordController
     public function all(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -678,7 +678,7 @@ class KeywordController
     public function detail(int $projectId, int $keywordId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -726,7 +726,7 @@ class KeywordController
     public function updateVolumes(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             return View::json(['success' => false, 'error' => 'Progetto non trovato'], 404);
@@ -743,7 +743,7 @@ class KeywordController
     public function checkVolumeService(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             return View::json(['success' => false, 'error' => 'Progetto non trovato'], 404);
@@ -795,7 +795,7 @@ class KeywordController
     public function getRefreshCost(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             return View::json(['success' => false, 'error' => 'Progetto non trovato'], 404);
@@ -840,7 +840,7 @@ class KeywordController
     public function refreshVolumes(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             return View::json(['success' => false, 'error' => 'Progetto non trovato'], 404);
@@ -923,7 +923,7 @@ class KeywordController
     public function refreshPositions(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             return View::json(['success' => false, 'error' => 'Progetto non trovato'], 404);
@@ -1083,7 +1083,7 @@ class KeywordController
     public function refreshAll(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             return View::json(['success' => false, 'error' => 'Progetto non trovato'], 404);
@@ -1295,7 +1295,7 @@ class KeywordController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1399,7 +1399,7 @@ class KeywordController
             exit('Unauthorized');
         }
 
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
         if (!$project) {
             header('HTTP/1.1 404 Not Found');
             exit('Progetto non trovato');
@@ -1628,7 +1628,7 @@ class KeywordController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1665,7 +1665,7 @@ class KeywordController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -1729,7 +1729,7 @@ class KeywordController
     public function getSeasonality(int $projectId, int $keywordId): string
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             return View::json(['success' => false, 'error' => 'Progetto non trovato'], 404);

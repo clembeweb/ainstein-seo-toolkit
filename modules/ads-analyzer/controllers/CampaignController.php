@@ -122,7 +122,7 @@ class CampaignController
     public function index(int $projectId): string
     {
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $projectId);
+        $project = Project::findAccessible($user['id'], $projectId);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
@@ -185,7 +185,7 @@ class CampaignController
     public function show(int $projectId, int $runId): string
     {
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $projectId);
+        $project = Project::findAccessible($user['id'], $projectId);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
@@ -246,7 +246,7 @@ class CampaignController
 
         try {
             $user = Auth::user();
-            $project = Project::findByUserAndId($user['id'], $projectId);
+            $project = Project::findAccessible($user['id'], $projectId);
 
             if (!$project) {
                 jsonResponse(['error' => 'Progetto non trovato'], 404);
@@ -410,7 +410,7 @@ class CampaignController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $projectId);
+        $project = Project::findAccessible($user['id'], $projectId);
 
         if (!$project) {
             http_response_code(404);
@@ -440,7 +440,7 @@ class CampaignController
     public function evaluationShow(int $projectId, int $evalId): string
     {
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $projectId);
+        $project = Project::findAccessible($user['id'], $projectId);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
@@ -486,7 +486,7 @@ class CampaignController
 
         try {
             $user = Auth::user();
-            $project = Project::findByUserAndId($user['id'], $projectId);
+            $project = Project::findAccessible($user['id'], $projectId);
 
             if (!$project || ($project['type'] ?? 'negative-kw') !== 'campaign') {
                 ob_end_clean();
@@ -566,7 +566,7 @@ class CampaignController
     public function exportPdf(int $projectId, int $evalId): void
     {
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $projectId);
+        $project = Project::findAccessible($user['id'], $projectId);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
@@ -632,7 +632,7 @@ class CampaignController
     public function exportCsv(int $projectId, int $evalId): void
     {
         $user = Auth::user();
-        $project = Project::findByUserAndId($user['id'], $projectId);
+        $project = Project::findAccessible($user['id'], $projectId);
 
         if (!$project || ($project['type'] ?? 'negative-kw') !== 'campaign') {
             http_response_code(400);

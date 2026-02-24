@@ -64,7 +64,7 @@ Router::post('/ai-content/projects', function () {
 // Dashboard progetto - distingue AUTO vs MANUAL
 Router::get('/ai-content/projects/{id}', function ($id) {
     Middleware::auth();
-    $project = (new \Modules\AiContent\Models\Project())->find((int) $id, Auth::user()['id']);
+    $project = (new \Modules\AiContent\Models\Project())->findAccessible((int) $id, Auth::user()['id']);
 
     if (!$project) {
         $_SESSION['_flash']['error'] = 'Progetto non trovato';
