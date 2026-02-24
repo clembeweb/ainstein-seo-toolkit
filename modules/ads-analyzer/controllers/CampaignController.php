@@ -315,8 +315,37 @@ class CampaignController
                 'status' => 'analyzing',
             ]);
 
-            // Valutazione AI (singola chiamata — no scraping landing per limiti hosting)
+            // Scraping landing pages (max 5 URL uniche dagli annunci)
             $landingContexts = [];
+            $uniqueUrls = [];
+            foreach ($ads as $ad) {
+                $url = $ad['final_url'] ?? '';
+                if (!empty($url) && !isset($uniqueUrls[$url]) && count($uniqueUrls) < 5) {
+                    $uniqueUrls[$url] = true;
+                }
+            }
+
+            if (!empty($uniqueUrls)) {
+                require_once __DIR__ . '/../../../services/ScraperService.php';
+                $scraper = new \Services\ScraperService();
+                foreach (array_keys($uniqueUrls) as $url) {
+                    try {
+                        $scraped = $scraper->scrape($url);
+                        Database::reconnect();
+                        if (!empty($scraped['success']) && !empty($scraped['content'])) {
+                            // Limita contenuto per non esplodere il prompt
+                            $content = mb_substr($scraped['content'], 0, 3000);
+                            $landingContexts[$url] = "Titolo: " . ($scraped['title'] ?? 'N/D')
+                                . "\nWord count: " . ($scraped['word_count'] ?? 0)
+                                . "\nContenuto: " . $content;
+                        }
+                    } catch (\Exception $e) {
+                        Logger::channel('ai')->warning("Landing scrape failed", ['url' => $url, 'error' => $e->getMessage()]);
+                    }
+                }
+            }
+
+            $landingPagesAnalyzed = count($landingContexts);
 
             set_time_limit(0);
             $evaluator = new CampaignEvaluatorService();
@@ -337,6 +366,7 @@ class CampaignController
             CampaignEvaluation::update($evalId, [
                 'ai_response' => json_encode($aiResult, JSON_UNESCAPED_UNICODE),
                 'credits_used' => $cost,
+                'landing_pages_analyzed' => $landingPagesAnalyzed,
             ]);
             CampaignEvaluation::updateStatus($evalId, 'completed');
 

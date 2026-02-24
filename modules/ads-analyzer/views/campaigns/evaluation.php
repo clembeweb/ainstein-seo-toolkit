@@ -625,7 +625,7 @@ HTML;
                                     'recommendation' => $issue['recommendation'] ?? '',
                                     'campaign_name' => $campaign['campaign_name'] ?? '',
                                 ])) ?>, '<?= $issueKey ?>')"
-                                    :disabled="generators['<?= $issueKey ?>']?.loading"
+                                    :disabled="isLoading('<?= $issueKey ?>')"
                                     class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg text-primary-700 bg-primary-50 hover:bg-primary-100 dark:text-primary-300 dark:bg-primary-900/30 dark:hover:bg-primary-900/50 disabled:opacity-50 transition-colors mt-2">
                                     <template x-if="!generators['<?= $issueKey ?>']?.loading">
                                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -872,7 +872,7 @@ HTML;
         <?php if (!empty($extensionsEval['missing'])): ?>
         <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
             <button @click="generateFix('extensions', <?= e(json_encode(['missing' => $extensionsEval['missing']])) ?>, 'ext_main')"
-                :disabled="generators['ext_main']?.loading"
+                :disabled="isLoading('ext_main')"
                 class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg text-primary-700 bg-primary-50 hover:bg-primary-100 dark:text-primary-300 dark:bg-primary-900/30 dark:hover:bg-primary-900/50 disabled:opacity-50 transition-colors">
                 <template x-if="!generators['ext_main']?.loading">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -890,8 +890,8 @@ HTML;
     </div>
     <?php endif; ?>
 
-    <!-- Landing Evaluation -->
-    <?php if (!empty($landingEval)): ?>
+    <!-- Landing Evaluation (solo se landing pages effettivamente analizzate) -->
+    <?php if (!empty($landingEval) && ($evaluation['landing_pages_analyzed'] ?? 0) > 0): ?>
     <?php $landScore = (float)($landingEval['overall_score'] ?? 0); ?>
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <div class="flex items-center justify-between mb-4">
@@ -995,7 +995,7 @@ HTML;
                         'expected_impact' => $cs['expected_impact'] ?? '',
                         'campaign_name' => '',
                     ])) ?>, '<?= $sugKey ?>')"
-                        :disabled="generators['<?= $sugKey ?>']?.loading"
+                        :disabled="isLoading('<?= $sugKey ?>')"
                         class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg text-primary-700 bg-primary-50 hover:bg-primary-100 dark:text-primary-300 dark:bg-primary-900/30 dark:hover:bg-primary-900/50 disabled:opacity-50 transition-colors mt-2">
                         <template x-if="!generators['<?= $sugKey ?>']?.loading">
                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1016,8 +1016,8 @@ HTML;
     </div>
     <?php endif; ?>
 
-    <!-- Landing Suggestions -->
-    <?php if (!empty($landingSuggestions)): ?>
+    <!-- Landing Suggestions (solo se landing pages effettivamente analizzate) -->
+    <?php if (!empty($landingSuggestions) && ($evaluation['landing_pages_analyzed'] ?? 0) > 0): ?>
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1077,6 +1077,10 @@ function evaluationFixes() {
         generators: {},
         generateUrl: '<?= e($generateUrl ?? '') ?>',
         csrfToken: '<?= csrf_token() ?>',
+
+        isLoading(key) {
+            return !!(this.generators[key] && this.generators[key].loading);
+        },
 
         async generateFix(type, context, key) {
             this.generators[key] = { loading: true, result: null, error: null, copied: false };

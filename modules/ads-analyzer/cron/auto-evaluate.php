@@ -195,6 +195,38 @@ try {
 
             logMessage("  Evaluation #{$evalId} creata, avvio AI...");
 
+            // Scraping landing pages (max 5 URL uniche dagli annunci)
+            $landingContexts = [];
+            $uniqueUrls = [];
+            foreach ($ads as $ad) {
+                $url = $ad['final_url'] ?? '';
+                if (!empty($url) && !isset($uniqueUrls[$url]) && count($uniqueUrls) < 5) {
+                    $uniqueUrls[$url] = true;
+                }
+            }
+
+            if (!empty($uniqueUrls)) {
+                require_once dirname(__DIR__, 3) . '/services/ScraperService.php';
+                $scraper = new \Services\ScraperService();
+                foreach (array_keys($uniqueUrls) as $url) {
+                    try {
+                        $scraped = $scraper->scrape($url);
+                        Database::reconnect();
+                        if (!empty($scraped['success']) && !empty($scraped['content'])) {
+                            $content = mb_substr($scraped['content'], 0, 3000);
+                            $landingContexts[$url] = "Titolo: " . ($scraped['title'] ?? 'N/D')
+                                . "\nWord count: " . ($scraped['word_count'] ?? 0)
+                                . "\nContenuto: " . $content;
+                        }
+                    } catch (\Exception $e) {
+                        logMessage("  WARNING: landing scrape failed for {$url}: " . $e->getMessage());
+                    }
+                }
+            }
+
+            $landingPagesAnalyzed = count($landingContexts);
+            logMessage("  Landing pages scraped: {$landingPagesAnalyzed}/" . count($uniqueUrls));
+
             // Chiamata AI con contesto storico
             set_time_limit(0);
             $evaluator = new CampaignEvaluatorService();
@@ -203,7 +235,7 @@ try {
                 $campaigns,
                 $ads,
                 $extensions,
-                [], // no landing contexts (async)
+                $landingContexts,
                 $adGroupsData,
                 $keywordsData,
                 $previousEvalSummary,
@@ -218,6 +250,7 @@ try {
                 'ai_response' => json_encode($aiResult, JSON_UNESCAPED_UNICODE),
                 'metric_deltas' => $metricDeltas ? json_encode($metricDeltas, JSON_UNESCAPED_UNICODE) : null,
                 'credits_used' => $cost,
+                'landing_pages_analyzed' => $landingPagesAnalyzed,
             ]);
             CampaignEvaluation::updateStatus($evalId, 'completed');
 
