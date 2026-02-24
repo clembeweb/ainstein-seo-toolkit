@@ -42,12 +42,18 @@ class CompareController
         $dateFromB = $_GET['date_from_b'] ?? $presetData['dateFromB'];
         $dateToB = $_GET['date_to_b'] ?? $presetData['dateToB'];
 
+        $source = $_GET['source'] ?? 'gsc';
+
         $filters = [
             'keyword' => $_GET['keyword'] ?? '',
             'url' => $_GET['url'] ?? ''
         ];
 
-        $results = $compareService->compare($dateFromA, $dateToA, $dateFromB, $dateToB, $filters);
+        if ($source === 'positions') {
+            $results = $compareService->compareFromPositions($dateFromB, $dateToB, $filters);
+        } else {
+            $results = $compareService->compare($dateFromA, $dateToA, $dateFromB, $dateToB, $filters);
+        }
 
         // Tab attiva
         $activeTab = $_GET['tab'] ?? 'all';
@@ -66,7 +72,8 @@ class CompareController
             'dateFromB' => $dateFromB,
             'dateToB' => $dateToB,
             'filters' => $filters,
-            'activeTab' => $activeTab
+            'activeTab' => $activeTab,
+            'currentSource' => $source
         ]);
     }
 
@@ -88,17 +95,27 @@ class CompareController
 
         $input = json_decode(file_get_contents('php://input'), true) ?: $_POST;
 
+        $source = $input['source'] ?? 'gsc';
         $compareService = new PositionCompareService($projectId);
-        $results = $compareService->compare(
-            $input['date_from_a'] ?? '',
-            $input['date_to_a'] ?? '',
-            $input['date_from_b'] ?? '',
-            $input['date_to_b'] ?? '',
-            [
-                'keyword' => $input['keyword'] ?? '',
-                'url' => $input['url'] ?? ''
-            ]
-        );
+
+        if ($source === 'positions') {
+            $results = $compareService->compareFromPositions(
+                $input['date_from_b'] ?? '',
+                $input['date_to_b'] ?? '',
+                ['keyword' => $input['keyword'] ?? '']
+            );
+        } else {
+            $results = $compareService->compare(
+                $input['date_from_a'] ?? '',
+                $input['date_to_a'] ?? '',
+                $input['date_from_b'] ?? '',
+                $input['date_to_b'] ?? '',
+                [
+                    'keyword' => $input['keyword'] ?? '',
+                    'url' => $input['url'] ?? ''
+                ]
+            );
+        }
 
         echo json_encode(['success' => true, 'data' => $results]);
         exit;
@@ -119,17 +136,27 @@ class CompareController
             exit;
         }
 
+        $source = $_GET['source'] ?? 'gsc';
         $compareService = new PositionCompareService($projectId);
-        $results = $compareService->compare(
-            $_GET['date_from_a'] ?? '',
-            $_GET['date_to_a'] ?? '',
-            $_GET['date_from_b'] ?? '',
-            $_GET['date_to_b'] ?? '',
-            [
-                'keyword' => $_GET['keyword'] ?? '',
-                'url' => $_GET['url'] ?? ''
-            ]
-        );
+
+        if ($source === 'positions') {
+            $results = $compareService->compareFromPositions(
+                $_GET['date_from_b'] ?? '',
+                $_GET['date_to_b'] ?? '',
+                ['keyword' => $_GET['keyword'] ?? '']
+            );
+        } else {
+            $results = $compareService->compare(
+                $_GET['date_from_a'] ?? '',
+                $_GET['date_to_a'] ?? '',
+                $_GET['date_from_b'] ?? '',
+                $_GET['date_to_b'] ?? '',
+                [
+                    'keyword' => $_GET['keyword'] ?? '',
+                    'url' => $_GET['url'] ?? ''
+                ]
+            );
+        }
 
         $tab = $_GET['tab'] ?? 'all';
         $data = $results[$tab] ?? $results['all'];

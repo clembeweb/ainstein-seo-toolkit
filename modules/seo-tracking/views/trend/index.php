@@ -33,29 +33,55 @@ $dateRange = $dateRange ?? ['min_date' => date('Y-m-d', strtotime('-16 months'))
     <!-- Controlli Periodo -->
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Preset -->
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Confronto Rapido</label>
-                <div class="flex flex-wrap gap-2">
-                    <?php foreach ($presets as $key => $preset): ?>
-                    <button @click="applyPreset('<?= $key ?>')"
-                            :class="activePreset === '<?= $key ?>' ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'"
-                            class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
-                        <?= e($preset['label']) ?>
-                    </button>
-                    <?php endforeach; ?>
-                    <button @click="activePreset = 'custom'"
-                            :class="activePreset === 'custom' ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'"
-                            class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
-                        Personalizzato
-                    </button>
+            <!-- Preset + Fonte Dati -->
+            <div class="space-y-4">
+                <!-- Preset -->
+                <div x-show="source === 'gsc'">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Confronto Rapido</label>
+                    <div class="flex flex-wrap gap-2">
+                        <?php foreach ($presets as $key => $preset): ?>
+                        <button @click="applyPreset('<?= $key ?>')"
+                                :class="activePreset === '<?= $key ?>' ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'"
+                                class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
+                            <?= e($preset['label']) ?>
+                        </button>
+                        <?php endforeach; ?>
+                        <button @click="activePreset = 'custom'"
+                                :class="activePreset === 'custom' ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'"
+                                class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
+                            Personalizzato
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Fonte Dati -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Fonte Dati</label>
+                    <div class="flex gap-2">
+                        <button @click="source = 'gsc'"
+                                :class="source === 'gsc' ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'"
+                                class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"/>
+                            </svg>
+                            GSC (tutte le query)
+                        </button>
+                        <button @click="source = 'positions'"
+                                :class="source === 'positions' ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'"
+                                class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/>
+                            </svg>
+                            Keyword tracciate
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <!-- Date Pickers -->
-            <div class="grid grid-cols-2 gap-4">
-                <!-- Periodo A (Precedente) -->
-                <div class="space-y-2">
+            <div class="grid gap-4" :class="source === 'gsc' ? 'grid-cols-2' : 'grid-cols-1'">
+                <!-- Periodo A (Precedente) - solo per GSC -->
+                <div class="space-y-2" x-show="source === 'gsc'">
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Periodo A (Precedente)</label>
                     <div class="flex gap-2">
                         <input type="date" x-model="dateFromA" @change="activePreset = 'custom'"
@@ -67,9 +93,10 @@ $dateRange = $dateRange ?? ['min_date' => date('Y-m-d', strtotime('-16 months'))
                     </div>
                 </div>
 
-                <!-- Periodo B (Attuale) -->
+                <!-- Periodo B (Attuale) / Periodo unico per positions -->
                 <div class="space-y-2">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Periodo B (Attuale)</label>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300"
+                           x-text="source === 'positions' ? 'Periodo' : 'Periodo B (Attuale)'"></label>
                     <div class="flex gap-2">
                         <input type="date" x-model="dateFromB" @change="activePreset = 'custom'"
                                min="<?= e($dateRange['min_date']) ?>" max="<?= e($dateRange['max_date']) ?>"
@@ -266,6 +293,7 @@ function positionCompare(projectId) {
         hasData: false,
         activeTab: 'all',
         activePreset: '28d',
+        source: '<?= e($currentSource ?? 'gsc') ?>',
 
         // Date ranges
         dateFromA: defaultPreset.dateFromA,
@@ -319,6 +347,7 @@ function positionCompare(projectId) {
                 formData.append('date_to_b', this.dateToB);
                 formData.append('keyword', this.filterKeyword);
                 formData.append('url', this.filterUrl);
+                formData.append('source', this.source);
 
                 const response = await fetch(`${this.baseUrl}/seo-tracking/project/${this.projectId}/trend/data`, {
                     method: 'POST',
@@ -359,7 +388,8 @@ function positionCompare(projectId) {
                 date_to_b: this.dateToB,
                 keyword: this.filterKeyword,
                 url: this.filterUrl,
-                tab: this.activeTab
+                tab: this.activeTab,
+                source: this.source
             });
 
             window.location.href = `${this.baseUrl}/seo-tracking/project/${this.projectId}/trend/export?${params}`;
