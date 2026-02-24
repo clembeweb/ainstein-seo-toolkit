@@ -172,6 +172,30 @@ class GlobalProject
     }
 
     /**
+     * Trova un progetto accessibile dall'utente (owner O membro accettato).
+     * Ritorna il progetto con campo extra `access_role` ('owner', 'editor', 'viewer').
+     */
+    public function findAccessible(int $id, int $userId): ?array
+    {
+        // Fast path: owner
+        $project = Database::fetch(
+            "SELECT p.*, 'owner' as access_role FROM {$this->table} p WHERE p.id = ? AND p.user_id = ?",
+            [$id, $userId]
+        );
+        if ($project) {
+            return $project;
+        }
+
+        // Shared member
+        return Database::fetch(
+            "SELECT p.*, pm.role as access_role FROM {$this->table} p
+             JOIN project_members pm ON pm.project_id = p.id
+             WHERE p.id = ? AND pm.user_id = ? AND pm.accepted_at IS NOT NULL",
+            [$id, $userId]
+        );
+    }
+
+    /**
      * Tutti i progetti di un utente, con filtro status opzionale.
      */
     public function allByUser(int $userId, string $status = 'all'): array
@@ -187,6 +211,41 @@ class GlobalProject
         $sql .= " ORDER BY created_at DESC";
 
         return Database::fetchAll($sql, $params);
+    }
+
+    /**
+     * Tutti i progetti di un utente: propri + condivisi.
+     * Ritorna ['owned' => [...], 'shared' => [...]].
+     * I progetti condivisi includono anche owner_name, owner_email, owner_avatar.
+     */
+    public function allWithShared(int $userId, string $status = 'active'): array
+    {
+        $statusClause = $status !== 'all' ? "AND p.status = ?" : "";
+        $params = [$userId];
+        if ($status !== 'all') {
+            $params[] = $status;
+        }
+
+        $owned = Database::fetchAll(
+            "SELECT p.*, 'owner' as access_role FROM {$this->table} p
+             WHERE p.user_id = ? {$statusClause}
+             ORDER BY p.updated_at DESC",
+            $params
+        );
+
+        $sharedParams = $params;
+        $shared = Database::fetchAll(
+            "SELECT p.*, pm.role as access_role,
+                    u.name as owner_name, u.email as owner_email, u.avatar as owner_avatar
+             FROM {$this->table} p
+             JOIN project_members pm ON pm.project_id = p.id
+             JOIN users u ON u.id = p.user_id
+             WHERE pm.user_id = ? AND pm.accepted_at IS NOT NULL {$statusClause}
+             ORDER BY p.updated_at DESC",
+            $sharedParams
+        );
+
+        return ['owned' => $owned, 'shared' => $shared];
     }
 
     /**
