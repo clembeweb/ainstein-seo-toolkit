@@ -311,6 +311,10 @@
                 <div class="shrink-0 w-7 h-7 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-xs font-bold text-primary-600 dark:text-primary-400">3</div>
                 <p class="text-sm text-slate-600 dark:text-slate-400">L'utente ricevera una <strong class="text-slate-900 dark:text-white">notifica</strong>: se e gia registrato su Ainstein, la vedra nell'applicazione. Se non e registrato, ricevera un'<strong class="text-slate-900 dark:text-white">email di invito</strong> con un link per accettare.</p>
             </div>
+            <div class="flex items-start gap-3 p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                <div class="shrink-0 w-7 h-7 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-xs font-bold text-primary-600 dark:text-primary-400">4</div>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Dopo l'accettazione, il progetto condiviso apparira nella pagina <strong class="text-slate-900 dark:text-white">Progetti</strong> del collaboratore e nelle <strong class="text-slate-900 dark:text-white">dashboard di ogni modulo</strong> a cui ha accesso, contrassegnato come "condiviso".</p>
+            </div>
         </div>
 
         <!-- Note importanti -->

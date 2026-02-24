@@ -365,6 +365,72 @@
         </div>
     </section>
 
+    <!-- Categoria: Condivisione e Collaborazione -->
+    <section class="mb-10">
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            Condivisione e Collaborazione
+        </h2>
+
+        <div class="space-y-3">
+            <!-- FAQ 15 -->
+            <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+                <button @click="open === 15 ? open = null : open = 15"
+                        class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <span class="text-sm font-medium text-slate-900 dark:text-white">Come condivido un progetto con un collaboratore?</span>
+                    <svg class="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 transition-transform duration-200"
+                         :class="{ 'rotate-180': open === 15 }"
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="open === 15" x-cloak x-collapse>
+                    <div class="px-5 pb-4 text-sm text-slate-600 dark:text-slate-400">
+                        Dalla dashboard del progetto, vai su <strong class="text-slate-900 dark:text-white">Impostazioni &rarr; Condivisione</strong>. Inserisci l'email dell'utente, scegli il ruolo (Editor o Visualizzatore) e seleziona i moduli a cui avra accesso. Se l'utente e gia registrato ricevera una notifica in-app, altrimenti ricevera un'email di invito.
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ 16 -->
+            <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+                <button @click="open === 16 ? open = null : open = 16"
+                        class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <span class="text-sm font-medium text-slate-900 dark:text-white">Dove vedo i progetti condivisi con me?</span>
+                    <svg class="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 transition-transform duration-200"
+                         :class="{ 'rotate-180': open === 16 }"
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="open === 16" x-cloak x-collapse>
+                    <div class="px-5 pb-4 text-sm text-slate-600 dark:text-slate-400">
+                        I progetti condivisi con te appaiono nella pagina <strong class="text-slate-900 dark:text-white">Progetti</strong> (con il badge "condiviso") e nelle <strong class="text-slate-900 dark:text-white">dashboard di ogni modulo</strong> a cui hai accesso. Puoi lavorarci esattamente come sui tuoi progetti, in base al ruolo assegnato.
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ 17 -->
+            <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+                <button @click="open === 17 ? open = null : open = 17"
+                        class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <span class="text-sm font-medium text-slate-900 dark:text-white">Chi paga i crediti per i progetti condivisi?</span>
+                    <svg class="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 transition-transform duration-200"
+                         :class="{ 'rotate-180': open === 17 }"
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="open === 17" x-cloak x-collapse>
+                    <div class="px-5 pb-4 text-sm text-slate-600 dark:text-slate-400">
+                        I crediti sono <strong class="text-slate-900 dark:text-white">sempre a carico del proprietario</strong> del progetto. I collaboratori (editor e visualizzatori) non consumano i propri crediti quando eseguono operazioni su un progetto condiviso con loro.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Categoria: Tecnico -->
     <section class="mb-8">
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
