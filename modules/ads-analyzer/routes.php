@@ -224,6 +224,21 @@ Router::post('/ads-analyzer/projects/{id}/campaigns/evaluations/{evalId}/generat
     return $controller->generateFix((int) $id, (int) $evalId);
 });
 
+// Export PDF valutazione
+Router::get('/ads-analyzer/projects/{id}/campaigns/evaluations/{evalId}/export-pdf', function ($id, $evalId) {
+    Middleware::auth();
+    $controller = new CampaignController();
+    return $controller->exportPdf((int) $id, (int) $evalId);
+});
+
+// Export CSV fix AI per Google Ads Editor
+Router::post('/ads-analyzer/projects/{id}/campaigns/evaluations/{evalId}/export-csv', function ($id, $evalId) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new CampaignController();
+    return $controller->exportCsv((int) $id, (int) $evalId);
+});
+
 // ============================================
 // ANALISI KEYWORD NEGATIVE (Campaign Projects)
 // ============================================

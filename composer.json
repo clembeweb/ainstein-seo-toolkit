@@ -3,6 +3,7 @@
         "fivefilters/readability.php": ">=3.0",
         "monolog/monolog": "^3.9",
         "symfony/cache": "^6.4",
-        "phpmailer/phpmailer": "^7.0"
+        "phpmailer/phpmailer": "^7.0",
+        "mpdf/mpdf": "^8.2"
     }
 }

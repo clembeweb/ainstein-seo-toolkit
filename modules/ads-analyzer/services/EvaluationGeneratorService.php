@@ -26,9 +26,9 @@ class EvaluationGeneratorService
      * @param string $type    extensions|copy|keywords
      * @param array  $context Dati specifici del problema (issue, recommendation, missing, campaign_name)
      * @param array  $data    Dati campagna (campaigns, ads, extensions, keywords, business_context)
-     * @return string Testo formattato pronto per copia
+     * @return array Dati strutturati JSON
      */
-    public function generate(int $userId, string $type, array $context, array $data): string
+    public function generate(int $userId, string $type, array $context, array $data): array
     {
         $prompt = match (true) {
             str_contains($type, 'extensions') => $this->buildExtensionsPrompt($context, $data),
@@ -54,7 +54,7 @@ class EvaluationGeneratorService
             throw new \Exception($response['message'] ?? 'Errore AI');
         }
 
-        return $this->cleanResponse($response['result']);
+        return $this->parseJsonResponse($response['result']);
     }
 
     /**
@@ -95,15 +95,23 @@ ISTRUZIONI:
 Per ogni tipo di estensione mancante, genera contenuti pronti da copiare in Google Ads.
 Rispetta TASSATIVAMENTE i limiti caratteri di Google Ads.
 
-FORMATI PER TIPO:
-- SITELINK: Genera 4 sitelink. Per ciascuno: Titolo (max 25 char) | Descrizione 1 (max 35 char) | Descrizione 2 (max 35 char) | URL suggerito
-- CALLOUT: Genera 6 callout (max 25 char ciascuno)
-- STRUCTURED SNIPPET: Genera 1-2 snippet con Header (es: Servizi, Tipi, Destinazioni) + 4-5 valori (max 25 char ciascuno)
-- PRICE EXTENSION: Genera 3-4 item con: Intestazione (max 25 char) | Descrizione (max 25 char) | Prezzo suggerito
-- PROMOTION EXTENSION: Genera 1-2 promozioni con: Occasione | Descrizione (max 20 char)
+GENERA in formato JSON esatto (NESSUN testo fuori dal JSON):
+{
+  "sitelinks": [
+    {"title": "Titolo (max 25)", "desc1": "Desc 1 (max 35)", "desc2": "Desc 2 (max 35)", "url": "/percorso"}
+  ],
+  "callouts": ["Callout 1 (max 25)", "Callout 2"],
+  "structured_snippets": [
+    {"header": "Servizi", "values": ["Valore 1 (max 25)", "Valore 2"]}
+  ]
+}
 
-Formatta come testo leggibile con sezioni separate per tipo. Mostra il conteggio caratteri tra parentesi.
-Genera SOLO i tipi elencati in ESTENSIONI MANCANTI.
+Regole:
+- 4 sitelink se SITELINK e tra le mancanti
+- 6 callout se CALLOUT e tra le mancanti
+- 1-2 structured snippet se STRUCTURED SNIPPET e tra le mancanti
+- Genera SOLO i tipi elencati in ESTENSIONI MANCANTI
+- SOLO JSON valido, nessun commento o testo aggiuntivo
 PROMPT;
     }
 
@@ -162,12 +170,18 @@ ISTRUZIONI:
 Genera nuovi copy per risolvere il problema identificato.
 Rispetta TASSATIVAMENTE i limiti caratteri Google Ads.
 
-GENERA:
-- 5 Headlines (max 30 caratteri ciascuna)
-- 3 Descriptions (max 90 caratteri ciascuna)
+GENERA in formato JSON esatto (NESSUN testo fuori dal JSON):
+{
+  "headlines": ["Headline 1", "Headline 2", "Headline 3", "Headline 4", "Headline 5"],
+  "descriptions": ["Description 1", "Description 2", "Description 3"],
+  "paths": {"path1": "percorso1", "path2": "percorso2"}
+}
 
-Ogni headline e description deve essere diversa dagli annunci esistenti.
-Formatta come testo leggibile. Mostra il conteggio caratteri tra parentesi per ogni elemento.
+Regole:
+- Esattamente 5 headlines, ciascuna max 30 caratteri
+- Esattamente 3 descriptions, ciascuna max 90 caratteri
+- Paths opzionali, max 15 caratteri ciascuno
+- SOLO JSON valido, nessun commento o testo aggiuntivo
 PROMPT;
     }
 
@@ -219,21 +233,34 @@ ISTRUZIONI:
 Genera una lista di keyword negative per risolvere il problema identificato.
 Raggruppa per tema/categoria.
 
-GENERA:
-- 15-20 keyword negative
-- Per ciascuna: keyword | match type consigliato (phrase o exact) | motivazione breve
+GENERA in formato JSON esatto (NESSUN testo fuori dal JSON):
+{
+  "keywords": [
+    {"keyword": "keyword text", "match_type": "phrase", "is_negative": true, "reason": "Motivazione breve"}
+  ]
+}
 
-Formatta come testo leggibile raggruppato per categoria.
+Regole:
+- 15-20 keyword negative
+- match_type: "exact" o "phrase"
+- is_negative: sempre true
+- SOLO JSON valido, nessun commento o testo aggiuntivo
 PROMPT;
     }
 
     /**
-     * Pulisce la risposta AI da eventuali markdown wrapper
+     * Parsa la risposta AI come JSON, rimuovendo eventuali markdown wrapper
      */
-    private function cleanResponse(string $text): string
+    private function parseJsonResponse(string $text): array
     {
-        $text = preg_replace('/^```[\w]*\n?/', '', trim($text));
+        $text = preg_replace('/^```(?:json)?\s*/i', '', trim($text));
         $text = preg_replace('/\n?```$/', '', $text);
-        return trim($text);
+        $text = trim($text);
+
+        $result = json_decode($text, true);
+        if ($result === null && json_last_error() !== JSON_ERROR_NONE) {
+            throw new \Exception('Risposta AI non valida (JSON): ' . json_last_error_msg());
+        }
+        return $result;
     }
 }

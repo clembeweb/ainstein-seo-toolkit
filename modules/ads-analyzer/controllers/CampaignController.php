@@ -542,7 +542,12 @@ class CampaignController
             Database::reconnect();
 
             ob_end_clean();
-            echo json_encode(['success' => true, 'content' => $result]);
+            echo json_encode([
+                'success' => true,
+                'type' => $type,
+                'data' => $result,
+                'content' => self::formatFixForDisplay($type, $result),
+            ]);
             exit;
 
         } catch (\Exception $e) {
@@ -553,5 +558,167 @@ class CampaignController
             echo json_encode(['error' => 'Errore: ' . $e->getMessage()]);
             exit;
         }
+    }
+
+    /**
+     * Export PDF della valutazione campagne
+     */
+    public function exportPdf(int $projectId, int $evalId): void
+    {
+        $user = Auth::user();
+        $project = Project::findByUserAndId($user['id'], $projectId);
+
+        if (!$project) {
+            $_SESSION['flash_error'] = 'Progetto non trovato';
+            header('Location: ' . url('/ads-analyzer'));
+            exit;
+        }
+
+        if (($project['type'] ?? 'negative-kw') !== 'campaign') {
+            $_SESSION['flash_error'] = 'Operazione non disponibile per questo tipo di progetto';
+            header('Location: ' . url("/ads-analyzer/projects/{$projectId}"));
+            exit;
+        }
+
+        $evaluation = CampaignEvaluation::find($evalId);
+        if (!$evaluation || $evaluation['project_id'] != $projectId || $evaluation['status'] !== 'completed') {
+            $_SESSION['flash_error'] = 'Valutazione non trovata o non completata';
+            header('Location: ' . url("/ads-analyzer/projects/{$projectId}/campaigns"));
+            exit;
+        }
+
+        $aiResponse = json_decode($evaluation['ai_response'] ?? '{}', true) ?: [];
+
+        if (empty($aiResponse)) {
+            $_SESSION['flash_error'] = 'Nessun dato AI disponibile per questa valutazione';
+            header('Location: ' . url("/ads-analyzer/projects/{$projectId}/campaigns/evaluations/{$evalId}"));
+            exit;
+        }
+
+        require_once __DIR__ . '/../services/EvaluationPdfService.php';
+        $service = new \Modules\AdsAnalyzer\Services\EvaluationPdfService();
+
+        try {
+            $pdfContent = $service->generate($evaluation, $aiResponse, $project);
+        } catch (\Exception $e) {
+            Logger::channel('ai')->error("PDF export error", ['error' => $e->getMessage()]);
+            $_SESSION['flash_error'] = 'Errore nella generazione del PDF: ' . $e->getMessage();
+            header('Location: ' . url("/ads-analyzer/projects/{$projectId}/campaigns/evaluations/{$evalId}"));
+            exit;
+        }
+
+        // Genera filename: report-{slug}-{date}.pdf
+        $slug = preg_replace('/[^a-z0-9]+/', '-', strtolower($project['name'] ?? 'progetto'));
+        $slug = trim($slug, '-');
+        $dateStr = date('Y-m-d', strtotime($evaluation['created_at'] ?? 'now'));
+        $filename = "report-{$slug}-{$dateStr}.pdf";
+
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . strlen($pdfContent));
+        header('Cache-Control: private, max-age=0, must-revalidate');
+
+        echo $pdfContent;
+        exit;
+    }
+
+    /**
+     * Export CSV Google Ads Editor da fix AI generato
+     */
+    public function exportCsv(int $projectId, int $evalId): void
+    {
+        $user = Auth::user();
+        $project = Project::findByUserAndId($user['id'], $projectId);
+
+        if (!$project || ($project['type'] ?? 'negative-kw') !== 'campaign') {
+            http_response_code(400);
+            echo json_encode(['error' => 'Progetto non valido']);
+            exit;
+        }
+
+        $type = $_POST['type'] ?? '';
+        $data = json_decode($_POST['data'] ?? '{}', true) ?: [];
+        $campaignName = $_POST['campaign_name'] ?? $project['name'] ?? 'Campagna';
+
+        if (empty($type) || empty($data)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Dati mancanti']);
+            exit;
+        }
+
+        require_once __DIR__ . '/../services/EvaluationCsvService.php';
+        $service = new \Modules\AdsAnalyzer\Services\EvaluationCsvService();
+        $csv = $service->generate($type, $data, $campaignName);
+
+        $typeLabel = match (true) {
+            str_contains($type, 'copy') => 'copy',
+            str_contains($type, 'ext') => 'extensions',
+            str_contains($type, 'key') => 'keywords',
+            default => 'export',
+        };
+        $filename = "ads-editor-{$typeLabel}-" . date('Y-m-d') . '.csv';
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . strlen($csv));
+        echo $csv;
+        exit;
+    }
+
+    /**
+     * Formatta dati strutturati AI in testo leggibile per il bottone "Copia"
+     */
+    private static function formatFixForDisplay(string $type, array $data): string
+    {
+        $lines = [];
+
+        if (str_contains($type, 'copy')) {
+            $lines[] = "HEADLINES:";
+            foreach (($data['headlines'] ?? []) as $i => $h) {
+                $lines[] = ($i + 1) . ". " . $h . " (" . mb_strlen($h) . " car.)";
+            }
+            $lines[] = "";
+            $lines[] = "DESCRIPTIONS:";
+            foreach (($data['descriptions'] ?? []) as $i => $d) {
+                $lines[] = ($i + 1) . ". " . $d . " (" . mb_strlen($d) . " car.)";
+            }
+            if (!empty($data['paths'])) {
+                $lines[] = "";
+                $lines[] = "PATHS: /" . ($data['paths']['path1'] ?? '') . " / " . ($data['paths']['path2'] ?? '');
+            }
+        } elseif (str_contains($type, 'extensions')) {
+            if (!empty($data['sitelinks'])) {
+                $lines[] = "SITELINKS:";
+                foreach ($data['sitelinks'] as $i => $sl) {
+                    $lines[] = ($i + 1) . ". " . ($sl['title'] ?? '') . " (" . mb_strlen($sl['title'] ?? '') . " car.)";
+                    $lines[] = "   Desc 1: " . ($sl['desc1'] ?? '');
+                    $lines[] = "   Desc 2: " . ($sl['desc2'] ?? '');
+                    $lines[] = "   URL: " . ($sl['url'] ?? '');
+                }
+            }
+            if (!empty($data['callouts'])) {
+                $lines[] = "";
+                $lines[] = "CALLOUTS:";
+                foreach ($data['callouts'] as $i => $c) {
+                    $lines[] = ($i + 1) . ". " . $c . " (" . mb_strlen($c) . " car.)";
+                }
+            }
+            if (!empty($data['structured_snippets'])) {
+                $lines[] = "";
+                $lines[] = "STRUCTURED SNIPPETS:";
+                foreach ($data['structured_snippets'] as $ss) {
+                    $lines[] = "Header: " . ($ss['header'] ?? '');
+                    $lines[] = "Valori: " . implode(', ', $ss['values'] ?? []);
+                }
+            }
+        } elseif (str_contains($type, 'keywords')) {
+            $lines[] = "KEYWORD NEGATIVE:";
+            foreach (($data['keywords'] ?? []) as $i => $kw) {
+                $match = $kw['match_type'] ?? 'phrase';
+                $lines[] = ($i + 1) . ". " . ($kw['keyword'] ?? '') . " [{$match}]" . (!empty($kw['reason']) ? " - " . $kw['reason'] : '');
+            }
+        }
+
+        return implode("\n", $lines);
     }
 }

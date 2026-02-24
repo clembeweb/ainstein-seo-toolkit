@@ -84,12 +84,22 @@ function renderAiGenerator(string $key): string {
             </svg>
             Contenuto generato
         </span>
-        <button @click="copyResult('{$key}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-emerald-700 bg-emerald-100 hover:bg-emerald-200 dark:text-emerald-300 dark:bg-emerald-900/40 dark:hover:bg-emerald-900/60 transition-colors">
-            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
-            </svg>
-            <span x-text="generators['{$key}']?.copied ? 'Copiato!' : 'Copia'"></span>
-        </button>
+        <div class="flex items-center gap-2">
+            <button @click="copyResult('{$key}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-emerald-700 bg-emerald-100 hover:bg-emerald-200 dark:text-emerald-300 dark:bg-emerald-900/40 dark:hover:bg-emerald-900/60 transition-colors">
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                </svg>
+                <span x-text="generators['{$key}']?.copied ? 'Copiato!' : 'Copia'"></span>
+            </button>
+            <button x-show="generators['{$key}']?.data && ['copy','extensions','keywords'].includes(generators['{$key}']?.type)"
+                @click="exportCsv('{$key}')"
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-rose-700 bg-rose-100 hover:bg-rose-200 dark:text-rose-300 dark:bg-rose-900/40 dark:hover:bg-rose-900/60 transition-colors">
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Esporta CSV Ads Editor
+            </button>
+        </div>
     </div>
     <pre x-text="generators['{$key}']?.result" class="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-sans leading-relaxed max-h-96 overflow-y-auto"></pre>
 </div>
@@ -369,6 +379,16 @@ HTML;
                         </svg>
                         <?= number_format((float)$evaluation['credits_used'], 1) ?> crediti
                     </div>
+                    <?php endif; ?>
+                    <?php if ($hasResults): ?>
+                    <a href="<?= url("/ads-analyzer/projects/{$project['id']}/campaigns/evaluations/{$evaluation['id']}/export-pdf") ?>"
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 dark:text-rose-300 dark:bg-rose-900/30 dark:hover:bg-rose-900/50 transition-colors"
+                       target="_blank">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Esporta PDF
+                    </a>
                     <?php endif; ?>
                 </div>
             </div>
@@ -1111,9 +1131,9 @@ function evaluationFixes() {
                     throw new Error(data.error);
                 }
 
-                this.generators[key] = { loading: false, result: data.content || '', error: null, copied: false };
+                this.generators[key] = { loading: false, result: data.content || '', type: data.type || '', data: data.data || null, error: null, copied: false };
             } catch (e) {
-                this.generators[key] = { loading: false, result: null, error: e.message || 'Errore di connessione. Riprova.', copied: false };
+                this.generators[key] = { loading: false, result: null, type: '', data: null, error: e.message || 'Errore di connessione. Riprova.', copied: false };
             }
         },
 
@@ -1137,7 +1157,36 @@ function evaluationFixes() {
             setTimeout(() => {
                 if (this.generators[key]) this.generators[key].copied = false;
             }, 2000);
-        }
+        },
+
+        exportCsv(key) {
+            const gen = this.generators[key];
+            if (!gen || !gen.data) return;
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = this.generateUrl.replace('/generate', '/export-csv');
+            form.target = '_blank';
+
+            const fields = {
+                '_csrf_token': this.csrfToken,
+                'type': gen.type,
+                'data': JSON.stringify(gen.data),
+                'campaign_name': '<?= e($project['name'] ?? '') ?>',
+            };
+
+            for (const [name, value] of Object.entries(fields)) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = value;
+                form.appendChild(input);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+        },
     };
 }
 </script>
