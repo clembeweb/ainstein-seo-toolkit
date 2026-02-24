@@ -53,6 +53,9 @@ $config = [
     // --- Nuovi: content-creator ---
     'cc_jobs_days'              => 7,    // Jobs completati: 7 giorni
     'cc_operations_log_days'    => 90,   // Operations log: 90 giorni
+
+    // --- Notifications ---
+    'notifications_days'        => 90,   // Notifiche lette: 90 giorni
 ];
 
 $logFile = BASE_PATH . '/storage/logs/data-cleanup.log';
@@ -841,6 +844,25 @@ function cleanupExpiredInvitations(): int
 }
 
 // ============================================
+// 24. notifications → DELETE > 90 giorni
+// ============================================
+
+function cleanupOldNotifications(array $config): int
+{
+    if (!tableExists('notifications')) {
+        logMsg("  Tabella notifications non trovata, skip");
+        return 0;
+    }
+
+    $days = $config['notifications_days'];
+
+    return Database::execute(
+        "DELETE FROM notifications WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)",
+        [$days]
+    );
+}
+
+// ============================================
 // ESECUZIONE PRINCIPALE
 // ============================================
 
@@ -879,6 +901,9 @@ $sections = [
 
     // --- 23: project sharing ---
     ['project_invitations (scaduti)', 'cleanupExpiredInvitations', []],
+
+    // --- 24: notifications ---
+    ['notifications (> 90gg)',        'cleanupOldNotifications', [$config]],
 ];
 
 foreach ($sections as [$label, $func, $args]) {
