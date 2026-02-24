@@ -103,6 +103,22 @@ class ProjectSharingService
                 'invited_by' => $invitedBy,
             ]);
 
+            // Notifica all'utente invitato
+            try {
+                $inviter = Database::fetch("SELECT name, email FROM users WHERE id = ?", [$invitedBy]);
+                $inviterLabel = ($inviter['name'] ?? $inviter['email']);
+                \Services\NotificationService::send($targetUser['id'], 'project_invite',
+                    'Invito a collaborare su ' . $project['name'], [
+                    'body' => $inviterLabel . ' ti ha invitato come ' . ($role === 'editor' ? 'Editor' : 'Visualizzatore'),
+                    'icon' => 'user-plus',
+                    'color' => 'blue',
+                    'action_url' => '/projects',
+                    'data' => ['project_id' => $projectId, 'invited_by' => $invitedBy],
+                ]);
+            } catch (\Throwable $e) {
+                Logger::channel('sharing')->warning('Notifica invito fallita', ['error' => $e->getMessage()]);
+            }
+
             return [
                 'success' => true,
                 'message' => "Invito inviato a {$targetUser['name']} come {$roleLabel}.",
@@ -223,6 +239,23 @@ class ProjectSharingService
             'user_id'    => $userId,
         ]);
 
+        // Notifica al proprietario del progetto
+        try {
+            $ownerId = \Services\ProjectAccessService::getOwnerId((int)$member['project_id']);
+            if ($ownerId && $ownerId !== $userId) {
+                $userName = Database::fetch("SELECT name, email FROM users WHERE id = ?", [$userId]);
+                \Services\NotificationService::send($ownerId, 'project_invite_accepted',
+                    ($userName['name'] ?? $userName['email']) . ' ha accettato l\'invito', [
+                    'icon' => 'check-circle',
+                    'color' => 'emerald',
+                    'action_url' => '/projects/' . $member['project_id'] . '/sharing',
+                    'data' => ['project_id' => (int)$member['project_id'], 'user_id' => $userId],
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Logger::channel('sharing')->warning('Notifica accettazione fallita', ['error' => $e->getMessage()]);
+        }
+
         return [
             'success'    => true,
             'message'    => 'Invito accettato con successo.',
@@ -254,6 +287,23 @@ class ProjectSharingService
 
         if ($member['accepted_at'] !== null) {
             return ['success' => false, 'message' => 'Questo invito e gia stato accettato e non puo essere rifiutato.'];
+        }
+
+        // Notifica al proprietario del progetto (prima del DELETE)
+        try {
+            $ownerId = \Services\ProjectAccessService::getOwnerId((int)$member['project_id']);
+            if ($ownerId && $ownerId !== $userId) {
+                $userName = Database::fetch("SELECT name, email FROM users WHERE id = ?", [$userId]);
+                \Services\NotificationService::send($ownerId, 'project_invite_declined',
+                    ($userName['name'] ?? $userName['email']) . ' ha rifiutato l\'invito', [
+                    'icon' => 'x-circle',
+                    'color' => 'amber',
+                    'action_url' => '/projects/' . $member['project_id'] . '/sharing',
+                    'data' => ['project_id' => (int)$member['project_id'], 'user_id' => $userId],
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Logger::channel('sharing')->warning('Notifica rifiuto fallita', ['error' => $e->getMessage()]);
         }
 
         // DELETE cascade rimuove anche project_member_modules
@@ -305,7 +355,7 @@ class ProjectSharingService
 
         // Verifica che l'email dell'utente corrisponda all'invito
         $user = Database::fetch(
-            "SELECT email FROM users WHERE id = ?",
+            "SELECT name, email FROM users WHERE id = ?",
             [$userId]
         );
 
@@ -370,6 +420,22 @@ class ProjectSharingService
             'project_id'    => $invitation['project_id'],
             'user_id'       => $userId,
         ]);
+
+        // Notifica al proprietario del progetto
+        try {
+            $ownerId = \Services\ProjectAccessService::getOwnerId((int)$invitation['project_id']);
+            if ($ownerId && $ownerId !== $userId) {
+                \Services\NotificationService::send($ownerId, 'project_invite_accepted',
+                    ($user['name'] ?? $user['email']) . ' ha accettato l\'invito', [
+                    'icon' => 'check-circle',
+                    'color' => 'emerald',
+                    'action_url' => '/projects/' . $invitation['project_id'] . '/sharing',
+                    'data' => ['project_id' => (int)$invitation['project_id'], 'user_id' => $userId],
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Logger::channel('sharing')->warning('Notifica accettazione token fallita', ['error' => $e->getMessage()]);
+        }
 
         $roleLabel = $invitation['role'] === 'editor' ? 'Editor' : 'Visualizzatore';
 
