@@ -66,6 +66,44 @@ class Project
         return Database::fetch($sql, $params);
     }
 
+    /**
+     * Find a project accessible by the user (owner or shared member).
+     */
+    public function findAccessible(int $id, ?int $userId = null): ?array
+    {
+        // Fast path: direct owner
+        $project = $this->find($id, $userId);
+        if ($project) {
+            $project['access_role'] = 'owner';
+            return $project;
+        }
+
+        if ($userId === null) {
+            return null;
+        }
+
+        // Shared access: find project without user filter, then check sharing
+        $project = $this->find($id);
+        if (!$project || empty($project['global_project_id'])) {
+            return null;
+        }
+
+        $role = \Services\ProjectAccessService::getRole((int)$project['global_project_id'], $userId);
+        if ($role === null) {
+            return null;
+        }
+
+        // Check module-level access
+        if ($role !== 'owner' && !\Services\ProjectAccessService::canAccessModule(
+            (int)$project['global_project_id'], $userId, 'keyword-research'
+        )) {
+            return null;
+        }
+
+        $project['access_role'] = $role;
+        return $project;
+    }
+
     public function allByUser(int $userId): array
     {
         $sql = "SELECT * FROM {$this->table} WHERE user_id = ? ORDER BY created_at DESC";

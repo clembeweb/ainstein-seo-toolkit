@@ -30,6 +30,88 @@ class Project
     }
 
     /**
+     * Find a project accessible by the user (owner or shared member).
+     */
+    public function findAccessible(int $id, ?int $userId = null): ?array
+    {
+        // Fast path: direct owner
+        $project = $this->find($id, $userId);
+        if ($project) {
+            $project['access_role'] = 'owner';
+            return $project;
+        }
+
+        if ($userId === null) {
+            return null;
+        }
+
+        // Shared access: find project without user filter, then check sharing
+        $project = $this->find($id);
+        if (!$project || empty($project['global_project_id'])) {
+            return null;
+        }
+
+        $role = \Services\ProjectAccessService::getRole((int)$project['global_project_id'], $userId);
+        if ($role === null) {
+            return null;
+        }
+
+        // Check module-level access
+        if ($role !== 'owner' && !\Services\ProjectAccessService::canAccessModule(
+            (int)$project['global_project_id'], $userId, 'seo-tracking'
+        )) {
+            return null;
+        }
+
+        $project['access_role'] = $role;
+        return $project;
+    }
+
+    /**
+     * Find project with connections, accessible by the user (owner or shared member).
+     */
+    public function findWithConnectionsAccessible(int $id, int $userId): ?array
+    {
+        // Fast path: direct owner
+        $project = $this->findWithConnections($id, $userId);
+        if ($project) {
+            $project['access_role'] = 'owner';
+            return $project;
+        }
+
+        // Shared access: find project without user filter, then check sharing
+        $project = $this->find($id);
+        if (!$project || empty($project['global_project_id'])) {
+            return null;
+        }
+
+        $role = \Services\ProjectAccessService::getRole((int)$project['global_project_id'], $userId);
+        if ($role === null) {
+            return null;
+        }
+
+        if ($role !== 'owner' && !\Services\ProjectAccessService::canAccessModule(
+            (int)$project['global_project_id'], $userId, 'seo-tracking'
+        )) {
+            return null;
+        }
+
+        // Load connections for the shared project
+        $project['gsc_connection'] = Database::fetch(
+            "SELECT * FROM st_gsc_connections WHERE project_id = ?",
+            [$id]
+        );
+        $project['alert_settings'] = Database::fetch(
+            "SELECT * FROM st_alert_settings WHERE project_id = ?",
+            [$id]
+        );
+        $project['stats'] = $this->getStats($id);
+        $project['access_role'] = $role;
+
+        return $project;
+    }
+
+    /**
      * Tutti i progetti di un utente
      */
     public function allByUser(int $userId): array

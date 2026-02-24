@@ -50,6 +50,40 @@ class Project
         ) ?: null;
     }
 
+    /**
+     * Find a project accessible by the user (owner or shared member).
+     */
+    public static function findAccessible(int $userId, int $id): ?array
+    {
+        // Fast path: direct owner
+        $project = self::findByUserAndId($userId, $id);
+        if ($project) {
+            $project['access_role'] = 'owner';
+            return $project;
+        }
+
+        // Shared access: find project without user filter, then check sharing
+        $project = self::find($id);
+        if (!$project || empty($project['global_project_id'])) {
+            return null;
+        }
+
+        $role = \Services\ProjectAccessService::getRole((int)$project['global_project_id'], $userId);
+        if ($role === null) {
+            return null;
+        }
+
+        // Check module-level access
+        if ($role !== 'owner' && !\Services\ProjectAccessService::canAccessModule(
+            (int)$project['global_project_id'], $userId, 'ads-analyzer'
+        )) {
+            return null;
+        }
+
+        $project['access_role'] = $role;
+        return $project;
+    }
+
     public static function getAllByUser(int $userId, ?string $status = null, ?string $type = null): array
     {
         $sql = "SELECT * FROM ga_projects WHERE user_id = ?";
