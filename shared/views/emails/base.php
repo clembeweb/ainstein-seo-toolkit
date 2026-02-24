@@ -16,12 +16,32 @@ $brandColor = \Core\Settings::get('email_brand_color', '#006e96');
 $logoUrl = \Core\Settings::get('email_logo_url', '');
 $customFooterText = \Core\Settings::get('email_footer_text', '');
 
+// Fallback: usa il logo orizzontale del brand se email_logo_url non e impostato
+if (empty($logoUrl)) {
+    $brandLogo = \Core\Settings::get('brand_logo_horizontal', '');
+    if (!empty($brandLogo)) {
+        // Il path in DB e relativo (assets/images/...), costruisci URL completo
+        $logoUrl = rtrim($appUrl ?? '', '/') . '/' . ltrim($brandLogo, '/');
+    }
+}
+
 // Darken brand color by ~15% for hover state
 $brandColorHover = (function($hex) {
     $hex = ltrim($hex, '#');
+    if (strlen($hex) !== 6) return '#005577';
     $r = max(0, intval(hexdec(substr($hex, 0, 2)) * 0.85));
     $g = max(0, intval(hexdec(substr($hex, 2, 2)) * 0.85));
     $b = max(0, intval(hexdec(substr($hex, 4, 2)) * 0.85));
+    return sprintf('#%02x%02x%02x', $r, $g, $b);
+})($brandColor);
+
+// Lighten brand color for accent backgrounds
+$brandColorLight = (function($hex) {
+    $hex = ltrim($hex, '#');
+    if (strlen($hex) !== 6) return '#e6f4f8';
+    $r = min(255, intval(hexdec(substr($hex, 0, 2)) * 0.15 + 255 * 0.85));
+    $g = min(255, intval(hexdec(substr($hex, 2, 2)) * 0.15 + 255 * 0.85));
+    $b = min(255, intval(hexdec(substr($hex, 4, 2)) * 0.15 + 255 * 0.85));
     return sprintf('#%02x%02x%02x', $r, $g, $b);
 })($brandColor);
 ?>
@@ -32,6 +52,15 @@ $brandColorHover = (function($hex) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title><?= htmlspecialchars($appName ?? 'Ainstein') ?></title>
+    <!--[if mso]>
+    <noscript>
+    <xml>
+    <o:OfficeDocumentSettings>
+    <o:PixelsPerInch>96</o:PixelsPerInch>
+    </o:OfficeDocumentSettings>
+    </xml>
+    </noscript>
+    <![endif]-->
     <style>
         /* Reset */
         body, table, td, p, a, li { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
@@ -41,7 +70,7 @@ $brandColorHover = (function($hex) {
 
         /* Base styles */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: #f1f5f9;
             color: #334155;
             line-height: 1.6;
@@ -50,7 +79,7 @@ $brandColorHover = (function($hex) {
         .email-wrapper {
             width: 100%;
             background-color: #f1f5f9;
-            padding: 32px 16px;
+            padding: 0;
         }
 
         .email-container {
@@ -58,42 +87,72 @@ $brandColorHover = (function($hex) {
             margin: 0 auto;
         }
 
+        /* Header — brand identity bar */
         .email-header {
+            background-color: <?= htmlspecialchars($brandColor) ?>;
             text-align: center;
-            padding: 24px 0 16px;
+            padding: 20px 32px;
+            border-radius: 12px 12px 0 0;
         }
 
         .email-header a {
-            color: <?= htmlspecialchars($brandColor) ?>;
+            color: #ffffff;
             text-decoration: none;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
             letter-spacing: -0.5px;
         }
 
-        .email-body {
-            background-color: #ffffff;
-            border-radius: 12px;
-            padding: 32px;
-            border: 1px solid #e2e8f0;
+        .email-header img {
+            max-height: 36px;
+            width: auto;
         }
 
+        /* Accent line under header */
+        .email-accent-line {
+            height: 3px;
+            background: linear-gradient(90deg, <?= htmlspecialchars($brandColor) ?>, <?= htmlspecialchars($brandColorLight) ?>, <?= htmlspecialchars($brandColor) ?>);
+        }
+
+        /* Body */
+        .email-body {
+            background-color: #ffffff;
+            padding: 36px 32px;
+            border-left: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        /* Footer */
         .email-footer {
+            background-color: #f8fafc;
+            border-radius: 0 0 12px 12px;
+            border: 1px solid #e2e8f0;
+            border-top: none;
             text-align: center;
-            padding: 24px 16px;
+            padding: 24px 32px;
+        }
+
+        .email-footer p {
+            margin: 0 0 6px;
             font-size: 12px;
             color: #94a3b8;
+            line-height: 1.5;
         }
 
         .email-footer a {
-            color: #64748b;
+            color: <?= htmlspecialchars($brandColor) ?>;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .email-footer a:hover {
             text-decoration: underline;
         }
 
         /* Buttons */
         .btn {
             display: inline-block;
-            padding: 14px 32px;
+            padding: 14px 36px;
             background-color: <?= htmlspecialchars($brandColor) ?>;
             color: #ffffff !important;
             text-decoration: none;
@@ -102,6 +161,7 @@ $brandColorHover = (function($hex) {
             font-size: 15px;
             line-height: 1;
             text-align: center;
+            transition: background-color 0.2s;
         }
 
         .btn:hover {
@@ -116,15 +176,15 @@ $brandColorHover = (function($hex) {
 
         /* Info box */
         .info-box {
-            background-color: #f0f9ff;
-            border: 1px solid #bae6fd;
-            border-radius: 8px;
-            padding: 16px;
+            background-color: <?= htmlspecialchars($brandColorLight) ?>;
+            border-left: 4px solid <?= htmlspecialchars($brandColor) ?>;
+            border-radius: 0 8px 8px 0;
+            padding: 16px 20px;
             margin: 20px 0;
         }
 
         .info-box p {
-            color: #0369a1;
+            color: #1e293b;
             margin: 0;
             font-size: 14px;
         }
@@ -138,7 +198,10 @@ $brandColorHover = (function($hex) {
 
         /* Responsive */
         @media only screen and (max-width: 620px) {
-            .email-body { padding: 24px 20px; }
+            .email-wrapper { padding: 0 !important; }
+            .email-header { padding: 16px 20px; border-radius: 0; }
+            .email-body { padding: 28px 20px; }
+            .email-footer { padding: 20px; border-radius: 0; }
             .btn { padding: 12px 24px; font-size: 14px; }
             h1 { font-size: 20px; }
         }
@@ -152,36 +215,47 @@ $brandColorHover = (function($hex) {
     <?php endif; ?>
 
     <div class="email-wrapper">
-        <div class="email-container">
-            <!-- Header -->
-            <div class="email-header">
-                <?php if (!empty($logoUrl)): ?>
-                    <a href="<?= htmlspecialchars($appUrl) ?>"><img src="<?= htmlspecialchars($logoUrl) ?>" alt="<?= htmlspecialchars($appName) ?>" style="max-height:40px;"></a>
-                <?php else: ?>
-                    <a href="<?= htmlspecialchars($appUrl) ?>"><?= htmlspecialchars($appName) ?></a>
-                <?php endif; ?>
-            </div>
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#f1f5f9;">
+            <tr><td style="padding: 32px 16px;">
+                <div class="email-container">
 
-            <!-- Body -->
-            <div class="email-body">
-                <?= $emailContent ?>
-            </div>
+                    <!-- Header — brand bar -->
+                    <div class="email-header">
+                        <?php if (!empty($logoUrl)): ?>
+                            <a href="<?= htmlspecialchars($appUrl) ?>">
+                                <img src="<?= htmlspecialchars($logoUrl) ?>" alt="<?= htmlspecialchars($appName) ?>" style="max-height:36px;width:auto;filter:brightness(0) invert(1);">
+                            </a>
+                        <?php else: ?>
+                            <a href="<?= htmlspecialchars($appUrl) ?>"><?= htmlspecialchars($appName) ?></a>
+                        <?php endif; ?>
+                    </div>
 
-            <!-- Footer -->
-            <div class="email-footer">
-                <?php if (!empty($customFooterText)): ?>
-                    <p style="margin: 0 0 12px; color: #64748b; font-size: 13px;">
-                        <?= htmlspecialchars($customFooterText) ?>
-                    </p>
-                <?php endif; ?>
-                <p style="margin: 0 0 8px;">
-                    &copy; <?= $year ?> <?= htmlspecialchars($appName) ?>. Tutti i diritti riservati.
-                </p>
-                <p style="margin: 0;">
-                    <a href="<?= htmlspecialchars($appUrl) ?>"><?= htmlspecialchars(str_replace(['https://', 'http://'], '', $appUrl)) ?></a>
-                </p>
-            </div>
-        </div>
+                    <!-- Accent gradient line -->
+                    <div class="email-accent-line"></div>
+
+                    <!-- Body -->
+                    <div class="email-body">
+                        <?= $emailContent ?>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="email-footer">
+                        <?php if (!empty($customFooterText)): ?>
+                            <p style="margin: 0 0 10px; color: #64748b; font-size: 13px;">
+                                <?= htmlspecialchars($customFooterText) ?>
+                            </p>
+                        <?php endif; ?>
+                        <p style="margin: 0 0 6px;">
+                            &copy; <?= $year ?> <?= htmlspecialchars($appName) ?>. Tutti i diritti riservati.
+                        </p>
+                        <p style="margin: 0;">
+                            <a href="<?= htmlspecialchars($appUrl) ?>"><?= htmlspecialchars(str_replace(['https://', 'http://'], '', $appUrl)) ?></a>
+                        </p>
+                    </div>
+
+                </div>
+            </td></tr>
+        </table>
     </div>
 </body>
 </html>
