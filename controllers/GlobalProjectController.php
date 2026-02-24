@@ -545,6 +545,219 @@ class GlobalProjectController
         exit;
     }
 
+    // =========================================
+    // PROJECT SHARING
+    // =========================================
+
+    /**
+     * Pagina gestione condivisione progetto
+     * GET /projects/{id}/sharing
+     */
+    public function sharing(int $id): string
+    {
+        Middleware::auth();
+        $user = Auth::user();
+
+        $project = $this->project->findAccessible($id, $user['id']);
+        if (!$project || $project['access_role'] !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Accesso non autorizzato';
+            Router::redirect('/projects');
+            return '';
+        }
+
+        $members = \Services\ProjectAccessService::getProjectMembers($id);
+        $invitations = \Services\ProjectAccessService::getProjectInvitations($id);
+        $activeModules = $this->project->getActiveModules($id);
+
+        return View::render('projects/sharing', [
+            'project' => $project,
+            'members' => $members,
+            'invitations' => $invitations,
+            'activeModules' => $activeModules,
+            'modules' => ModuleLoader::getActiveModules()
+        ]);
+    }
+
+    /**
+     * Invita membro al progetto
+     * POST /projects/{id}/sharing/invite
+     */
+    public function invite(int $id): string
+    {
+        Middleware::auth();
+        Middleware::csrf();
+        $user = Auth::user();
+
+        // Solo il proprietario puo invitare
+        if (!\Services\ProjectAccessService::isOwner($id, $user['id'])) {
+            $_SESSION['_flash']['error'] = 'Solo il proprietario puo invitare membri';
+            Router::redirect('/projects/' . $id);
+            return '';
+        }
+
+        $email = trim($_POST['email'] ?? '');
+        $role = $_POST['role'] ?? 'viewer';
+        $moduleSlugs = $_POST['modules'] ?? [];
+
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $_SESSION['_flash']['error'] = 'Inserisci un indirizzo email valido';
+            Router::redirect('/projects/' . $id . '/sharing');
+            return '';
+        }
+
+        if (empty($moduleSlugs)) {
+            $_SESSION['_flash']['error'] = 'Seleziona almeno un modulo da condividere';
+            Router::redirect('/projects/' . $id . '/sharing');
+            return '';
+        }
+
+        $result = \Services\ProjectSharingService::invite($id, $email, $role, $moduleSlugs, $user['id']);
+
+        $_SESSION['_flash'][$result['success'] ? 'success' : 'error'] = $result['message'];
+        Router::redirect('/projects/' . $id . '/sharing');
+        return '';
+    }
+
+    /**
+     * Rimuovi membro dal progetto
+     * POST /projects/{id}/sharing/remove/{userId}
+     */
+    public function removeMember(int $id, int $memberUserId): string
+    {
+        Middleware::auth();
+        Middleware::csrf();
+        $user = Auth::user();
+
+        if (!\Services\ProjectAccessService::isOwner($id, $user['id'])) {
+            $_SESSION['_flash']['error'] = 'Accesso non autorizzato';
+            Router::redirect('/projects/' . $id);
+            return '';
+        }
+
+        $result = \Services\ProjectSharingService::removeMember($id, $memberUserId);
+        $_SESSION['_flash'][$result['success'] ? 'success' : 'error'] = $result['message'];
+        Router::redirect('/projects/' . $id . '/sharing');
+        return '';
+    }
+
+    /**
+     * Aggiorna ruolo/moduli membro
+     * POST /projects/{id}/sharing/update/{userId}
+     */
+    public function updateMember(int $id, int $memberUserId): string
+    {
+        Middleware::auth();
+        Middleware::csrf();
+        $user = Auth::user();
+
+        if (!\Services\ProjectAccessService::isOwner($id, $user['id'])) {
+            $_SESSION['_flash']['error'] = 'Accesso non autorizzato';
+            Router::redirect('/projects/' . $id);
+            return '';
+        }
+
+        $role = $_POST['role'] ?? 'viewer';
+        $moduleSlugs = $_POST['modules'] ?? [];
+
+        $result = \Services\ProjectSharingService::updateMember($id, $memberUserId, $role, $moduleSlugs);
+        $_SESSION['_flash'][$result['success'] ? 'success' : 'error'] = $result['message'];
+        Router::redirect('/projects/' . $id . '/sharing');
+        return '';
+    }
+
+    /**
+     * Annulla invito in sospeso
+     * POST /projects/{id}/sharing/cancel-invite/{inviteId}
+     */
+    public function cancelInvitation(int $id, int $invitationId): string
+    {
+        Middleware::auth();
+        Middleware::csrf();
+        $user = Auth::user();
+
+        if (!\Services\ProjectAccessService::isOwner($id, $user['id'])) {
+            $_SESSION['_flash']['error'] = 'Accesso non autorizzato';
+            Router::redirect('/projects/' . $id);
+            return '';
+        }
+
+        $result = \Services\ProjectSharingService::cancelInvitation($invitationId, $id);
+        $_SESSION['_flash'][$result['success'] ? 'success' : 'error'] = $result['message'];
+        Router::redirect('/projects/' . $id . '/sharing');
+        return '';
+    }
+
+    /**
+     * Accetta invito tramite token (link email)
+     * GET /invite/accept?token=xxx
+     */
+    public function acceptInviteByToken(): string
+    {
+        $token = $_GET['token'] ?? '';
+        if (empty($token)) {
+            $_SESSION['_flash']['error'] = 'Token invito mancante';
+            Router::redirect('/login');
+            return '';
+        }
+
+        if (!Auth::check()) {
+            $_SESSION['invite_token'] = $token;
+            $_SESSION['_flash']['info'] = 'Accedi o registrati per accettare l\'invito';
+            Router::redirect('/login');
+            return '';
+        }
+
+        $user = Auth::user();
+        $result = \Services\ProjectSharingService::acceptByToken($token, $user['id']);
+
+        if ($result['success']) {
+            $_SESSION['_flash']['success'] = $result['message'];
+            $redirectTo = isset($result['project_id']) ? '/projects/' . $result['project_id'] : '/projects';
+            Router::redirect($redirectTo);
+        } else {
+            $_SESSION['_flash']['error'] = $result['message'];
+            Router::redirect('/projects');
+        }
+        return '';
+    }
+
+    /**
+     * Accetta invito interno (notifica in-app)
+     * POST /invite/{id}/accept
+     */
+    public function acceptInternalInvite(int $memberId): string
+    {
+        Middleware::auth();
+        Middleware::csrf();
+        $user = Auth::user();
+
+        $result = \Services\ProjectSharingService::acceptInternal($memberId, $user['id']);
+        $_SESSION['_flash'][$result['success'] ? 'success' : 'error'] = $result['message'];
+
+        if ($result['success'] && isset($result['project_id'])) {
+            Router::redirect('/projects/' . $result['project_id']);
+        } else {
+            Router::redirect('/projects');
+        }
+        return '';
+    }
+
+    /**
+     * Rifiuta invito interno (notifica in-app)
+     * POST /invite/{id}/decline
+     */
+    public function declineInternalInvite(int $memberId): string
+    {
+        Middleware::auth();
+        Middleware::csrf();
+        $user = Auth::user();
+
+        $result = \Services\ProjectSharingService::declineInternal($memberId, $user['id']);
+        $_SESSION['_flash'][$result['success'] ? 'success' : 'error'] = $result['message'];
+        Router::redirect('/projects');
+        return '';
+    }
+
     /**
      * Elimina progetto
      * POST /projects/{id}/delete

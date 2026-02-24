@@ -730,6 +730,34 @@ Router::post('/projects/{id}/wp-sites/test', function ($id) {
     $controller->testWpSite((int) $id);
 });
 
+// Project Sharing
+Router::get('/projects/{id}/sharing', function ($id) {
+    return (new Controllers\GlobalProjectController())->sharing((int) $id);
+});
+Router::post('/projects/{id}/sharing/invite', function ($id) {
+    return (new Controllers\GlobalProjectController())->invite((int) $id);
+});
+Router::post('/projects/{id}/sharing/remove/{userId}', function ($id, $userId) {
+    return (new Controllers\GlobalProjectController())->removeMember((int) $id, (int) $userId);
+});
+Router::post('/projects/{id}/sharing/update/{userId}', function ($id, $userId) {
+    return (new Controllers\GlobalProjectController())->updateMember((int) $id, (int) $userId);
+});
+Router::post('/projects/{id}/sharing/cancel-invite/{inviteId}', function ($id, $inviteId) {
+    return (new Controllers\GlobalProjectController())->cancelInvitation((int) $id, (int) $inviteId);
+});
+
+// Invitation acceptance
+Router::get('/invite/accept', function () {
+    return (new Controllers\GlobalProjectController())->acceptInviteByToken();
+});
+Router::post('/invite/{id}/accept', function ($id) {
+    return (new Controllers\GlobalProjectController())->acceptInternalInvite((int) $id);
+});
+Router::post('/invite/{id}/decline', function ($id) {
+    return (new Controllers\GlobalProjectController())->declineInternalInvite((int) $id);
+});
+
 // --- OAuth Routes (centralizzati) ---
 Router::get('/oauth/google/callback', [Controllers\OAuthController::class, 'googleCallback']);
 
