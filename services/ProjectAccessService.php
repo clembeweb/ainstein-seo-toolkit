@@ -189,7 +189,7 @@ class ProjectAccessService
     {
         $members = Database::fetchAll(
             "SELECT pm.id, pm.user_id, pm.role, pm.accepted_at, pm.created_at,
-                    u.name, u.email, u.avatar
+                    u.name AS user_name, u.email AS user_email, u.avatar AS user_avatar
              FROM project_members pm
              JOIN users u ON u.id = pm.user_id
              WHERE pm.project_id = ?
