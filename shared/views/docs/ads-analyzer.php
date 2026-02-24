@@ -108,7 +108,7 @@
                 </div>
                 <h3 class="font-medium text-slate-900 dark:text-white text-sm">Valutazione campagne AI</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Analisi delle performance con raccomandazioni AI su copy annunci, budget e strategie di ottimizzazione. Con pulsanti "Genera con AI" per creare contenuti pronti da copiare.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Analisi delle performance con raccomandazioni AI su copy, budget, landing pages e strategie di ottimizzazione. Include analisi automatica delle landing page e report esportabile in PDF.</p>
         </div>
         <!-- Genera con AI -->
         <div class="p-4 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20">
@@ -120,7 +120,7 @@
                 </div>
                 <h3 class="font-medium text-slate-900 dark:text-white text-sm">Genera con AI</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Dalla pagina valutazione, genera contenuti actionable per risolvere i problemi identificati: copy annunci (headline + description), estensioni mancanti (sitelink, callout, snippet, price, promotion) e keyword negative raggruppate per categoria. Contenuti pronti per copia/incolla in Google Ads.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Dalla pagina valutazione, genera contenuti actionable per risolvere i problemi identificati: copy annunci (headline + description), estensioni mancanti (sitelink, callout, snippet) e keyword negative raggruppate per categoria. Ogni generazione puo essere copiata o esportata in CSV compatibile Google Ads Editor per importazione diretta.</p>
         </div>
         <!-- Keyword negative -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -166,9 +166,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                     </svg>
                 </div>
-                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Export e copia rapida</h3>
+                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Export PDF e CSV</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Esporta in CSV o formato Google Ads Editor, oppure copia le keyword selezionate negli appunti con un clic.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Esporta il report completo della valutazione in PDF per condividerlo con il cliente. I contenuti generati con AI (copy, estensioni, keyword negative) possono essere esportati in CSV compatibile Google Ads Editor per importazione diretta.</p>
         </div>
         <!-- Campaign Creator -->
         <div class="p-4 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20">
