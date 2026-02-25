@@ -89,6 +89,13 @@ Router::post('/crawl-budget/projects/{id}/crawl/cancel', function ($id) {
     return $controller->cancel((int) $id);
 });
 
+// Stato crawl (per recovery dopo navigazione)
+Router::get('/crawl-budget/projects/{id}/crawl/status', function ($id) {
+    Middleware::auth();
+    $controller = new CrawlController();
+    return $controller->status((int) $id);
+});
+
 // Polling fallback
 Router::get('/crawl-budget/projects/{id}/crawl/job-status', function ($id) {
     Middleware::auth();

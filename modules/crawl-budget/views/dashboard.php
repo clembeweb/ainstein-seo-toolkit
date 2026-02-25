@@ -59,50 +59,124 @@ $dashOffset = $circumference - ($circumference * $score / 100);
     </div>
 </div>
 
-<!-- Crawl Progress Section (Alpine.js) -->
-<div x-data="crawlProgress()" x-cloak>
+<!-- Crawl Progress Section (Alpine.js - pattern SEO Audit) -->
+<div x-data="crawlJob()" x-cloak>
+
     <!-- Start Crawl Button (if no crawl running) -->
-    <?php if (!$isCrawling): ?>
-    <div class="mb-6 flex items-center gap-3">
+    <div x-show="status === 'idle'" class="mb-6 flex items-center gap-3">
         <button @click="startCrawl()"
-                :disabled="running"
                 class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-orange-600 hover:bg-orange-700 rounded-lg shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <span x-text="running ? 'Avvio in corso...' : '<?= $isCompleted ? 'Ri-analizza Sito' : 'Avvia Analisi' ?>'"></span>
+            <?= $isCompleted ? 'Ri-analizza Sito' : 'Avvia Analisi' ?>
         </button>
         <span class="text-xs text-slate-500 dark:text-slate-400">Gratuito — nessun credito richiesto</span>
     </div>
-    <?php endif; ?>
+
+    <!-- Starting state -->
+    <div x-show="status === 'starting'" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-orange-200 dark:border-orange-800 p-5 mb-6">
+        <div class="text-center py-4">
+            <svg class="w-8 h-8 mx-auto mb-2 animate-spin text-orange-500" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-sm font-medium text-slate-600 dark:text-slate-300">Avvio scansione in corso...</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Ricerca URL nel sito</p>
+        </div>
+    </div>
 
     <!-- Progress Card (shown during crawl) -->
-    <template x-if="running">
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-orange-200 dark:border-orange-800 p-5 mb-6">
-            <div class="flex items-center justify-between mb-4">
+    <div x-show="status === 'running' || status === 'cancelling'" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-orange-200 dark:border-orange-800 p-5 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Crawl in corso...</h3>
-                <button @click="cancelCrawl()" class="text-sm text-red-600 hover:text-red-700 dark:text-red-400 font-medium">Annulla</button>
-            </div>
-
-            <!-- Progress bar -->
-            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 mb-3">
-                <div class="bg-orange-500 h-3 rounded-full transition-all duration-300"
-                     :style="'width: ' + progress + '%'"></div>
-            </div>
-
-            <div class="flex items-center justify-between text-sm">
-                <span class="text-slate-600 dark:text-slate-400">
-                    <span x-text="pagesCrawled"></span> / <span x-text="pagesFound"></span> pagine
+                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300 animate-pulse">
+                    <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+                    <span x-text="status === 'cancelling' ? 'Arresto...' : 'In esecuzione'"></span>
                 </span>
-                <span class="text-slate-600 dark:text-slate-400">
-                    <span x-text="issuesFound"></span> problemi trovati
-                </span>
-                <span class="text-orange-600 dark:text-orange-400 font-medium" x-text="progress + '%'"></span>
             </div>
+            <button @click="cancelCrawl()" x-show="status === 'running'" class="text-sm text-red-600 hover:text-red-700 dark:text-red-400 font-medium">Annulla</button>
+        </div>
 
-            <div class="mt-2 text-xs text-slate-500 dark:text-slate-400 truncate" x-show="currentUrl">
-                <span x-text="currentUrl"></span>
+        <!-- Progress bar -->
+        <div class="flex items-center justify-between text-sm mb-2">
+            <span class="text-slate-600 dark:text-slate-400">Progresso</span>
+            <span class="font-medium text-slate-900 dark:text-white" x-text="completed + '/' + total + ' pagine'"></span>
+        </div>
+        <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-4">
+            <div class="h-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full transition-all duration-500"
+                 :style="'width: ' + percent + '%'"></div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 text-center">
+                <p class="text-2xl font-bold text-slate-900 dark:text-white" x-text="completed"></p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Pagine</p>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 text-center">
+                <p class="text-2xl font-bold text-red-600 dark:text-red-400" x-text="issues"></p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Problemi</p>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 text-center">
+                <p class="text-2xl font-bold text-slate-900 dark:text-white" x-text="percent + '%'"></p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Completato</p>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 text-center">
+                <p class="text-2xl font-bold text-slate-900 dark:text-white" x-text="elapsed"></p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Tempo</p>
             </div>
         </div>
-    </template>
+
+        <!-- Current URL -->
+        <div x-show="currentUrl" class="mb-3">
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">URL corrente:</p>
+            <p class="text-sm text-slate-700 dark:text-slate-300 truncate font-mono" x-text="currentUrl"></p>
+        </div>
+
+        <!-- Polling indicator -->
+        <div class="text-center" x-show="polling">
+            <p class="text-xs text-slate-400 dark:text-slate-500">
+                <svg class="inline w-3 h-3 mr-1 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Connessione in modalita polling
+            </p>
+        </div>
+    </div>
+
+    <!-- Completed state -->
+    <div x-show="status === 'completed'" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-emerald-200 dark:border-emerald-800 p-5 mb-6 text-center">
+        <svg class="w-12 h-12 mx-auto mb-2 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p class="text-sm font-medium text-emerald-600 dark:text-emerald-400">Scansione completata!</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Caricamento risultati...</p>
+    </div>
+
+    <!-- Stuck state (orphaned session) -->
+    <div x-show="status === 'stuck'" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-amber-200 dark:border-amber-800 p-5 mb-6 text-center">
+        <svg class="w-12 h-12 mx-auto mb-2 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+        </svg>
+        <p class="text-sm font-medium text-amber-600 dark:text-amber-400">Scansione interrotta</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-3">La scansione precedente si e interrotta. Avvia una nuova analisi.</p>
+        <button @click="status = 'idle'" class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 transition-colors">
+            <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Resetta e riprova
+        </button>
+    </div>
+
+    <!-- Error state -->
+    <div x-show="status === 'error'" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-red-200 dark:border-red-800 p-5 mb-6 text-center">
+        <svg class="w-12 h-12 mx-auto mb-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p class="text-sm font-medium text-red-600 dark:text-red-400" x-text="errorMsg || 'Errore durante la scansione'"></p>
+        <button @click="status = 'idle'" class="mt-3 text-sm text-orange-600 hover:text-orange-700 dark:text-orange-400 font-medium">Riprova</button>
+    </div>
 </div>
 
 <?php if ($isCompleted): ?>
@@ -284,112 +358,262 @@ $dashOffset = $circumference - ($circumference * $score / 100);
 <?php endif; ?>
 
 <script>
-function crawlProgress() {
+/**
+ * Alpine.js component: Crawl Job (SSE + Polling Fallback)
+ * Pattern copiato da seo-audit/crawl-control.php
+ *
+ * 1. Check for active job on init (recover after navigation)
+ * 2. Start crawl via POST /crawl/start
+ * 3. Connect to SSE stream for real-time progress
+ * 4. Fall back to polling if SSE disconnects (proxy timeout)
+ * 5. Cancel crawl via POST /crawl/cancel
+ */
+function crawlJob() {
+    const baseUrl = '<?= url('/crawl-budget/projects/' . $projectId) ?>';
+    const csrfToken = '<?= csrf_token() ?>';
+    const initialStatus = '<?= $isCrawling ? 'running' : ($isCompleted ? 'idle' : 'idle') ?>';
+    // Valori iniziali a 0 se crawling attivo: init() li aggiornerà dal server con conteggi reali
+    const initialCompleted = 0;
+    const initialTotal = 0;
+    const initialIssues = 0;
+    const initialPercent = 0;
+
     return {
-        running: <?= $isCrawling ? 'true' : 'false' ?>,
-        progress: 0,
-        pagesCrawled: 0,
-        pagesFound: 0,
-        issuesFound: 0,
-        currentUrl: '',
         jobId: null,
+        status: initialStatus,
         eventSource: null,
-        pollingInterval: null,
+        polling: false,
+        errorMsg: '',
 
-        startCrawl() {
-            if (this.running) return;
-            this.running = true;
+        completed: initialCompleted,
+        total: initialTotal,
+        issues: initialIssues,
+        percent: initialPercent,
+        currentUrl: '',
+        elapsed: '0:00',
 
-            fetch('<?= url('/crawl-budget/projects/' . $projectId . '/crawl/start') ?>', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                body: '_csrf_token=<?= csrf_token() ?>'
-            })
-            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-            .then(data => {
-                if (data.error) {
-                    alert(data.message || 'Errore');
-                    this.running = false;
-                    return;
+        _startTime: null,
+        _timerInterval: null,
+
+        /**
+         * Init: check for active job on page load (recovery after navigation).
+         */
+        async init() {
+            if (this.status === 'running') {
+                try {
+                    const resp = await fetch(baseUrl + '/crawl/status');
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        if (data.active_job_id) {
+                            this.jobId = data.active_job_id;
+                            if (data.session) {
+                                this.completed = data.session.pages_crawled || this.completed;
+                                this.total = data.session.pages_found || this.total;
+                                this.percent = this.total > 0 ? Math.round((this.completed / this.total) * 100) : 0;
+                                this.currentUrl = data.session.current_url || '';
+                            }
+                            if (data.issues) {
+                                this.issues = (data.issues.critical || 0) + (data.issues.warning || 0) + (data.issues.notice || 0);
+                            }
+                            this.startTimer();
+                            this.connectSSE();
+                        } else {
+                            this.status = 'stuck';
+                        }
+                    }
+                } catch (e) {
+                    if (this.status === 'running') {
+                        this.startPolling();
+                    }
                 }
-                this.jobId = data.job_id;
-                this.pagesFound = data.pages_found || 0;
-                this.connectSSE(data.job_id);
-            })
-            .catch(err => {
-                alert('Errore di connessione: ' + err.message);
-                this.running = false;
-            });
+            }
         },
 
-        connectSSE(jobId) {
-            const url = '<?= url('/crawl-budget/projects/' . $projectId . '/crawl/stream') ?>?job_id=' + jobId;
-            this.eventSource = new EventSource(url);
+        async startCrawl() {
+            this.status = 'starting';
+            this.completed = 0;
+            this.total = 0;
+            this.issues = 0;
+            this.percent = 0;
+            this.currentUrl = '';
+            this.elapsed = '0:00';
+            this.errorMsg = '';
+
+            try {
+                const resp = await fetch(baseUrl + '/crawl/start', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: '_csrf_token=' + csrfToken
+                });
+
+                if (!resp.ok) {
+                    const text = await resp.text();
+                    try { const err = JSON.parse(text); this.showError(err.message || 'Errore'); } catch(_) { this.showError('Errore di connessione'); }
+                    this.status = 'error';
+                    return;
+                }
+
+                const data = await resp.json();
+                if (data.success) {
+                    this.jobId = data.job_id;
+                    this.total = data.pages_found || 0;
+                    this.status = 'running';
+                    this.startTimer();
+                    this.connectSSE();
+                } else {
+                    this.showError(data.message || 'Errore durante l\'avvio');
+                    this.status = 'error';
+                }
+            } catch (e) {
+                this.showError('Errore di connessione al server');
+                this.status = 'error';
+            }
+        },
+
+        connectSSE() {
+            if (this.eventSource) this.eventSource.close();
+            this.polling = false;
+
+            this.eventSource = new EventSource(baseUrl + '/crawl/stream?job_id=' + this.jobId);
+
+            this.eventSource.addEventListener('started', (e) => {
+                const d = JSON.parse(e.data);
+                this.total = d.total || this.total;
+                this.status = 'running';
+            });
 
             this.eventSource.addEventListener('item_completed', (e) => {
                 const d = JSON.parse(e.data);
-                this.pagesCrawled = d.completed || 0;
-                this.pagesFound = d.total || this.pagesFound;
-                this.issuesFound += (d.issues || 0);
-                this.progress = parseFloat(d.percent) || 0;
+                this.completed = d.completed || 0;
+                this.total = d.total || this.total;
+                this.issues += (d.issues || 0);
+                this.percent = parseFloat(d.percent) || 0;
+                this.currentUrl = d.url || '';
+            });
+
+            this.eventSource.addEventListener('item_error', (e) => {
+                const d = JSON.parse(e.data);
                 this.currentUrl = d.url || '';
             });
 
             this.eventSource.addEventListener('completed', () => {
                 this.eventSource.close();
-                this.running = false;
-                location.reload();
+                this.eventSource = null;
+                this.stopTimer();
+                this.status = 'completed';
+                this.percent = 100;
+                setTimeout(() => location.reload(), 2000);
             });
 
             this.eventSource.addEventListener('cancelled', () => {
                 this.eventSource.close();
-                this.running = false;
-                location.reload();
+                this.eventSource = null;
+                this.stopTimer();
+                this.status = 'completed';
+                setTimeout(() => location.reload(), 2000);
             });
 
             this.eventSource.addEventListener('error', (e) => {
-                // SSE failed — fallback to polling
-                if (this.eventSource) this.eventSource.close();
-                this.startPolling(jobId);
+                try {
+                    const d = JSON.parse(e.data);
+                    this.showError(d.message || 'Errore dal server');
+                    this.eventSource.close();
+                    this.eventSource = null;
+                    this.stopTimer();
+                    this.status = 'error';
+                } catch (_) {}
             });
 
-            // Polling fallback after 30s if no events
-            setTimeout(() => {
-                if (this.running && this.pagesCrawled === 0) {
-                    if (this.eventSource) this.eventSource.close();
-                    this.startPolling(jobId);
-                }
-            }, 30000);
+            this.eventSource.onerror = () => {
+                this.eventSource.close();
+                this.eventSource = null;
+                this.startPolling();
+            };
         },
 
-        startPolling(jobId) {
-            this.pollingInterval = setInterval(() => {
-                fetch('<?= url('/crawl-budget/projects/' . $projectId . '/crawl/job-status') ?>?job_id=' + jobId)
-                .then(r => r.json())
-                .then(data => {
-                    if (!data.success) return;
-                    const job = data.job || {};
-                    this.pagesCrawled = job.items_completed || 0;
-                    this.pagesFound = job.items_total || this.pagesFound;
-                    this.progress = this.pagesFound > 0 ? Math.round((this.pagesCrawled / this.pagesFound) * 100) : 0;
+        async startPolling() {
+            if (this.polling) return;
+            this.polling = true;
 
-                    if (job.status === 'completed' || job.status === 'cancelled' || job.status === 'error') {
-                        clearInterval(this.pollingInterval);
-                        this.running = false;
-                        location.reload();
+            while (this.polling && this.status === 'running') {
+                try {
+                    const resp = await fetch(baseUrl + '/crawl/job-status?job_id=' + this.jobId);
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        if (data.success && data.job) {
+                            const job = data.job;
+                            this.completed = job.items_completed || 0;
+                            this.total = job.items_total || 0;
+                            this.percent = Math.round(job.progress || 0);
+                            this.currentUrl = job.current_item || '';
+
+                            if (data.issues) {
+                                this.issues = (data.issues.critical || 0) + (data.issues.warning || 0) + (data.issues.notice || 0);
+                            }
+
+                            if (job.status === 'completed') {
+                                this.polling = false;
+                                this.stopTimer();
+                                this.status = 'completed';
+                                this.percent = 100;
+                                setTimeout(() => location.reload(), 2000);
+                                return;
+                            }
+                            if (job.status === 'cancelled' || job.status === 'error') {
+                                this.polling = false;
+                                this.stopTimer();
+                                this.status = job.status === 'error' ? 'error' : 'completed';
+                                if (job.status !== 'error') setTimeout(() => location.reload(), 2000);
+                                return;
+                            }
+                        }
                     }
-                });
-            }, 3000);
+                } catch (e) {}
+                await new Promise(r => setTimeout(r, 3000));
+            }
         },
 
-        cancelCrawl() {
+        async cancelCrawl() {
             if (!this.jobId) return;
-            fetch('<?= url('/crawl-budget/projects/' . $projectId . '/crawl/cancel') ?>', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                body: '_csrf_token=<?= csrf_token() ?>&job_id=' + this.jobId
-            });
+            this.status = 'cancelling';
+
+            try {
+                await fetch(baseUrl + '/crawl/cancel', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: '_csrf_token=' + csrfToken + '&job_id=' + this.jobId
+                });
+            } catch (e) {
+                this.showError('Errore durante l\'annullamento');
+                this.status = 'running';
+            }
+        },
+
+        showError(msg) {
+            this.errorMsg = msg;
+            if (window.ainstein && window.ainstein.alert) window.ainstein.alert(msg, 'error');
+        },
+
+        startTimer() {
+            this._startTime = Date.now();
+            this.stopTimer();
+            this._timerInterval = setInterval(() => {
+                const seconds = Math.floor((Date.now() - this._startTime) / 1000);
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                this.elapsed = mins + ':' + secs.toString().padStart(2, '0');
+            }, 1000);
+        },
+
+        stopTimer() {
+            if (this._timerInterval) { clearInterval(this._timerInterval); this._timerInterval = null; }
+        },
+
+        destroy() {
+            if (this.eventSource) { this.eventSource.close(); this.eventSource = null; }
+            this.polling = false;
+            this.stopTimer();
         }
-    }
+    };
 }
 </script>

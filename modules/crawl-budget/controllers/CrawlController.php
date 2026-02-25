@@ -180,7 +180,21 @@ class CrawlController
         $sessionId = (int) $job['session_id'];
         $projectId = $id;
 
-        // Avvia job
+        // Se il job è già running, un altro processo lo sta gestendo.
+        // Non ri-processare: relay polling via SSE al client.
+        if ($job['status'] === CrawlJob::STATUS_RUNNING) {
+            $this->relayJobStatus($jobId, $sessionId);
+            exit;
+        }
+
+        // Se job già completato/errore/cancellato, notifica il client
+        if (in_array($job['status'], [CrawlJob::STATUS_COMPLETED, CrawlJob::STATUS_ERROR, CrawlJob::STATUS_CANCELLED])) {
+            $eventName = $job['status'] === CrawlJob::STATUS_ERROR ? 'error' : $job['status'];
+            $this->sendEvent($eventName, $this->jobModel->getJobResponse($jobId));
+            exit;
+        }
+
+        // Avvia job (solo se pending)
         $this->jobModel->start($jobId);
 
         // Recupera progetto per dominio
@@ -320,6 +334,7 @@ class CrawlController
                     // Aggiorna pages_found con nuovi URL scoperti
                     $totalPending = $this->pageModel->countBySession($sessionId);
                     $this->sessionModel->update($sessionId, ['pages_found' => $totalPending]);
+                    $this->jobModel->update($jobId, ['items_total' => $totalPending]);
 
                     // Controlla limite max_pages
                     $maxPages = $config['max_pages'] ?? 5000;
@@ -420,6 +435,58 @@ class CrawlController
     }
 
     /**
+     * GET /crawl-budget/projects/{id}/crawl/status
+     *
+     * Restituisce stato crawl corrente: active_job_id, sessione, issues.
+     * Usato dalla UI per recovery dopo navigazione (pattern SEO Audit).
+     */
+    public function status(int $id): void
+    {
+        header('Content-Type: application/json');
+
+        Middleware::auth();
+        $user = Auth::user();
+        $project = $this->projectModel->findAccessible($id, $user['id']);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'message' => 'Progetto non trovato']);
+            exit;
+        }
+
+        $activeJob = $this->jobModel->findActiveByProject($id);
+        $session = $this->sessionModel->findActiveByProject($id);
+
+        $issues = null;
+        $realCounts = null;
+        if ($session) {
+            $sessionId = (int) $session['id'];
+            $issues = $this->issueModel->countBySeverity($sessionId);
+            // Conteggio reale dalle pagine (piu affidabile dei contatori sessione)
+            $realCounts = Database::fetch(
+                "SELECT COUNT(*) as total,
+                        SUM(CASE WHEN status IN ('crawled','error') THEN 1 ELSE 0 END) as done
+                 FROM cb_pages WHERE session_id = ?",
+                [$sessionId]
+            );
+        }
+
+        echo json_encode([
+            'success' => true,
+            'active_job_id' => $activeJob ? (int) $activeJob['id'] : null,
+            'session' => $session ? [
+                'id' => (int) $session['id'],
+                'pages_found' => (int) ($realCounts['total'] ?? $session['pages_found'] ?? 0),
+                'pages_crawled' => (int) ($realCounts['done'] ?? $session['pages_crawled'] ?? 0),
+                'issues_found' => (int) ($session['issues_found'] ?? 0),
+                'current_url' => $session['current_url'] ?? null,
+                'status' => $session['status'] ?? null,
+            ] : null,
+            'issues' => $issues,
+        ]);
+        exit;
+    }
+
+    /**
      * GET /crawl-budget/projects/{id}/crawl/job-status?job_id=X
      *
      * Polling fallback per quando SSE non funziona.
@@ -438,16 +505,32 @@ class CrawlController
 
         $jobResponse = $this->jobModel->getJobResponse($jobId);
 
+        $sessionId = (int) $rawJob['session_id'];
         $sessionStats = null;
-        if (!empty($rawJob['session_id'])) {
-            $sessionStats = $this->sessionModel->getStats((int) $rawJob['session_id']);
+        if ($sessionId) {
+            $sessionStats = $this->sessionModel->getStats($sessionId);
+
+            // Conteggio reale dalle pagine (piu affidabile dei contatori)
+            $realCounts = Database::fetch(
+                "SELECT COUNT(*) as total,
+                        SUM(CASE WHEN status IN ('crawled','error') THEN 1 ELSE 0 END) as done
+                 FROM cb_pages WHERE session_id = ?",
+                [$sessionId]
+            );
+            if ($realCounts) {
+                $total = (int) $realCounts['total'];
+                $done = (int) $realCounts['done'];
+                $jobResponse['items_total'] = $total;
+                $jobResponse['items_completed'] = $done;
+                $jobResponse['progress'] = $total > 0 ? round(($done / $total) * 100, 1) : 0;
+            }
         }
 
         echo json_encode([
             'success' => true,
             'job' => $jobResponse,
             'session' => $sessionStats,
-            'issues' => $this->issueModel->countBySeverity((int) $rawJob['session_id']),
+            'issues' => $this->issueModel->countBySeverity($sessionId),
         ]);
         exit;
     }
@@ -468,6 +551,63 @@ class CrawlController
             'crawl_budget_score' => $score,
             'last_crawl_at' => date('Y-m-d H:i:s'),
         ]);
+    }
+
+    /**
+     * Relay: quando un altro processo sta già eseguendo il job,
+     * questo metodo fa polling dal DB e inoltra gli aggiornamenti via SSE.
+     */
+    private function relayJobStatus(int $jobId, int $sessionId): void
+    {
+        $this->sendEvent('started', ['total' => 0, 'job_id' => $jobId, 'relay' => true]);
+
+        $lastCompleted = -1;
+
+        while (true) {
+            Database::reconnect();
+
+            $job = $this->jobModel->find($jobId);
+            if (!$job) break;
+
+            // Conteggio reale dal DB
+            $realCounts = Database::fetch(
+                "SELECT COUNT(*) as total,
+                        SUM(CASE WHEN status IN ('crawled','error') THEN 1 ELSE 0 END) as done
+                 FROM cb_pages WHERE session_id = ?",
+                [$sessionId]
+            );
+            $total = (int) ($realCounts['total'] ?? 0);
+            $done = (int) ($realCounts['done'] ?? 0);
+            $issues = $this->issueModel->countBySeverity($sessionId);
+            $issueTotal = ($issues['critical'] ?? 0) + ($issues['warning'] ?? 0) + ($issues['notice'] ?? 0);
+
+            if ($done !== $lastCompleted) {
+                $lastCompleted = $done;
+                $this->sendEvent('item_completed', [
+                    'completed' => $done,
+                    'total' => $total,
+                    'issues' => 0,
+                    'percent' => $total > 0 ? round(($done / $total) * 100, 1) : 0,
+                    'url' => '',
+                ]);
+            }
+
+            // Job terminato?
+            if ($job['status'] === CrawlJob::STATUS_COMPLETED) {
+                $this->sendEvent('completed', $this->jobModel->getJobResponse($jobId));
+                break;
+            }
+            if ($job['status'] === CrawlJob::STATUS_CANCELLED) {
+                $this->sendEvent('cancelled', []);
+                break;
+            }
+            if ($job['status'] === CrawlJob::STATUS_ERROR) {
+                $this->sendEvent('error', ['message' => $job['error_message'] ?? 'Errore']);
+                break;
+            }
+
+            sleep(2);
+        }
     }
 
     /**

@@ -106,6 +106,14 @@ class CrawlJob
     }
 
     /**
+     * Aggiorna campi job
+     */
+    public function update(int $id, array $data): bool
+    {
+        return Database::update(self::TABLE, $data, 'id = ?', [$id]) > 0;
+    }
+
+    /**
      * Aggiorna progresso job
      */
     public function updateProgress(int $id, int $completed, ?string $currentItem = null): bool
