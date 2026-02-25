@@ -42,6 +42,20 @@ class GlobalProjectController
         // Mantieni compatibilita: $projects = owned per viste esistenti
         $projects = $ownedProjects;
 
+        // Tutti i siti WordPress dell'utente (con info progetto collegato)
+        $wpSiteModel = new \Modules\AiContent\Models\WpSite();
+        $allWpSites = $wpSiteModel->allByUser($user['id']);
+        // Arricchisci con nome progetto
+        $projectNames = [];
+        foreach (array_merge($ownedProjects, $sharedProjects) as $p) {
+            $projectNames[(int) $p['id']] = $p['name'];
+        }
+        foreach ($allWpSites as &$wpSite) {
+            $gpId = (int) ($wpSite['global_project_id'] ?? 0);
+            $wpSite['project_name'] = $gpId > 0 ? ($projectNames[$gpId] ?? 'Progetto #' . $gpId) : null;
+        }
+        unset($wpSite);
+
         return View::render('projects/index', [
             'title' => 'Progetti',
             'user' => $user,
@@ -50,6 +64,7 @@ class GlobalProjectController
             'ownedProjects' => $ownedProjects,
             'sharedProjects' => $sharedProjects,
             'pendingInvitations' => $pendingInvitations,
+            'allWpSites' => $allWpSites,
         ]);
     }
 
@@ -490,8 +505,37 @@ class GlobalProjectController
             return;
         }
 
-        $wpSiteModel->linkToProject($siteId, $id, $user['id']);
-        $_SESSION['_flash']['success'] = 'Sito "' . $site['name'] . '" collegato al progetto';
+        $linked = $wpSiteModel->linkToProject($siteId, $id, $user['id']);
+        if (!$linked) {
+            $_SESSION['_flash']['error'] = 'Errore nel collegamento del sito';
+            Router::redirect('/projects/' . $id);
+            return;
+        }
+
+        // Auto-test connessione dopo il link
+        try {
+            $connector = new \Services\Connectors\WordPressSeoConnector([
+                'url' => $site['url'],
+                'api_key' => $site['api_key'],
+            ]);
+            $testResult = $connector->test();
+
+            if ($testResult['success']) {
+                $wpSiteModel->updateTestStatus($siteId, 'success');
+                $wpSiteModel->update($siteId, ['last_sync_at' => date('Y-m-d H:i:s')], $user['id']);
+                // Sync categorie
+                $this->syncWpCategories($siteId, $site['url'], $site['api_key'], $wpSiteModel);
+                $_SESSION['_flash']['success'] = 'Sito "' . $site['name'] . '" collegato e connessione verificata';
+            } else {
+                $wpSiteModel->updateTestStatus($siteId, 'error');
+                $errorMsg = $testResult['message'] ?? 'Errore sconosciuto';
+                $_SESSION['_flash']['warning'] = 'Sito collegato ma connessione fallita: ' . $errorMsg . '. Verifica URL e API Key.';
+            }
+        } catch (\Exception $e) {
+            $wpSiteModel->updateTestStatus($siteId, 'error');
+            $_SESSION['_flash']['warning'] = 'Sito collegato ma test connessione fallito: ' . $e->getMessage();
+        }
+
         Router::redirect('/projects/' . $id);
     }
 
@@ -561,19 +605,195 @@ class GlobalProjectController
             ]);
             $result = $connector->test();
 
-            // Aggiorna last_sync_at su successo
             if ($result['success']) {
-                $wpSiteModel->update($siteId, [
-                    'last_sync_at' => date('Y-m-d H:i:s'),
-                ], $user['id']);
+                $wpSiteModel->updateTestStatus($siteId, 'success');
+                $wpSiteModel->update($siteId, ['last_sync_at' => date('Y-m-d H:i:s')], $user['id']);
+                // Sync categorie automaticamente
+                $this->syncWpCategories($siteId, $site['url'], $site['api_key'], $wpSiteModel);
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Connessione riuscita',
+                    'details' => $result['details'] ?? [],
+                    'site_name' => $result['site_name'] ?? '',
+                    'wp_version' => $result['wp_version'] ?? '',
+                    'plugin_version' => $result['plugin_version'] ?? '',
+                    'seo_plugin' => $result['seo_plugin'] ?? 'none',
+                ]);
+            } else {
+                $wpSiteModel->updateTestStatus($siteId, 'error');
+                echo json_encode([
+                    'success' => false,
+                    'message' => $result['message'] ?? 'Connessione fallita',
+                ]);
+            }
+        } catch (\Exception $e) {
+            $wpSiteModel->updateTestStatus($siteId, 'error');
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+
+        exit;
+    }
+
+    /**
+     * Aggiorna sito WordPress (nome/api_key) — AJAX, solo owner
+     * POST /projects/{id}/wp-sites/update
+     */
+    public function updateWpSite(int $id): void
+    {
+        Middleware::auth();
+        Middleware::csrf();
+        $user = Auth::user();
+
+        header('Content-Type: application/json');
+
+        $project = $this->project->findAccessible($id, $user['id']);
+        if (!$project || $project['access_role'] !== 'owner') {
+            echo json_encode(['success' => false, 'message' => 'Accesso non autorizzato']);
+            exit;
+        }
+
+        $siteId = (int) ($_POST['site_id'] ?? 0);
+        $wpSiteModel = new \Modules\AiContent\Models\WpSite();
+        $site = $wpSiteModel->find($siteId, $user['id']);
+
+        if (!$site) {
+            echo json_encode(['success' => false, 'message' => 'Sito non trovato']);
+            exit;
+        }
+
+        $updateData = [];
+        $newName = trim($_POST['name'] ?? '');
+        $newApiKey = trim($_POST['api_key'] ?? '');
+
+        if (!empty($newName)) {
+            $updateData['name'] = $newName;
+        }
+
+        $apiKeyChanged = false;
+        if (!empty($newApiKey) && $newApiKey !== $site['api_key']) {
+            $updateData['api_key'] = $newApiKey;
+            $apiKeyChanged = true;
+        }
+
+        if (empty($updateData)) {
+            echo json_encode(['success' => false, 'message' => 'Nessuna modifica da salvare']);
+            exit;
+        }
+
+        try {
+            $wpSiteModel->update($siteId, $updateData, $user['id']);
+
+            // Se API key cambiata, ritesta connessione
+            $testResult = null;
+            if ($apiKeyChanged) {
+                $connector = new \Services\Connectors\WordPressSeoConnector([
+                    'url' => $site['url'],
+                    'api_key' => $newApiKey,
+                ]);
+                $testResult = $connector->test();
+
+                if ($testResult['success']) {
+                    $wpSiteModel->updateTestStatus($siteId, 'success');
+                    $wpSiteModel->update($siteId, ['last_sync_at' => date('Y-m-d H:i:s')], $user['id']);
+                    $this->syncWpCategories($siteId, $site['url'], $newApiKey, $wpSiteModel);
+                } else {
+                    $wpSiteModel->updateTestStatus($siteId, 'error');
+                }
             }
 
-            echo json_encode($result);
+            $response = [
+                'success' => true,
+                'message' => 'Sito aggiornato' . ($apiKeyChanged && $testResult ? ($testResult['success'] ? ' e connessione verificata' : ' ma connessione fallita') : ''),
+            ];
+
+            if ($testResult) {
+                $response['test'] = $testResult;
+            }
+
+            echo json_encode($response);
         } catch (\Exception $e) {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
 
         exit;
+    }
+
+    /**
+     * Sync categorie da sito WordPress (helper interno)
+     */
+    private function syncWpCategories(int $siteId, string $url, string $apiKey, \Modules\AiContent\Models\WpSite $wpSiteModel): void
+    {
+        try {
+            $connector = new \Services\Connectors\WordPressSeoConnector([
+                'url' => $url,
+                'api_key' => $apiKey,
+            ]);
+            // Usa endpoint categories — fetch manuale perche' il connector non ha il metodo
+            $ch = curl_init();
+            curl_setopt_array($ch, [
+                CURLOPT_URL => rtrim($url, '/') . '/wp-json/seo-toolkit/v1/categories',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT => 15,
+                CURLOPT_HTTPHEADER => [
+                    'Content-Type: application/json',
+                    'Accept: application/json',
+                    'X-SEO-Toolkit-Key: ' . $apiKey,
+                ],
+                CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+            ]);
+            $response = curl_exec($ch);
+            $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($response && $httpCode >= 200 && $httpCode < 300) {
+                $data = json_decode($response, true);
+                $categories = $data['categories'] ?? $data ?? [];
+                if (is_array($categories) && !empty($categories)) {
+                    $wpSiteModel->updateCategoriesCache($siteId, $categories);
+                }
+            }
+        } catch (\Exception $e) {
+            // Sync categorie non critico — ignora errori
+        }
+    }
+
+    /**
+     * Elimina sito WordPress — POST con form submit
+     * POST /wp-sites/delete
+     */
+    public function deleteWpSite(): void
+    {
+        Middleware::auth();
+        Middleware::csrf();
+        $user = Auth::user();
+
+        $siteId = (int) ($_POST['site_id'] ?? 0);
+        $wpSiteModel = new \Modules\AiContent\Models\WpSite();
+        $site = $wpSiteModel->find($siteId, $user['id']);
+
+        if (!$site) {
+            $_SESSION['_flash']['error'] = 'Sito non trovato o non autorizzato';
+            Router::redirect('/projects');
+            return;
+        }
+
+        // Scollega dal progetto se collegato
+        if (!empty($site['global_project_id'])) {
+            $wpSiteModel->unlinkFromProject($siteId, $user['id']);
+        }
+
+        // Elimina
+        $deleted = $wpSiteModel->delete($siteId, $user['id']);
+
+        if ($deleted) {
+            $_SESSION['_flash']['success'] = 'Sito "' . ($site['name'] ?: parse_url($site['url'], PHP_URL_HOST)) . '" eliminato';
+        } else {
+            $_SESSION['_flash']['error'] = 'Errore nell\'eliminazione del sito';
+        }
+
+        Router::redirect('/projects');
     }
 
     /**

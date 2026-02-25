@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS cb_projects (
     global_project_id INT NULL,
     name VARCHAR(255) NOT NULL,
     domain VARCHAR(255) NOT NULL,
-    status ENUM('pending','crawling','completed','failed') DEFAULT 'pending',
+    status ENUM('idle','pending','crawling','completed','failed') DEFAULT 'idle',
     last_crawl_at DATETIME NULL,
     crawl_budget_score INT NULL,
     settings JSON,

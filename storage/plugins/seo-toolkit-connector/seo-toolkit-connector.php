@@ -187,11 +187,11 @@ class SEOToolkitConnector {
                 <h2 style="margin-top: 0;">Come collegare il sito</h2>
                 <ol>
                     <li>Accedi alla piattaforma SEO Toolkit</li>
-                    <li>Vai su <strong>AI Content > Siti WordPress</strong></li>
-                    <li>Clicca su <strong>Aggiungi Sito</strong></li>
+                    <li>Vai sulla <strong>Dashboard del tuo Progetto</strong></li>
+                    <li>Nella sezione <strong>Siti WordPress</strong>, clicca <strong>Aggiungi</strong></li>
                     <li>Inserisci un nome identificativo (es. "Il Mio Blog")</li>
                     <li>Incolla l'<strong>URL Sito</strong> e l'<strong>API Key</strong> mostrati sopra</li>
-                    <li>Clicca su <strong>Test e Aggiungi</strong></li>
+                    <li>Clicca su <strong>Aggiungi e collega</strong></li>
                 </ol>
             </div>
 

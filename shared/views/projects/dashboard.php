@@ -508,13 +508,15 @@ endif;
     <!-- WordPress Sites Section — owner only -->
     <?php if (($access_role ?? 'owner') === 'owner'): ?>
     <?php
-        // Domain match suggestion: find unlinked sites matching project domain
+        // Domain match suggestion: find unlinked sites matching project domain (confronto esatto)
         $suggestedSite = null;
         $projectDomain = $project['domain'] ?? '';
         if (!empty($projectDomain) && !empty($unlinkedWpSites)) {
+            $cleanProjectDomain = preg_replace('#^www\.#i', '', strtolower($projectDomain));
             foreach ($unlinkedWpSites as $uSite) {
                 $siteDomain = parse_url($uSite['url'], PHP_URL_HOST) ?: '';
-                if ($siteDomain && stripos($siteDomain, $projectDomain) !== false) {
+                $cleanSiteDomain = preg_replace('#^www\.#i', '', strtolower($siteDomain));
+                if ($cleanSiteDomain && $cleanSiteDomain === $cleanProjectDomain) {
                     $suggestedSite = $uSite;
                     break;
                 }
@@ -551,7 +553,7 @@ endif;
                 </svg>
                 <div class="flex-1">
                     <p class="text-sm font-medium text-blue-800 dark:text-blue-200">
-                        Hai gi&agrave; collegato <strong><?= htmlspecialchars($suggestedSite['name']) ?></strong> (<?= htmlspecialchars(parse_url($suggestedSite['url'], PHP_URL_HOST)) ?>)
+                        Hai gi&agrave; il sito <strong><?= htmlspecialchars($suggestedSite['name']) ?></strong> (<?= htmlspecialchars(parse_url($suggestedSite['url'], PHP_URL_HOST)) ?>)
                     </p>
                     <p class="text-xs text-blue-600 dark:text-blue-300 mt-1">Corrisponde al dominio di questo progetto. Vuoi collegarlo?</p>
                     <form method="POST" action="<?= url('/projects/' . $project['id'] . '/wp-sites/link') ?>" class="mt-2">
@@ -561,7 +563,7 @@ endif;
                             <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                             </svg>
-                            Collega al progetto
+                            Collega e verifica connessione
                         </button>
                     </form>
                 </div>
@@ -576,57 +578,114 @@ endif;
                 $siteDomain = parse_url($site['url'], PHP_URL_HOST) ?: $site['url'];
                 $catCount = !empty($site['categories']) ? count($site['categories']) : 0;
                 $apiKeyPreview = substr($site['api_key'], 0, 8) . '...' . substr($site['api_key'], -4);
+                // Status connessione
+                $testStatus = $site['last_test_status'] ?? null;
+                $testAt = $site['last_test_at'] ?? null;
+                if ($testStatus === 'success') {
+                    $statusColor = 'bg-emerald-400';
+                    $statusTitle = 'Connessione OK' . ($testAt ? ' — ' . _dashboard_time_ago($testAt) : '');
+                } elseif ($testStatus === 'error') {
+                    $statusColor = 'bg-red-400';
+                    $statusTitle = 'Connessione fallita' . ($testAt ? ' — ' . _dashboard_time_ago($testAt) : '');
+                } else {
+                    $statusColor = 'bg-slate-400';
+                    $statusTitle = 'Mai testato';
+                }
             ?>
             <div class="bg-slate-50 dark:bg-slate-700/30 rounded-xl p-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex items-start gap-3 min-w-0">
-                        <!-- WP Icon -->
-                        <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <!-- WP Icon con indicatore stato -->
+                        <div class="relative w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 mt-0.5">
                             <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 1.5c4.687 0 8.5 3.813 8.5 8.5 0 4.687-3.813 8.5-8.5 8.5-4.687 0-8.5-3.813-8.5-8.5 0-4.687 3.813-8.5 8.5-8.5z"/>
                             </svg>
+                            <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full <?= $statusColor ?> ring-2 ring-white dark:ring-slate-700" title="<?= htmlspecialchars($statusTitle) ?>"></span>
                         </div>
                         <div class="min-w-0">
-                            <div class="flex items-center gap-2 flex-wrap">
+                            <!-- Nome (editabile inline) -->
+                            <div x-show="!editing[<?= $site['id'] ?>]" class="flex items-center gap-2 flex-wrap">
                                 <p class="font-medium text-sm text-slate-900 dark:text-white truncate"><?= htmlspecialchars($site['name']) ?></p>
                                 <a href="<?= htmlspecialchars($site['url']) ?>" target="_blank" class="text-xs text-indigo-500 dark:text-indigo-400 hover:underline"><?= htmlspecialchars($siteDomain) ?></a>
                                 <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium <?= $site['is_active'] ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-400' ?>">
                                     <?= $site['is_active'] ? 'Attivo' : 'Disattivato' ?>
                                 </span>
                             </div>
-                            <div class="flex items-center gap-3 mt-1 text-xs text-slate-500 dark:text-slate-400">
+                            <!-- Info riga -->
+                            <div x-show="!editing[<?= $site['id'] ?>]" class="flex items-center gap-3 mt-1 text-xs text-slate-500 dark:text-slate-400">
                                 <?php if ($catCount > 0): ?>
                                 <span><?= $catCount ?> categorie</span>
                                 <?php endif; ?>
                                 <?php if (!empty($site['last_sync_at'])): ?>
-                                <span>Ultimo sync: <?= _dashboard_time_ago($site['last_sync_at']) ?></span>
+                                <span>Sync: <?= _dashboard_time_ago($site['last_sync_at']) ?></span>
                                 <?php endif; ?>
                                 <span class="font-mono text-xs"><?= htmlspecialchars($apiKeyPreview) ?></span>
                             </div>
-                            <!-- AJAX test result -->
+
+                            <!-- Edit inline form -->
+                            <div x-show="editing[<?= $site['id'] ?>]" x-cloak class="mt-1">
+                                <div class="flex flex-col gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <input type="text" x-model="editData[<?= $site['id'] ?>].name"
+                                               class="flex-1 px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                               placeholder="Nome sito">
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <input type="password" x-model="editData[<?= $site['id'] ?>].api_key"
+                                               class="flex-1 px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono"
+                                               placeholder="Nuova API Key (lascia vuoto per mantenere)">
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button @click="saveEdit(<?= $site['id'] ?>)" :disabled="saving[<?= $site['id'] ?>]"
+                                                class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white transition-colors disabled:opacity-50">
+                                            <template x-if="saving[<?= $site['id'] ?>]">
+                                                <svg class="animate-spin w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                            </template>
+                                            Salva
+                                        </button>
+                                        <button @click="editing[<?= $site['id'] ?>] = false"
+                                                class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
+                                            Annulla
+                                        </button>
+                                        <span x-show="editResult[<?= $site['id'] ?>]?.success" x-cloak class="text-xs text-emerald-600 dark:text-emerald-400" x-text="editResult[<?= $site['id'] ?>]?.message"></span>
+                                        <span x-show="editResult[<?= $site['id'] ?>] && !editResult[<?= $site['id'] ?>]?.success" x-cloak class="text-xs text-red-600 dark:text-red-400" x-text="editResult[<?= $site['id'] ?>]?.message"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- AJAX test result arricchito -->
                             <template x-if="testResults[<?= $site['id'] ?>]">
                                 <div class="mt-1.5">
-                                    <span x-show="testResults[<?= $site['id'] ?>]?.success" class="text-xs text-emerald-600 dark:text-emerald-400">
-                                        <svg class="w-3.5 h-3.5 inline -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                        </svg>
-                                        Connessione riuscita
-                                    </span>
-                                    <span x-show="!testResults[<?= $site['id'] ?>]?.success" class="text-xs text-red-600 dark:text-red-400">
-                                        <svg class="w-3.5 h-3.5 inline -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                        </svg>
-                                        <span x-text="testResults[<?= $site['id'] ?>]?.message || 'Errore'"></span>
-                                    </span>
+                                    <template x-if="testResults[<?= $site['id'] ?>]?.success">
+                                        <div class="text-xs text-emerald-600 dark:text-emerald-400">
+                                            <svg class="w-3.5 h-3.5 inline -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                            Connessione OK
+                                            <template x-if="testResults[<?= $site['id'] ?>]?.wp_version">
+                                                <span class="text-slate-500 dark:text-slate-400">
+                                                    — WP <span x-text="testResults[<?= $site['id'] ?>]?.wp_version"></span><template x-if="testResults[<?= $site['id'] ?>]?.seo_plugin && testResults[<?= $site['id'] ?>]?.seo_plugin !== 'none'"><span>, <span x-text="testResults[<?= $site['id'] ?>]?.seo_plugin"></span></span></template>
+                                                </span>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <template x-if="!testResults[<?= $site['id'] ?>]?.success">
+                                        <div class="text-xs text-red-600 dark:text-red-400">
+                                            <svg class="w-3.5 h-3.5 inline -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
+                                            <span x-text="testResults[<?= $site['id'] ?>]?.message || 'Errore di connessione'"></span>
+                                        </div>
+                                    </template>
                                 </div>
                             </template>
                         </div>
                     </div>
                     <!-- Actions -->
-                    <div class="flex items-center gap-2 flex-shrink-0">
+                    <div x-show="!editing[<?= $site['id'] ?>]" class="flex items-center gap-1.5 flex-shrink-0">
                         <button @click="testSite(<?= $site['id'] ?>)"
                                 :disabled="testing[<?= $site['id'] ?>]"
-                                class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-medium bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors disabled:opacity-50">
+                                class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-medium bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors disabled:opacity-50" title="Testa connessione">
                             <template x-if="testing[<?= $site['id'] ?>]">
                                 <svg class="animate-spin w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -640,8 +699,14 @@ endif;
                             </template>
                             Testa
                         </button>
+                        <button @click="startEdit(<?= $site['id'] ?>, '<?= htmlspecialchars(addslashes($site['name']), ENT_QUOTES) ?>')"
+                                class="inline-flex items-center px-2 py-1.5 rounded-lg text-xs font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-600/50 transition-colors" title="Modifica nome o API Key">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                        </button>
                         <button @click="confirmUnlink(<?= $site['id'] ?>, '<?= htmlspecialchars(addslashes($site['name']), ENT_QUOTES) ?>')"
-                                class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-medium bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors" title="Scollega dal progetto">
+                                class="inline-flex items-center px-2 py-1.5 rounded-lg text-xs font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-colors" title="Scollega dal progetto">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                             </svg>
@@ -678,7 +743,7 @@ endif;
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                         </svg>
-                        Collega
+                        Collega e verifica
                     </button>
                 </form>
             </div>
@@ -729,6 +794,10 @@ endif;
             showForm: <?= empty($wpSites) ? 'true' : 'false' ?>,
             testing: {},
             testResults: {},
+            editing: {},
+            editData: {},
+            saving: {},
+            editResult: {},
 
             async testSite(siteId) {
                 this.testing[siteId] = true;
@@ -750,6 +819,45 @@ endif;
                     this.testResults[siteId] = { success: false, message: 'Errore di connessione' };
                 }
                 this.testing[siteId] = false;
+            },
+
+            startEdit(siteId, currentName) {
+                this.editing[siteId] = true;
+                this.editData[siteId] = { name: currentName, api_key: '' };
+                this.editResult[siteId] = null;
+            },
+
+            async saveEdit(siteId) {
+                this.saving[siteId] = true;
+                this.editResult[siteId] = null;
+                try {
+                    const formData = new FormData();
+                    formData.append('_csrf_token', '<?= csrf_token() ?>');
+                    formData.append('site_id', siteId);
+                    if (this.editData[siteId].name) {
+                        formData.append('name', this.editData[siteId].name);
+                    }
+                    if (this.editData[siteId].api_key) {
+                        formData.append('api_key', this.editData[siteId].api_key);
+                    }
+                    const resp = await fetch('<?= url('/projects/' . $project['id'] . '/wp-sites/update') ?>', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if (!resp.ok) {
+                        this.editResult[siteId] = { success: false, message: 'Errore del server' };
+                    } else {
+                        const data = await resp.json();
+                        this.editResult[siteId] = data;
+                        if (data.success) {
+                            // Ricarica pagina per vedere le modifiche
+                            setTimeout(() => window.location.reload(), 800);
+                        }
+                    }
+                } catch (e) {
+                    this.editResult[siteId] = { success: false, message: 'Errore di connessione' };
+                }
+                this.saving[siteId] = false;
             },
 
             confirmUnlink(siteId, siteName) {

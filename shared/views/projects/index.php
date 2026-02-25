@@ -216,4 +216,104 @@
     <?php endif; ?>
 
     <?php endif; ?>
+
+    <!-- Siti WordPress — vista centralizzata -->
+    <?php if (!empty($allWpSites)): ?>
+    <div class="mt-10">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Siti WordPress</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Tutti i tuoi siti WordPress collegati alla piattaforma</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <table class="w-full">
+                <thead>
+                    <tr class="dark:bg-slate-700/50">
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Sito</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Progetto</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stato</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ultimo test</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                    <?php foreach ($allWpSites as $wpSite):
+                        $wpDomain = parse_url($wpSite['url'], PHP_URL_HOST) ?: $wpSite['url'];
+                        $testStatus = $wpSite['last_test_status'] ?? null;
+                        $testAt = $wpSite['last_test_at'] ?? null;
+                    ?>
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-2.5">
+                                <?php
+                                    if ($testStatus === 'success') {
+                                        $dotColor = 'bg-emerald-400';
+                                    } elseif ($testStatus === 'error') {
+                                        $dotColor = 'bg-red-400';
+                                    } else {
+                                        $dotColor = 'bg-slate-400';
+                                    }
+                                ?>
+                                <span class="w-2 h-2 rounded-full <?= $dotColor ?> flex-shrink-0"></span>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-medium text-slate-900 dark:text-white truncate"><?= htmlspecialchars($wpSite['name']) ?></p>
+                                    <a href="<?= htmlspecialchars($wpSite['url']) ?>" target="_blank" class="text-xs text-indigo-500 dark:text-indigo-400 hover:underline"><?= htmlspecialchars($wpDomain) ?></a>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <?php if ($wpSite['project_name']): ?>
+                            <a href="<?= url('/projects/' . $wpSite['global_project_id']) ?>" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"><?= htmlspecialchars($wpSite['project_name']) ?></a>
+                            <?php else: ?>
+                            <span class="text-xs text-slate-400 dark:text-slate-500 italic">Non collegato</span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $wpSite['is_active'] ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-400' ?>">
+                                <?= $wpSite['is_active'] ? 'Attivo' : 'Disattivato' ?>
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">
+                            <?php if ($testAt): ?>
+                                <?php
+                                    $tDiff = time() - strtotime($testAt);
+                                    if ($tDiff < 60) $tAgo = 'Adesso';
+                                    elseif ($tDiff < 3600) $tAgo = floor($tDiff / 60) . ' min fa';
+                                    elseif ($tDiff < 86400) $tAgo = floor($tDiff / 3600) . ' ore fa';
+                                    elseif ($tDiff < 604800) $tAgo = floor($tDiff / 86400) . 'g fa';
+                                    else $tAgo = date('d/m/Y', strtotime($testAt));
+                                ?>
+                                <span class="<?= $testStatus === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400' ?>"><?= $testStatus === 'success' ? 'OK' : 'Errore' ?></span>
+                                <span class="ml-1"><?= $tAgo ?></span>
+                            <?php else: ?>
+                                <span class="italic">Mai testato</span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="px-4 py-3 text-right">
+                            <form method="POST" action="<?= url('/wp-sites/delete') ?>"
+                                  onsubmit="return confirm('Eliminare il sito <?= htmlspecialchars(addslashes($wpSite['name'] ?: $wpDomain)) ?>? Gli articoli già pubblicati non saranno modificati, ma la configurazione auto-publish perderà il riferimento.')">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="site_id" value="<?= (int) $wpSite['id'] ?>">
+                                <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Elimina sito">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>

@@ -70,9 +70,9 @@ $sevColors = [
 <!-- Issues Table -->
 <?php if (empty($issues)): ?>
     <?= \Core\View::partial('components/table-empty-state', [
-        'icon' => '<svg class="w-16 h-16 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12H9.75m3 0v3.375m0 0H9.75m3.375 0h3.375M6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>',
-        'title' => 'Nessuna pagina spreco',
-        'description' => 'Non sono state rilevate pagine spreco in questo crawl.',
+        'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12H9.75m3 0v3.375m0 0H9.75m3.375 0h3.375M6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/>',
+        'heading' => 'Nessuna pagina spreco',
+        'message' => 'Non sono state rilevate pagine spreco in questo crawl.',
     ]) ?>
 <?php else: ?>
 <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">

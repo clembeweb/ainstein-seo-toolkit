@@ -856,6 +856,16 @@ Router::post('/projects/{id}/wp-sites/test', function ($id) {
     $controller->testWpSite((int) $id);
 });
 
+Router::post('/projects/{id}/wp-sites/update', function ($id) {
+    $controller = new Controllers\GlobalProjectController();
+    $controller->updateWpSite((int) $id);
+});
+
+Router::post('/wp-sites/delete', function () {
+    $controller = new Controllers\GlobalProjectController();
+    $controller->deleteWpSite();
+});
+
 // Project Sharing
 Router::get('/projects/{id}/sharing', function ($id) {
     return (new Controllers\GlobalProjectController())->sharing((int) $id);

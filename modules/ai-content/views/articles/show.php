@@ -556,7 +556,7 @@ $baseUrl = !empty($article['project_id']) ? '/ai-content/projects/' . $article['
                             <?php if (empty($wpSites)): ?>
                             <p class="mt-2 text-sm text-amber-600 dark:text-amber-400">
                                 Nessun sito configurato.
-                                <a href="<?= url('/ai-content/wordpress') ?>" class="underline">Aggiungi un sito WordPress</a>
+                                <a href="<?= url($project && !empty($project['global_project_id']) ? '/projects/' . $project['global_project_id'] : '/projects') ?>" class="underline">Aggiungi un sito WordPress</a>
                             </p>
                             <?php endif; ?>
                         </div>
@@ -695,7 +695,7 @@ function articleEditor(initialData) {
 
         // Publish modal
         showPublishModal: false,
-        publishSiteId: '',
+        publishSiteId: '<?= (int) ($project['wp_site_id'] ?? 0) ?: '' ?>',
         publishCategory: '',
         publishStatus: 'draft',
         publishing: false,

@@ -131,7 +131,7 @@
                     </select>
                     <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
                         <?php if (empty($wpSites)): ?>
-                        Nessun sito WordPress collegato. <a href="<?= url('/ai-content/wordpress') ?>" class="text-primary-600 hover:text-primary-700">Aggiungi un sito</a>
+                        Nessun sito WordPress collegato. <a href="<?= url(!empty($project['global_project_id']) ? '/projects/' . $project['global_project_id'] : '/projects') ?>" class="text-primary-600 hover:text-primary-700">Aggiungi un sito</a>
                         <?php else: ?>
                         Seleziona il sito WordPress predefinito per la pubblicazione degli articoli di questo progetto.
                         <?php endif; ?>

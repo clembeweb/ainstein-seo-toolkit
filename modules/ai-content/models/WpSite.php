@@ -136,6 +136,17 @@ class WpSite
     }
 
     /**
+     * Aggiorna stato ultimo test connessione
+     */
+    public function updateTestStatus(int $id, string $status): bool
+    {
+        return Database::update($this->table, [
+            'last_test_status' => $status,
+            'last_test_at' => date('Y-m-d H:i:s'),
+        ], 'id = ?', [$id]) > 0;
+    }
+
+    /**
      * Check if URL already exists for user
      */
     public function urlExists(string $url, int $userId): bool

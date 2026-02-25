@@ -294,6 +294,335 @@ class GlobalProject
     }
 
     /**
+     * Dashboard-optimized: tutti i progetti con KPI leggeri per modulo.
+     * Usa batch query (1 per modulo) anziché N×M singole query.
+     *
+     * @return array Progetti con chiavi extra: modules_data[], health_status, primary_action
+     */
+    public function allWithDashboardData(int $userId): array
+    {
+        $projects = $this->allByUser($userId);
+        if (empty($projects)) {
+            return [];
+        }
+
+        $projectIds = array_column($projects, 'id');
+        $placeholders = implode(',', array_fill(0, count($projectIds), '?'));
+
+        // Index per accesso rapido
+        $indexed = [];
+        foreach ($projects as &$project) {
+            $project['modules_data'] = [];
+            $project['active_modules'] = [];
+            $project['health_status'] = 'gray'; // gray, green, amber, red
+            $project['primary_action'] = null;
+            $project['active_modules_count'] = 0;
+            $project['last_module_activity'] = null;
+            $indexed[$project['id']] = &$project;
+        }
+        unset($project);
+
+        // --- Batch query per ogni modulo ---
+
+        // SEO Audit
+        try {
+            $rows = Database::fetchAll(
+                "SELECT global_project_id, id, health_score, issues_count, status, completed_at
+                 FROM sa_projects WHERE global_project_id IN ($placeholders)",
+                $projectIds
+            );
+            foreach ($rows as $row) {
+                $gpId = (int) $row['global_project_id'];
+                if (!isset($indexed[$gpId])) continue;
+                $indexed[$gpId]['modules_data']['seo-audit'] = [
+                    'module_project_id' => (int) $row['id'],
+                    'health_score' => (int) ($row['health_score'] ?? 0),
+                    'issues_count' => (int) ($row['issues_count'] ?? 0),
+                    'status' => $row['status'] ?? null,
+                ];
+                $indexed[$gpId]['active_modules'][] = 'seo-audit';
+                $this->updateLastActivity($indexed[$gpId], $row['completed_at']);
+            }
+        } catch (\Exception $e) {}
+
+        // SEO Tracking
+        try {
+            $rows = Database::fetchAll(
+                "SELECT p.global_project_id, p.id, p.gsc_connected,
+                        COUNT(k.id) as keywords_count
+                 FROM st_projects p
+                 LEFT JOIN st_keywords k ON k.project_id = p.id AND k.is_tracked = 1
+                 WHERE p.global_project_id IN ($placeholders)
+                 GROUP BY p.id",
+                $projectIds
+            );
+            foreach ($rows as $row) {
+                $gpId = (int) $row['global_project_id'];
+                if (!isset($indexed[$gpId])) continue;
+                $indexed[$gpId]['modules_data']['seo-tracking'] = [
+                    'module_project_id' => (int) $row['id'],
+                    'keywords_count' => (int) ($row['keywords_count'] ?? 0),
+                    'gsc_connected' => (bool) ($row['gsc_connected'] ?? 0),
+                ];
+                $indexed[$gpId]['active_modules'][] = 'seo-tracking';
+            }
+        } catch (\Exception $e) {}
+
+        // AI Content
+        try {
+            $rows = Database::fetchAll(
+                "SELECT ap.global_project_id, ap.id,
+                        COUNT(a.id) as articles_total,
+                        SUM(CASE WHEN a.status = 'ready' THEN 1 ELSE 0 END) as articles_ready,
+                        SUM(CASE WHEN a.status = 'published' THEN 1 ELSE 0 END) as articles_published,
+                        MAX(a.created_at) as last_activity
+                 FROM aic_projects ap
+                 LEFT JOIN aic_articles a ON a.project_id = ap.id
+                 WHERE ap.global_project_id IN ($placeholders)
+                 GROUP BY ap.id",
+                $projectIds
+            );
+            foreach ($rows as $row) {
+                $gpId = (int) $row['global_project_id'];
+                if (!isset($indexed[$gpId])) continue;
+                $indexed[$gpId]['modules_data']['ai-content'] = [
+                    'module_project_id' => (int) $row['id'],
+                    'articles_total' => (int) ($row['articles_total'] ?? 0),
+                    'articles_ready' => (int) ($row['articles_ready'] ?? 0),
+                    'articles_published' => (int) ($row['articles_published'] ?? 0),
+                ];
+                $indexed[$gpId]['active_modules'][] = 'ai-content';
+                $this->updateLastActivity($indexed[$gpId], $row['last_activity']);
+            }
+        } catch (\Exception $e) {}
+
+        // Keyword Research
+        try {
+            $rows = Database::fetchAll(
+                "SELECT global_project_id, COUNT(*) as cnt, MAX(created_at) as last_at
+                 FROM kr_projects WHERE global_project_id IN ($placeholders)
+                 GROUP BY global_project_id",
+                $projectIds
+            );
+            foreach ($rows as $row) {
+                $gpId = (int) $row['global_project_id'];
+                if (!isset($indexed[$gpId])) continue;
+                $indexed[$gpId]['modules_data']['keyword-research'] = [
+                    'projects_count' => (int) ($row['cnt'] ?? 0),
+                ];
+                $indexed[$gpId]['active_modules'][] = 'keyword-research';
+                $this->updateLastActivity($indexed[$gpId], $row['last_at']);
+            }
+        } catch (\Exception $e) {}
+
+        // Ads Analyzer
+        try {
+            $rows = Database::fetchAll(
+                "SELECT global_project_id, COUNT(*) as cnt, MAX(created_at) as last_at
+                 FROM ga_projects WHERE global_project_id IN ($placeholders)
+                 GROUP BY global_project_id",
+                $projectIds
+            );
+            foreach ($rows as $row) {
+                $gpId = (int) $row['global_project_id'];
+                if (!isset($indexed[$gpId])) continue;
+                $indexed[$gpId]['modules_data']['ads-analyzer'] = [
+                    'projects_count' => (int) ($row['cnt'] ?? 0),
+                ];
+                $indexed[$gpId]['active_modules'][] = 'ads-analyzer';
+                $this->updateLastActivity($indexed[$gpId], $row['last_at']);
+            }
+        } catch (\Exception $e) {}
+
+        // Internal Links
+        try {
+            $rows = Database::fetchAll(
+                "SELECT global_project_id, COUNT(*) as cnt, MAX(created_at) as last_at
+                 FROM il_projects WHERE global_project_id IN ($placeholders)
+                 GROUP BY global_project_id",
+                $projectIds
+            );
+            foreach ($rows as $row) {
+                $gpId = (int) $row['global_project_id'];
+                if (!isset($indexed[$gpId])) continue;
+                $indexed[$gpId]['modules_data']['internal-links'] = [
+                    'projects_count' => (int) ($row['cnt'] ?? 0),
+                ];
+                $indexed[$gpId]['active_modules'][] = 'internal-links';
+                $this->updateLastActivity($indexed[$gpId], $row['last_at']);
+            }
+        } catch (\Exception $e) {}
+
+        // Content Creator
+        try {
+            $rows = Database::fetchAll(
+                "SELECT global_project_id, COUNT(*) as cnt, MAX(created_at) as last_at
+                 FROM cc_projects WHERE global_project_id IN ($placeholders)
+                 GROUP BY global_project_id",
+                $projectIds
+            );
+            foreach ($rows as $row) {
+                $gpId = (int) $row['global_project_id'];
+                if (!isset($indexed[$gpId])) continue;
+                $indexed[$gpId]['modules_data']['content-creator'] = [
+                    'projects_count' => (int) ($row['cnt'] ?? 0),
+                ];
+                $indexed[$gpId]['active_modules'][] = 'content-creator';
+                $this->updateLastActivity($indexed[$gpId], $row['last_at']);
+            }
+        } catch (\Exception $e) {}
+
+        // Crawl Budget
+        try {
+            $rows = Database::fetchAll(
+                "SELECT global_project_id, COUNT(*) as cnt, MAX(created_at) as last_at
+                 FROM cb_projects WHERE global_project_id IN ($placeholders)
+                 GROUP BY global_project_id",
+                $projectIds
+            );
+            foreach ($rows as $row) {
+                $gpId = (int) $row['global_project_id'];
+                if (!isset($indexed[$gpId])) continue;
+                $indexed[$gpId]['modules_data']['crawl-budget'] = [
+                    'projects_count' => (int) ($row['cnt'] ?? 0),
+                ];
+                $indexed[$gpId]['active_modules'][] = 'crawl-budget';
+                $this->updateLastActivity($indexed[$gpId], $row['last_at']);
+            }
+        } catch (\Exception $e) {}
+
+        // --- Calcola health_status e primary_action per ogni progetto ---
+        foreach ($projects as &$project) {
+            $project['active_modules_count'] = count($project['active_modules']);
+            $md = $project['modules_data'];
+
+            // Health status
+            $project['health_status'] = $this->computeHealthStatus($md);
+
+            // Primary action (prima che matcha, in ordine di priorità)
+            $project['primary_action'] = $this->computePrimaryAction($project);
+        }
+        unset($project);
+
+        // Ordina: red first, then amber, then green, then gray
+        $healthOrder = ['red' => 0, 'amber' => 1, 'green' => 2, 'gray' => 3];
+        usort($projects, function ($a, $b) use ($healthOrder) {
+            return ($healthOrder[$a['health_status']] ?? 3) <=> ($healthOrder[$b['health_status']] ?? 3);
+        });
+
+        return $projects;
+    }
+
+    /**
+     * Aggiorna last_module_activity se la nuova data è più recente.
+     */
+    private function updateLastActivity(array &$project, ?string $date): void
+    {
+        if ($date && ($project['last_module_activity'] === null || $date > $project['last_module_activity'])) {
+            $project['last_module_activity'] = $date;
+        }
+    }
+
+    /**
+     * Calcola lo stato di salute del progetto basato sui moduli.
+     */
+    private function computeHealthStatus(array $modulesData): string
+    {
+        if (empty($modulesData)) {
+            return 'gray';
+        }
+
+        $sa = $modulesData['seo-audit'] ?? null;
+        if ($sa) {
+            if (($sa['health_score'] ?? 0) < 40) return 'red';
+            if (($sa['health_score'] ?? 0) < 70) return 'amber';
+        }
+
+        // Controlla se ci sono azioni urgenti
+        $aic = $modulesData['ai-content'] ?? null;
+        if ($aic && ($aic['articles_ready'] ?? 0) > 0) return 'amber';
+
+        $st = $modulesData['seo-tracking'] ?? null;
+        if ($st && ($st['keywords_count'] ?? 0) > 0 && !($st['gsc_connected'] ?? false)) return 'amber';
+
+        return 'green';
+    }
+
+    /**
+     * Determina l'azione primaria per un progetto.
+     * Ritorna null se nessuna azione urgente, o array con text, cta, url, slug.
+     */
+    private function computePrimaryAction(array $project): ?array
+    {
+        $md = $project['modules_data'];
+        $gpId = $project['id'];
+
+        // 1. SEO Audit — problemi
+        $sa = $md['seo-audit'] ?? null;
+        if ($sa && ($sa['issues_count'] ?? 0) > 0 && ($sa['status'] ?? '') === 'completed') {
+            $n = $sa['issues_count'];
+            return [
+                'text' => $n . ' problem' . ($n > 1 ? 'i' : 'a') . ' trovat' . ($n > 1 ? 'i' : 'o') . ' nel SEO Audit',
+                'cta' => 'Vedi piano',
+                'url' => '/seo-audit/project/' . $sa['module_project_id'] . '/results',
+                'slug' => 'seo-audit',
+                'severity' => 'warning',
+            ];
+        }
+
+        // 2. AI Content — articoli pronti
+        $aic = $md['ai-content'] ?? null;
+        if ($aic && ($aic['articles_ready'] ?? 0) > 0) {
+            $n = $aic['articles_ready'];
+            return [
+                'text' => $n . ' articol' . ($n > 1 ? 'i pronti' : 'o pronto') . ' da pubblicare',
+                'cta' => 'Pubblica',
+                'url' => '/ai-content/projects/' . $aic['module_project_id'],
+                'slug' => 'ai-content',
+                'severity' => 'info',
+            ];
+        }
+
+        // 3. SEO Tracking — GSC non collegato
+        $st = $md['seo-tracking'] ?? null;
+        if ($st && ($st['keywords_count'] ?? 0) > 0 && !($st['gsc_connected'] ?? false)) {
+            return [
+                'text' => 'Collega Google Search Console per dati reali',
+                'cta' => 'Collega',
+                'url' => '/seo-tracking/project/' . $st['module_project_id'] . '/settings',
+                'slug' => 'seo-tracking',
+                'severity' => 'info',
+            ];
+        }
+
+        // 4. Nessuna azione urgente — suggerisci modulo da attivare
+        $allSlugs = ['seo-audit', 'seo-tracking', 'ai-content', 'keyword-research', 'ads-analyzer', 'internal-links'];
+        $activeSlugs = $project['active_modules'];
+        $missing = array_diff($allSlugs, $activeSlugs);
+        if (!empty($missing)) {
+            $suggestions = [
+                'seo-audit' => 'Attiva SEO Audit per analizzare il sito',
+                'seo-tracking' => 'Attiva SEO Tracking per monitorare le posizioni',
+                'ai-content' => 'Attiva AI Content per generare articoli',
+                'keyword-research' => 'Attiva Keyword Research per trovare opportunità',
+            ];
+            foreach ($suggestions as $slug => $text) {
+                if (in_array($slug, $missing)) {
+                    return [
+                        'text' => $text,
+                        'cta' => 'Attiva',
+                        'url' => '/projects/' . $gpId,
+                        'slug' => $slug,
+                        'severity' => 'suggestion',
+                    ];
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Crea nuovo progetto globale.
      */
     public function create(array $data): int
@@ -508,13 +837,27 @@ class GlobalProject
         try {
             switch ($moduleSlug) {
                 case 'ai-content':
-                    return Database::insert('aic_projects', array_merge([
+                    // Auto-set wp_site_id se il progetto globale ha un sito WP collegato
+                    $wpSiteId = null;
+                    $wpSiteModel = new \Modules\AiContent\Models\WpSite();
+                    $linkedWpSite = $wpSiteModel->getActiveByProject($globalProjectId);
+                    if ($linkedWpSite) {
+                        $wpSiteId = (int) $linkedWpSite['id'];
+                    }
+
+                    $insertData = array_merge([
                         'user_id' => $userId,
                         'global_project_id' => $globalProjectId,
                         'name' => $name,
                         'type' => $extraData['type'] ?? 'manual',
                         'default_language' => $extraData['default_language'] ?? 'it',
-                    ], $this->filterExtraData($extraData, ['type', 'default_language'])));
+                    ], $this->filterExtraData($extraData, ['type', 'default_language']));
+
+                    if ($wpSiteId) {
+                        $insertData['wp_site_id'] = $wpSiteId;
+                    }
+
+                    return Database::insert('aic_projects', $insertData);
 
                 case 'seo-audit':
                     $projectId = Database::insert('sa_projects', [
@@ -577,6 +920,18 @@ class GlobalProject
                         'base_url' => $domain ?: null,
                         'status' => 'active',
                     ]);
+
+                case 'crawl-budget':
+                    $projectId = Database::insert('cb_projects', [
+                        'user_id' => $userId,
+                        'global_project_id' => $globalProjectId,
+                        'name' => $name,
+                        'domain' => $domain ?: '',
+                        'status' => 'idle',
+                    ]);
+                    // Crea record configurazione sito
+                    Database::insert('cb_site_config', ['project_id' => $projectId]);
+                    return $projectId;
 
                 default:
                     return null;

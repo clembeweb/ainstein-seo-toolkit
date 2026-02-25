@@ -53,7 +53,7 @@
                             </svg>
                             <p class="text-sm text-amber-700 dark:text-amber-400">
                                 Nessun sito WordPress configurato.
-                                <a href="<?= url('/ai-content/wordpress') ?>" class="underline hover:no-underline">Aggiungi un sito</a>
+                                <a href="<?= url($project && !empty($project['global_project_id']) ? '/projects/' . $project['global_project_id'] : '/projects') ?>" class="underline hover:no-underline">Aggiungi un sito</a>
                             </p>
                         </div>
                     </div>

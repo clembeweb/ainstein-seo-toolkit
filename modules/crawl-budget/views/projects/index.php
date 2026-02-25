@@ -40,9 +40,9 @@ function getScoreBadge(int $score, array $colors): string {
     <?php if (empty($projects)): ?>
         <!-- Empty State -->
         <?= \Core\View::partial('components/table-empty-state', [
-            'icon' => '<svg class="w-16 h-16 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>',
-            'title' => 'Nessun progetto',
-            'description' => 'Crea il tuo primo progetto per analizzare il crawl budget di un sito.',
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>',
+            'heading' => 'Nessun progetto',
+            'message' => 'Crea il tuo primo progetto per analizzare il crawl budget di un sito.',
             'ctaText' => 'Nuovo Progetto',
             'ctaUrl' => url('/projects/create'),
         ]) ?>
