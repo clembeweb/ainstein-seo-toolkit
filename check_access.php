@@ -63,7 +63,7 @@ foreach ($members as $m) {
 echo "\n--- MODULI ACCESSIBILI PER PROGETTO ---\n";
 foreach ($members as $m) {
     if (!$m['accepted_at']) continue;
-    $modules = ProjectAccessService::getAccessibleModules((int)$m['project_id'], $userId);
+    $modules = ProjectAccessService::getMemberModules((int)$m['project_id'], $userId);
     echo "  {$m['name']}: " . (empty($modules) ? 'NESSUNO' : implode(', ', $modules)) . "\n";
 }
 
