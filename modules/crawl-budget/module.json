@@ -1,0 +1,127 @@
+{
+    "name": "Crawl Budget Optimizer",
+    "slug": "crawl-budget",
+    "version": "1.0.0",
+    "description": "Analisi crawl budget: redirect chains, pagine spreco, conflitti indexability",
+    "icon": "magnifying-glass-circle",
+    "menu_order": 55,
+    "requires": {
+        "php": ">=8.0",
+        "services": ["scraper", "ai"]
+    },
+    "credits": {
+        "crawl_per_page": {
+            "cost": 0,
+            "description": "Scansione singola pagina (Gratis)"
+        },
+        "report_generate": {
+            "cost": 5,
+            "description": "Generazione Report AI con priorita e raccomandazioni"
+        }
+    },
+    "settings_groups": {
+        "general": {
+            "label": "Configurazione Generale",
+            "icon": "cog-6-tooth",
+            "description": "Impostazioni generali del crawler",
+            "order": 0
+        },
+        "crawl_config": {
+            "label": "Configurazione Crawl",
+            "icon": "globe-alt",
+            "description": "Parametri del crawler",
+            "order": 1
+        },
+        "ai_config": {
+            "label": "Configurazione AI",
+            "icon": "sparkles",
+            "description": "Provider e modello AI per i report",
+            "order": 2
+        },
+        "costs": {
+            "label": "Costi Operazioni",
+            "icon": "currency-euro",
+            "description": "Crediti consumati per ogni operazione",
+            "order": 99,
+            "collapsed": true
+        }
+    },
+    "settings": {
+        "max_pages_per_crawl": {
+            "type": "number",
+            "label": "Max pagine per crawl",
+            "description": "Numero massimo di pagine da analizzare per sessione",
+            "default": 5000,
+            "min": 10,
+            "max": 10000,
+            "admin_only": true,
+            "group": "crawl_config"
+        },
+        "crawl_delay_ms": {
+            "type": "number",
+            "label": "Ritardo tra richieste (ms)",
+            "description": "Millisecondi di attesa tra una richiesta e l'altra",
+            "default": 500,
+            "min": 100,
+            "max": 5000,
+            "admin_only": true,
+            "group": "crawl_config"
+        },
+        "respect_robots": {
+            "type": "select",
+            "label": "Rispetta robots.txt",
+            "default": "1",
+            "admin_only": true,
+            "group": "crawl_config",
+            "options": [
+                {"value": "1", "label": "Si"},
+                {"value": "0", "label": "No"}
+            ]
+        },
+        "ai_provider": {
+            "type": "select",
+            "label": "Provider AI",
+            "description": "Provider AI per i report di questo modulo",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"},
+                {"value": "anthropic", "label": "Anthropic (Claude)"},
+                {"value": "openai", "label": "OpenAI (GPT)"}
+            ]
+        },
+        "ai_model": {
+            "type": "select",
+            "label": "Modello AI",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"}
+            ]
+        },
+        "ai_fallback_enabled": {
+            "type": "select",
+            "label": "Fallback AI",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"},
+                {"value": "1", "label": "Abilitato"},
+                {"value": "0", "label": "Disabilitato"}
+            ]
+        },
+        "cost_report_generate": {
+            "type": "number",
+            "label": "Costo Report AI",
+            "default": 5,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        }
+    },
+    "routes_prefix": "/crawl-budget"
+}
