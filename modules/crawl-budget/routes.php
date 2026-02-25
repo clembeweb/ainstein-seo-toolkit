@@ -55,6 +55,13 @@ Router::post('/crawl-budget/projects/{id}/settings', function ($id) {
     return (new ProjectController())->updateSettings((int) $id);
 });
 
+// Elimina progetto
+Router::post('/crawl-budget/projects/{id}/delete', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    (new ProjectController())->destroy((int) $id);
+});
+
 // ============================================
 // CRAWL
 // ============================================
