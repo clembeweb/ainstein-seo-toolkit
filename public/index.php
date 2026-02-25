@@ -28,6 +28,7 @@ if (file_exists(BASE_PATH . '/vendor/autoload.php')) {
 spl_autoload_register(function ($class) {
     $paths = [
         'Core\\' => BASE_PATH . '/core/',
+        'Services\\Connectors\\' => BASE_PATH . '/services/connectors/',
         'Services\\' => BASE_PATH . '/services/',
         'Controllers\\' => BASE_PATH . '/controllers/',
         'Admin\\Controllers\\' => BASE_PATH . '/admin/controllers/',
