@@ -1,6 +1,6 @@
 # AINSTEIN - Istruzioni Claude Code
 
-> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-02-24 (notifiche)
+> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-02-25 (cron jobs)
 
 ---
 
@@ -403,14 +403,16 @@ Formato: `/usr/bin/php /home/u1608-ykgnd3z1twn4/www/ainstein.it/public_html/<pat
 Regole: NON usare `~`, `$HOME`, redirect `>>`. Logs scritti dallo script stesso.
 
 ```
-cron/cleanup-data.php                              # Daily (0 2 * * *)
-modules/ai-content/cron/dispatcher.php             # Every Min
-modules/ads-analyzer/cron/auto-evaluate.php        # Every 5 Min
-modules/seo-tracking/cron/rank-dispatcher.php      # Every 5 Min
-modules/seo-tracking/cron/gsc-sync-dispatcher.php  # Hourly
-modules/seo-audit/cron/crawl-dispatcher.php        # Every 5 Min
-modules/seo-tracking/cron/ai-report-dispatcher.php # Hourly
+cron/cleanup-data.php                              # Daily (0 0 * * *)
+cron/cleanup-api-logs.php                          # Daily (0 3 * * *)
+cron/cleanup-ai-logs.php                           # Daily (0 4 * * *)
 cron/admin-report.php                              # Weekly (0 8 * * 1)
+modules/ai-content/cron/dispatcher.php             # Every Min (* * * * *)
+modules/ads-analyzer/cron/auto-evaluate.php        # Every 5 Min (*/5 * * * *)
+modules/seo-audit/cron/crawl-dispatcher.php        # Every 5 Min (*/5 * * * *)
+modules/seo-tracking/cron/rank-dispatcher.php      # Every 5 Min (*/5 * * * *)
+modules/seo-tracking/cron/gsc-sync-dispatcher.php  # Hourly (0 * * * *)
+modules/seo-tracking/cron/ai-report-dispatcher.php # Hourly (0 * * * *)
 ```
 
 ---
