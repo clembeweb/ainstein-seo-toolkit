@@ -29,17 +29,14 @@ try {
         "SELECT COUNT(*) as cnt FROM users"
     )['cnt'];
 
-    // 3. Utenti attivi (logged in durante il periodo)
-    // Check if last_login_at column exists, fallback to 0
+    // 3. Utenti attivi (aggiornati durante il periodo, proxy per login)
     $activeUsers = 0;
     try {
         $activeUsers = (int) Database::fetch(
-            "SELECT COUNT(*) as cnt FROM users WHERE last_login_at >= ?",
+            "SELECT COUNT(*) as cnt FROM users WHERE updated_at >= ?",
             [$periodStart]
         )['cnt'];
-    } catch (\Exception $e) {
-        // Column may not exist
-    }
+    } catch (\Exception $e) {}
 
     // 4. Crediti consumati
     $creditsConsumed = 0;
@@ -79,18 +76,21 @@ try {
         )['cnt'];
     } catch (\Exception $e) {}
 
-    // 7. Job falliti
+    // 7. Job falliti (aggregato da tutte le tabelle job dei moduli)
     $failedJobs = 0;
-    try {
-        $failedJobs = (int) Database::fetch(
-            "SELECT COUNT(*) as cnt FROM background_jobs WHERE status = 'failed' AND created_at >= ?",
-            [$periodStart]
-        )['cnt'];
-    } catch (\Exception $e) {}
+    $jobTables = ['aic_process_jobs', 'aic_scrape_jobs', 'cc_jobs', 'sa_crawl_jobs', 'st_rank_jobs'];
+    foreach ($jobTables as $jt) {
+        try {
+            $failedJobs += (int) Database::fetch(
+                "SELECT COUNT(*) as cnt FROM {$jt} WHERE status = 'failed' AND created_at >= ?",
+                [$periodStart]
+            )['cnt'];
+        } catch (\Exception $e) {}
+    }
 
     // Invia a tutti gli admin attivi
     $admins = Database::fetchAll(
-        "SELECT id, email FROM users WHERE is_admin = 1 AND is_active = 1"
+        "SELECT id, email FROM users WHERE role = 'admin' AND is_active = 1"
     );
 
     if (empty($admins)) {
