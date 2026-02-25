@@ -288,9 +288,11 @@ erDiagram
     email_templates {
         int id PK
         varchar slug UK
+        varchar name
         varchar category
         varchar subject
         longtext body_html
+        json available_vars
         tinyint is_active
     }
     email_unsubscribe_tokens {
@@ -446,9 +448,11 @@ erDiagram
     email_templates {
         int id PK
         varchar slug UK
+        varchar name
         varchar category
         varchar subject
         longtext body_html
+        json available_vars
         tinyint is_active
     }
     email_unsubscribe_tokens {
@@ -765,10 +769,11 @@ erDiagram
                         <tr><td class="py-1.5 px-3 font-mono text-xs">id</td><td class="py-1.5 px-3">INT AUTO_INCREMENT</td><td class="py-1.5 px-3"><span class="text-amber-500 font-semibold">PK</span></td></tr>
                         <tr><td class="py-1.5 px-3 font-mono text-xs">slug</td><td class="py-1.5 px-3">VARCHAR(100)</td><td class="py-1.5 px-3">UNIQUE &mdash; Identificatore template (welcome, password-reset, ecc.)</td></tr>
                         <tr><td class="py-1.5 px-3 font-mono text-xs">name</td><td class="py-1.5 px-3">VARCHAR(255)</td><td class="py-1.5 px-3">Nome visualizzato nell'admin</td></tr>
-                        <tr><td class="py-1.5 px-3 font-mono text-xs">category</td><td class="py-1.5 px-3">ENUM('auth','notification','report')</td><td class="py-1.5 px-3">Categoria per filtro admin</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">category</td><td class="py-1.5 px-3">VARCHAR(50)</td><td class="py-1.5 px-3">DEFAULT 'system' &mdash; Valori: auth, notification, module, report</td></tr>
                         <tr><td class="py-1.5 px-3 font-mono text-xs">subject</td><td class="py-1.5 px-3">VARCHAR(255)</td><td class="py-1.5 px-3">Oggetto email con {{placeholder}}</td></tr>
                         <tr><td class="py-1.5 px-3 font-mono text-xs">body_html</td><td class="py-1.5 px-3">LONGTEXT</td><td class="py-1.5 px-3">Body HTML con {{placeholder}} &mdash; renderizzato dentro base.php</td></tr>
-                        <tr><td class="py-1.5 px-3 font-mono text-xs">variables</td><td class="py-1.5 px-3">JSON</td><td class="py-1.5 px-3">Elenco variabili disponibili per il template</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">description</td><td class="py-1.5 px-3">TEXT NULL</td><td class="py-1.5 px-3">Descrizione per l'admin (quando viene inviata)</td></tr>
+                        <tr><td class="py-1.5 px-3 font-mono text-xs">available_vars</td><td class="py-1.5 px-3">JSON</td><td class="py-1.5 px-3">Elenco variabili disponibili per il template (es. user_name, app_url)</td></tr>
                         <tr><td class="py-1.5 px-3 font-mono text-xs">is_active</td><td class="py-1.5 px-3">TINYINT(1)</td><td class="py-1.5 px-3">DEFAULT 1 &mdash; Se disattivo, l'email non viene inviata</td></tr>
                         <tr><td class="py-1.5 px-3 font-mono text-xs">created_at</td><td class="py-1.5 px-3">TIMESTAMP</td><td class="py-1.5 px-3">DEFAULT CURRENT_TIMESTAMP</td></tr>
                         <tr><td class="py-1.5 px-3 font-mono text-xs">updated_at</td><td class="py-1.5 px-3">TIMESTAMP</td><td class="py-1.5 px-3">ON UPDATE CURRENT_TIMESTAMP</td></tr>
