@@ -151,6 +151,10 @@
             <span class="w-2 h-2 rounded-full bg-orange-500"></span>
             Content Creator (cc_)
         </a>
+        <a href="#cb" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 text-orange-600 dark:text-orange-400 transition-colors">
+            <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+            Crawl Budget (cb_)
+        </a>
     </div>
 </nav>
 
@@ -172,10 +176,10 @@
     <!-- Header -->
     <div class="mb-12">
         <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Ainstein SEO Toolkit &mdash; Data Model</h1>
-        <p class="text-slate-500 dark:text-slate-400">Documentazione completa dello schema database. Generato il <strong class="text-slate-700 dark:text-slate-300">24 Febbraio 2026</strong>.</p>
+        <p class="text-slate-500 dark:text-slate-400">Documentazione completa dello schema database. Generato il <strong class="text-slate-700 dark:text-slate-300">25 Febbraio 2026</strong>.</p>
         <div class="flex flex-wrap gap-3 mt-4 text-sm">
-            <span class="px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">~81 tabelle</span>
-            <span class="px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">8 moduli</span>
+            <span class="px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">~88 tabelle</span>
+            <span class="px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">9 moduli</span>
             <span class="px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">MySQL 8.0 / InnoDB</span>
             <span class="px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">utf8mb4</span>
         </div>
@@ -203,6 +207,7 @@ erDiagram
     projects ||--o{ kr_projects : "attiva"
     projects ||--o{ il_projects : "attiva"
     projects ||--o{ ga_projects : "attiva"
+    projects ||--o{ cb_projects : "attiva"
     projects ||--o{ project_members : "has members"
     projects ||--o{ project_invitations : "has invitations"
     users ||--o{ project_members : "is member of"
@@ -217,6 +222,7 @@ erDiagram
     users ||--o{ kr_projects : "possiede"
     users ||--o{ il_projects : "possiede"
     users ||--o{ ga_projects : "possiede"
+    users ||--o{ cb_projects : "possiede"
     users ||--o{ credit_transactions : "genera"
     users ||--o{ usage_log : "registra"
     users ||--o{ subscriptions : "sottoscrive"
@@ -1411,9 +1417,131 @@ erDiagram
         </details>
     </section>
 
+    <!-- ==================== CRAWL BUDGET ==================== -->
+    <section id="cb" class="mb-16 print-break">
+        <h2 class="text-2xl font-bold text-orange-400 mb-6">Crawl Budget Optimizer (cb_)</h2>
+        <p class="text-slate-500 dark:text-slate-400 mb-6">7 tabelle. Analisi del crawl budget di un sito web: crawl delle pagine, rilevamento problemi (redirect, pagine spreco, indexability), score complessivo e report AI con azioni prioritarie.</p>
+
+        <div class="mermaid">
+erDiagram
+    cb_projects ||--o{ cb_crawl_sessions : "sessioni"
+    cb_projects ||--o{ cb_crawl_jobs : "jobs"
+    cb_projects ||--o{ cb_pages : "pagine"
+    cb_projects ||--o{ cb_issues : "problemi"
+    cb_projects ||--|| cb_site_config : "config sito"
+    cb_projects ||--o{ cb_reports : "report"
+    cb_crawl_sessions ||--o{ cb_crawl_jobs : "ha jobs"
+    cb_crawl_sessions ||--o{ cb_pages : "ha pagine"
+    cb_crawl_sessions ||--o{ cb_issues : "ha problemi"
+    cb_crawl_sessions ||--o{ cb_reports : "ha report"
+    cb_pages ||--o{ cb_issues : "ha problemi"
+
+    cb_projects {
+        int id PK
+        int user_id FK
+        int global_project_id FK
+        varchar name
+        varchar domain
+        enum status "idle/pending/crawling/completed/failed"
+        int crawl_budget_score
+        json settings
+        int current_session_id
+    }
+    cb_crawl_sessions {
+        int id PK
+        int project_id FK
+        enum status "pending/running/paused/stopping/stopped/completed/failed"
+        int pages_found
+        int pages_crawled
+        int issues_found
+        varchar current_url
+        json config
+        datetime started_at
+        datetime completed_at
+    }
+    cb_crawl_jobs {
+        int id PK
+        int project_id FK
+        int session_id FK
+        int user_id FK
+        enum status "pending/running/completed/error/cancelled"
+        int items_total
+        int items_completed
+        int items_failed
+    }
+    cb_pages {
+        int id PK
+        int project_id FK
+        int session_id FK
+        varchar url
+        enum status "pending/crawling/crawled/error"
+        smallint http_status
+        int response_time_ms
+        int word_count
+        varchar title
+        varchar canonical_url
+        tinyint is_indexable
+        tinyint in_sitemap
+        tinyint has_parameters
+        tinyint depth
+    }
+    cb_issues {
+        int id PK
+        int project_id FK
+        int session_id FK
+        int page_id FK
+        enum category "redirect/waste/indexability"
+        varchar type
+        enum severity "critical/warning/notice"
+        varchar title
+        json details
+    }
+    cb_site_config {
+        int id PK
+        int project_id FK
+        text robots_txt
+        json robots_rules
+        json sitemaps
+        json sitemap_urls
+    }
+    cb_reports {
+        int id PK
+        int project_id FK
+        int session_id FK
+        longtext ai_response
+        text summary
+        json priority_actions
+        json estimated_impact
+    }
+        </div>
+
+        <details class="mt-6 bg-white dark:bg-slate-800 rounded-lg border border-orange-200 dark:border-orange-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">Progetto e Sessioni: cb_projects &middot; cb_crawl_sessions &middot; cb_crawl_jobs</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
+                <div><strong class="text-slate-900 dark:text-white">cb_projects</strong>: id(PK), user_id(FK&rarr;users CASCADE), global_project_id(FK&rarr;projects SET NULL), name, domain, status(ENUM idle/pending/crawling/completed/failed), last_crawl_at, crawl_budget_score, settings(JSON), current_session_id, created_at, updated_at. IDX: (user_id, status)</div>
+                <div><strong class="text-slate-900 dark:text-white">cb_crawl_sessions</strong>: id(PK), project_id(FK&rarr;cb_projects CASCADE), status(ENUM pending/running/paused/stopping/stopped/completed/failed), pages_found, pages_crawled, issues_found, current_url, config(JSON), started_at, completed_at, error_message, created_at. IDX: (project_id, status)</div>
+                <div><strong class="text-slate-900 dark:text-white">cb_crawl_jobs</strong>: id(PK), project_id(FK&rarr;cb_projects CASCADE), session_id(FK&rarr;cb_crawl_sessions CASCADE), user_id(FK&rarr;users CASCADE), status(ENUM pending/running/completed/error/cancelled), items_total, items_completed, items_failed, current_item, config(JSON), error_message, started_at, completed_at, created_at. IDX: (project_id, session_id), (status)</div>
+            </div>
+        </details>
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-orange-200 dark:border-orange-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">Pagine e Problemi: cb_pages &middot; cb_issues</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
+                <div><strong class="text-slate-900 dark:text-white">cb_pages</strong>: id(PK), project_id(FK CASCADE), session_id(FK CASCADE), url(VARCHAR 2048), status(ENUM pending/crawling/crawled/error), http_status(SMALLINT), content_type, response_time_ms, content_length, word_count, title, meta_robots, canonical_url, canonical_matches, is_indexable, indexability_reason, redirect_target, redirect_chain(JSON), redirect_hops, in_sitemap, in_robots_allowed, internal_links_in, internal_links_out, has_parameters, depth, discovered_from, created_at, updated_at. UK: (session_id, url(255)). IDX: (project_id, session_id, status), (session_id, status), (session_id, http_status)</div>
+                <div><strong class="text-slate-900 dark:text-white">cb_issues</strong>: id(PK), project_id(FK CASCADE), session_id(FK CASCADE), page_id(FK CASCADE NULL), category(ENUM redirect/waste/indexability), type(VARCHAR 100), severity(ENUM critical/warning/notice), title, details(JSON), created_at. IDX: (session_id, category, severity), (page_id)</div>
+            </div>
+        </details>
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-orange-200 dark:border-orange-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">Config e Report: cb_site_config &middot; cb_reports</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
+                <div><strong class="text-slate-900 dark:text-white">cb_site_config</strong>: id(PK), project_id(FK CASCADE, UNIQUE), robots_txt(TEXT), robots_rules(JSON), sitemaps(JSON), sitemap_urls(JSON), updated_at</div>
+                <div><strong class="text-slate-900 dark:text-white">cb_reports</strong>: id(PK), project_id(FK CASCADE), session_id(FK CASCADE), ai_response(LONGTEXT), summary(TEXT), priority_actions(JSON), estimated_impact(JSON), created_at. IDX: (project_id, session_id)</div>
+            </div>
+        </details>
+    </section>
+
     <!-- Footer -->
     <footer class="mt-16 pt-8 border-t border-slate-200 dark:border-slate-700 text-center text-sm text-slate-500 dark:text-slate-500">
-        <p>Ainstein SEO Toolkit &mdash; Data Model v1.2 &mdash; Aggiornato il 24 Febbraio 2026</p>
+        <p>Ainstein SEO Toolkit &mdash; Data Model v1.3 &mdash; Aggiornato il 25 Febbraio 2026</p>
         <p class="mt-1">Per stampare come PDF: Ctrl+P &rarr; Salva come PDF (layout A4 Landscape consigliato)</p>
     </footer>
 

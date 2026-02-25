@@ -1,6 +1,6 @@
 # AINSTEIN - Istruzioni Claude Code
 
-> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-02-25 (cron jobs)
+> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-02-25 (crawl-budget module)
 
 ---
 
@@ -58,6 +58,7 @@
 | AI Keyword Research | `keyword-research` | `kr_` | Completo |
 | Content Creator | `content-creator` | `cc_` | Completo (4 CMS connectors) |
 | Internal Links | `internal-links` | `il_` | 85% (manca AI Suggester) |
+| Crawl Budget Optimizer | `crawl-budget` | `cb_` | Completo |
 | AI Optimizer | `ai-optimizer` | `ao_` | In sviluppo |
 | SEO On-Page | `seo-onpage` | `so_` | In sviluppo |
 
@@ -413,6 +414,7 @@ modules/seo-audit/cron/crawl-dispatcher.php        # Every 5 Min (*/5 * * * *)
 modules/seo-tracking/cron/rank-dispatcher.php      # Every 5 Min (*/5 * * * *)
 modules/seo-tracking/cron/gsc-sync-dispatcher.php  # Hourly (0 * * * *)
 modules/seo-tracking/cron/ai-report-dispatcher.php # Hourly (0 * * * *)
+modules/crawl-budget/cron/crawl-dispatcher.php     # Every 5 Min (*/5 * * * *)
 ```
 
 ---
