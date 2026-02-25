@@ -1,5 +1,6 @@
 <?php
 $currentPage = 'search-term-analysis';
+$canEdit = ($access_role ?? 'owner') !== 'viewer';
 include __DIR__ . '/../partials/project-nav.php';
 
 $config = json_encode([
@@ -267,6 +268,7 @@ $config = json_encode([
                     </button>
                 </div>
 
+                <?php if ($canEdit): ?>
                 <!-- Bottone Analisi AI -->
                 <div class="mt-4">
                     <button @click="startAnalysis()" :disabled="isAnalyzing || businessContext.length < 20"
@@ -279,6 +281,7 @@ $config = json_encode([
                     </button>
                     <span class="ml-2 text-xs text-slate-400" x-text="'Crediti: ' + userCredits"></span>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
 

@@ -122,6 +122,7 @@ class SearchTermAnalysisController
             'savedContexts' => $savedContexts,
             'currentPage' => 'search-term-analysis',
             'userCredits' => Credits::getBalance($user['id']),
+            'access_role' => $project['access_role'] ?? 'owner',
         ]);
     }
 

@@ -113,6 +113,7 @@ class CampaignController
             'autoEvalEnabled' => $autoEvalEnabled,
             'currentPage' => 'dashboard',
             'userCredits' => Credits::getBalance($user['id']),
+            'access_role' => $project['access_role'] ?? 'owner',
         ]);
     }
 
@@ -176,6 +177,7 @@ class CampaignController
             'evaluations' => $evaluations,
             'campaignsList' => $campaignsList,
             'userCredits' => Credits::getBalance($user['id']),
+            'access_role' => $project['access_role'] ?? 'owner',
         ]);
     }
 
@@ -229,6 +231,7 @@ class CampaignController
             'extensions' => $extensions,
             'campaignStats' => $campaignStats,
             'adStats' => $adStats,
+            'access_role' => $project['access_role'] ?? 'owner',
         ]);
     }
 
@@ -470,6 +473,7 @@ class CampaignController
             'evaluation' => $evaluation,
             'aiResponse' => $aiResponse,
             'generateUrl' => url("/ads-analyzer/projects/{$projectId}/campaigns/evaluations/{$evalId}/generate"),
+            'access_role' => $project['access_role'] ?? 'owner',
         ]);
     }
 

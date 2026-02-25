@@ -63,6 +63,7 @@ class CampaignCreatorController
             'phaseAComplete' => $phaseAComplete,
             'scrapedContext' => $project['scraped_context'] ?? '',
             'hasScrapedData' => $hasScrapedData,
+            'access_role' => $project['access_role'] ?? 'owner',
         ]);
     }
 

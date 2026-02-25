@@ -9,6 +9,8 @@
  * - $user, $modules
  */
 
+$canEdit = ($access_role ?? 'owner') !== 'viewer';
+
 // Area translations
 $areaLabels = [
     'copy' => 'Copy',
@@ -638,7 +640,7 @@ HTML;
                                     </div>
                                 </div>
                                 <?php endif; ?>
-                                <?php if (in_array($area, $generatableAreas)): ?>
+                                <?php if ($canEdit && in_array($area, $generatableAreas)): ?>
                                 <?php $issueKey = "issue_{$cIndex}_{$iIndex}"; ?>
                                 <button @click="generateFix('<?= $area ?>', <?= e(json_encode([
                                     'issue' => $issue['description'] ?? '',

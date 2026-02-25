@@ -1,5 +1,6 @@
 <?php
 $currentPage = 'dashboard';
+$canEdit = ($access_role ?? 'owner') !== 'viewer';
 include __DIR__ . '/../partials/project-nav.php';
 ?>
 
@@ -375,6 +376,7 @@ $trendLabels = [
                     </div>
                 </a>
 
+                <?php if ($canEdit): ?>
                 <!-- Toggle Auto-Valutazione -->
                 <div class="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-700/30">
                     <div class="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
@@ -394,12 +396,14 @@ $trendLabels = [
                               :class="autoEvalEnabled ? 'translate-x-6' : 'translate-x-1'"></span>
                     </button>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 
     <?php endif; ?>
 
+    <?php if (($access_role ?? 'owner') === 'owner'): ?>
     <!-- Actions -->
     <div class="flex items-center justify-between">
         <form action="<?= url('/ads-analyzer/projects/' . $project['id'] . '/delete') ?>" method="POST"
@@ -410,6 +414,7 @@ $trendLabels = [
             </button>
         </form>
     </div>
+    <?php endif; ?>
 </div>
 
 <script>

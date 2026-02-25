@@ -1,4 +1,8 @@
-<?php $currentPage = 'campaigns'; include __DIR__ . '/../partials/project-nav.php'; ?>
+<?php
+$currentPage = 'campaigns';
+$canEdit = ($access_role ?? 'owner') !== 'viewer';
+include __DIR__ . '/../partials/project-nav.php';
+?>
 
 <div class="space-y-6" x-data="campaignPageManager()">
 
@@ -102,6 +106,7 @@
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div class="flex items-center gap-4">
+                <?php if ($canEdit): ?>
                 <!-- Valuta con AI Button -->
                 <button
                     @click="startEvaluation()"
@@ -130,6 +135,7 @@
                     <span class="mx-1">&bull;</span>
                     <span>Disponibili: <strong class="<?= $userCredits >= $evalCost ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' ?>"><?= number_format($userCredits, 1) ?></strong></span>
                 </div>
+                <?php endif; ?>
             </div>
 
             <!-- Script Setup Link -->

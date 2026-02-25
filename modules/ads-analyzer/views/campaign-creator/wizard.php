@@ -1,4 +1,5 @@
 <?php
+$canEdit = ($access_role ?? 'owner') !== 'viewer';
 $isPmax = ($project['campaign_type_gads'] ?? 'search') === 'pmax';
 $campaignTypeLabel = $isPmax ? 'Performance Max' : 'Search';
 $keywordsJson = json_encode($keywords ?? []);
@@ -110,6 +111,7 @@ $kwCost = \Modules\AdsAnalyzer\Services\CampaignCreatorService::getCost('keyword
                 </div>
 
                 <div class="flex justify-end mt-4">
+                    <?php if ($canEdit): ?>
                     <button type="button" @click="analyzeLanding()" :disabled="analyzingLanding"
                             class="inline-flex items-center px-5 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors disabled:opacity-50">
                         <svg x-show="analyzingLanding" x-cloak class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -121,6 +123,9 @@ $kwCost = \Modules\AdsAnalyzer\Services\CampaignCreatorService::getCost('keyword
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
                     </button>
+                    <?php else: ?>
+                    <span class="text-sm text-slate-500 dark:text-slate-400">Accesso in sola lettura</span>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -229,7 +234,7 @@ $kwCost = \Modules\AdsAnalyzer\Services\CampaignCreatorService::getCost('keyword
 
                 <!-- Azioni Phase B -->
                 <div class="flex items-center justify-between mt-4">
-                    <?php if ($needsScraping): ?>
+                    <?php if ($canEdit && $needsScraping): ?>
                     <button type="button" @click="regenerateStep('landing')" :disabled="loading"
                             class="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -241,6 +246,7 @@ $kwCost = \Modules\AdsAnalyzer\Services\CampaignCreatorService::getCost('keyword
                     <div></div>
                     <?php endif; ?>
 
+                    <?php if ($canEdit): ?>
                     <button type="button" @click="startKeywordResearch()" :disabled="loading"
                             class="inline-flex items-center px-5 py-2.5 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors disabled:opacity-50">
                         <svg x-show="loading" x-cloak class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -252,6 +258,7 @@ $kwCost = \Modules\AdsAnalyzer\Services\CampaignCreatorService::getCost('keyword
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                         </svg>
                     </button>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -389,6 +396,7 @@ $kwCost = \Modules\AdsAnalyzer\Services\CampaignCreatorService::getCost('keyword
             </div>
 
             <!-- Actions -->
+            <?php if ($canEdit): ?>
             <div class="flex items-center justify-between">
                 <button type="button" @click="regenerateStep('keywords')" :disabled="loading"
                         class="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
@@ -409,6 +417,7 @@ $kwCost = \Modules\AdsAnalyzer\Services\CampaignCreatorService::getCost('keyword
                     </svg>
                 </button>
             </div>
+            <?php endif; ?>
 
             <!-- Error -->
             <div x-show="errorMsg" x-transition class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
@@ -452,6 +461,7 @@ $kwCost = \Modules\AdsAnalyzer\Services\CampaignCreatorService::getCost('keyword
                             </svg>
                             Esporta CSV
                         </a>
+                        <?php if ($canEdit): ?>
                         <button type="button" @click="regenerateStep('campaign')" :disabled="loading"
                                 class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                             <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -459,6 +469,7 @@ $kwCost = \Modules\AdsAnalyzer\Services\CampaignCreatorService::getCost('keyword
                             </svg>
                             Rigenera
                         </button>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
