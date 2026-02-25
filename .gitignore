@@ -55,6 +55,9 @@ siteground_key.pub
 # Database dumps
 database_full_dump.sql
 
+# Business docs (riservati)
+/business/
+
 # Temp files
 tmpclaude-*
 file-grafici/

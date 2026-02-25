@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ainstein SEO Toolkit - Business Plan 2026</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --accent: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --dark: #0f172a;
+            --text: #334155;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --bg-light: #f8fafc;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        @page {
+            size: A4;
+            margin: 20mm 18mm;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 14px;
+            background: #fff;
+        }
+
+        /* ── Cover Page ── */
+        .cover {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, var(--dark) 0%, #1e293b 50%, #0f172a 100%);
+            color: white;
+            padding: 60px 40px;
+            page-break-after: always;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cover::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -30%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .cover::after {
+            content: '';
+            position: absolute;
+            bottom: -40%;
+            left: -20%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .cover-badge {
+            display: inline-block;
+            background: rgba(37,99,235,0.2);
+            border: 1px solid rgba(37,99,235,0.3);
+            color: #93c5fd;
+            padding: 6px 20px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cover-logo {
+            font-size: 64px;
+            font-weight: 800;
+            letter-spacing: -2px;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cover-logo span {
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .cover-tagline {
+            font-size: 22px;
+            font-weight: 300;
+            color: #94a3b8;
+            margin-bottom: 50px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cover-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cover-subtitle {
+            font-size: 16px;
+            color: #94a3b8;
+            margin-bottom: 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cover-meta {
+            position: relative;
+            z-index: 1;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .cover-meta strong {
+            color: #94a3b8;
+        }
+
+        /* ── Section styles ── */
+        .page-break { page-break-before: always; }
+
+        .section {
+            padding: 40px 50px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 30px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid var(--primary);
+            display: inline-block;
+        }
+
+        h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-top: 35px;
+            margin-bottom: 15px;
+        }
+
+        h3 {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--dark);
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+
+        p { margin-bottom: 14px; }
+
+        /* ── Elevator Pitch Box ── */
+        .elevator-pitch {
+            background: linear-gradient(135deg, #eff6ff, #f0f0ff);
+            border-left: 5px solid var(--primary);
+            border-radius: 0 16px 16px 0;
+            padding: 30px 35px;
+            margin: 25px 0 30px;
+            font-size: 16px;
+            line-height: 1.8;
+        }
+
+        .elevator-pitch .quote {
+            font-size: 18px;
+            font-weight: 600;
+            font-style: italic;
+            color: var(--primary-dark);
+            margin-bottom: 15px;
+        }
+
+        /* ── Highlight Box ── */
+        .highlight-box {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px 28px;
+            margin: 20px 0;
+        }
+
+        .highlight-box.blue {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+
+        .highlight-box.green {
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+        }
+
+        .highlight-box.purple {
+            background: #f5f3ff;
+            border-color: #c4b5fd;
+        }
+
+        /* ── Tables ── */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 18px 0 25px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        thead {
+            background: var(--dark);
+            color: white;
+        }
+
+        thead th {
+            padding: 12px 16px;
+            font-weight: 600;
+            text-align: left;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tbody td {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody tr:last-child td { border-bottom: none; }
+
+        tbody tr:nth-child(even) {
+            background: var(--bg-light);
+        }
+
+        /* ── KPI Grid ── */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin: 25px 0;
+        }
+
+        .kpi-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .kpi-card .value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .kpi-card .label {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-card.green .value { color: var(--success); }
+        .kpi-card.purple .value { color: var(--accent); }
+        .kpi-card.amber .value { color: var(--warning); }
+
+        /* ── Timeline ── */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+            margin: 20px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 6px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+
+        .timeline-item.done::before { background: var(--success); box-shadow: 0 0 0 2px var(--success); }
+        .timeline-item.current::before { background: var(--warning); box-shadow: 0 0 0 2px var(--warning); }
+
+        .timeline-date {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            color: var(--dark);
+            margin: 2px 0;
+        }
+
+        .timeline-desc {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
+        /* ── Lists ── */
+        ul, ol {
+            margin: 10px 0 16px 24px;
+        }
+
+        li { margin-bottom: 6px; }
+
+        /* ── Financials ── */
+        .financial-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .financial-row:last-child { border-bottom: none; }
+
+        .financial-row .label { color: var(--text-light); }
+        .financial-row .value { font-weight: 600; color: var(--dark); }
+        .financial-row .value.positive { color: var(--success); }
+        .financial-row .value.negative { color: #ef4444; }
+
+        /* ── TOC ── */
+        .toc {
+            background: var(--bg-light);
+            border-radius: 16px;
+            padding: 30px 35px;
+            margin: 25px 0;
+        }
+
+        .toc-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--dark);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .toc ol {
+            list-style: none;
+            counter-reset: toc;
+            margin: 0;
+            padding: 0;
+        }
+
+        .toc li {
+            counter-increment: toc;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border);
+            font-weight: 500;
+        }
+
+        .toc li:last-child { border-bottom: none; }
+
+        .toc li::before {
+            content: counter(toc, decimal-leading-zero);
+            font-weight: 700;
+            color: var(--primary);
+            margin-right: 12px;
+        }
+
+        /* ── SWOT Grid ── */
+        .swot-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .swot-card {
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .swot-card.strengths { background: #ecfdf5; border: 1px solid #a7f3d0; }
+        .swot-card.weaknesses { background: #fef2f2; border: 1px solid #fecaca; }
+        .swot-card.opportunities { background: #eff6ff; border: 1px solid #bfdbfe; }
+        .swot-card.threats { background: #fefce8; border: 1px solid #fde68a; }
+
+        .swot-card h4 {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .swot-card.strengths h4 { color: #059669; }
+        .swot-card.weaknesses h4 { color: #dc2626; }
+        .swot-card.opportunities h4 { color: #2563eb; }
+        .swot-card.threats h4 { color: #d97706; }
+
+        .swot-card ul { margin: 0; padding-left: 18px; }
+        .swot-card li { font-size: 13px; margin-bottom: 4px; }
+
+        /* ── Badges ── */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge.complete { background: #dcfce7; color: #166534; }
+        .badge.progress { background: #fef3c7; color: #92400e; }
+        .badge.planned { background: #e0e7ff; color: #3730a3; }
+
+        /* ── Footer ── */
+        .page-footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 11px;
+            color: var(--text-light);
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+
+        /* ── Print ── */
+        @media print {
+            .cover { min-height: auto; height: 100vh; }
+            .section { padding: 20px 0; }
+            .page-break { page-break-before: always; }
+        }
+
+        .strong-value { font-weight: 700; color: var(--dark); }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- COPERTINA -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="cover">
+    <div class="cover-badge">Documento Riservato</div>
+    <div class="cover-logo"><span>Ainstein</span></div>
+    <div class="cover-tagline">Il tuo team SEO e Google Ads, powered by AI</div>
+    <div class="cover-title">Business Plan &amp; Elevator Pitch</div>
+    <div class="cover-subtitle">Piano Strategico e Finanziario 2026&ndash;2028</div>
+    <div class="cover-meta">
+        <strong>ainstein.it</strong> &nbsp;&middot;&nbsp; Febbraio 2026 &nbsp;&middot;&nbsp; v1.0
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- INDICE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section">
+    <h1>Indice</h1>
+    <div class="toc">
+        <ol>
+            <li>Elevator Pitch</li>
+            <li>Executive Summary</li>
+            <li>Il Problema</li>
+            <li>La Soluzione: Ainstein</li>
+            <li>Prodotto e Funzionalita</li>
+            <li>Modello di Business</li>
+            <li>Analisi di Mercato</li>
+            <li>Analisi Competitiva (SWOT)</li>
+            <li>Roadmap di Sviluppo</li>
+            <li>Proiezioni Finanziarie</li>
+            <li>Struttura dei Costi</li>
+            <li>Strategia Go-to-Market</li>
+            <li>Rischi e Mitigazioni</li>
+            <li>Richiesta di Finanziamento</li>
+        </ol>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 1. ELEVATOR PITCH -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>1. Elevator Pitch</h1>
+
+    <div class="elevator-pitch">
+        <p class="quote">
+            &laquo;Ainstein e la piattaforma SaaS che trasforma un singolo professionista
+            in un intero reparto SEO e Google Ads.&raquo;
+        </p>
+        <p>
+            Oggi chi fa SEO e gestisce campagne Google Ads deve destreggiarsi tra decine di tool diversi
+            &mdash; ognuno con il proprio abbonamento, la propria interfaccia e la propria curva di apprendimento.
+            Il risultato? Costi elevati, workflow frammentati e ore perse a copiare dati da uno strumento all'altro.
+        </p>
+        <p>
+            <strong>Ainstein risolve questo problema</strong> unificando in un'unica piattaforma AI-native
+            tutte le operazioni chiave: dalla ricerca keyword alla generazione di articoli ottimizzati,
+            dall'audit tecnico al monitoraggio posizionamenti, dall'analisi dei link interni
+            alla creazione di campagne Google Ads complete.
+        </p>
+        <p>
+            L'intelligenza artificiale non e un add-on: e il motore di ogni funzionalita.
+            L'utente dice <em>cosa vuole ottenere</em>, Ainstein fa il lavoro.
+            Con un modello a crediti trasparente, senza abbonamenti multipli,
+            e con pubblicazione diretta su WordPress, Shopify, PrestaShop e Magento.
+        </p>
+        <p>
+            <strong>Target</strong>: freelance SEO, agenzie digitali, e-commerce manager, team marketing PMI.<br>
+            <strong>Mercato</strong>: 14,5 miliardi $ globali (SEO tools 2025), in crescita del 17% annuo.<br>
+            <strong>Pricing</strong>: da 0&euro;/mese (free tier) a 99&euro;/mese (agency), tutti i moduli inclusi sempre.
+        </p>
+    </div>
+
+    <h3>Versione 30 secondi</h3>
+    <div class="highlight-box blue">
+        <p style="margin:0; font-size: 15px;">
+            Ainstein e un toolkit SaaS all-in-one che usa l'AI per automatizzare SEO e Google Ads.
+            Un freelance o una piccola agenzia possono fare keyword research, generare articoli ottimizzati,
+            auditare siti, tracciare posizionamenti e creare campagne Ads &mdash; tutto da un'unica dashboard,
+            con pubblicazione diretta sui CMS. Pricing a crediti, da 0 a 99&euro;/mese.
+        </p>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 2. EXECUTIVE SUMMARY -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>2. Executive Summary</h1>
+
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="value">10</div>
+            <div class="label">Moduli Attivi</div>
+        </div>
+        <div class="kpi-card green">
+            <div class="value">8</div>
+            <div class="label">Completi / Produzione</div>
+        </div>
+        <div class="kpi-card purple">
+            <div class="value">4</div>
+            <div class="label">CMS Connessi</div>
+        </div>
+        <div class="kpi-card amber">
+            <div class="value">12+</div>
+            <div class="label">API Integrate</div>
+        </div>
+    </div>
+
+    <p>
+        <strong>Ainstein</strong> e una piattaforma SaaS B2B che unifica gli strumenti di
+        Search Engine Optimization e Google Ads Management in un unico prodotto AI-native.
+    </p>
+
+    <p>
+        A differenza dei competitor che offrono tool isolati (Semrush per analisi, Jasper per contenuti,
+        Screaming Frog per audit), Ainstein integra <strong>10 moduli specializzati</strong> in un workflow
+        continuo: dalla scoperta delle keyword alla pubblicazione dell'articolo, passando per
+        audit tecnici, monitoraggio posizionamenti e gestione campagne Ads.
+    </p>
+
+    <h3>Punti di Forza Chiave</h3>
+    <ul>
+        <li><strong>AI come motore, non come accessorio</strong> &mdash; ogni modulo e costruito attorno all'intelligenza artificiale</li>
+        <li><strong>Workflow integrato end-to-end</strong> &mdash; un keyword research diventa un piano editoriale che diventa un articolo pubblicato</li>
+        <li><strong>Pubblicazione diretta su 4 CMS</strong> &mdash; WordPress, Shopify, PrestaShop, Magento</li>
+        <li><strong>Pricing accessibile e prevedibile</strong> &mdash; crediti con 4 fasce semplici, free tier permanente</li>
+        <li><strong>Mercato italiano sottosservito</strong> &mdash; interfaccia nativa italiana, competitor principali in inglese</li>
+    </ul>
+
+    <h3>Stato Attuale</h3>
+    <p>
+        Il prodotto e live in <strong>beta aperta</strong> su <code>ainstein.it</code> con 8 moduli completi
+        su 10 pianificati. L'infrastruttura e in produzione su SiteGround con cron job attivi,
+        sistema di background processing (SSE), e integrazioni API funzionanti (Google Search Console,
+        DataForSEO, Serper, RapidAPI, Claude API, OpenAI).
+    </p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 3. IL PROBLEMA -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>3. Il Problema</h1>
+
+    <h2>3.1 Frammentazione degli Strumenti</h2>
+    <p>
+        Un professionista SEO oggi utilizza in media <strong>5-8 tool diversi</strong> per coprire
+        le sue attivita quotidiane. Ogni tool ha il proprio abbonamento (da 30 a 500&euro;/mese),
+        la propria interfaccia e i propri limiti.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Attivita</th>
+                <th>Tool Tipico</th>
+                <th>Costo/mese</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Keyword Research</td><td>Semrush / Ahrefs</td><td>120&ndash;250&euro;</td></tr>
+            <tr><td>Content Generation (AI)</td><td>Jasper / SurferSEO</td><td>50&ndash;120&euro;</td></tr>
+            <tr><td>SEO Audit Tecnico</td><td>Screaming Frog / Sitebulb</td><td>20&ndash;60&euro;</td></tr>
+            <tr><td>Rank Tracking</td><td>SE Ranking / AccuRanker</td><td>30&ndash;80&euro;</td></tr>
+            <tr><td>Internal Links</td><td>Screaming Frog (manuale)</td><td>Incluso</td></tr>
+            <tr><td>Google Ads Optimization</td><td>Optmyzr / WordStream</td><td>200&ndash;500&euro;</td></tr>
+            <tr><td>Crawl Budget Analysis</td><td>DeepCrawl / Oncrawl</td><td>80&ndash;300&euro;</td></tr>
+            <tr><td><strong>Totale stimato</strong></td><td></td><td><strong>530&ndash;1.310&euro;/mese</strong></td></tr>
+        </tbody>
+    </table>
+
+    <h2>3.2 Workflow Disconnessi</h2>
+    <p>
+        Anche avendo tutti i tool, il flusso di lavoro resta manuale: si fa keyword research su un tool,
+        si copia il risultato in un foglio, si scrive il brief su un documento, si genera il contenuto
+        su un altro tool, si fa il copia-incolla sul CMS. <strong>Ore di lavoro manuale</strong> tra
+        un passaggio e l'altro.
+    </p>
+
+    <h2>3.3 Barriera d'Ingresso per PMI e Freelance</h2>
+    <p>
+        I tool enterprise (Semrush, Ahrefs) partono da 120&euro;/mese e richiedono competenze tecniche.
+        I freelance e le piccole agenzie sono costretti a scegliere: <strong>pagare troppo</strong>
+        per funzionalita che non usano, oppure <strong>arrancarsi con tool gratuiti limitati</strong>.
+    </p>
+
+    <div class="highlight-box">
+        <h3 style="margin-top:0">Il Pain Point in Numeri</h3>
+        <ul>
+            <li>Un freelance SEO italiano spende in media <strong>200&ndash;400&euro;/mese</strong> in tool</li>
+            <li>Il <strong>60% del tempo</strong> viene speso in attivita ripetitive (copia-incolla, formattazione, export/import)</li>
+            <li>Solo il <strong>15% delle PMI italiane</strong> ha una strategia SEO strutturata (fonte: Osservatorio Digitale)</li>
+            <li>La barriera principale? <strong>Costo e complessita</strong> degli strumenti disponibili</li>
+        </ul>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 4. LA SOLUZIONE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>4. La Soluzione: Ainstein</h1>
+
+    <p>
+        Ainstein elimina la frammentazione offrendo <strong>un'unica piattaforma</strong> che copre
+        l'intero ciclo di vita SEO e Google Ads, con l'AI come motore principale di ogni operazione.
+    </p>
+
+    <h2>4.1 Proposta di Valore Unica</h2>
+
+    <div class="highlight-box green">
+        <p style="margin:0; font-size: 16px; font-weight: 600; color: #059669;">
+            &laquo;Un singolo abbonamento. Tutti i moduli. Paghi solo quello che usi.&raquo;
+        </p>
+    </div>
+
+    <h3>Workflow Integrato End-to-End</h3>
+    <p>
+        Il valore differenziante di Ainstein non e solo la somma dei singoli moduli,
+        ma la loro <strong>integrazione nativa</strong>:
+    </p>
+    <ol>
+        <li><strong>Keyword Research</strong> &rarr; scopri le keyword migliori con clustering AI</li>
+        <li><strong>Piano Editoriale</strong> &rarr; l'AI organizza le keyword in un calendario di pubblicazione</li>
+        <li><strong>Esporta in AI Content</strong> &rarr; con un click le keyword diventano articoli in coda</li>
+        <li><strong>Generazione Articolo</strong> &rarr; analisi SERP, brief strategico, articolo completo</li>
+        <li><strong>Pubblica su CMS</strong> &rarr; invio diretto a WordPress/Shopify/PrestaShop/Magento</li>
+        <li><strong>Monitora Risultati</strong> &rarr; tracking posizioni + dati GSC in tempo reale</li>
+        <li><strong>Ottimizza</strong> &rarr; audit tecnico, analisi link interni, report AI settimanali</li>
+    </ol>
+
+    <h2>4.2 Vantaggi Competitivi</h2>
+    <table>
+        <thead>
+            <tr><th>Caratteristica</th><th>Ainstein</th><th>Competitor Tipici</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>SEO + Google Ads in un tool</td>
+                <td><strong>Si</strong></td>
+                <td>No (tool separati)</td>
+            </tr>
+            <tr>
+                <td>AI nativa in ogni modulo</td>
+                <td><strong>Si (Claude + OpenAI)</strong></td>
+                <td>AI come add-on opzionale</td>
+            </tr>
+            <tr>
+                <td>Pubblicazione diretta su 4 CMS</td>
+                <td><strong>Si</strong></td>
+                <td>Solo WordPress (pochi)</td>
+            </tr>
+            <tr>
+                <td>Free tier permanente</td>
+                <td><strong>30 crediti/mese, tutti i moduli</strong></td>
+                <td>Trial 7-14 giorni</td>
+            </tr>
+            <tr>
+                <td>Interfaccia in italiano</td>
+                <td><strong>Nativa</strong></td>
+                <td>Solo inglese</td>
+            </tr>
+            <tr>
+                <td>Crediti non consumati su errore</td>
+                <td><strong>Si, fail-safe</strong></td>
+                <td>Raro</td>
+            </tr>
+            <tr>
+                <td>Costo per freelance</td>
+                <td><strong>19&euro;/mese</strong></td>
+                <td>120&ndash;250&euro;/mese</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 5. PRODOTTO E FUNZIONALITA -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>5. Prodotto e Funzionalita</h1>
+
+    <h2>5.1 Mappa dei Moduli</h2>
+
+    <table>
+        <thead>
+            <tr><th>Modulo</th><th>Funzione Chiave</th><th>Stato</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>AI Content Generator</strong></td>
+                <td>Genera articoli SEO da keyword: analisi SERP, brief, articolo completo, cover image</td>
+                <td><span class="badge complete">Completo</span></td>
+            </tr>
+            <tr>
+                <td><strong>SEO Audit</strong></td>
+                <td>Crawl tecnico fino a 2.000 pagine, Health Score, Piano d'Azione AI prioritizzato</td>
+                <td><span class="badge complete">Completo</span></td>
+            </tr>
+            <tr>
+                <td><strong>SEO Tracking</strong></td>
+                <td>Monitoraggio posizioni keyword, integrazione GSC, report AI settimanali/mensili</td>
+                <td><span class="badge complete">Completo</span></td>
+            </tr>
+            <tr>
+                <td><strong>AI Keyword Research</strong></td>
+                <td>Ricerca keyword con clustering AI, architettura sito, piano editoriale</td>
+                <td><span class="badge complete">Completo</span></td>
+            </tr>
+            <tr>
+                <td><strong>Google Ads Analyzer</strong></td>
+                <td>Analisi keyword negative, valutazione campagne AI, Campaign Creator completo</td>
+                <td><span class="badge complete">Completo</span></td>
+            </tr>
+            <tr>
+                <td><strong>Content Creator</strong></td>
+                <td>Generazione contenuti bulk per e-commerce con push diretto su 4 CMS</td>
+                <td><span class="badge complete">Completo</span></td>
+            </tr>
+            <tr>
+                <td><strong>Internal Links</strong></td>
+                <td>Analisi struttura link interni, pagine orfane, distribuzione link juice</td>
+                <td><span class="badge progress">85%</span></td>
+            </tr>
+            <tr>
+                <td><strong>Crawl Budget Optimizer</strong></td>
+                <td>Analisi crawl budget: redirect chain, pagine spreco, conflitti indexability</td>
+                <td><span class="badge complete">Completo</span></td>
+            </tr>
+            <tr>
+                <td><strong>AI Optimizer</strong></td>
+                <td>Ottimizzazione articoli esistenti vs top competitor SERP</td>
+                <td><span class="badge progress">In sviluppo</span></td>
+            </tr>
+            <tr>
+                <td><strong>SEO On-Page</strong></td>
+                <td>100+ check on-page con suggerimenti AI per ottimizzazione</td>
+                <td><span class="badge progress">In sviluppo</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>5.2 Integrazioni Attive</h2>
+    <table>
+        <thead>
+            <tr><th>Servizio</th><th>Utilizzo</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Google Search Console (OAuth)</td><td>Dati reali click, impressioni, CTR, posizioni</td></tr>
+            <tr><td>Claude API (Anthropic)</td><td>Provider AI primario per tutti i moduli</td></tr>
+            <tr><td>OpenAI (GPT-4o + DALL-E 3)</td><td>Fallback AI + generazione immagini cover</td></tr>
+            <tr><td>Serper.dev / SerpAPI</td><td>Estrazione SERP Google in tempo reale</td></tr>
+            <tr><td>DataForSEO</td><td>Rank check, analisi on-page, volumi ricerca</td></tr>
+            <tr><td>RapidAPI (Google Keyword Insight)</td><td>Volumi keyword e CPC</td></tr>
+            <tr><td>WordPress / Shopify / PrestaShop / Magento</td><td>Pubblicazione diretta contenuti</td></tr>
+            <tr><td>Stripe (predisposto)</td><td>Pagamenti ricorrenti (attivazione imminente)</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 6. MODELLO DI BUSINESS -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>6. Modello di Business</h1>
+
+    <h2>6.1 Revenue Model: SaaS a Crediti</h2>
+    <p>
+        Ainstein adotta un modello <strong>subscription + usage-based</strong>: l'utente sceglie un piano
+        mensile/annuale che include un pacchetto di crediti. Ogni operazione consuma crediti secondo
+        una tabella trasparente a 4 fasce.
+    </p>
+
+    <h3>Piani e Pricing</h3>
+    <table>
+        <thead>
+            <tr><th>Piano</th><th>Crediti/Mese</th><th>Mensile</th><th>Annuale</th><th>Target</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Free</strong></td>
+                <td>30</td>
+                <td>0&euro;</td>
+                <td>0&euro;</td>
+                <td>Esplorazione, trial permanente</td>
+            </tr>
+            <tr>
+                <td><strong>Starter</strong></td>
+                <td>150</td>
+                <td>19&euro;</td>
+                <td>190&euro;</td>
+                <td>Freelance, consulenti SEO</td>
+            </tr>
+            <tr>
+                <td><strong>Pro</strong></td>
+                <td>500</td>
+                <td>49&euro;</td>
+                <td>490&euro;</td>
+                <td>Professionisti, team piccoli</td>
+            </tr>
+            <tr>
+                <td><strong>Agency</strong></td>
+                <td>1.500</td>
+                <td>99&euro;</td>
+                <td>990&euro;</td>
+                <td>Agenzie, operazioni intensive</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Fasce Costo Operazioni</h3>
+    <table>
+        <thead>
+            <tr><th>Fascia</th><th>Crediti</th><th>Tipo Operazioni</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><strong>Gratis</strong></td><td>0</td><td>Navigazione, export CSV, creazione progetti, Quick Check</td></tr>
+            <tr><td><strong>Base</strong></td><td>1</td><td>Scraping URL, rank check keyword, scansione pagina</td></tr>
+            <tr><td><strong>Standard</strong></td><td>3</td><td>Analisi AI singola: SERP, brief, clustering, report settimanale</td></tr>
+            <tr><td><strong>Premium</strong></td><td>10</td><td>Operazioni AI complesse: articolo, audit plan, piano editoriale</td></tr>
+        </tbody>
+    </table>
+
+    <h2>6.2 Unit Economics (Target)</h2>
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="value">0&euro;</div>
+            <div class="label">CAC Organico</div>
+        </div>
+        <div class="kpi-card green">
+            <div class="value">~0,08&euro;</div>
+            <div class="label">Costo/Credito (API)</div>
+        </div>
+        <div class="kpi-card purple">
+            <div class="value">~75%</div>
+            <div class="label">Gross Margin Target</div>
+        </div>
+        <div class="kpi-card amber">
+            <div class="value">36+</div>
+            <div class="label">LTV/CAC Ratio</div>
+        </div>
+    </div>
+
+    <p>
+        Il costo variabile principale e il consumo API (Claude, OpenAI, DataForSEO, Serper).
+        Con un costo medio di ~0,08&euro; per credito consumato e un prezzo di vendita di
+        0,07&ndash;0,13&euro;/credito (in base al piano), il <strong>margine lordo target e ~75%</strong>,
+        in linea con i benchmark SaaS.
+    </p>
+
+    <h2>6.3 Sconto Annuale come Leva di Retention</h2>
+    <p>
+        Lo sconto del ~17% sul piano annuale incentiva il lock-in a 12 mesi,
+        riducendo il churn e migliorando la prevedibilita del revenue.
+    </p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 7. ANALISI DI MERCATO -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>7. Analisi di Mercato</h1>
+
+    <h2>7.1 Dimensione del Mercato</h2>
+    <table>
+        <thead>
+            <tr><th>Segmento</th><th>Valore 2025</th><th>CAGR</th><th>Valore 2028 (stima)</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>SEO Software (globale)</td>
+                <td>$14,5 miliardi</td>
+                <td>17%</td>
+                <td>$23,2 miliardi</td>
+            </tr>
+            <tr>
+                <td>AI Writing Tools (globale)</td>
+                <td>$4,8 miliardi</td>
+                <td>25%</td>
+                <td>$9,4 miliardi</td>
+            </tr>
+            <tr>
+                <td>SEO Software (Italia)</td>
+                <td>~$280 milioni</td>
+                <td>15%</td>
+                <td>~$430 milioni</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>7.2 Target Addressable Market (Italia)</h2>
+    <table>
+        <thead>
+            <tr><th>Segmento</th><th>Stima Utenti</th><th>ARPU Target</th><th>Potenziale Annuo</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Freelance SEO/Digital</td>
+                <td>~15.000</td>
+                <td>228&euro;/anno</td>
+                <td>3,4M&euro;</td>
+            </tr>
+            <tr>
+                <td>Agenzie Digitali</td>
+                <td>~5.000</td>
+                <td>990&euro;/anno</td>
+                <td>4,9M&euro;</td>
+            </tr>
+            <tr>
+                <td>PMI con Marketing Interno</td>
+                <td>~50.000</td>
+                <td>228&euro;/anno</td>
+                <td>11,4M&euro;</td>
+            </tr>
+            <tr>
+                <td>E-commerce</td>
+                <td>~30.000</td>
+                <td>588&euro;/anno</td>
+                <td>17,6M&euro;</td>
+            </tr>
+            <tr>
+                <td><strong>SAM Totale (Italia)</strong></td>
+                <td><strong>~100.000</strong></td>
+                <td></td>
+                <td><strong>~37M&euro;</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>7.3 Trend di Mercato Favorevoli</h2>
+    <ul>
+        <li><strong>AI democratizzazione</strong>: le API AI (Claude, GPT) rendono accessibili operazioni
+            che prima richiedevano team specializzati</li>
+        <li><strong>Consolidamento tool</strong>: forte trend verso piattaforme all-in-one
+            (Semrush acquisisce tool, HubSpot integra SEO)</li>
+        <li><strong>Growth del content marketing</strong>: 82% dei marketer investe attivamente in content
+            (Content Marketing Institute 2025)</li>
+        <li><strong>PMI digitalizzazione</strong>: PNRR e incentivi spingono le PMI italiane
+            verso strumenti digitali professionali</li>
+    </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 8. SWOT -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>8. Analisi Competitiva (SWOT)</h1>
+
+    <div class="swot-grid">
+        <div class="swot-card strengths">
+            <h4>Punti di Forza</h4>
+            <ul>
+                <li>Piattaforma all-in-one (SEO + Ads + Content + CMS)</li>
+                <li>AI nativa in ogni modulo (non add-on)</li>
+                <li>Dual AI provider con fallback automatico</li>
+                <li>4 CMS connector per pubblicazione diretta</li>
+                <li>Pricing 5-10x inferiore ai competitor enterprise</li>
+                <li>Interfaccia italiana nativa</li>
+                <li>Crediti fail-safe (no consumo su errore)</li>
+                <li>Free tier permanente senza limiti temporali</li>
+                <li>Prodotto gia funzionante in produzione</li>
+            </ul>
+        </div>
+        <div class="swot-card weaknesses">
+            <h4>Punti di Debolezza</h4>
+            <ul>
+                <li>Brand awareness zero (pre-lancio commerciale)</li>
+                <li>Database keyword proprietario assente (dipendenza API terze)</li>
+                <li>Team ridotto (bootstrapped)</li>
+                <li>2 moduli ancora in sviluppo</li>
+                <li>Dipendenza da API provider esterni (costi variabili)</li>
+                <li>Hosting su shared hosting (SiteGround) &mdash; limiti scaling</li>
+            </ul>
+        </div>
+        <div class="swot-card opportunities">
+            <h4>Opportunita</h4>
+            <ul>
+                <li>Mercato SEO italiano sottosservito da tool nativi</li>
+                <li>Trend consolidamento (utenti cercano meno tool)</li>
+                <li>E-commerce boom post-COVID</li>
+                <li>Costi API AI in calo costante (~30%/anno)</li>
+                <li>Espansione lingue EU (ES, DE, FR gia supportate)</li>
+                <li>Partnership agenzie digitali italiane</li>
+                <li>Affiliate/reseller program</li>
+            </ul>
+        </div>
+        <div class="swot-card threats">
+            <h4>Minacce</h4>
+            <ul>
+                <li>Semrush/Ahrefs integrano AI (catching up)</li>
+                <li>Google potrebbe integrare AI nella Search Console</li>
+                <li>Nuovi competitor AI-native (es. Surfer AI, Frase)</li>
+                <li>Aumento costi API non prevedibile</li>
+                <li>Cambiamenti algoritmo Google impattano valore SEO percepito</li>
+                <li>Regolamentazione AI (EU AI Act) potrebbe aggiungere compliance</li>
+            </ul>
+        </div>
+    </div>
+
+    <h2>8.1 Posizionamento vs Competitor Diretti</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Feature</th>
+                <th>Ainstein</th>
+                <th>Semrush</th>
+                <th>SurferSEO</th>
+                <th>Jasper AI</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Keyword Research</td><td>&#10004;</td><td>&#10004;</td><td>&#10006;</td><td>&#10006;</td></tr>
+            <tr><td>AI Content Generation</td><td>&#10004;</td><td>Limitato</td><td>&#10004;</td><td>&#10004;</td></tr>
+            <tr><td>SEO Audit Tecnico</td><td>&#10004;</td><td>&#10004;</td><td>&#10006;</td><td>&#10006;</td></tr>
+            <tr><td>Rank Tracking</td><td>&#10004;</td><td>&#10004;</td><td>&#10006;</td><td>&#10006;</td></tr>
+            <tr><td>Google Ads Analysis</td><td>&#10004;</td><td>&#10004;</td><td>&#10006;</td><td>&#10006;</td></tr>
+            <tr><td>Pubblicazione CMS</td><td>4 CMS</td><td>Solo WP</td><td>&#10006;</td><td>&#10006;</td></tr>
+            <tr><td>Crawl Budget Analysis</td><td>&#10004;</td><td>&#10006;</td><td>&#10006;</td><td>&#10006;</td></tr>
+            <tr><td>UI Italiano Nativa</td><td>&#10004;</td><td>&#10006;</td><td>&#10006;</td><td>&#10006;</td></tr>
+            <tr><td>Prezzo Starter</td><td><strong>19&euro;</strong></td><td>130&euro;</td><td>89&euro;</td><td>49&euro;</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 9. ROADMAP -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>9. Roadmap di Sviluppo</h1>
+
+    <div class="timeline">
+        <div class="timeline-item done">
+            <div class="timeline-date">Q3 2025 - Q1 2026</div>
+            <div class="timeline-title">Fase 1: Sviluppo Core Platform</div>
+            <div class="timeline-desc">
+                Architettura base, 8 moduli completati, sistema crediti,
+                Global Projects Hub, integrazioni API, CMS connectors, sistema email, notifiche.
+            </div>
+        </div>
+
+        <div class="timeline-item current">
+            <div class="timeline-date">Q1 2026 (corrente)</div>
+            <div class="timeline-title">Fase 2: Beta Aperta + Completamento</div>
+            <div class="timeline-desc">
+                Completamento AI Optimizer e SEO On-Page. Crawl Budget Optimizer rilasciato.
+                Project Sharing con ruoli. Attivazione Stripe per pagamenti automatici.
+                Landing page e onboarding ottimizzati.
+            </div>
+        </div>
+
+        <div class="timeline-item">
+            <div class="timeline-date">Q2 2026</div>
+            <div class="timeline-title">Fase 3: Lancio Commerciale Italia</div>
+            <div class="timeline-desc">
+                Go-to-market Italia. Content marketing, SEO organico, partnership agenzie.
+                Migrazione a hosting scalabile (VPS/cloud).
+                Obiettivo: 200 utenti paganti.
+            </div>
+        </div>
+
+        <div class="timeline-item">
+            <div class="timeline-date">Q3-Q4 2026</div>
+            <div class="timeline-title">Fase 4: Growth e Espansione Funzionalita</div>
+            <div class="timeline-desc">
+                Programma affiliate. API pubblica per integrazioni.
+                App mobile (dashboard). Nuovi moduli: Local SEO, Schema Markup Generator.
+                Obiettivo: 500 utenti paganti, 15K MRR.
+            </div>
+        </div>
+
+        <div class="timeline-item">
+            <div class="timeline-date">2027</div>
+            <div class="timeline-title">Fase 5: Espansione Internazionale</div>
+            <div class="timeline-desc">
+                Localizzazione UI per Spagna, Germania, Francia.
+                Partnership con agenzie EU. Team dedicato customer success.
+                Obiettivo: 2.000 utenti paganti, 50K MRR.
+            </div>
+        </div>
+
+        <div class="timeline-item">
+            <div class="timeline-date">2028</div>
+            <div class="timeline-title">Fase 6: Consolidamento e Scala</div>
+            <div class="timeline-desc">
+                White-label per agenzie. Marketplace plugin/connectors.
+                Eventuale round di investimento per accelerazione.
+                Obiettivo: 5.000+ utenti paganti, 120K+ MRR.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 10. PROIEZIONI FINANZIARIE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>10. Proiezioni Finanziarie</h1>
+
+    <p>
+        Le proiezioni assumono un lancio commerciale nel Q2 2026 con crescita organica iniziale,
+        supportata da content marketing e partnership. I numeri sono conservativi e basati su
+        benchmark di SaaS verticali B2B con pricing simile.
+    </p>
+
+    <h2>10.1 Proiezione Utenti e Revenue (3 anni)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Metrica</th>
+                <th>Fine 2026</th>
+                <th>Fine 2027</th>
+                <th>Fine 2028</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Utenti registrati</td>
+                <td>1.500</td>
+                <td>6.000</td>
+                <td>15.000</td>
+            </tr>
+            <tr>
+                <td>Utenti paganti</td>
+                <td>300</td>
+                <td>1.500</td>
+                <td>5.000</td>
+            </tr>
+            <tr>
+                <td>Conversion rate (free &rarr; paid)</td>
+                <td>20%</td>
+                <td>25%</td>
+                <td>33%</td>
+            </tr>
+            <tr>
+                <td>ARPU mensile</td>
+                <td>35&euro;</td>
+                <td>40&euro;</td>
+                <td>45&euro;</td>
+            </tr>
+            <tr>
+                <td><strong>MRR (fine anno)</strong></td>
+                <td><strong>10.500&euro;</strong></td>
+                <td><strong>60.000&euro;</strong></td>
+                <td><strong>225.000&euro;</strong></td>
+            </tr>
+            <tr>
+                <td><strong>ARR (fine anno)</strong></td>
+                <td><strong>126.000&euro;</strong></td>
+                <td><strong>720.000&euro;</strong></td>
+                <td><strong>2.700.000&euro;</strong></td>
+            </tr>
+            <tr>
+                <td>Churn mensile stimato</td>
+                <td>8%</td>
+                <td>5%</td>
+                <td>3,5%</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>10.2 Mix Piano Stimato</h2>
+    <table>
+        <thead>
+            <tr><th>Piano</th><th>% Utenti Paganti</th><th>Revenue %</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Starter (19&euro;)</td><td>50%</td><td>25%</td></tr>
+            <tr><td>Pro (49&euro;)</td><td>35%</td><td>45%</td></tr>
+            <tr><td>Agency (99&euro;)</td><td>15%</td><td>30%</td></tr>
+        </tbody>
+    </table>
+
+    <h2>10.3 Conto Economico Semplificato (Proiezione Annuale)</h2>
+    <table>
+        <thead>
+            <tr><th>Voce</th><th>2026</th><th>2027</th><th>2028</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Ricavi</strong></td>
+                <td class="strong-value">65.000&euro;</td>
+                <td class="strong-value">450.000&euro;</td>
+                <td class="strong-value">1.800.000&euro;</td>
+            </tr>
+            <tr>
+                <td>Costi API (AI + Data)</td>
+                <td>-12.000&euro;</td>
+                <td>-72.000&euro;</td>
+                <td>-270.000&euro;</td>
+            </tr>
+            <tr>
+                <td>Hosting / Infrastruttura</td>
+                <td>-2.400&euro;</td>
+                <td>-12.000&euro;</td>
+                <td>-36.000&euro;</td>
+            </tr>
+            <tr>
+                <td>Marketing / Ads</td>
+                <td>-6.000&euro;</td>
+                <td>-36.000&euro;</td>
+                <td>-120.000&euro;</td>
+            </tr>
+            <tr>
+                <td>Personale / Collaboratori</td>
+                <td>-24.000&euro;</td>
+                <td>-120.000&euro;</td>
+                <td>-360.000&euro;</td>
+            </tr>
+            <tr>
+                <td>Stripe/Payment Processing (3%)</td>
+                <td>-1.950&euro;</td>
+                <td>-13.500&euro;</td>
+                <td>-54.000&euro;</td>
+            </tr>
+            <tr>
+                <td>Altro (legale, contabile, SaaS tools)</td>
+                <td>-3.000&euro;</td>
+                <td>-8.000&euro;</td>
+                <td>-15.000&euro;</td>
+            </tr>
+            <tr style="background: #f0fdf4;">
+                <td><strong>EBITDA</strong></td>
+                <td class="strong-value">15.650&euro;</td>
+                <td class="strong-value">188.500&euro;</td>
+                <td class="strong-value">945.000&euro;</td>
+            </tr>
+            <tr>
+                <td><strong>Margine EBITDA</strong></td>
+                <td class="strong-value">24%</td>
+                <td class="strong-value">42%</td>
+                <td class="strong-value">52%</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="highlight-box green">
+        <p style="margin:0">
+            <strong>Break-even stimato</strong>: Q3 2026 (con ~150 utenti paganti e ARPU 35&euro;).
+            Il business raggiunge la sostenibilita finanziaria gia nel primo anno grazie ai costi
+            operativi contenuti del modello bootstrapped.
+        </p>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 11. STRUTTURA DEI COSTI -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>11. Struttura dei Costi</h1>
+
+    <h2>11.1 Costi Variabili (per credito consumato)</h2>
+    <table>
+        <thead>
+            <tr><th>Categoria</th><th>Costo Stimato</th><th>Note</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Claude API (Anthropic)</td>
+                <td>0,02&ndash;0,08&euro;/chiamata</td>
+                <td>Variabile per complessita prompt, modello Sonnet vs Opus</td>
+            </tr>
+            <tr>
+                <td>OpenAI Fallback (GPT-4o)</td>
+                <td>0,01&ndash;0,05&euro;/chiamata</td>
+                <td>Usato solo come fallback</td>
+            </tr>
+            <tr>
+                <td>DALL-E 3 (Cover Image)</td>
+                <td>0,04&euro;/immagine</td>
+                <td>Solo per generazione cover articoli</td>
+            </tr>
+            <tr>
+                <td>Serper.dev (SERP)</td>
+                <td>0,004&euro;/query</td>
+                <td>100 query/$ — molto efficiente</td>
+            </tr>
+            <tr>
+                <td>DataForSEO (Rank + On-page)</td>
+                <td>0,01&ndash;0,05&euro;/check</td>
+                <td>Prepagato a pacchetti</td>
+            </tr>
+            <tr>
+                <td>RapidAPI (Keyword Volumes)</td>
+                <td>0,005&euro;/keyword</td>
+                <td>Piano freemium disponibile</td>
+            </tr>
+            <tr>
+                <td><strong>Costo medio ponderato/credito</strong></td>
+                <td><strong>~0,08&euro;</strong></td>
+                <td>Margine lordo ~75% su prezzo vendita</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>11.2 Costi Fissi Attuali (pre-scale)</h2>
+    <div class="highlight-box">
+        <div class="financial-row">
+            <span class="label">Hosting SiteGround (GrowBig)</span>
+            <span class="value">~15&euro;/mese</span>
+        </div>
+        <div class="financial-row">
+            <span class="label">Dominio ainstein.it</span>
+            <span class="value">~12&euro;/anno</span>
+        </div>
+        <div class="financial-row">
+            <span class="label">API subscriptions base</span>
+            <span class="value">~50&euro;/mese</span>
+        </div>
+        <div class="financial-row">
+            <span class="label">Tool sviluppo (Claude Code, GitHub)</span>
+            <span class="value">~30&euro;/mese</span>
+        </div>
+        <div class="financial-row">
+            <span class="label"><strong>Totale costi fissi attuali</strong></span>
+            <span class="value"><strong>~105&euro;/mese</strong></span>
+        </div>
+    </div>
+
+    <p>
+        Uno dei punti di forza del progetto e il <strong>costo operativo estremamente basso</strong> nella fase iniziale.
+        L'architettura PHP su shared hosting consente di servire centinaia di utenti con costi
+        infrastrutturali minimi, migrando a VPS/cloud solo quando necessario (stimato > 500 utenti attivi).
+    </p>
+
+    <h2>11.3 Scalabilita dei Costi</h2>
+    <p>
+        I costi API scalano <strong>linearmente</strong> con l'utilizzo (non con gli utenti registrati).
+        Gli utenti free consumano pochi crediti, limitando l'impatto sui costi.
+        Il trend di riduzione prezzi API AI (~30%/anno) lavora a favore del margine nel tempo.
+    </p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 12. GO-TO-MARKET -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>12. Strategia Go-to-Market</h1>
+
+    <h2>12.1 Fase 1: Organic Pull (Q2 2026)</h2>
+    <ul>
+        <li><strong>Content Marketing</strong>: blog su ainstein.it con guide SEO pratiche (il prodotto
+            e il proprio strumento di content creation)</li>
+        <li><strong>SEO sul prodotto stesso</strong>: Ainstein indicizzato per keyword transazionali
+            ("tool SEO italiano", "generatore articoli AI", "audit SEO gratis")</li>
+        <li><strong>Product Hunt launch</strong>: visibilita nella community tech/indie maker</li>
+        <li><strong>Community</strong>: presenza in gruppi SEO italiani (Facebook, LinkedIn, forum)</li>
+    </ul>
+
+    <h2>12.2 Fase 2: Partnership (Q3 2026)</h2>
+    <ul>
+        <li><strong>Agenzie digitali</strong>: programma partner con commissioni ricorrenti (20% primo anno)</li>
+        <li><strong>Formatori SEO</strong>: accordi con chi tiene corsi SEO per consigliare Ainstein
+            come tool didattico (free tier = zero barriera)</li>
+        <li><strong>Web agency</strong>: offerta white-label o bulk pricing per gestione clienti</li>
+    </ul>
+
+    <h2>12.3 Fase 3: Paid Acquisition (Q4 2026)</h2>
+    <ul>
+        <li><strong>Google Ads</strong> su keyword transazionali ad alto intento</li>
+        <li><strong>LinkedIn Ads</strong> targetizzate su digital marketer e agency owner</li>
+        <li><strong>Retargeting</strong> su utenti free per conversione a paid</li>
+        <li>Budget iniziale: 500&euro;/mese, scalato con i dati di conversion</li>
+    </ul>
+
+    <h2>12.4 Funnel di Conversione</h2>
+    <div class="highlight-box purple">
+        <p style="text-align: center; margin: 0; font-size: 15px;">
+            <strong>Visita Landing</strong> &rarr;
+            <strong>Registrazione Free</strong> (no carta) &rarr;
+            <strong>30 crediti gratis</strong> &rarr;
+            <strong>Prima operazione AI</strong> (wow moment) &rarr;
+            <strong>Crediti esauriti</strong> &rarr;
+            <strong>Upgrade a Starter/Pro</strong>
+        </p>
+    </div>
+    <p>
+        Il free tier con 30 crediti e progettato per permettere all'utente di sperimentare
+        <strong>il valore reale dell'AI</strong> (es. un articolo completo o 3 analisi AI)
+        prima di incontrare il paywall naturale. Nessuna pressione, nessun trial a scadenza.
+    </p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 13. RISCHI -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>13. Rischi e Mitigazioni</h1>
+
+    <table>
+        <thead>
+            <tr><th>Rischio</th><th>Probabilita</th><th>Impatto</th><th>Mitigazione</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Aumento costi API AI</strong></td>
+                <td>Bassa</td>
+                <td>Alto</td>
+                <td>Dual provider (Claude + OpenAI) + possibilita di passare a modelli piu economici.
+                    Trend storico: costi in calo del 30%/anno.</td>
+            </tr>
+            <tr>
+                <td><strong>Competitor enterprise integrano AI</strong></td>
+                <td>Alta</td>
+                <td>Medio</td>
+                <td>Vantaggio di prezzo (5-10x inferiore), nicchia italiana,
+                    agilita di sviluppo vs burocrazia enterprise.</td>
+            </tr>
+            <tr>
+                <td><strong>Dipendenza API Google (GSC)</strong></td>
+                <td>Bassa</td>
+                <td>Alto</td>
+                <td>GSC e un servizio gratuito e stabile di Google.
+                    Moduli funzionano anche senza GSC connessa.</td>
+            </tr>
+            <tr>
+                <td><strong>Regolamentazione AI (EU AI Act)</strong></td>
+                <td>Media</td>
+                <td>Medio</td>
+                <td>Ainstein usa AI per contenuti non ad alto rischio (categoria low risk).
+                    Compliance trasparente gia in roadmap.</td>
+            </tr>
+            <tr>
+                <td><strong>Scalabilita hosting</strong></td>
+                <td>Media</td>
+                <td>Basso</td>
+                <td>Migrazione VPS/cloud pianificata a 500 utenti.
+                    Architettura PHP stateless facilita la migrazione.</td>
+            </tr>
+            <tr>
+                <td><strong>Single founder risk</strong></td>
+                <td>Media</td>
+                <td>Alto</td>
+                <td>Codebase ben documentata (CLAUDE.md, docs/), architettura modulare,
+                    potenziale co-founder tecnico in fase di growth.</td>
+            </tr>
+            <tr>
+                <td><strong>Churn elevato</strong></td>
+                <td>Media</td>
+                <td>Alto</td>
+                <td>Focus su integrazione profonda (dati storici, progetti CMS collegati)
+                    che crea switching cost naturale. Report AI ricorrenti aumentano stickiness.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 14. RICHIESTA FINANZIAMENTO -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>14. Richiesta di Finanziamento</h1>
+
+    <div class="highlight-box blue">
+        <h3 style="margin-top:0; color: var(--primary-dark);">Obiettivo: Accelerazione Go-to-Market</h3>
+        <p>
+            Il prodotto e gia sviluppato e funzionante. L'investimento richiesto serve esclusivamente
+            ad <strong>accelerare l'acquisizione utenti</strong> e <strong>completare l'infrastruttura
+            commerciale</strong> (pagamenti, scaling, marketing).
+        </p>
+    </div>
+
+    <h2>14.1 Importo e Destinazione</h2>
+    <table>
+        <thead>
+            <tr><th>Area</th><th>Importo</th><th>Dettaglio</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Marketing e Acquisizione</strong></td>
+                <td>8.000&euro;</td>
+                <td>Google Ads, LinkedIn Ads, content sponsorizzati, Product Hunt launch</td>
+            </tr>
+            <tr>
+                <td><strong>Infrastruttura Cloud</strong></td>
+                <td>3.000&euro;</td>
+                <td>Migrazione VPS, CDN, backup professionali, SSL, monitoring</td>
+            </tr>
+            <tr>
+                <td><strong>API Credits Buffer</strong></td>
+                <td>2.000&euro;</td>
+                <td>Prepagamento API (Claude, DataForSEO, Serper) per sostenere free tier iniziale</td>
+            </tr>
+            <tr>
+                <td><strong>Legale e Compliance</strong></td>
+                <td>2.000&euro;</td>
+                <td>GDPR audit, termini di servizio, privacy policy, consulenza fiscale SaaS</td>
+            </tr>
+            <tr>
+                <td><strong>Design e UX</strong></td>
+                <td>2.500&euro;</td>
+                <td>Landing page professionale, video demo, materiali marketing</td>
+            </tr>
+            <tr>
+                <td><strong>Contingency (10%)</strong></td>
+                <td>2.500&euro;</td>
+                <td>Imprevisti, opportunita non pianificate</td>
+            </tr>
+            <tr style="background: #eff6ff;">
+                <td><strong>Totale Richiesta</strong></td>
+                <td><strong>20.000&euro;</strong></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>14.2 Return on Investment Atteso</h2>
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="value">6 mesi</div>
+            <div class="label">Payback Period</div>
+        </div>
+        <div class="kpi-card green">
+            <div class="value">3-5x</div>
+            <div class="label">ROI a 12 mesi</div>
+        </div>
+        <div class="kpi-card purple">
+            <div class="value">126K&euro;</div>
+            <div class="label">ARR Fine 2026</div>
+        </div>
+        <div class="kpi-card amber">
+            <div class="value">300+</div>
+            <div class="label">Utenti Paganti Y1</div>
+        </div>
+    </div>
+
+    <h2>14.3 Perche Ora</h2>
+    <ul>
+        <li><strong>Il prodotto e pronto</strong>: 8 moduli completi, infrastruttura funzionante,
+            zero debito tecnico critico</li>
+        <li><strong>Window of opportunity</strong>: il mercato SEO AI italiano e ancora vergine,
+            i competitor internazionali non hanno interfaccia italiana</li>
+        <li><strong>Costi API in calo</strong>: il margine migliora naturalmente ogni trimestre</li>
+        <li><strong>Stagionalita favorevole</strong>: Q2-Q3 e il periodo di maggiore investimento
+            in marketing digitale per le aziende</li>
+    </ul>
+
+    <div class="page-footer">
+        <strong>Ainstein SEO Toolkit</strong> &mdash; ainstein.it &mdash; Business Plan v1.0 &mdash; Febbraio 2026<br>
+        Documento riservato. Le proiezioni finanziarie sono stime basate su benchmark di settore e non costituiscono garanzia di risultato.
+    </div>
+</div>
+
+</body>
+</html>

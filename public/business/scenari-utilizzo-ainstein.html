@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ainstein - Scenari di Utilizzo e Analisi Costi/Ricavi</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --accent: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --text: #334155;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --bg-light: #f8fafc;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @page { size: A4; margin: 18mm 16mm; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 13.5px;
+            background: #fff;
+        }
+
+        /* ── Cover ── */
+        .cover {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            color: white;
+            padding: 60px 40px;
+            page-break-after: always;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cover::before {
+            content: '';
+            position: absolute;
+            top: -40%;
+            right: -20%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .cover-badge {
+            display: inline-block;
+            background: rgba(16,185,129,0.2);
+            border: 1px solid rgba(16,185,129,0.3);
+            color: #6ee7b7;
+            padding: 6px 20px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cover-logo {
+            font-size: 56px;
+            font-weight: 800;
+            letter-spacing: -2px;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cover-logo span { background: linear-gradient(135deg, #60a5fa, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .cover-title { font-size: 26px; font-weight: 700; margin-bottom: 8px; position: relative; z-index: 1; }
+        .cover-subtitle { font-size: 15px; color: #94a3b8; margin-bottom: 50px; position: relative; z-index: 1; }
+        .cover-meta { position: relative; z-index: 1; color: #64748b; font-size: 13px; }
+        .cover-meta strong { color: #94a3b8; }
+
+        /* ── Sections ── */
+        .section { padding: 35px 45px; max-width: 920px; margin: 0 auto; }
+        .page-break { page-break-before: always; }
+
+        h1 {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--success);
+            display: inline-block;
+        }
+
+        h2 { font-size: 20px; font-weight: 700; color: var(--dark); margin-top: 30px; margin-bottom: 12px; }
+        h3 { font-size: 16px; font-weight: 600; color: var(--dark); margin-top: 22px; margin-bottom: 8px; }
+        p { margin-bottom: 12px; }
+
+        /* ── Tables ── */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 15px 0 22px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            font-size: 12.5px;
+        }
+
+        thead { background: var(--dark); color: white; }
+        thead th { padding: 10px 14px; font-weight: 600; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+        thead th.right { text-align: right; }
+        tbody td { padding: 8px 14px; border-bottom: 1px solid var(--border); }
+        tbody td.right { text-align: right; font-variant-numeric: tabular-nums; }
+        tbody td.bold { font-weight: 700; color: var(--dark); }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:nth-child(even) { background: var(--bg-light); }
+        tbody tr.total-row { background: #ecfdf5 !important; font-weight: 600; }
+        tbody tr.total-row td { border-top: 2px solid var(--success); color: var(--dark); }
+        tbody tr.cost-row { background: #fef2f2 !important; }
+        tbody tr.margin-row { background: #f0fdf4 !important; font-weight: 700; }
+        tbody tr.margin-row td { color: var(--success); }
+
+        /* ── Boxes ── */
+        .box {
+            border-radius: 12px;
+            padding: 22px 26px;
+            margin: 18px 0;
+            border: 1px solid var(--border);
+        }
+        .box.blue { background: #eff6ff; border-color: #bfdbfe; }
+        .box.green { background: #ecfdf5; border-color: #a7f3d0; }
+        .box.amber { background: #fffbeb; border-color: #fde68a; }
+        .box.purple { background: #f5f3ff; border-color: #c4b5fd; }
+        .box.slate { background: var(--bg-light); }
+
+        /* ── KPI Grid ── */
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 20px 0; }
+        .kpi-card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+        .kpi-card .value { font-size: 24px; font-weight: 800; }
+        .kpi-card .label { font-size: 11px; color: var(--text-light); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-card.blue .value { color: var(--primary); }
+        .kpi-card.green .value { color: var(--success); }
+        .kpi-card.purple .value { color: var(--accent); }
+        .kpi-card.amber .value { color: var(--warning); }
+        .kpi-card.red .value { color: var(--danger); }
+
+        .kpi-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 20px 0; }
+
+        /* ── Badges ── */
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; }
+        .badge.yes { background: #dcfce7; color: #166534; }
+        .badge.no { background: #fee2e2; color: #991b1b; }
+        .badge.partial { background: #fef3c7; color: #92400e; }
+
+        /* ── Scenario cards ── */
+        .scenario-header {
+            background: linear-gradient(135deg, var(--dark), #1e293b);
+            color: white;
+            border-radius: 14px;
+            padding: 24px 28px;
+            margin: 25px 0 20px;
+        }
+        .scenario-header h2 { color: white; margin: 0 0 6px; }
+        .scenario-header p { color: #94a3b8; margin: 0; font-size: 14px; }
+
+        ul, ol { margin: 8px 0 14px 22px; }
+        li { margin-bottom: 5px; }
+        .small { font-size: 11px; color: var(--text-light); }
+        .strong-value { font-weight: 700; color: var(--dark); }
+        .text-green { color: var(--success); }
+        .text-red { color: var(--danger); }
+
+        .note {
+            background: #fffbeb;
+            border-left: 4px solid var(--warning);
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            margin: 15px 0;
+            font-size: 12.5px;
+        }
+
+        @media print {
+            .cover { min-height: auto; height: 100vh; }
+            .section { padding: 18px 0; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- COPERTINA -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="cover">
+    <div class="cover-badge">Allegato al Business Plan</div>
+    <div class="cover-logo"><span>Ainstein</span></div>
+    <div class="cover-title">Scenari di Utilizzo &amp; Analisi Costi/Ricavi</div>
+    <div class="cover-subtitle">Proiezioni per 10, 50 e 100 utenti paganti &mdash; Modello a crediti</div>
+    <div class="cover-meta">
+        <strong>ainstein.it</strong> &nbsp;&middot;&nbsp; Febbraio 2026 &nbsp;&middot;&nbsp; v1.0
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 1. STRUTTURA PIANI E MODULI -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section">
+    <h1>1. Accesso Moduli per Piano</h1>
+
+    <p>
+        Proposta di segmentazione moduli per piano. Attualmente tutti i moduli sono accessibili
+        a tutti i piani &mdash; la tabella seguente definisce la <strong>restrizione target</strong>
+        per differenziare il valore dei piani superiori.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Modulo</th>
+                <th style="text-align:center">Free (30 cr)</th>
+                <th style="text-align:center">Starter (150 cr)</th>
+                <th style="text-align:center">Pro (500 cr)</th>
+                <th style="text-align:center">Agency (1.500 cr)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>AI Content Generator</strong></td>
+                <td style="text-align:center"><span class="badge partial">Solo manuale</span></td>
+                <td style="text-align:center"><span class="badge partial">Manuale + Meta</span></td>
+                <td style="text-align:center"><span class="badge yes">Completo</span></td>
+                <td style="text-align:center"><span class="badge yes">Completo</span></td>
+            </tr>
+            <tr>
+                <td><strong>SEO Audit</strong></td>
+                <td style="text-align:center"><span class="badge partial">100 pagine</span></td>
+                <td style="text-align:center"><span class="badge partial">500 pagine</span></td>
+                <td style="text-align:center"><span class="badge yes">2.000 pagine</span></td>
+                <td style="text-align:center"><span class="badge yes">2.000 pagine</span></td>
+            </tr>
+            <tr>
+                <td><strong>SEO Tracking</strong></td>
+                <td style="text-align:center"><span class="badge partial">20 keyword</span></td>
+                <td style="text-align:center"><span class="badge partial">100 keyword</span></td>
+                <td style="text-align:center"><span class="badge yes">500 keyword</span></td>
+                <td style="text-align:center"><span class="badge yes">Illimitato</span></td>
+            </tr>
+            <tr>
+                <td><strong>AI Keyword Research</strong></td>
+                <td style="text-align:center"><span class="badge partial">Quick Check</span></td>
+                <td style="text-align:center"><span class="badge yes">Completo</span></td>
+                <td style="text-align:center"><span class="badge yes">Completo</span></td>
+                <td style="text-align:center"><span class="badge yes">Completo</span></td>
+            </tr>
+            <tr>
+                <td><strong>Google Ads Analyzer</strong></td>
+                <td style="text-align:center"><span class="badge no">No</span></td>
+                <td style="text-align:center"><span class="badge partial">Solo Analisi</span></td>
+                <td style="text-align:center"><span class="badge yes">Completo</span></td>
+                <td style="text-align:center"><span class="badge yes">Completo</span></td>
+            </tr>
+            <tr>
+                <td><strong>Content Creator</strong></td>
+                <td style="text-align:center"><span class="badge no">No</span></td>
+                <td style="text-align:center"><span class="badge partial">1 CMS</span></td>
+                <td style="text-align:center"><span class="badge yes">4 CMS</span></td>
+                <td style="text-align:center"><span class="badge yes">4 CMS</span></td>
+            </tr>
+            <tr>
+                <td><strong>Internal Links</strong></td>
+                <td style="text-align:center"><span class="badge no">No</span></td>
+                <td style="text-align:center"><span class="badge yes">Si</span></td>
+                <td style="text-align:center"><span class="badge yes">Si</span></td>
+                <td style="text-align:center"><span class="badge yes">Si</span></td>
+            </tr>
+            <tr>
+                <td><strong>Crawl Budget Optimizer</strong></td>
+                <td style="text-align:center"><span class="badge no">No</span></td>
+                <td style="text-align:center"><span class="badge no">No</span></td>
+                <td style="text-align:center"><span class="badge yes">Si</span></td>
+                <td style="text-align:center"><span class="badge yes">Si</span></td>
+            </tr>
+            <tr>
+                <td><strong>AI Optimizer</strong></td>
+                <td style="text-align:center"><span class="badge no">No</span></td>
+                <td style="text-align:center"><span class="badge no">No</span></td>
+                <td style="text-align:center"><span class="badge yes">Si</span></td>
+                <td style="text-align:center"><span class="badge yes">Si</span></td>
+            </tr>
+            <tr>
+                <td><strong>SEO On-Page</strong></td>
+                <td style="text-align:center"><span class="badge no">No</span></td>
+                <td style="text-align:center"><span class="badge yes">Si</span></td>
+                <td style="text-align:center"><span class="badge yes">Si</span></td>
+                <td style="text-align:center"><span class="badge yes">Si</span></td>
+            </tr>
+            <tr>
+                <td><strong>Project Sharing</strong></td>
+                <td style="text-align:center"><span class="badge no">No</span></td>
+                <td style="text-align:center"><span class="badge no">No</span></td>
+                <td style="text-align:center"><span class="badge partial">3 membri</span></td>
+                <td style="text-align:center"><span class="badge yes">Illimitato</span></td>
+            </tr>
+            <tr>
+                <td><strong>Report AI Automatici</strong></td>
+                <td style="text-align:center"><span class="badge no">No</span></td>
+                <td style="text-align:center"><span class="badge no">No</span></td>
+                <td style="text-align:center"><span class="badge partial">Settimanale</span></td>
+                <td style="text-align:center"><span class="badge yes">Sett. + Mensile</span></td>
+            </tr>
+            <tr>
+                <td><strong>Progetti</strong></td>
+                <td style="text-align:center">1</td>
+                <td style="text-align:center">5</td>
+                <td style="text-align:center">20</td>
+                <td style="text-align:center">Illimitati</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 2. COSTI API REALI -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>2. Costi API Reali per Operazione</h1>
+
+    <p>
+        Ogni credito consumato sulla piattaforma genera un costo variabile verso i provider API.
+        La tabella seguente mostra il <strong>costo effettivo</strong> per operazione
+        e il prezzo di vendita equivalente in crediti.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Operazione</th>
+                <th class="right">Crediti</th>
+                <th class="right">Costo API</th>
+                <th>Provider API</th>
+                <th class="right">Margine</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Scraping URL</td>
+                <td class="right">1</td>
+                <td class="right">~0,00&euro;</td>
+                <td>Interno (PHP)</td>
+                <td class="right text-green">~100%</td>
+            </tr>
+            <tr>
+                <td>Rank check (1 keyword)</td>
+                <td class="right">1</td>
+                <td class="right">0,01&euro;</td>
+                <td>Serper / DataForSEO</td>
+                <td class="right text-green">92%</td>
+            </tr>
+            <tr>
+                <td>Volume refresh (1 keyword)</td>
+                <td class="right">1</td>
+                <td class="right">0,005&euro;</td>
+                <td>RapidAPI</td>
+                <td class="right text-green">96%</td>
+            </tr>
+            <tr>
+                <td>SERP Extraction</td>
+                <td class="right">3</td>
+                <td class="right">0,004&euro;</td>
+                <td>Serper.dev</td>
+                <td class="right text-green">99%</td>
+            </tr>
+            <tr>
+                <td>AI Brief Generation</td>
+                <td class="right">3</td>
+                <td class="right">0,03&euro;</td>
+                <td>Claude Sonnet</td>
+                <td class="right text-green">85%</td>
+            </tr>
+            <tr>
+                <td>AI Clustering</td>
+                <td class="right">3</td>
+                <td class="right">0,04&euro;</td>
+                <td>Claude Sonnet</td>
+                <td class="right text-green">80%</td>
+            </tr>
+            <tr>
+                <td>Content Generation (pagina)</td>
+                <td class="right">3</td>
+                <td class="right">0,05&euro;</td>
+                <td>Claude Sonnet</td>
+                <td class="right text-green">75%</td>
+            </tr>
+            <tr>
+                <td>AI Weekly Digest</td>
+                <td class="right">3</td>
+                <td class="right">0,03&euro;</td>
+                <td>Claude Sonnet</td>
+                <td class="right text-green">85%</td>
+            </tr>
+            <tr>
+                <td>Cover Image</td>
+                <td class="right">3</td>
+                <td class="right">0,04&euro;</td>
+                <td>DALL-E 3</td>
+                <td class="right text-green">80%</td>
+            </tr>
+            <tr>
+                <td>Crawl Budget Report</td>
+                <td class="right">5</td>
+                <td class="right">0,06&euro;</td>
+                <td>Claude Sonnet</td>
+                <td class="right text-green">82%</td>
+            </tr>
+            <tr>
+                <td>Articolo Completo (~2.000 parole)</td>
+                <td class="right">10</td>
+                <td class="right">0,12&euro;</td>
+                <td>Claude Sonnet</td>
+                <td class="right text-green">82%</td>
+            </tr>
+            <tr>
+                <td>SEO Audit Action Plan</td>
+                <td class="right">10</td>
+                <td class="right">0,10&euro;</td>
+                <td>Claude Sonnet</td>
+                <td class="right text-green">85%</td>
+            </tr>
+            <tr>
+                <td>Piano Editoriale AI</td>
+                <td class="right">10</td>
+                <td class="right">0,08&euro;</td>
+                <td>Claude Sonnet</td>
+                <td class="right text-green">88%</td>
+            </tr>
+            <tr>
+                <td>Campaign Evaluation</td>
+                <td class="right">10</td>
+                <td class="right">0,10&euro;</td>
+                <td>Claude Sonnet</td>
+                <td class="right text-green">85%</td>
+            </tr>
+            <tr>
+                <td>GSC Full Sync (16 mesi)</td>
+                <td class="right">10</td>
+                <td class="right">0,00&euro;</td>
+                <td>Google (gratis)</td>
+                <td class="right text-green">100%</td>
+            </tr>
+            <tr>
+                <td>Monthly Executive Report</td>
+                <td class="right">10</td>
+                <td class="right">0,15&euro;</td>
+                <td>Claude Sonnet</td>
+                <td class="right text-green">78%</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="box green">
+        <h3 style="margin-top:0; color: #059669;">Prezzo medio per credito (per piano)</h3>
+        <table style="margin-bottom:0">
+            <thead>
+                <tr><th>Piano</th><th class="right">Prezzo/mese</th><th class="right">Crediti</th><th class="right">Prezzo/credito</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Free</td><td class="right">0&euro;</td><td class="right">30</td><td class="right bold">&mdash;</td></tr>
+                <tr><td>Starter</td><td class="right">19&euro;</td><td class="right">150</td><td class="right bold">0,127&euro;</td></tr>
+                <tr><td>Pro</td><td class="right">49&euro;</td><td class="right">500</td><td class="right bold">0,098&euro;</td></tr>
+                <tr><td>Agency</td><td class="right">99&euro;</td><td class="right">1.500</td><td class="right bold">0,066&euro;</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="note">
+        <strong>Nota:</strong> Il costo API medio ponderato per credito e ~0,035&euro; considerando che
+        molte operazioni (scraping, export, GSC) hanno costo API zero o quasi zero.
+        I crediti "Base" (1 cr) hanno margine altissimo, i "Premium" (10 cr) margine piu contenuto ma comunque >75%.
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 3. PROFILI UTILIZZO TIPO -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>3. Profili di Utilizzo Mensile Tipo</h1>
+
+    <p>
+        Per ogni piano, definiamo un <strong>profilo di utilizzo realistico</strong> basato sulle
+        operazioni disponibili e sul budget crediti. Questi profili alimentano gli scenari successivi.
+    </p>
+
+    <!-- FREE -->
+    <h2>Free (30 crediti/mese)</h2>
+    <p>Utente esplorativo. Prova le funzionalita base per valutare l'upgrade.</p>
+    <table>
+        <thead><tr><th>Operazione</th><th class="right">Crediti</th><th class="right">Qty/mese</th><th class="right">Totale cr</th><th class="right">Costo API</th></tr></thead>
+        <tbody>
+            <tr><td>Quick Check keyword</td><td class="right">0</td><td class="right">5</td><td class="right">0</td><td class="right">0,00&euro;</td></tr>
+            <tr><td>Scraping URL</td><td class="right">1</td><td class="right">5</td><td class="right">5</td><td class="right">0,00&euro;</td></tr>
+            <tr><td>SERP Extraction</td><td class="right">3</td><td class="right">2</td><td class="right">6</td><td class="right">0,01&euro;</td></tr>
+            <tr><td>AI Brief</td><td class="right">3</td><td class="right">1</td><td class="right">3</td><td class="right">0,03&euro;</td></tr>
+            <tr><td>Articolo AI</td><td class="right">10</td><td class="right">1</td><td class="right">10</td><td class="right">0,12&euro;</td></tr>
+            <tr><td>Rank check keyword</td><td class="right">1</td><td class="right">5</td><td class="right">5</td><td class="right">0,05&euro;</td></tr>
+            <tr class="total-row">
+                <td><strong>Totale</strong></td><td></td><td></td>
+                <td class="right"><strong>29/30</strong></td>
+                <td class="right"><strong>0,21&euro;</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- STARTER -->
+    <h2>Starter (150 crediti/mese) &mdash; Freelance SEO</h2>
+    <p>Consulente SEO che gestisce 2-3 clienti. Usa content e tracking regolarmente.</p>
+    <table>
+        <thead><tr><th>Operazione</th><th class="right">Crediti</th><th class="right">Qty/mese</th><th class="right">Totale cr</th><th class="right">Costo API</th></tr></thead>
+        <tbody>
+            <tr><td>Keyword Research (clustering)</td><td class="right">3</td><td class="right">3</td><td class="right">9</td><td class="right">0,12&euro;</td></tr>
+            <tr><td>SERP Extraction</td><td class="right">3</td><td class="right">5</td><td class="right">15</td><td class="right">0,02&euro;</td></tr>
+            <tr><td>Scraping URL</td><td class="right">1</td><td class="right">15</td><td class="right">15</td><td class="right">0,00&euro;</td></tr>
+            <tr><td>AI Brief</td><td class="right">3</td><td class="right">4</td><td class="right">12</td><td class="right">0,12&euro;</td></tr>
+            <tr><td>Articolo completo</td><td class="right">10</td><td class="right">3</td><td class="right">30</td><td class="right">0,36&euro;</td></tr>
+            <tr><td>Cover Image</td><td class="right">3</td><td class="right">3</td><td class="right">9</td><td class="right">0,12&euro;</td></tr>
+            <tr><td>Rank check (keyword)</td><td class="right">1</td><td class="right">30</td><td class="right">30</td><td class="right">0,30&euro;</td></tr>
+            <tr><td>SEO Audit (Action Plan)</td><td class="right">10</td><td class="right">1</td><td class="right">10</td><td class="right">0,10&euro;</td></tr>
+            <tr><td>Meta Tag (scrape+gen)</td><td class="right">4</td><td class="right">3</td><td class="right">12</td><td class="right">0,09&euro;</td></tr>
+            <tr><td>Ad Group Analysis</td><td class="right">3</td><td class="right">2</td><td class="right">6</td><td class="right">0,06&euro;</td></tr>
+            <tr class="total-row">
+                <td><strong>Totale</strong></td><td></td><td></td>
+                <td class="right"><strong>148/150</strong></td>
+                <td class="right"><strong>1,29&euro;</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- PRO -->
+    <h2>Pro (500 crediti/mese) &mdash; Team Marketing PMI</h2>
+    <p>Team di 2-3 persone. Gestiscono 5-8 siti, uso intensivo di content e tracking.</p>
+    <table>
+        <thead><tr><th>Operazione</th><th class="right">Crediti</th><th class="right">Qty/mese</th><th class="right">Totale cr</th><th class="right">Costo API</th></tr></thead>
+        <tbody>
+            <tr><td>Keyword Research (clustering)</td><td class="right">3</td><td class="right">6</td><td class="right">18</td><td class="right">0,24&euro;</td></tr>
+            <tr><td>Piano Editoriale</td><td class="right">10</td><td class="right">2</td><td class="right">20</td><td class="right">0,16&euro;</td></tr>
+            <tr><td>SERP Extraction</td><td class="right">3</td><td class="right">15</td><td class="right">45</td><td class="right">0,06&euro;</td></tr>
+            <tr><td>Scraping URL</td><td class="right">1</td><td class="right">40</td><td class="right">40</td><td class="right">0,00&euro;</td></tr>
+            <tr><td>AI Brief</td><td class="right">3</td><td class="right">10</td><td class="right">30</td><td class="right">0,30&euro;</td></tr>
+            <tr><td>Articolo completo</td><td class="right">10</td><td class="right">8</td><td class="right">80</td><td class="right">0,96&euro;</td></tr>
+            <tr><td>Cover Image</td><td class="right">3</td><td class="right">8</td><td class="right">24</td><td class="right">0,32&euro;</td></tr>
+            <tr><td>Content Creator (pagine e-commerce)</td><td class="right">3</td><td class="right">15</td><td class="right">45</td><td class="right">0,75&euro;</td></tr>
+            <tr><td>Rank check (keyword)</td><td class="right">1</td><td class="right">80</td><td class="right">80</td><td class="right">0,80&euro;</td></tr>
+            <tr><td>Weekly Digest AI</td><td class="right">3</td><td class="right">4</td><td class="right">12</td><td class="right">0,12&euro;</td></tr>
+            <tr><td>SEO Audit + Action Plan</td><td class="right">10</td><td class="right">2</td><td class="right">20</td><td class="right">0,20&euro;</td></tr>
+            <tr><td>Internal Links Analysis</td><td class="right">1</td><td class="right">20</td><td class="right">20</td><td class="right">0,00&euro;</td></tr>
+            <tr><td>Crawl Budget Report</td><td class="right">5</td><td class="right">2</td><td class="right">10</td><td class="right">0,12&euro;</td></tr>
+            <tr><td>Campaign Evaluation</td><td class="right">10</td><td class="right">2</td><td class="right">20</td><td class="right">0,20&euro;</td></tr>
+            <tr><td>Quick Wins / Anomaly</td><td class="right">3</td><td class="right">4</td><td class="right">12</td><td class="right">0,12&euro;</td></tr>
+            <tr><td>GSC Full Sync</td><td class="right">10</td><td class="right">2</td><td class="right">20</td><td class="right">0,00&euro;</td></tr>
+            <tr class="total-row">
+                <td><strong>Totale</strong></td><td></td><td></td>
+                <td class="right"><strong>496/500</strong></td>
+                <td class="right"><strong>4,35&euro;</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- AGENCY -->
+    <h2>Agency (1.500 crediti/mese) &mdash; Agenzia Digitale</h2>
+    <p>Agenzia con 10+ clienti. Volume elevato su tutti i moduli. Team collaborativo.</p>
+    <table>
+        <thead><tr><th>Operazione</th><th class="right">Crediti</th><th class="right">Qty/mese</th><th class="right">Totale cr</th><th class="right">Costo API</th></tr></thead>
+        <tbody>
+            <tr><td>Keyword Research (clustering + arch.)</td><td class="right">3-10</td><td class="right">12</td><td class="right">66</td><td class="right">0,72&euro;</td></tr>
+            <tr><td>Piano Editoriale</td><td class="right">10</td><td class="right">5</td><td class="right">50</td><td class="right">0,40&euro;</td></tr>
+            <tr><td>SERP + Scraping</td><td class="right">1-3</td><td class="right">80</td><td class="right">120</td><td class="right">0,32&euro;</td></tr>
+            <tr><td>AI Brief + Articolo (pipeline)</td><td class="right">13</td><td class="right">25</td><td class="right">325</td><td class="right">3,75&euro;</td></tr>
+            <tr><td>Cover Image</td><td class="right">3</td><td class="right">25</td><td class="right">75</td><td class="right">1,00&euro;</td></tr>
+            <tr><td>Content Creator (bulk e-commerce)</td><td class="right">3</td><td class="right">50</td><td class="right">150</td><td class="right">2,50&euro;</td></tr>
+            <tr><td>Rank check (keyword)</td><td class="right">1</td><td class="right">200</td><td class="right">200</td><td class="right">2,00&euro;</td></tr>
+            <tr><td>Weekly + Monthly Report AI</td><td class="right">3-10</td><td class="right">14</td><td class="right">52</td><td class="right">0,62&euro;</td></tr>
+            <tr><td>SEO Audit + Action Plan</td><td class="right">10</td><td class="right">5</td><td class="right">50</td><td class="right">0,50&euro;</td></tr>
+            <tr><td>Internal Links + Crawl Budget</td><td class="right">1-5</td><td class="right">30</td><td class="right">60</td><td class="right">0,36&euro;</td></tr>
+            <tr><td>Ads (Analysis + Campaign Creator)</td><td class="right">3-10</td><td class="right">12</td><td class="right">96</td><td class="right">0,84&euro;</td></tr>
+            <tr><td>GSC Sync + On-Page</td><td class="right">1-10</td><td class="right">20</td><td class="right">80</td><td class="right">0,40&euro;</td></tr>
+            <tr><td>Optimizer (gap + refactor)</td><td class="right">3-10</td><td class="right">10</td><td class="right">80</td><td class="right">0,80&euro;</td></tr>
+            <tr class="total-row">
+                <td><strong>Totale</strong></td><td></td><td></td>
+                <td class="right"><strong>1.404/1.500</strong></td>
+                <td class="right"><strong>14,21&euro;</strong></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 4. SCENARIO 10 UTENTI -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>4. Scenario A: 10 Utenti Paganti</h1>
+    <p class="small">Fase iniziale &mdash; primi 2-3 mesi post-lancio</p>
+
+    <div class="scenario-header">
+        <h2 style="font-size: 22px;">10 Utenti Paganti + ~20 Free</h2>
+        <p>Mix: 5 Starter, 3 Pro, 2 Agency &mdash; Tipico di un lancio via community/passaparola</p>
+    </div>
+
+    <h3>Distribuzione Utenti</h3>
+    <table>
+        <thead><tr><th>Piano</th><th class="right">Utenti</th><th class="right">Prezzo/mese</th><th class="right">Revenue</th><th class="right">Crediti erogati</th><th class="right">Costo API stim.</th></tr></thead>
+        <tbody>
+            <tr><td>Free</td><td class="right">20</td><td class="right">0&euro;</td><td class="right">0&euro;</td><td class="right">600</td><td class="right">4,20&euro;</td></tr>
+            <tr><td>Starter</td><td class="right">5</td><td class="right">19&euro;</td><td class="right">95&euro;</td><td class="right">750</td><td class="right">6,45&euro;</td></tr>
+            <tr><td>Pro</td><td class="right">3</td><td class="right">49&euro;</td><td class="right">147&euro;</td><td class="right">1.500</td><td class="right">13,05&euro;</td></tr>
+            <tr><td>Agency</td><td class="right">2</td><td class="right">99&euro;</td><td class="right">198&euro;</td><td class="right">3.000</td><td class="right">28,42&euro;</td></tr>
+            <tr class="total-row">
+                <td><strong>Totale</strong></td>
+                <td class="right"><strong>30</strong></td>
+                <td></td>
+                <td class="right"><strong>440&euro;</strong></td>
+                <td class="right"><strong>5.850</strong></td>
+                <td class="right"><strong>52,12&euro;</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Conto Economico Mensile</h3>
+    <table>
+        <thead><tr><th>Voce</th><th class="right">Importo</th><th class="right">% Revenue</th></tr></thead>
+        <tbody>
+            <tr><td><strong>Revenue mensile</strong></td><td class="right bold">440&euro;</td><td class="right">&mdash;</td></tr>
+            <tr class="cost-row"><td>Costi API variabili</td><td class="right">-52&euro;</td><td class="right">11,8%</td></tr>
+            <tr class="cost-row"><td>Hosting (SiteGround)</td><td class="right">-15&euro;</td><td class="right">3,4%</td></tr>
+            <tr class="cost-row"><td>API subscriptions base</td><td class="right">-50&euro;</td><td class="right">11,4%</td></tr>
+            <tr class="cost-row"><td>Stripe processing (3%)</td><td class="right">-13&euro;</td><td class="right">3,0%</td></tr>
+            <tr class="margin-row">
+                <td><strong>Margine netto</strong></td>
+                <td class="right"><strong>310&euro;</strong></td>
+                <td class="right"><strong>70,5%</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="kpi-grid">
+        <div class="kpi-card blue"><div class="value">440&euro;</div><div class="label">MRR</div></div>
+        <div class="kpi-card green"><div class="value">310&euro;</div><div class="label">Margine Netto</div></div>
+        <div class="kpi-card purple"><div class="value">70,5%</div><div class="label">Margine %</div></div>
+        <div class="kpi-card amber"><div class="value">5.280&euro;</div><div class="label">ARR</div></div>
+    </div>
+
+    <div class="note">
+        <strong>Nota:</strong> Con 10 utenti paganti i costi fissi (hosting, API subscriptions) pesano il 14,8%.
+        Margine gia positivo grazie ai bassi costi operativi. I 20 utenti free costano solo ~4&euro;/mese in API.
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 5. SCENARIO 50 UTENTI -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>5. Scenario B: 50 Utenti Paganti</h1>
+    <p class="small">Fase growth &mdash; 4-8 mesi post-lancio</p>
+
+    <div class="scenario-header">
+        <h2 style="font-size: 22px;">50 Utenti Paganti + ~120 Free</h2>
+        <p>Mix: 25 Starter, 17 Pro, 8 Agency &mdash; Content marketing e partnership attive</p>
+    </div>
+
+    <h3>Distribuzione Utenti</h3>
+    <table>
+        <thead><tr><th>Piano</th><th class="right">Utenti</th><th class="right">Prezzo/mese</th><th class="right">Revenue</th><th class="right">Crediti erogati</th><th class="right">Costo API stim.</th></tr></thead>
+        <tbody>
+            <tr><td>Free</td><td class="right">120</td><td class="right">0&euro;</td><td class="right">0&euro;</td><td class="right">3.600</td><td class="right">25,20&euro;</td></tr>
+            <tr><td>Starter</td><td class="right">25</td><td class="right">19&euro;</td><td class="right">475&euro;</td><td class="right">3.750</td><td class="right">32,25&euro;</td></tr>
+            <tr><td>Pro</td><td class="right">17</td><td class="right">49&euro;</td><td class="right">833&euro;</td><td class="right">8.500</td><td class="right">73,95&euro;</td></tr>
+            <tr><td>Agency</td><td class="right">8</td><td class="right">99&euro;</td><td class="right">792&euro;</td><td class="right">12.000</td><td class="right">113,68&euro;</td></tr>
+            <tr class="total-row">
+                <td><strong>Totale</strong></td>
+                <td class="right"><strong>170</strong></td>
+                <td></td>
+                <td class="right"><strong>2.100&euro;</strong></td>
+                <td class="right"><strong>27.850</strong></td>
+                <td class="right"><strong>245,08&euro;</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Conto Economico Mensile</h3>
+    <table>
+        <thead><tr><th>Voce</th><th class="right">Importo</th><th class="right">% Revenue</th></tr></thead>
+        <tbody>
+            <tr><td><strong>Revenue mensile</strong></td><td class="right bold">2.100&euro;</td><td class="right">&mdash;</td></tr>
+            <tr class="cost-row"><td>Costi API variabili</td><td class="right">-245&euro;</td><td class="right">11,7%</td></tr>
+            <tr class="cost-row"><td>Hosting (VPS dedicato)</td><td class="right">-40&euro;</td><td class="right">1,9%</td></tr>
+            <tr class="cost-row"><td>API subscriptions</td><td class="right">-80&euro;</td><td class="right">3,8%</td></tr>
+            <tr class="cost-row"><td>Stripe processing (3%)</td><td class="right">-63&euro;</td><td class="right">3,0%</td></tr>
+            <tr class="cost-row"><td>Email service (transazionale)</td><td class="right">-15&euro;</td><td class="right">0,7%</td></tr>
+            <tr class="cost-row"><td>Marketing (content + ads)</td><td class="right">-300&euro;</td><td class="right">14,3%</td></tr>
+            <tr class="margin-row">
+                <td><strong>Margine netto</strong></td>
+                <td class="right"><strong>1.357&euro;</strong></td>
+                <td class="right"><strong>64,6%</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="kpi-grid">
+        <div class="kpi-card blue"><div class="value">2.100&euro;</div><div class="label">MRR</div></div>
+        <div class="kpi-card green"><div class="value">1.357&euro;</div><div class="label">Margine Netto</div></div>
+        <div class="kpi-card purple"><div class="value">64,6%</div><div class="label">Margine %</div></div>
+        <div class="kpi-card amber"><div class="value">25.200&euro;</div><div class="label">ARR</div></div>
+    </div>
+
+    <div class="note">
+        <strong>Nota:</strong> A 50 utenti paganti si inizia ad investire in marketing (300&euro;/mese).
+        Il peso dei costi fissi scende drasticamente. Si migra a VPS dedicato (~40&euro;/mese).
+        I 120 utenti free costano ~25&euro;/mese: un costo di acquisizione praticamente irrisorio.
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 6. SCENARIO 100 UTENTI -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>6. Scenario C: 100 Utenti Paganti</h1>
+    <p class="small">Fase consolidamento &mdash; 8-14 mesi post-lancio</p>
+
+    <div class="scenario-header">
+        <h2 style="font-size: 22px;">100 Utenti Paganti + ~300 Free</h2>
+        <p>Mix: 45 Starter, 35 Pro, 20 Agency &mdash; Traction consolidata, referral attivo</p>
+    </div>
+
+    <h3>Distribuzione Utenti</h3>
+    <table>
+        <thead><tr><th>Piano</th><th class="right">Utenti</th><th class="right">Prezzo/mese</th><th class="right">Revenue</th><th class="right">Crediti erogati</th><th class="right">Costo API stim.</th></tr></thead>
+        <tbody>
+            <tr><td>Free</td><td class="right">300</td><td class="right">0&euro;</td><td class="right">0&euro;</td><td class="right">9.000</td><td class="right">63,00&euro;</td></tr>
+            <tr><td>Starter</td><td class="right">45</td><td class="right">19&euro;</td><td class="right">855&euro;</td><td class="right">6.750</td><td class="right">58,05&euro;</td></tr>
+            <tr><td>Pro</td><td class="right">35</td><td class="right">49&euro;</td><td class="right">1.715&euro;</td><td class="right">17.500</td><td class="right">152,25&euro;</td></tr>
+            <tr><td>Agency</td><td class="right">20</td><td class="right">99&euro;</td><td class="right">1.980&euro;</td><td class="right">30.000</td><td class="right">284,20&euro;</td></tr>
+            <tr class="total-row">
+                <td><strong>Totale</strong></td>
+                <td class="right"><strong>400</strong></td>
+                <td></td>
+                <td class="right"><strong>4.550&euro;</strong></td>
+                <td class="right"><strong>63.250</strong></td>
+                <td class="right"><strong>557,50&euro;</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Conto Economico Mensile</h3>
+    <table>
+        <thead><tr><th>Voce</th><th class="right">Importo</th><th class="right">% Revenue</th></tr></thead>
+        <tbody>
+            <tr><td><strong>Revenue mensile</strong></td><td class="right bold">4.550&euro;</td><td class="right">&mdash;</td></tr>
+            <tr class="cost-row"><td>Costi API variabili</td><td class="right">-558&euro;</td><td class="right">12,3%</td></tr>
+            <tr class="cost-row"><td>Hosting (VPS scalato + CDN)</td><td class="right">-80&euro;</td><td class="right">1,8%</td></tr>
+            <tr class="cost-row"><td>API subscriptions (livelli superiori)</td><td class="right">-120&euro;</td><td class="right">2,6%</td></tr>
+            <tr class="cost-row"><td>Stripe processing (3%)</td><td class="right">-137&euro;</td><td class="right">3,0%</td></tr>
+            <tr class="cost-row"><td>Email + Monitoring tools</td><td class="right">-30&euro;</td><td class="right">0,7%</td></tr>
+            <tr class="cost-row"><td>Marketing (content + ads + partnership)</td><td class="right">-600&euro;</td><td class="right">13,2%</td></tr>
+            <tr class="cost-row"><td>Supporto clienti (part-time)</td><td class="right">-400&euro;</td><td class="right">8,8%</td></tr>
+            <tr class="margin-row">
+                <td><strong>Margine netto</strong></td>
+                <td class="right"><strong>2.625&euro;</strong></td>
+                <td class="right"><strong>57,7%</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="kpi-grid">
+        <div class="kpi-card blue"><div class="value">4.550&euro;</div><div class="label">MRR</div></div>
+        <div class="kpi-card green"><div class="value">2.625&euro;</div><div class="label">Margine Netto</div></div>
+        <div class="kpi-card purple"><div class="value">57,7%</div><div class="label">Margine %</div></div>
+        <div class="kpi-card amber"><div class="value">54.600&euro;</div><div class="label">ARR</div></div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 7. CONFRONTO SCENARI -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>7. Confronto Scenari</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Metrica</th>
+                <th class="right">10 Paganti</th>
+                <th class="right">50 Paganti</th>
+                <th class="right">100 Paganti</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Utenti totali (free+paganti)</td><td class="right">30</td><td class="right">170</td><td class="right">400</td></tr>
+            <tr><td>Conversion rate</td><td class="right">33%</td><td class="right">29%</td><td class="right">25%</td></tr>
+            <tr><td><strong>MRR</strong></td><td class="right bold">440&euro;</td><td class="right bold">2.100&euro;</td><td class="right bold">4.550&euro;</td></tr>
+            <tr><td><strong>ARR</strong></td><td class="right bold">5.280&euro;</td><td class="right bold">25.200&euro;</td><td class="right bold">54.600&euro;</td></tr>
+            <tr><td>ARPU mensile</td><td class="right">44&euro;</td><td class="right">42&euro;</td><td class="right">45,5&euro;</td></tr>
+            <tr><td>Crediti erogati/mese</td><td class="right">5.850</td><td class="right">27.850</td><td class="right">63.250</td></tr>
+            <tr><td>Costi API variabili</td><td class="right">52&euro;</td><td class="right">245&euro;</td><td class="right">558&euro;</td></tr>
+            <tr><td>Costo API per credito</td><td class="right">0,009&euro;</td><td class="right">0,009&euro;</td><td class="right">0,009&euro;</td></tr>
+            <tr><td>Costi totali operativi</td><td class="right">130&euro;</td><td class="right">743&euro;</td><td class="right">1.925&euro;</td></tr>
+            <tr><td><strong>Margine netto</strong></td><td class="right bold text-green">310&euro;</td><td class="right bold text-green">1.357&euro;</td><td class="right bold text-green">2.625&euro;</td></tr>
+            <tr><td><strong>Margine %</strong></td><td class="right bold text-green">70,5%</td><td class="right bold text-green">64,6%</td><td class="right bold text-green">57,7%</td></tr>
+            <tr><td>Costo Free users/mese</td><td class="right">4&euro;</td><td class="right">25&euro;</td><td class="right">63&euro;</td></tr>
+            <tr><td>CAC implicito (free tier)</td><td class="right">0,21&euro;</td><td class="right">0,21&euro;</td><td class="right">0,21&euro;</td></tr>
+        </tbody>
+    </table>
+
+    <h2>7.1 Dinamica dei Margini</h2>
+    <div class="box slate">
+        <p>
+            Il margine % decresce dal 70,5% al 57,7% passando da 10 a 100 utenti paganti.
+            Questo e fisiologico e previsto: a 100 utenti si aggiungono costi di
+            <strong>marketing</strong> (600&euro;) e <strong>supporto</strong> (400&euro;)
+            che non esistono nello scenario a 10 utenti.
+        </p>
+        <p style="margin-bottom:0">
+            Tuttavia il <strong>margine netto assoluto</strong> cresce da 310&euro; a 2.625&euro;
+            (8,5x), confermando la scalabilita del modello. I costi API variabili restano
+            costanti al ~12% del fatturato indipendentemente dalla scala.
+        </p>
+    </div>
+
+    <h2>7.2 Break-Even Analysis</h2>
+    <div class="kpi-grid-3">
+        <div class="kpi-card green">
+            <div class="value">~3</div>
+            <div class="label">Utenti paganti per coprire costi fissi base</div>
+        </div>
+        <div class="kpi-card blue">
+            <div class="value">105&euro;</div>
+            <div class="label">Costi fissi minimi mensili</div>
+        </div>
+        <div class="kpi-card purple">
+            <div class="value">~44&euro;</div>
+            <div class="label">ARPU medio</div>
+        </div>
+    </div>
+
+    <p>
+        Con un ARPU medio di ~44&euro; e costi fissi base di 105&euro;/mese,
+        bastano <strong>3 utenti paganti</strong> per raggiungere il break-even operativo.
+        Ogni utente aggiuntivo contribuisce ~35-38&euro; di margine netto al mese.
+    </p>
+
+    <h2>7.3 Impatto Utenti Free</h2>
+    <table>
+        <thead><tr><th>Scenario</th><th class="right">Utenti Free</th><th class="right">Costo API Free/mese</th><th class="right">% su Revenue</th><th class="right">Costo per conversione</th></tr></thead>
+        <tbody>
+            <tr><td>10 paganti</td><td class="right">20</td><td class="right">4,20&euro;</td><td class="right">0,95%</td><td class="right">0,84&euro;*</td></tr>
+            <tr><td>50 paganti</td><td class="right">120</td><td class="right">25,20&euro;</td><td class="right">1,20%</td><td class="right">0,84&euro;*</td></tr>
+            <tr><td>100 paganti</td><td class="right">300</td><td class="right">63,00&euro;</td><td class="right">1,38%</td><td class="right">0,84&euro;*</td></tr>
+        </tbody>
+    </table>
+    <p class="small">
+        * Costo medio di un utente free per 4 mesi (tempo medio stimato di conversione) = 0,21&euro; &times; 4 = 0,84&euro;.
+        Un CAC di 0,84&euro; con un LTV di 528&euro; (12 mesi &times; 44 ARPU) produce un <strong>LTV/CAC ratio di 629x</strong> (solo organico).
+    </p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 8. SENSIBILITA -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section page-break">
+    <h1>8. Analisi di Sensibilita</h1>
+
+    <h2>8.1 Se i costi API aumentano del 50%</h2>
+    <table>
+        <thead><tr><th>Scenario</th><th class="right">Margine attuale</th><th class="right">Margine con +50% API</th><th class="right">Delta</th></tr></thead>
+        <tbody>
+            <tr><td>10 utenti</td><td class="right text-green">70,5%</td><td class="right text-green">64,6%</td><td class="right">-5,9pp</td></tr>
+            <tr><td>50 utenti</td><td class="right text-green">64,6%</td><td class="right text-green">58,8%</td><td class="right">-5,8pp</td></tr>
+            <tr><td>100 utenti</td><td class="right text-green">57,7%</td><td class="right text-green">51,6%</td><td class="right">-6,1pp</td></tr>
+        </tbody>
+    </table>
+    <p>Anche con un aumento del 50% dei costi API, il margine resta superiore al 50% in tutti gli scenari.</p>
+
+    <h2>8.2 Se il mix si sposta verso Starter (piu utenti entry-level)</h2>
+    <table>
+        <thead><tr><th>Scenario</th><th class="right">Mix attuale MRR</th><th class="right">Mix 70% Starter</th><th class="right">Delta</th></tr></thead>
+        <tbody>
+            <tr><td>50 utenti</td><td class="right">2.100&euro;</td><td class="right">1.455&euro;</td><td class="right text-red">-30,7%</td></tr>
+            <tr><td>100 utenti</td><td class="right">4.550&euro;</td><td class="right">2.950&euro;</td><td class="right text-red">-35,2%</td></tr>
+        </tbody>
+    </table>
+    <p>
+        Il mix di piano e la leva piu sensibile. Se il 70% degli utenti resta su Starter,
+        il MRR cala del ~30%. <strong>Mitigazione</strong>: feature gating aggressivo sui piani
+        superiori (Crawl Budget, AI Optimizer, Project Sharing, Report automatici).
+    </p>
+
+    <h2>8.3 Se il churn mensile e alto (10%)</h2>
+    <table>
+        <thead><tr><th>Metrica</th><th class="right">Churn 5%</th><th class="right">Churn 10%</th><th class="right">Churn 15%</th></tr></thead>
+        <tbody>
+            <tr><td>LTV (ARPU 44&euro;)</td><td class="right">880&euro;</td><td class="right">440&euro;</td><td class="right">293&euro;</td></tr>
+            <tr><td>Mesi medi di permanenza</td><td class="right">20</td><td class="right">10</td><td class="right">6,7</td></tr>
+            <tr><td>Utenti necessari per 4.550&euro; MRR</td><td class="right">100</td><td class="right">100</td><td class="right">100</td></tr>
+            <tr><td>Nuovi utenti/mese per mantenere 100</td><td class="right">5</td><td class="right">10</td><td class="right">15</td></tr>
+        </tbody>
+    </table>
+
+    <h2>8.4 Scenario Annuale (con crescita)</h2>
+    <p>Ipotizzando una crescita lineare da 10 a 100 utenti paganti in 12 mesi:</p>
+    <div class="box green">
+        <table style="margin-bottom:0">
+            <thead><tr><th>Metrica annuale</th><th class="right">Conservativo</th><th class="right">Base</th><th class="right">Ottimista</th></tr></thead>
+            <tbody>
+                <tr><td>Utenti paganti fine anno</td><td class="right">60</td><td class="right">100</td><td class="right">180</td></tr>
+                <tr><td>ARPU medio</td><td class="right">35&euro;</td><td class="right">44&euro;</td><td class="right">50&euro;</td></tr>
+                <tr><td>Revenue cumulata anno</td><td class="right">18.000&euro;</td><td class="right">36.000&euro;</td><td class="right">72.000&euro;</td></tr>
+                <tr><td>Costi cumulati anno</td><td class="right">9.600&euro;</td><td class="right">15.000&euro;</td><td class="right">28.000&euro;</td></tr>
+                <tr><td><strong>Utile netto anno</strong></td><td class="right bold text-green">8.400&euro;</td><td class="right bold text-green">21.000&euro;</td><td class="right bold text-green">44.000&euro;</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div style="text-align:center; padding: 30px 0; font-size: 12px; color: var(--text-light); border-top: 1px solid var(--border); margin-top: 30px;">
+        <strong>Ainstein SEO Toolkit</strong> &mdash; ainstein.it &mdash; Scenari di Utilizzo v1.0 &mdash; Febbraio 2026<br>
+        Allegato al Business Plan. Le proiezioni sono stime basate sui costi API attuali e profili di utilizzo realistici.
+    </div>
+</div>
+
+</body>
+</html>

@@ -185,6 +185,7 @@ seo-toolkit/
 │   │   ├── credit-badge.php, orphaned-project-notice.php
 │   │   └── module-ai-settings.php, module-provider-settings.php
 │   └── docs/                      # Documentazione utente pubblica (/docs)
+├── business/                      # Docs business riservate (business plan, scenari, .gitignore'd)
 ├── docs/                          # Docs tecniche (GOLDEN-RULES.md, specs/, data-model.html, etc.)
 ├── public/                        # Entry point, landing pages, assets
 └── config/                        # app.php, database.php, modules.php
@@ -203,6 +204,18 @@ seo-toolkit/
 | Modulo specifico | `specs/{modulo}.md` |
 | API esterne | `API-LOGS.md` |
 | Deploy | `DEPLOY.md` |
+
+### Documentazione Business (in `business/`)
+
+Cartella separata, esclusa da git (`.gitignore`). Contiene documenti strategici e finanziari riservati.
+
+| Documento | File |
+|-----------|------|
+| Business Plan + Elevator Pitch | `business-plan-ainstein.{html,pdf,docx}` |
+| Scenari Utilizzo + Costi/Ricavi | `scenari-utilizzo-ainstein.{html,pdf,docx}` |
+| Indice navigabile | `index.html` |
+
+Documenti correlati in `docs/`: `STRATEGY.md` (posizionamento), `ROADMAP.md` (roadmap AI), `AINSTEIN-STATUS.md` (stato progetto).
 
 ---
 
