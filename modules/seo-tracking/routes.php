@@ -317,9 +317,9 @@ Router::post('/seo-tracking/project/{id}/keywords/bulk', function ($id) {
 // (MUST be BEFORE {keywordId} wildcard route!)
 // =============================================
 
-// Avvia job posizioni in background
+// Avvia job posizioni in background (solo admin)
 Router::post('/seo-tracking/project/{id}/keywords/start-positions-job', function ($id) {
-    Middleware::auth();
+    Middleware::admin();
     return (new KeywordController())->startPositionsJob((int) $id);
 });
 
@@ -406,27 +406,27 @@ Router::get('/seo-tracking/project/{id}/keywords/check-volume-service', function
 // REFRESH DATI KEYWORD (con crediti)
 // =============================================
 
-// Refresh volumi (DataForSEO) - con consumo crediti
+// Refresh volumi (DataForSEO) - solo admin
 Router::post('/seo-tracking/project/{id}/keywords/refresh-volumes', function ($id) {
-    Middleware::auth();
+    Middleware::admin();
     return (new KeywordController())->refreshVolumes((int) $id);
 });
 
-// Refresh posizioni SERP - con consumo crediti
+// Refresh posizioni SERP - solo admin
 Router::post('/seo-tracking/project/{id}/keywords/refresh-positions', function ($id) {
-    Middleware::auth();
+    Middleware::admin();
     return (new KeywordController())->refreshPositions((int) $id);
 });
 
-// Refresh completo (volumi + posizioni) - con consumo crediti
+// Refresh completo (volumi + posizioni) - solo admin
 Router::post('/seo-tracking/project/{id}/keywords/refresh-all', function ($id) {
-    Middleware::auth();
+    Middleware::admin();
     return (new KeywordController())->refreshAll((int) $id);
 });
 
-// Calcola costo refresh (AJAX - per preview)
+// Calcola costo refresh (AJAX - per preview, solo admin)
 Router::get('/seo-tracking/project/{id}/keywords/refresh-cost', function ($id) {
-    Middleware::auth();
+    Middleware::admin();
     return (new KeywordController())->getRefreshCost((int) $id);
 });
 

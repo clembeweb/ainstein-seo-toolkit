@@ -55,7 +55,8 @@
                 <?= number_format($stats['total'] ?? 0) ?> keyword totali, <?= number_format($stats['tracked'] ?? 0) ?> tracciate
             </p>
             <div class="flex items-center gap-2">
-                <!-- Aggiorna Volumi (blu) -->
+                <?php if (($user['role'] ?? '') === 'admin'): ?>
+                <!-- Aggiorna Volumi (blu) - Solo admin -->
                 <button type="button" onclick="showRefreshModal('volumes')" id="refreshVolumesBtn"
                         class="inline-flex items-center px-3 py-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
                         title="Aggiorna volumi di ricerca, CPC e competizione">
@@ -65,7 +66,7 @@
                     Volumi
                 </button>
 
-                <!-- Aggiorna Posizioni (verde) -->
+                <!-- Aggiorna Posizioni (verde) - Solo admin -->
                 <button type="button" onclick="showRefreshModal('positions')" id="refreshPositionsBtn"
                         class="inline-flex items-center px-3 py-2 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-sm font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors"
                         title="Aggiorna posizioni SERP delle keyword tracciate">
@@ -75,7 +76,7 @@
                     Posizioni
                 </button>
 
-                <!-- Aggiorna Tutto (indigo) -->
+                <!-- Aggiorna Tutto (indigo) - Solo admin -->
                 <button type="button" onclick="showRefreshModal('all')" id="refreshAllBtn"
                         class="inline-flex items-center px-3 py-2 rounded-lg border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-sm font-medium hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
                         title="Aggiorna volumi e posizioni insieme">
@@ -86,6 +87,7 @@
                 </button>
 
                 <div class="w-px h-6 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+                <?php endif; ?>
 
                 <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/add') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
                     <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -96,7 +98,8 @@
             </div>
         </div>
 
-        <!-- Indicatore costi -->
+        <?php if (($user['role'] ?? '') === 'admin'): ?>
+        <!-- Indicatore costi - Solo admin -->
         <?php
         $totalKw = $stats['total'] ?? 0;
         $trackedKw = $stats['tracked'] ?? 0;
@@ -115,6 +118,7 @@
             <span class="text-emerald-600 dark:text-emerald-400">Posizioni: ~<?= $positionCost ?> crediti</span>
             <span class="text-indigo-600 dark:text-indigo-400">Tutto: ~<?= $allCost ?> crediti</span>
         </div>
+        <?php endif; ?>
     </div>
 
     <!-- Filters -->
