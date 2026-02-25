@@ -1,8 +1,6 @@
 <div class="sm:mx-auto sm:w-full sm:max-w-md">
     <div class="flex justify-center">
-        <svg class="h-10 w-10 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-        </svg>
+        <img src="<?= url('/assets/images/logo-ainstein-orizzontal.png') ?>" alt="Ainstein" class="h-10 dark:brightness-0 dark:invert">
     </div>
     <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
         Crea il tuo account
@@ -69,11 +67,12 @@
                 </div>
             </div>
 
-            <div class="flex items-center">
+            <div class="flex items-start">
                 <input id="terms" name="terms" type="checkbox" required
-                       class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                       class="h-4 w-4 mt-0.5 rounded border-gray-300 text-primary-600 focus:ring-primary-500">
                 <label for="terms" class="ml-2 block text-sm text-gray-900 dark:text-gray-300">
-                    Accetto i <a href="#" class="text-primary-600 hover:text-primary-500">termini di servizio</a>
+                    Accetto i <a href="<?= \Core\Router::url('/terms') ?>" class="text-primary-600 hover:text-primary-500" target="_blank">Termini di Servizio</a>
+                    e la <a href="<?= \Core\Router::url('/privacy') ?>" class="text-primary-600 hover:text-primary-500" target="_blank">Privacy Policy</a>
                 </label>
             </div>
 
