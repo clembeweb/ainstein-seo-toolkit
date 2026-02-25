@@ -30,7 +30,7 @@ class Article
     }
 
     /**
-     * Get article with related data
+     * Get article with related data (supports shared project access)
      */
     public function findWithRelations(int $id, int $userId): ?array
     {
@@ -49,6 +49,46 @@ class Article
         ";
 
         $article = Database::fetch($sql, [$id, $userId]);
+
+        // Shared access: if not direct owner, check via project sharing
+        if (!$article) {
+            $sqlShared = "
+                SELECT
+                    a.*,
+                    k.keyword,
+                    k.language,
+                    k.location,
+                    ws.name as wp_site_name,
+                    ws.url as wp_site_url
+                FROM {$this->table} a
+                JOIN aic_keywords k ON a.keyword_id = k.id
+                LEFT JOIN aic_wp_sites ws ON a.wp_site_id = ws.id
+                WHERE a.id = ?
+            ";
+            $article = Database::fetch($sqlShared, [$id]);
+
+            if ($article && !empty($article['project_id'])) {
+                $project = Database::fetch(
+                    "SELECT global_project_id FROM aic_projects WHERE id = ?",
+                    [$article['project_id']]
+                );
+                if (!$project || empty($project['global_project_id'])) {
+                    return null;
+                }
+                $role = \Services\ProjectAccessService::getRole((int)$project['global_project_id'], $userId);
+                if ($role === null) {
+                    return null;
+                }
+                if ($role !== 'owner' && !\Services\ProjectAccessService::canAccessModule(
+                    (int)$project['global_project_id'], $userId, 'ai-content'
+                )) {
+                    return null;
+                }
+                $article['access_role'] = $role;
+            } else {
+                return null;
+            }
+        }
 
         if ($article) {
             // Get sources

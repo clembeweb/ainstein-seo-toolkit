@@ -80,7 +80,8 @@ class ArticleController
             'wpSites' => $wpSites,
             'project' => $project,
             'projectId' => $projectId,
-            'filters' => $filters
+            'filters' => $filters,
+            'access_role' => $project['access_role'] ?? 'owner'
         ]);
     }
 
@@ -104,7 +105,7 @@ class ArticleController
             }
         }
 
-        $article = $this->article->findWithRelations($id);
+        $article = $this->article->findWithRelations($id, $user['id']);
 
         if (!$article) {
             $_SESSION['_flash']['error'] = 'Articolo non trovato';
@@ -120,6 +121,9 @@ class ArticleController
 
         $wpSites = $this->wpSite->getActiveSites($user['id']);
 
+        // Determine access role (from project or article shared access)
+        $accessRole = $project['access_role'] ?? $article['access_role'] ?? 'owner';
+
         return View::render('ai-content/articles/show', [
             'title' => ($article['title'] ?: 'Articolo #' . $id) . ' - AI Content',
             'user' => $user,
@@ -127,7 +131,8 @@ class ArticleController
             'article' => $article,
             'wpSites' => $wpSites,
             'project' => $project,
-            'projectId' => $projectId
+            'projectId' => $projectId,
+            'access_role' => $accessRole
         ]);
     }
 
@@ -694,7 +699,7 @@ class ArticleController
 
         $user = Auth::user();
 
-        $article = $this->article->findWithRelations($id);
+        $article = $this->article->findWithRelations($id, $user['id']);
         if (!$article) {
             echo json_encode(['success' => false, 'error' => 'Articolo non trovato']);
             exit;

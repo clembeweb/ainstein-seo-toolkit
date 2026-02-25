@@ -1,6 +1,7 @@
 <?php
 // Base URL for project context
 $baseUrl = !empty($article['project_id']) ? '/ai-content/projects/' . $article['project_id'] : '/ai-content';
+$canEdit = ($access_role ?? 'owner') !== 'viewer';
 ?>
 <div class="space-y-6" x-data="articleEditor(<?= htmlspecialchars(json_encode([
     'id' => $article['id'],
@@ -102,6 +103,7 @@ $baseUrl = !empty($article['project_id']) ? '/ai-content/projects/' . $article['
                     echo e($briefData['error'] ?? 'Si e verificato un errore durante la generazione dell\'articolo.');
                     ?>
                 </p>
+                <?php if ($canEdit): ?>
                 <div class="mt-3">
                     <button @click="regenerateArticle()"
                             :disabled="regenerating"
@@ -116,6 +118,7 @@ $baseUrl = !empty($article['project_id']) ? '/ai-content/projects/' . $article['
                         Riprova generazione (10 crediti)
                     </button>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -192,6 +195,7 @@ $baseUrl = !empty($article['project_id']) ? '/ai-content/projects/' . $article['
                 </svg>
                 Immagine di Copertina
             </h3>
+            <?php if ($canEdit): ?>
             <div class="flex items-center gap-2">
                 <button @click="regenerateCover()"
                         :disabled="loading"
@@ -220,6 +224,7 @@ $baseUrl = !empty($article['project_id']) ? '/ai-content/projects/' . $article['
                     </button>
                 </template>
             </div>
+            <?php endif; ?>
         </div>
 
         <!-- Cover Preview -->
@@ -260,6 +265,7 @@ $baseUrl = !empty($article['project_id']) ? '/ai-content/projects/' . $article['
                             Preview
                         </span>
                     </button>
+                    <?php if ($canEdit): ?>
                     <button @click="viewMode = 'editor'"
                             :class="viewMode === 'editor' ? 'bg-white dark:bg-slate-600 shadow-sm' : 'hover:bg-slate-200 dark:hover:bg-slate-600'"
                             class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
@@ -270,8 +276,10 @@ $baseUrl = !empty($article['project_id']) ? '/ai-content/projects/' . $article['
                             HTML Editor
                         </span>
                     </button>
+                    <?php endif; ?>
                 </div>
 
+                <?php if ($canEdit): ?>
                 <div class="flex items-center gap-2">
                     <span x-show="hasChanges" x-cloak class="text-sm text-amber-600 dark:text-amber-400">
                         Modifiche non salvate
@@ -291,6 +299,7 @@ $baseUrl = !empty($article['project_id']) ? '/ai-content/projects/' . $article['
                         Salva
                     </button>
                 </div>
+                <?php endif; ?>
             </div>
 
             <!-- Content Area -->
@@ -442,6 +451,7 @@ $baseUrl = !empty($article['project_id']) ? '/ai-content/projects/' . $article['
                     Azioni
                 </h3>
 
+                <?php if ($canEdit): ?>
                 <!-- Save Button -->
                 <button @click="saveArticle()"
                         :disabled="saving || !hasChanges"
@@ -481,6 +491,16 @@ $baseUrl = !empty($article['project_id']) ? '/ai-content/projects/' . $article['
                     </svg>
                     <span x-text="regenerating ? 'Rigenerazione...' : 'Rigenera (10 crediti)'"></span>
                 </button>
+                <?php endif; ?>
+                <?php else: ?>
+                <!-- Viewer notice -->
+                <div class="text-center text-sm text-slate-500 dark:text-slate-400 py-2">
+                    <svg class="w-5 h-5 mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    Accesso in sola lettura
+                </div>
                 <?php endif; ?>
 
                 <!-- Back to List -->
