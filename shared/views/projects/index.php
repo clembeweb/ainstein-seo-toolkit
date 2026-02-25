@@ -218,8 +218,7 @@
     <?php endif; ?>
 
     <!-- Siti WordPress — vista centralizzata -->
-    <?php if (!empty($allWpSites)): ?>
-    <div class="mt-10">
+    <div class="mt-10" x-data="wpSitesManager()">
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
@@ -233,6 +232,25 @@
                 </div>
             </div>
         </div>
+
+        <?php if (empty($allWpSites)): ?>
+        <!-- Empty state -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-8 text-center">
+            <div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mx-auto mb-4">
+                <svg class="w-6 h-6 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                </svg>
+            </div>
+            <h3 class="text-sm font-medium text-slate-900 dark:text-white mb-1">Nessun sito WordPress</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Collega il tuo primo sito WordPress dalla dashboard di un progetto per pubblicare articoli direttamente.</p>
+            <a href="<?= url('/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors">
+                <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Crea un Progetto
+            </a>
+        </div>
+        <?php else: ?>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
             <table class="w-full">
                 <thead>
@@ -253,16 +271,8 @@
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
                         <td class="px-4 py-3">
                             <div class="flex items-center gap-2.5">
-                                <?php
-                                    if ($testStatus === 'success') {
-                                        $dotColor = 'bg-emerald-400';
-                                    } elseif ($testStatus === 'error') {
-                                        $dotColor = 'bg-red-400';
-                                    } else {
-                                        $dotColor = 'bg-slate-400';
-                                    }
-                                ?>
-                                <span class="w-2 h-2 rounded-full <?= $dotColor ?> flex-shrink-0"></span>
+                                <span class="w-2 h-2 rounded-full flex-shrink-0"
+                                      :class="testStatus[<?= (int) $wpSite['id'] ?>] === 'success' ? 'bg-emerald-400' : (testStatus[<?= (int) $wpSite['id'] ?>] === 'error' ? 'bg-red-400' : 'bg-slate-400')"></span>
                                 <div class="min-w-0">
                                     <p class="text-sm font-medium text-slate-900 dark:text-white truncate"><?= htmlspecialchars($wpSite['name']) ?></p>
                                     <a href="<?= htmlspecialchars($wpSite['url']) ?>" target="_blank" class="text-xs text-indigo-500 dark:text-indigo-400 hover:underline"><?= htmlspecialchars($wpDomain) ?></a>
@@ -282,38 +292,118 @@
                             </span>
                         </td>
                         <td class="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">
-                            <?php if ($testAt): ?>
-                                <?php
-                                    $tDiff = time() - strtotime($testAt);
-                                    if ($tDiff < 60) $tAgo = 'Adesso';
-                                    elseif ($tDiff < 3600) $tAgo = floor($tDiff / 60) . ' min fa';
-                                    elseif ($tDiff < 86400) $tAgo = floor($tDiff / 3600) . ' ore fa';
-                                    elseif ($tDiff < 604800) $tAgo = floor($tDiff / 86400) . 'g fa';
-                                    else $tAgo = date('d/m/Y', strtotime($testAt));
-                                ?>
-                                <span class="<?= $testStatus === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400' ?>"><?= $testStatus === 'success' ? 'OK' : 'Errore' ?></span>
-                                <span class="ml-1"><?= $tAgo ?></span>
-                            <?php else: ?>
-                                <span class="italic">Mai testato</span>
-                            <?php endif; ?>
+                            <!-- Test result (reactive) -->
+                            <template x-if="testResult[<?= (int) $wpSite['id'] ?>]">
+                                <div>
+                                    <template x-if="testResult[<?= (int) $wpSite['id'] ?>].success">
+                                        <span class="text-emerald-600 dark:text-emerald-400">
+                                            OK
+                                            <span x-show="testResult[<?= (int) $wpSite['id'] ?>].wp_version" class="text-slate-400 dark:text-slate-500 ml-1">
+                                                WP <span x-text="testResult[<?= (int) $wpSite['id'] ?>].wp_version"></span>
+                                            </span>
+                                        </span>
+                                    </template>
+                                    <template x-if="!testResult[<?= (int) $wpSite['id'] ?>].success">
+                                        <span class="text-red-500 dark:text-red-400" x-text="testResult[<?= (int) $wpSite['id'] ?>].message || 'Errore'"></span>
+                                    </template>
+                                </div>
+                            </template>
+                            <!-- Initial server-rendered state -->
+                            <template x-if="!testResult[<?= (int) $wpSite['id'] ?>]">
+                                <span>
+                                    <?php if ($testAt): ?>
+                                        <?php
+                                            $tDiff = time() - strtotime($testAt);
+                                            if ($tDiff < 60) $tAgo = 'Adesso';
+                                            elseif ($tDiff < 3600) $tAgo = floor($tDiff / 60) . ' min fa';
+                                            elseif ($tDiff < 86400) $tAgo = floor($tDiff / 3600) . ' ore fa';
+                                            elseif ($tDiff < 604800) $tAgo = floor($tDiff / 86400) . 'g fa';
+                                            else $tAgo = date('d/m/Y', strtotime($testAt));
+                                        ?>
+                                        <span class="<?= $testStatus === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400' ?>"><?= $testStatus === 'success' ? 'OK' : 'Errore' ?></span>
+                                        <span class="ml-1"><?= $tAgo ?></span>
+                                    <?php else: ?>
+                                        <span class="italic">Mai testato</span>
+                                    <?php endif; ?>
+                                </span>
+                            </template>
                         </td>
-                        <td class="px-4 py-3 text-right">
-                            <form method="POST" action="<?= url('/wp-sites/delete') ?>"
-                                  onsubmit="return confirm('Eliminare il sito <?= htmlspecialchars(addslashes($wpSite['name'] ?: $wpDomain)) ?>? Gli articoli già pubblicati non saranno modificati, ma la configurazione auto-publish perderà il riferimento.')">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="site_id" value="<?= (int) $wpSite['id'] ?>">
-                                <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Elimina sito">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center justify-end gap-1">
+                                <!-- Test button -->
+                                <button @click="testSite(<?= (int) $wpSite['id'] ?>)"
+                                        :disabled="testing[<?= (int) $wpSite['id'] ?>]"
+                                        class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:text-indigo-400 dark:hover:bg-indigo-900/20 transition-colors disabled:opacity-50"
+                                        title="Testa connessione">
+                                    <svg x-show="!testing[<?= (int) $wpSite['id'] ?>]" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                    </svg>
+                                    <svg x-show="testing[<?= (int) $wpSite['id'] ?>]" x-cloak class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                                     </svg>
                                 </button>
-                            </form>
+                                <!-- Delete button -->
+                                <form method="POST" action="<?= url('/wp-sites/delete') ?>"
+                                      onsubmit="return confirm('Eliminare il sito <?= htmlspecialchars(addslashes($wpSite['name'] ?: $wpDomain)) ?>? Gli articoli già pubblicati non saranno modificati, ma la configurazione auto-publish perderà il riferimento.')">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="site_id" value="<?= (int) $wpSite['id'] ?>">
+                                    <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Elimina sito">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
+        <?php endif; ?>
     </div>
-    <?php endif; ?>
+
+    <script>
+    function wpSitesManager() {
+        return {
+            testing: {},
+            testResult: {},
+            testStatus: {
+                <?php foreach ($allWpSites ?? [] as $s): ?>
+                <?= (int) $s['id'] ?>: '<?= ($s['last_test_status'] ?? '') ?>',
+                <?php endforeach; ?>
+            },
+            csrfToken: '<?= csrf_token() ?>',
+
+            async testSite(siteId) {
+                if (this.testing[siteId]) return;
+                this.testing[siteId] = true;
+                this.testResult[siteId] = null;
+
+                try {
+                    const formData = new FormData();
+                    formData.append('site_id', siteId);
+                    formData.append('_csrf_token', this.csrfToken);
+
+                    const resp = await fetch('<?= url('/wp-sites/test') ?>', {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    if (!resp.ok) throw new Error('Errore HTTP ' + resp.status);
+                    const data = await resp.json();
+
+                    this.testResult[siteId] = data;
+                    this.testStatus[siteId] = data.success ? 'success' : 'error';
+                } catch (e) {
+                    this.testResult[siteId] = { success: false, message: e.message };
+                    this.testStatus[siteId] = 'error';
+                } finally {
+                    this.testing[siteId] = false;
+                }
+            }
+        }
+    }
+    </script>
 </div>

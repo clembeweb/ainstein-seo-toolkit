@@ -760,6 +760,61 @@ class GlobalProjectController
     }
 
     /**
+     * Testa connessione sito WordPress — AJAX, non project-scoped
+     * POST /wp-sites/test
+     */
+    public function testWpSiteGlobal(): void
+    {
+        Middleware::auth();
+        Middleware::csrf();
+        $user = Auth::user();
+
+        header('Content-Type: application/json');
+
+        $siteId = (int) ($_POST['site_id'] ?? 0);
+        $wpSiteModel = new \Modules\AiContent\Models\WpSite();
+        $site = $wpSiteModel->find($siteId, $user['id']);
+
+        if (!$site) {
+            echo json_encode(['success' => false, 'message' => 'Sito non trovato']);
+            exit;
+        }
+
+        try {
+            $connector = new \Services\Connectors\WordPressSeoConnector([
+                'url' => $site['url'],
+                'api_key' => $site['api_key'],
+            ]);
+            $result = $connector->test();
+
+            if ($result['success']) {
+                $wpSiteModel->updateTestStatus($siteId, 'success');
+                $wpSiteModel->update($siteId, ['last_sync_at' => date('Y-m-d H:i:s')], $user['id']);
+                $this->syncWpCategories($siteId, $site['url'], $site['api_key'], $wpSiteModel);
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Connessione riuscita',
+                    'wp_version' => $result['wp_version'] ?? '',
+                    'plugin_version' => $result['plugin_version'] ?? '',
+                    'seo_plugin' => $result['seo_plugin'] ?? 'none',
+                ]);
+            } else {
+                $wpSiteModel->updateTestStatus($siteId, 'error');
+                echo json_encode([
+                    'success' => false,
+                    'message' => $result['message'] ?? 'Connessione fallita',
+                ]);
+            }
+        } catch (\Exception $e) {
+            $wpSiteModel->updateTestStatus($siteId, 'error');
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+
+        exit;
+    }
+
+    /**
      * Elimina sito WordPress — POST con form submit
      * POST /wp-sites/delete
      */
