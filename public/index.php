@@ -518,8 +518,9 @@ Router::get('/dashboard', function () {
     $user = Auth::user();
     $uid = $user['id'];
     $modules = ModuleLoader::getUserModules($uid);
+    $_credits = (float) ($user['credits'] ?? 0);
 
-    // --- Stats compatte (solo per header) ---
+    // --- Stats header ---
     $usageToday = (float) Database::fetch(
         "SELECT COALESCE(SUM(credits_used), 0) as total FROM usage_log WHERE user_id = ? AND DATE(created_at) = CURDATE()", [$uid]
     )['total'];
@@ -528,130 +529,54 @@ Router::get('/dashboard', function () {
         "SELECT COALESCE(SUM(credits_used), 0) as total FROM usage_log WHERE user_id = ? AND MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())", [$uid]
     )['total'];
 
-    // --- Pipeline data (per smart actions) ---
-    $pipelineData = ['kr_projects' => 0, 'aic_keywords' => 0, 'aic_articles' => 0, 'aic_published' => 0, 'aic_ready' => 0, 'wp_connected' => false];
+    // --- Global Projects con KPI per modulo (batch queries) ---
+    $gpModel = new \Core\Models\GlobalProject();
+    $globalProjects = [];
     try {
-        $pipelineData['kr_projects'] = (int) Database::fetch(
-            "SELECT COUNT(*) as cnt FROM kr_projects WHERE user_id = ?", [$uid]
-        )['cnt'];
-        $pipelineData['aic_keywords'] = (int) Database::fetch(
-            "SELECT COUNT(*) as cnt FROM aic_queue WHERE user_id = ?", [$uid]
-        )['cnt'];
-        $aicArtStats = Database::fetch(
-            "SELECT COUNT(*) as total,
-                    SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END) as published,
-                    SUM(CASE WHEN status = 'ready' THEN 1 ELSE 0 END) as ready
-             FROM aic_articles WHERE user_id = ?", [$uid]
-        );
-        $pipelineData['aic_articles'] = (int) ($aicArtStats['total'] ?? 0);
-        $pipelineData['aic_published'] = (int) ($aicArtStats['published'] ?? 0);
-        $pipelineData['aic_ready'] = (int) ($aicArtStats['ready'] ?? 0);
-        $pipelineData['wp_connected'] = (bool) Database::fetch(
+        $globalProjects = $gpModel->allWithDashboardData($uid);
+    } catch (\Exception $e) {}
+
+    // --- Conta azioni urgenti ---
+    $urgentActionsCount = 0;
+    foreach ($globalProjects as $gp) {
+        if ($gp['primary_action'] && ($gp['primary_action']['severity'] ?? '') !== 'suggestion') {
+            $urgentActionsCount++;
+        }
+    }
+
+    // --- Moduli non usati (per "Scopri cosa puoi fare") ---
+    $usedModuleSlugs = [];
+    foreach ($globalProjects as $gp) {
+        foreach ($gp['active_modules'] as $slug) {
+            $usedModuleSlugs[$slug] = true;
+        }
+    }
+    $allModuleSlugs = array_column($modules, 'slug');
+    $unusedModuleSlugs = array_diff($allModuleSlugs, array_keys($usedModuleSlugs));
+
+    // --- WordPress collegato (user-level, non project-level) ---
+    $wpConnected = false;
+    try {
+        $wpConnected = (bool) Database::fetch(
             "SELECT COUNT(*) as cnt FROM aic_wp_sites WHERE user_id = ? AND is_active = 1", [$uid]
         )['cnt'];
     } catch (\Exception $e) {}
 
-    // --- Widget data per modulo (per smart actions + compact cards) ---
-    $widgetData = [];
-
-    // AI Content
-    try {
-        $aStats = Database::fetch(
-            "SELECT COUNT(*) as total, SUM(CASE WHEN status='ready' THEN 1 ELSE 0 END) as ready, SUM(CASE WHEN status='published' THEN 1 ELSE 0 END) as published FROM aic_articles WHERE user_id = ?", [$uid]
-        );
-        $widgetData['ai-content'] = [
-            'articles_total' => (int)($aStats['total'] ?? 0),
-            'articles_ready' => (int)($aStats['ready'] ?? 0),
-            'articles_published' => (int)($aStats['published'] ?? 0),
-        ];
-    } catch (\Exception $e) { $widgetData['ai-content'] = null; }
-
-    // SEO Tracking
-    try {
-        $stKw = Database::fetch(
-            "SELECT COUNT(k.id) as tracked FROM st_keywords k JOIN st_projects p ON k.project_id = p.id WHERE p.user_id = ?", [$uid]
-        );
-        $gscConnected = (int) Database::fetch(
-            "SELECT SUM(gsc_connected) as cnt FROM st_projects WHERE user_id = ?", [$uid]
-        )['cnt'];
-        $widgetData['seo-tracking'] = [
-            'keywords' => (int)($stKw['tracked'] ?? 0),
-            'gsc_connected' => $gscConnected > 0,
-        ];
-    } catch (\Exception $e) { $widgetData['seo-tracking'] = null; }
-
-    // SEO Audit
-    try {
-        $saLast = Database::fetch(
-            "SELECT health_score, issues_count FROM sa_projects WHERE user_id = ? AND status = 'completed' ORDER BY completed_at DESC LIMIT 1", [$uid]
-        );
-        $saCount = (int) Database::fetch(
-            "SELECT COUNT(*) as cnt FROM sa_projects WHERE user_id = ?", [$uid]
-        )['cnt'];
-        $widgetData['seo-audit'] = [
-            'projects' => $saCount,
-            'health_score' => $saLast ? (int)$saLast['health_score'] : null,
-            'issues' => $saLast ? (int)$saLast['issues_count'] : 0,
-        ];
-    } catch (\Exception $e) { $widgetData['seo-audit'] = null; }
-
-    // Keyword Research
-    try {
-        $krProjects = (int) Database::fetch(
-            "SELECT COUNT(*) as cnt FROM kr_projects WHERE user_id = ?", [$uid]
-        )['cnt'];
-        $widgetData['keyword-research'] = [
-            'projects' => $krProjects,
-        ];
-    } catch (\Exception $e) { $widgetData['keyword-research'] = null; }
-
-    // Ads Analyzer
-    try {
-        $gaTotal = (int) Database::fetch(
-            "SELECT COUNT(*) as cnt FROM ga_projects WHERE user_id = ?", [$uid]
-        )['cnt'];
-        $widgetData['ads-analyzer'] = [
-            'total' => $gaTotal,
-        ];
-    } catch (\Exception $e) { $widgetData['ads-analyzer'] = null; }
-
-    // Internal Links
-    try {
-        $ilProjects = (int) Database::fetch(
-            "SELECT COUNT(*) as cnt FROM il_projects WHERE user_id = ?", [$uid]
-        )['cnt'];
-        $widgetData['internal-links'] = [
-            'projects' => $ilProjects,
-        ];
-    } catch (\Exception $e) { $widgetData['internal-links'] = null; }
-
-    // --- Switch new/active user (derivato dai widget data) ---
-    $projectsCount = 0;
-    foreach ($widgetData as $wData) {
-        if (!$wData) continue;
-        $projectsCount += ($wData['projects'] ?? 0);
-        $projectsCount += ($wData['articles_total'] ?? 0);
-        $projectsCount += ($wData['keywords'] ?? 0);
-        $projectsCount += ($wData['total'] ?? 0);
-    }
-
-    // --- Global Projects ---
-    $globalProjects = [];
-    try {
-        $gpModel = new \Core\Models\GlobalProject();
-        $globalProjects = $gpModel->allWithModuleStats($uid);
-    } catch (\Exception $e) {}
+    // --- Switch new/active user ---
+    $isNewUser = empty($globalProjects);
 
     return View::render('dashboard', [
         'title' => 'Dashboard',
         'user' => $user,
         'modules' => $modules,
+        'credits' => $_credits,
         'usageToday' => $usageToday,
         'usageMonth' => $usageMonth,
-        'projectsCount' => $projectsCount,
-        'pipelineData' => $pipelineData,
-        'widgetData' => $widgetData,
         'globalProjects' => $globalProjects,
+        'urgentActionsCount' => $urgentActionsCount,
+        'unusedModuleSlugs' => $unusedModuleSlugs,
+        'wpConnected' => $wpConnected,
+        'isNewUser' => $isNewUser,
     ]);
 });
 
@@ -859,6 +784,11 @@ Router::post('/projects/{id}/wp-sites/test', function ($id) {
 Router::post('/projects/{id}/wp-sites/update', function ($id) {
     $controller = new Controllers\GlobalProjectController();
     $controller->updateWpSite((int) $id);
+});
+
+Router::post('/wp-sites/test', function () {
+    $controller = new Controllers\GlobalProjectController();
+    $controller->testWpSiteGlobal();
 });
 
 Router::post('/wp-sites/delete', function () {
