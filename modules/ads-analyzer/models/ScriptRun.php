@@ -49,6 +49,28 @@ class ScriptRun
         );
     }
 
+    /**
+     * Get completed campaign runs grouped by period duration
+     */
+    public static function getCompletedCampaignRuns(int $projectId, int $limit = 20): array
+    {
+        return Database::fetchAll(
+            "SELECT r.*, DATEDIFF(r.date_range_end, r.date_range_start) as period_days,
+                    (SELECT e.id FROM ga_campaign_evaluations e
+                     WHERE e.run_id = r.id AND e.status = 'completed'
+                     ORDER BY e.created_at DESC LIMIT 1) as evaluation_id
+             FROM ga_script_runs r
+             WHERE r.project_id = ?
+               AND r.status = 'completed'
+               AND (r.run_type = 'campaign_performance' OR r.run_type = 'both')
+               AND r.date_range_start IS NOT NULL
+               AND r.date_range_end IS NOT NULL
+             ORDER BY r.created_at DESC
+             LIMIT ?",
+            [$projectId, $limit]
+        );
+    }
+
     public static function getRecentByProject(int $projectId, int $limit = 5): array
     {
         return Database::fetchAll(
