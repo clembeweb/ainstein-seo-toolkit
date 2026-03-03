@@ -284,6 +284,18 @@ HTML;
     $evalType = $evaluation['eval_type'] ?? 'manual';
     $metricDeltas = !empty($evaluation['metric_deltas']) ? json_decode($evaluation['metric_deltas'], true) : null;
 
+    // Helper: format KPI value based on metric key
+    function formatKpiValue(string $key, $value): string {
+        $val = (float)$value;
+        return match(true) {
+            str_contains($key, 'cpc') => '€' . number_format($val, 2, ',', '.'),
+            str_contains($key, 'ctr') => number_format($val * 100, 2, ',', '.') . '%',
+            str_contains($key, 'cost') => '€' . number_format($val, 0, ',', '.'),
+            str_contains($key, 'value') => '€' . number_format($val, 0, ',', '.'),
+            default => number_format($val, 0, ',', '.'),
+        };
+    }
+
     $trendConfig = [
         'improving' => ['label' => 'In miglioramento', 'color' => 'text-emerald-600 dark:text-emerald-400', 'bg' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300', 'icon' => 'M5 10l7-7m0 0l7 7m-7-7v18'],
         'stable' => ['label' => 'Stabile', 'color' => 'text-slate-600 dark:text-slate-400', 'bg' => 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300', 'icon' => 'M5 12h14'],
@@ -435,7 +447,7 @@ HTML;
     <!-- KPI CARDS (metric deltas) -->
     <!-- ============================================ -->
     <?php if (!empty($metricDeltas)): ?>
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         <?php foreach ($metricDeltas as $key => $delta): ?>
         <?php
         $deltaPercent = (float)($delta['percent'] ?? 0);
@@ -443,15 +455,15 @@ HTML;
         $isPositive = $deltaPercent > 0;
         $isGood = ($isPositive && $positiveIsGood) || (!$isPositive && !$positiveIsGood);
         $isBad = ($isPositive && !$positiveIsGood) || (!$isPositive && $positiveIsGood);
-        $kpiColor = abs($deltaPercent) < 2 ? 'text-slate-500 dark:text-slate-400' : ($isGood ? 'text-emerald-600 dark:text-emerald-400' : ($isBad ? 'text-red-600 dark:text-red-400' : 'text-slate-500 dark:text-slate-400'));
-        $kpiBg = abs($deltaPercent) < 2 ? 'bg-slate-50 dark:bg-slate-700/30' : ($isGood ? 'bg-emerald-50 dark:bg-emerald-900/10' : ($isBad ? 'bg-red-50 dark:bg-red-900/10' : 'bg-slate-50 dark:bg-slate-700/30'));
+        $kpiColor = abs($deltaPercent) < 0.02 ? 'text-slate-500 dark:text-slate-400' : ($isGood ? 'text-emerald-600 dark:text-emerald-400' : ($isBad ? 'text-red-600 dark:text-red-400' : 'text-slate-500 dark:text-slate-400'));
+        $kpiBg = abs($deltaPercent) < 0.02 ? 'bg-slate-50 dark:bg-slate-700/30' : ($isGood ? 'bg-emerald-50 dark:bg-emerald-900/10' : ($isBad ? 'bg-red-50 dark:bg-red-900/10' : 'bg-slate-50 dark:bg-slate-700/30'));
         $kpiArrow = $deltaPercent > 0 ? '↑' : ($deltaPercent < 0 ? '↓' : '→');
         ?>
         <div class="<?= $kpiBg ?> rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
             <p class="text-xs text-slate-500 dark:text-slate-400 mb-1"><?= e($delta['label'] ?? $key) ?></p>
-            <p class="text-sm font-semibold text-slate-900 dark:text-white"><?= e($delta['current'] ?? '') ?></p>
+            <p class="text-sm font-semibold text-slate-900 dark:text-white"><?= formatKpiValue($key, $delta['current'] ?? 0) ?></p>
             <p class="text-xs font-medium <?= $kpiColor ?> mt-0.5">
-                <?= $kpiArrow ?> <?= $delta['percent_display'] ?? (number_format(abs($deltaPercent), 1) . '%') ?>
+                <?= $kpiArrow ?> <?= isset($delta['percent_display']) ? abs($delta['percent_display']) . '%' : number_format(abs($deltaPercent * 100), 1) . '%' ?>
             </p>
         </div>
         <?php endforeach; ?>
