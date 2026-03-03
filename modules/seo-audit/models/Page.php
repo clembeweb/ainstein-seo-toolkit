@@ -400,4 +400,82 @@ class Page
         ";
         return Database::fetchAll($sql, [$projectId, $thresholdMs]);
     }
+
+    // ──────────────────────────────────────────────────────────
+    // Crawl Budget query methods
+    // ──────────────────────────────────────────────────────────
+
+    /**
+     * Count waste pages for budget score calculation
+     * Waste: status != 2xx OR word_count < 100 OR has_parameters with self-canonical
+     */
+    public function getWastePages(int $projectId, ?int $sessionId = null): int
+    {
+        $sql = "SELECT COUNT(*) as cnt FROM {$this->table} WHERE project_id = ?";
+        $params = [$projectId];
+        if ($sessionId) {
+            $sql .= " AND session_id = ?";
+            $params[] = $sessionId;
+        }
+        $sql .= " AND (status_code < 200 OR status_code >= 300 OR word_count < 100 OR (has_parameters = 1 AND (canonical_url IS NULL OR canonical_url = url)))";
+        $result = Database::fetch($sql, $params);
+        return (int) ($result['cnt'] ?? 0);
+    }
+
+    /**
+     * Get HTTP status code distribution
+     */
+    public function getStatusDistribution(int $projectId, ?int $sessionId = null): array
+    {
+        $sql = "SELECT
+            SUM(CASE WHEN status_code >= 200 AND status_code < 300 THEN 1 ELSE 0 END) as `2xx`,
+            SUM(CASE WHEN status_code >= 300 AND status_code < 400 THEN 1 ELSE 0 END) as `3xx`,
+            SUM(CASE WHEN status_code >= 400 AND status_code < 500 THEN 1 ELSE 0 END) as `4xx`,
+            SUM(CASE WHEN status_code >= 500 THEN 1 ELSE 0 END) as `5xx`
+        FROM {$this->table} WHERE project_id = ?";
+        $params = [$projectId];
+        if ($sessionId) {
+            $sql .= " AND session_id = ?";
+            $params[] = $sessionId;
+        }
+        $result = Database::fetch($sql, $params);
+        return $result ? [
+            '2xx' => (int) ($result['2xx'] ?? 0),
+            '3xx' => (int) ($result['3xx'] ?? 0),
+            '4xx' => (int) ($result['4xx'] ?? 0),
+            '5xx' => (int) ($result['5xx'] ?? 0),
+        ] : ['2xx' => 0, '3xx' => 0, '4xx' => 0, '5xx' => 0];
+    }
+
+    /**
+     * Get pages with longest redirect chains
+     */
+    public function getTopRedirectChains(int $projectId, int $limit = 10, ?int $sessionId = null): array
+    {
+        $sql = "SELECT url, redirect_chain, redirect_hops, redirect_target, status_code
+                FROM {$this->table} WHERE project_id = ? AND redirect_hops > 0";
+        $params = [$projectId];
+        if ($sessionId) {
+            $sql .= " AND session_id = ?";
+            $params[] = $sessionId;
+        }
+        $sql .= " ORDER BY redirect_hops DESC LIMIT " . (int) $limit;
+        return Database::fetchAll($sql, $params) ?: [];
+    }
+
+    /**
+     * Update internal_links_in count from discovered_from field
+     */
+    public function updateInternalLinksIn(int $projectId, ?int $sessionId = null): void
+    {
+        $sessionFilter = $sessionId ? " AND session_id = " . (int) $sessionId : "";
+
+        // Count how many pages have each URL as discovered_from
+        $sql = "UPDATE {$this->table} p SET internal_links_in = (
+            SELECT COUNT(*) FROM (SELECT discovered_from FROM {$this->table} WHERE project_id = ? {$sessionFilter} AND discovered_from IS NOT NULL) sub
+            WHERE sub.discovered_from = p.url
+        ) WHERE p.project_id = ? {$sessionFilter}";
+
+        Database::execute($sql, [$projectId, $projectId]);
+    }
 }
