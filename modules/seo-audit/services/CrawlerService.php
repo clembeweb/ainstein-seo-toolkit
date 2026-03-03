@@ -189,23 +189,6 @@ class CrawlerService
         ];
     }
 
-    /**
-     * Imposta URL sitemap per budget analysis
-     */
-    public function setSitemapUrls(array $urls): self
-    {
-        $this->sitemapUrls = $urls;
-        return $this;
-    }
-
-    /**
-     * Imposta regole robots.txt per budget analysis
-     */
-    public function setRobotsRules(array $rules): self
-    {
-        $this->robotsRules = $rules;
-        return $this;
-    }
 
     /**
      * Scopri URL da scansionare
