@@ -192,6 +192,116 @@
     </div>
 </section>
 
+<!-- Suggerimenti AI -->
+<section class="mb-12">
+    <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+        <svg class="w-5 h-5 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+        Suggerimenti AI (AI Suggester)
+    </h2>
+    <div class="prose dark:prose-invert max-w-none mb-6">
+        <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
+            Genera suggerimenti di link interni utilizzando una pipeline ibrida <strong class="text-slate-900 dark:text-white">deterministica + AI</strong>. Il sistema analizza la struttura del sito, identifica opportunita di linking e produce snippet HTML pronti per l'inserimento, con possibilita di push automatico tramite connettore CMS.
+        </p>
+    </div>
+
+    <!-- Come Funziona -->
+    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Come Funziona</h3>
+    <div class="space-y-4 mb-8">
+        <!-- Fase 1 -->
+        <div class="flex items-start gap-4 p-4 rounded-xl border border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-900/20">
+            <div class="shrink-0 w-8 h-8 rounded-full bg-cyan-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+            <div>
+                <h4 class="font-medium text-cyan-900 dark:text-cyan-200">Fase 1 - Analisi Deterministica <span class="text-xs font-normal text-cyan-700 dark:text-cyan-400">(gratuita)</span></h4>
+                <p class="text-sm text-cyan-800 dark:text-cyan-300 mt-1">Estrae keyword dalle pagine, calcola la similarita tra contenuti, identifica pagine hub e pagine orfane. Genera un punteggio di compatibilita per ogni coppia sorgente-destinazione basato su keyword match, categoria e struttura del sito.</p>
+            </div>
+        </div>
+        <!-- Fase 2 -->
+        <div class="flex items-start gap-4 p-4 rounded-xl border border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-900/20">
+            <div class="shrink-0 w-8 h-8 rounded-full bg-cyan-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+            <div>
+                <h4 class="font-medium text-cyan-900 dark:text-cyan-200">Fase 2 - Validazione AI <span class="text-xs font-normal text-cyan-700 dark:text-cyan-400">(crediti)</span></h4>
+                <p class="text-sm text-cyan-800 dark:text-cyan-300 mt-1">L'AI valida la rilevanza semantica di ogni suggerimento, genera ancore di testo diverse e appropriate, e fornisce un livello di confidenza (alto/medio/basso) per ogni proposta di link.</p>
+            </div>
+        </div>
+        <!-- Fase 3 -->
+        <div class="flex items-start gap-4 p-4 rounded-xl border border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-900/20">
+            <div class="shrink-0 w-8 h-8 rounded-full bg-cyan-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+            <div>
+                <h4 class="font-medium text-cyan-900 dark:text-cyan-200">Fase 3 - Snippet AI <span class="text-xs font-normal text-cyan-700 dark:text-cyan-400">(crediti)</span></h4>
+                <p class="text-sm text-cyan-800 dark:text-cyan-300 mt-1">L'AI individua il punto di inserimento piu naturale nel contenuto della pagina sorgente e genera lo snippet HTML pronto, con anteprima prima/dopo del paragrafo modificato.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Azioni Disponibili -->
+    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Azioni Disponibili</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <!-- Genera Snippet -->
+        <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="shrink-0 w-8 h-8 rounded-lg bg-cyan-50 dark:bg-cyan-900/30 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                    </svg>
+                </div>
+                <h4 class="font-medium text-slate-900 dark:text-white text-sm">Genera Snippet</h4>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Genera lo snippet HTML e visualizza l'anteprima con il paragrafo originale e quello modificato.</p>
+        </div>
+        <!-- Copia Snippet -->
+        <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="shrink-0 w-8 h-8 rounded-lg bg-cyan-50 dark:bg-cyan-900/30 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                    </svg>
+                </div>
+                <h4 class="font-medium text-slate-900 dark:text-white text-sm">Copia Snippet</h4>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Copia lo snippet HTML negli appunti per incollarlo manualmente nel CMS del tuo sito.</p>
+        </div>
+        <!-- Applica via CMS -->
+        <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="shrink-0 w-8 h-8 rounded-lg bg-cyan-50 dark:bg-cyan-900/30 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                </div>
+                <h4 class="font-medium text-slate-900 dark:text-white text-sm">Applica via CMS</h4>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Push automatico del link tramite connettore WordPress configurato nel modulo Content Creator.</p>
+        </div>
+        <!-- Esporta -->
+        <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="shrink-0 w-8 h-8 rounded-lg bg-cyan-50 dark:bg-cyan-900/30 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <h4 class="font-medium text-slate-900 dark:text-white text-sm">Esporta CSV/HTML</h4>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Esporta il report completo dei suggerimenti in formato CSV o HTML per condivisione e analisi.</p>
+        </div>
+    </div>
+
+    <!-- Connettore CMS -->
+    <div class="flex items-start gap-4 p-4 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800">
+        <div class="shrink-0 mt-0.5">
+            <svg class="w-5 h-5 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        </div>
+        <div>
+            <h4 class="font-medium text-cyan-900 dark:text-cyan-200 text-sm">Connettore CMS</h4>
+            <p class="text-sm text-cyan-800 dark:text-cyan-300 mt-1">Per utilizzare l'applicazione automatica dei link, configura un connettore WordPress nel modulo <strong>Content Creator</strong> e selezionalo nelle impostazioni del progetto Internal Links. Il sistema utilizzera le API REST di WordPress per aggiornare direttamente il contenuto delle pagine.</p>
+        </div>
+    </div>
+</section>
+
 <!-- Costi in crediti -->
 <section class="mb-12">
     <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
@@ -213,6 +323,24 @@
                     <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Analisi link (per pagina)</td>
                     <td class="px-4 py-3 text-right">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">1 credito</span>
+                    </td>
+                </tr>
+                <tr class="bg-white dark:bg-slate-800/50">
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Validazione AI suggerimenti (per batch)</td>
+                    <td class="px-4 py-3 text-right">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300">1 credito</span>
+                    </td>
+                </tr>
+                <tr class="bg-white dark:bg-slate-800/50">
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Generazione snippet AI (per suggerimento)</td>
+                    <td class="px-4 py-3 text-right">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300">1 credito</span>
+                    </td>
+                </tr>
+                <tr class="bg-white dark:bg-slate-800/50">
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Analisi deterministica (Fase 1)</td>
+                    <td class="px-4 py-3 text-right">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">Gratuita</span>
                     </td>
                 </tr>
             </tbody>

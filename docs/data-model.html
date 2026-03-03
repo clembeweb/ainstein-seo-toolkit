@@ -1164,7 +1164,7 @@ erDiagram
     <!-- ==================== INTERNAL LINKS ==================== -->
     <section id="il" class="mb-16 print-break">
         <h2 class="text-2xl font-bold text-cyan-400 mb-6">Internal Links (il_)</h2>
-        <p class="text-slate-500 dark:text-slate-400 mb-6">8 tabelle. Analisi struttura link interni, rilevamento pagine orfane, snapshot storici.</p>
+        <p class="text-slate-500 dark:text-slate-400 mb-6">9 tabelle. Analisi struttura link interni, rilevamento pagine orfane, snapshot storici, suggerimenti AI con push CMS.</p>
 
         <div class="mermaid">
 erDiagram
@@ -1172,13 +1172,17 @@ erDiagram
     il_projects ||--|| il_project_stats : "stats"
     il_projects ||--o{ il_scrape_sessions : "sessioni"
     il_projects ||--o{ il_snapshots : "snapshot"
+    il_projects ||--o{ il_link_suggestions : "suggerimenti"
     il_urls ||--o{ il_internal_links : "link uscenti"
     il_snapshots ||--o{ il_snapshot_links : "link salvati"
+    il_link_suggestions }o--|| il_urls : "source_url_id"
+    il_link_suggestions }o--|| il_urls : "destination_url_id"
     il_projects {
         int id PK
         int user_id FK
         varchar name
         varchar base_url
+        int connector_id FK "nullable FK cc_connectors"
     }
     il_urls {
         int id PK
@@ -1194,12 +1198,38 @@ erDiagram
         tinyint ai_relevance_score
         enum ai_juice_flow
     }
+    il_link_suggestions {
+        int id PK
+        int project_id FK
+        int source_url_id FK
+        int destination_url_id FK
+        int keyword_score
+        int category_bonus
+        int total_score
+        enum reason
+        tinyint ai_relevance_score
+        json ai_suggested_anchors
+        text ai_placement_hint
+        enum ai_confidence
+        text ai_anchor_diversity_note
+        datetime ai_analyzed_at
+        text ai_snippet_html
+        text ai_original_paragraph
+        enum ai_insertion_method
+        varchar ai_anchor_used
+        datetime ai_snippet_generated_at
+        enum status
+        datetime applied_at
+        enum applied_method
+        datetime created_at
+        datetime updated_at
+    }
         </div>
 
         <details class="mt-6 bg-white dark:bg-slate-800 rounded-lg border border-cyan-200 dark:border-cyan-900/50 shadow-sm">
             <summary class="p-4 font-semibold text-slate-900 dark:text-white">Tutte le tabelle il_</summary>
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
-                <div><strong class="text-slate-900 dark:text-white">il_projects</strong>: id(PK), user_id(FK), name, base_url, css_selector, html_block_regex, scrape_delay, user_agent, status, created_at</div>
+                <div><strong class="text-slate-900 dark:text-white">il_projects</strong>: id(PK), user_id(FK), name, base_url, css_selector, html_block_regex, scrape_delay, user_agent, connector_id(FK&rarr;cc_connectors nullable), status, created_at</div>
                 <div><strong class="text-slate-900 dark:text-white">il_urls</strong>: id(PK), project_id(FK), url(UK con project), keyword, raw_html, content_html, http_status, scraped_at, status(pending/scraping/scraped/error/no_content), error_message</div>
                 <div><strong class="text-slate-900 dark:text-white">il_internal_links</strong>: id(PK), project_id(FK), source_url_id(FK&rarr;il_urls), destination_url, anchor_text, anchor_text_clean, link_position, source_block, is_internal, is_valid, ai_relevance_score(1-10), ai_anchor_quality(1-10), ai_juice_flow(optimal/good/weak/poor/orphan), ai_notes, ai_suggestions, analyzed_at</div>
                 <div><strong class="text-slate-900 dark:text-white">il_scrape_sessions</strong>: id(PK), project_id(FK), status(running/paused/completed/stopped), mode(pending/all), total_urls, processed_urls, error_count</div>
@@ -1207,6 +1237,7 @@ erDiagram
                 <div><strong class="text-slate-900 dark:text-white">il_snapshot_links</strong>: id(PK), snapshot_id(FK), source_url, destination_url, anchor_text, is_internal, ai_relevance_score, ai_juice_flow</div>
                 <div><strong class="text-slate-900 dark:text-white">il_project_stats</strong>: project_id(PK FK), total_urls, scraped/error_urls, total/internal/external/analyzed_links, avg_relevance_score, orphan_pages</div>
                 <div><strong class="text-slate-900 dark:text-white">il_activity_logs</strong>: id(PK), project_id(FK), user_id(FK), action, details(JSON)</div>
+                <div><strong class="text-slate-900 dark:text-white">il_link_suggestions</strong>: id(PK), project_id(FK), source_url_id(FK&rarr;il_urls), destination_url_id(FK&rarr;il_urls), keyword_score, category_bonus, total_score, reason(keyword_match/category_match/orphan_rescue/hub_boost/content_gap), ai_relevance_score(1-10), ai_suggested_anchors(JSON), ai_placement_hint, ai_confidence(high/medium/low), ai_anchor_diversity_note, ai_analyzed_at, ai_snippet_html, ai_original_paragraph, ai_insertion_method(append_paragraph/inline_link/new_paragraph), ai_anchor_used, ai_snippet_generated_at, status(pending/ai_validated/snippet_ready/applied/dismissed), applied_at, applied_method(manual/cms_push), created_at, updated_at</div>
             </div>
         </details>
     </section>
