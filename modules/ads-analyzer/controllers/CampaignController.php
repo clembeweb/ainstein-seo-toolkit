@@ -514,6 +514,44 @@ class CampaignController
 
         $aiResponse = json_decode($evaluation['ai_response'] ?? '{}', true) ?: [];
 
+        // Run info for this evaluation
+        $currentRun = null;
+        if (!empty($evaluation['run_id'])) {
+            $currentRun = ScriptRun::find($evaluation['run_id']);
+        }
+
+        // Available runs for period selector
+        $availableRuns = ScriptRun::getCompletedCampaignRuns($projectId, 30);
+        $periods = ['7' => null, '14' => null, '30' => null];
+        $currentPeriod = null;
+
+        foreach ($availableRuns as $run) {
+            $days = (int)($run['period_days'] ?? 0);
+            $bucket = null;
+            if ($days >= 5 && $days <= 9) $bucket = '7';
+            elseif ($days >= 12 && $days <= 16) $bucket = '14';
+            elseif ($days >= 25 && $days <= 35) $bucket = '30';
+
+            if ($bucket && $periods[$bucket] === null) {
+                $periods[$bucket] = [
+                    'available' => true,
+                    'run_id' => (int)$run['id'],
+                    'has_evaluation' => !empty($run['evaluation_id']),
+                    'evaluation_id' => $run['evaluation_id'] ? (int)$run['evaluation_id'] : null,
+                ];
+            }
+
+            if ($currentRun && (int)$run['id'] === (int)$currentRun['id'] && $bucket) {
+                $currentPeriod = $bucket;
+            }
+        }
+
+        foreach ($periods as $key => &$val) {
+            if ($val === null) {
+                $val = ['available' => false, 'run_id' => null, 'has_evaluation' => false, 'evaluation_id' => null];
+            }
+        }
+
         return View::render('ads-analyzer/campaigns/evaluation', [
             'title' => 'Valutazione Campagne - ' . $project['name'],
             'user' => $user,
@@ -523,6 +561,9 @@ class CampaignController
             'aiResponse' => $aiResponse,
             'generateUrl' => url("/ads-analyzer/projects/{$projectId}/campaigns/evaluations/{$evalId}/generate"),
             'access_role' => $project['access_role'] ?? 'owner',
+            'currentRun' => $currentRun,
+            'periods' => $periods,
+            'currentPeriod' => $currentPeriod,
         ]);
     }
 
