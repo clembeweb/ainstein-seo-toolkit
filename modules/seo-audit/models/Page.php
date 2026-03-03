@@ -401,9 +401,9 @@ class Page
         return Database::fetchAll($sql, [$projectId, $thresholdMs]);
     }
 
-    // ============================================
-    // CRAWL BUDGET QUERY METHODS
-    // ============================================
+    // ──────────────────────────────────────────────────────────
+    // Crawl Budget query methods
+    // ──────────────────────────────────────────────────────────
 
     /**
      * Count waste pages for budget score calculation
@@ -439,7 +439,12 @@ class Page
             $params[] = $sessionId;
         }
         $result = Database::fetch($sql, $params);
-        return $result ?: ['2xx' => 0, '3xx' => 0, '4xx' => 0, '5xx' => 0];
+        return $result ? [
+            '2xx' => (int) ($result['2xx'] ?? 0),
+            '3xx' => (int) ($result['3xx'] ?? 0),
+            '4xx' => (int) ($result['4xx'] ?? 0),
+            '5xx' => (int) ($result['5xx'] ?? 0),
+        ] : ['2xx' => 0, '3xx' => 0, '4xx' => 0, '5xx' => 0];
     }
 
     /**
@@ -454,60 +459,23 @@ class Page
             $sql .= " AND session_id = ?";
             $params[] = $sessionId;
         }
-        $sql .= " ORDER BY redirect_hops DESC LIMIT " . (int)$limit;
+        $sql .= " ORDER BY redirect_hops DESC LIMIT " . (int) $limit;
         return Database::fetchAll($sql, $params) ?: [];
     }
 
     /**
-     * Recalculate internal_links_in count from discovered_from field
+     * Update internal_links_in count from discovered_from field
      */
     public function updateInternalLinksIn(int $projectId, ?int $sessionId = null): void
     {
-        $sql = "UPDATE {$this->table} p
-                SET internal_links_in = (
-                    SELECT COUNT(*) FROM (
-                        SELECT discovered_from FROM {$this->table}
-                        WHERE project_id = ? AND discovered_from IS NOT NULL
-                        " . ($sessionId ? "AND session_id = " . (int)$sessionId : "") . "
-                    ) sub WHERE sub.discovered_from = p.url
-                )
-                WHERE p.project_id = ?" . ($sessionId ? " AND p.session_id = " . (int)$sessionId : "");
+        $sessionFilter = $sessionId ? " AND session_id = " . (int) $sessionId : "";
+
+        // Count how many pages have each URL as discovered_from
+        $sql = "UPDATE {$this->table} p SET internal_links_in = (
+            SELECT COUNT(*) FROM (SELECT discovered_from FROM {$this->table} WHERE project_id = ? {$sessionFilter} AND discovered_from IS NOT NULL) sub
+            WHERE sub.discovered_from = p.url
+        ) WHERE p.project_id = ? {$sessionFilter}";
+
         Database::execute($sql, [$projectId, $projectId]);
-    }
-
-    /**
-     * Get budget issue pages by category with pagination
-     */
-    public function getBudgetIssuePages(int $projectId, string $category, int $page = 1, int $perPage = 50, ?int $sessionId = null): array
-    {
-        $offset = ($page - 1) * $perPage;
-
-        $where = "i.project_id = ? AND i.category = ?";
-        $params = [$projectId, $category];
-        if ($sessionId) {
-            $where .= " AND i.session_id = ?";
-            $params[] = $sessionId;
-        }
-
-        $countSql = "SELECT COUNT(DISTINCT i.id) as total FROM sa_issues i WHERE {$where}";
-        $countResult = Database::fetch($countSql, $params);
-        $total = (int) ($countResult['total'] ?? 0);
-
-        $sql = "SELECT i.*, p.url, p.status_code, p.redirect_hops, p.redirect_chain
-                FROM sa_issues i
-                LEFT JOIN {$this->table} p ON i.page_id = p.id
-                WHERE {$where}
-                ORDER BY FIELD(i.severity, 'critical', 'warning', 'notice'), i.id
-                LIMIT ? OFFSET ?";
-        $params[] = $perPage;
-        $params[] = $offset;
-
-        return [
-            'data' => Database::fetchAll($sql, $params) ?: [],
-            'total' => $total,
-            'current_page' => $page,
-            'per_page' => $perPage,
-            'last_page' => (int) ceil($total / $perPage) ?: 1,
-        ];
     }
 }

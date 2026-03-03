@@ -55,7 +55,7 @@
             <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">2</div>
             <div>
                 <h3 class="font-medium text-slate-900 dark:text-white">Configura lo script Google Ads</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Copia lo script generato automaticamente e incollalo nel tuo account Google Ads (Strumenti > Script). Eseguilo per inviare i dati delle campagne ad Ainstein.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Copia lo script v2.0 generato automaticamente e incollalo nel tuo account Google Ads (Strumenti > Script). Ogni esecuzione raccoglie automaticamente dati per 3 periodi (7, 14 e 30 giorni).</p>
             </div>
         </div>
         <!-- Step 3 -->
@@ -96,7 +96,7 @@
                 </div>
                 <h3 class="font-medium text-slate-900 dark:text-white text-sm">Google Ads Script</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Integrazione automatica per ricevere dati aggiornati sulle campagne senza intervento manuale.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Script v2.0 con raccolta automatica multi-periodo: ogni esecuzione invia i dati per 7, 14 e 30 giorni, abilitando analisi su finestre temporali diverse.</p>
         </div>
         <!-- Valutazione campagne -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -108,7 +108,7 @@
                 </div>
                 <h3 class="font-medium text-slate-900 dark:text-white text-sm">Valutazione campagne AI</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Analisi delle performance con raccomandazioni AI su copy, budget, landing pages e strategie di ottimizzazione. Include analisi automatica delle landing page e report esportabile in PDF.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Dashboard a tab con panoramica KPI, dettaglio campagne, estensioni, landing page e azioni. Selettore periodo (7g/14g/30g) per confrontare performance su finestre temporali diverse. Report esportabile in PDF.</p>
         </div>
         <!-- Genera con AI -->
         <div class="p-4 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20">
@@ -132,7 +132,7 @@
                 </div>
                 <h3 class="font-medium text-slate-900 dark:text-white text-sm">Analisi keyword negative</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Identifica i termini di ricerca irrilevanti dai dati raccolti dallo script, classificati per categoria e priorita con AI.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Identifica i termini di ricerca irrilevanti dai dati raccolti dallo script, classificati per categoria e priorita con AI. Seleziona il periodo (7g/14g/30g) per analizzare solo i termini recenti ed escludere quelli gia negati.</p>
         </div>
         <!-- Contesti business salvati -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -311,8 +311,8 @@
                 </svg>
             </div>
             <div>
-                <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Salva i contesti business</h3>
-                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Se gestisci piu campagne per lo stesso cliente, salva il contesto business per riutilizzarlo nelle analisi keyword negative successive senza doverlo reinserire.</p>
+                <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Usa il periodo 7g per keyword negative</h3>
+                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Dopo aver aggiunto keyword negative, seleziona il run a 7 giorni nell'analisi successiva: vedrai solo i termini di ricerca recenti, senza quelli gia negati che inquinano i risultati a 30 giorni.</p>
             </div>
         </div>
     </div>

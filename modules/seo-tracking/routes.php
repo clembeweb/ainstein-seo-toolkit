@@ -754,6 +754,30 @@ Router::get('/seo-tracking/project/{id}/api/tracked-keywords', function ($id) {
     return (new ApiController())->trackedKeywords((int) $id);
 });
 
+// Visibility Stats (dashboard KPIs)
+Router::get('/seo-tracking/api/project/{id}/visibility-stats', function ($id) {
+    Middleware::auth();
+    return (new ApiController())->visibilityStats((int) $id);
+});
+
+// Distribution History (stacked bar chart)
+Router::get('/seo-tracking/api/project/{id}/distribution-history', function ($id) {
+    Middleware::auth();
+    return (new ApiController())->distributionHistory((int) $id);
+});
+
+// Visibility Trend (line chart)
+Router::get('/seo-tracking/api/project/{id}/visibility-trend', function ($id) {
+    Middleware::auth();
+    return (new ApiController())->visibilityTrend((int) $id);
+});
+
+// Keywords Compare (date range comparison table)
+Router::get('/seo-tracking/api/project/{id}/keywords-compare', function ($id) {
+    Middleware::auth();
+    return (new ApiController())->keywordsCompare((int) $id);
+});
+
 // =============================================
 // CRON: Gestiti da CLI dispatcher (non serve HTTP)
 // Vedi: cron/gsc-sync-dispatcher.php

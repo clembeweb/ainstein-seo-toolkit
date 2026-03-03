@@ -15,10 +15,10 @@ $basePath = "/seo-tracking/project/{$projectId}";
 // Definizione tabs
 // Nota: "Verifica SERP" e "Trend" rimosse - funzionalità integrate in Keywords
 $tabs = [
-    'overview' => ['path' => '', 'label' => 'Overview', 'icon' => 'chart-bar'],
-    'keywords' => ['path' => '/keywords', 'label' => 'Keywords', 'icon' => 'key'],
-    'urls' => ['path' => '/urls', 'label' => 'URLs', 'icon' => 'link'],
-    'groups' => ['path' => '/groups', 'label' => 'Gruppi', 'icon' => 'folder'],
+    'overview' => ['path' => '', 'label' => 'Landscape', 'icon' => 'chart-bar'],
+    'keywords' => ['path' => '/keywords', 'label' => 'Overview', 'icon' => 'key'],
+    'urls' => ['path' => '/urls', 'label' => 'Pages', 'icon' => 'link'],
+    'groups' => ['path' => '/groups', 'label' => 'Tags', 'icon' => 'folder'],
     'history' => ['path' => '/rank-check/history', 'label' => 'Storico', 'icon' => 'clock'],
     'quick-wins' => ['path' => '/quick-wins', 'label' => 'Quick Wins', 'icon' => 'zap'],
     'page-analyzer' => ['path' => '/page-analyzer', 'label' => 'Page Analyzer', 'icon' => 'document-search'],

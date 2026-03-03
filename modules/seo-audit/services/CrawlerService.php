@@ -190,6 +190,24 @@ class CrawlerService
     }
 
     /**
+     * Imposta URL sitemap per budget analysis
+     */
+    public function setSitemapUrls(array $urls): self
+    {
+        $this->sitemapUrls = $urls;
+        return $this;
+    }
+
+    /**
+     * Imposta regole robots.txt per budget analysis
+     */
+    public function setRobotsRules(array $rules): self
+    {
+        $this->robotsRules = $rules;
+        return $this;
+    }
+
+    /**
      * Scopri URL da scansionare
      * Prima controlla se ci sono URL già importate (da import page)
      * Altrimenti usa spider ricorsivo dalla homepage
@@ -444,7 +462,7 @@ class CrawlerService
     /**
      * Compute crawl budget metadata for a page
      */
-    private function computeBudgetMetadata(string $url): array
+    private function computeBudgetMetadata(string $url, ?string $parentUrl = null, int $parentDepth = 0): array
     {
         $parsedUrl = parse_url($url);
         $hasParameters = !empty($parsedUrl['query']);
@@ -454,6 +472,8 @@ class CrawlerService
         $inRobotsAllowed = empty($this->robotsRules) ? null : ($robotsParser->isAllowed($url, $this->robotsRules) ? 1 : 0);
 
         return [
+            'depth' => $parentUrl ? $parentDepth + 1 : 0,
+            'discovered_from' => $parentUrl,
             'has_parameters' => $hasParameters ? 1 : 0,
             'in_sitemap' => $inSitemap ? 1 : 0,
             'in_robots_allowed' => $inRobotsAllowed,
@@ -563,7 +583,7 @@ class CrawlerService
         $html = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $html);
         $data['html_content'] = $html;
 
-        // Crawl budget data — redirect chain tracing + metadata
+        // Crawl budget data
         $redirectData = $this->traceRedirectChain($url);
         $budgetMeta = $this->computeBudgetMetadata($url);
 
@@ -571,6 +591,8 @@ class CrawlerService
         $data['redirect_hops'] = $redirectData['hops'];
         $data['redirect_target'] = $redirectData['target'];
         $data['is_redirect_loop'] = $redirectData['is_loop'] ? 1 : 0;
+        $data['depth'] = $budgetMeta['depth'];
+        $data['discovered_from'] = $budgetMeta['discovered_from'];
         $data['has_parameters'] = $budgetMeta['has_parameters'];
         $data['in_sitemap'] = $budgetMeta['in_sitemap'];
         $data['in_robots_allowed'] = $budgetMeta['in_robots_allowed'];
