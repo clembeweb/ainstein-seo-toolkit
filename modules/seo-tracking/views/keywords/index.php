@@ -148,10 +148,33 @@
                 </option>
                 <?php endforeach; ?>
             </select>
+            <select name="intent" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm">
+                <option value="">Tutti gli intenti</option>
+                <option value="informational" <?= ($filters['intent'] ?? '') === 'informational' ? 'selected' : '' ?>>Informational</option>
+                <option value="navigational" <?= ($filters['intent'] ?? '') === 'navigational' ? 'selected' : '' ?>>Navigational</option>
+                <option value="commercial" <?= ($filters['intent'] ?? '') === 'commercial' ? 'selected' : '' ?>>Commercial</option>
+                <option value="transactional" <?= ($filters['intent'] ?? '') === 'transactional' ? 'selected' : '' ?>>Transactional</option>
+            </select>
+            <select name="position_range" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm">
+                <option value="">Tutte le posizioni</option>
+                <option value="top3" <?= ($filters['position_range'] ?? '') === 'top3' ? 'selected' : '' ?>>Top 3</option>
+                <option value="top10" <?= ($filters['position_range'] ?? '') === 'top10' ? 'selected' : '' ?>>Top 10</option>
+                <option value="top20" <?= ($filters['position_range'] ?? '') === 'top20' ? 'selected' : '' ?>>Top 20</option>
+                <option value="top50" <?= ($filters['position_range'] ?? '') === 'top50' ? 'selected' : '' ?>>Top 50</option>
+                <option value="51-100" <?= ($filters['position_range'] ?? '') === '51-100' ? 'selected' : '' ?>>51-100</option>
+                <option value="100+" <?= ($filters['position_range'] ?? '') === '100+' ? 'selected' : '' ?>>100+</option>
+            </select>
+            <select name="volume_range" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm">
+                <option value="">Tutti i volumi</option>
+                <option value="0-100" <?= ($filters['volume_range'] ?? '') === '0-100' ? 'selected' : '' ?>>0-100</option>
+                <option value="100-1000" <?= ($filters['volume_range'] ?? '') === '100-1000' ? 'selected' : '' ?>>100-1K</option>
+                <option value="1000-10000" <?= ($filters['volume_range'] ?? '') === '1000-10000' ? 'selected' : '' ?>>1K-10K</option>
+                <option value="10000+" <?= ($filters['volume_range'] ?? '') === '10000+' ? 'selected' : '' ?>>10K+</option>
+            </select>
             <button type="submit" class="px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm">
                 Filtra
             </button>
-            <?php if ($filters['search'] || $filters['is_tracked'] !== null || $filters['group_name'] || $filters['position_max']): ?>
+            <?php if ($filters['search'] || $filters['is_tracked'] !== null || $filters['group_name'] || $filters['position_max'] || ($filters['intent'] ?? null) || ($filters['position_range'] ?? null) || ($filters['volume_range'] ?? null)): ?>
             <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords') ?>" class="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300">
                 Cancella filtri
             </a>
@@ -309,6 +332,23 @@
         <?php endif; ?>
     </div>
 
+    <!-- Visibility Trend Chart -->
+    <?php if (!empty($visibilityTrend)): ?>
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6" x-data="{ chartTab: 'visibility' }">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Trend</h2>
+            <div class="flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <button @click="chartTab = 'visibility'; updateTrendChart('visibility')" :class="chartTab === 'visibility' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'" class="px-3 py-1.5 text-xs font-medium transition-colors">Visibility %</button>
+                <button @click="chartTab = 'traffic'; updateTrendChart('traffic')" :class="chartTab === 'traffic' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'" class="px-3 py-1.5 text-xs font-medium transition-colors border-l border-slate-200 dark:border-slate-700">Est. Traffic</button>
+                <button @click="chartTab = 'position'; updateTrendChart('position')" :class="chartTab === 'position' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'" class="px-3 py-1.5 text-xs font-medium transition-colors border-l border-slate-200 dark:border-slate-700">Pos. Media</button>
+            </div>
+        </div>
+        <div class="h-56">
+            <canvas id="visibilityTrendChart"></canvas>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Results info -->
     <?php if (!empty($keywords)): ?>
     <div class="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
@@ -376,6 +416,8 @@
                             <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">CPC</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Comp.</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase" title="Intento di ricerca">Intento</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Visibility %</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Est. Traffic</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase" title="Stagionalit&agrave;">Stagion.</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Aggiornato</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Azioni</th>
@@ -540,9 +582,9 @@
                                     $intentBadges = [];
                                     foreach ($intents as $i) {
                                         $badge = match($i) {
-                                            'commercial' => ['C', 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300', 'Commercial'],
                                             'informational' => ['I', 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300', 'Informational'],
-                                            'navigational' => ['N', 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300', 'Navigational'],
+                                            'navigational' => ['N', 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300', 'Navigational'],
+                                            'commercial' => ['C', 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300', 'Commercial'],
                                             'transactional' => ['T', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300', 'Transactional'],
                                             default => null
                                         };
@@ -558,6 +600,20 @@
                                 else:
                                 ?>
                                     <span class="text-slate-400 dark:text-slate-500">-</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-4 py-3 text-right text-sm">
+                                <?php if (($kw['visibility'] ?? 0) > 0): ?>
+                                <span class="text-slate-900 dark:text-white"><?= number_format($kw['visibility'], 1) ?>%</span>
+                                <?php else: ?>
+                                <span class="text-slate-400 dark:text-slate-500">-</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-4 py-3 text-right text-sm">
+                                <?php if (($kw['est_traffic'] ?? 0) > 0): ?>
+                                <span class="text-slate-900 dark:text-white"><?= number_format($kw['est_traffic'], 1) ?></span>
+                                <?php else: ?>
+                                <span class="text-slate-400 dark:text-slate-500">-</span>
                                 <?php endif; ?>
                             </td>
                             <td class="px-4 py-3 text-center">
@@ -613,6 +669,70 @@
         </div>
     </form>
 </div>
+
+<!-- Chart.js for Visibility Trend -->
+<?php if (!empty($visibilityTrend)): ?>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function() {
+    const isDark = document.documentElement.classList.contains('dark');
+    const gridColor = isDark ? 'rgba(148, 163, 184, 0.1)' : 'rgba(148, 163, 184, 0.2)';
+    const textColor = isDark ? '#94a3b8' : '#64748b';
+    const trendData = <?= json_encode($visibilityTrend) ?>;
+
+    Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
+    Chart.defaults.color = textColor;
+
+    const labels = trendData.map(d => {
+        const date = new Date(d.date);
+        return date.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' });
+    });
+
+    const datasets = {
+        visibility: { data: trendData.map(d => d.visibility), label: 'Visibility %', color: '#3b82f6', reverse: false },
+        traffic: { data: trendData.map(d => d.est_traffic), label: 'Est. Traffic', color: '#10b981', reverse: false },
+        position: { data: trendData.map(d => d.avg_position), label: 'Pos. Media', color: '#f59e0b', reverse: true },
+    };
+
+    const ctx = document.getElementById('visibilityTrendChart');
+    let chart = null;
+
+    function createChart(type) {
+        if (chart) chart.destroy();
+        const ds = datasets[type];
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: ds.label,
+                    data: ds.data,
+                    borderColor: ds.color,
+                    backgroundColor: ds.color + '1a',
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 2,
+                    pointHoverRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { intersect: false, mode: 'index' },
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 15 } },
+                    y: { grid: { color: gridColor }, reverse: ds.reverse, beginAtZero: !ds.reverse }
+                }
+            }
+        });
+    }
+
+    createChart('visibility');
+    window.updateTrendChart = createChart;
+})();
+</script>
+<?php endif; ?>
 
 <script>
 // ============================================================
