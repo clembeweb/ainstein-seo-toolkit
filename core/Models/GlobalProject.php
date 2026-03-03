@@ -892,13 +892,22 @@ class GlobalProject
                     return (int) Database::lastInsertId();
 
                 case 'ads-analyzer':
-                    return Database::insert('ga_projects', [
+                    $gaType = $extraData['type'] ?? 'campaign';
+                    $insertData = [
                         'user_id' => $userId,
                         'global_project_id' => $globalProjectId,
                         'name' => $name,
-                        'type' => $extraData['type'] ?? 'campaign',
+                        'type' => $gaType,
                         'status' => 'draft',
-                    ]);
+                    ];
+                    // Campaign Creator: default campaign_type_gads e landing_url
+                    if ($gaType === 'campaign-creator') {
+                        $insertData['campaign_type_gads'] = $extraData['campaign_type_gads'] ?? 'search';
+                        if (!empty($domain)) {
+                            $insertData['landing_url'] = $domain;
+                        }
+                    }
+                    return Database::insert('ga_projects', $insertData);
 
                 case 'internal-links':
                     $projectId = Database::insert('il_projects', [
