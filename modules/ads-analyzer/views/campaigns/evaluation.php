@@ -1,12 +1,15 @@
 <?php
 /**
- * Valutazione AI Campagne - Risultati
+ * Valutazione AI Campagne - Risultati (Tabbed Dashboard)
  *
  * Variables:
  * - $project: project data (id, name)
- * - $evaluation: evaluation record (id, name, status, campaigns_evaluated, ads_evaluated, credits_used, created_at, completed_at)
+ * - $evaluation: evaluation record
  * - $aiResponse: decoded AI response array
  * - $user, $modules
+ * - $currentRun: current run data (nullable)
+ * - $periods: period selector data ['7' => [...], '14' => [...], '30' => [...]]
+ * - $currentPeriod: current period bucket ('7', '14', '30' or null)
  */
 
 $canEdit = ($access_role ?? 'owner') !== 'viewer';
@@ -112,7 +115,7 @@ HTML;
 
 <?php $currentPage = 'evaluations'; include __DIR__ . '/../partials/project-nav.php'; ?>
 
-<div class="space-y-6" x-data="evaluationFixes()">
+<div class="space-y-6" x-data="evaluationDashboard()">
 
     <?php if ($isError): ?>
     <!-- Error State -->
@@ -262,7 +265,7 @@ HTML;
 
     <?php else: ?>
     <!-- ============================================ -->
-    <!-- RESULTS -->
+    <!-- TABBED DASHBOARD RESULTS -->
     <!-- ============================================ -->
 
     <?php
@@ -288,11 +291,40 @@ HTML;
         'mixed' => ['label' => 'Misto', 'color' => 'text-amber-600 dark:text-amber-400', 'bg' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300', 'icon' => 'M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4'],
     ];
     $trendConf = $trendConfig[$trend] ?? null;
+
+    // Count issues by severity across all campaigns
+    $totalHighIssues = 0;
+    $totalMediumIssues = 0;
+    $totalLowIssues = 0;
+    foreach ($campaigns as $c) {
+        foreach ($c['issues'] ?? [] as $iss) {
+            $sev = $iss['severity'] ?? 'low';
+            if ($sev === 'high') $totalHighIssues++;
+            elseif ($sev === 'medium') $totalMediumIssues++;
+            else $totalLowIssues++;
+        }
+    }
+
+    // Severity classes reused
+    $severityClasses = [
+        'high' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
+        'medium' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
+        'low' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
+    ];
+    $severityLabels = ['high' => 'Alta', 'medium' => 'Media', 'low' => 'Bassa'];
+    $priorityClasses = $severityClasses;
+    $priorityLabels = $severityLabels;
+
+    // Period selector data
+    $periodsJson = json_encode($periods ?? []);
+    $currentPeriodStr = $currentPeriod ?? '30';
     ?>
 
-    <!-- Overall Score Card -->
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 md:p-8">
-        <div class="flex flex-col md:flex-row md:items-center gap-6">
+    <!-- ============================================ -->
+    <!-- HEADER: Score + Summary + Period + Actions -->
+    <!-- ============================================ -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div class="flex flex-col md:flex-row md:items-start gap-6">
             <!-- Score Circle -->
             <div class="flex-shrink-0 flex justify-center">
                 <div class="relative">
@@ -309,9 +341,9 @@ HTML;
                 </div>
             </div>
 
-            <!-- Summary & Metadata -->
+            <!-- Summary & Meta -->
             <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-2">
+                <div class="flex items-center gap-2 mb-2 flex-wrap">
                     <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Punteggio Complessivo</h2>
                     <?php if ($evalType === 'auto'): ?>
                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
@@ -320,565 +352,579 @@ HTML;
                     </span>
                     <?php endif; ?>
                     <?php if ($trendConf): ?>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $trendConf['bg'] ?>">
-                        <?= $trendConf['label'] ?>
-                    </span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $trendConf['bg'] ?>"><?= $trendConf['label'] ?></span>
+                    <?php endif; ?>
+                    <?php if ($totalHighIssues > 0): ?>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"><?= $totalHighIssues ?> critici</span>
                     <?php endif; ?>
                 </div>
                 <?php if ($summary): ?>
                 <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed"><?= e($summary) ?></p>
                 <?php endif; ?>
 
-                <div class="mt-4 flex flex-wrap gap-4 text-sm text-slate-500 dark:text-slate-400">
-                    <div class="flex items-center gap-1.5">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                        <?= date('d/m/Y H:i', strtotime($evaluation['created_at'])) ?>
-                    </div>
-                    <div class="flex items-center gap-1.5">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
-                        </svg>
-                        <?= (int)($evaluation['campaigns_evaluated'] ?? 0) ?> campagne valutate
-                    </div>
+                <!-- Metadata row -->
+                <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+                    <span><?= date('d/m/Y H:i', strtotime($evaluation['created_at'])) ?></span>
+                    <span><?= (int)($evaluation['campaigns_evaluated'] ?? 0) ?> campagne</span>
                     <?php if (!empty($evaluation['ad_groups_evaluated'])): ?>
-                    <div class="flex items-center gap-1.5">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                        </svg>
-                        <?= (int)$evaluation['ad_groups_evaluated'] ?> gruppi annunci
-                    </div>
-                    <?php endif; ?>
-                    <?php if (!empty($evaluation['ads_evaluated'])): ?>
-                    <div class="flex items-center gap-1.5">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        <?= (int)$evaluation['ads_evaluated'] ?> annunci
-                    </div>
-                    <?php endif; ?>
-                    <?php if (!empty($evaluation['keywords_evaluated'])): ?>
-                    <div class="flex items-center gap-1.5">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
-                        </svg>
-                        <?= (int)$evaluation['keywords_evaluated'] ?> keyword
-                    </div>
+                    <span><?= (int)$evaluation['ad_groups_evaluated'] ?> gruppi</span>
                     <?php endif; ?>
                     <?php if (!empty($evaluation['landing_pages_analyzed'])): ?>
-                    <div class="flex items-center gap-1.5">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <?= (int)$evaluation['landing_pages_analyzed'] ?> landing analizzate
-                    </div>
+                    <span><?= (int)$evaluation['landing_pages_analyzed'] ?> landing</span>
                     <?php endif; ?>
                     <?php if (!empty($evaluation['credits_used'])): ?>
-                    <div class="flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.736 6.979C9.208 6.193 9.696 6 10 6c.304 0 .792.193 1.264.979a1 1 0 001.715-1.029C12.279 4.784 11.232 4 10 4s-2.279.784-2.979 1.95c-.285.475-.507 1-.67 1.55H6a1 1 0 000 2h.013a9.358 9.358 0 000 1H6a1 1 0 100 2h.351c.163.55.385 1.075.67 1.55C7.721 15.216 8.768 16 10 16s2.279-.784 2.979-1.95a1 1 0 10-1.715-1.029c-.472.786-.96.979-1.264.979-.304 0-.792-.193-1.264-.979a4.265 4.265 0 01-.264-.521H10a1 1 0 100-2H8.017a7.36 7.36 0 010-1H10a1 1 0 100-2H8.472a4.265 4.265 0 01.264-.521z"/>
-                        </svg>
-                        <?= number_format((float)$evaluation['credits_used'], 1) ?> crediti
-                    </div>
+                    <span><?= number_format((float)$evaluation['credits_used'], 1) ?> crediti</span>
                     <?php endif; ?>
-                    <?php if ($hasResults): ?>
+                </div>
+            </div>
+
+            <!-- Actions & Period Selector -->
+            <div class="flex-shrink-0 flex flex-col items-end gap-3">
+                <!-- Period Selector -->
+                <?php if (!empty($periods)): ?>
+                <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
+                    <?php foreach (['7' => '7g', '14' => '14g', '30' => '30g'] as $pKey => $pLabel): ?>
+                    <?php
+                    $pData = $periods[$pKey] ?? ['available' => false];
+                    $isActive = ($currentPeriodStr === $pKey);
+                    $isAvailable = $pData['available'] ?? false;
+                    ?>
+                    <?php if ($isAvailable && !$isActive): ?>
+                    <?php
+                    $navUrl = $pData['has_evaluation'] && $pData['evaluation_id']
+                        ? url("/ads-analyzer/projects/{$project['id']}/campaigns/evaluations/{$pData['evaluation_id']}")
+                        : null;
+                    ?>
+                    <?php if ($navUrl): ?>
+                    <a href="<?= $navUrl ?>" class="px-3 py-1.5 text-xs font-medium rounded-md text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-600 transition-colors"><?= $pLabel ?></a>
+                    <?php else: ?>
+                    <span class="px-3 py-1.5 text-xs font-medium rounded-md text-slate-400 dark:text-slate-500 cursor-not-allowed" title="Nessuna analisi per questo periodo"><?= $pLabel ?></span>
+                    <?php endif; ?>
+                    <?php elseif ($isActive): ?>
+                    <span class="px-3 py-1.5 text-xs font-medium rounded-md bg-white dark:bg-slate-600 text-rose-700 dark:text-rose-300 shadow-sm"><?= $pLabel ?></span>
+                    <?php else: ?>
+                    <span class="px-3 py-1.5 text-xs font-medium rounded-md text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-50" title="Nessuna run disponibile"><?= $pLabel ?></span>
+                    <?php endif; ?>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+
+                <!-- Action buttons -->
+                <div class="flex items-center gap-2">
                     <a href="<?= url("/ads-analyzer/projects/{$project['id']}/campaigns/evaluations/{$evaluation['id']}/export-pdf") ?>"
-                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 dark:text-rose-300 dark:bg-rose-900/30 dark:hover:bg-rose-900/50 transition-colors"
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 dark:text-rose-300 dark:bg-rose-900/30 dark:hover:bg-rose-900/50 transition-colors"
                        target="_blank">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        Esporta PDF
+                        PDF
                     </a>
-                    <?php endif; ?>
+                    <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns') ?>"
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        Indietro
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Changes Summary (auto-eval with historical context) -->
-    <?php if ($changesSummary): ?>
-    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-5">
-        <div class="flex items-start gap-3">
-            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-            </svg>
-            <div>
-                <h3 class="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-1">Riepilogo Cambiamenti</h3>
-                <p class="text-sm text-blue-700 dark:text-blue-400 leading-relaxed"><?= e($changesSummary) ?></p>
-            </div>
-        </div>
-    </div>
-    <?php endif; ?>
-
-    <!-- Metric Deltas (comparison with previous run) -->
+    <!-- ============================================ -->
+    <!-- KPI CARDS (metric deltas) -->
+    <!-- ============================================ -->
     <?php if (!empty($metricDeltas)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-        <h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-            </svg>
-            Variazioni rispetto al periodo precedente
-        </h3>
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            <?php foreach ($metricDeltas as $key => $delta): ?>
-            <?php
-            $deltaPercent = (float)($delta['percent'] ?? 0);
-            $positiveIsGood = $delta['positive_is_good'] ?? true;
-            $isPositive = $deltaPercent > 0;
-            $isGood = ($isPositive && $positiveIsGood) || (!$isPositive && !$positiveIsGood);
-            $isBad = ($isPositive && !$positiveIsGood) || (!$isPositive && $positiveIsGood);
-            $colorClass = abs($deltaPercent) < 2 ? 'text-slate-500 dark:text-slate-400' : ($isGood ? 'text-emerald-600 dark:text-emerald-400' : ($isBad ? 'text-red-600 dark:text-red-400' : 'text-slate-500 dark:text-slate-400'));
-            $arrow = $deltaPercent > 0 ? '↑' : ($deltaPercent < 0 ? '↓' : '→');
-            ?>
-            <div class="text-center">
-                <p class="text-xs text-slate-500 dark:text-slate-400 mb-1"><?= e($delta['label'] ?? $key) ?></p>
-                <p class="text-lg font-bold <?= $colorClass ?>">
-                    <?= $arrow ?> <?= $delta['percent_display'] ?? (number_format(abs($deltaPercent), 1) . '%') ?>
-                </p>
-                <p class="text-xs text-slate-400 dark:text-slate-500"><?= e($delta['current'] ?? '') ?></p>
-            </div>
-            <?php endforeach; ?>
-        </div>
-    </div>
-    <?php endif; ?>
-
-    <!-- New Issues / Resolved Issues -->
-    <?php if (!empty($newIssues) || !empty($resolvedIssues)): ?>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <?php if (!empty($newIssues)): ?>
-        <div class="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-5">
-            <h3 class="text-sm font-semibold text-red-800 dark:text-red-300 mb-3 flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-                </svg>
-                Nuovi Problemi (<?= count($newIssues) ?>)
-            </h3>
-            <ul class="space-y-2">
-                <?php foreach ($newIssues as $ni): ?>
-                <li class="flex items-start gap-2 text-sm text-red-700 dark:text-red-400">
-                    <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0"></span>
-                    <?= e(is_string($ni) ? $ni : ($ni['description'] ?? '')) ?>
-                </li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-        <?php endif; ?>
-
-        <?php if (!empty($resolvedIssues)): ?>
-        <div class="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-lg p-5">
-            <h3 class="text-sm font-semibold text-emerald-800 dark:text-emerald-300 mb-3 flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                Problemi Risolti (<?= count($resolvedIssues) ?>)
-            </h3>
-            <ul class="space-y-2">
-                <?php foreach ($resolvedIssues as $ri): ?>
-                <li class="flex items-start gap-2 text-sm text-emerald-700 dark:text-emerald-400">
-                    <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
-                    <?= e(is_string($ri) ? $ri : ($ri['description'] ?? '')) ?>
-                </li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-        <?php endif; ?>
-    </div>
-    <?php endif; ?>
-
-    <!-- Top Recommendations -->
-    <?php if (!empty($topRecommendations)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-            </svg>
-            Raccomandazioni Principali
-        </h2>
-        <ol class="space-y-3">
-            <?php foreach ($topRecommendations as $index => $recommendation): ?>
-            <li class="flex items-start gap-3">
-                <span class="flex-shrink-0 w-7 h-7 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-sm font-bold flex items-center justify-center">
-                    <?= $index + 1 ?>
-                </span>
-                <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed pt-0.5"><?= e($recommendation) ?></p>
-            </li>
-            <?php endforeach; ?>
-        </ol>
-    </div>
-    <?php endif; ?>
-
-    <!-- Campaign-by-Campaign Analysis -->
-    <?php if (!empty($campaigns)): ?>
-    <div class="space-y-4">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Analisi per Campagna</h2>
-
-        <?php foreach ($campaigns as $cIndex => $campaign): ?>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <?php foreach ($metricDeltas as $key => $delta): ?>
         <?php
-        $campaignScore = (float)($campaign['score'] ?? 0);
-        $strengths = $campaign['strengths'] ?? [];
-        $issues = $campaign['issues'] ?? [];
-        $adGroupsAI = $campaign['ad_groups'] ?? [];
-        $campType = strtoupper($campaign['campaign_type'] ?? 'SEARCH');
-        $typeConf = $campaignTypeConfig[$campType] ?? ['bg' => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300', 'label' => $campType];
-        $typeInsights = $campaign['type_specific_insights'] ?? '';
+        $deltaPercent = (float)($delta['percent'] ?? 0);
+        $positiveIsGood = $delta['positive_is_good'] ?? true;
+        $isPositive = $deltaPercent > 0;
+        $isGood = ($isPositive && $positiveIsGood) || (!$isPositive && !$positiveIsGood);
+        $isBad = ($isPositive && !$positiveIsGood) || (!$isPositive && $positiveIsGood);
+        $kpiColor = abs($deltaPercent) < 2 ? 'text-slate-500 dark:text-slate-400' : ($isGood ? 'text-emerald-600 dark:text-emerald-400' : ($isBad ? 'text-red-600 dark:text-red-400' : 'text-slate-500 dark:text-slate-400'));
+        $kpiBg = abs($deltaPercent) < 2 ? 'bg-slate-50 dark:bg-slate-700/30' : ($isGood ? 'bg-emerald-50 dark:bg-emerald-900/10' : ($isBad ? 'bg-red-50 dark:bg-red-900/10' : 'bg-slate-50 dark:bg-slate-700/30'));
+        $kpiArrow = $deltaPercent > 0 ? '↑' : ($deltaPercent < 0 ? '↓' : '→');
         ?>
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"
-             x-data="{ open: <?= $cIndex === 0 ? 'true' : 'false' ?>, openAdGroups: {} }">
-
-            <!-- Campaign Header (Accordion Toggle) -->
-            <button @click="open = !open" class="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                <div class="flex items-center gap-3 min-w-0">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold <?= scoreBadgeBgClass($campaignScore) ?>">
-                        <?= number_format($campaignScore, 1) ?>
-                    </span>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $typeConf['bg'] ?>">
-                        <?= $typeConf['label'] ?>
-                    </span>
-                    <span class="font-medium text-slate-900 dark:text-white text-left truncate"><?= e($campaign['campaign_name'] ?? 'Campagna') ?></span>
-                </div>
-                <div class="flex items-center gap-2 flex-shrink-0">
-                    <?php if (!empty($adGroupsAI)): ?>
-                    <span class="text-xs text-slate-500 dark:text-slate-400">
-                        <?= count($adGroupsAI) ?> gruppi
-                    </span>
-                    <?php endif; ?>
-                    <?php if (!empty($issues)): ?>
-                    <span class="text-xs text-slate-500 dark:text-slate-400">
-                        <?= count($issues) ?> problem<?= count($issues) !== 1 ? 'i' : 'a' ?>
-                    </span>
-                    <?php endif; ?>
-                    <svg :class="open ? 'rotate-180' : ''" class="w-5 h-5 text-slate-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                    </svg>
-                </div>
-            </button>
-
-            <!-- Campaign Content -->
-            <div x-show="open" x-collapse>
-                <div class="border-t border-slate-200 dark:border-slate-700 px-6 py-5 space-y-5">
-
-                    <!-- Type-Specific Insights -->
-                    <?php if ($typeInsights): ?>
-                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                        <div class="flex items-start gap-2">
-                            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <div>
-                                <h4 class="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-1">Analisi <?= $typeConf['label'] ?></h4>
-                                <p class="text-sm text-blue-700 dark:text-blue-400"><?= e($typeInsights) ?></p>
-                            </div>
-                        </div>
-                    </div>
-                    <?php endif; ?>
-
-                    <!-- Punti di Forza -->
-                    <?php if (!empty($strengths)): ?>
-                    <div>
-                        <h4 class="text-sm font-semibold text-emerald-700 dark:text-emerald-400 mb-2 flex items-center gap-1.5">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                            Punti di Forza
-                        </h4>
-                        <ul class="space-y-1.5">
-                            <?php foreach ($strengths as $strength): ?>
-                            <li class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
-                                <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
-                                <?= e($strength) ?>
-                            </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
-                    <?php endif; ?>
-
-                    <!-- Problemi Campagna -->
-                    <?php if (!empty($issues)): ?>
-                    <div>
-                        <h4 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-                            </svg>
-                            Problemi Campagna
-                        </h4>
-                        <div class="space-y-3">
-                            <?php foreach ($issues as $iIndex => $issue): ?>
-                            <?php
-                            $severity = $issue['severity'] ?? 'low';
-                            $area = $issue['area'] ?? '';
-                            $severityClasses = [
-                                'high' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
-                                'medium' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
-                                'low' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
-                            ];
-                            $severityClass = $severityClasses[$severity] ?? $severityClasses['low'];
-                            $severityLabels = ['high' => 'Alta', 'medium' => 'Media', 'low' => 'Bassa'];
-                            $severityLabel = $severityLabels[$severity] ?? ucfirst($severity);
-                            $areaLabel = $areaLabels[$area] ?? ucfirst($area);
-                            ?>
-                            <div class="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
-                                <div class="flex flex-wrap items-center gap-2 mb-2">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $severityClass ?>">
-                                        <?= $severityLabel ?>
-                                    </span>
-                                    <?php if ($area): ?>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
-                                        <?= e($areaLabel) ?>
-                                    </span>
-                                    <?php endif; ?>
-                                </div>
-                                <p class="text-sm text-slate-700 dark:text-slate-300"><?= e($issue['description'] ?? '') ?></p>
-                                <?php if (!empty($issue['recommendation'])): ?>
-                                <div class="mt-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-                                    <div class="flex items-start gap-2">
-                                        <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                                        </svg>
-                                        <p class="text-sm text-amber-800 dark:text-amber-300"><?= e($issue['recommendation']) ?></p>
-                                    </div>
-                                </div>
-                                <?php endif; ?>
-                                <?php if ($canEdit && in_array($area, $generatableAreas)): ?>
-                                <?php $issueKey = "issue_{$cIndex}_{$iIndex}"; ?>
-                                <button @click="generateFix('<?= $area ?>', <?= e(json_encode([
-                                    'issue' => $issue['description'] ?? '',
-                                    'recommendation' => $issue['recommendation'] ?? '',
-                                    'campaign_name' => $campaign['campaign_name'] ?? '',
-                                ])) ?>, '<?= $issueKey ?>')"
-                                    :disabled="isLoading('<?= $issueKey ?>')"
-                                    class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg text-primary-700 bg-primary-50 hover:bg-primary-100 dark:text-primary-300 dark:bg-primary-900/30 dark:hover:bg-primary-900/50 disabled:opacity-50 transition-colors mt-2">
-                                    <template x-if="!generators['<?= $issueKey ?>']?.loading">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                                        </svg>
-                                    </template>
-                                    <template x-if="generators['<?= $issueKey ?>']?.loading">
-                                        <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                    </template>
-                                    <span x-text="generators['<?= $issueKey ?>']?.loading ? 'Generazione...' : 'Genera con AI'"></span>
-                                </button>
-                                <?= renderAiGenerator($issueKey) ?>
-                                <?php endif; ?>
-                            </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                    <?php endif; ?>
-
-                    <!-- Ad Groups Detail (Nested Accordion) -->
-                    <?php if (!empty($adGroupsAI)): ?>
-                    <div>
-                        <h4 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                            </svg>
-                            Dettaglio Gruppi Annunci (<?= count($adGroupsAI) ?>)
-                        </h4>
-                        <div class="space-y-2">
-                            <?php foreach ($adGroupsAI as $agIndex => $adGroup): ?>
-                            <?php
-                            $agScore = (float)($adGroup['score'] ?? 0);
-                            $agStrengths = $adGroup['strengths'] ?? [];
-                            $agIssues = $adGroup['issues'] ?? [];
-                            $kwCoherence = $adGroup['keyword_coherence'] ?? null;
-                            $adRelevance = $adGroup['ad_relevance'] ?? null;
-                            $landCoherence = $adGroup['landing_coherence'] ?? null;
-                            $qsAvg = $adGroup['quality_score_avg'] ?? null;
-                            ?>
-                            <div class="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
-                                <!-- Ad Group Header -->
-                                <button @click="openAdGroups[<?= $cIndex ?>*100+<?= $agIndex ?>] = !openAdGroups[<?= $cIndex ?>*100+<?= $agIndex ?>]"
-                                        class="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                                    <div class="flex items-center gap-2 min-w-0">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold <?= scoreBadgeBgClass($agScore) ?>">
-                                            <?= number_format($agScore, 1) ?>
-                                        </span>
-                                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300 text-left truncate"><?= e($adGroup['ad_group_name'] ?? 'Gruppo') ?></span>
-                                    </div>
-                                    <div class="flex items-center gap-2 flex-shrink-0">
-                                        <?php if (!empty($agIssues)): ?>
-                                        <span class="text-xs text-slate-400"><?= count($agIssues) ?> problem<?= count($agIssues) !== 1 ? 'i' : 'a' ?></span>
-                                        <?php endif; ?>
-                                        <svg :class="openAdGroups[<?= $cIndex ?>*100+<?= $agIndex ?>] ? 'rotate-180' : ''" class="w-4 h-4 text-slate-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                        </svg>
-                                    </div>
-                                </button>
-
-                                <!-- Ad Group Content -->
-                                <div x-show="openAdGroups[<?= $cIndex ?>*100+<?= $agIndex ?>]" x-collapse>
-                                    <div class="border-t border-slate-200 dark:border-slate-700 px-4 py-4 space-y-4">
-
-                                        <!-- Mini score cards -->
-                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                            <?php if ($kwCoherence !== null): ?>
-                                            <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 text-center">
-                                                <p class="text-lg font-bold <?= scoreTextClass((float)$kwCoherence) ?>"><?= number_format((float)$kwCoherence, 1) ?></p>
-                                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Coerenza KW</p>
-                                            </div>
-                                            <?php endif; ?>
-                                            <?php if ($adRelevance !== null): ?>
-                                            <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 text-center">
-                                                <p class="text-lg font-bold <?= scoreTextClass((float)$adRelevance) ?>"><?= number_format((float)$adRelevance, 1) ?></p>
-                                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Pertinenza Annunci</p>
-                                            </div>
-                                            <?php endif; ?>
-                                            <?php if ($landCoherence !== null): ?>
-                                            <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 text-center">
-                                                <p class="text-lg font-bold <?= scoreTextClass((float)$landCoherence) ?>"><?= number_format((float)$landCoherence, 1) ?></p>
-                                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Coerenza Landing</p>
-                                            </div>
-                                            <?php endif; ?>
-                                            <?php if ($qsAvg !== null): ?>
-                                            <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 text-center">
-                                                <p class="text-lg font-bold <?= scoreTextClass((float)$qsAvg) ?>"><?= number_format((float)$qsAvg, 1) ?></p>
-                                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">QS Medio</p>
-                                            </div>
-                                            <?php endif; ?>
-                                        </div>
-
-                                        <!-- Landing Analysis (if available) -->
-                                        <?php if (!empty($adGroup['landing_analysis'])): ?>
-                                        <div class="bg-slate-50 dark:bg-slate-700/30 border border-slate-200 dark:border-slate-600 rounded-lg p-3">
-                                            <div class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-slate-500 dark:text-slate-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                </svg>
-                                                <p class="text-xs text-slate-600 dark:text-slate-400"><?= e($adGroup['landing_analysis']) ?></p>
-                                            </div>
-                                        </div>
-                                        <?php endif; ?>
-
-                                        <!-- Ad Group Strengths -->
-                                        <?php if (!empty($agStrengths)): ?>
-                                        <div>
-                                            <h5 class="text-xs font-semibold text-emerald-700 dark:text-emerald-400 mb-1.5 flex items-center gap-1">
-                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                                </svg>
-                                                Punti di Forza
-                                            </h5>
-                                            <ul class="space-y-1">
-                                                <?php foreach ($agStrengths as $s): ?>
-                                                <li class="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400">
-                                                    <span class="mt-1 w-1 h-1 rounded-full bg-emerald-500 flex-shrink-0"></span>
-                                                    <?= e($s) ?>
-                                                </li>
-                                                <?php endforeach; ?>
-                                            </ul>
-                                        </div>
-                                        <?php endif; ?>
-
-                                        <!-- Ad Group Issues -->
-                                        <?php if (!empty($agIssues)): ?>
-                                        <div class="space-y-2">
-                                            <?php foreach ($agIssues as $agIssue): ?>
-                                            <?php
-                                            $agSeverity = $agIssue['severity'] ?? 'low';
-                                            $agArea = $agIssue['area'] ?? '';
-                                            $agSeverityClasses = [
-                                                'high' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
-                                                'medium' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
-                                                'low' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
-                                            ];
-                                            $agSeverityClass = $agSeverityClasses[$agSeverity] ?? $agSeverityClasses['low'];
-                                            $agSeverityLabels = ['high' => 'Alta', 'medium' => 'Media', 'low' => 'Bassa'];
-                                            $agSeverityLabel = $agSeverityLabels[$agSeverity] ?? ucfirst($agSeverity);
-                                            $agAreaLabel = $areaLabels[$agArea] ?? ucfirst($agArea);
-                                            ?>
-                                            <div class="bg-slate-50 dark:bg-slate-700/30 rounded-lg p-3">
-                                                <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
-                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium <?= $agSeverityClass ?>">
-                                                        <?= $agSeverityLabel ?>
-                                                    </span>
-                                                    <?php if ($agArea): ?>
-                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-600 dark:bg-slate-600 dark:text-slate-300">
-                                                        <?= e($agAreaLabel) ?>
-                                                    </span>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <p class="text-xs text-slate-700 dark:text-slate-300"><?= e($agIssue['description'] ?? '') ?></p>
-                                                <?php if (!empty($agIssue['recommendation'])): ?>
-                                                <p class="mt-1.5 text-xs text-amber-700 dark:text-amber-400 italic"><?= e($agIssue['recommendation']) ?></p>
-                                                <?php endif; ?>
-                                            </div>
-                                            <?php endforeach; ?>
-                                        </div>
-                                        <?php endif; ?>
-
-                                        <?php if (empty($agStrengths) && empty($agIssues)): ?>
-                                        <p class="text-xs text-slate-500 dark:text-slate-400 text-center py-2">Nessun dettaglio disponibile.</p>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                    <?php endif; ?>
-
-                    <!-- Empty state -->
-                    <?php if (empty($strengths) && empty($issues) && empty($adGroupsAI)): ?>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 text-center py-4">
-                        Nessun dettaglio disponibile per questa campagna.
-                    </p>
-                    <?php endif; ?>
-
-                </div>
-            </div>
+        <div class="<?= $kpiBg ?> rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-1"><?= e($delta['label'] ?? $key) ?></p>
+            <p class="text-sm font-semibold text-slate-900 dark:text-white"><?= e($delta['current'] ?? '') ?></p>
+            <p class="text-xs font-medium <?= $kpiColor ?> mt-0.5">
+                <?= $kpiArrow ?> <?= $delta['percent_display'] ?? (number_format(abs($deltaPercent), 1) . '%') ?>
+            </p>
         </div>
         <?php endforeach; ?>
     </div>
     <?php endif; ?>
 
-    <!-- Extensions Evaluation -->
-    <?php if (!empty($extensionsEval)): ?>
-    <?php $extScore = (float)($extensionsEval['score'] ?? 0); ?>
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"/>
-                </svg>
-                Valutazione Estensioni
-            </h2>
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold <?= scoreBadgeBgClass($extScore) ?>">
-                <?= number_format($extScore, 1) ?>/10
-            </span>
-        </div>
+    <!-- ============================================ -->
+    <!-- TAB NAVIGATION -->
+    <!-- ============================================ -->
+    <div class="border-b border-slate-200 dark:border-slate-700">
+        <nav class="flex gap-1 -mb-px overflow-x-auto" aria-label="Tabs">
+            <button @click="activeTab = 'panoramica'" :class="activeTab === 'panoramica' ? 'border-rose-500 text-rose-600 dark:text-rose-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 hover:border-slate-300'"
+                class="whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors">
+                Panoramica
+            </button>
+            <button @click="activeTab = 'campagne'" :class="activeTab === 'campagne' ? 'border-rose-500 text-rose-600 dark:text-rose-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 hover:border-slate-300'"
+                class="whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors">
+                Campagne (<?= count($campaigns) ?>)
+            </button>
+            <?php if (!empty($extensionsEval)): ?>
+            <button @click="activeTab = 'estensioni'" :class="activeTab === 'estensioni' ? 'border-rose-500 text-rose-600 dark:text-rose-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 hover:border-slate-300'"
+                class="whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors">
+                Estensioni
+            </button>
+            <?php endif; ?>
+            <?php if (!empty($landingEval) && ($evaluation['landing_pages_analyzed'] ?? 0) > 0): ?>
+            <button @click="activeTab = 'landing'" :class="activeTab === 'landing' ? 'border-rose-500 text-rose-600 dark:text-rose-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 hover:border-slate-300'"
+                class="whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors">
+                Landing Pages
+            </button>
+            <?php endif; ?>
+            <?php if (!empty($campaignSuggestions) || !empty($landingSuggestions)): ?>
+            <button @click="activeTab = 'azioni'" :class="activeTab === 'azioni' ? 'border-rose-500 text-rose-600 dark:text-rose-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 hover:border-slate-300'"
+                class="whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors">
+                Azioni
+            </button>
+            <?php endif; ?>
+        </nav>
+    </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Missing Extensions -->
-            <?php if (!empty($extensionsEval['missing'])): ?>
-            <div>
-                <h4 class="text-sm font-semibold text-red-700 dark:text-red-400 mb-2 flex items-center gap-1.5">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                    Estensioni Mancanti
-                </h4>
-                <ul class="space-y-1.5">
-                    <?php foreach ($extensionsEval['missing'] as $missing): ?>
-                    <li class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+    <!-- ============================================ -->
+    <!-- TAB: PANORAMICA -->
+    <!-- ============================================ -->
+    <div x-show="activeTab === 'panoramica'" x-cloak class="space-y-6">
+
+        <!-- Changes Summary (auto-eval) -->
+        <?php if ($changesSummary): ?>
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-5">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                </svg>
+                <div>
+                    <h3 class="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-1">Riepilogo Cambiamenti</h3>
+                    <p class="text-sm text-blue-700 dark:text-blue-400 leading-relaxed"><?= e($changesSummary) ?></p>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- New Issues / Resolved Issues -->
+        <?php if (!empty($newIssues) || !empty($resolvedIssues)): ?>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <?php if (!empty($newIssues)): ?>
+            <div class="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl p-5">
+                <h3 class="text-sm font-semibold text-red-800 dark:text-red-300 mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                    Nuovi Problemi (<?= count($newIssues) ?>)
+                </h3>
+                <ul class="space-y-2">
+                    <?php foreach ($newIssues as $ni): ?>
+                    <li class="flex items-start gap-2 text-sm text-red-700 dark:text-red-400">
                         <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0"></span>
-                        <?= e($missing) ?>
+                        <?= e(is_string($ni) ? $ni : ($ni['description'] ?? '')) ?>
                     </li>
                     <?php endforeach; ?>
                 </ul>
             </div>
             <?php endif; ?>
+            <?php if (!empty($resolvedIssues)): ?>
+            <div class="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl p-5">
+                <h3 class="text-sm font-semibold text-emerald-800 dark:text-emerald-300 mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Problemi Risolti (<?= count($resolvedIssues) ?>)
+                </h3>
+                <ul class="space-y-2">
+                    <?php foreach ($resolvedIssues as $ri): ?>
+                    <li class="flex items-start gap-2 text-sm text-emerald-700 dark:text-emerald-400">
+                        <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                        <?= e(is_string($ri) ? $ri : ($ri['description'] ?? '')) ?>
+                    </li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
 
-            <!-- Suggestions -->
+        <!-- Top Recommendations -->
+        <?php if (!empty($topRecommendations)): ?>
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                Raccomandazioni Principali
+            </h2>
+            <ol class="space-y-3">
+                <?php foreach ($topRecommendations as $index => $recommendation): ?>
+                <li class="flex items-start gap-3">
+                    <span class="flex-shrink-0 w-7 h-7 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-sm font-bold flex items-center justify-center">
+                        <?= $index + 1 ?>
+                    </span>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed pt-0.5"><?= e($recommendation) ?></p>
+                </li>
+                <?php endforeach; ?>
+            </ol>
+        </div>
+        <?php endif; ?>
+
+        <!-- Issues Heatmap -->
+        <?php if (!empty($campaigns)): ?>
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                Score per Campagna
+            </h2>
+            <div class="space-y-3">
+                <?php foreach ($campaigns as $cIdx => $camp): ?>
+                <?php
+                $cScore = (float)($camp['score'] ?? 0);
+                $cIssuesHigh = count(array_filter($camp['issues'] ?? [], fn($i) => ($i['severity'] ?? '') === 'high'));
+                $cIssuesMed = count(array_filter($camp['issues'] ?? [], fn($i) => ($i['severity'] ?? '') === 'medium'));
+                $cIssuesLow = count(array_filter($camp['issues'] ?? [], fn($i) => ($i['severity'] ?? '') === 'low'));
+                $cType = strtoupper($camp['campaign_type'] ?? 'SEARCH');
+                $cTypeConf = $campaignTypeConfig[$cType] ?? ['bg' => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300', 'label' => $cType];
+                $barWidth = max(5, min(100, $cScore * 10));
+                ?>
+                <button @click="activeTab = 'campagne'; $nextTick(() => openDrawer(<?= $cIdx ?>))"
+                    class="w-full text-left group">
+                    <div class="flex items-center gap-3">
+                        <span class="flex-shrink-0 w-16 text-right text-sm font-bold <?= scoreTextClass($cScore) ?>"><?= number_format($cScore, 1) ?>/10</span>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium <?= $cTypeConf['bg'] ?>"><?= $cTypeConf['label'] ?></span>
+                                <span class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors"><?= e($camp['campaign_name'] ?? 'Campagna') ?></span>
+                            </div>
+                            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                                <div class="h-2 rounded-full <?= scoreColorClass($cScore) ?> transition-all" style="width: <?= $barWidth ?>%"></div>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0 flex items-center gap-1">
+                            <?php if ($cIssuesHigh > 0): ?><span class="px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"><?= $cIssuesHigh ?></span><?php endif; ?>
+                            <?php if ($cIssuesMed > 0): ?><span class="px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"><?= $cIssuesMed ?></span><?php endif; ?>
+                            <?php if ($cIssuesLow > 0): ?><span class="px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"><?= $cIssuesLow ?></span><?php endif; ?>
+                            <svg class="w-4 h-4 text-slate-400 group-hover:text-rose-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </div>
+                    </div>
+                </button>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
+    </div>
+
+    <!-- ============================================ -->
+    <!-- TAB: CAMPAGNE (Card Grid) -->
+    <!-- ============================================ -->
+    <div x-show="activeTab === 'campagne'" x-cloak class="space-y-6">
+
+        <?php if (!empty($campaigns)): ?>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <?php foreach ($campaigns as $cIndex => $campaign): ?>
+            <?php
+            $campaignScore = (float)($campaign['score'] ?? 0);
+            $issues = $campaign['issues'] ?? [];
+            $adGroupsAI = $campaign['ad_groups'] ?? [];
+            $campType = strtoupper($campaign['campaign_type'] ?? 'SEARCH');
+            $typeConf = $campaignTypeConfig[$campType] ?? ['bg' => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300', 'label' => $campType];
+            $highCount = count(array_filter($issues, fn($i) => ($i['severity'] ?? '') === 'high'));
+            $medCount = count(array_filter($issues, fn($i) => ($i['severity'] ?? '') === 'medium'));
+            $lowCount = count(array_filter($issues, fn($i) => ($i['severity'] ?? '') === 'low'));
+            ?>
+            <button @click="openDrawer(<?= $cIndex ?>)"
+                class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 text-left hover:shadow-md hover:border-rose-300 dark:hover:border-rose-700 transition-all group relative overflow-hidden">
+                <!-- Left color bar -->
+                <div class="absolute left-0 top-0 bottom-0 w-1 <?= scoreColorClass($campaignScore) ?>"></div>
+
+                <div class="flex items-start justify-between mb-3">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $typeConf['bg'] ?>"><?= $typeConf['label'] ?></span>
+                        </div>
+                        <h3 class="text-sm font-semibold text-slate-900 dark:text-white truncate group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                            <?= e($campaign['campaign_name'] ?? 'Campagna') ?>
+                        </h3>
+                    </div>
+                    <div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-2 <?= scoreBorderClass($campaignScore) ?> ml-3">
+                        <span class="text-sm font-bold <?= scoreTextClass($campaignScore) ?>"><?= number_format($campaignScore, 1) ?></span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 flex-wrap">
+                    <?php if ($highCount > 0): ?>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"><?= $highCount ?> alta</span>
+                    <?php endif; ?>
+                    <?php if ($medCount > 0): ?>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"><?= $medCount ?> media</span>
+                    <?php endif; ?>
+                    <?php if ($lowCount > 0): ?>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"><?= $lowCount ?> bassa</span>
+                    <?php endif; ?>
+                    <?php if (count($issues) === 0): ?>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">Nessun problema</span>
+                    <?php endif; ?>
+                    <?php if (!empty($adGroupsAI)): ?>
+                    <span class="text-xs text-slate-400"><?= count($adGroupsAI) ?> gruppi</span>
+                    <?php endif; ?>
+                </div>
+            </button>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+
+    </div>
+
+    <!-- ============================================ -->
+    <!-- DRAWER: Dettaglio Campagna (slide-in right) -->
+    <!-- ============================================ -->
+    <!-- Backdrop -->
+    <div x-show="drawerOpen" x-cloak
+         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+         @click="closeDrawer()"
+         class="fixed inset-0 bg-black/40 z-40"></div>
+
+    <!-- Drawer Panel -->
+    <div x-show="drawerOpen" x-cloak
+         x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+         x-transition:leave="transition ease-in duration-200" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full"
+         class="fixed top-0 right-0 bottom-0 w-full md:w-[60%] lg:w-[50%] bg-white dark:bg-slate-800 shadow-2xl z-50 overflow-y-auto">
+
+        <template x-if="selectedCampaign !== null && campaignsData[selectedCampaign]">
+            <div class="p-6 space-y-5">
+                <!-- Drawer Header -->
+                <div class="flex items-start justify-between gap-4">
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold" :class="campaignsData[selectedCampaign].scoreBadgeClass" x-text="campaignsData[selectedCampaign].score + '/10'"></span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" :class="campaignsData[selectedCampaign].typeBg" x-text="campaignsData[selectedCampaign].typeLabel"></span>
+                        </div>
+                        <h2 class="text-lg font-semibold text-slate-900 dark:text-white" x-text="campaignsData[selectedCampaign].name"></h2>
+                    </div>
+                    <button @click="closeDrawer()" class="flex-shrink-0 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                        <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Type-Specific Insights -->
+                <template x-if="campaignsData[selectedCampaign].typeInsights">
+                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                        <div class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <div>
+                                <h4 class="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-1" x-text="'Analisi ' + campaignsData[selectedCampaign].typeLabel"></h4>
+                                <p class="text-sm text-blue-700 dark:text-blue-400" x-text="campaignsData[selectedCampaign].typeInsights"></p>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Strengths -->
+                <template x-if="campaignsData[selectedCampaign].strengths.length > 0">
+                    <div>
+                        <h4 class="text-sm font-semibold text-emerald-700 dark:text-emerald-400 mb-2 flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Punti di Forza
+                        </h4>
+                        <ul class="space-y-1.5">
+                            <template x-for="(s, i) in campaignsData[selectedCampaign].strengths" :key="i">
+                                <li class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+                                    <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                                    <span x-text="s"></span>
+                                </li>
+                            </template>
+                        </ul>
+                    </div>
+                </template>
+
+                <!-- Issues -->
+                <template x-if="campaignsData[selectedCampaign].issues.length > 0">
+                    <div>
+                        <h4 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                            Problemi
+                        </h4>
+                        <div class="space-y-3">
+                            <template x-for="(issue, iIdx) in campaignsData[selectedCampaign].issues" :key="iIdx">
+                                <div class="border border-slate-200 dark:border-slate-700 rounded-xl p-4">
+                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" :class="issue.severityClass" x-text="issue.severityLabel"></span>
+                                        <template x-if="issue.areaLabel">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300" x-text="issue.areaLabel"></span>
+                                        </template>
+                                    </div>
+                                    <p class="text-sm text-slate-700 dark:text-slate-300" x-text="issue.description"></p>
+                                    <template x-if="issue.recommendation">
+                                        <div class="mt-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                                            <div class="flex items-start gap-2">
+                                                <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                                                <p class="text-sm text-amber-800 dark:text-amber-300" x-text="issue.recommendation"></p>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <?php if ($canEdit): ?>
+                                    <template x-if="issue.genType">
+                                        <div>
+                                            <button @click="generateFix(issue.genType, {issue: issue.description, recommendation: issue.recommendation || '', campaign_name: campaignsData[selectedCampaign].name}, issue.genKey)"
+                                                :disabled="isLoading(issue.genKey)"
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg text-primary-700 bg-primary-50 hover:bg-primary-100 dark:text-primary-300 dark:bg-primary-900/30 dark:hover:bg-primary-900/50 disabled:opacity-50 transition-colors mt-2">
+                                                <svg x-show="!isLoading(issue.genKey)" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                                                <svg x-show="isLoading(issue.genKey)" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                <span x-text="isLoading(issue.genKey) ? 'Generazione...' : 'Genera con AI'"></span>
+                                            </button>
+                                            <div x-html="getGeneratorHtml(issue.genKey)"></div>
+                                        </div>
+                                    </template>
+                                    <?php endif; ?>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Ad Groups -->
+                <template x-if="campaignsData[selectedCampaign].adGroups.length > 0">
+                    <div>
+                        <h4 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                            <span x-text="'Gruppi Annunci (' + campaignsData[selectedCampaign].adGroups.length + ')'"></span>
+                        </h4>
+                        <div class="space-y-2">
+                            <template x-for="(ag, agIdx) in campaignsData[selectedCampaign].adGroups" :key="agIdx">
+                                <div class="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden" x-data="{ agOpen: false }">
+                                    <button @click="agOpen = !agOpen" class="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold" :class="ag.scoreBadgeClass" x-text="ag.score"></span>
+                                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300 text-left truncate" x-text="ag.name"></span>
+                                        </div>
+                                        <div class="flex items-center gap-2 flex-shrink-0">
+                                            <template x-if="ag.issueCount > 0">
+                                                <span class="text-xs text-slate-400" x-text="ag.issueCount + ' problem' + (ag.issueCount !== 1 ? 'i' : 'a')"></span>
+                                            </template>
+                                            <svg :class="agOpen ? 'rotate-180' : ''" class="w-4 h-4 text-slate-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                        </div>
+                                    </button>
+                                    <div x-show="agOpen" x-collapse>
+                                        <div class="border-t border-slate-200 dark:border-slate-700 px-4 py-4 space-y-4">
+                                            <!-- Mini score cards -->
+                                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                                <template x-for="metric in ag.metrics" :key="metric.label">
+                                                    <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 text-center">
+                                                        <p class="text-lg font-bold" :class="metric.colorClass" x-text="metric.value"></p>
+                                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" x-text="metric.label"></p>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                            <!-- Landing analysis -->
+                                            <template x-if="ag.landingAnalysis">
+                                                <div class="bg-slate-50 dark:bg-slate-700/30 border border-slate-200 dark:border-slate-600 rounded-lg p-3">
+                                                    <p class="text-xs text-slate-600 dark:text-slate-400" x-text="ag.landingAnalysis"></p>
+                                                </div>
+                                            </template>
+                                            <!-- Strengths -->
+                                            <template x-if="ag.strengths.length > 0">
+                                                <ul class="space-y-1">
+                                                    <template x-for="(s, si) in ag.strengths" :key="si">
+                                                        <li class="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400">
+                                                            <span class="mt-1 w-1 h-1 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                                                            <span x-text="s"></span>
+                                                        </li>
+                                                    </template>
+                                                </ul>
+                                            </template>
+                                            <!-- Issues -->
+                                            <template x-if="ag.issues.length > 0">
+                                                <div class="space-y-2">
+                                                    <template x-for="(agIss, agIssIdx) in ag.issues" :key="agIssIdx">
+                                                        <div class="bg-slate-50 dark:bg-slate-700/30 rounded-lg p-3">
+                                                            <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
+                                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium" :class="agIss.severityClass" x-text="agIss.severityLabel"></span>
+                                                                <template x-if="agIss.areaLabel">
+                                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-600 dark:bg-slate-600 dark:text-slate-300" x-text="agIss.areaLabel"></span>
+                                                                </template>
+                                                            </div>
+                                                            <p class="text-xs text-slate-700 dark:text-slate-300" x-text="agIss.description"></p>
+                                                            <template x-if="agIss.recommendation">
+                                                                <p class="mt-1.5 text-xs text-amber-700 dark:text-amber-400 italic" x-text="agIss.recommendation"></p>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- TAB: ESTENSIONI -->
+    <!-- ============================================ -->
+    <?php if (!empty($extensionsEval)): ?>
+    <?php $extScore = (float)($extensionsEval['score'] ?? 0); ?>
+    <div x-show="activeTab === 'estensioni'" x-cloak class="space-y-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"/></svg>
+                    Valutazione Estensioni
+                </h2>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold <?= scoreBadgeBgClass($extScore) ?>"><?= number_format($extScore, 1) ?>/10</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <?php if (!empty($extensionsEval['present'])): ?>
+                <div>
+                    <h4 class="text-sm font-semibold text-emerald-700 dark:text-emerald-400 mb-2 flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Estensioni Presenti
+                    </h4>
+                    <ul class="space-y-1.5">
+                        <?php foreach ($extensionsEval['present'] as $present): ?>
+                        <li class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+                            <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                            <?= e($present) ?>
+                        </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+                <?php endif; ?>
+
+                <?php if (!empty($extensionsEval['missing'])): ?>
+                <div>
+                    <h4 class="text-sm font-semibold text-red-700 dark:text-red-400 mb-2 flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        Estensioni Mancanti
+                    </h4>
+                    <ul class="space-y-1.5">
+                        <?php foreach ($extensionsEval['missing'] as $missing): ?>
+                        <li class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+                            <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0"></span>
+                            <?= e($missing) ?>
+                        </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+                <?php endif; ?>
+            </div>
+
             <?php if (!empty($extensionsEval['suggestions'])): ?>
-            <div>
-                <h4 class="text-sm font-semibold text-amber-700 dark:text-amber-400 mb-2 flex items-center gap-1.5">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                    </svg>
-                    Suggerimenti
-                </h4>
+            <div class="mt-5 pt-5 border-t border-slate-200 dark:border-slate-700">
+                <h4 class="text-sm font-semibold text-amber-700 dark:text-amber-400 mb-2">Suggerimenti</h4>
                 <ul class="space-y-1.5">
                     <?php foreach ($extensionsEval['suggestions'] as $suggestion): ?>
                     <li class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
@@ -889,203 +935,161 @@ HTML;
                 </ul>
             </div>
             <?php endif; ?>
-        </div>
 
-        <?php if (!empty($extensionsEval['missing'])): ?>
-        <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-            <button @click="generateFix('extensions', <?= e(json_encode(['missing' => $extensionsEval['missing']])) ?>, 'ext_main')"
-                :disabled="isLoading('ext_main')"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg text-primary-700 bg-primary-50 hover:bg-primary-100 dark:text-primary-300 dark:bg-primary-900/30 dark:hover:bg-primary-900/50 disabled:opacity-50 transition-colors">
-                <template x-if="!generators['ext_main']?.loading">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                    </svg>
-                </template>
-                <template x-if="generators['ext_main']?.loading">
-                    <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                </template>
-                <span x-text="generators['ext_main']?.loading ? 'Generazione...' : 'Genera Estensioni Mancanti'"></span>
-            </button>
-            <?= renderAiGenerator('ext_main') ?>
+            <?php if ($canEdit && !empty($extensionsEval['missing'])): ?>
+            <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <button @click="generateFix('extensions', <?= e(json_encode(['missing' => $extensionsEval['missing']])) ?>, 'ext_main')"
+                    :disabled="isLoading('ext_main')"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg text-primary-700 bg-primary-50 hover:bg-primary-100 dark:text-primary-300 dark:bg-primary-900/30 dark:hover:bg-primary-900/50 disabled:opacity-50 transition-colors">
+                    <svg x-show="!generators['ext_main']?.loading" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                    <svg x-show="generators['ext_main']?.loading" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span x-text="generators['ext_main']?.loading ? 'Generazione...' : 'Genera Estensioni Mancanti'"></span>
+                </button>
+                <?= renderAiGenerator('ext_main') ?>
+            </div>
+            <?php endif; ?>
         </div>
-        <?php endif; ?>
     </div>
     <?php endif; ?>
 
-    <!-- Landing Evaluation (solo se landing pages effettivamente analizzate) -->
+    <!-- ============================================ -->
+    <!-- TAB: LANDING PAGES -->
+    <!-- ============================================ -->
     <?php if (!empty($landingEval) && ($evaluation['landing_pages_analyzed'] ?? 0) > 0): ?>
     <?php $landScore = (float)($landingEval['overall_score'] ?? 0); ?>
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                Analisi Landing Pages
-            </h2>
-            <div class="flex items-center gap-3">
-                <?php if (!empty($landingEval['pages_analyzed'])): ?>
-                <span class="text-sm text-slate-500 dark:text-slate-400"><?= (int)$landingEval['pages_analyzed'] ?> pagine analizzate</span>
-                <?php endif; ?>
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold <?= scoreBadgeBgClass($landScore) ?>">
-                    <?= number_format($landScore, 1) ?>/10
-                </span>
+    <div x-show="activeTab === 'landing'" x-cloak class="space-y-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Analisi Landing Pages
+                </h2>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold <?= scoreBadgeBgClass($landScore) ?>"><?= number_format($landScore, 1) ?>/10</span>
             </div>
-        </div>
 
-        <?php if (!empty($landingEval['issues'])): ?>
-        <div class="space-y-3">
-            <?php foreach ($landingEval['issues'] as $landIssue): ?>
-            <div class="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
-                <?php if (!empty($landIssue['url'])): ?>
-                <p class="text-xs font-mono text-slate-500 dark:text-slate-400 mb-2 truncate"><?= e($landIssue['url']) ?></p>
-                <?php endif; ?>
-                <p class="text-sm text-slate-700 dark:text-slate-300"><?= e($landIssue['issue'] ?? '') ?></p>
-                <?php if (!empty($landIssue['recommendation'])): ?>
-                <div class="mt-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-                    <div class="flex items-start gap-2">
-                        <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                        </svg>
-                        <p class="text-sm text-amber-800 dark:text-amber-300"><?= e($landIssue['recommendation']) ?></p>
+            <?php if (!empty($landingEval['issues'])): ?>
+            <div class="space-y-3">
+                <?php foreach ($landingEval['issues'] as $landIssue): ?>
+                <div class="border border-slate-200 dark:border-slate-700 rounded-xl p-4">
+                    <?php if (!empty($landIssue['url'])): ?>
+                    <p class="text-xs font-mono text-slate-500 dark:text-slate-400 mb-2 truncate"><?= e($landIssue['url']) ?></p>
+                    <?php endif; ?>
+                    <p class="text-sm text-slate-700 dark:text-slate-300"><?= e($landIssue['issue'] ?? '') ?></p>
+                    <?php if (!empty($landIssue['recommendation'])): ?>
+                    <div class="mt-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                        <div class="flex items-start gap-2">
+                            <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                            <p class="text-sm text-amber-800 dark:text-amber-300"><?= e($landIssue['recommendation']) ?></p>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php else: ?>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Nessun problema rilevato nelle landing pages analizzate.</p>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- ============================================ -->
+    <!-- TAB: AZIONI -->
+    <!-- ============================================ -->
+    <?php if (!empty($campaignSuggestions) || !empty($landingSuggestions)): ?>
+    <div x-show="activeTab === 'azioni'" x-cloak class="space-y-6">
+
+        <!-- Campaign Suggestions -->
+        <?php if (!empty($campaignSuggestions)): ?>
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                Suggerimenti Campagne
+            </h2>
+            <div class="space-y-3">
+                <?php foreach ($campaignSuggestions as $sIndex => $cs): ?>
+                <?php
+                $csPriority = $cs['priority'] ?? 'medium';
+                $csPriorityClass = $priorityClasses[$csPriority] ?? $priorityClasses['medium'];
+                $csPriorityLabel = $priorityLabels[$csPriority] ?? ucfirst($csPriority);
+                $csAreaLower = strtolower($cs['area'] ?? '');
+                $csGenType = null;
+                if (str_contains($csAreaLower, 'copy') || str_contains($csAreaLower, 'annunci')) $csGenType = 'copy';
+                elseif (str_contains($csAreaLower, 'keyword')) $csGenType = 'keywords';
+                elseif (str_contains($csAreaLower, 'estension') || str_contains($csAreaLower, 'extension')) $csGenType = 'extensions';
+                $sugKey = "sug_{$sIndex}";
+                ?>
+                <div class="flex items-start gap-3 bg-slate-50 dark:bg-slate-700/30 rounded-xl p-4">
+                    <div class="flex flex-wrap gap-2 flex-shrink-0 pt-0.5">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $csPriorityClass ?>"><?= $csPriorityLabel ?></span>
+                        <?php if (!empty($cs['area'])): ?>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-600 dark:bg-slate-600 dark:text-slate-300"><?= e($cs['area']) ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-slate-700 dark:text-slate-300"><?= e($cs['suggestion'] ?? '') ?></p>
+                        <?php if (!empty($cs['expected_impact'])): ?>
+                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Impatto: <?= e($cs['expected_impact']) ?></p>
+                        <?php endif; ?>
+                        <?php if ($canEdit && $csGenType): ?>
+                        <button @click="generateFix('<?= $csGenType ?>', <?= e(json_encode(['suggestion' => $cs['suggestion'] ?? '', 'expected_impact' => $cs['expected_impact'] ?? '', 'campaign_name' => ''])) ?>, '<?= $sugKey ?>')"
+                            :disabled="isLoading('<?= $sugKey ?>')"
+                            class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg text-primary-700 bg-primary-50 hover:bg-primary-100 dark:text-primary-300 dark:bg-primary-900/30 dark:hover:bg-primary-900/50 disabled:opacity-50 transition-colors mt-2">
+                            <svg x-show="!generators['<?= $sugKey ?>']?.loading" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                            <svg x-show="generators['<?= $sugKey ?>']?.loading" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span x-text="generators['<?= $sugKey ?>']?.loading ? 'Generazione...' : 'Genera con AI'"></span>
+                        </button>
+                        <?= renderAiGenerator($sugKey) ?>
+                        <?php endif; ?>
                     </div>
                 </div>
-                <?php endif; ?>
+                <?php endforeach; ?>
             </div>
-            <?php endforeach; ?>
         </div>
-        <?php else: ?>
-        <p class="text-sm text-slate-500 dark:text-slate-400">Nessun problema rilevato nelle landing pages analizzate.</p>
         <?php endif; ?>
-    </div>
-    <?php endif; ?>
 
-    <!-- Campaign Suggestions -->
-    <?php if (!empty($campaignSuggestions)): ?>
-    <?php
-    $priorityClasses = [
-        'high' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
-        'medium' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
-        'low' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300',
-    ];
-    $priorityLabels = ['high' => 'Alta', 'medium' => 'Media', 'low' => 'Bassa'];
-    ?>
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-            </svg>
-            Suggerimenti Miglioramento Campagne
-        </h2>
-        <div class="space-y-3">
-            <?php foreach ($campaignSuggestions as $sIndex => $cs): ?>
-            <?php
-            $csPriority = $cs['priority'] ?? 'medium';
-            $csPriorityClass = $priorityClasses[$csPriority] ?? $priorityClasses['medium'];
-            $csPriorityLabel = $priorityLabels[$csPriority] ?? ucfirst($csPriority);
-            // Determina se il suggerimento è generabile dall'AI
-            $csAreaLower = strtolower($cs['area'] ?? '');
-            $csGenType = null;
-            if (str_contains($csAreaLower, 'copy') || str_contains($csAreaLower, 'annunci')) {
-                $csGenType = 'copy';
-            } elseif (str_contains($csAreaLower, 'keyword')) {
-                $csGenType = 'keywords';
-            } elseif (str_contains($csAreaLower, 'estension') || str_contains($csAreaLower, 'extension')) {
-                $csGenType = 'extensions';
-            }
-            $sugKey = "sug_{$sIndex}";
-            ?>
-            <div class="flex items-start gap-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg p-4">
-                <div class="flex flex-wrap gap-2 flex-shrink-0 pt-0.5">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $csPriorityClass ?>">
-                        <?= $csPriorityLabel ?>
-                    </span>
-                    <?php if (!empty($cs['area'])): ?>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-600 dark:bg-slate-600 dark:text-slate-300">
-                        <?= e($cs['area']) ?>
-                    </span>
+        <!-- Landing Suggestions -->
+        <?php if (!empty($landingSuggestions) && ($evaluation['landing_pages_analyzed'] ?? 0) > 0): ?>
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                Suggerimenti Landing Pages
+            </h2>
+            <div class="space-y-3">
+                <?php foreach ($landingSuggestions as $ls): ?>
+                <?php
+                $lsPriority = $ls['priority'] ?? 'medium';
+                $lsPriorityClass = $priorityClasses[$lsPriority] ?? $priorityClasses['medium'];
+                $lsPriorityLabel = $priorityLabels[$lsPriority] ?? ucfirst($lsPriority);
+                ?>
+                <div class="bg-slate-50 dark:bg-slate-700/30 rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $lsPriorityClass ?>"><?= $lsPriorityLabel ?></span>
+                        <?php if (!empty($ls['url'])): ?>
+                        <span class="text-xs font-mono text-slate-500 dark:text-slate-400 truncate max-w-xs"><?= e($ls['url']) ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <p class="text-sm font-medium text-slate-700 dark:text-slate-300"><?= e($ls['suggestion'] ?? '') ?></p>
+                    <?php if (!empty($ls['expected_impact'])): ?>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Impatto: <?= e($ls['expected_impact']) ?></p>
                     <?php endif; ?>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-slate-700 dark:text-slate-300"><?= e($cs['suggestion'] ?? '') ?></p>
-                    <?php if (!empty($cs['expected_impact'])): ?>
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Impatto: <?= e($cs['expected_impact']) ?></p>
-                    <?php endif; ?>
-                    <?php if ($csGenType): ?>
-                    <button @click="generateFix('<?= $csGenType ?>', <?= e(json_encode([
-                        'suggestion' => $cs['suggestion'] ?? '',
-                        'expected_impact' => $cs['expected_impact'] ?? '',
-                        'campaign_name' => '',
-                    ])) ?>, '<?= $sugKey ?>')"
-                        :disabled="isLoading('<?= $sugKey ?>')"
-                        class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg text-primary-700 bg-primary-50 hover:bg-primary-100 dark:text-primary-300 dark:bg-primary-900/30 dark:hover:bg-primary-900/50 disabled:opacity-50 transition-colors mt-2">
-                        <template x-if="!generators['<?= $sugKey ?>']?.loading">
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                            </svg>
-                        </template>
-                        <template x-if="generators['<?= $sugKey ?>']?.loading">
-                            <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        </template>
-                        <span x-text="generators['<?= $sugKey ?>']?.loading ? 'Generazione...' : 'Genera con AI'"></span>
-                    </button>
-                    <?= renderAiGenerator($sugKey) ?>
-                    <?php endif; ?>
-                </div>
+                <?php endforeach; ?>
             </div>
-            <?php endforeach; ?>
         </div>
-    </div>
-    <?php endif; ?>
+        <?php endif; ?>
 
-    <!-- Landing Suggestions (solo se landing pages effettivamente analizzate) -->
-    <?php if (!empty($landingSuggestions) && ($evaluation['landing_pages_analyzed'] ?? 0) > 0): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-            </svg>
-            Suggerimenti Miglioramento Landing Pages
-        </h2>
-        <div class="space-y-3">
-            <?php foreach ($landingSuggestions as $ls): ?>
-            <?php
-            $lsPriority = $ls['priority'] ?? 'medium';
-            $lsPriorityClass = $priorityClasses[$lsPriority] ?? $priorityClasses['medium'];
-            $lsPriorityLabel = $priorityLabels[$lsPriority] ?? ucfirst($lsPriority);
-            ?>
-            <div class="bg-slate-50 dark:bg-slate-700/30 rounded-lg p-4">
-                <div class="flex items-center gap-2 mb-2">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $lsPriorityClass ?>">
-                        <?= $lsPriorityLabel ?>
-                    </span>
-                    <?php if (!empty($ls['url'])): ?>
-                    <span class="text-xs font-mono text-slate-500 dark:text-slate-400 truncate max-w-xs"><?= e($ls['url']) ?></span>
-                    <?php endif; ?>
-                </div>
-                <p class="text-sm font-medium text-slate-700 dark:text-slate-300"><?= e($ls['suggestion'] ?? '') ?></p>
-                <?php if (!empty($ls['expected_impact'])): ?>
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Impatto: <?= e($ls['expected_impact']) ?></p>
-                <?php endif; ?>
-            </div>
-            <?php endforeach; ?>
-        </div>
     </div>
     <?php endif; ?>
 
     <!-- Back Link -->
     <div class="flex items-center justify-between pt-2">
         <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns') ?>" class="inline-flex items-center text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
-            <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
+            <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
             Torna alle campagne
         </a>
-
         <?php if (!empty($evaluation['completed_at'])): ?>
-        <span class="text-xs text-slate-400 dark:text-slate-500">
-            Completata il <?= date('d/m/Y H:i', strtotime($evaluation['completed_at'])) ?>
-        </span>
+        <span class="text-xs text-slate-400 dark:text-slate-500">Completata il <?= date('d/m/Y H:i', strtotime($evaluation['completed_at'])) ?></span>
         <?php endif; ?>
     </div>
 
@@ -1094,14 +1098,128 @@ HTML;
 
 <?php if ($hasResults): ?>
 <script>
-function evaluationFixes() {
+function evaluationDashboard() {
     return {
+        activeTab: 'panoramica',
+        drawerOpen: false,
+        selectedCampaign: null,
         generators: {},
         generateUrl: '<?= e($generateUrl ?? '') ?>',
         csrfToken: '<?= csrf_token() ?>',
 
+        // Campaign data for drawer (populated from PHP)
+        campaignsData: <?= json_encode(array_map(function($cIndex, $campaign) use ($campaignTypeConfig, $areaLabels, $generatableAreas, $severityClasses, $severityLabels) {
+            $campType = strtoupper($campaign['campaign_type'] ?? 'SEARCH');
+            $typeConf = $campaignTypeConfig[$campType] ?? ['bg' => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300', 'label' => $campType];
+            $score = (float)($campaign['score'] ?? 0);
+
+            $issues = array_map(function($iIndex, $issue) use ($areaLabels, $generatableAreas, $cIndex, $severityClasses, $severityLabels) {
+                $sev = $issue['severity'] ?? 'low';
+                $area = $issue['area'] ?? '';
+                $genType = in_array($area, $generatableAreas) ? $area : null;
+                return [
+                    'severity' => $sev,
+                    'severityClass' => $severityClasses[$sev] ?? $severityClasses['low'],
+                    'severityLabel' => $severityLabels[$sev] ?? ucfirst($sev),
+                    'area' => $area,
+                    'areaLabel' => !empty($area) ? ($areaLabels[$area] ?? ucfirst($area)) : null,
+                    'description' => $issue['description'] ?? '',
+                    'recommendation' => $issue['recommendation'] ?? null,
+                    'genType' => $genType,
+                    'genKey' => "issue_{$cIndex}_{$iIndex}",
+                ];
+            }, array_keys($campaign['issues'] ?? []), $campaign['issues'] ?? []);
+
+            $adGroups = array_map(function($ag) use ($severityClasses, $severityLabels, $areaLabels) {
+                $agScore = (float)($ag['score'] ?? 0);
+                $metrics = [];
+                if (isset($ag['keyword_coherence'])) $metrics[] = ['label' => 'Coerenza KW', 'value' => number_format((float)$ag['keyword_coherence'], 1), 'colorClass' => $agScore < 5 ? 'text-red-600 dark:text-red-400' : ($agScore <= 7 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400')];
+                if (isset($ag['ad_relevance'])) {
+                    $arScore = (float)$ag['ad_relevance'];
+                    $metrics[] = ['label' => 'Pertinenza Annunci', 'value' => number_format($arScore, 1), 'colorClass' => $arScore < 5 ? 'text-red-600 dark:text-red-400' : ($arScore <= 7 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400')];
+                }
+                if (isset($ag['landing_coherence'])) {
+                    $lcScore = (float)$ag['landing_coherence'];
+                    $metrics[] = ['label' => 'Coerenza Landing', 'value' => number_format($lcScore, 1), 'colorClass' => $lcScore < 5 ? 'text-red-600 dark:text-red-400' : ($lcScore <= 7 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400')];
+                }
+                if (isset($ag['quality_score_avg'])) {
+                    $qsScore = (float)$ag['quality_score_avg'];
+                    $metrics[] = ['label' => 'QS Medio', 'value' => number_format($qsScore, 1), 'colorClass' => $qsScore < 5 ? 'text-red-600 dark:text-red-400' : ($qsScore <= 7 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400')];
+                }
+
+                $agIssues = array_map(function($agIss) use ($severityClasses, $severityLabels, $areaLabels) {
+                    $s = $agIss['severity'] ?? 'low';
+                    $a = $agIss['area'] ?? '';
+                    return [
+                        'severityClass' => $severityClasses[$s] ?? $severityClasses['low'],
+                        'severityLabel' => $severityLabels[$s] ?? ucfirst($s),
+                        'areaLabel' => !empty($a) ? ($areaLabels[$a] ?? ucfirst($a)) : null,
+                        'description' => $agIss['description'] ?? '',
+                        'recommendation' => $agIss['recommendation'] ?? null,
+                    ];
+                }, $ag['issues'] ?? []);
+
+                return [
+                    'name' => $ag['ad_group_name'] ?? 'Gruppo',
+                    'score' => number_format($agScore, 1),
+                    'scoreBadgeClass' => $agScore < 5 ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' : ($agScore <= 7 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'),
+                    'metrics' => $metrics,
+                    'landingAnalysis' => $ag['landing_analysis'] ?? null,
+                    'strengths' => $ag['strengths'] ?? [],
+                    'issues' => $agIssues,
+                    'issueCount' => count($ag['issues'] ?? []),
+                ];
+            }, $campaign['ad_groups'] ?? []);
+
+            return [
+                'name' => $campaign['campaign_name'] ?? 'Campagna',
+                'score' => number_format($score, 1),
+                'scoreBadgeClass' => $score < 5 ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' : ($score <= 7 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'),
+                'typeLabel' => $typeConf['label'],
+                'typeBg' => $typeConf['bg'],
+                'typeInsights' => $campaign['type_specific_insights'] ?? null,
+                'strengths' => $campaign['strengths'] ?? [],
+                'issues' => $issues,
+                'adGroups' => $adGroups,
+            ];
+        }, array_keys($campaigns), $campaigns)) ?>,
+
+        openDrawer(index) {
+            this.selectedCampaign = index;
+            this.drawerOpen = true;
+            document.body.style.overflow = 'hidden';
+        },
+
+        closeDrawer() {
+            this.drawerOpen = false;
+            this.selectedCampaign = null;
+            document.body.style.overflow = '';
+        },
+
         isLoading(key) {
             return !!(this.generators[key] && this.generators[key].loading);
+        },
+
+        getGeneratorHtml(key) {
+            const gen = this.generators[key];
+            if (!gen) return '';
+            let html = '';
+            if (gen.loading) {
+                html += '<div class="mt-3 flex items-center gap-2 text-xs text-primary-600 dark:text-primary-400"><svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generazione in corso...</div>';
+            }
+            if (gen.result) {
+                html += '<div class="mt-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4"><pre class="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-sans leading-relaxed max-h-96 overflow-y-auto">' + this.escapeHtml(gen.result) + '</pre></div>';
+            }
+            if (gen.error) {
+                html += '<div class="mt-2 text-xs text-red-600 dark:text-red-400">' + this.escapeHtml(gen.error) + '</div>';
+            }
+            return html;
+        },
+
+        escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
         },
 
         async generateFix(type, context, key) {
@@ -1113,10 +1231,7 @@ function evaluationFixes() {
                 formData.append('type', type);
                 formData.append('context', JSON.stringify(context));
 
-                const resp = await fetch(this.generateUrl, {
-                    method: 'POST',
-                    body: formData,
-                });
+                const resp = await fetch(this.generateUrl, { method: 'POST', body: formData });
 
                 if (!resp.ok) {
                     if (resp.status === 502 || resp.status === 504) {
@@ -1128,10 +1243,7 @@ function evaluationFixes() {
                 }
 
                 const data = await resp.json();
-
-                if (data.error) {
-                    throw new Error(data.error);
-                }
+                if (data.error) throw new Error(data.error);
 
                 this.generators[key] = { loading: false, result: data.content || '', type: data.type || '', data: data.data || null, error: null, copied: false };
             } catch (e) {
@@ -1142,52 +1254,29 @@ function evaluationFixes() {
         async copyResult(key) {
             const text = this.generators[key]?.result;
             if (!text) return;
-
-            try {
-                await navigator.clipboard.writeText(text);
-            } catch (_) {
+            try { await navigator.clipboard.writeText(text); } catch (_) {
                 const ta = document.createElement('textarea');
-                ta.value = text;
-                ta.style.cssText = 'position:fixed;left:-999px';
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
+                ta.value = text; ta.style.cssText = 'position:fixed;left:-999px';
+                document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
             }
-
             this.generators[key].copied = true;
-            setTimeout(() => {
-                if (this.generators[key]) this.generators[key].copied = false;
-            }, 2000);
+            setTimeout(() => { if (this.generators[key]) this.generators[key].copied = false; }, 2000);
         },
 
         exportCsv(key) {
             const gen = this.generators[key];
             if (!gen || !gen.data) return;
-
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = this.generateUrl.replace('/generate', '/export-csv');
             form.target = '_blank';
-
-            const fields = {
-                '_csrf_token': this.csrfToken,
-                'type': gen.type,
-                'data': JSON.stringify(gen.data),
-                'campaign_name': '<?= e($project['name'] ?? '') ?>',
-            };
-
+            const fields = { '_csrf_token': this.csrfToken, 'type': gen.type, 'data': JSON.stringify(gen.data), 'campaign_name': '<?= e($project['name'] ?? '') ?>' };
             for (const [name, value] of Object.entries(fields)) {
                 const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = name;
-                input.value = value;
+                input.type = 'hidden'; input.name = name; input.value = value;
                 form.appendChild(input);
             }
-
-            document.body.appendChild(form);
-            form.submit();
-            document.body.removeChild(form);
+            document.body.appendChild(form); form.submit(); document.body.removeChild(form);
         },
     };
 }
