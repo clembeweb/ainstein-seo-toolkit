@@ -51,6 +51,10 @@ class CrawlerService
     private int $stopCheckInterval = 5;
     private int $pagesSinceLastCheck = 0;
 
+    // Budget analysis data (set before crawl starts)
+    private array $sitemapUrls = [];
+    private array $robotsRules = [];
+
     public function __construct()
     {
         $this->projectModel = new Project();
@@ -148,6 +152,24 @@ class CrawlerService
             $this->respectRobots = (bool) $config['respect_robots'];
         }
 
+        return $this;
+    }
+
+    /**
+     * Set sitemap URLs for budget analysis (in_sitemap check)
+     */
+    public function setSitemapUrls(array $urls): self
+    {
+        $this->sitemapUrls = $urls;
+        return $this;
+    }
+
+    /**
+     * Set parsed robots.txt rules for budget analysis
+     */
+    public function setRobotsRules(array $rules): self
+    {
+        $this->robotsRules = $rules;
         return $this;
     }
 
@@ -358,6 +380,88 @@ class CrawlerService
     }
 
     /**
+     * Trace redirect chain manually (hop-by-hop) without auto-follow
+     * Ported from crawl-budget BudgetCrawlerService
+     */
+    private function traceRedirectChain(string $url): array
+    {
+        $chain = [];
+        $visited = [];
+        $maxHops = 10;
+        $currentUrl = $url;
+        $isLoop = false;
+
+        for ($hop = 0; $hop < $maxHops; $hop++) {
+            if (in_array($currentUrl, $visited)) {
+                $isLoop = true;
+                break;
+            }
+            $visited[] = $currentUrl;
+
+            $ch = curl_init($currentUrl);
+            curl_setopt_array($ch, [
+                CURLOPT_FOLLOWLOCATION => false,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HEADER => true,
+                CURLOPT_NOBODY => true,
+                CURLOPT_TIMEOUT => 5,
+                CURLOPT_CONNECTTIMEOUT => 5,
+                CURLOPT_USERAGENT => $this->userAgent,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => 0,
+            ]);
+            $response = curl_exec($ch);
+            $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpCode === 0) {
+                $chain[] = ['url' => $currentUrl, 'status' => 0];
+                break;
+            }
+
+            if ($httpCode >= 300 && $httpCode < 400) {
+                if (preg_match('/^Location:\s*(.+)$/mi', $response, $m)) {
+                    $nextUrl = $this->normalizeUrl(trim($m[1]), $currentUrl);
+                    if (!$nextUrl) break;
+                    $chain[] = ['url' => $currentUrl, 'status' => $httpCode];
+                    $currentUrl = $nextUrl;
+                    continue;
+                }
+            }
+
+            $chain[] = ['url' => $currentUrl, 'status' => $httpCode];
+            break;
+        }
+
+        return [
+            'chain' => $chain,
+            'hops' => max(0, count($chain) - 1),
+            'target' => $currentUrl,
+            'is_loop' => $isLoop,
+        ];
+    }
+
+    /**
+     * Compute crawl budget metadata for a page
+     */
+    private function computeBudgetMetadata(string $url): array
+    {
+        $parsedUrl = parse_url($url);
+        $hasParameters = !empty($parsedUrl['query']);
+        $inSitemap = in_array(rtrim($url, '/'), array_map(fn($u) => rtrim($u, '/'), $this->sitemapUrls));
+
+        $robotsParser = new RobotsTxtParser();
+        $inRobotsAllowed = empty($this->robotsRules) ? null : ($robotsParser->isAllowed($url, $this->robotsRules) ? 1 : 0);
+
+        return [
+            'has_parameters' => $hasParameters ? 1 : 0,
+            'in_sitemap' => $inSitemap ? 1 : 0,
+            'in_robots_allowed' => $inRobotsAllowed,
+            'crawl_source' => $inSitemap ? 'sitemap' : 'spider',
+        ];
+    }
+
+    /**
      * Ottieni varianti dominio (con e senza www)
      */
     private function getDomainVariants(string $domain): array
@@ -458,6 +562,19 @@ class CrawlerService
         $html = mb_convert_encoding($html, 'UTF-8', 'UTF-8');
         $html = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $html);
         $data['html_content'] = $html;
+
+        // Crawl budget data — redirect chain tracing + metadata
+        $redirectData = $this->traceRedirectChain($url);
+        $budgetMeta = $this->computeBudgetMetadata($url);
+
+        $data['redirect_chain'] = json_encode($redirectData['chain']);
+        $data['redirect_hops'] = $redirectData['hops'];
+        $data['redirect_target'] = $redirectData['target'];
+        $data['is_redirect_loop'] = $redirectData['is_loop'] ? 1 : 0;
+        $data['has_parameters'] = $budgetMeta['has_parameters'];
+        $data['in_sitemap'] = $budgetMeta['in_sitemap'];
+        $data['in_robots_allowed'] = $budgetMeta['in_robots_allowed'];
+        $data['crawl_source'] = $budgetMeta['crawl_source'];
 
         return $data;
     }
