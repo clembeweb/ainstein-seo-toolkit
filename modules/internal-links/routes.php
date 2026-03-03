@@ -2057,7 +2057,7 @@ Router::post('/internal-links/project/{id}/suggestions/{sid}/snippet', function 
     exit;
 });
 
-// Segna suggerimento come applicato
+// Segna suggerimento come applicato (manual_copy o cms_push)
 Router::post('/internal-links/project/{id}/suggestions/{sid}/apply', function ($id, $sid) {
     Middleware::auth();
     Middleware::csrf();
@@ -2075,6 +2075,115 @@ Router::post('/internal-links/project/{id}/suggestions/{sid}/apply', function ($
 
     $method = $_POST['method'] ?? 'manual_copy';
     $suggestionModel = new Suggestion();
+
+    // CMS Push flow
+    if ($method === 'cms_push') {
+        // Verify connector
+        if (empty($project['connector_id'])) {
+            echo json_encode(['success' => false, 'error' => 'Nessun connettore CMS configurato per questo progetto']);
+            exit;
+        }
+
+        // Load connector config
+        $connector = \Core\Database::fetch(
+            "SELECT * FROM cc_connectors WHERE id = ? AND user_id = ?",
+            [$project['connector_id'], $userId]
+        );
+        if (!$connector) {
+            echo json_encode(['success' => false, 'error' => 'Connettore CMS non trovato']);
+            exit;
+        }
+
+        // Get suggestion with URLs
+        $suggestion = $suggestionModel->findWithUrls((int) $sid, (int) $id);
+        if (!$suggestion) {
+            echo json_encode(['success' => false, 'error' => 'Suggerimento non trovato']);
+            exit;
+        }
+
+        if (empty($suggestion['ai_snippet_html']) || empty($suggestion['ai_original_paragraph'])) {
+            echo json_encode(['success' => false, 'error' => 'Genera prima lo snippet AI per questo suggerimento']);
+            exit;
+        }
+
+        try {
+            $config = json_decode($connector['config'], true);
+            $wp = new \Modules\ContentCreator\Services\Connectors\WordPressConnector($config);
+
+            // Find post ID by matching source URL
+            $posts = $wp->fetchItems('posts', 500);
+            $wpPostId = null;
+            $sourceUrlNormalized = rtrim(strtolower($suggestion['source_url']), '/');
+
+            if (!empty($posts['items'])) {
+                foreach ($posts['items'] as $post) {
+                    $postUrlNormalized = rtrim(strtolower($post['url'] ?? ''), '/');
+                    if ($postUrlNormalized === $sourceUrlNormalized) {
+                        $wpPostId = $post['id'];
+                        break;
+                    }
+                }
+            }
+
+            if (!$wpPostId) {
+                echo json_encode(['success' => false, 'error' => 'URL sorgente non trovata nel CMS: ' . $suggestion['source_url']]);
+                exit;
+            }
+
+            // Fetch raw content
+            $rawResult = $wp->fetchRawContent((int) $wpPostId);
+            if (!$rawResult['success'] || empty($rawResult['data']['content'])) {
+                echo json_encode(['success' => false, 'error' => 'Impossibile recuperare il contenuto dal CMS']);
+                exit;
+            }
+
+            $currentContent = $rawResult['data']['content'];
+
+            // Replace original paragraph with snippet
+            $originalParagraph = $suggestion['ai_original_paragraph'];
+            $snippetHtml = $suggestion['ai_snippet_html'];
+
+            // Try exact match first, then normalized match
+            if (strpos($currentContent, $originalParagraph) !== false) {
+                $newContent = str_replace($originalParagraph, $snippetHtml, $currentContent);
+            } else {
+                // Normalize whitespace for comparison
+                $normalizedCurrent = preg_replace('/\s+/', ' ', $currentContent);
+                $normalizedOriginal = preg_replace('/\s+/', ' ', $originalParagraph);
+                if (strpos($normalizedCurrent, $normalizedOriginal) !== false) {
+                    $newContent = preg_replace(
+                        '/' . preg_quote($normalizedOriginal, '/') . '/',
+                        $snippetHtml,
+                        $normalizedCurrent,
+                        1
+                    );
+                } else {
+                    echo json_encode([
+                        'success' => false,
+                        'error' => 'Il paragrafo originale non corrisponde al contenuto attuale. Il contenuto potrebbe essere stato modificato.'
+                    ]);
+                    exit;
+                }
+            }
+
+            // Push updated content
+            $updateResult = $wp->updateItem((string) $wpPostId, 'post', ['content' => $newContent]);
+
+            \Core\Database::reconnect();
+
+            if (!$updateResult['success']) {
+                echo json_encode(['success' => false, 'error' => 'Errore push CMS: ' . ($updateResult['message'] ?? 'Errore sconosciuto')]);
+                exit;
+            }
+
+        } catch (\Exception $e) {
+            \Core\Database::reconnect();
+            echo json_encode(['success' => false, 'error' => 'Errore CMS: ' . $e->getMessage()]);
+            exit;
+        }
+    }
+
+    // Mark as applied
     $ok = $suggestionModel->markApplied((int) $sid, $method);
 
     $projectModel->logActivity((int) $id, $userId, 'suggestion_applied', [
@@ -2153,5 +2262,205 @@ Router::post('/internal-links/project/{id}/suggestions/bulk', function ($id) {
     $projectModel->updateStats((int) $id);
 
     echo json_encode(['success' => true, 'affected' => $affected]);
+    exit;
+});
+
+// Export suggerimenti (CSV o HTML)
+Router::get('/internal-links/project/{id}/suggestions/export', function ($id) {
+    Middleware::auth();
+
+    $user = Auth::user();
+    $projectModel = new Project();
+    $project = $projectModel->findAccessible((int) $id, $user['id']);
+
+    if (!$project) {
+        $_SESSION['flash_error'] = 'Progetto non trovato';
+        header('Location: ' . url('/internal-links'));
+        exit;
+    }
+
+    $format = $_GET['format'] ?? 'csv';
+    $suggestionModel = new Suggestion();
+
+    // Fetch ALL suggestions (no pagination limit)
+    $result = $suggestionModel->getByProject((int) $id, 1, 10000);
+    $suggestions = $result['data'];
+    $stats = $suggestionModel->getStats((int) $id);
+
+    if ($format === 'html') {
+        // HTML Report
+        header('Content-Type: text/html; charset=utf-8');
+        header('Content-Disposition: inline; filename="suggerimenti_' . date('Y-m-d') . '.html"');
+
+        $reasonLabels = [
+            'hub_needs_outgoing' => 'Hub - Necessita link in uscita',
+            'orphan_needs_inbound' => 'Orfano - Necessita link in entrata',
+            'topical_relevance' => 'Rilevanza Topica',
+        ];
+        $statusLabels = [
+            'pending' => 'In Attesa',
+            'ai_validated' => 'Validato AI',
+            'snippet_ready' => 'Snippet Pronto',
+            'applied' => 'Applicato',
+            'dismissed' => 'Ignorato',
+        ];
+
+        // Group by reason
+        $grouped = [];
+        foreach ($suggestions as $s) {
+            $grouped[$s['reason']][] = $s;
+        }
+
+        ob_start();
+        ?>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="utf-8">
+    <title>Suggerimenti Link - <?= htmlspecialchars($project['name']) ?></title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f8fafc; color: #1e293b; }
+        h1 { font-size: 1.5rem; margin-bottom: 4px; }
+        .meta { color: #64748b; font-size: 0.875rem; margin-bottom: 24px; }
+        .stats { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+        .stat { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; text-align: center; min-width: 120px; }
+        .stat-value { font-size: 1.5rem; font-weight: 700; }
+        .stat-label { font-size: 0.75rem; color: #64748b; margin-top: 2px; }
+        .group-title { font-size: 1.1rem; font-weight: 600; margin: 24px 0 12px; padding-bottom: 8px; border-bottom: 2px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; background: white; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 24px; font-size: 0.875rem; }
+        th { background: #f1f5f9; padding: 8px 12px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; }
+        td { padding: 8px 12px; border-top: 1px solid #e2e8f0; vertical-align: top; }
+        tr:hover { background: #f8fafc; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+        .badge-amber { background: #fef3c7; color: #92400e; }
+        .badge-slate { background: #f1f5f9; color: #475569; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+        .badge-cyan { background: #cffafe; color: #155e75; }
+        .url { max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .anchors { display: flex; gap: 4px; flex-wrap: wrap; }
+        .anchor-pill { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 4px; padding: 1px 6px; font-size: 0.75rem; }
+        .snippet-preview { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 4px; padding: 8px; font-size: 0.8rem; margin-top: 4px; max-height: 100px; overflow-y: auto; }
+        @media print { body { background: white; } .stats { page-break-inside: avoid; } table { page-break-inside: auto; } }
+    </style>
+</head>
+<body>
+    <h1>Suggerimenti Link Interni</h1>
+    <div class="meta"><?= htmlspecialchars($project['name']) ?> &mdash; <?= htmlspecialchars($project['base_url']) ?> &mdash; Generato il <?= date('d/m/Y H:i') ?></div>
+
+    <div class="stats">
+        <div class="stat"><div class="stat-value"><?= number_format($stats['total']) ?></div><div class="stat-label">Totale</div></div>
+        <div class="stat"><div class="stat-value" style="color:#059669"><?= number_format($stats['applied']) ?></div><div class="stat-label">Applicati</div></div>
+        <div class="stat"><div class="stat-value" style="color:#d97706"><?= number_format($stats['actionable']) ?></div><div class="stat-label">Da Applicare</div></div>
+        <div class="stat"><div class="stat-value" style="color:#dc2626"><?= number_format($stats['dismissed']) ?></div><div class="stat-label">Ignorati</div></div>
+    </div>
+
+    <?php foreach (['hub_needs_outgoing', 'orphan_needs_inbound', 'topical_relevance'] as $reason): ?>
+    <?php if (!empty($grouped[$reason])): ?>
+    <div class="group-title"><?= $reasonLabels[$reason] ?> (<?= count($grouped[$reason]) ?>)</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Sorgente</th>
+                <th>Destinazione</th>
+                <th>Score</th>
+                <th>Ancore</th>
+                <th>Stato</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($grouped[$reason] as $s): ?>
+            <tr>
+                <td class="url" title="<?= htmlspecialchars($s['source_url']) ?>"><?= htmlspecialchars(mb_substr($s['source_url'], 0, 50)) ?></td>
+                <td class="url" title="<?= htmlspecialchars($s['destination_url']) ?>"><?= htmlspecialchars(mb_substr($s['destination_url'], 0, 50)) ?></td>
+                <td>
+                    <span class="badge badge-slate"><?= $s['total_score'] ?></span>
+                    <?php if ($s['ai_relevance_score']): ?>
+                    <span class="badge badge-blue">AI: <?= $s['ai_relevance_score'] ?></span>
+                    <?php endif; ?>
+                </td>
+                <td>
+                    <div class="anchors">
+                    <?php
+                    $anchors = $s['ai_suggested_anchors'] ? json_decode($s['ai_suggested_anchors'], true) : [];
+                    foreach (array_slice($anchors ?: [], 0, 3) as $a): ?>
+                        <span class="anchor-pill"><?= htmlspecialchars($a) ?></span>
+                    <?php endforeach; ?>
+                    </div>
+                    <?php if (!empty($s['ai_snippet_html'])): ?>
+                    <div class="snippet-preview"><?= $s['ai_snippet_html'] ?></div>
+                    <?php endif; ?>
+                </td>
+                <td>
+                    <?php
+                    $statusBadge = match($s['status']) {
+                        'applied' => 'badge-green',
+                        'snippet_ready' => 'badge-cyan',
+                        'ai_validated' => 'badge-blue',
+                        'dismissed' => 'badge-red',
+                        default => 'badge-slate',
+                    };
+                    ?>
+                    <span class="badge <?= $statusBadge ?>"><?= $statusLabels[$s['status']] ?? $s['status'] ?></span>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+    <?php endif; ?>
+    <?php endforeach; ?>
+
+</body>
+</html>
+        <?php
+        echo ob_get_clean();
+        exit;
+    }
+
+    // CSV Export (default)
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="suggerimenti_' . date('Y-m-d') . '.csv"');
+
+    $output = fopen('php://output', 'w');
+    // BOM for Excel UTF-8
+    fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+    fputcsv($output, [
+        'Sorgente URL', 'Destinazione URL', 'Score Totale', 'Score AI',
+        'Motivo', 'Stato', 'Ancore Suggerite', 'Ancora Usata',
+        'Metodo Inserimento', 'Snippet HTML'
+    ]);
+
+    $reasonLabels = [
+        'hub_needs_outgoing' => 'Hub',
+        'orphan_needs_inbound' => 'Orfano',
+        'topical_relevance' => 'Topico',
+    ];
+    $statusLabels = [
+        'pending' => 'In Attesa',
+        'ai_validated' => 'Validato AI',
+        'snippet_ready' => 'Snippet Pronto',
+        'applied' => 'Applicato',
+        'dismissed' => 'Ignorato',
+    ];
+
+    foreach ($suggestions as $s) {
+        $anchors = $s['ai_suggested_anchors'] ? json_decode($s['ai_suggested_anchors'], true) : [];
+        fputcsv($output, [
+            $s['source_url'] ?? '',
+            $s['destination_url'] ?? '',
+            $s['total_score'] ?? 0,
+            $s['ai_relevance_score'] ?? '',
+            $reasonLabels[$s['reason']] ?? $s['reason'],
+            $statusLabels[$s['status']] ?? $s['status'],
+            implode(' | ', $anchors ?: []),
+            $s['ai_anchor_used'] ?? '',
+            $s['ai_insertion_method'] ?? '',
+            $s['ai_snippet_html'] ?? '',
+        ]);
+    }
+
+    fclose($output);
     exit;
 });

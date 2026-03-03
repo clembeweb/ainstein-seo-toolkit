@@ -225,6 +225,14 @@ class WordPressConnector implements ConnectorInterface
         return 'wordpress';
     }
 
+    /**
+     * Fetch raw HTML content of a post (for Internal Links module)
+     */
+    public function fetchRawContent(int $postId): array
+    {
+        return $this->makeRequest('GET', '/wp-json/seo-toolkit/v1/posts/' . $postId . '/raw-content');
+    }
+
     // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
