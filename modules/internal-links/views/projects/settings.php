@@ -64,6 +64,36 @@
                                class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                     </div>
 
+                    <!-- Connettore CMS -->
+                    <div class="border-t border-slate-200 dark:border-slate-700 pt-6">
+                        <h4 class="text-sm font-semibold text-slate-900 dark:text-white mb-1">Connettore CMS</h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                            Collega un CMS per applicare automaticamente i link suggeriti
+                        </p>
+
+                        <?php if (!empty($connectors)): ?>
+                        <select name="connector_id" id="connector_id"
+                                class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            <option value="">Nessun connettore</option>
+                            <?php foreach ($connectors as $c): ?>
+                            <option value="<?= $c['id'] ?>" <?= ($project['connector_id'] ?? '') == $c['id'] ? 'selected' : '' ?>>
+                                <?= e($c['name']) ?> (<?= ucfirst($c['type']) ?>)
+                                <?= $c['last_test_status'] === 'success' ? ' - Connesso' : ' - Non verificato' ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <?php else: ?>
+                        <div class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4">
+                            <p class="text-sm text-slate-500 dark:text-slate-400">
+                                Nessun connettore CMS configurato.
+                                <a href="<?= url('/content-creator/connectors/create') ?>" class="text-cyan-600 dark:text-cyan-400 hover:underline">
+                                    Configura in Content Creator
+                                </a>
+                            </p>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+
                     <div class="flex justify-end">
                         <button type="submit" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
                             Salva Modifiche

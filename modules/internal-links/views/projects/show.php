@@ -24,7 +24,7 @@
     <?= \Core\View::partial('components/orphaned-project-notice', ['project' => $project]) ?>
 
     <!-- Quick Actions -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
         <a href="<?= url('/internal-links/project/' . $project['id'] . '/urls') ?>" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 hover:shadow-md transition-shadow text-center">
             <div class="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 mx-auto flex items-center justify-center mb-2">
                 <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -63,6 +63,19 @@
             </div>
             <p class="text-sm font-medium text-slate-900 dark:text-white">Analisi AI</p>
             <p class="text-xs text-slate-500 dark:text-slate-400"><?= number_format($project['analyzed_links']) ?> analizzati</p>
+        </a>
+
+        <a href="<?= url('/internal-links/project/' . $project['id'] . '/suggestions') ?>"
+           class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 hover:shadow-md transition-shadow text-center">
+            <div class="h-10 w-10 rounded-lg bg-cyan-100 dark:bg-cyan-900/50 mx-auto flex items-center justify-center mb-2">
+                <svg class="w-5 h-5 text-cyan-600 dark:text-cyan-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"/>
+                </svg>
+            </div>
+            <p class="text-sm font-medium text-slate-900 dark:text-white">Suggerimenti</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+                <?= number_format($suggestionStats['actionable'] ?? 0) ?> da applicare
+            </p>
         </a>
     </div>
 

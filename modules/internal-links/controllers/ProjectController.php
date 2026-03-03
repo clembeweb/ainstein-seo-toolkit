@@ -5,10 +5,12 @@ namespace Modules\InternalLinks\Controllers;
 use Core\View;
 use Core\Auth;
 use Core\Credits;
+use Core\Database;
 use Core\ModuleLoader;
 use Modules\InternalLinks\Models\Project;
 use Modules\InternalLinks\Models\Url;
 use Modules\InternalLinks\Models\InternalLink;
+use Modules\InternalLinks\Models\Suggestion;
 
 /**
  * ProjectController
@@ -147,6 +149,9 @@ class ProjectController
         $orphanPages = $this->link->getOrphanPages($id);
         $recentActivity = $this->project->getActivity($id, 10);
 
+        $suggestionModel = new Suggestion();
+        $suggestionStats = $suggestionModel->getStats($id);
+
         return View::render('internal-links/projects/show', [
             'title' => $project['name'] . ' - Dashboard',
             'user' => $user,
@@ -157,6 +162,7 @@ class ProjectController
             'juiceDistribution' => $juiceDistribution,
             'orphanCount' => count($orphanPages),
             'recentActivity' => $recentActivity,
+            'suggestionStats' => $suggestionStats,
         ]);
     }
 
@@ -181,11 +187,18 @@ class ProjectController
             exit;
         }
 
+        // Fetch active CMS connectors for this user (from Content Creator module)
+        $connectors = Database::fetchAll(
+            "SELECT id, name, type, is_active, last_test_status FROM cc_connectors WHERE user_id = ? AND is_active = 1",
+            [$user['id']]
+        );
+
         return View::render('internal-links/projects/settings', [
             'title' => $project['name'] . ' - Impostazioni',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
+            'connectors' => $connectors,
         ]);
     }
 
@@ -216,6 +229,7 @@ class ProjectController
         $scrapeDelay = (int) ($_POST['scrape_delay'] ?? 1000);
         $userAgent = trim($_POST['user_agent'] ?? '');
         $status = $_POST['status'] ?? 'active';
+        $connectorId = !empty($_POST['connector_id']) ? (int) $_POST['connector_id'] : null;
 
         $errors = [];
 
@@ -245,6 +259,7 @@ class ProjectController
                 'scrape_delay' => $scrapeDelay,
                 'user_agent' => $userAgent,
                 'status' => $status,
+                'connector_id' => $connectorId,
             ], $user['id']);
 
             $this->project->logActivity($id, $user['id'], 'project_updated');
