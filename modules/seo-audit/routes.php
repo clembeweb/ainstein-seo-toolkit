@@ -196,6 +196,15 @@ Router::get('/seo-audit/project/{id}/history', function ($id) {
 });
 
 // ============================================
+// CRAWL BUDGET TAB
+// ============================================
+
+Router::get('/seo-audit/project/{id}/budget', fn($id) => (new \Modules\SeoAudit\Controllers\BudgetResultsController())->overview((int) $id));
+Router::get('/seo-audit/project/{id}/budget/redirects', fn($id) => (new \Modules\SeoAudit\Controllers\BudgetResultsController())->redirects((int) $id));
+Router::get('/seo-audit/project/{id}/budget/waste', fn($id) => (new \Modules\SeoAudit\Controllers\BudgetResultsController())->waste((int) $id));
+Router::get('/seo-audit/project/{id}/budget/indexability', fn($id) => (new \Modules\SeoAudit\Controllers\BudgetResultsController())->indexability((int) $id));
+
+// ============================================
 // STRUTTURA LINK ROUTES
 // ============================================
 
