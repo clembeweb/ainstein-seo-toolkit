@@ -61,6 +61,9 @@ class KeywordController
             'is_tracked' => $_GET['tracked'] ?? null,
             'group_name' => $_GET['group'] ?? null,
             'position_max' => $_GET['position'] ?? null,
+            'intent' => $_GET['intent'] ?? null,
+            'position_range' => $_GET['position_range'] ?? null,
+            'volume_range' => $_GET['volume_range'] ?? null,
         ];
 
         // Date range comparison
@@ -81,6 +84,52 @@ class KeywordController
             $keywords = $this->keyword->allWithPositionComparison($projectId, $dateFrom, $dateTo, $filters);
         } else {
             $keywords = $this->keyword->allWithPositions($projectId, 30, $filters);
+        }
+
+        // Enrich keywords with visibility and est. traffic
+        foreach ($keywords as &$kw) {
+            $pos = (int) ($kw['last_position'] ?? 0);
+            $vol = (int) ($kw['search_volume'] ?? 0);
+            $kw['visibility'] = \Modules\SeoTracking\Services\VisibilityService::calculateKeywordVisibility($pos);
+            $kw['est_traffic'] = \Modules\SeoTracking\Services\VisibilityService::calculateKeywordEstTraffic($vol, $pos);
+        }
+        unset($kw);
+
+        // Apply advanced filters (post-query filtering for intent/position_range/volume_range)
+        if (!empty($filters['intent'])) {
+            $keywords = array_filter($keywords, fn($k) => strtolower($k['keyword_intent'] ?? '') === strtolower($filters['intent']));
+            $keywords = array_values($keywords);
+        }
+        if (!empty($filters['position_range'])) {
+            $range = match ($filters['position_range']) {
+                'top3' => [1, 3], 'top10' => [1, 10], 'top20' => [1, 20],
+                'top50' => [1, 50], '51-100' => [51, 100], '100+' => [101, null],
+                default => [null, null],
+            };
+            if ($range[0] !== null) {
+                $keywords = array_filter($keywords, function ($k) use ($range) {
+                    $pos = (int)($k['last_position'] ?? 0);
+                    if ($pos <= 0) return false;
+                    if ($range[1] !== null) return $pos >= $range[0] && $pos <= $range[1];
+                    return $pos >= $range[0];
+                });
+                $keywords = array_values($keywords);
+            }
+        }
+        if (!empty($filters['volume_range'])) {
+            $range = match ($filters['volume_range']) {
+                '0-100' => [0, 100], '100-1000' => [100, 1000],
+                '1000-10000' => [1000, 10000], '10000+' => [10000, null],
+                default => [null, null],
+            };
+            if ($range[0] !== null) {
+                $keywords = array_filter($keywords, function ($k) use ($range) {
+                    $vol = (int)($k['search_volume'] ?? 0);
+                    if ($range[1] !== null) return $vol >= $range[0] && $vol <= $range[1];
+                    return $vol >= $range[0];
+                });
+                $keywords = array_values($keywords);
+            }
         }
 
         $groups = $this->keyword->getGroups($projectId);
@@ -118,6 +167,7 @@ class KeywordController
             'dateRange' => $dateRange,
             'userCredits' => Credits::getBalance($user['id']),
             'activeJob' => $activeJob,
+            'visibilityTrend' => \Modules\SeoTracking\Services\VisibilityService::getVisibilityTrend($projectId, 30),
         ]);
     }
 
