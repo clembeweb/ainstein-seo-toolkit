@@ -97,7 +97,7 @@ $config = json_encode([
                 <p class="text-xs text-slate-500 dark:text-slate-400">Impression sprecate</p>
             </div>
             <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-center">
-                <p class="text-2xl font-bold text-blue-600 dark:text-blue-400" x-text="'€' + stats.total_cost.toFixed(2)"></p>
+                <p class="text-2xl font-bold text-blue-600 dark:text-blue-400" x-text="'€' + parseFloat(stats.total_cost || 0).toFixed(2)"></p>
                 <p class="text-xs text-slate-500 dark:text-slate-400">Spesa totale</p>
             </div>
         </div>
