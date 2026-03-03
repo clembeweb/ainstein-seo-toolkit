@@ -13,6 +13,10 @@ use Modules\SeoAudit\Models\CrawlSession;
 use Modules\SeoAudit\Models\CrawlJob;
 use Modules\SeoAudit\Services\CrawlerService;
 use Modules\SeoAudit\Services\IssueDetector;
+use Modules\SeoAudit\Services\BudgetIssueDetector;
+use Modules\SeoAudit\Services\BudgetScoreCalculator;
+use Modules\SeoAudit\Services\RobotsTxtParser;
+use Modules\SeoAudit\Services\SitemapParser;
 use Core\Logger;
 
 /**
@@ -129,6 +133,36 @@ class CrawlController
             $crawler->init($id, $user['id']);
             $crawler->setSessionId($sessionId);
             $crawler->setConfig($config); // Passa configurazione spider
+
+            // Crawl Budget: fetch robots.txt + sitemaps before discovery
+            $baseUrl = rtrim($project['url'] ?? $project['domain'] ?? '', '/');
+            if (!str_starts_with($baseUrl, 'http')) {
+                $baseUrl = 'https://' . $baseUrl;
+            }
+            $robotsContent = @file_get_contents($baseUrl . '/robots.txt');
+            $robotsRules = [];
+            $sitemapUrls = [];
+            $crawlDelay = null;
+
+            if ($robotsContent) {
+                $robotsParser = new RobotsTxtParser();
+                $robotsRules = $robotsParser->parse($robotsContent);
+                $crawlDelay = $robotsParser->extractCrawlDelay($robotsContent);
+            }
+
+            $sitemapParser = new SitemapParser();
+            $sitemapResult = $sitemapParser->discoverAndParse($baseUrl, $robotsContent ?: null);
+            $sitemapUrls = $sitemapResult['urls'] ?? [];
+
+            // Save budget data to sa_site_config
+            Database::execute(
+                "UPDATE sa_site_config SET robots_rules = ?, crawl_delay = ? WHERE project_id = ?",
+                [!empty($robotsRules) ? json_encode($robotsRules) : null, $crawlDelay, $id]
+            );
+
+            // Pass to crawler for per-page budget checks
+            $crawler->setSitemapUrls($sitemapUrls);
+            $crawler->setRobotsRules($robotsRules);
 
             // Fase 1: Discovery URL
             $urls = $crawler->discoverUrls();
@@ -617,6 +651,22 @@ class CrawlController
         $issueDetector->init($id);
         $issueDetector->setSessionId((int) $job['session_id']);
 
+        // Budget issue detector
+        $budgetDetector = new BudgetIssueDetector();
+        $budgetDetector->init($id)->setSessionId((int) $job['session_id']);
+
+        // Load robots/sitemap data for crawler budget checks
+        $siteConfig = Database::fetch(
+            "SELECT robots_rules, sitemap_urls FROM sa_site_config WHERE project_id = ?",
+            [$id]
+        );
+        if ($siteConfig) {
+            $robotsRules = $siteConfig['robots_rules'] ? json_decode($siteConfig['robots_rules'], true) : [];
+            $sitemapUrls = $siteConfig['sitemap_urls'] ? json_decode($siteConfig['sitemap_urls'], true) : [];
+            if ($robotsRules) $crawlerService->setRobotsRules($robotsRules);
+            if ($sitemapUrls) $crawlerService->setSitemapUrls($sitemapUrls);
+        }
+
         $this->sendEvent('started', [
             'total' => (int) $job['items_total'],
             'job_id' => $jobId,
@@ -665,6 +715,32 @@ class CrawlController
                 // Tutte le pagine processate - finalizza
                 // CRITICO: Salvare nel DB PRIMA dell'evento completed (polling fallback)
                 Database::reconnect();
+
+                // Budget post-analysis (orphans, duplicates, canonical chains, noindex with links)
+                try {
+                    $budgetDetector->runPostAnalysis();
+                    Database::reconnect();
+                } catch (\Exception $e) {
+                    Logger::channel('scraping')->warning("Budget post-analysis error", ['error' => $e->getMessage()]);
+                }
+
+                // Calculate and save budget score
+                try {
+                    $budgetCalc = new BudgetScoreCalculator();
+                    $budgetResult = $budgetCalc->calculate($id, (int) $job['session_id']);
+                    Database::reconnect();
+
+                    // Save to session
+                    Database::execute(
+                        "UPDATE sa_crawl_sessions SET budget_score = ?, waste_percentage = ? WHERE id = ?",
+                        [$budgetResult['score'], $budgetResult['waste_percentage'], (int) $job['session_id']]
+                    );
+                    // Save to project
+                    $this->projectModel->update($id, ['budget_score' => $budgetResult['score']]);
+                } catch (\Exception $e) {
+                    Logger::channel('scraping')->warning("Budget score calc error", ['error' => $e->getMessage()]);
+                }
+
                 $this->finalizeCrawl($id, (int) $job['user_id']);
                 $jobModel->complete($jobId);
                 $this->sessionModel->complete((int) $job['session_id']);
@@ -706,12 +782,13 @@ class CrawlController
                     // Salva dati pagina
                     $pageId = $crawlerService->savePage($pageData);
 
-                    // Rileva issues
+                    // Rileva issues (on-page + budget)
                     $issueCount = $issueDetector->analyzeAndSave($pageData, $pageId);
+                    $budgetIssueCount = $budgetDetector->analyzeAndSave($pageData, $pageId);
                     Database::reconnect();
 
                     $completed++;
-                    $totalIssuesFound += $issueCount;
+                    $totalIssuesFound += $issueCount + $budgetIssueCount;
                     $jobModel->incrementCompleted($jobId);
                     $jobModel->updateProgress($jobId, $completed, $pendingPage['url']);
 
