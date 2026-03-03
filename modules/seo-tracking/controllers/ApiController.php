@@ -232,6 +232,43 @@ class ApiController
     }
 
     /**
+     * GET /api/project/{id}/country-summary
+     * Restituisce metriche aggregate per ogni country attiva.
+     */
+    public function countrySummary(int $id): string
+    {
+        if (!$this->checkProject($id)) {
+            return View::json(['error' => 'Progetto non trovato'], 404);
+        }
+
+        $countries = $this->keyword->getActiveCountries($id);
+        $result = [];
+
+        foreach ($countries as $country) {
+            $countryCode = $country['location_code'];
+            $keywords = $this->keyword->allWithPositions($id, 30, ['location_code' => $countryCode]);
+            $tracked = array_filter($keywords, fn($k) => !empty($k['is_tracked']));
+
+            $visibility = \Modules\SeoTracking\Services\VisibilityService::calculateVisibility($tracked);
+            $estTraffic = \Modules\SeoTracking\Services\VisibilityService::calculateEstTraffic($tracked);
+
+            $positions = array_filter(array_map(fn($k) => (int)($k['last_position'] ?? 0), $tracked), fn($p) => $p > 0);
+            $avgPosition = !empty($positions) ? round(array_sum($positions) / count($positions), 1) : 0;
+
+            $result[] = [
+                'country_code' => $countryCode,
+                'country_name' => $country['country_name'] ?? $countryCode,
+                'keyword_count' => (int) $country['keyword_count'],
+                'visibility' => $visibility,
+                'est_traffic' => round($estTraffic, 1),
+                'avg_position' => $avgPosition,
+            ];
+        }
+
+        return View::json($result);
+    }
+
+    /**
      * Visibility stats (KPI data for dashboard)
      */
     public function visibilityStats(int $id): string
@@ -240,7 +277,9 @@ class ApiController
             return View::json(['error' => 'Progetto non trovato'], 404);
         }
 
-        $keywords = $this->keyword->allWithPositions($id, 30);
+        $country = $_GET['country'] ?? null;
+        $filters = $country ? ['location_code' => $country] : [];
+        $keywords = $this->keyword->allWithPositions($id, 30, $filters);
         $trackedKeywords = array_filter($keywords, fn($k) => !empty($k['is_tracked']));
 
         $visibility = \Modules\SeoTracking\Services\VisibilityService::calculateVisibility($trackedKeywords);
@@ -267,7 +306,8 @@ class ApiController
         }
 
         $days = (int) ($_GET['days'] ?? 30);
-        $data = \Modules\SeoTracking\Services\VisibilityService::getDistributionOverTime($id, $days);
+        $country = $_GET['country'] ?? null;
+        $data = \Modules\SeoTracking\Services\VisibilityService::getDistributionOverTime($id, $days, $country);
 
         return View::json($data);
     }
@@ -282,7 +322,8 @@ class ApiController
         }
 
         $days = (int) ($_GET['days'] ?? 30);
-        $data = \Modules\SeoTracking\Services\VisibilityService::getVisibilityTrend($id, $days);
+        $country = $_GET['country'] ?? null;
+        $data = \Modules\SeoTracking\Services\VisibilityService::getVisibilityTrend($id, $days, $country);
 
         return View::json($data);
     }
@@ -298,11 +339,13 @@ class ApiController
 
         $dateFrom = $_GET['date_from'] ?? date('Y-m-d', strtotime('-7 days'));
         $dateTo = $_GET['date_to'] ?? date('Y-m-d');
+        $country = $_GET['country'] ?? null;
         $filters = [
             'search' => $_GET['search'] ?? '',
             'intent' => $_GET['intent'] ?? '',
             'position_range' => $_GET['position_range'] ?? '',
             'volume_range' => $_GET['volume_range'] ?? '',
+            'location_code' => $country,
         ];
 
         $data = \Modules\SeoTracking\Services\VisibilityService::getKeywordsCompare($id, $dateFrom, $dateTo, $filters);

@@ -544,6 +544,19 @@ class Project
             ['label' => 'In Top 10', 'value' => (int) ($kwStats['top10'] ?? 0)],
         ];
 
+        // Country breakdown for widget
+        $activeCountries = Database::fetchAll("
+            SELECT location_code, COUNT(*) as kw_count
+            FROM st_keywords
+            WHERE project_id = ? AND is_tracked = 1
+            GROUP BY location_code
+            ORDER BY COUNT(*) DESC
+        ", [$projectId]);
+
+        if (count($activeCountries) > 1) {
+            $metrics[] = ['label' => 'Country', 'value' => count($activeCountries)];
+        }
+
         return [
             'metrics' => $metrics,
             'lastActivity' => $lastCheck['last_at'] ?? null,

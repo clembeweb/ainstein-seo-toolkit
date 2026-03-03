@@ -185,8 +185,18 @@ class VisibilityService
      * @param int $days Numero di giorni da analizzare
      * @return array Array di date con distribuzione [date, top3, top10, top20, top50, top100, beyond]
      */
-    public static function getDistributionOverTime(int $projectId, int $days = 30): array
+    public static function getDistributionOverTime(int $projectId, int $days = 30, ?string $country = null): array
     {
+        $countryJoin = '';
+        $countryWhere = '';
+        $params = [$projectId, $days];
+
+        if ($country) {
+            $countryJoin = 'JOIN st_keywords k ON kp.keyword_id = k.id';
+            $countryWhere = 'AND k.location_code = ?';
+            $params[] = $country;
+        }
+
         $sql = "
             SELECT
                 kp.date,
@@ -198,13 +208,15 @@ class VisibilityService
                 SUM(CASE WHEN kp.avg_position > 100 THEN 1 ELSE 0 END) as beyond,
                 COUNT(*) as total
             FROM st_keyword_positions kp
+            {$countryJoin}
             WHERE kp.project_id = ?
               AND kp.date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+              {$countryWhere}
             GROUP BY kp.date
             ORDER BY kp.date ASC
         ";
 
-        $rows = Database::fetchAll($sql, [$projectId, $days]);
+        $rows = Database::fetchAll($sql, $params);
 
         // Cast a interi
         return array_map(function ($row) {
@@ -229,25 +241,37 @@ class VisibilityService
      * @param int $days Numero di giorni da analizzare
      * @return array Array di [date, visibility, est_traffic, avg_position, keyword_count]
      */
-    public static function getVisibilityTrend(int $projectId, int $days = 30): array
+    public static function getVisibilityTrend(int $projectId, int $days = 30, ?string $country = null): array
     {
         // Recupera keyword con volume per il progetto (cache per calcolo traffico)
-        $keywordVolumes = self::getKeywordVolumes($projectId);
+        $keywordVolumes = self::getKeywordVolumes($projectId, $country);
 
         // Recupera posizioni giornaliere
+        $countryJoin = '';
+        $countryWhere = '';
+        $params = [$projectId, $days];
+
+        if ($country) {
+            $countryJoin = 'JOIN st_keywords k ON kp.keyword_id = k.id';
+            $countryWhere = 'AND k.location_code = ?';
+            $params[] = $country;
+        }
+
         $sql = "
             SELECT
                 kp.date,
                 kp.keyword_id,
                 kp.avg_position
             FROM st_keyword_positions kp
+            {$countryJoin}
             WHERE kp.project_id = ?
               AND kp.date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
               AND kp.avg_position IS NOT NULL
+              {$countryWhere}
             ORDER BY kp.date ASC
         ";
 
-        $rows = Database::fetchAll($sql, [$projectId, $days]);
+        $rows = Database::fetchAll($sql, $params);
 
         // Raggruppa per data
         $byDate = [];
@@ -379,6 +403,12 @@ class VisibilityService
             }
         }
 
+        // Filtro country
+        if (!empty($filters['location_code'])) {
+            $sql .= " AND k.location_code = ?";
+            $params[] = $filters['location_code'];
+        }
+
         $sql .= " ORDER BY k.search_volume DESC, k.keyword ASC";
 
         $rows = Database::fetchAll($sql, $params);
@@ -498,10 +528,17 @@ class VisibilityService
      * @param int $projectId ID del progetto
      * @return array [keyword_id => search_volume]
      */
-    private static function getKeywordVolumes(int $projectId): array
+    private static function getKeywordVolumes(int $projectId, ?string $country = null): array
     {
         $sql = "SELECT id, search_volume FROM st_keywords WHERE project_id = ? AND search_volume > 0";
-        $rows = Database::fetchAll($sql, [$projectId]);
+        $params = [$projectId];
+
+        if ($country) {
+            $sql .= " AND location_code = ?";
+            $params[] = $country;
+        }
+
+        $rows = Database::fetchAll($sql, $params);
 
         $volumes = [];
         foreach ($rows as $row) {

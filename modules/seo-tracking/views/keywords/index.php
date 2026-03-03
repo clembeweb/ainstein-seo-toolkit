@@ -3,6 +3,13 @@
     <!-- Header + Navigation -->
     <?php include __DIR__ . '/../partials/project-nav.php'; ?>
 
+    <?= \Core\View::partial('seo-tracking/partials/country-bar', [
+        'countries' => $countries ?? [],
+        'activeCountry' => $activeCountry ?? null,
+        'project' => $project,
+        'currentPage' => 'keywords',
+    ]) ?>
+
     <!-- Active Job Banner (se c'è un job in corso) -->
     <?php if (!empty($activeJob)): ?>
     <div id="jobStatusBanner" class="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
@@ -89,7 +96,7 @@
                 <div class="w-px h-6 bg-slate-300 dark:bg-slate-600 mx-1"></div>
                 <?php endif; ?>
 
-                <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/add') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
+                <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords/add') ?><?= !empty($activeCountry) ? '?country=' . e($activeCountry) : '' ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
                     <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>

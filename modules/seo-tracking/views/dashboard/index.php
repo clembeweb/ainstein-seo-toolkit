@@ -5,6 +5,13 @@
 
     <?= \Core\View::partial('components/orphaned-project-notice', ['project' => $project]) ?>
 
+    <?= \Core\View::partial('seo-tracking/partials/country-bar', [
+        'countries' => $countries ?? [],
+        'activeCountry' => $activeCountry ?? null,
+        'project' => $project,
+        'currentPage' => 'overview',
+    ]) ?>
+
     <!-- ROW 1: KPI Cards (Semrush-style) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Visibility Score -->

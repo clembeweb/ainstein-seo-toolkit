@@ -778,6 +778,12 @@ Router::get('/seo-tracking/api/project/{id}/keywords-compare', function ($id) {
     return (new ApiController())->keywordsCompare((int) $id);
 });
 
+// Country Summary (per-country metrics for country bar)
+Router::get('/seo-tracking/api/project/{id}/country-summary', function ($id) {
+    Middleware::auth();
+    return (new ApiController())->countrySummary((int) $id);
+});
+
 // =============================================
 // CRON: Gestiti da CLI dispatcher (non serve HTTP)
 // Vedi: cron/gsc-sync-dispatcher.php

@@ -56,9 +56,27 @@ class DashboardController
             session_write_close();
         }
 
-        // All tracked keywords with positions
-        $allKeywords = $this->keyword->allWithPositions($id, 30);
+        // Country filtering
+        $activeCountry = $_GET['country'] ?? null;
+        $activeCountries = $this->keyword->getActiveCountries($id);
+
+        // All tracked keywords with positions (filtered by country if active)
+        $filters = $activeCountry ? ['location_code' => $activeCountry] : [];
+        $allKeywords = $this->keyword->allWithPositions($id, 30, $filters);
         $trackedKeywords = array_filter($allKeywords, fn($k) => !empty($k['is_tracked']));
+
+        // Enrich countries with visibility metrics for summary bar
+        $countriesWithMetrics = [];
+        foreach ($activeCountries as $c) {
+            $cKeywords = $this->keyword->allWithPositions($id, 30, ['location_code' => $c['location_code']]);
+            $cTracked = array_filter($cKeywords, fn($k) => !empty($k['is_tracked']));
+            $countriesWithMetrics[] = [
+                'country_code' => $c['location_code'],
+                'country_name' => $c['country_name'],
+                'keyword_count' => $c['keyword_count'],
+                'visibility' => \Modules\SeoTracking\Services\VisibilityService::calculateVisibility($cTracked),
+            ];
+        }
 
         // Visibility metrics
         $visibility = \Modules\SeoTracking\Services\VisibilityService::calculateVisibility($trackedKeywords);
@@ -70,7 +88,7 @@ class DashboardController
         $kpiStats['est_traffic'] = $estTraffic;
 
         // Distribution over time (stacked bar chart - 30 days)
-        $distributionHistory = \Modules\SeoTracking\Services\VisibilityService::getDistributionOverTime($id, 30);
+        $distributionHistory = \Modules\SeoTracking\Services\VisibilityService::getDistributionOverTime($id, 30, $activeCountry);
 
         // Distribuzione posizioni corrente (for keywords mini-grid)
         $positionDistribution = $this->getPositionDistribution($id);
@@ -116,6 +134,8 @@ class DashboardController
             'recentMovements' => $recentMovements,
             'lastCheck' => $lastCheck,
             'lastReport' => $lastReport,
+            'countries' => $countriesWithMetrics,
+            'activeCountry' => $activeCountry,
         ]);
     }
 

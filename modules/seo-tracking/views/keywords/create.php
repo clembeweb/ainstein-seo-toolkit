@@ -36,7 +36,7 @@
                 <select name="location_code" id="location_code" required
                         class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                     <?php foreach ($locations ?? [] as $loc): ?>
-                    <option value="<?= e($loc['country_code']) ?>" <?= ($loc['country_code'] === 'IT') ? 'selected' : '' ?>>
+                    <option value="<?= e($loc['country_code']) ?>" <?= ($loc['country_code'] === ($defaultCountry ?? 'IT')) ? 'selected' : '' ?>>
                         <?= e($loc['name']) ?> (<?= e($loc['country_code']) ?>)
                     </option>
                     <?php endforeach; ?>

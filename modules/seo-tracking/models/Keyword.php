@@ -146,6 +146,11 @@ class Keyword
             $params[] = (int) $filters['position_max'];
         }
 
+        if (!empty($filters['location_code'])) {
+            $sql .= " AND k.location_code = ?";
+            $params[] = $filters['location_code'];
+        }
+
         $sql .= " ORDER BY k.last_position IS NULL, k.last_position ASC";
 
         return Database::fetchAll($sql, $params);
@@ -437,6 +442,24 @@ class Keyword
             'keywords_top10' => $top10,
             'keywords_with_clicks' => $withClicks,
         ];
+    }
+
+    /**
+     * Restituisce le country attive (con almeno 1 keyword tracciata) per un progetto.
+     */
+    public function getActiveCountries(int $projectId): array
+    {
+        return Database::fetchAll("
+            SELECT
+                k.location_code,
+                l.name as country_name,
+                COUNT(*) as keyword_count
+            FROM {$this->table} k
+            LEFT JOIN st_locations l ON l.country_code = k.location_code
+            WHERE k.project_id = ? AND k.is_tracked = 1
+            GROUP BY k.location_code, l.name
+            ORDER BY COUNT(*) DESC
+        ", [$projectId]);
     }
 
     /**

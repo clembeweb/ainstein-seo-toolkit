@@ -56,6 +56,10 @@ class KeywordController
             exit;
         }
 
+        // Country filtering
+        $activeCountry = $_GET['country'] ?? null;
+        $activeCountries = $this->keyword->getActiveCountries($projectId);
+
         $filters = [
             'search' => $_GET['search'] ?? '',
             'is_tracked' => $_GET['tracked'] ?? null,
@@ -65,6 +69,10 @@ class KeywordController
             'position_range' => $_GET['position_range'] ?? null,
             'volume_range' => $_GET['volume_range'] ?? null,
         ];
+
+        if ($activeCountry) {
+            $filters['location_code'] = $activeCountry;
+        }
 
         // Date range comparison
         $dateFrom = $_GET['date_from'] ?? null;
@@ -167,7 +175,9 @@ class KeywordController
             'dateRange' => $dateRange,
             'userCredits' => Credits::getBalance($user['id']),
             'activeJob' => $activeJob,
-            'visibilityTrend' => \Modules\SeoTracking\Services\VisibilityService::getVisibilityTrend($projectId, 30),
+            'visibilityTrend' => \Modules\SeoTracking\Services\VisibilityService::getVisibilityTrend($projectId, 30, $activeCountry),
+            'countries' => $activeCountries,
+            'activeCountry' => $activeCountry,
         ]);
     }
 
@@ -684,6 +694,7 @@ class KeywordController
 
         $groups = $this->keyword->getGroups($projectId);
         $locations = $this->location->all();
+        $defaultCountry = $_GET['country'] ?? 'IT';
 
         return View::render('seo-tracking/keywords/create', [
             'title' => 'Aggiungi Keyword - ' . $project['name'],
@@ -692,6 +703,7 @@ class KeywordController
             'project' => $project,
             'groups' => $groups,
             'locations' => $locations,
+            'defaultCountry' => $defaultCountry,
         ]);
     }
 
