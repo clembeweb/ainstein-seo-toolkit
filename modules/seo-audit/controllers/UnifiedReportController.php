@@ -45,7 +45,9 @@ class UnifiedReportController
         $siteProfile = null;
 
         if ($report) {
-            $reportData = json_decode($report['ai_response'] ?? '{}', true);
+            $decoded = json_decode($report['html_content'] ?? '{}', true);
+            // html_content may be a wrapper {ai_report: {...}} or direct AI response
+            $reportData = $decoded['ai_report'] ?? $decoded;
             $siteProfile = json_decode($report['site_profile'] ?? '{}', true);
         }
 
@@ -127,7 +129,8 @@ class UnifiedReportController
             exit;
         }
 
-        $reportData = json_decode($report['ai_response'] ?? '{}', true);
+        $decoded = json_decode($report['html_content'] ?? '{}', true);
+        $reportData = $decoded['ai_report'] ?? $decoded;
         $siteProfile = json_decode($report['site_profile'] ?? '{}', true);
         $domain = $project['domain'] ?? $project['url'] ?? '';
 
