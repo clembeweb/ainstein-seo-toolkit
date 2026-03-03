@@ -225,6 +225,22 @@ class CampaignCreatorController
         ob_start();
         header('Content-Type: application/json');
 
+        // Cattura errori fatali (memory, timeout, segfault)
+        $projectIdForShutdown = $id;
+        register_shutdown_function(function() use ($projectIdForShutdown) {
+            $error = error_get_last();
+            if ($error && in_array($error['type'], [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_PARSE])) {
+                Logger::channel('ai')->error("CampaignCreator [P{$projectIdForShutdown}]: FATAL SHUTDOWN", [
+                    'type' => $error['type'],
+                    'message' => $error['message'],
+                    'file' => $error['file'],
+                    'line' => $error['line'],
+                    'mem' => memory_get_usage(true),
+                    'peak_mem' => memory_get_peak_usage(true),
+                ]);
+            }
+        });
+
         try {
             $user = Auth::user();
             $project = Project::findAccessible($user['id'], $id);
@@ -263,8 +279,10 @@ class CampaignCreatorController
             ]);
 
             // === FASE 1: AI genera seed keywords ===
+            Logger::channel('ai')->info("CampaignCreator [P{$id}]: FASE 1 START - generateSeedKeywords", ['mem' => memory_get_usage(true), 'time' => time()]);
             $seedResult = CampaignCreatorService::generateSeedKeywords($user['id'], $project);
             Database::reconnect();
+            Logger::channel('ai')->info("CampaignCreator [P{$id}]: FASE 1 DONE", ['success' => !empty($seedResult['success']), 'seeds' => count($seedResult['seeds'] ?? []), 'mem' => memory_get_usage(true), 'time' => time()]);
 
             $realKeywords = [];
             $useRealVolumes = false;
@@ -273,23 +291,26 @@ class CampaignCreatorController
                 // === FASE 2: API espande seed → keyword reali con volumi ===
                 $location = $seedResult['location'] ?? 'US';
                 $lang = $seedResult['lang'] ?? 'en';
-                Logger::channel('ai')->info("CampaignCreator: Seeds=" . implode(', ', $seedResult['seeds']) . " | Market={$location}/{$lang}");
+                Logger::channel('ai')->info("CampaignCreator [P{$id}]: FASE 2 START - expandAndFilterKeywords | Seeds=" . implode(', ', $seedResult['seeds']) . " | Market={$location}/{$lang}");
                 $expandResult = CampaignCreatorService::expandAndFilterKeywords($seedResult['seeds'], $location, $lang);
                 Database::reconnect();
+                Logger::channel('ai')->info("CampaignCreator [P{$id}]: FASE 2 DONE", ['success' => !empty($expandResult['success']), 'kw_count' => count($expandResult['keywords'] ?? []), 'mem' => memory_get_usage(true), 'time' => time()]);
 
                 if (!empty($expandResult['success']) && !empty($expandResult['keywords'])) {
                     $realKeywords = $expandResult['keywords'];
                     $useRealVolumes = true;
                 } else {
-                    Logger::channel('ai')->warning("CampaignCreator: API expand failed, fallback AI-only", ['error' => $expandResult['error'] ?? 'empty']);
+                    Logger::channel('ai')->warning("CampaignCreator [P{$id}]: API expand failed, fallback AI-only", ['error' => $expandResult['error'] ?? 'empty']);
                 }
             } else {
-                Logger::channel('ai')->warning("CampaignCreator: Seed generation failed, fallback AI-only", ['error' => $seedResult['message'] ?? 'unknown']);
+                Logger::channel('ai')->warning("CampaignCreator [P{$id}]: Seed generation failed, fallback AI-only", ['error' => $seedResult['message'] ?? 'unknown']);
             }
 
             // === FASE 3: AI organizza keyword ===
+            Logger::channel('ai')->info("CampaignCreator [P{$id}]: FASE 3 START - generateKeywordResearch", ['kw_count' => count($realKeywords), 'mem' => memory_get_usage(true), 'time' => time()]);
             $kwResult = CampaignCreatorService::generateKeywordResearch($user['id'], $project, $realKeywords);
             Database::reconnect();
+            Logger::channel('ai')->info("CampaignCreator [P{$id}]: FASE 3 DONE", ['success' => !empty($kwResult['success']), 'mem' => memory_get_usage(true), 'time' => time()]);
 
             if (!empty($kwResult['error'])) {
                 CreatorGeneration::updateStatus($generation, 'error', $kwResult['message'] ?? 'Errore AI');
