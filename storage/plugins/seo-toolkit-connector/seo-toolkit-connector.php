@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) exit;
 class SEOToolkitConnector {
 
     private $option_name = 'seo_toolkit_api_key';
-    private $version = '1.1.0';
+    private $version = '1.2.0';
 
     public function __construct() {
         add_action('admin_menu', [$this, 'addAdminMenu']);
@@ -318,6 +318,13 @@ class SEOToolkitConnector {
                 'page'     => ['default' => 1, 'sanitize_callback' => 'absint'],
                 'type'     => ['default' => 'post,page', 'sanitize_callback' => 'sanitize_text_field'],
             ],
+        ]);
+
+        // Get raw HTML content of a single post (for internal linking)
+        register_rest_route('seo-toolkit/v1', '/posts/(?P<id>\d+)/raw-content', [
+            'methods' => 'GET',
+            'callback' => [$this, 'getPostRawContent'],
+            'permission_callback' => [$this, 'verifyApiKey']
         ]);
     }
 
@@ -673,6 +680,43 @@ class SEOToolkitConnector {
             'pages' => $query->max_num_pages,
             'current_page' => $page,
             'seo_plugin' => $this->detectSeoPlugin(),
+        ]);
+    }
+
+    /**
+     * Get raw HTML content of a single post
+     * Used by Internal Links module for link injection
+     */
+    public function getPostRawContent($request): \WP_REST_Response {
+        $post_id = (int) $request['id'];
+        $post = get_post($post_id);
+
+        if (!$post || $post->post_status === 'trash') {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'Post non trovato'
+            ], 404);
+        }
+
+        $categories = wp_get_post_categories($post_id, ['fields' => 'all']);
+        $cat_data = [];
+        foreach ($categories as $cat) {
+            $cat_data[] = [
+                'id' => $cat->term_id,
+                'name' => $cat->name,
+                'slug' => $cat->slug,
+            ];
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'post_id' => $post_id,
+            'title' => $post->post_title,
+            'content' => $post->post_content,  // RAW HTML, not stripped
+            'url' => get_permalink($post_id),
+            'status' => $post->post_status,
+            'categories' => $cat_data,
+            'word_count' => str_word_count(wp_strip_all_tags($post->post_content)),
         ]);
     }
 
