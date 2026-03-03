@@ -564,7 +564,7 @@ class GlobalProject
             return [
                 'text' => $n . ' problem' . ($n > 1 ? 'i' : 'a') . ' trovat' . ($n > 1 ? 'i' : 'o') . ' nel SEO Audit',
                 'cta' => 'Vedi piano',
-                'url' => '/seo-audit/project/' . $sa['module_project_id'] . '/results',
+                'url' => '/seo-audit/project/' . $sa['module_project_id'] . '/action-plan',
                 'slug' => 'seo-audit',
                 'severity' => 'warning',
             ];
