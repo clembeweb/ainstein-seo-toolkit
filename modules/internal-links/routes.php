@@ -18,7 +18,9 @@ use Modules\InternalLinks\Models\Project;
 use Modules\InternalLinks\Models\Url;
 use Modules\InternalLinks\Models\InternalLink;
 use Modules\InternalLinks\Models\Snapshot;
+use Modules\InternalLinks\Models\Suggestion;
 use Modules\InternalLinks\Services\Scraper;
+use Modules\InternalLinks\Services\SuggestionService;
 use Services\SitemapService;
 
 $moduleSlug = 'internal-links';
@@ -1806,5 +1808,350 @@ Router::get('/internal-links/project/{id}/export', function ($id) {
     }
 
     fclose($output);
+    exit;
+});
+
+// ============================================
+// SUGGESTIONS ROUTES (AI Suggester)
+// ============================================
+
+// Lista suggerimenti
+Router::get('/internal-links/project/{id}/suggestions', function ($id) {
+    Middleware::auth();
+    $user = Auth::user();
+    $userId = $user['id'];
+
+    $projectModel = new Project();
+    $project = $projectModel->findWithStats((int) $id, $userId);
+    if (!$project) {
+        $_SESSION['flash_error'] = 'Progetto non trovato';
+        header('Location: ' . url('/internal-links'));
+        exit;
+    }
+
+    $suggestionModel = new Suggestion();
+
+    $page = max(1, (int) ($_GET['page'] ?? 1));
+    $filters = [
+        'status' => $_GET['status'] ?? '',
+        'reason' => $_GET['reason'] ?? '',
+        'min_score' => $_GET['min_score'] ?? '',
+        'confidence' => $_GET['confidence'] ?? '',
+        'search' => $_GET['search'] ?? '',
+    ];
+
+    $suggestions = $suggestionModel->getByProject((int) $id, $page, 30, $filters);
+    $stats = $suggestionModel->getStats((int) $id);
+
+    $credits = Credits::getBalance($userId);
+    $costValidation = Credits::getCost('ai_suggestions', 'internal-links');
+    $costSnippet = Credits::getCost('ai_snippet', 'internal-links');
+
+    return View::render('internal-links::suggestions/index', [
+        'title' => 'Suggerimenti Link — ' . $project['name'],
+        'user' => $user,
+        'project' => $project,
+        'suggestions' => $suggestions,
+        'stats' => $stats,
+        'filters' => $filters,
+        'credits' => $credits,
+        'costValidation' => $costValidation,
+        'costSnippet' => $costSnippet,
+        'modules' => \Core\ModuleLoader::getActiveModules()
+    ]);
+});
+
+// Genera suggerimenti (AJAX lungo)
+Router::post('/internal-links/project/{id}/suggestions/generate', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $user = Auth::user();
+    $userId = $user['id'];
+
+    $projectModel = new Project();
+    $project = $projectModel->find((int) $id, $userId);
+    if (!$project) {
+        echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+        exit;
+    }
+
+    ignore_user_abort(true);
+    set_time_limit(0);
+    ob_start();
+    header('Content-Type: application/json');
+    session_write_close();
+
+    $service = new SuggestionService();
+
+    // Phase 1: Deterministic generation (free)
+    $result = $service->generateDeterministic((int) $id);
+
+    if (isset($result['error'])) {
+        ob_end_clean();
+        echo json_encode(['success' => false, 'error' => $result['error']]);
+        exit;
+    }
+
+    // Phase 2: AI Validation (costs credits)
+    $suggestionModel = new Suggestion();
+    $pending = $suggestionModel->getPendingAiValidation((int) $id, 30);
+    $aiValidated = 0;
+
+    if (!empty($pending)) {
+        $costPerBatch = Credits::getCost('ai_suggestions', 'internal-links');
+
+        if (Credits::hasEnough($userId, $costPerBatch)) {
+            $anchorDist = $suggestionModel->getAnchorDistribution((int) $id);
+            $prompt = $service->buildValidationPrompt($pending, $anchorDist);
+
+            if (!empty($prompt)) {
+                $ai = new \Services\AiService('internal-links');
+                $aiResult = $ai->analyze($userId, $prompt, '', 'internal-links');
+                \Core\Database::reconnect();
+
+                if ($aiResult && !empty($aiResult['response'])) {
+                    $parsed = $service->parseValidationResponse($aiResult['response'], $pending);
+
+                    foreach ($parsed as $index => $data) {
+                        if (isset($pending[$index])) {
+                            $suggestionModel->updateAiValidation($pending[$index]['id'], $data);
+                            $aiValidated++;
+                        }
+                    }
+
+                    Credits::consume($userId, $costPerBatch, 'ai_suggestions', 'internal-links');
+                }
+            }
+        }
+    }
+
+    // Update project stats
+    $projectModel->updateStats((int) $id);
+
+    // Log activity
+    $projectModel->logActivity((int) $id, $userId, 'suggestions_generated', [
+        'total_candidates' => $result['total_candidates'],
+        'plan_a' => $result['plan_a'],
+        'plan_b' => $result['plan_b'],
+        'ai_validated' => $aiValidated,
+    ]);
+
+    ob_end_clean();
+    echo json_encode([
+        'success' => true,
+        'total_candidates' => $result['total_candidates'],
+        'plan_a' => $result['plan_a'],
+        'plan_b' => $result['plan_b'],
+        'ai_validated' => $aiValidated,
+    ]);
+    exit;
+});
+
+// Genera snippet AI per singolo suggerimento (AJAX lungo)
+Router::post('/internal-links/project/{id}/suggestions/{sid}/snippet', function ($id, $sid) {
+    Middleware::auth();
+    Middleware::csrf();
+    $user = Auth::user();
+    $userId = $user['id'];
+
+    header('Content-Type: application/json');
+
+    $projectModel = new Project();
+    $project = $projectModel->find((int) $id, $userId);
+    if (!$project) {
+        echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+        exit;
+    }
+
+    $suggestionModel = new Suggestion();
+    $suggestion = $suggestionModel->findWithUrls((int) $sid, (int) $id);
+    if (!$suggestion) {
+        echo json_encode(['success' => false, 'error' => 'Suggerimento non trovato']);
+        exit;
+    }
+
+    $costSnippet = Credits::getCost('ai_snippet', 'internal-links');
+    if (!Credits::hasEnough($userId, $costSnippet)) {
+        echo json_encode(['success' => false, 'error' => 'Crediti insufficienti']);
+        exit;
+    }
+
+    ignore_user_abort(true);
+    set_time_limit(120);
+    ob_start();
+    session_write_close();
+
+    // Get source content
+    $urlModel = new Url();
+    $sourceUrl = $urlModel->find($suggestion['source_url_id']);
+    $sourceContent = $sourceUrl['content_html'] ?? '';
+
+    if (empty($sourceContent)) {
+        ob_end_clean();
+        echo json_encode(['success' => false, 'error' => 'Contenuto sorgente non disponibile. Esegui prima lo scraping.']);
+        exit;
+    }
+
+    // Get existing anchors
+    $linkModel = new InternalLink();
+    $existingAnchorsInPage = [];
+    $sourceLinks = $linkModel->getBySourceUrl($suggestion['source_url_id']);
+    foreach ($sourceLinks as $l) {
+        if (!empty($l['anchor_text_clean'])) {
+            $existingAnchorsInPage[] = $l['anchor_text_clean'];
+        }
+    }
+
+    $existingAnchorsForDest = [];
+    $destLinks = $linkModel->getIncomingLinks((int) $id, $suggestion['destination_url']);
+    foreach ($destLinks as $l) {
+        if (!empty($l['anchor_text_clean'])) {
+            $existingAnchorsForDest[] = $l['anchor_text_clean'];
+        }
+    }
+
+    $totalLinksInPage = count($sourceLinks);
+    $suggestedAnchors = json_decode($suggestion['ai_suggested_anchors'] ?? '[]', true) ?: [];
+
+    $service = new SuggestionService();
+    $prompt = $service->buildSnippetPrompt(
+        $sourceContent,
+        $suggestion['destination_url'],
+        $suggestion['destination_keyword'] ?? '',
+        $suggestion['destination_keyword'] ?? '',
+        $suggestedAnchors,
+        $existingAnchorsInPage,
+        $existingAnchorsForDest,
+        $totalLinksInPage
+    );
+
+    $ai = new \Services\AiService('internal-links');
+    $aiResult = $ai->analyze($userId, $prompt, '', 'internal-links');
+    \Core\Database::reconnect();
+
+    if (!$aiResult || empty($aiResult['response'])) {
+        ob_end_clean();
+        echo json_encode(['success' => false, 'error' => 'Errore nella generazione dello snippet']);
+        exit;
+    }
+
+    $parsed = $service->parseSnippetResponse($aiResult['response']);
+    if (!$parsed || empty($parsed['snippet_html'])) {
+        ob_end_clean();
+        echo json_encode(['success' => false, 'error' => 'Impossibile generare uno snippet valido']);
+        exit;
+    }
+
+    $suggestionModel->updateSnippet((int) $sid, $parsed);
+    Credits::consume($userId, $costSnippet, 'ai_snippet', 'internal-links');
+
+    ob_end_clean();
+    echo json_encode([
+        'success' => true,
+        'snippet_html' => $parsed['snippet_html'],
+        'original_paragraph' => $parsed['original_paragraph'] ?? '',
+        'anchor_used' => $parsed['anchor_used'] ?? '',
+        'insertion_method' => $parsed['insertion_method'] ?? '',
+        'confidence' => $parsed['confidence'] ?? '',
+    ]);
+    exit;
+});
+
+// Segna suggerimento come applicato
+Router::post('/internal-links/project/{id}/suggestions/{sid}/apply', function ($id, $sid) {
+    Middleware::auth();
+    Middleware::csrf();
+    $user = Auth::user();
+    $userId = $user['id'];
+
+    header('Content-Type: application/json');
+
+    $projectModel = new Project();
+    $project = $projectModel->find((int) $id, $userId);
+    if (!$project) {
+        echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+        exit;
+    }
+
+    $method = $_POST['method'] ?? 'manual_copy';
+    $suggestionModel = new Suggestion();
+    $ok = $suggestionModel->markApplied((int) $sid, $method);
+
+    $projectModel->logActivity((int) $id, $userId, 'suggestion_applied', [
+        'suggestion_id' => (int) $sid,
+        'method' => $method,
+    ]);
+    $projectModel->updateStats((int) $id);
+
+    echo json_encode(['success' => $ok]);
+    exit;
+});
+
+// Scarta suggerimento
+Router::post('/internal-links/project/{id}/suggestions/{sid}/dismiss', function ($id, $sid) {
+    Middleware::auth();
+    Middleware::csrf();
+    $user = Auth::user();
+
+    header('Content-Type: application/json');
+
+    $projectModel = new Project();
+    $project = $projectModel->find((int) $id, $user['id']);
+    if (!$project) {
+        echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+        exit;
+    }
+
+    $suggestionModel = new Suggestion();
+    $ok = $suggestionModel->markDismissed((int) $sid);
+    $projectModel->updateStats((int) $id);
+
+    echo json_encode(['success' => $ok]);
+    exit;
+});
+
+// Azioni bulk suggerimenti
+Router::post('/internal-links/project/{id}/suggestions/bulk', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $user = Auth::user();
+
+    header('Content-Type: application/json');
+
+    $projectModel = new Project();
+    $project = $projectModel->find((int) $id, $user['id']);
+    if (!$project) {
+        echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+        exit;
+    }
+
+    $action = $_POST['action'] ?? '';
+    $ids = $_POST['ids'] ?? [];
+    if (is_string($ids)) $ids = json_decode($ids, true) ?: [];
+    $ids = array_map('intval', $ids);
+
+    if (empty($ids)) {
+        echo json_encode(['success' => false, 'error' => 'Nessun suggerimento selezionato']);
+        exit;
+    }
+
+    $suggestionModel = new Suggestion();
+    $affected = 0;
+
+    switch ($action) {
+        case 'apply':
+            $affected = $suggestionModel->bulkUpdateStatus($ids, 'applied', (int) $id);
+            break;
+        case 'dismiss':
+            $affected = $suggestionModel->bulkUpdateStatus($ids, 'dismissed', (int) $id);
+            break;
+        default:
+            echo json_encode(['success' => false, 'error' => 'Azione non valida']);
+            exit;
+    }
+
+    $projectModel->updateStats((int) $id);
+
+    echo json_encode(['success' => true, 'affected' => $affected]);
     exit;
 });
