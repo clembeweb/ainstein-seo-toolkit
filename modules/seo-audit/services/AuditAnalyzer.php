@@ -72,6 +72,22 @@ class AuditAnalyzer
             'color' => 'orange',
             'description' => 'Regole robots.txt',
         ],
+        // Crawl Budget categories
+        'redirect' => [
+            'icon' => 'arrow-path',
+            'color' => 'rose',
+            'description' => 'Catene e loop di redirect',
+        ],
+        'waste' => [
+            'icon' => 'trash',
+            'color' => 'orange',
+            'description' => 'Pagine che sprecano crawl budget',
+        ],
+        'indexability' => [
+            'icon' => 'eye-slash',
+            'color' => 'violet',
+            'description' => 'Conflitti di indicizzazione',
+        ],
     ];
 
     public function __construct()
