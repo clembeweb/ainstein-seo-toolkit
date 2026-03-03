@@ -438,6 +438,55 @@ class CampaignController
     }
 
     /**
+     * Run disponibili per selettore periodo (AJAX)
+     */
+    public function availableRuns(int $projectId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = Project::findAccessible($user['id'], $projectId);
+
+        if (!$project || ($project['type'] ?? 'negative-kw') !== 'campaign') {
+            http_response_code(400);
+            echo json_encode(['error' => 'Progetto non valido']);
+            exit;
+        }
+
+        $runs = ScriptRun::getCompletedCampaignRuns($projectId, 30);
+
+        $periods = ['7' => null, '14' => null, '30' => null];
+        foreach ($runs as $run) {
+            $days = (int)($run['period_days'] ?? 0);
+            $bucket = null;
+            if ($days >= 5 && $days <= 9) $bucket = '7';
+            elseif ($days >= 12 && $days <= 16) $bucket = '14';
+            elseif ($days >= 25 && $days <= 35) $bucket = '30';
+
+            if ($bucket && $periods[$bucket] === null) {
+                $periods[$bucket] = [
+                    'available' => true,
+                    'run_id' => (int)$run['id'],
+                    'date_start' => $run['date_range_start'],
+                    'date_end' => $run['date_range_end'],
+                    'period_days' => $days,
+                    'has_evaluation' => !empty($run['evaluation_id']),
+                    'evaluation_id' => $run['evaluation_id'] ? (int)$run['evaluation_id'] : null,
+                ];
+            }
+        }
+
+        foreach ($periods as $key => &$val) {
+            if ($val === null) {
+                $val = ['available' => false, 'run_id' => null, 'has_evaluation' => false, 'evaluation_id' => null];
+            }
+        }
+
+        echo json_encode(['periods' => $periods]);
+        exit;
+    }
+
+    /**
      * Mostra risultato valutazione AI
      */
     public function evaluationShow(int $projectId, int $evalId): string

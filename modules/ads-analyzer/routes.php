@@ -209,6 +209,13 @@ Router::post('/ads-analyzer/projects/{id}/campaigns/toggle-auto-evaluate', funct
     return $controller->toggleAutoEvaluate((int) $id);
 });
 
+// Run disponibili per selettore periodo (AJAX)
+Router::get('/ads-analyzer/projects/{id}/campaigns/available-runs', function ($id) {
+    Middleware::auth();
+    $controller = new CampaignController();
+    return $controller->availableRuns((int) $id);
+});
+
 // Dettaglio valutazione AI
 Router::get('/ads-analyzer/projects/{id}/campaigns/evaluations/{evalId}', function ($id, $evalId) {
     Middleware::auth();
