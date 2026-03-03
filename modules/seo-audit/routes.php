@@ -205,6 +205,28 @@ Router::get('/seo-audit/project/{id}/budget/waste', fn($id) => (new \Modules\Seo
 Router::get('/seo-audit/project/{id}/budget/indexability', fn($id) => (new \Modules\SeoAudit\Controllers\BudgetResultsController())->indexability((int) $id));
 
 // ============================================
+// UNIFIED AI REPORT ROUTES
+// ============================================
+
+use Modules\SeoAudit\Controllers\UnifiedReportController;
+
+Router::get('/seo-audit/project/{id}/report', function ($id) {
+    Middleware::auth();
+    return (new UnifiedReportController())->view((int) $id);
+});
+
+Router::post('/seo-audit/project/{id}/report/generate', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    (new UnifiedReportController())->generate((int) $id);
+});
+
+Router::get('/seo-audit/project/{id}/report/download', function ($id) {
+    Middleware::auth();
+    (new UnifiedReportController())->download((int) $id);
+});
+
+// ============================================
 // STRUTTURA LINK ROUTES
 // ============================================
 
