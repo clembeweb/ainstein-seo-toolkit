@@ -82,6 +82,16 @@
             "step": 0.1,
             "admin_only": true,
             "group": "costs"
+        },
+        "cost_ai_snippet": {
+            "type": "number",
+            "label": "Costo Snippet AI",
+            "description": "Crediti per generazione snippet inserimento link",
+            "default": 1,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
         }
     },
     "routes_prefix": "/internal-links"

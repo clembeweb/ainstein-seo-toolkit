@@ -204,7 +204,10 @@ class Project
                 external_links,
                 analyzed_links,
                 avg_relevance_score,
-                orphan_pages
+                orphan_pages,
+                total_suggestions,
+                pending_suggestions,
+                applied_suggestions
             )
             SELECT
                 ?,
@@ -222,7 +225,10 @@ class Project
                         WHERE il.project_id = ?
                         AND LOWER(TRIM(TRAILING '/' FROM il.destination_url)) = LOWER(TRIM(TRAILING '/' FROM u.url))
                     )
-                )
+                ),
+                (SELECT COUNT(*) FROM il_link_suggestions WHERE project_id = ?),
+                (SELECT COUNT(*) FROM il_link_suggestions WHERE project_id = ? AND status IN ('pending','ai_validated','snippet_ready')),
+                (SELECT COUNT(*) FROM il_link_suggestions WHERE project_id = ? AND status = 'applied')
             ON DUPLICATE KEY UPDATE
                 total_urls = VALUES(total_urls),
                 scraped_urls = VALUES(scraped_urls),
@@ -233,10 +239,13 @@ class Project
                 analyzed_links = VALUES(analyzed_links),
                 avg_relevance_score = VALUES(avg_relevance_score),
                 orphan_pages = VALUES(orphan_pages),
+                total_suggestions = VALUES(total_suggestions),
+                pending_suggestions = VALUES(pending_suggestions),
+                applied_suggestions = VALUES(applied_suggestions),
                 updated_at = CURRENT_TIMESTAMP
         ";
 
-        Database::query($sql, array_fill(0, 11, $projectId));
+        Database::query($sql, array_fill(0, 14, $projectId));
     }
 
     /**
