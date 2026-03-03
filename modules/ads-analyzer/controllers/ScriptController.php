@@ -98,19 +98,12 @@ class ScriptController
         $config = [
             'enable_search_terms' => isset($_POST['enable_search_terms']),
             'enable_campaign_performance' => isset($_POST['enable_campaign_performance']),
-            'date_range' => $_POST['date_range'] ?? 'LAST_30_DAYS',
             'campaign_filter' => trim($_POST['campaign_filter'] ?? ''),
         ];
 
         // Almeno uno deve essere attivo
         if (!$config['enable_search_terms'] && !$config['enable_campaign_performance']) {
             jsonResponse(['error' => 'Almeno uno strumento deve essere attivo'], 400);
-        }
-
-        // Valida date_range
-        $validRanges = ['LAST_7_DAYS', 'LAST_14_DAYS', 'LAST_30_DAYS', 'LAST_90_DAYS', 'ALL_TIME'];
-        if (!in_array($config['date_range'], $validRanges)) {
-            $config['date_range'] = 'LAST_30_DAYS';
         }
 
         Project::updateScriptConfig($projectId, $config);

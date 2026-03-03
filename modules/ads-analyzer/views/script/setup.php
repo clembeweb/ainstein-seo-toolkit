@@ -149,25 +149,28 @@
                     </div>
                 </div>
 
-                <!-- Date Range -->
+                <!-- Multi-Period Info -->
                 <div>
-                    <label for="date_range" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                        Periodo di riferimento
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        Periodo di raccolta dati
                     </label>
-                    <select
-                        id="date_range"
-                        name="date_range"
-                        class="w-full sm:w-64 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                    >
-                        <option value="LAST_7_DAYS" <?= ($config['date_range'] ?? '') === 'LAST_7_DAYS' ? 'selected' : '' ?>>Ultimi 7 giorni</option>
-                        <option value="LAST_14_DAYS" <?= ($config['date_range'] ?? '') === 'LAST_14_DAYS' ? 'selected' : '' ?>>Ultimi 14 giorni</option>
-                        <option value="LAST_30_DAYS" <?= ($config['date_range'] ?? 'LAST_30_DAYS') === 'LAST_30_DAYS' ? 'selected' : '' ?>>Ultimi 30 giorni</option>
-                        <option value="LAST_90_DAYS" <?= ($config['date_range'] ?? '') === 'LAST_90_DAYS' ? 'selected' : '' ?>>Ultimi 90 giorni</option>
-                        <option value="ALL_TIME" <?= ($config['date_range'] ?? '') === 'ALL_TIME' ? 'selected' : '' ?>>Tutto il periodo</option>
-                    </select>
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        Periodo di tempo per cui lo script raccoglie i dati ad ogni esecuzione
-                    </p>
+                    <div class="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div class="text-sm text-blue-800 dark:text-blue-300">
+                            <p class="font-medium mb-1">Raccolta automatica multi-periodo</p>
+                            <p>Lo script raccoglie automaticamente i dati per <strong>3 periodi</strong> ad ogni esecuzione:</p>
+                            <ul class="mt-2 space-y-1 list-disc list-inside text-xs">
+                                <li><strong>7 giorni</strong> &mdash; per verificare l'effetto delle modifiche recenti</li>
+                                <li><strong>14 giorni</strong> &mdash; per una visione a medio termine</li>
+                                <li><strong>30 giorni</strong> &mdash; per l'analisi completa del periodo</li>
+                            </ul>
+                            <p class="mt-2 text-xs text-blue-600 dark:text-blue-400">
+                                Ogni periodo crea un'esecuzione separata. Puoi selezionare il periodo desiderato nelle pagine di analisi.
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Campaign Filter -->
