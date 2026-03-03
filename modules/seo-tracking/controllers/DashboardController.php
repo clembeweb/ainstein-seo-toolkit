@@ -39,7 +39,7 @@ class DashboardController
     }
 
     /**
-     * Dashboard principale progetto (basata su rank checker, non GSC)
+     * Dashboard principale progetto — Landscape (Semrush-style)
      */
     public function index(int $id): string
     {
@@ -52,42 +52,70 @@ class DashboardController
             exit;
         }
 
-        // Rilascia sessione PRIMA delle query pesanti
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_write_close();
         }
 
-        // KPI Stats basate su keyword tracciate
-        $kpiStats = $this->getKpiStats($id);
+        // All tracked keywords with positions
+        $allKeywords = $this->keyword->allWithPositions($id, 30);
+        $trackedKeywords = array_filter($allKeywords, fn($k) => !empty($k['is_tracked']));
 
-        // Distribuzione posizioni per donut chart
+        // Visibility metrics
+        $visibility = \Modules\SeoTracking\Services\VisibilityService::calculateVisibility($trackedKeywords);
+        $estTraffic = \Modules\SeoTracking\Services\VisibilityService::calculateEstTraffic($trackedKeywords);
+
+        // KPI Stats (existing + enhanced)
+        $kpiStats = $this->getKpiStats($id);
+        $kpiStats['visibility'] = $visibility;
+        $kpiStats['est_traffic'] = $estTraffic;
+
+        // Distribution over time (stacked bar chart - 30 days)
+        $distributionHistory = \Modules\SeoTracking\Services\VisibilityService::getDistributionOverTime($id, 30);
+
+        // Distribuzione posizioni corrente (for keywords mini-grid)
         $positionDistribution = $this->getPositionDistribution($id);
 
-        // Trend posizione media (ultimi 30 giorni)
-        $positionTrend = $this->getPositionTrend($id, 30);
+        // Position bucket counts with changes
+        $keywordBuckets = $this->getKeywordBuckets($trackedKeywords);
 
         // Top 5 Gainers e Losers
         $gainers = $this->getTopMovers($id, 5, 'gainers');
         $losers = $this->getTopMovers($id, 5, 'losers');
 
-        // Movimenti recenti (ultime 10 verifiche)
+        // Top keywords by position (for mini-table)
+        $topKeywords = $this->getTopKeywordsByPosition($trackedKeywords, 5);
+
+        // Positive/Negative impact (by visibility change)
+        $positiveImpact = $this->getImpactKeywords($trackedKeywords, 5, 'positive');
+        $negativeImpact = $this->getImpactKeywords($trackedKeywords, 5, 'negative');
+
+        // Movimenti recenti
         $recentMovements = $this->getRecentMovements($id, 10);
 
         // Ultimo check
         $lastCheck = $this->getLastCheckInfo($id);
 
+        // Last AI report summary (weekly type)
+        $lastReports = $this->aiReport->getLatestByType($id, 'weekly', 1);
+        $lastReport = !empty($lastReports) ? $lastReports[0] : null;
+
         return View::render('seo-tracking/dashboard/index', [
-            'title' => $project['name'] . ' - Dashboard',
+            'title' => $project['name'] . ' - Landscape',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
             'kpiStats' => $kpiStats,
+            'distributionHistory' => $distributionHistory,
             'positionDistribution' => $positionDistribution,
-            'positionTrend' => $positionTrend,
+            'keywordBuckets' => $keywordBuckets,
+            'topKeywords' => $topKeywords,
+            'positiveImpact' => $positiveImpact,
+            'negativeImpact' => $negativeImpact,
             'gainers' => $gainers,
             'losers' => $losers,
             'recentMovements' => $recentMovements,
             'lastCheck' => $lastCheck,
+            'lastReport' => $lastReport,
         ]);
     }
 
@@ -275,6 +303,84 @@ class DashboardController
              LIMIT 1",
             [$projectId]
         );
+    }
+
+    /**
+     * Keywords grouped into position buckets with improved/declined counts
+     */
+    private function getKeywordBuckets(array $keywords): array
+    {
+        $buckets = [
+            'top3' => ['count' => 0, 'improved' => 0, 'declined' => 0],
+            'top10' => ['count' => 0, 'improved' => 0, 'declined' => 0],
+            'top20' => ['count' => 0, 'improved' => 0, 'declined' => 0],
+            'top100' => ['count' => 0, 'improved' => 0, 'declined' => 0],
+        ];
+
+        foreach ($keywords as $kw) {
+            $pos = (int) ($kw['last_position'] ?? 0);
+            $change = (int) ($kw['position_change'] ?? 0);
+
+            if ($pos <= 0) continue;
+
+            // Cumulative buckets (like Semrush)
+            if ($pos <= 3) {
+                $buckets['top3']['count']++;
+                if ($change > 0) $buckets['top3']['improved']++;
+                elseif ($change < 0) $buckets['top3']['declined']++;
+            }
+            if ($pos <= 10) {
+                $buckets['top10']['count']++;
+                if ($change > 0) $buckets['top10']['improved']++;
+                elseif ($change < 0) $buckets['top10']['declined']++;
+            }
+            if ($pos <= 20) {
+                $buckets['top20']['count']++;
+                if ($change > 0) $buckets['top20']['improved']++;
+                elseif ($change < 0) $buckets['top20']['declined']++;
+            }
+            if ($pos <= 100) {
+                $buckets['top100']['count']++;
+                if ($change > 0) $buckets['top100']['improved']++;
+                elseif ($change < 0) $buckets['top100']['declined']++;
+            }
+        }
+
+        return $buckets;
+    }
+
+    /**
+     * Top keywords sorted by best position
+     */
+    private function getTopKeywordsByPosition(array $keywords, int $limit): array
+    {
+        $withPosition = array_filter($keywords, fn($k) => ($k['last_position'] ?? 0) > 0);
+        usort($withPosition, fn($a, $b) => ($a['last_position'] ?? 999) - ($b['last_position'] ?? 999));
+        return array_slice($withPosition, 0, $limit);
+    }
+
+    /**
+     * Keywords with most positive or negative visibility change
+     */
+    private function getImpactKeywords(array $keywords, int $limit, string $direction): array
+    {
+        $withChange = array_filter($keywords, fn($k) => ($k['position_change'] ?? 0) != 0 && ($k['last_position'] ?? 0) > 0);
+
+        usort($withChange, function ($a, $b) use ($direction) {
+            $changeA = (int) ($a['position_change'] ?? 0);
+            $changeB = (int) ($b['position_change'] ?? 0);
+
+            if ($direction === 'positive') {
+                return $changeB - $changeA; // Largest positive first
+            }
+            return $changeA - $changeB; // Largest negative first
+        });
+
+        $filtered = $direction === 'positive'
+            ? array_filter($withChange, fn($k) => ($k['position_change'] ?? 0) > 0)
+            : array_filter($withChange, fn($k) => ($k['position_change'] ?? 0) < 0);
+
+        return array_slice(array_values($filtered), 0, $limit);
     }
 
     /**
