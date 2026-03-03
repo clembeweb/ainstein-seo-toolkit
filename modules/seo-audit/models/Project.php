@@ -280,9 +280,9 @@ class Project
             [$projectId]
         );
 
-        // pages_found: usa sa_projects.pages_found (set da discoverUrls) come fonte principale
-        // perché le URL scoperte sono in sa_site_config, non in sa_pages
-        $pagesFound = (int) ($project['pages_found'] ?? $counts['total'] ?? 0);
+        // pages_found: usa sa_projects.pages_found se > 0, altrimenti fallback a count sa_pages
+        $projectFound = (int) ($project['pages_found'] ?? 0);
+        $pagesFound = $projectFound > 0 ? $projectFound : (int) ($counts['total'] ?? 0);
         $pagesCrawled = (int) ($counts['crawled'] ?? 0);
         $pagesPending = (int) ($counts['pending'] ?? 0);
 

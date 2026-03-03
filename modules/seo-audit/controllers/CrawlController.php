@@ -177,6 +177,9 @@ class CrawlController
             // Aggiorna sessione con pagine trovate
             $this->sessionModel->setPagesFound($sessionId, count($urls));
 
+            // Aggiorna anche pages_found nel progetto (getCrawlProgress lo legge da qui)
+            $this->projectModel->update($id, ['pages_found' => count($urls)]);
+
             // Inserisci URL scoperti in sa_pages come pending (per processStream SSE)
             // Necessario perché discoverUrls() salva in sa_site_config ma processStream
             // legge da sa_pages filtrato per session_id
