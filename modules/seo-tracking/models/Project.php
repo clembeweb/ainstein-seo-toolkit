@@ -480,23 +480,56 @@ class Project
             WHERE project_id = ? AND is_tracked = 1
         ", [$projectId]);
 
-        // Posizione media (ultimo check per ogni keyword)
-        $avgPos = Database::fetch("
-            SELECT AVG(latest.serp_position) as avg_position
-            FROM (
-                SELECT rc1.keyword, rc1.serp_position
-                FROM st_rank_checks rc1
-                WHERE rc1.project_id = ?
-                  AND rc1.serp_position IS NOT NULL
-                  AND rc1.checked_at = (
+        // Carica tutte le keyword con posizione e volume per calcoli visibility
+        $keywords = Database::fetchAll("
+            SELECT keyword, last_position, search_volume
+            FROM st_keywords
+            WHERE project_id = ? AND is_tracked = 1
+        ", [$projectId]);
+
+        // Calcola metriche attuali con VisibilityService
+        $visibility = \Modules\SeoTracking\Services\VisibilityService::calculateVisibility($keywords);
+        $estTraffic = \Modules\SeoTracking\Services\VisibilityService::calculateEstTraffic($keywords);
+
+        // Posizione media dalle keyword attuali
+        $positionedKw = array_filter($keywords, fn($k) => ($k['last_position'] ?? 0) > 0);
+        $avgPosition = !empty($positionedKw)
+            ? round(array_sum(array_column($positionedKw, 'last_position')) / count($positionedKw), 1)
+            : 0;
+
+        // Delta 7 giorni: metriche della settimana precedente
+        $prevData = Database::fetchAll("
+            SELECT k.keyword, k.search_volume, p.serp_position as last_position
+            FROM st_keywords k
+            LEFT JOIN (
+                SELECT keyword, serp_position
+                FROM st_rank_checks
+                WHERE project_id = ?
+                  AND serp_position IS NOT NULL
+                  AND checked_at <= DATE_SUB(NOW(), INTERVAL 7 DAY)
+                  AND checked_at = (
                       SELECT MAX(rc2.checked_at)
                       FROM st_rank_checks rc2
-                      WHERE rc2.project_id = rc1.project_id
-                        AND rc2.keyword = rc1.keyword
+                      WHERE rc2.project_id = st_rank_checks.project_id
+                        AND rc2.keyword = st_rank_checks.keyword
                         AND rc2.serp_position IS NOT NULL
+                        AND rc2.checked_at <= DATE_SUB(NOW(), INTERVAL 7 DAY)
                   )
-            ) latest
-        ", [$projectId]);
+            ) p ON p.keyword = k.keyword
+            WHERE k.project_id = ? AND k.is_tracked = 1
+        ", [$projectId, $projectId]);
+
+        $prevVisibility = \Modules\SeoTracking\Services\VisibilityService::calculateVisibility($prevData);
+        $prevTraffic = \Modules\SeoTracking\Services\VisibilityService::calculateEstTraffic($prevData);
+        $prevPositioned = array_filter($prevData, fn($k) => ($k['last_position'] ?? 0) > 0);
+        $prevAvgPos = !empty($prevPositioned)
+            ? round(array_sum(array_column($prevPositioned, 'last_position')) / count($prevPositioned), 1)
+            : 0;
+
+        // Calcola delta (per posizione, negativo = miglioramento)
+        $visibilityDelta = $prevVisibility > 0 ? round($visibility - $prevVisibility, 2) : null;
+        $trafficDelta = $prevTraffic > 0 ? round($estTraffic - $prevTraffic, 1) : null;
+        $posDelta = ($prevAvgPos > 0 && $avgPosition > 0) ? round($prevAvgPos - $avgPosition, 1) : null;
 
         // Ultima attivita
         $lastCheck = Database::fetch(
@@ -504,13 +537,10 @@ class Project
             [$projectId]
         );
 
-        $avgPosition = $avgPos && $avgPos['avg_position'] !== null
-            ? round((float) $avgPos['avg_position'], 1)
-            : 0;
-
         $metrics = [
-            ['label' => 'Keyword monitorate', 'value' => (int) ($kwStats['tracked'] ?? 0)],
-            ['label' => 'Posizione media', 'value' => $avgPosition],
+            ['label' => 'Visibility', 'value' => $visibility . '%', 'delta' => $visibilityDelta],
+            ['label' => 'Est. Traffic', 'value' => number_format($estTraffic, 0, ',', '.'), 'delta' => $trafficDelta],
+            ['label' => 'Pos. Media', 'value' => $avgPosition, 'delta' => $posDelta],
             ['label' => 'In Top 10', 'value' => (int) ($kwStats['top10'] ?? 0)],
         ];
 
