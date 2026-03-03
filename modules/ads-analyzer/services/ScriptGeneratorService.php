@@ -11,13 +11,13 @@ class ScriptGeneratorService
     {
         $enableSearchTerms = ($config['enable_search_terms'] ?? true) ? 'true' : 'false';
         $enableCampaignPerf = ($config['enable_campaign_performance'] ?? true) ? 'true' : 'false';
-        $dateRange = $config['date_range'] ?? 'LAST_30_DAYS';
         $campaignFilter = addslashes($config['campaign_filter'] ?? '');
 
         return <<<SCRIPT
 /**
  * Ainstein SEO Toolkit - Google Ads Script
  * Invia automaticamente dati search terms e campagne al tuo progetto Ainstein.
+ * Raccolta multi-periodo: 7, 14 e 30 giorni per ogni esecuzione.
  *
  * ISTRUZIONI:
  * 1. Copia questo script in Google Ads > Strumenti > Script
@@ -26,7 +26,7 @@ class ScriptGeneratorService
  * 4. Imposta la frequenza desiderata (giornaliero, settimanale)
  *
  * NON modificare il token o l'endpoint.
- * Versione: 1.0
+ * Versione: 2.0
  */
 
 // === CONFIGURAZIONE ===
@@ -35,55 +35,78 @@ var CONFIG = {
   ENDPOINT: '{$endpointUrl}',
   ENABLE_SEARCH_TERMS: {$enableSearchTerms},
   ENABLE_CAMPAIGN_PERFORMANCE: {$enableCampaignPerf},
-  DATE_RANGE: '{$dateRange}',
+  PERIODS: [7, 14, 30],
   CAMPAIGN_FILTER: '{$campaignFilter}',
-  SCRIPT_VERSION: '1.0',
+  SCRIPT_VERSION: '2.0',
   MAX_ITEMS: 5000
 };
 
 function main() {
-  Logger.log('Ainstein Script - Avvio...');
+  Logger.log('Ainstein Script v' + CONFIG.SCRIPT_VERSION + ' - Avvio raccolta multi-periodo...');
+  var results = [];
 
-  var payload = {
-    token: CONFIG.TOKEN,
-    type: getRunType(),
-    script_version: CONFIG.SCRIPT_VERSION,
-    date_range: getDateRange()
-  };
+  for (var i = 0; i < CONFIG.PERIODS.length; i++) {
+    var days = CONFIG.PERIODS[i];
+    var dateRangeString = getGadsDateRangeString(days);
+    Logger.log('');
+    Logger.log('--- Periodo: ultimi ' + days + ' giorni (' + dateRangeString + ') ---');
 
-  // Raccogli search terms
-  if (CONFIG.ENABLE_SEARCH_TERMS) {
-    Logger.log('Raccolta termini di ricerca...');
-    payload.search_terms = collectSearchTerms();
-    Logger.log('Termini raccolti: ' + payload.search_terms.length);
+    var payload = {
+      token: CONFIG.TOKEN,
+      type: getRunType(),
+      script_version: CONFIG.SCRIPT_VERSION,
+      date_range: getDateRangeForDays(days)
+    };
+
+    // Raccogli search terms
+    if (CONFIG.ENABLE_SEARCH_TERMS) {
+      Logger.log('Raccolta termini di ricerca...');
+      payload.search_terms = collectSearchTerms(dateRangeString);
+      Logger.log('Termini raccolti: ' + payload.search_terms.length);
+    }
+
+    // Raccogli dati campagne
+    if (CONFIG.ENABLE_CAMPAIGN_PERFORMANCE) {
+      Logger.log('Raccolta dati campagne...');
+      var campaignData = collectCampaignData(dateRangeString);
+      payload.campaigns = campaignData.campaigns;
+      payload.ads = campaignData.ads;
+      payload.ad_groups = campaignData.adGroups;
+      payload.keywords = campaignData.keywords;
+      payload.extensions = campaignData.extensions;
+      Logger.log('Campagne: ' + payload.campaigns.length +
+                 ', Ad Groups: ' + payload.ad_groups.length +
+                 ', Annunci: ' + payload.ads.length +
+                 ', Keyword: ' + payload.keywords.length +
+                 ', Estensioni: ' + payload.extensions.length);
+    }
+
+    // Invia dati
+    Logger.log('Invio dati ad Ainstein...');
+    var result = sendData(payload);
+
+    if (result.success) {
+      Logger.log('Periodo ' + days + 'g: OK (Run #' + result.run_id + ', ' + result.items_processed + ' items)');
+      results.push({days: days, success: true, run_id: result.run_id});
+    } else {
+      Logger.log('Periodo ' + days + 'g: ERRORE - ' + result.error);
+      results.push({days: days, success: false, error: result.error});
+    }
+
+    // Pausa tra invii per evitare sovraccarico
+    if (i < CONFIG.PERIODS.length - 1) {
+      Utilities.sleep(2000);
+    }
   }
 
-  // Raccogli dati campagne
-  if (CONFIG.ENABLE_CAMPAIGN_PERFORMANCE) {
-    Logger.log('Raccolta dati campagne...');
-    var campaignData = collectCampaignData();
-    payload.campaigns = campaignData.campaigns;
-    payload.ads = campaignData.ads;
-    payload.ad_groups = campaignData.adGroups;
-    payload.keywords = campaignData.keywords;
-    payload.extensions = campaignData.extensions;
-    Logger.log('Campagne: ' + payload.campaigns.length +
-               ', Ad Groups: ' + payload.ad_groups.length +
-               ', Annunci: ' + payload.ads.length +
-               ', Keyword: ' + payload.keywords.length +
-               ', Estensioni: ' + payload.extensions.length);
+  // Riepilogo
+  Logger.log('');
+  Logger.log('=== Riepilogo ===');
+  for (var j = 0; j < results.length; j++) {
+    var r = results[j];
+    Logger.log(r.days + 'g: ' + (r.success ? 'OK (Run #' + r.run_id + ')' : 'ERRORE: ' + r.error));
   }
-
-  // Invia dati
-  Logger.log('Invio dati ad Ainstein...');
-  var result = sendData(payload);
-
-  if (result.success) {
-    Logger.log('Completato! Run ID: ' + result.run_id +
-               ', Items: ' + result.items_processed);
-  } else {
-    Logger.log('ERRORE: ' + result.error);
-  }
+  Logger.log('Script completato.');
 }
 
 function getRunType() {
@@ -92,34 +115,24 @@ function getRunType() {
   return 'campaign_performance';
 }
 
-function getDateRange() {
+function getDateRangeForDays(days) {
   var today = new Date();
   var start = new Date();
-
-  switch (CONFIG.DATE_RANGE) {
-    case 'LAST_7_DAYS':
-      start.setDate(today.getDate() - 7);
-      break;
-    case 'LAST_14_DAYS':
-      start.setDate(today.getDate() - 14);
-      break;
-    case 'LAST_30_DAYS':
-      start.setDate(today.getDate() - 30);
-      break;
-    case 'LAST_90_DAYS':
-      start.setDate(today.getDate() - 90);
-      break;
-    case 'ALL_TIME':
-      start.setFullYear(2020, 0, 1);
-      break;
-    default:
-      start.setDate(today.getDate() - 30);
-  }
-
+  start.setDate(today.getDate() - days);
   return {
     start: formatDate(start),
     end: formatDate(today)
   };
+}
+
+function getGadsDateRangeString(days) {
+  switch (days) {
+    case 7: return 'LAST_7_DAYS';
+    case 14: return 'LAST_14_DAYS';
+    case 30: return 'LAST_30_DAYS';
+    case 90: return 'LAST_90_DAYS';
+    default: return 'LAST_30_DAYS';
+  }
 }
 
 function formatDate(d) {
@@ -131,7 +144,7 @@ function formatDate(d) {
 function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
 // === SEARCH TERMS ===
-function collectSearchTerms() {
+function collectSearchTerms(dateRangeString) {
   var terms = [];
   var campaignIterator = getCampaigns();
 
@@ -141,7 +154,7 @@ function collectSearchTerms() {
       'SELECT Query, AdGroupName, Clicks, Impressions, Ctr, Cost, Conversions, ConversionValue ' +
       'FROM SEARCH_QUERY_PERFORMANCE_REPORT ' +
       'WHERE CampaignId = ' + campaign.getId() + ' ' +
-      'DURING ' + CONFIG.DATE_RANGE
+      'DURING ' + dateRangeString
     );
 
     var rows = report.rows();
@@ -164,7 +177,7 @@ function collectSearchTerms() {
 }
 
 // === CAMPAIGN PERFORMANCE ===
-function collectCampaignData() {
+function collectCampaignData(dateRangeString) {
   var campaigns = [];
   var ads = [];
   var adGroupsData = [];
@@ -175,7 +188,7 @@ function collectCampaignData() {
 
   while (campaignIterator.hasNext()) {
     var campaign = campaignIterator.next();
-    var stats = campaign.getStatsFor(CONFIG.DATE_RANGE);
+    var stats = campaign.getStatsFor(dateRangeString);
     var campaignType = campaign.getAdvertisingChannelType ? campaign.getAdvertisingChannelType() : 'SEARCH';
 
     campaigns.push({
@@ -204,7 +217,7 @@ function collectCampaignData() {
 
         // Metriche aggregate ad group
         try {
-          var agStats = adGroup.getStatsFor(CONFIG.DATE_RANGE);
+          var agStats = adGroup.getStatsFor(dateRangeString);
           adGroupsData.push({
             campaign_id: String(campaign.getId()),
             campaign_name: campaign.getName(),
@@ -229,7 +242,7 @@ function collectCampaignData() {
         var adIterator = adGroup.ads().get();
         while (adIterator.hasNext() && ads.length < CONFIG.MAX_ITEMS) {
           var ad = adIterator.next();
-          var adStats = ad.getStatsFor(CONFIG.DATE_RANGE);
+          var adStats = ad.getStatsFor(dateRangeString);
           var adData = {
             campaign_id: String(campaign.getId()),
             campaign_name: campaign.getName(),
@@ -275,7 +288,7 @@ function collectCampaignData() {
           var kwIterator = adGroup.keywords().get();
           while (kwIterator.hasNext() && keywords.length < CONFIG.MAX_ITEMS) {
             var kw = kwIterator.next();
-            var kwStats = kw.getStatsFor(CONFIG.DATE_RANGE);
+            var kwStats = kw.getStatsFor(dateRangeString);
             keywords.push({
               campaign_id: String(campaign.getId()),
               campaign_name: campaign.getName(),
@@ -308,7 +321,7 @@ function collectCampaignData() {
     var sitelinkIterator = AdsApp.extensions().sitelinks().get();
     while (sitelinkIterator.hasNext() && extensions.length < 500) {
       var sitelink = sitelinkIterator.next();
-      var slStats = sitelink.getStatsFor(CONFIG.DATE_RANGE);
+      var slStats = sitelink.getStatsFor(dateRangeString);
       extensions.push({
         campaign_id: null,
         type: 'SITELINK',
