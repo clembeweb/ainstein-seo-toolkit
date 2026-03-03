@@ -598,8 +598,71 @@ class SuggestionService
      */
     public function buildValidationPrompt(array $suggestions, array $anchorDistribution): string
     {
-        // Implemented in Task 4
-        return '';
+        $candidatesText = '';
+        foreach ($suggestions as $i => $s) {
+            $srcExcerpt = mb_substr(strip_tags($s['source_content'] ?? ''), 0, 300);
+            $dstExcerpt = mb_substr(strip_tags($s['destination_content'] ?? ''), 0, 300);
+            $candidatesText .= sprintf(
+                "%d. [Score: %d, Motivo: %s]\n   SORGENTE (ID %d): %s\n   Keyword: %s\n   Contenuto: %s\n   DESTINAZIONE (ID %d): %s\n   Keyword: %s\n   Contenuto: %s\n\n",
+                $i + 1,
+                $s['total_score'],
+                $s['reason'],
+                $s['source_url_id'], $s['source_url'],
+                $s['source_keyword'] ?? '-',
+                $srcExcerpt ?: '[nessun contenuto]',
+                $s['destination_url_id'], $s['destination_url'],
+                $s['destination_keyword'] ?? '-',
+                $dstExcerpt ?: '[nessun contenuto]'
+            );
+        }
+
+        $anchorsText = '';
+        if (!empty($anchorDistribution)) {
+            $anchorsText = "## ANCORA GIA' USATE NEL PROGETTO (top per frequenza)\n";
+            foreach (array_slice($anchorDistribution, 0, 20) as $a) {
+                $anchorsText .= sprintf("- \"%s\" (%dx)\n", $a['anchor'], $a['count']);
+            }
+        }
+
+        return <<<PROMPT
+Sei un esperto SEO specializzato in internal linking. Analizza questi candidati per nuovi link interni e valida la loro rilevanza semantica reale.
+
+## CANDIDATI DA VALUTARE
+{$candidatesText}
+
+{$anchorsText}
+
+## ISTRUZIONI
+
+Per ogni candidato:
+1. Valuta se la SORGENTE e la DESTINAZIONE sono REALMENTE correlate semanticamente (non solo keyword overlap)
+2. Se la correlazione e' bassa o forzata, assegna confidence "low" (verra' scartato)
+3. Per i candidati validi, genera 3 varianti di anchor text:
+   - Variante 1: keyword-focused (termine chiave della destinazione)
+   - Variante 2: contesto naturale (frase che si integra nel testo della sorgente)
+   - Variante 3: diversificata (EVITA ancore gia' sovra-usate nel progetto)
+4. Indica il punto del contenuto sorgente piu' adatto per inserire il link
+5. Se un'ancora suggerita e' gia' troppo frequente nel progetto, segnalalo
+
+## FORMATO RISPOSTA
+
+Rispondi SOLO con un array JSON:
+[
+    {
+        "candidate_index": 1,
+        "relevance_score": 8,
+        "confidence": "high",
+        "suggested_anchors": ["ancora keyword", "frase naturale per il contesto", "variante diversificata"],
+        "placement_hint": "Il paragrafo che tratta di [argomento] e' il punto migliore per inserire il link",
+        "anchor_diversity_note": "L'ancora 'keyword X' e' gia' usata 12 volte, preferire la variante 3"
+    }
+]
+
+Note:
+- confidence: "high" (forte correlazione), "medium" (correlazione accettabile), "low" (forzato/irrilevante, da scartare)
+- relevance_score: 1-10 (basato sulla correlazione semantica REALE, non sul keyword_score algoritmico)
+- Se un candidato e' chiaramente irrilevante, rispondi con confidence "low" e relevance_score <= 3
+PROMPT;
     }
 
     /**
@@ -628,14 +691,83 @@ class SuggestionService
         array $existingAnchorsForDest,
         int $totalLinksInPage
     ): string {
-        // Implemented in Task 4
-        return '';
+        $anchorsInPageText = '';
+        if (!empty($existingAnchorsInPage)) {
+            $anchorsInPageText = "## ANCORE GIA' PRESENTI NELLA PAGINA SORGENTE\n";
+            foreach (array_slice($existingAnchorsInPage, 0, 15) as $a) {
+                $anchorsInPageText .= "- \"{$a}\"\n";
+            }
+        }
+
+        $anchorsForDestText = '';
+        if (!empty($existingAnchorsForDest)) {
+            $anchorsForDestText = "## ANCORE GIA' USATE PER QUESTA DESTINAZIONE (nel progetto)\n";
+            foreach ($existingAnchorsForDest as $a) {
+                $anchorsForDestText .= "- \"{$a}\"\n";
+            }
+        }
+
+        $suggestedText = implode(', ', array_map(fn($a) => "\"$a\"", $suggestedAnchors));
+
+        return <<<PROMPT
+Sei un esperto SEO. Devi inserire UN link interno in modo NATURALE nel contenuto HTML fornito.
+
+## DESTINAZIONE DEL LINK
+URL: {$destinationUrl}
+Titolo: {$destinationTitle}
+Keyword: {$destinationKeyword}
+Ancore suggerite: {$suggestedText}
+
+## CONTENUTO HTML DELLA PAGINA SORGENTE
+{$sourceContentHtml}
+
+{$anchorsInPageText}
+{$anchorsForDestText}
+
+Link totali gia' presenti nella pagina: {$totalLinksInPage}
+
+## ISTRUZIONI CRITICHE
+
+1. Trova il paragrafo PIU' COERENTE con il tema della destinazione
+2. NON forzare: se nessun paragrafo e' naturalmente collegato, usa method "contextual_sentence"
+3. Per "inline_existing_text": scegli parole GIA' presenti nel testo come ancora
+   - L'ancora deve avere senso come testo linkato (no singole preposizioni, no frammenti)
+   - NON inserire dentro heading (h1-h6), link esistenti, o attributi HTML
+4. Per "contextual_sentence": genera una frase NELLA LINGUA del contenuto
+   - Usa frasi come "Scopri anche...", "Approfondisci...", "Leggi anche..."
+   - La frase deve sembrare scritta dall'autore, non da un bot
+5. EVITA ancore gia' usate per questa destinazione — genera una VARIANTE
+6. L'ancora deve essere diversa dalle ancore gia' presenti nella pagina (evita over-optimization)
+7. Genera lo snippet HTML del paragrafo modificato, pronto da copiare
+
+## FORMATO RISPOSTA
+
+Rispondi SOLO con JSON:
+{
+    "paragraph_excerpt": "primi 150 caratteri del paragrafo individuato...",
+    "anchor_text": "l'ancora scelta",
+    "anchor_alternatives": ["variante1", "variante2"],
+    "insertion_method": "inline_existing_text",
+    "confidence": "high",
+    "reason": "Spiegazione breve del perche' questo punto e' naturale",
+    "snippet_html": "<p>...testo con <a href=\"URL\">ancora</a> inserita...</p>",
+    "original_paragraph": "<p>...testo originale del paragrafo...</p>"
+}
+
+Note:
+- insertion_method: "inline_existing_text" (preferito) o "contextual_sentence" (fallback)
+- confidence: "high", "medium", "low"
+- snippet_html: SOLO il paragrafo modificato, non l'intero contenuto
+- original_paragraph: il paragrafo originale prima della modifica
+PROMPT;
     }
 
     /**
      * Parse AI validation response (Phase 2)
      *
      * Extracts structured validation results from AI response JSON.
+     * Uses regex to find JSON array in the response text (handles markdown
+     * code fences and extra text around the JSON).
      *
      * @param string $response Raw AI response text
      * @param array $suggestions The original suggestion batch (for index mapping)
@@ -643,21 +775,60 @@ class SuggestionService
      */
     public function parseValidationResponse(string $response, array $suggestions): array
     {
-        // Implemented in Task 4
-        return [];
+        $results = [];
+
+        // Extract JSON array from response (handles markdown code fences, extra text)
+        if (preg_match('/\[[\s\S]*\]/', $response, $matches)) {
+            $response = $matches[0];
+        }
+
+        $parsed = json_decode($response, true);
+        if (!is_array($parsed)) return $results;
+
+        foreach ($parsed as $item) {
+            $index = ($item['candidate_index'] ?? 0) - 1;
+            if (!isset($suggestions[$index])) continue;
+
+            $results[$index] = [
+                'relevance_score' => max(1, min(10, (int) ($item['relevance_score'] ?? 5))),
+                'confidence' => in_array($item['confidence'] ?? '', ['high', 'medium', 'low']) ? $item['confidence'] : 'medium',
+                'suggested_anchors' => $item['suggested_anchors'] ?? [],
+                'placement_hint' => mb_substr($item['placement_hint'] ?? '', 0, 500),
+                'anchor_diversity_note' => mb_substr($item['anchor_diversity_note'] ?? '', 0, 500),
+            ];
+        }
+
+        return $results;
     }
 
     /**
      * Parse AI snippet response (Phase 3)
      *
      * Extracts structured snippet data from AI response JSON.
+     * Uses regex to find JSON object in the response text (handles markdown
+     * code fences and extra text around the JSON).
      *
      * @param string $response Raw AI response text
      * @return array|null Parsed snippet data or null on failure
      */
     public function parseSnippetResponse(string $response): ?array
     {
-        // Implemented in Task 4
-        return null;
+        // Extract JSON object from response (handles markdown code fences, extra text)
+        if (preg_match('/\{[\s\S]*\}/', $response, $matches)) {
+            $response = $matches[0];
+        }
+
+        $parsed = json_decode($response, true);
+        if (!is_array($parsed)) return null;
+
+        return [
+            'snippet_html' => $parsed['snippet_html'] ?? null,
+            'original_paragraph' => $parsed['original_paragraph'] ?? null,
+            'insertion_method' => in_array($parsed['insertion_method'] ?? '', ['inline_existing_text', 'contextual_sentence'])
+                ? $parsed['insertion_method'] : 'contextual_sentence',
+            'anchor_used' => mb_substr($parsed['anchor_text'] ?? '', 0, 255),
+            'confidence' => $parsed['confidence'] ?? 'medium',
+            'reason' => $parsed['reason'] ?? '',
+        ];
     }
 }
