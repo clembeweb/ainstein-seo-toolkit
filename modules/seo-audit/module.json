@@ -81,6 +81,16 @@
             "step": 0.1,
             "admin_only": true,
             "group": "costs"
+        },
+        "cost_unified_report": {
+            "type": "number",
+            "label": "Costo Report AI Unificato",
+            "description": "Crediti per report unificato on-page + crawl budget (Premium)",
+            "default": 15,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
         }
     },
     "routes_prefix": "/seo-audit"

@@ -28,6 +28,38 @@ $circumference = 2 * 3.14159 * 45;
 $dashOffset = $circumference - ($circumference * $score / 100);
 ?>
 
+<!-- Legacy migration banner -->
+<?php
+$saProject = \Core\Database::fetch(
+    "SELECT sp.id FROM sa_projects sp WHERE sp.global_project_id = ? LIMIT 1",
+    [$project['global_project_id'] ?? 0]
+);
+if ($saProject): ?>
+<div class="mb-6 rounded-xl border border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/20 p-4">
+    <div class="flex items-start gap-3">
+        <svg class="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div class="flex-1">
+            <p class="text-sm font-medium text-amber-800 dark:text-amber-200">
+                L'analisi Crawl Budget è ora integrata in SEO Audit
+            </p>
+            <p class="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                Tutti i dati crawl budget vengono raccolti automaticamente durante il crawl SEO Audit.
+                Questa sezione standalone resterà disponibile ma non riceverà più aggiornamenti.
+            </p>
+            <a href="<?= url('/seo-audit/project/' . (int)$saProject['id'] . '/budget') ?>"
+               class="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 text-xs font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors">
+                Vai a SEO Audit
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- Orphaned project notice -->
 <?= \Core\View::partial('components/orphaned-project-notice', ['project' => $project]) ?>
 
