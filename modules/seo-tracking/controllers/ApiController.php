@@ -230,4 +230,83 @@ class ApiController
             'count' => count($tracked),
         ]);
     }
+
+    /**
+     * Visibility stats (KPI data for dashboard)
+     */
+    public function visibilityStats(int $id): string
+    {
+        if (!$this->checkProject($id)) {
+            return View::json(['error' => 'Progetto non trovato'], 404);
+        }
+
+        $keywords = $this->keyword->allWithPositions($id, 30);
+        $trackedKeywords = array_filter($keywords, fn($k) => !empty($k['is_tracked']));
+
+        $visibility = \Modules\SeoTracking\Services\VisibilityService::calculateVisibility($trackedKeywords);
+        $estTraffic = \Modules\SeoTracking\Services\VisibilityService::calculateEstTraffic($trackedKeywords);
+
+        $positions = array_filter(array_map(fn($k) => (int)($k['last_position'] ?? 0), $trackedKeywords), fn($p) => $p > 0);
+        $avgPosition = !empty($positions) ? round(array_sum($positions) / count($positions), 1) : 0;
+
+        return View::json([
+            'visibility' => $visibility,
+            'est_traffic' => $estTraffic,
+            'avg_position' => $avgPosition,
+            'tracked_count' => count($trackedKeywords),
+        ]);
+    }
+
+    /**
+     * Rankings distribution history (stacked bar chart data)
+     */
+    public function distributionHistory(int $id): string
+    {
+        if (!$this->checkProject($id)) {
+            return View::json(['error' => 'Progetto non trovato'], 404);
+        }
+
+        $days = (int) ($_GET['days'] ?? 30);
+        $data = \Modules\SeoTracking\Services\VisibilityService::getDistributionOverTime($id, $days);
+
+        return View::json($data);
+    }
+
+    /**
+     * Visibility trend over time (line chart data)
+     */
+    public function visibilityTrend(int $id): string
+    {
+        if (!$this->checkProject($id)) {
+            return View::json(['error' => 'Progetto non trovato'], 404);
+        }
+
+        $days = (int) ($_GET['days'] ?? 30);
+        $data = \Modules\SeoTracking\Services\VisibilityService::getVisibilityTrend($id, $days);
+
+        return View::json($data);
+    }
+
+    /**
+     * Keywords comparison between two dates
+     */
+    public function keywordsCompare(int $id): string
+    {
+        if (!$this->checkProject($id)) {
+            return View::json(['error' => 'Progetto non trovato'], 404);
+        }
+
+        $dateFrom = $_GET['date_from'] ?? date('Y-m-d', strtotime('-7 days'));
+        $dateTo = $_GET['date_to'] ?? date('Y-m-d');
+        $filters = [
+            'search' => $_GET['search'] ?? '',
+            'intent' => $_GET['intent'] ?? '',
+            'position_range' => $_GET['position_range'] ?? '',
+            'volume_range' => $_GET['volume_range'] ?? '',
+        ];
+
+        $data = \Modules\SeoTracking\Services\VisibilityService::getKeywordsCompare($id, $dateFrom, $dateTo, $filters);
+
+        return View::json($data);
+    }
 }
