@@ -833,9 +833,11 @@ class RankCheckerService
             'rate limit',
             'too many requests',
             'quota exceeded',
-            'HTTP 400',
-            'HTTP 402',
-            'HTTP 429',
+            'run out of searches',
+            'run out of credits',
+            'http 400',
+            'http 402',
+            'http 429',
         ];
         $lower = strtolower($errorMessage);
         foreach ($patterns as $pattern) {
