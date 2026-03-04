@@ -546,6 +546,57 @@ class SearchTermAnalysisController
             ];
         }
 
+        // Cross-analysis comparison
+        $previousAnalysis = null;
+        $resolvedKeywords = [];
+        $comparison = ['resolved' => 0, 'recurring' => 0, 'new' => 0, 'has_previous' => false, 'previous_analysis_name' => ''];
+
+        $completedAnalyses = Analysis::getCompletedByProject($projectId);
+        foreach ($completedAnalyses as $ca) {
+            if ((int)$ca['id'] !== $analysisId) {
+                $previousAnalysis = $ca;
+                break;
+            }
+        }
+
+        if ($previousAnalysis) {
+            $comparison['has_previous'] = true;
+            $comparison['previous_analysis_name'] = $previousAnalysis['name'];
+
+            $prevKeywords = NegativeKeyword::getDistinctKeywordTextByAnalysis((int)$previousAnalysis['id']);
+            $prevSet = array_flip($prevKeywords);
+
+            $currentKeywords = NegativeKeyword::getDistinctKeywordTextByAnalysis($analysisId);
+            $currentSet = array_flip($currentKeywords);
+
+            // Classify each current keyword
+            foreach ($result as &$cat) {
+                foreach ($cat['keywords'] as &$kw) {
+                    $kwLower = strtolower($kw['keyword']);
+                    $kw['status'] = isset($prevSet[$kwLower]) ? 'recurring' : 'new';
+                }
+                unset($kw);
+            }
+            unset($cat);
+
+            // Resolved: in previous but not in current
+            foreach ($prevKeywords as $pk) {
+                if (!isset($currentSet[$pk])) {
+                    $resolvedKeywords[] = $pk;
+                    $comparison['resolved']++;
+                } else {
+                    $comparison['recurring']++;
+                }
+            }
+
+            // New count
+            foreach ($currentKeywords as $ck) {
+                if (!isset($prevSet[$ck])) {
+                    $comparison['new']++;
+                }
+            }
+        }
+
         // Raggruppa per ad_group_id
         $byAdGroup = [];
         foreach ($result as $cat) {
@@ -577,6 +628,8 @@ class SearchTermAnalysisController
             'adGroupNames' => $adGroupNames,
             'selectedCount' => $selectedCount,
             'totalCount' => $totalCount,
+            'comparison' => $comparison,
+            'resolvedKeywords' => $resolvedKeywords,
         ]);
         exit;
     }

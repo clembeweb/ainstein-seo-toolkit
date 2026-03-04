@@ -328,6 +328,53 @@ $config = json_encode([
             </div>
         </div>
 
+        <!-- Banner confronto cross-analisi -->
+        <div x-show="comparison.has_previous" x-cloak class="px-4 py-4 border-b border-slate-200 dark:border-slate-700">
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                Confronto con "<span x-text="comparison.previous_analysis_name"></span>"
+            </p>
+            <div class="grid grid-cols-3 gap-3 mb-3">
+                <!-- Risolte -->
+                <div class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 p-3 text-center">
+                    <div class="flex items-center justify-center gap-1.5 mb-1">
+                        <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span class="text-xs font-medium text-emerald-700 dark:text-emerald-300">Risolte</span>
+                    </div>
+                    <span class="text-xl font-bold text-emerald-800 dark:text-emerald-200" x-text="comparison.resolved"></span>
+                </div>
+                <!-- Ricorrenti -->
+                <div class="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-3 text-center">
+                    <div class="flex items-center justify-center gap-1.5 mb-1">
+                        <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M2.985 19.644l3.181-3.182"/></svg>
+                        <span class="text-xs font-medium text-amber-700 dark:text-amber-300">Ricorrenti</span>
+                    </div>
+                    <span class="text-xl font-bold text-amber-800 dark:text-amber-200" x-text="comparison.recurring"></span>
+                </div>
+                <!-- Nuove -->
+                <div class="rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-3 text-center">
+                    <div class="flex items-center justify-center gap-1.5 mb-1">
+                        <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"/></svg>
+                        <span class="text-xs font-medium text-blue-700 dark:text-blue-300">Nuove</span>
+                    </div>
+                    <span class="text-xl font-bold text-blue-800 dark:text-blue-200" x-text="comparison.new"></span>
+                </div>
+            </div>
+            <!-- Keyword risolte collapsible -->
+            <div x-show="resolvedKeywords.length > 0">
+                <button @click="showResolved = !showResolved" class="flex items-center gap-1.5 text-xs text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors">
+                    <svg class="w-3.5 h-3.5 transition-transform" :class="showResolved && 'rotate-90'" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    Mostra <span x-text="resolvedKeywords.length"></span> keyword risolte
+                </button>
+                <div x-show="showResolved" x-cloak class="mt-2 flex flex-wrap gap-1.5">
+                    <template x-for="rk in resolvedKeywords" :key="rk">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 line-through">
+                            <span x-text="rk"></span>
+                        </span>
+                    </template>
+                </div>
+            </div>
+        </div>
+
         <!-- Analisi selector (se piu analisi) -->
         <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700" x-show="analyses.length > 1">
             <select x-model="currentAnalysisId" @change="loadResults(currentAnalysisId)"
@@ -388,7 +435,10 @@ $config = json_encode([
                                     <template x-for="kw in cat.keywords" :key="kw.id">
                                         <button @click="toggleKeywordAction(kw.id, kw, cat)"
                                                 :class="kw.is_selected ? 'bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-700' : 'bg-slate-100 text-slate-500 border-slate-200 line-through dark:bg-slate-700 dark:text-slate-400 dark:border-slate-600'"
+                                                :title="kw.status === 'recurring' ? 'Gia suggerita precedentemente' : kw.status === 'new' ? 'Nuova keyword' : ''"
                                                 class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border transition-colors hover:opacity-80">
+                                            <span x-show="kw.status === 'recurring'" class="w-1.5 h-1.5 rounded-full bg-amber-400 mr-1.5 flex-shrink-0"></span>
+                                            <span x-show="kw.status === 'new'" class="w-1.5 h-1.5 rounded-full bg-blue-400 mr-1.5 flex-shrink-0"></span>
                                             <span x-text="kw.keyword"></span>
                                         </button>
                                     </template>
@@ -469,6 +519,11 @@ function searchTermAnalysis(config) {
         totalCount: 0,
         activeResultTab: null,
         copyButtonText: 'Copia tutte',
+
+        // Cross-analysis comparison
+        comparison: { resolved: 0, recurring: 0, new: 0, has_previous: false, previous_analysis_name: '' },
+        resolvedKeywords: [],
+        showResolved: false,
 
         formatNumber(n) {
             return new Intl.NumberFormat('it-IT').format(n);
@@ -636,6 +691,11 @@ function searchTermAnalysis(config) {
                     this.selectedCount = data.selectedCount;
                     this.totalCount = data.totalCount;
                     this.currentAnalysisId = analysisId;
+
+                    // Cross-analysis comparison
+                    this.comparison = data.comparison || { resolved: 0, recurring: 0, new: 0, has_previous: false, previous_analysis_name: '' };
+                    this.resolvedKeywords = data.resolvedKeywords || [];
+                    this.showResolved = false;
 
                     // Seleziona primo tab risultati
                     const firstKey = Object.keys(this.categoriesByAdGroup)[0];

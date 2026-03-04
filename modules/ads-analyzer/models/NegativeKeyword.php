@@ -232,4 +232,13 @@ class NegativeKeyword
     {
         return Database::count('ga_negative_keywords', 'analysis_id = ? AND is_selected = 1', [$analysisId]);
     }
+
+    public static function getDistinctKeywordTextByAnalysis(int $analysisId): array
+    {
+        $rows = Database::fetchAll(
+            "SELECT DISTINCT LOWER(keyword) as keyword FROM ga_negative_keywords WHERE analysis_id = ?",
+            [$analysisId]
+        );
+        return array_column($rows, 'keyword');
+    }
 }
