@@ -10,11 +10,12 @@
  */
 
 // Flag images via flagcdn.com (emoji don't render on Windows)
-function countryFlagImg(string $code, int $w = 20): string {
+// flagcdn sizes: w20, w40, w80, w160, w320
+function countryFlagImg(string $code, int $displayW = 20): string {
     $lc = strtolower($code);
-    return '<img src="https://flagcdn.com/w' . $w . '/' . e($lc) . '.png" '
-         . 'srcset="https://flagcdn.com/w' . ($w * 2) . '/' . e($lc) . '.png 2x" '
-         . 'width="' . $w . '" alt="' . e($code) . '" class="inline-block rounded-sm" loading="lazy">';
+    return '<img src="https://flagcdn.com/w20/' . e($lc) . '.png" '
+         . 'srcset="https://flagcdn.com/w40/' . e($lc) . '.png 2x" '
+         . 'width="' . $displayW . '" alt="' . e($code) . '" class="inline-block rounded-sm" loading="lazy">';
 }
 
 // Build base URL for current page
