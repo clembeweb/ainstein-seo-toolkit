@@ -259,6 +259,27 @@ $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
                             2.500 query/mese incluse
                         </p>
                     </div>
+                    <!-- Serper.dev Backup Key -->
+                    <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                        <label for="serper_api_key_2" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                            Serper.dev API Key (Backup)
+                            <?php if (!empty($settings['serper_api_key_2']['value'])): ?>
+                                <span class="text-green-600 dark:text-green-400 text-xs ml-1">Configurata</span>
+                            <?php endif; ?>
+                        </label>
+                        <div class="relative">
+                            <input type="password" name="serper_api_key_2" id="serper_api_key_2"
+                                   value="<?= e($settings['serper_api_key_2']['value'] ?? '') ?>"
+                                   placeholder="Secondo account Serper.dev (opzionale)..."
+                                   class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 pr-10 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                            <button type="button" onclick="togglePassword('serper_api_key_2')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            </button>
+                        </div>
+                        <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                            Usata automaticamente se la chiave primaria esaurisce i crediti
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -483,6 +504,27 @@ $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
                             </button>
                         </div>
                         <p class="mt-1 text-xs text-slate-500"><a href="https://serpapi.com/manage-api-key" target="_blank" class="text-slate-600 hover:underline">Ottieni API Key</a> · 100 query/mese gratis</p>
+                        <!-- SerpAPI Backup Key -->
+                        <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <label for="serp_api_key_2" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                SERP API Key (Backup)
+                                <?php if (!empty($settings['serp_api_key_2']['value'] ?? '')): ?>
+                                    <span class="text-green-600 dark:text-green-400 text-xs ml-1">Configurata</span>
+                                <?php endif; ?>
+                            </label>
+                            <div class="relative">
+                                <input type="password" name="serp_api_key_2" id="serp_api_key_2"
+                                       value="<?= e($settings['serp_api_key_2']['value'] ?? '') ?>"
+                                       placeholder="Secondo account SerpAPI (opzionale)..."
+                                       class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 pr-10 focus:ring-2 focus:ring-slate-500 focus:border-slate-500 text-sm">
+                                <button type="button" onclick="togglePassword('serp_api_key_2')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                </button>
+                            </div>
+                            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                Usata automaticamente se la chiave primaria esaurisce i crediti
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

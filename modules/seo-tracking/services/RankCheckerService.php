@@ -19,8 +19,10 @@ use Modules\SeoTracking\Models\Location;
  */
 class RankCheckerService
 {
-    private string $serperApiKey;
-    private string $serpApiKey;
+    /** @var string[] Chiavi API Serper.dev (primaria + backup) */
+    private array $serperApiKeys = [];
+    /** @var string[] Chiavi API SerpAPI (primaria + backup) */
+    private array $serpApiKeys = [];
     private string $serperBaseUrl = 'https://google.serper.dev/search';
     private string $serpApiBaseUrl = 'https://serpapi.com/search.json';
     private ScraperService $scraper;
@@ -30,9 +32,18 @@ class RankCheckerService
 
     public function __construct(?string $serperKey = null, ?string $serpKey = null)
     {
-        // Leggi chiavi API dalle impostazioni globali
-        $this->serperApiKey = $serperKey ?? \Core\Settings::get('serper_api_key', '');
-        $this->serpApiKey = $serpKey ?? \Core\Settings::get('serp_api_key', '');
+        // Leggi chiavi API dalle impostazioni globali (primaria + backup)
+        $serperKey1 = $serperKey ?? \Core\Settings::get('serper_api_key', '');
+        $serperKey2 = \Core\Settings::get('serper_api_key_2', '');
+        $serpKey1 = $serpKey ?? \Core\Settings::get('serp_api_key', '');
+        $serpKey2 = \Core\Settings::get('serp_api_key_2', '');
+
+        // Costruisci array chiavi (solo quelle non vuote)
+        if (!empty($serperKey1)) $this->serperApiKeys[] = $serperKey1;
+        if (!empty($serperKey2)) $this->serperApiKeys[] = $serperKey2;
+        if (!empty($serpKey1)) $this->serpApiKeys[] = $serpKey1;
+        if (!empty($serpKey2)) $this->serpApiKeys[] = $serpKey2;
+
         $this->scraper = new ScraperService();
         $this->locationModel = new Location();
 
@@ -45,7 +56,7 @@ class RankCheckerService
      */
     public function isConfigured(): bool
     {
-        return $this->hasDataForSeo() || !empty($this->serperApiKey) || !empty($this->serpApiKey);
+        return $this->hasDataForSeo() || $this->hasSerper() || $this->hasSerpApi();
     }
 
     /**
@@ -57,19 +68,19 @@ class RankCheckerService
     }
 
     /**
-     * Verifica se Serper.dev è configurato
+     * Verifica se Serper.dev è configurato (almeno una chiave)
      */
     public function hasSerper(): bool
     {
-        return !empty($this->serperApiKey);
+        return !empty($this->serperApiKeys);
     }
 
     /**
-     * Verifica se SERP API è configurato
+     * Verifica se SERP API è configurato (almeno una chiave)
      */
     public function hasSerpApi(): bool
     {
-        return !empty($this->serpApiKey);
+        return !empty($this->serpApiKeys);
     }
 
     /**
@@ -90,16 +101,19 @@ class RankCheckerService
                 'configured' => $this->hasSerper(),
                 'name' => 'Serper.dev',
                 'type' => 'primary',
+                'keys_count' => count($this->serperApiKeys),
             ],
             'dataforseo' => [
                 'configured' => $this->hasDataForSeo(),
                 'name' => 'DataForSEO',
                 'type' => 'secondary',
+                'keys_count' => $this->hasDataForSeo() ? 1 : 0,
             ],
             'serpapi' => [
                 'configured' => $this->hasSerpApi(),
                 'name' => 'SERP API',
                 'type' => 'fallback',
+                'keys_count' => count($this->serpApiKeys),
             ],
         ];
     }
@@ -163,24 +177,40 @@ class RankCheckerService
 
         // =====================================================================
         // 1. PROVA Serper.dev (PRIMARIO - 2.500 query/mese gratis)
+        //    Prova tutte le chiavi configurate prima di passare al prossimo provider
         // =====================================================================
         if ($this->hasSerper()) {
-            try {
-                $serperResult = $this->checkWithSerper($keyword, $targetDomain, $location, $device);
-                $this->lastProvider = 'serper';
-                $serperResult['provider'] = 'Serper.dev';
+            foreach ($this->serperApiKeys as $keyIndex => $serperKey) {
+                $keyLabel = $keyIndex === 0 ? 'primaria' : 'backup';
+                try {
+                    $serperResult = $this->checkWithSerper($keyword, $targetDomain, $location, $device, $serperKey);
+                    $this->lastProvider = 'serper';
+                    $serperResult['provider'] = 'Serper.dev';
 
-                // Se trovato, ritorna subito
-                if ($serperResult['found']) {
-                    return $serperResult;
+                    // Se trovato, ritorna subito
+                    if ($serperResult['found']) {
+                        return $serperResult;
+                    }
+
+                    // Non trovato ma query riuscita
+                    $primaryResult = $serperResult;
+                    \Core\Logger::channel('api')->warning('[RankChecker] Serper.dev: keyword non trovata, provo fallback', ['keyword' => $keyword]);
+                    break; // Query riuscita (anche se non trovato), non serve provare altra chiave
+                } catch (\Exception $e) {
+                    $lastError = $e->getMessage();
+                    $isCreditsError = $this->isCreditsOrRateLimitError($e->getMessage());
+                    \Core\Logger::channel('api')->error("[RankChecker] Serper.dev (chiave {$keyLabel}) fallito", [
+                        'error' => $lastError,
+                        'is_credits_error' => $isCreditsError,
+                    ]);
+                    // Se è un errore di crediti/rate-limit e c'è una chiave successiva, prova quella
+                    if ($isCreditsError && isset($this->serperApiKeys[$keyIndex + 1])) {
+                        \Core\Logger::channel('api')->info("[RankChecker] Provo chiave Serper.dev backup...");
+                        continue;
+                    }
+                    // Altrimenti passa al prossimo provider
+                    break;
                 }
-
-                // Non trovato ma query riuscita
-                $primaryResult = $serperResult;
-                \Core\Logger::channel('api')->warning('[RankChecker] Serper.dev: keyword non trovata, provo fallback', ['keyword' => $keyword]);
-            } catch (\Exception $e) {
-                $lastError = $e->getMessage();
-                \Core\Logger::channel('api')->error('[RankChecker] Serper.dev fallito', ['error' => $lastError]);
             }
         }
 
@@ -237,26 +267,40 @@ class RankCheckerService
 
         // =====================================================================
         // 3. FALLBACK SERP API
+        //    Prova tutte le chiavi configurate prima di dichiarare errore
         // =====================================================================
         if ($this->hasSerpApi()) {
-            try {
-                $serpApiResult = $this->checkWithSerpApi($keyword, $targetDomain, $location, $device);
-                $this->lastProvider = 'serpapi';
-                $serpApiResult['provider'] = 'SERP API';
+            foreach ($this->serpApiKeys as $keyIndex => $serpKey) {
+                $keyLabel = $keyIndex === 0 ? 'primaria' : 'backup';
+                try {
+                    $serpApiResult = $this->checkWithSerpApi($keyword, $targetDomain, $location, $device, $serpKey);
+                    $this->lastProvider = 'serpapi';
+                    $serpApiResult['provider'] = 'SERP API';
 
-                // Se trovato, ritorna subito
-                if ($serpApiResult['found']) {
-                    return $serpApiResult;
+                    // Se trovato, ritorna subito
+                    if ($serpApiResult['found']) {
+                        return $serpApiResult;
+                    }
+
+                    if ($primaryResult === null) {
+                        $primaryResult = $serpApiResult;
+                    }
+
+                    \Core\Logger::channel('api')->warning('[RankChecker] SERP API: keyword non trovata', ['keyword' => $keyword]);
+                    break; // Query riuscita, non serve provare altra chiave
+                } catch (\Exception $e) {
+                    $lastError = $e->getMessage();
+                    $isCreditsError = $this->isCreditsOrRateLimitError($e->getMessage());
+                    \Core\Logger::channel('api')->error("[RankChecker] SERP API (chiave {$keyLabel}) fallito", [
+                        'error' => $lastError,
+                        'is_credits_error' => $isCreditsError,
+                    ]);
+                    if ($isCreditsError && isset($this->serpApiKeys[$keyIndex + 1])) {
+                        \Core\Logger::channel('api')->info("[RankChecker] Provo chiave SERP API backup...");
+                        continue;
+                    }
+                    break;
                 }
-
-                if ($primaryResult === null) {
-                    $primaryResult = $serpApiResult;
-                }
-
-                \Core\Logger::channel('api')->warning('[RankChecker] SERP API: keyword non trovata', ['keyword' => $keyword]);
-            } catch (\Exception $e) {
-                $lastError = $e->getMessage();
-                \Core\Logger::channel('api')->error('[RankChecker] SERP API fallito', ['error' => $lastError]);
             }
         }
 
@@ -310,19 +354,45 @@ class RankCheckerService
                 if (!$this->hasSerpApi()) {
                     throw new \Exception('SerpAPI non configurato. Vai in Admin > Impostazioni > Integrazioni');
                 }
-                $serpResult = $this->checkWithSerpApi($keyword, $targetDomain, $location, $device);
-                $this->lastProvider = 'serpapi';
-                $serpResult['provider'] = 'SERP API';
-                return $serpResult;
+                // Prova tutte le chiavi configurate
+                $serpLastError = null;
+                foreach ($this->serpApiKeys as $ki => $sKey) {
+                    try {
+                        $serpResult = $this->checkWithSerpApi($keyword, $targetDomain, $location, $device, $sKey);
+                        $this->lastProvider = 'serpapi';
+                        $serpResult['provider'] = 'SERP API';
+                        return $serpResult;
+                    } catch (\Exception $e) {
+                        $serpLastError = $e;
+                        if ($this->isCreditsOrRateLimitError($e->getMessage()) && isset($this->serpApiKeys[$ki + 1])) {
+                            continue;
+                        }
+                        throw $e;
+                    }
+                }
+                throw $serpLastError ?? new \Exception('SerpAPI: nessuna chiave disponibile');
 
             case 'serper':
                 if (!$this->hasSerper()) {
                     throw new \Exception('Serper.dev non configurato. Vai in Admin > Impostazioni > Essenziali');
                 }
-                $serperResult = $this->checkWithSerper($keyword, $targetDomain, $location, $device);
-                $this->lastProvider = 'serper';
-                $serperResult['provider'] = 'Serper.dev';
-                return $serperResult;
+                // Prova tutte le chiavi configurate
+                $serperLastError = null;
+                foreach ($this->serperApiKeys as $ki => $sKey) {
+                    try {
+                        $serperResult = $this->checkWithSerper($keyword, $targetDomain, $location, $device, $sKey);
+                        $this->lastProvider = 'serper';
+                        $serperResult['provider'] = 'Serper.dev';
+                        return $serperResult;
+                    } catch (\Exception $e) {
+                        $serperLastError = $e;
+                        if ($this->isCreditsOrRateLimitError($e->getMessage()) && isset($this->serperApiKeys[$ki + 1])) {
+                            continue;
+                        }
+                        throw $e;
+                    }
+                }
+                throw $serperLastError ?? new \Exception('Serper.dev: nessuna chiave disponibile');
 
             default:
                 throw new \Exception("Provider SERP sconosciuto: {$provider}");
@@ -336,11 +406,13 @@ class RankCheckerService
         string $keyword,
         string $targetDomain,
         array $location,
-        string $device
+        string $device,
+        ?string $apiKey = null
     ): array {
         // Headers per Serper.dev
+        $key = $apiKey ?? ($this->serperApiKeys[0] ?? '');
         $headers = [
-            'X-API-KEY: ' . $this->serperApiKey,
+            'X-API-KEY: ' . $key,
             'Content-Type: application/json',
         ];
 
@@ -532,12 +604,14 @@ class RankCheckerService
         string $keyword,
         string $targetDomain,
         array $location,
-        string $device
+        string $device,
+        ?string $apiKey = null
     ): array {
         $allOrganicResults = [];
         $maxPages = 10; // Cerca nelle prime 10 pagine (100 risultati)
         $resultsPerPage = 10;
         $totalResults = null;
+        $key = $apiKey ?? ($this->serpApiKeys[0] ?? '');
 
         for ($page = 0; $page < $maxPages; $page++) {
             $startTime = microtime(true);
@@ -553,7 +627,7 @@ class RankCheckerService
                 'google_domain' => $location['serpapi_google_domain'] ?? 'google.it',
                 'num' => $resultsPerPage,
                 'start' => $page * $resultsPerPage,
-                'api_key' => $this->serpApiKey
+                'api_key' => $key
             ];
 
             if ($device === 'mobile') {
@@ -747,6 +821,31 @@ class RankCheckerService
     /**
      * Normalizza il dominio (rimuovi www, protocollo, trailing slash)
      */
+    /**
+     * Verifica se un errore è dovuto a crediti esauriti o rate limiting
+     * In tal caso vale la pena provare con una chiave backup
+     */
+    private function isCreditsOrRateLimitError(string $errorMessage): bool
+    {
+        $patterns = [
+            'not enough credits',
+            'insufficient credits',
+            'rate limit',
+            'too many requests',
+            'quota exceeded',
+            'HTTP 400',
+            'HTTP 402',
+            'HTTP 429',
+        ];
+        $lower = strtolower($errorMessage);
+        foreach ($patterns as $pattern) {
+            if (str_contains($lower, $pattern)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private function normalizeDomain(string $domain): string
     {
         // Rimuovi protocollo se presente
@@ -779,7 +878,7 @@ class RankCheckerService
         $targetDomain = $this->normalizeDomain($targetDomain);
 
         $headers = [
-            'X-API-KEY: ' . $this->serperApiKey,
+            'X-API-KEY: ' . ($this->serperApiKeys[0] ?? ''),
             'Content-Type: application/json',
         ];
 
@@ -978,7 +1077,7 @@ class RankCheckerService
         int $maxResults
     ): array {
         $headers = [
-            'X-API-KEY: ' . $this->serperApiKey,
+            'X-API-KEY: ' . ($this->serperApiKeys[0] ?? ''),
             'Content-Type: application/json',
         ];
 
@@ -1142,7 +1241,7 @@ class RankCheckerService
                 'google_domain' => $location['serpapi_google_domain'] ?? 'google.it',
                 'num' => $resultsPerPage,
                 'start' => $page * $resultsPerPage,
-                'api_key' => $this->serpApiKey
+                'api_key' => ($this->serpApiKeys[0] ?? '')
             ];
 
             if ($device === 'mobile') {
