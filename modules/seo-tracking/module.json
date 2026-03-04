@@ -128,7 +128,7 @@
             "admin_only": true,
             "group": "provider_config",
             "options": [
-                {"value": "auto", "label": "Auto (cascata tutti i provider)"},
+                {"value": "auto", "label": "Auto (cascata: Serper.dev → DataForSEO → SerpAPI)"},
                 {"value": "serper", "label": "Serper.dev"},
                 {"value": "dataforseo", "label": "DataForSEO"},
                 {"value": "serpapi", "label": "SerpAPI"}
@@ -142,7 +142,7 @@
             "admin_only": true,
             "group": "provider_config",
             "options": [
-                {"value": "auto", "label": "Auto (cascata tutti i provider)"},
+                {"value": "auto", "label": "Auto (cascata: RapidAPI → DataForSEO → Keywords Everywhere)"},
                 {"value": "rapidapi", "label": "RapidAPI"},
                 {"value": "dataforseo", "label": "DataForSEO"},
                 {"value": "keywordseverywhere", "label": "Keywords Everywhere"}

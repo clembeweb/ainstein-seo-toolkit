@@ -470,11 +470,11 @@ class Keyword
      */
     public function updateSearchVolumes(int $projectId): array
     {
-        // Determina quale service usare
-        $service = $this->getVolumeService();
+        // Usa cascata provider (come updateSearchVolumesForIds)
+        $providers = $this->getAllVolumeServices();
 
-        if ($service === null) {
-            return ['success' => false, 'error' => 'Nessun provider volumi configurato. Vai in Admin > Impostazioni per configurare DataForSEO o Keywords Everywhere'];
+        if (empty($providers)) {
+            return ['success' => false, 'error' => 'Nessun provider volumi configurato. Vai in Admin > Impostazioni per configurare RapidAPI, DataForSEO o Keywords Everywhere'];
         }
 
         // Prendi tutte le keyword del progetto
@@ -498,18 +498,34 @@ class Keyword
         $totalCached = 0;
         $totalFetched = 0;
         $errors = [];
-        $provider = $service instanceof \Services\RapidApiKeywordService ? 'RapidAPI' :
-                   ($service instanceof \Services\DataForSeoService ? 'DataForSEO' : 'Keywords Everywhere');
+        $usedProvider = null;
 
         // Processa ogni gruppo di location
         foreach ($keywordsByLocation as $locationCode => $locationKeywords) {
             $keywordTexts = array_column($locationKeywords, 'keyword');
 
-            // Ottieni volumi per questa location
-            $result = $service->getSearchVolumes($keywordTexts, $locationCode);
+            // Prova ogni provider in sequenza (fallback automatico)
+            $result = null;
+            foreach ($providers as $providerName => $service) {
+                $result = $service->getSearchVolumes($keywordTexts, $locationCode);
 
-            if (!$result['success']) {
-                $errors[] = "Errore per location {$locationCode}: " . ($result['error'] ?? 'unknown');
+                if ($result['success'] && !empty($result['data'])) {
+                    $usedProvider = $providerName;
+                    break; // Provider ha funzionato, esci dal loop
+                }
+
+                // Log del fallback
+                $errorMsg = $result['error'] ?? 'Nessun dato';
+                Logger::channel('api')->warning("[Keyword] Provider {$providerName} fallito per location {$locationCode}: {$errorMsg}. Provo il successivo...");
+            }
+
+            if (!$result || !$result['success']) {
+                $errors[] = "Errore per location {$locationCode}: tutti i provider hanno fallito";
+                continue;
+            }
+
+            if (empty($result['data'])) {
+                $errors[] = "Location {$locationCode}: nessun dato trovato per le keyword";
                 continue;
             }
 
@@ -523,7 +539,7 @@ class Keyword
                     // Sanitizza competition: deve essere decimal, non stringa
                     $competition = $volumeData['competition'] ?? null;
                     if ($competition !== null && !is_numeric($competition)) {
-                        $competition = null; // Se e' una stringa come 'LOW', usa null
+                        $competition = null;
                     } elseif ($competition !== null) {
                         $competition = (float) $competition;
                     }
@@ -562,8 +578,8 @@ class Keyword
             'total' => count($keywords),
             'cached' => $totalCached,
             'fetched' => $totalFetched,
-            'provider' => $provider,
-            'message' => "Volumi aggiornati per {$updated} keyword (provider: {$provider})"
+            'provider' => $usedProvider ?? 'unknown',
+            'message' => "Volumi aggiornati per {$updated} keyword (provider: " . ($usedProvider ?? 'unknown') . ")"
         ];
 
         if (!empty($errors)) {

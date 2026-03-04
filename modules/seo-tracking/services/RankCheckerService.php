@@ -11,9 +11,9 @@ use Modules\SeoTracking\Models\Location;
  * RankCheckerService
  *
  * Verifica posizioni SERP reali tramite (in ordine di priorità):
- * 1. DataForSEO (primario - usa stesse credenziali dei volumi, economico)
- * 2. SERP API (secondario - più affidabile, 100 query/mese gratis)
- * 3. Serper.dev (fallback - 2.500 query/mese gratis ma risultati inconsistenti)
+ * 1. Serper.dev (primario - 2.500 query/mese gratis)
+ * 2. DataForSEO (secondario - economico, usa stesse credenziali volumi)
+ * 3. SERP API (fallback - 100 query/mese gratis)
  *
  * Supporta locations dinamiche dal database.
  */
@@ -86,19 +86,19 @@ class RankCheckerService
     public function getProvidersInfo(): array
     {
         return [
+            'serper' => [
+                'configured' => $this->hasSerper(),
+                'name' => 'Serper.dev',
+                'type' => 'primary',
+            ],
             'dataforseo' => [
                 'configured' => $this->hasDataForSeo(),
                 'name' => 'DataForSEO',
-                'type' => 'primary',
+                'type' => 'secondary',
             ],
             'serpapi' => [
                 'configured' => $this->hasSerpApi(),
                 'name' => 'SERP API',
-                'type' => 'secondary',
-            ],
-            'serper' => [
-                'configured' => $this->hasSerper(),
-                'name' => 'Serper.dev',
                 'type' => 'fallback',
             ],
         ];
@@ -119,7 +119,7 @@ class RankCheckerService
 
     /**
      * Verifica posizione SERP per una keyword e dominio target
-     * Ordine provider: configurabile da admin (default: cascata DataForSEO → SERP API → Serper.dev)
+     * Ordine provider: configurabile da admin (default: cascata Serper.dev → DataForSEO → SERP API)
      *
      * @param string $keyword La keyword da cercare
      * @param string $targetDomain Il dominio da trovare (es: example.com)
@@ -156,13 +156,36 @@ class RankCheckerService
             return $this->checkWithSpecificProvider($configuredProvider, $keyword, $targetDomain, $location, $device, $locationCode);
         }
 
-        // Modalità auto: cascata DataForSEO → SERP API → Serper.dev
-        // Variabili per tracking risultati
+        // Modalità auto: cascata Serper.dev → DataForSEO → SERP API
+        // (ordine coerente con impostazioni admin modulo)
         $primaryResult = null;
         $lastError = null;
 
         // =====================================================================
-        // 1. PROVA DataForSEO (PRIMARIO - economico, usa stesse credenziali volumi)
+        // 1. PROVA Serper.dev (PRIMARIO - 2.500 query/mese gratis)
+        // =====================================================================
+        if ($this->hasSerper()) {
+            try {
+                $serperResult = $this->checkWithSerper($keyword, $targetDomain, $location, $device);
+                $this->lastProvider = 'serper';
+                $serperResult['provider'] = 'Serper.dev';
+
+                // Se trovato, ritorna subito
+                if ($serperResult['found']) {
+                    return $serperResult;
+                }
+
+                // Non trovato ma query riuscita
+                $primaryResult = $serperResult;
+                \Core\Logger::channel('api')->warning('[RankChecker] Serper.dev: keyword non trovata, provo fallback', ['keyword' => $keyword]);
+            } catch (\Exception $e) {
+                $lastError = $e->getMessage();
+                \Core\Logger::channel('api')->error('[RankChecker] Serper.dev fallito', ['error' => $lastError]);
+            }
+        }
+
+        // =====================================================================
+        // 2. PROVA DataForSEO (SECONDARIO - economico, usa stesse credenziali volumi)
         // =====================================================================
         if ($this->hasDataForSeo()) {
             try {
@@ -176,7 +199,7 @@ class RankCheckerService
 
                 if ($dataForSeoResult['success']) {
                     $this->lastProvider = 'dataforseo';
-                    $primaryResult = [
+                    $dfResult = [
                         'found' => $dataForSeoResult['found'],
                         'position' => $dataForSeoResult['position'],
                         'url' => $dataForSeoResult['url'],
@@ -194,10 +217,13 @@ class RankCheckerService
                     ];
 
                     // Se trovato, ritorna subito
-                    if ($primaryResult['found']) {
-                        return $primaryResult;
+                    if ($dfResult['found']) {
+                        return $dfResult;
                     }
 
+                    if ($primaryResult === null) {
+                        $primaryResult = $dfResult;
+                    }
                     \Core\Logger::channel('api')->warning('[RankChecker] DataForSEO: keyword non trovata nelle prime 100 posizioni, provo fallback', ['keyword' => $keyword]);
                 } else {
                     $lastError = $dataForSeoResult['error'] ?? 'Unknown DataForSEO error';
@@ -210,7 +236,7 @@ class RankCheckerService
         }
 
         // =====================================================================
-        // 2. PROVA SERP API (SECONDARIO)
+        // 3. FALLBACK SERP API
         // =====================================================================
         if ($this->hasSerpApi()) {
             try {
@@ -223,40 +249,14 @@ class RankCheckerService
                     return $serpApiResult;
                 }
 
-                // Se non abbiamo ancora un risultato primario, usa questo
                 if ($primaryResult === null) {
                     $primaryResult = $serpApiResult;
                 }
 
-                \Core\Logger::channel('api')->warning('[RankChecker] SERP API: keyword non trovata, provo fallback Serper.dev', ['keyword' => $keyword]);
+                \Core\Logger::channel('api')->warning('[RankChecker] SERP API: keyword non trovata', ['keyword' => $keyword]);
             } catch (\Exception $e) {
                 $lastError = $e->getMessage();
                 \Core\Logger::channel('api')->error('[RankChecker] SERP API fallito', ['error' => $lastError]);
-            }
-        }
-
-        // =====================================================================
-        // 3. FALLBACK Serper.dev
-        // =====================================================================
-        if ($this->hasSerper()) {
-            try {
-                $serperResult = $this->checkWithSerper($keyword, $targetDomain, $location, $device);
-                $this->lastProvider = 'serper';
-                $serperResult['provider'] = 'Serper.dev';
-
-                // Se trovato con fallback, ritorna questo risultato
-                if ($serperResult['found']) {
-                    \Core\Logger::channel('api')->info('[RankChecker] Serper.dev: keyword trovata', ['keyword' => $keyword, 'position' => $serperResult['position']]);
-                    return $serperResult;
-                }
-
-                // Se non abbiamo ancora un risultato primario, usa questo
-                if ($primaryResult === null) {
-                    $primaryResult = $serperResult;
-                }
-            } catch (\Exception $e) {
-                $lastError = $e->getMessage();
-                \Core\Logger::channel('api')->error('[RankChecker] Serper.dev fallback fallito', ['error' => $lastError]);
             }
         }
 
@@ -391,15 +391,21 @@ class RankCheckerService
             // Log anche quando troviamo il target (aggiungeremo dopo il check)
             $foundOnThisPage = false;
 
-            if ($error) {
-                throw new \Exception('Errore Serper.dev: ' . $error);
-            }
+            if ($error || $httpCode !== 200 || isset($data['message'])) {
+                // Log errore in API logs PRIMA di lanciare eccezione
+                $errorMsg = $error ?: ($data['message'] ?? "HTTP {$httpCode}");
+                ApiLoggerService::log('serper', '/search', $payload, $data ?? [], $httpCode, $startTime, [
+                    'module' => 'seo-tracking',
+                    'context' => "keyword={$keyword}, page={$page}, ERROR: {$errorMsg}",
+                    'error' => $errorMsg,
+                ]);
 
-            if ($httpCode !== 200) {
-                throw new \Exception('Errore Serper.dev HTTP ' . $httpCode);
-            }
-
-            if (isset($data['message'])) {
+                if ($error) {
+                    throw new \Exception('Errore Serper.dev: ' . $error);
+                }
+                if ($httpCode !== 200) {
+                    throw new \Exception('Errore Serper.dev HTTP ' . $httpCode);
+                }
                 throw new \Exception('Errore Serper.dev: ' . $data['message']);
             }
 
