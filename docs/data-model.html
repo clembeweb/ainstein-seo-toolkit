@@ -912,7 +912,7 @@ erDiagram
     <!-- ==================== SEO AUDIT ==================== -->
     <section id="sa" class="mb-16 print-break">
         <h2 class="text-2xl font-bold text-emerald-400 mb-6">SEO Audit (sa_)</h2>
-        <p class="text-slate-500 dark:text-slate-400 mb-6">9 tabelle. Crawling sito e import WordPress, rilevamento 50+ problemi, Piano d'Azione AI con fix per pagina.</p>
+        <p class="text-slate-500 dark:text-slate-400 mb-6">9 tabelle. Crawling sito e import WordPress, rilevamento 50+ problemi, analisi crawl budget (redirect, spreco, indicizzabilit&agrave;), Piano d'Azione AI con fix per pagina.</p>
 
         <div class="mermaid">
 erDiagram
@@ -940,6 +940,10 @@ erDiagram
         varchar title
         int word_count
         enum source "scraper/wordpress"
+        int redirect_hops "budget: hop redirect"
+        tinyint in_sitemap "budget: in sitemap XML"
+        tinyint in_robots_allowed "budget: permessa robots"
+        int internal_links_in "budget: link in entrata"
     }
     sa_issues {
         int id PK
@@ -966,19 +970,20 @@ erDiagram
         <details class="mt-6 bg-white dark:bg-slate-800 rounded-lg border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
             <summary class="p-4 font-semibold text-slate-900 dark:text-white">sa_projects</summary>
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300">
-                id(PK), user_id(FK&rarr;users), name, base_url, crawl_mode(sitemap/spider/both), max_pages, status(pending/crawling/analyzing/completed/failed), pages_found, pages_crawled, issues_count, health_score, created_at, updated_at, completed_at
+                id(PK), user_id(FK&rarr;users), name, base_url, crawl_mode(sitemap/spider/both), max_pages, status(pending/crawling/analyzing/completed/failed), pages_found, pages_crawled, issues_count, health_score, current_session_id, crawl_config(JSON), budget_score(0-100), waste_percentage(DECIMAL), created_at, updated_at, completed_at
             </div>
         </details>
         <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
-            <summary class="p-4 font-semibold text-slate-900 dark:text-white">sa_pages <span class="text-xs text-slate-400 ml-2">~30 colonne</span></summary>
-            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300">
-                id(PK), project_id(FK), url, status_code, load_time_ms, content_length, title, title_length, meta_description, meta_description_length, meta_robots, canonical_url, og_title/description/image, h1_count..h6_count, word_count, images_count, images_without_alt, images_data(JSON), internal/external/broken/nofollow_links_count, links_data(JSON), has_schema, schema_types(JSON), hreflang_tags(JSON), is_indexable, indexability_reason, html_content(LONGTEXT), crawled_at
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">sa_pages <span class="text-xs text-slate-400 ml-2">~40 colonne</span></summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
+                <div><strong class="text-slate-900 dark:text-white">On-page</strong>: id(PK), project_id(FK), session_id(FK), url, status, status_code, load_time_ms, content_length, title, title_length, meta_description, meta_description_length, meta_robots, canonical_url, og_title/description/image, h1_count..h6_count, word_count, images_count, images_without_alt, images_data(JSON), internal/external/broken/nofollow_links_count, links_data(JSON), has_schema, schema_types(JSON), hreflang_tags(JSON), is_indexable, indexability_reason, html_content(LONGTEXT), source(crawl/wordpress), crawled_at</div>
+                <div><strong class="text-slate-900 dark:text-white">Crawl Budget</strong>: redirect_chain(JSON), redirect_hops, redirect_target, is_redirect_loop, depth, discovered_from, has_parameters, in_sitemap, in_robots_allowed, crawl_source(spider/sitemap/import), internal_links_in</div>
             </div>
         </details>
         <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
             <summary class="p-4 font-semibold text-slate-900 dark:text-white">sa_issues</summary>
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300">
-                id(PK), project_id(FK), page_id(FK&rarr;sa_pages CASCADE), category, issue_type, severity(critical/warning/notice/info), title, description, affected_element, recommendation, source(crawler), created_at
+                id(PK), project_id(FK), page_id(FK&rarr;sa_pages CASCADE), session_id, category, issue_type, severity(critical/warning/notice/info), title, description, affected_element, recommendation, source(crawler), created_at. <strong>Categorie budget</strong>: redirect, waste, indexability (oltre alle 10 categorie on-page)
             </div>
         </details>
         <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
@@ -1016,7 +1021,7 @@ erDiagram
         <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
             <summary class="p-4 font-semibold text-slate-900 dark:text-white">sa_site_config &middot; sa_activity_logs</summary>
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
-                <div><strong class="text-slate-900 dark:text-white">sa_site_config</strong>: id(PK), project_id(FK UK), robots_txt, robots_allows/disallows(JSON), sitemap_urls(JSON), discovered_urls(JSON), has_sitemap, has_robots, is_https, ssl_valid</div>
+                <div><strong class="text-slate-900 dark:text-white">sa_site_config</strong>: id(PK), project_id(FK UK), robots_txt, robots_allows/disallows(JSON), sitemap_urls(JSON), discovered_urls(JSON), has_sitemap, has_robots, is_https, ssl_valid, crawl_delay(INT), robots_rules(JSON)</div>
                 <div><strong class="text-slate-900 dark:text-white">sa_activity_logs</strong>: id(PK), project_id(FK), user_id(FK), action, details(JSON)</div>
             </div>
         </details>
@@ -1053,6 +1058,12 @@ erDiagram
         int id PK
         int project_id FK
         varchar keyword UK
+        varchar location_code
+        int search_volume
+        decimal cpc
+        varchar keyword_intent
+        varchar group_name
+        boolean is_tracked
         enum priority
         decimal last_position
     }
@@ -1074,7 +1085,7 @@ erDiagram
         <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-blue-900/50 shadow-sm">
             <summary class="p-4 font-semibold text-slate-900 dark:text-white">st_keywords</summary>
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300">
-                id(PK), project_id(FK), keyword(UK con project), keyword_group, is_brand, target_url, priority(high/medium/low), alert_position_change, alert_enabled, last_position, last_clicks, last_impressions, last_ctr, last_updated_at, created_at
+                id(PK), project_id(FK), keyword, <strong>location_code</strong>(default IT - paese per multi-country tracking), <strong>search_volume</strong>, <strong>cpc</strong>, <strong>competition</strong>, <strong>competition_level</strong>, <strong>keyword_intent</strong>, volume_updated_at, <strong>group_name</strong>, is_brand, target_url, priority(high/medium/low), alert_position_change, alert_enabled, <strong>is_tracked</strong>(boolean), <strong>source</strong>(manual/gsc/import), notes, target_position, last_position, last_clicks, last_impressions, last_ctr, last_updated_at, created_at
             </div>
         </details>
         <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-blue-900/50 shadow-sm">

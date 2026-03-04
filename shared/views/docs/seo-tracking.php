@@ -11,7 +11,7 @@
             </div>
             <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">SEO Tracking</h1>
         </div>
-        <p class="text-sm text-slate-500 dark:text-slate-400">Monitoraggio posizioni keyword, traffico e revenue con report AI</p>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Monitoraggio posizioni keyword multi-country, traffico stimato, visibility % e report AI</p>
     </div>
 
     <!-- Cos'e -->
@@ -24,7 +24,7 @@
         </h2>
         <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
             <p class="text-slate-700 dark:text-slate-300 leading-relaxed">
-                Monitora le posizioni delle keyword su Google, integra dati da Search Console e Analytics, e genera report AI con insights azionabili. Il modulo piu completo per il monitoraggio SEO continuo: traccia l'evoluzione delle posizioni, identifica opportunita e misura il valore economico del traffico organico.
+                Monitora le posizioni delle keyword su Google in piu paesi contemporaneamente, con dashboard stile Semrush che mostra visibility %, traffico stimato e distribuzione posizioni. Integra dati da Search Console e Analytics, e genera report AI con insights azionabili. Il modulo piu completo per il monitoraggio SEO continuo: traccia l'evoluzione delle posizioni per country, identifica opportunita e misura il valore economico del traffico organico.
             </p>
         </div>
     </section>
@@ -55,7 +55,7 @@
                 <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">2</div>
                 <div>
                     <h3 class="font-medium text-slate-900 dark:text-white">Aggiungi le keyword da monitorare</h3>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Inserisci manualmente o importa da CSV le keyword strategiche che vuoi tracciare nel tempo.</p>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Inserisci manualmente o importa da CSV le keyword strategiche. Per ogni keyword puoi scegliere il paese (IT, US, DE, ecc.) per il monitoraggio multi-country.</p>
                 </div>
                 <svg class="w-5 h-5 shrink-0 text-slate-300 dark:text-slate-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -90,8 +90,8 @@
             <div class="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">5</div>
                 <div>
-                    <h3 class="font-medium text-slate-900 dark:text-white">Consulta la dashboard con trend e alert</h3>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Visualizza grafici di posizionamento, variazioni settimanali, alert automatici e report AI con suggerimenti operativi.</p>
+                    <h3 class="font-medium text-slate-900 dark:text-white">Consulta la dashboard Landscape e Overview</h3>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">La dashboard Landscape mostra visibility %, distribuzione posizioni, traffico stimato e keyword ad alto impatto. La tab Overview elenca tutte le keyword con filtri avanzati e confronto periodi.</p>
                 </div>
                 <svg class="w-5 h-5 shrink-0 text-slate-300 dark:text-slate-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
@@ -109,6 +109,32 @@
             Funzionalita principali
         </h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Multi-country tracking -->
+            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-cyan-50 dark:bg-cyan-900/30 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Tracking multi-country</h3>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Monitora le keyword in piu paesi contemporaneamente (IT, US, DE, ecc.). Country bar con bandierine, filtro per paese e metriche separate per ogni mercato.</p>
+            </div>
+
+            <!-- Landscape dashboard -->
+            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Dashboard Landscape</h3>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Panoramica stile Semrush con visibility %, traffico stimato, distribuzione posizioni (Top 3/10/20/50/100) e keyword ad alto impatto.</p>
+            </div>
+
             <!-- Rank checking -->
             <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="flex items-center gap-3 mb-2">
@@ -119,7 +145,7 @@
                     </div>
                     <h3 class="font-medium text-slate-900 dark:text-white text-sm">Rank checking automatico</h3>
                 </div>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Provider multipli (Serper, SerpAPI, DataForSEO) con fallback automatico per massima affidabilita.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Provider multipli (Serper, SerpAPI, DataForSEO) con fallback automatico. Cron ogni 5 minuti per aggiornamento continuo.</p>
             </div>
 
             <!-- GSC -->
@@ -135,17 +161,18 @@
                 <p class="text-sm text-slate-600 dark:text-slate-400">Sync completa con fino a 16 mesi di storico: click, impression, CTR e posizione media.</p>
             </div>
 
-            <!-- GA4 -->
+            <!-- Visibility e traffico stimato -->
             <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="flex items-center gap-3 mb-2">
                     <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
                         <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                         </svg>
                     </div>
-                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Google Analytics 4</h3>
+                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Visibility % e traffico stimato</h3>
                 </div>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Sessioni, revenue e conversioni per landing page per misurare il valore economico del traffico.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Calcolo visibility basato su curva CTR per posizione. Traffico organico stimato (volume x CTR) con trend giornaliero e delta 7 giorni.</p>
             </div>
 
             <!-- Gruppi keyword -->
@@ -161,19 +188,6 @@
                 <p class="text-sm text-slate-600 dark:text-slate-400">Organizza le keyword in gruppi tematici con statistiche aggregate per ogni gruppo.</p>
             </div>
 
-            <!-- Alert -->
-            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-900/30 flex items-center justify-center">
-                        <svg class="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                        </svg>
-                    </div>
-                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Sistema di alert</h3>
-                </div>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Notifiche per calo posizioni, calo traffico e anomalie con soglie personalizzabili.</p>
-            </div>
-
             <!-- Report AI -->
             <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="flex items-center gap-3 mb-2">
@@ -187,19 +201,6 @@
                 <p class="text-sm text-slate-600 dark:text-slate-400">Quick Wins, Digest settimanale e Executive mensile con insights azionabili generati dall'AI.</p>
             </div>
 
-            <!-- Revenue attribution -->
-            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
-                        <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Attribuzione revenue</h3>
-                </div>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Collega click GSC a revenue GA4 per calcolare il valore economico di ogni keyword.</p>
-            </div>
-
             <!-- Confronto periodi -->
             <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="flex items-center gap-3 mb-2">
@@ -210,7 +211,7 @@
                     </div>
                     <h3 class="font-medium text-slate-900 dark:text-white text-sm">Confronto periodi</h3>
                 </div>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Seleziona due date nella pagina Keywords per confrontare le posizioni: vedi delta, keyword migliorate, peggiorate, nuove e perse. Nella pagina Trend puoi scegliere tra dati GSC o keyword tracciate.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Confronta posizioni tra due date: vedi delta, keyword migliorate, peggiorate, nuove e perse. Scegli tra dati GSC o keyword tracciate.</p>
             </div>
         </div>
     </section>
@@ -232,6 +233,32 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                    <tr class="bg-white dark:bg-slate-800">
+                        <td class="px-5 py-3 text-slate-700 dark:text-slate-300">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4"/>
+                                </svg>
+                                Rank check (verifica posizione SERP)
+                            </div>
+                        </td>
+                        <td class="px-5 py-3 text-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">1 cr/keyword</span>
+                        </td>
+                    </tr>
+                    <tr class="bg-white dark:bg-slate-800">
+                        <td class="px-5 py-3 text-slate-700 dark:text-slate-300">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                                Recupero volumi, CPC, competition
+                            </div>
+                        </td>
+                        <td class="px-5 py-3 text-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">0.3-0.5 cr/kw</span>
+                        </td>
+                    </tr>
                     <tr class="bg-white dark:bg-slate-800">
                         <td class="px-5 py-3 text-slate-700 dark:text-slate-300">
                             <div class="flex items-center gap-2">
@@ -291,7 +318,7 @@
             <svg class="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            Il rank checking (1 cr/kw) e il monitoraggio base non consumano crediti. Le sync GSC e i report AI richiedono crediti.
+            Il rank checking (1 cr/kw) e il recupero volumi (0.3-0.5 cr/kw) vengono eseguiti automaticamente dai cron. Le sync GSC e i report AI richiedono crediti aggiuntivi.
         </p>
     </section>
 
