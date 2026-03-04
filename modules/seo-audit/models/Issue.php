@@ -27,6 +27,9 @@ class Issue
         'security' => 'Sicurezza',
         'sitemap' => 'Sitemap',
         'robots' => 'Robots.txt',
+        'redirect' => 'Redirect',
+        'waste' => 'Spreco Crawl Budget',
+        'indexability' => 'Indicizzabilità',
     ];
 
     /**

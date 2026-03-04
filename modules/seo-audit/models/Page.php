@@ -464,6 +464,44 @@ class Page
     }
 
     /**
+     * Get budget issue pages with pagination (used by BudgetResultsController)
+     * Queries sa_issues filtered by budget category, joined with sa_pages for URL.
+     *
+     * @param string $category One of: redirect, waste, indexability
+     */
+    public function getBudgetIssuePages(int $projectId, string $category, int $page = 1, int $perPage = 25): array
+    {
+        $offset = ($page - 1) * $perPage;
+
+        $countSql = "SELECT COUNT(*) as total FROM sa_issues WHERE project_id = ? AND category = ?";
+        $countResult = Database::fetch($countSql, [$projectId, $category]);
+        $total = (int) ($countResult['total'] ?? 0);
+
+        $sql = "
+            SELECT
+                i.id, i.page_id, i.category, i.issue_type, i.severity,
+                i.title, i.description, i.affected_element, i.recommendation, i.source, i.created_at,
+                p.url, p.status_code, p.redirect_hops, p.redirect_target,
+                p.depth, p.has_parameters, p.in_sitemap, p.is_indexable, p.word_count
+            FROM sa_issues i
+            LEFT JOIN {$this->table} p ON i.page_id = p.id
+            WHERE i.project_id = ? AND i.category = ?
+            ORDER BY FIELD(i.severity, 'critical', 'warning', 'notice', 'info'), i.created_at DESC
+            LIMIT ? OFFSET ?
+        ";
+
+        $data = Database::fetchAll($sql, [$projectId, $category, $perPage, $offset]);
+
+        return [
+            'data' => $data ?: [],
+            'total' => $total,
+            'current_page' => $page,
+            'per_page' => $perPage,
+            'last_page' => (int) ceil($total / $perPage) ?: 1,
+        ];
+    }
+
+    /**
      * Update internal_links_in count from discovered_from field
      */
     public function updateInternalLinksIn(int $projectId, ?int $sessionId = null): void

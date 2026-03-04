@@ -109,7 +109,7 @@ class BudgetIssueDetector
                 'issue_type' => 'redirect_loop',
                 'severity' => 'critical',
                 'title' => 'Loop di redirect rilevato',
-                'details' => json_encode([
+                'description' => json_encode([
                     'chain' => $chainArray,
                     'hops' => $hops,
                 ]),
@@ -127,7 +127,7 @@ class BudgetIssueDetector
                 'issue_type' => 'redirect_to_4xx',
                 'severity' => 'critical',
                 'title' => "Redirect termina con errore {$finalStatus}",
-                'details' => json_encode([
+                'description' => json_encode([
                     'chain' => $chainArray,
                     'final_status' => $finalStatus,
                 ]),
@@ -141,7 +141,7 @@ class BudgetIssueDetector
                 'issue_type' => 'redirect_to_5xx',
                 'severity' => 'critical',
                 'title' => "Redirect termina con errore server {$finalStatus}",
-                'details' => json_encode([
+                'description' => json_encode([
                     'chain' => $chainArray,
                     'final_status' => $finalStatus,
                 ]),
@@ -155,7 +155,7 @@ class BudgetIssueDetector
                 'issue_type' => 'redirect_chain',
                 'severity' => 'critical',
                 'title' => "Catena di redirect ({$hops} hop)",
-                'details' => json_encode([
+                'description' => json_encode([
                     'chain' => $chainArray,
                     'hops' => $hops,
                     'target' => $data['redirect_target'] ?? null,
@@ -170,7 +170,7 @@ class BudgetIssueDetector
                 'issue_type' => 'redirect_temporary',
                 'severity' => 'warning',
                 'title' => 'Redirect temporaneo (302) — considerare 301',
-                'details' => json_encode([
+                'description' => json_encode([
                     'chain' => $chainArray,
                 ]),
             ];
@@ -183,7 +183,7 @@ class BudgetIssueDetector
                 'issue_type' => 'redirect_single',
                 'severity' => 'notice',
                 'title' => 'Redirect singolo (1 hop)',
-                'details' => json_encode([
+                'description' => json_encode([
                     'chain' => $chainArray,
                     'target' => $data['redirect_target'] ?? null,
                 ]),
@@ -253,7 +253,7 @@ class BudgetIssueDetector
                     'issue_type' => 'soft_404',
                     'severity' => 'critical',
                     'title' => 'Soft 404 — Pagina sembra errore ma risponde 200',
-                    'details' => json_encode([
+                    'description' => json_encode([
                         'status_code' => $statusCode,
                         'page_title' => $title,
                         'word_count' => $wordCount,
@@ -269,7 +269,7 @@ class BudgetIssueDetector
                 'issue_type' => 'empty_page',
                 'severity' => 'critical',
                 'title' => 'Pagina vuota — nessun contenuto testuale',
-                'details' => json_encode([
+                'description' => json_encode([
                     'status_code' => $statusCode,
                 ]),
             ];
@@ -282,7 +282,7 @@ class BudgetIssueDetector
                 'issue_type' => 'thin_content_budget',
                 'severity' => 'warning',
                 'title' => "Contenuto scarso ({$wordCount} parole) — spreco crawl budget",
-                'details' => json_encode([
+                'description' => json_encode([
                     'word_count' => $wordCount,
                     'threshold' => 100,
                 ]),
@@ -300,7 +300,7 @@ class BudgetIssueDetector
                     'issue_type' => 'parameter_url_crawled',
                     'severity' => 'warning',
                     'title' => 'URL con parametri senza canonical verso versione pulita',
-                    'details' => json_encode([
+                    'description' => json_encode([
                         'url' => $url,
                         'canonical' => $canonicalUrl,
                         'clean_url' => strtok($url, '?'),
@@ -316,7 +316,7 @@ class BudgetIssueDetector
                 'issue_type' => 'deep_page',
                 'severity' => 'notice',
                 'title' => "Pagina a profondità elevata (livello {$depth})",
-                'details' => json_encode([
+                'description' => json_encode([
                     'depth' => $depth,
                     'threshold' => 4,
                 ]),
@@ -346,7 +346,7 @@ class BudgetIssueDetector
                 'issue_type' => 'noindex_in_sitemap',
                 'severity' => 'critical',
                 'title' => 'Pagina noindex presente in sitemap',
-                'details' => json_encode([
+                'description' => json_encode([
                     'url' => $url,
                     'indexability_reason' => $data['indexability_reason'] ?? 'noindex',
                 ]),
@@ -360,7 +360,7 @@ class BudgetIssueDetector
                 'issue_type' => 'mixed_signals',
                 'severity' => 'critical',
                 'title' => 'Segnali contraddittori — noindex + canonical verso altra pagina',
-                'details' => json_encode([
+                'description' => json_encode([
                     'url' => $url,
                     'canonical_url' => $canonicalUrl,
                 ]),
@@ -375,7 +375,7 @@ class BudgetIssueDetector
                 'issue_type' => 'blocked_but_linked',
                 'severity' => 'warning',
                 'title' => "Bloccata da robots.txt ma riceve {$internalLinksIn} link interni",
-                'details' => json_encode([
+                'description' => json_encode([
                     'url' => $url,
                     'internal_links_in' => $internalLinksIn,
                 ]),
@@ -389,7 +389,7 @@ class BudgetIssueDetector
                 'issue_type' => 'canonical_mismatch_budget',
                 'severity' => 'warning',
                 'title' => 'Canonical URL diverso dalla pagina — spreco crawl budget',
-                'details' => json_encode([
+                'description' => json_encode([
                     'url' => $url,
                     'canonical_url' => $canonicalUrl,
                 ]),
@@ -425,7 +425,7 @@ class BudgetIssueDetector
                 'issue_type' => 'orphan_page_budget',
                 'severity' => 'notice',
                 'title' => 'Pagina orfana — nessun link interno in entrata',
-                'details' => json_encode([
+                'description' => json_encode([
                     'url' => $page['url'],
                     'depth' => (int) $page['depth'],
                 ]),
@@ -466,7 +466,7 @@ class BudgetIssueDetector
                     'issue_type' => 'duplicate_title_budget',
                     'severity' => 'warning',
                     'title' => "Titolo duplicato con altre {$dup['cnt']} pagine — spreco crawl budget",
-                    'details' => json_encode([
+                    'description' => json_encode([
                         'title' => $dup['title'],
                         'duplicate_urls' => $urls,
                         'count' => (int) $dup['cnt'],
@@ -509,7 +509,7 @@ class BudgetIssueDetector
                     'issue_type' => 'canonical_chain',
                     'severity' => 'critical',
                     'title' => 'Catena di canonical — A→B→C',
-                    'details' => json_encode([
+                    'description' => json_encode([
                         'page_url' => $page['url'],
                         'canonical_1' => $page['canonical_url'],
                         'canonical_2' => $target['canonical_url'],
@@ -545,7 +545,7 @@ class BudgetIssueDetector
                 'issue_type' => 'noindex_receives_links',
                 'severity' => 'warning',
                 'title' => "Pagina noindex riceve {$page['internal_links_in']} link interni",
-                'details' => json_encode([
+                'description' => json_encode([
                     'url' => $page['url'],
                     'internal_links_in' => (int) $page['internal_links_in'],
                 ]),

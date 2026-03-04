@@ -771,12 +771,6 @@ class CrawlController
             }
 
             try {
-                // Segna pagina come in scraping
-                Database::execute(
-                    "UPDATE sa_pages SET status = 'scraping' WHERE id = ?",
-                    [$pendingPage['id']]
-                );
-
                 // Crawl la pagina
                 $pageData = $crawlerService->crawlPage($pendingPage['url']);
                 Database::reconnect();

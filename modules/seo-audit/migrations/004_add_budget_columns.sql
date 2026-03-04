@@ -20,6 +20,10 @@ ALTER TABLE sa_pages
   ADD COLUMN in_robots_allowed TINYINT(1) DEFAULT NULL COMMENT 'URL permessa da robots.txt',
   ADD COLUMN crawl_source ENUM('spider','sitemap','import') DEFAULT 'spider' COMMENT 'Come e stata scoperta';
 
+-- sa_pages: internal_links_in for orphan detection
+ALTER TABLE sa_pages
+  ADD COLUMN internal_links_in INT DEFAULT 0 COMMENT 'Numero link interni in entrata (calcolato post-crawl)';
+
 -- sa_site_config: crawl_delay + robots_rules
 -- NOTE: sitemap_urls already exists (JSON), no need to re-add
 ALTER TABLE sa_site_config
