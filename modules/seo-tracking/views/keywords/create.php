@@ -77,7 +77,8 @@
                 </div>
             </label>
 
-            <!-- Auto-fetch dati -->
+            <!-- Auto-fetch dati - Solo admin -->
+            <?php if (($user['role'] ?? '') === 'admin'): ?>
             <label class="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" name="auto_fetch" id="auto_fetch" value="1" checked
                        class="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500"
@@ -87,6 +88,7 @@
                     <span class="block text-xs text-slate-500 dark:text-slate-400">Ottieni volume, CPC e competition per ogni keyword (1 cr/kw Base)</span>
                 </div>
             </label>
+            <?php endif; ?>
         </div>
 
         <!-- Footer -->
@@ -97,6 +99,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
                     </svg>
                     <span id="keywordCount" class="text-sm text-slate-600 dark:text-slate-400">0 keyword</span>
+                    <?php if (($user['role'] ?? '') === 'admin'): ?>
                     <span id="costPreview" class="text-sm text-slate-500 dark:text-slate-500 ml-1 hidden">
                         <span class="text-slate-400 dark:text-slate-600">|</span>
                         <svg class="w-4 h-4 inline-block ml-1 -mt-0.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -104,6 +107,7 @@
                         </svg>
                         <span id="costValue">0</span> crediti
                     </span>
+                    <?php endif; ?>
                 </div>
                 <div class="flex gap-3">
                     <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/keywords') ?>" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
@@ -190,15 +194,17 @@ function calculateCost(count) {
 
 function updateCostPreview() {
     const count = countKeywords();
-    const autoFetch = document.getElementById('auto_fetch').checked;
+    const autoFetchEl = document.getElementById('auto_fetch');
+    const autoFetch = autoFetchEl ? autoFetchEl.checked : false;
 
     // Update keyword count
     const countEl = document.getElementById('keywordCount');
     countEl.textContent = count + ' keyword' + (count !== 1 ? '' : '');
 
-    // Update cost preview
+    // Update cost preview (admin only)
     const costPreviewEl = document.getElementById('costPreview');
     const costValueEl = document.getElementById('costValue');
+    if (!costPreviewEl) return;
 
     if (autoFetch && count > 0) {
         const cost = calculateCost(count);
