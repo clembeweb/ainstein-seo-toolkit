@@ -527,13 +527,11 @@
                             <?php else: ?>
                             <!-- Normal mode columns -->
                             <td class="px-4 py-3 text-center" title="<?= e($kw['location_code'] ?? 'IT') ?>">
-                                <?php
-                                $locCode = $kw['location_code'] ?? 'IT';
-                                $locFlags = ['IT'=>"\xF0\x9F\x87\xAE\xF0\x9F\x87\xB9",'US'=>"\xF0\x9F\x87\xBA\xF0\x9F\x87\xB8",'GB'=>"\xF0\x9F\x87\xAC\xF0\x9F\x87\xA7",'DE'=>"\xF0\x9F\x87\xA9\xF0\x9F\x87\xAA",'FR'=>"\xF0\x9F\x87\xAB\xF0\x9F\x87\xB7",'ES'=>"\xF0\x9F\x87\xAA\xF0\x9F\x87\xB8",'CH'=>"\xF0\x9F\x87\xA8\xF0\x9F\x87\xAD",'AT'=>"\xF0\x9F\x87\xA6\xF0\x9F\x87\xB9",'NL'=>"\xF0\x9F\x87\xB3\xF0\x9F\x87\xB1",'BE'=>"\xF0\x9F\x87\xA7\xF0\x9F\x87\xAA",'PT'=>"\xF0\x9F\x87\xB5\xF0\x9F\x87\xB9",'BR'=>"\xF0\x9F\x87\xA7\xF0\x9F\x87\xB7",'CA'=>"\xF0\x9F\x87\xA8\xF0\x9F\x87\xA6",'AU'=>"\xF0\x9F\x87\xA6\xF0\x9F\x87\xBA",'MX'=>"\xF0\x9F\x87\xB2\xF0\x9F\x87\xBD",'AR'=>"\xF0\x9F\x87\xA6\xF0\x9F\x87\xB7",'CL'=>"\xF0\x9F\x87\xA8\xF0\x9F\x87\xB1",'CO'=>"\xF0\x9F\x87\xA8\xF0\x9F\x87\xB4",'PL'=>"\xF0\x9F\x87\xB5\xF0\x9F\x87\xB1",'SE'=>"\xF0\x9F\x87\xB8\xF0\x9F\x87\xAA"];
-                                $locFlag = $locFlags[$locCode] ?? "\xF0\x9F\x8C\x90";
-                                ?>
+                                <?php $locCode = $kw['location_code'] ?? 'IT'; ?>
                                 <span class="inline-flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-300" title="<?= e($locCode) ?>">
-                                    <span class="text-sm"><?= $locFlag ?></span>
+                                    <img src="https://flagcdn.com/w20/<?= strtolower(e($locCode)) ?>.png"
+                                         srcset="https://flagcdn.com/w40/<?= strtolower(e($locCode)) ?>.png 2x"
+                                         width="16" alt="<?= e($locCode) ?>" class="inline-block rounded-sm" loading="lazy">
                                     <?= e($locCode) ?>
                                 </span>
                             </td>

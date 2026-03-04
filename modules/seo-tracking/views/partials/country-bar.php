@@ -9,18 +9,13 @@
  * - $currentPage: string (for URL building)
  */
 
-$countryFlags = [
-    'IT' => "\xF0\x9F\x87\xAE\xF0\x9F\x87\xB9", 'US' => "\xF0\x9F\x87\xBA\xF0\x9F\x87\xB8",
-    'GB' => "\xF0\x9F\x87\xAC\xF0\x9F\x87\xA7", 'DE' => "\xF0\x9F\x87\xA9\xF0\x9F\x87\xAA",
-    'FR' => "\xF0\x9F\x87\xAB\xF0\x9F\x87\xB7", 'ES' => "\xF0\x9F\x87\xAA\xF0\x9F\x87\xB8",
-    'CH' => "\xF0\x9F\x87\xA8\xF0\x9F\x87\xAD", 'AT' => "\xF0\x9F\x87\xA6\xF0\x9F\x87\xB9",
-    'NL' => "\xF0\x9F\x87\xB3\xF0\x9F\x87\xB1", 'BE' => "\xF0\x9F\x87\xA7\xF0\x9F\x87\xAA",
-    'PT' => "\xF0\x9F\x87\xB5\xF0\x9F\x87\xB9", 'BR' => "\xF0\x9F\x87\xA7\xF0\x9F\x87\xB7",
-    'CA' => "\xF0\x9F\x87\xA8\xF0\x9F\x87\xA6", 'AU' => "\xF0\x9F\x87\xA6\xF0\x9F\x87\xBA",
-    'MX' => "\xF0\x9F\x87\xB2\xF0\x9F\x87\xBD", 'AR' => "\xF0\x9F\x87\xA6\xF0\x9F\x87\xB7",
-    'CL' => "\xF0\x9F\x87\xA8\xF0\x9F\x87\xB1", 'CO' => "\xF0\x9F\x87\xA8\xF0\x9F\x87\xB4",
-    'PL' => "\xF0\x9F\x87\xB5\xF0\x9F\x87\xB1", 'SE' => "\xF0\x9F\x87\xB8\xF0\x9F\x87\xAA",
-];
+// Flag images via flagcdn.com (emoji don't render on Windows)
+function countryFlagImg(string $code, int $w = 20): string {
+    $lc = strtolower($code);
+    return '<img src="https://flagcdn.com/w' . $w . '/' . e($lc) . '.png" '
+         . 'srcset="https://flagcdn.com/w' . ($w * 2) . '/' . e($lc) . '.png 2x" '
+         . 'width="' . $w . '" alt="' . e($code) . '" class="inline-block rounded-sm" loading="lazy">';
+}
 
 // Build base URL for current page
 $pageRoutes = [
@@ -38,7 +33,6 @@ if (count($countries) < 2) return; // Single country: no bar needed
 <div class="flex flex-wrap gap-3 mb-4">
     <?php foreach ($countries as $c):
         $code = $c['country_code'] ?? $c['location_code'] ?? '';
-        $flag = $countryFlags[$code] ?? "\xF0\x9F\x8C\x90";
         $isActive = $activeCountry === $code;
     ?>
     <a href="<?= $baseUrl ?>?country=<?= e($code) ?>"
@@ -46,7 +40,7 @@ if (count($countries) < 2) return; // Single country: no bar needed
               <?= $isActive
                   ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 ring-1 ring-blue-200 dark:ring-blue-800'
                   : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700' ?>">
-        <span class="text-base"><?= $flag ?></span>
+        <?= countryFlagImg($code, 20) ?>
         <span class="font-semibold text-slate-900 dark:text-white"><?= e($code) ?></span>
         <span class="text-slate-500 dark:text-slate-400"><?= number_format($c['visibility'] ?? 0, 1) ?>%</span>
         <span class="text-xs text-slate-400 dark:text-slate-500"><?= $c['keyword_count'] ?> kw</span>
@@ -65,7 +59,6 @@ if (count($countries) < 2) return; // Single country: no bar needed
     </a>
     <?php foreach ($countries as $c):
         $code = $c['country_code'] ?? $c['location_code'] ?? '';
-        $flag = $countryFlags[$code] ?? "\xF0\x9F\x8C\x90";
         $isActive = $activeCountry === $code;
     ?>
     <a href="<?= $baseUrl ?>?country=<?= e($code) ?>"
@@ -73,7 +66,7 @@ if (count($countries) < 2) return; // Single country: no bar needed
               <?= $isActive
                   ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 -mb-px'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300' ?>">
-        <span class="text-xs"><?= $flag ?></span>
+        <?= countryFlagImg($code, 16) ?>
         <?= e($code) ?>
     </a>
     <?php endforeach; ?>
