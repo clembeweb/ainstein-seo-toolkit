@@ -157,7 +157,9 @@ class ScraperService
             'external' => [],
         ];
 
-        $baseDomain = parse_url($baseUrl, PHP_URL_HOST);
+        // Gestisci base_url con o senza protocollo (es. "www.example.com" o "https://www.example.com")
+        $baseDomain = parse_url($baseUrl, PHP_URL_HOST) ?: parse_url('https://' . $baseUrl, PHP_URL_HOST);
+        $baseScheme = parse_url($baseUrl, PHP_URL_SCHEME) ?: 'https';
 
         preg_match_all('/<a[^>]+href=["\']([^"\'#]+)["\'][^>]*>(.*?)<\/a>/is', $html, $matches, PREG_SET_ORDER);
 
@@ -167,7 +169,7 @@ class ScraperService
 
             // Normalizza URL relativo
             if (str_starts_with($href, '/')) {
-                $href = parse_url($baseUrl, PHP_URL_SCHEME) . '://' . $baseDomain . $href;
+                $href = $baseScheme . '://' . $baseDomain . $href;
             }
 
             if (!filter_var($href, FILTER_VALIDATE_URL)) {
