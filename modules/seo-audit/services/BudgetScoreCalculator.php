@@ -75,12 +75,38 @@ class BudgetScoreCalculator
         $score -= min(20, $wastePercentage * 0.4);
         $score = max(0, (int) round($score));
 
+        // Severity per category (for overview links)
+        $catSql = "SELECT category, severity, COUNT(*) as cnt FROM sa_issues
+                   WHERE project_id = ? AND category IN ({$categoriesIn})";
+        $catParams = [$projectId];
+        if ($sessionId) {
+            $catSql .= " AND session_id = ?";
+            $catParams[] = $sessionId;
+        }
+        $catSql .= " GROUP BY category, severity";
+        $catRows = Database::fetchAll($catSql, $catParams);
+
+        $categoryBreakdown = [];
+        foreach (self::BUDGET_CATEGORIES as $cat) {
+            $categoryBreakdown[$cat] = ['total' => 0, 'critical' => 0, 'warning' => 0, 'notice' => 0];
+        }
+        foreach ($catRows as $row) {
+            $cat = $row['category'];
+            $sev = $row['severity'];
+            $cnt = (int) $row['cnt'];
+            if (isset($categoryBreakdown[$cat])) {
+                $categoryBreakdown[$cat][$sev] = $cnt;
+                $categoryBreakdown[$cat]['total'] += $cnt;
+            }
+        }
+
         return [
             'score' => $score,
             'label' => self::getLabel($score),
             'color' => self::getColor($score),
             'waste_percentage' => round($wastePercentage, 1),
             'severity_counts' => $severity,
+            'category_breakdown' => $categoryBreakdown,
             'total_pages' => $totalPages,
             'waste_pages' => $wastePages,
         ];

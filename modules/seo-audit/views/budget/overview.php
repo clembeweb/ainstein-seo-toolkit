@@ -250,43 +250,63 @@ $activeSubTab = 'overview';
         <?php endif; ?>
     </div>
 
-    <!-- Severity Breakdown -->
+    <!-- Category Breakdown -->
+    <?php
+    $catBreakdown = $budgetScore['category_breakdown'] ?? [];
+    $catMeta = [
+        'redirect' => [
+            'label' => 'Redirect',
+            'url' => $budgetUrl . '/redirects',
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+            'color' => 'blue',
+        ],
+        'waste' => [
+            'label' => 'Spreco Crawl Budget',
+            'url' => $budgetUrl . '/waste',
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>',
+            'color' => 'amber',
+        ],
+        'indexability' => [
+            'label' => 'Indicizzabilit&agrave;',
+            'url' => $budgetUrl . '/indexability',
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
+            'color' => 'emerald',
+        ],
+    ];
+    $colorClasses = [
+        'blue'    => ['border' => 'border-blue-200 dark:border-blue-900/50',     'hover' => 'hover:bg-blue-50 dark:hover:bg-blue-900/20',     'bg' => 'bg-blue-100 dark:bg-blue-900/50',     'text' => 'text-blue-600 dark:text-blue-400'],
+        'amber'   => ['border' => 'border-amber-200 dark:border-amber-900/50',   'hover' => 'hover:bg-amber-50 dark:hover:bg-amber-900/20',   'bg' => 'bg-amber-100 dark:bg-amber-900/50',   'text' => 'text-amber-600 dark:text-amber-400'],
+        'emerald' => ['border' => 'border-emerald-200 dark:border-emerald-900/50','hover' => 'hover:bg-emerald-50 dark:hover:bg-emerald-900/20','bg' => 'bg-emerald-100 dark:bg-emerald-900/50','text' => 'text-emerald-600 dark:text-emerald-400'],
+    ];
+    ?>
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Riepilogo per Gravit&agrave;</h3>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Riepilogo per Categoria</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <a href="<?= url($budgetUrl . '/redirects') ?>" class="flex items-center justify-between p-4 rounded-xl border border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+            <?php foreach ($catMeta as $catKey => $meta):
+                $catData = $catBreakdown[$catKey] ?? ['total' => 0, 'critical' => 0, 'warning' => 0, 'notice' => 0];
+                $cc = $colorClasses[$meta['color']];
+            ?>
+            <a href="<?= url($meta['url']) ?>" class="flex items-center justify-between p-4 rounded-xl border <?= $cc['border'] ?> <?= $cc['hover'] ?> transition-colors">
                 <div>
-                    <p class="text-sm font-medium text-slate-600 dark:text-slate-300">Critici</p>
-                    <p class="text-2xl font-bold text-red-600 dark:text-red-400"><?= $severity['critical'] ?></p>
+                    <p class="text-sm font-medium text-slate-600 dark:text-slate-300"><?= $meta['label'] ?></p>
+                    <p class="text-2xl font-bold <?= $cc['text'] ?>"><?= $catData['total'] ?></p>
+                    <?php if ($catData['total'] > 0): ?>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        <?php $parts = [];
+                        if ($catData['critical'] > 0) $parts[] = '<span class="text-red-600">' . $catData['critical'] . ' critici</span>';
+                        if ($catData['warning'] > 0) $parts[] = '<span class="text-amber-600">' . $catData['warning'] . ' warning</span>';
+                        if ($catData['notice'] > 0) $parts[] = '<span class="text-blue-600">' . $catData['notice'] . ' notice</span>';
+                        echo implode(' / ', $parts); ?>
+                    </p>
+                    <?php endif; ?>
                 </div>
-                <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <div class="w-10 h-10 rounded-full <?= $cc['bg'] ?> flex items-center justify-center">
+                    <svg class="w-5 h-5 <?= $cc['text'] ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <?= $meta['icon'] ?>
                     </svg>
                 </div>
             </a>
-            <a href="<?= url($budgetUrl . '/waste') ?>" class="flex items-center justify-between p-4 rounded-xl border border-amber-200 dark:border-amber-900/50 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors">
-                <div>
-                    <p class="text-sm font-medium text-slate-600 dark:text-slate-300">Warning</p>
-                    <p class="text-2xl font-bold text-amber-600 dark:text-amber-400"><?= $severity['warning'] ?></p>
-                </div>
-                <div class="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                    </svg>
-                </div>
-            </a>
-            <a href="<?= url($budgetUrl . '/indexability') ?>" class="flex items-center justify-between p-4 rounded-xl border border-blue-200 dark:border-blue-900/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
-                <div>
-                    <p class="text-sm font-medium text-slate-600 dark:text-slate-300">Notice</p>
-                    <p class="text-2xl font-bold text-blue-600 dark:text-blue-400"><?= $severity['notice'] ?></p>
-                </div>
-                <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-            </a>
+            <?php endforeach; ?>
         </div>
     </div>
 

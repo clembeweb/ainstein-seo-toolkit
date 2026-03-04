@@ -78,7 +78,7 @@ class BudgetResultsController
         $page = (int) ($_GET['page'] ?? 1);
         $severity = $_GET['severity'] ?? null;
 
-        $issuesData = $this->pageModel->getBudgetIssuePages($id, 'redirect', $page, 25);
+        $issuesData = $this->pageModel->getBudgetIssuePages($id, 'redirect', $page, 25, $severity);
 
         return View::render('seo-audit/budget/redirects', [
             'title' => 'Redirect — Crawl Budget — ' . ($project['domain'] ?? $project['name']),
@@ -117,7 +117,7 @@ class BudgetResultsController
         $page = (int) ($_GET['page'] ?? 1);
         $severity = $_GET['severity'] ?? null;
 
-        $issuesData = $this->pageModel->getBudgetIssuePages($id, 'waste', $page, 25);
+        $issuesData = $this->pageModel->getBudgetIssuePages($id, 'waste', $page, 25, $severity);
 
         return View::render('seo-audit/budget/waste', [
             'title' => 'Pagine Spreco — Crawl Budget — ' . ($project['domain'] ?? $project['name']),
@@ -156,7 +156,7 @@ class BudgetResultsController
         $page = (int) ($_GET['page'] ?? 1);
         $severity = $_GET['severity'] ?? null;
 
-        $issuesData = $this->pageModel->getBudgetIssuePages($id, 'indexability', $page, 25);
+        $issuesData = $this->pageModel->getBudgetIssuePages($id, 'indexability', $page, 25, $severity);
 
         return View::render('seo-audit/budget/indexability', [
             'title' => 'Indicizzabilità — Crawl Budget — ' . ($project['domain'] ?? $project['name']),

@@ -469,12 +469,21 @@ class Page
      *
      * @param string $category One of: redirect, waste, indexability
      */
-    public function getBudgetIssuePages(int $projectId, string $category, int $page = 1, int $perPage = 25): array
+    public function getBudgetIssuePages(int $projectId, string $category, int $page = 1, int $perPage = 25, ?string $severity = null): array
     {
         $offset = ($page - 1) * $perPage;
 
-        $countSql = "SELECT COUNT(*) as total FROM sa_issues WHERE project_id = ? AND category = ?";
-        $countResult = Database::fetch($countSql, [$projectId, $category]);
+        $severityFilter = '';
+        $countParams = [$projectId, $category];
+        $dataParams = [$projectId, $category];
+        if ($severity && in_array($severity, ['critical', 'warning', 'notice'])) {
+            $severityFilter = ' AND i.severity = ?';
+            $countParams[] = $severity;
+            $dataParams[] = $severity;
+        }
+
+        $countSql = "SELECT COUNT(*) as total FROM sa_issues i WHERE i.project_id = ? AND i.category = ?" . $severityFilter;
+        $countResult = Database::fetch($countSql, $countParams);
         $total = (int) ($countResult['total'] ?? 0);
 
         $sql = "
@@ -485,12 +494,14 @@ class Page
                 p.depth, p.has_parameters, p.in_sitemap, p.is_indexable, p.word_count
             FROM sa_issues i
             LEFT JOIN {$this->table} p ON i.page_id = p.id
-            WHERE i.project_id = ? AND i.category = ?
+            WHERE i.project_id = ? AND i.category = ?" . $severityFilter . "
             ORDER BY FIELD(i.severity, 'critical', 'warning', 'notice', 'info'), i.created_at DESC
             LIMIT ? OFFSET ?
         ";
 
-        $data = Database::fetchAll($sql, [$projectId, $category, $perPage, $offset]);
+        $dataParams[] = $perPage;
+        $dataParams[] = $offset;
+        $data = Database::fetchAll($sql, $dataParams);
 
         return [
             'data' => $data ?: [],
