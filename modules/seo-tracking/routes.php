@@ -708,7 +708,7 @@ Router::get('/seo-tracking/project/{id}/export/keywords', function ($id) {
 
 Router::get('/seo-tracking/project/{id}/export/positions', function ($id) {
     Middleware::auth();
-    return (new ExportController())->positions((int) $id);
+    return (new ExportController())->keywords((int) $id);
 });
 
 // =============================================

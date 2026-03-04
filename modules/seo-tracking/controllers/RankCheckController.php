@@ -35,7 +35,7 @@ class RankCheckController
         $project = $projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: /seo-tracking');
             exit;
         }
@@ -394,7 +394,7 @@ class RankCheckController
         $project = $projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: /seo-tracking');
             exit;
         }
@@ -631,8 +631,20 @@ class RankCheckController
                         'last_position' => $result['position'],
                         'last_updated_at' => date('Y-m-d H:i:s'),
                     ]);
+
+                    // Upsert snapshot giornaliero
+                    $positionModel = new KeywordPosition();
+                    $positionModel->upsert([
+                        'project_id' => $projectId,
+                        'keyword_id' => $existingKeyword['id'],
+                        'date' => date('Y-m-d'),
+                        'avg_position' => $result['position'],
+                    ]);
                 }
             }
+
+            // Reconnect dopo API call
+            Database::reconnect();
 
             // Scala crediti
             Credits::consume($user['id'], $cost, 'rank_check', 'seo-tracking', [
@@ -914,7 +926,7 @@ class RankCheckController
                         'Rank check annullato', [
                         'icon' => 'exclamation-triangle',
                         'color' => 'red',
-                        'action_url' => '/seo-tracking/projects/' . $projectId . '/keywords',
+                        'action_url' => '/seo-tracking/project/' . $projectId . '/keywords',
                         'body' => 'Il rank check e stato annullato dall\'utente.',
                         'data' => ['module' => 'seo-tracking', 'project_id' => $projectId],
                     ]);
@@ -947,7 +959,7 @@ class RankCheckController
                         "Rank check completato per {$projectName}", [
                         'icon' => 'check-circle',
                         'color' => 'emerald',
-                        'action_url' => '/seo-tracking/projects/' . $projectId . '/keywords',
+                        'action_url' => '/seo-tracking/project/' . $projectId . '/keywords',
                         'body' => "Verificate {$completed} keyword, {$found} trovate in SERP.",
                         'data' => ['module' => 'seo-tracking', 'project_id' => $projectId],
                     ]);

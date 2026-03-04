@@ -1347,7 +1347,10 @@ function checkSingleKeyword(keywordId, keyword, locationCode, btnElement) {
         },
         body: `_csrf_token=${encodeURIComponent(csrfToken)}&keyword=${encodeURIComponent(keyword)}&location=${encodeURIComponent(locationCode)}&device=desktop`
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) throw new Error('Errore server: ' + response.status);
+        return response.json();
+    })
     .then(data => {
         btnElement.disabled = false;
         btnElement.innerHTML = originalHTML;
@@ -1374,8 +1377,8 @@ function checkSingleKeyword(keywordId, keyword, locationCode, btnElement) {
             positionCell.textContent = '-';
         }
 
-        // Aggiorna la cella "Aggiornato" (colonna 10: checkbox, keyword, loc, pos, vol, cpc, comp, intento, stagion, aggiornato)
-        const updatedCell = row.querySelector('td:nth-child(10)');
+        // Aggiorna la cella "Aggiornato" (colonna 12: checkbox, keyword, loc, pos, vol, cpc, comp, intento, vis%, est.traffic, stagion, aggiornato)
+        const updatedCell = row.querySelector('td:nth-child(12)');
         if (updatedCell) {
             const now = new Date();
             const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;

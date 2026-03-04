@@ -1062,9 +1062,9 @@ class KeywordController
                     'serp_position' => $result['found'] ? $result['position'] : null,
                     'serp_url' => $result['url'] ?? null,
                     'serp_title' => $result['title'] ?? null,
-                    'gsc_position' => $kw['last_position'],
+                    'gsc_position' => null,
                     'position_diff' => $result['found'] && $kw['last_position']
-                        ? ($result['position'] - $kw['last_position'])
+                        ? round($result['position'] - $kw['last_position'], 1)
                         : null,
                     'credits_used' => 1,
                 ]);
@@ -1152,10 +1152,11 @@ class KeywordController
         }
 
         // Verifica servizi configurati
-        $dataForSeo = new \Services\DataForSeoService();
         $rankChecker = new RankCheckerService();
+        $keywordModel = $this->keyword;
+        $hasVolumeProvider = !empty($keywordModel->getAllVolumeServices());
 
-        if (!$dataForSeo->isConfigured() && !$rankChecker->isConfigured()) {
+        if (!$hasVolumeProvider && !$rankChecker->isConfigured()) {
             return View::json(['success' => false, 'error' => 'Nessun servizio configurato. Vai in Admin > Impostazioni']);
         }
 
@@ -1187,7 +1188,7 @@ class KeywordController
         }
 
         // Calcola costo totale
-        $volumeCost = $dataForSeo->isConfigured() ? $this->calculateRefreshCost($allCount, 'volumes') : 0;
+        $volumeCost = $hasVolumeProvider ? $this->calculateRefreshCost($allCount, 'volumes') : 0;
         $positionCost = $rankChecker->isConfigured() && $trackedCount > 0
             ? $this->calculateRefreshCost($trackedCount, 'positions')
             : 0;
@@ -1208,7 +1209,7 @@ class KeywordController
         $details = [];
 
         // 1. Refresh volumi
-        if ($dataForSeo->isConfigured()) {
+        if ($hasVolumeProvider) {
             if (!empty($keywordIds)) {
                 $volumeResult = $this->keyword->updateSearchVolumesForIds(array_map('intval', $keywordIds));
             } else {
@@ -1246,9 +1247,9 @@ class KeywordController
                             'device' => 'desktop',
                             'serp_position' => $result['found'] ? $result['position'] : null,
                             'serp_url' => $result['url'] ?? null,
-                            'gsc_position' => $kw['last_position'],
+                            'gsc_position' => null,
                             'position_diff' => $result['found'] && $kw['last_position']
-                                ? ($result['position'] - $kw['last_position'])
+                                ? round($result['position'] - $kw['last_position'], 1)
                                 : null,
                             'credits_used' => 1,
                         ]);
@@ -1486,6 +1487,10 @@ class KeywordController
         header('Connection: keep-alive');
         header('X-Accel-Buffering: no');
 
+        // Safety guards SSE
+        ignore_user_abort(true);
+        set_time_limit(0);
+
         // Chiudi la sessione PRIMA del loop per non bloccare altre richieste
         session_write_close();
 
@@ -1493,7 +1498,7 @@ class KeywordController
         $sendEvent = function (string $event, array $data) {
             echo "event: {$event}\n";
             echo "data: " . json_encode($data) . "\n\n";
-            ob_flush();
+            if (ob_get_level()) ob_flush();
             flush();
         };
 

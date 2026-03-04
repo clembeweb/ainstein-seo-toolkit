@@ -12,6 +12,7 @@ use Modules\SeoTracking\Models\GscConnection;
 use Modules\SeoTracking\Models\GscData;
 use Modules\SeoTracking\Services\GscService;
 use Core\Logger;
+use Core\Database;
 
 /**
  * GscController
@@ -300,7 +301,7 @@ class GscController
 
         // Aumenta timeout
         set_time_limit(0);
-        ignore_user_abort(false);
+        ignore_user_abort(true);
 
         $user = Auth::user();
         session_write_close(); // RILASCIA SESSIONE

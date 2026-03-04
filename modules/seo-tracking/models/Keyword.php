@@ -117,6 +117,13 @@ class Keyword
                         WHEN 'IT' THEN 2380 WHEN 'US' THEN 2840 WHEN 'GB' THEN 2826 WHEN 'UK' THEN 2826
                         WHEN 'DE' THEN 2276 WHEN 'FR' THEN 2250 WHEN 'ES' THEN 2724 WHEN 'NL' THEN 2528
                         WHEN 'BE' THEN 2056 WHEN 'AT' THEN 2040 WHEN 'CH' THEN 2756 WHEN 'PT' THEN 2620
+                        WHEN 'PL' THEN 2616 WHEN 'SE' THEN 2752 WHEN 'NO' THEN 2578 WHEN 'DK' THEN 2208
+                        WHEN 'FI' THEN 2246 WHEN 'IE' THEN 2372 WHEN 'CZ' THEN 2203 WHEN 'RO' THEN 2642
+                        WHEN 'HU' THEN 2348 WHEN 'GR' THEN 2300 WHEN 'HR' THEN 2191 WHEN 'BG' THEN 2100
+                        WHEN 'SK' THEN 2703 WHEN 'SI' THEN 2705 WHEN 'LT' THEN 2440 WHEN 'LV' THEN 2428
+                        WHEN 'EE' THEN 2233 WHEN 'LU' THEN 2442 WHEN 'MT' THEN 2470 WHEN 'CY' THEN 2196
+                        WHEN 'BR' THEN 2076 WHEN 'CA' THEN 2124 WHEN 'AU' THEN 2036 WHEN 'IN' THEN 2356
+                        WHEN 'JP' THEN 2392 WHEN 'MX' THEN 2484 WHEN 'AR' THEN 2032
                         ELSE 2380
                     END
                 )
@@ -534,7 +541,14 @@ class Keyword
 
             // Aggiorna keyword nel DB
             foreach ($locationKeywords as $kw) {
-                $volumeData = $result['data'][$kw['keyword']] ?? null;
+                // Case-insensitive lookup: API potrebbe ritornare case diverso
+                $volumeData = null;
+                foreach ($result['data'] as $apiKeyword => $apiData) {
+                    if (strcasecmp($apiKeyword, $kw['keyword']) === 0) {
+                        $volumeData = $apiData;
+                        break;
+                    }
+                }
                 if ($volumeData) {
                     // Sanitizza competition: deve essere decimal, non stringa
                     $competition = $volumeData['competition'] ?? null;
@@ -765,7 +779,14 @@ class Keyword
 
             // Aggiorna keyword nel DB
             foreach ($locationKeywords as $kw) {
-                $volumeData = $result['data'][$kw['keyword']] ?? null;
+                // Case-insensitive lookup: API potrebbe ritornare case diverso
+                $volumeData = null;
+                foreach ($result['data'] as $apiKeyword => $apiData) {
+                    if (strcasecmp($apiKeyword, $kw['keyword']) === 0) {
+                        $volumeData = $apiData;
+                        break;
+                    }
+                }
                 if ($volumeData) {
                     // Sanitizza competition: deve essere decimal, non stringa
                     $competition = $volumeData['competition'] ?? null;
@@ -826,7 +847,7 @@ class Keyword
      *
      * @return array Array associativo [nome => service]
      */
-    private function getAllVolumeServices(): array
+    public function getAllVolumeServices(): array
     {
         $configured = $this->getConfiguredVolumeProvider();
 
