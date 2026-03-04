@@ -41,6 +41,14 @@ $severityLabels = [
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400"><?= $pagination['total'] ?> pagine che sprecano crawl budget</p>
     </div>
 
+    <!-- Guida -->
+    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+        <p class="text-sm text-amber-800 dark:text-amber-200">
+            Le pagine spreco consumano crawl budget senza portare valore SEO: pagine duplicate, con contenuto scarso, errori soft-404 o parametri inutili.
+            <strong>Rimuovile, uniscile o bloccale con noindex</strong> per permettere a Google di concentrarsi sulle pagine importanti del tuo sito.
+        </p>
+    </div>
+
     <!-- Severity Filter Bar -->
     <div class="flex flex-wrap gap-2">
         <a href="<?= url($budgetUrl . '/waste') ?>"

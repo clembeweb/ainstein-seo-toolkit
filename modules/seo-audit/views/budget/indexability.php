@@ -41,6 +41,14 @@ $severityLabels = [
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400"><?= $pagination['total'] ?> problemi di indicizzabilit&agrave; rilevati</p>
     </div>
 
+    <!-- Guida -->
+    <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4">
+        <p class="text-sm text-emerald-800 dark:text-emerald-200">
+            Questi problemi impediscono o ostacolano l'indicizzazione delle pagine: tag noindex, canonical errati, pagine bloccate da robots.txt o segnali contraddittori (es. noindex + canonical).
+            <strong>Correggi le pagine importanti</strong> per assicurarti che Google possa trovarle e indicizzarle correttamente.
+        </p>
+    </div>
+
     <!-- Severity Filter Bar -->
     <div class="flex flex-wrap gap-2">
         <a href="<?= url($budgetUrl . '/indexability') ?>"

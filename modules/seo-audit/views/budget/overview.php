@@ -54,6 +54,26 @@ $activeSubTab = 'overview';
         <a href="<?= url($budgetUrl . '/indexability') ?>" class="px-3 py-1.5 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700">Indicizzabilit&agrave;</a>
     </div>
 
+    <!-- Intro -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="flex gap-3">
+            <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center mt-0.5">
+                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="text-sm text-slate-600 dark:text-slate-300">
+                    Il <strong>Crawl Budget</strong> rappresenta il numero di pagine che Google scansiona sul tuo sito in un dato periodo.
+                    Redirect inutili, pagine duplicate e problemi di indicizzabilit&agrave; sprecano questo budget, rallentando l'indicizzazione delle pagine importanti.
+                </p>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                    Punteggio pi&ugrave; alto = meno sprechi. Concentrati sui problemi <strong class="text-red-600">critici</strong> per ottenere i risultati migliori.
+                </p>
+            </div>
+        </div>
+    </div>
+
     <?php if (($budgetScore['total_pages'] ?? 0) === 0): ?>
     <!-- Empty state -->
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
@@ -152,7 +172,8 @@ $activeSubTab = 'overview';
 
     <!-- Status Distribution Bar -->
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Distribuzione Status Code</h3>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-1">Distribuzione Status Code</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Come rispondono le pagine del sito ai crawler. Le risposte 2xx sono corrette, 3xx indicano redirect, 4xx errori client e 5xx errori server.</p>
 
         <?php if ($sTotal > 0): ?>
         <!-- Stacked bar -->
@@ -280,7 +301,8 @@ $activeSubTab = 'overview';
     ];
     ?>
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Riepilogo per Categoria</h3>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-1">Riepilogo per Categoria</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Clicca su una categoria per vedere il dettaglio dei problemi e le raccomandazioni specifiche.</p>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <?php foreach ($catMeta as $catKey => $meta):
                 $catData = $catBreakdown[$catKey] ?? ['total' => 0, 'critical' => 0, 'warning' => 0, 'notice' => 0];

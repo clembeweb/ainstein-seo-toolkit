@@ -41,6 +41,14 @@ $severityLabels = [
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400"><?= $pagination['total'] ?> problemi di redirect rilevati</p>
     </div>
 
+    <!-- Guida -->
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+        <p class="text-sm text-blue-800 dark:text-blue-200">
+            I redirect (301, 302) costringono il crawler a fare richieste aggiuntive per raggiungere la pagina finale.
+            <strong>Le catene di redirect</strong> (A &rarr; B &rarr; C) moltiplicano lo spreco. Aggiorna i link interni per puntare direttamente alla destinazione finale e riduci i redirect non necessari.
+        </p>
+    </div>
+
     <!-- Severity Filter Bar -->
     <div class="flex flex-wrap gap-2">
         <a href="<?= url($budgetUrl . '/redirects') ?>"
