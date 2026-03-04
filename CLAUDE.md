@@ -1,6 +1,6 @@
 # AINSTEIN - Istruzioni Claude Code
 
-> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-03-03 (internal-links AI Suggester)
+> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-03-04 (Crawl Budget mergiato in SEO Audit)
 
 ---
 
@@ -52,13 +52,13 @@
 | Modulo | Slug | Prefisso DB | Stato |
 |--------|------|-------------|-------|
 | AI Content Generator | `ai-content` | `aic_` | Completo (reference pattern) |
-| SEO Audit | `seo-audit` | `sa_` | Completo |
+| SEO Audit | `seo-audit` | `sa_` | Completo (+ Crawl Budget integrato) |
 | Google Ads Analyzer | `ads-analyzer` | `ga_` | Completo |
 | SEO Tracking | `seo-tracking` | `st_` | Completo |
 | AI Keyword Research | `keyword-research` | `kr_` | Completo |
 | Content Creator | `content-creator` | `cc_` | Completo (4 CMS connectors) |
-| Internal Links | `internal-links` | `il_` | Completo (AI Suggester + CMS push) |
-| Crawl Budget Optimizer | `crawl-budget` | `cb_` | Completo |
+| Internal Links | `internal-links` | `il_` | Standby (redesign: crawl-first) |
+| Crawl Budget Optimizer | `crawl-budget` | `cb_` | Legacy (mergiato in SEO Audit) |
 | AI Optimizer | `ai-optimizer` | `ao_` | In sviluppo |
 | SEO On-Page | `seo-onpage` | `so_` | In sviluppo |
 

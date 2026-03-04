@@ -24,7 +24,7 @@
         </h2>
         <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
             <p class="text-slate-700 dark:text-slate-300 leading-relaxed">
-                Analisi tecnica SEO completa del tuo sito web. Identifica oltre 50 tipologie di problemi in 10 categorie, calcola un punteggio di salute da 0 a 100 e fornisce raccomandazioni AI prioritizzate. Se il tuo sito usa WordPress, puoi installare il plugin Ainstein per analizzare le pagine direttamente dal CMS, senza scraping. Ogni scansione viene archiviata per permettere il confronto nel tempo e misurare i progressi.
+                Analisi tecnica SEO completa del tuo sito web. Identifica oltre 50 tipologie di problemi in 10 categorie, calcola un punteggio di salute da 0 a 100 e fornisce raccomandazioni AI prioritizzate. Include l'analisi del <strong>Crawl Budget</strong> con rilevamento di redirect inutili, pagine spreco e problemi di indicizzabilit&agrave;. Se il tuo sito usa WordPress, puoi installare il plugin Ainstein per analizzare le pagine direttamente dal CMS, senza scraping. Ogni scansione viene archiviata per permettere il confronto nel tempo e misurare i progressi.
             </p>
         </div>
     </section>
@@ -79,7 +79,7 @@
                 <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">4</div>
                 <div>
                     <h3 class="font-medium text-slate-900 dark:text-white">Analizza i problemi per categoria e severita</h3>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Esplora le 10 categorie di controllo: meta tag, heading, immagini, link, contenuto, schema markup, mobile, sicurezza e altro.</p>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Esplora le 10 categorie di controllo on-page (meta tag, heading, immagini, link, contenuto, schema) e il tab Crawl Budget per redirect, pagine spreco e indicizzabilit&agrave;.</p>
                 </div>
                 <svg class="w-5 h-5 shrink-0 text-slate-300 dark:text-slate-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
@@ -187,8 +187,21 @@
                 <p class="text-sm text-slate-600 dark:text-slate-400">Se hai il plugin WP installato, analizza direttamente dal CMS senza scraping. Piu veloce e affidabile.</p>
             </div>
 
+            <!-- Crawl Budget -->
+            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Analisi Crawl Budget</h3>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Score dedicato 0-100 per il crawl budget con analisi di redirect, pagine spreco e problemi di indicizzabilit&agrave;.</p>
+            </div>
+
             <!-- Storico -->
-            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 sm:col-span-2">
+            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="flex items-center gap-3 mb-2">
                     <div class="w-8 h-8 rounded-lg bg-cyan-50 dark:bg-cyan-900/30 flex items-center justify-center">
                         <svg class="w-4 h-4 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
