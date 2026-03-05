@@ -118,6 +118,34 @@ class ProjectAccessService
     }
 
     /**
+     * Verifica se l'utente è un viewer (sola lettura).
+     */
+    public static function isViewer(?string $accessRole): bool
+    {
+        return $accessRole === 'viewer';
+    }
+
+    /**
+     * Verifica se l'utente ha permessi di scrittura (owner o editor).
+     */
+    public static function canWrite(?string $accessRole): bool
+    {
+        return in_array($accessRole, ['owner', 'editor']);
+    }
+
+    /**
+     * Ottieni l'ID utente per il billing crediti (owner del progetto globale).
+     */
+    public static function getCreditUserId(array $project, int $fallbackUserId): int
+    {
+        if (!empty($project['global_project_id'])) {
+            $ownerId = self::getOwnerId((int)$project['global_project_id']);
+            if ($ownerId) return $ownerId;
+        }
+        return $fallbackUserId;
+    }
+
+    /**
      * Ottieni tutti i progetti accessibili da un utente.
      *
      * @return array ['owned' => [...], 'shared' => [...]]
@@ -235,7 +263,7 @@ class ProjectAccessService
     public static function getProjectInvitations(int $projectId): array
     {
         return Database::fetchAll(
-            "SELECT pi.id, pi.email, pi.role, pi.modules, pi.token, pi.created_at, pi.expires_at,
+            "SELECT pi.id, pi.email, pi.role, pi.modules, pi.created_at, pi.expires_at,
                     u.name AS invited_by_name
              FROM project_invitations pi
              JOIN users u ON u.id = pi.invited_by

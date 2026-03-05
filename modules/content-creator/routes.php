@@ -155,12 +155,14 @@ Router::post('/content-creator/projects/{id}/urls/{urlId}/update', function ($id
 
 Router::post('/content-creator/projects/{id}/urls/{urlId}/approve', function ($id, $urlId) {
     Middleware::auth();
+    Middleware::csrf();
     $controller = new UrlController();
     return $controller->approve((int) $id, (int) $urlId);
 });
 
 Router::post('/content-creator/projects/{id}/urls/{urlId}/reject', function ($id, $urlId) {
     Middleware::auth();
+    Middleware::csrf();
     $controller = new UrlController();
     return $controller->reject((int) $id, (int) $urlId);
 });

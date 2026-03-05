@@ -561,12 +561,15 @@ class MetaTagController
             return;
         }
 
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
         $batchSize = (int) ($_POST['batch_size'] ?? 10);
         $batchSize = min(50, max(1, $batchSize));
 
         // Verifica crediti (1 per URL come da spec)
         $cost = $batchSize * 1;
-        if (!Credits::hasEnough($user['id'], $cost)) {
+        if (!Credits::hasEnough($creditUserId, $cost)) {
             echo json_encode([
                 'success' => false,
                 'error' => "Crediti insufficienti. Richiesti: {$cost}"
@@ -620,7 +623,7 @@ class MetaTagController
 
         // Consuma crediti solo per quelli effettivamente scrappati
         if ($scraped > 0) {
-            Credits::consume($user['id'], $scraped, 'meta_scrape', 'ai-content', [
+            Credits::consume($creditUserId, $scraped, 'meta_scrape', 'ai-content', [
                 'project_id' => $projectId,
                 'scraped' => $scraped,
             ]);
@@ -654,12 +657,15 @@ class MetaTagController
             return;
         }
 
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
         $batchSize = (int) ($_POST['batch_size'] ?? 10);
         $batchSize = min(20, max(1, $batchSize)); // Max 20 per batch
 
         // Verifica crediti (2 per generazione come da spec)
         $cost = $batchSize * 2;
-        if (!Credits::hasEnough($user['id'], $cost)) {
+        if (!Credits::hasEnough($creditUserId, $cost)) {
             echo json_encode([
                 'success' => false,
                 'error' => "Crediti insufficienti. Richiesti: {$cost}"
@@ -725,7 +731,7 @@ class MetaTagController
 
         // Consuma crediti solo per quelli effettivamente generati
         if ($generated > 0) {
-            Credits::consume($user['id'], $generated * 2, 'meta_generate', 'ai-content', [
+            Credits::consume($creditUserId, $generated * 2, 'meta_generate', 'ai-content', [
                 'project_id' => $projectId,
                 'generated' => $generated,
             ]);
@@ -1299,12 +1305,15 @@ PROMPT;
             return;
         }
 
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
         // Verifica crediti
         $totalCost = $pendingCount * self::SCRAPE_CREDIT_COST;
-        if (!Credits::hasEnough($user['id'], $totalCost)) {
+        if (!Credits::hasEnough($creditUserId, $totalCost)) {
             echo json_encode([
                 'success' => false,
-                'error' => "Crediti insufficienti. Necessari: {$totalCost}, disponibili: " . Credits::getBalance($user['id'])
+                'error' => "Crediti insufficienti. Necessari: {$totalCost}, disponibili: " . Credits::getBalance($creditUserId)
             ]);
             return;
         }
@@ -1345,6 +1354,9 @@ PROMPT;
             header('HTTP/1.1 404 Not Found');
             exit('Progetto non trovato');
         }
+
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
 
         $jobId = (int) ($_GET['job_id'] ?? 0);
         if (!$jobId) {
@@ -1468,7 +1480,7 @@ PROMPT;
                 ]);
 
                 // Scala crediti
-                Credits::consume($user['id'], self::SCRAPE_CREDIT_COST, 'meta_scrape', 'ai-content', [
+                Credits::consume($creditUserId, self::SCRAPE_CREDIT_COST, 'meta_scrape', 'ai-content', [
                     'project_id' => $projectId,
                     'meta_tag_id' => $item['id'],
                     'job_id' => $jobId,
@@ -1487,7 +1499,7 @@ PROMPT;
                     'url' => $item['url'],
                     'title' => $result['title'] ?? '',
                     'word_count' => $wordCount,
-                    'credits_remaining' => Credits::getBalance($user['id']),
+                    'credits_remaining' => Credits::getBalance($creditUserId),
                 ]);
 
             } catch (\Exception $e) {
@@ -1642,12 +1654,15 @@ PROMPT;
             return;
         }
 
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
         // Verifica crediti
         $totalCost = $scrapedCount * self::GENERATE_CREDIT_COST;
-        if (!Credits::hasEnough($user['id'], $totalCost)) {
+        if (!Credits::hasEnough($creditUserId, $totalCost)) {
             echo json_encode([
                 'success' => false,
-                'error' => "Crediti insufficienti. Necessari: {$totalCost}, disponibili: " . Credits::getBalance($user['id'])
+                'error' => "Crediti insufficienti. Necessari: {$totalCost}, disponibili: " . Credits::getBalance($creditUserId)
             ]);
             return;
         }
@@ -1690,6 +1705,9 @@ PROMPT;
             header('HTTP/1.1 404 Not Found');
             exit('Progetto non trovato');
         }
+
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
 
         $jobId = (int) ($_GET['job_id'] ?? 0);
         if (!$jobId) {
@@ -1824,7 +1842,7 @@ PROMPT;
 
                 $this->metaTag->updateGeneratedData($item['id'], $parsed['title'], $parsed['description']);
 
-                Credits::consume($user['id'], self::GENERATE_CREDIT_COST, 'meta_generate', 'ai-content', [
+                Credits::consume($creditUserId, self::GENERATE_CREDIT_COST, 'meta_generate', 'ai-content', [
                     'project_id' => $projectId,
                     'meta_tag_id' => $item['id'],
                     'job_id' => $jobId,
@@ -1842,7 +1860,7 @@ PROMPT;
                     'generated_desc' => $parsed['description'],
                     'title_length' => mb_strlen($parsed['title']),
                     'desc_length' => mb_strlen($parsed['description']),
-                    'credits_remaining' => Credits::getBalance($user['id']),
+                    'credits_remaining' => Credits::getBalance($creditUserId),
                 ]);
 
             } catch (\Exception $e) {

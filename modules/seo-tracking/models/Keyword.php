@@ -60,7 +60,8 @@ class Keyword
             $params[] = '%' . $filters['search'] . '%';
         }
 
-        $orderBy = $filters['order_by'] ?? 'last_position';
+        $allowedColumns = ['last_position', 'keyword', 'search_volume', 'position_change', 'best_position', 'created_at', 'updated_at'];
+        $orderBy = in_array($filters['order_by'] ?? 'last_position', $allowedColumns) ? ($filters['order_by'] ?? 'last_position') : 'last_position';
         $orderDir = strtoupper($filters['order_dir'] ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
 
         // Gestione NULL per ordinamento posizione

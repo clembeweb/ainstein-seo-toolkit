@@ -30,7 +30,7 @@ class CampaignController
         $project = Project::findAccessible($user['id'], $projectId);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/ads-analyzer'));
             exit;
         }
@@ -126,7 +126,7 @@ class CampaignController
         $project = Project::findAccessible($user['id'], $projectId);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/ads-analyzer'));
             exit;
         }
@@ -190,7 +190,7 @@ class CampaignController
         $project = Project::findAccessible($user['id'], $projectId);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/ads-analyzer'));
             exit;
         }
@@ -202,7 +202,7 @@ class CampaignController
 
         $run = ScriptRun::find($runId);
         if (!$run || $run['project_id'] != $projectId) {
-            $_SESSION['flash_error'] = 'Esecuzione non trovata';
+            $_SESSION['_flash']['error'] = 'Esecuzione non trovata';
             header('Location: ' . url("/ads-analyzer/projects/{$projectId}/campaigns"));
             exit;
         }
@@ -252,10 +252,18 @@ class CampaignController
             $project = Project::findAccessible($user['id'], $projectId);
 
             if (!$project) {
+                ob_end_clean();
                 jsonResponse(['error' => 'Progetto non trovato'], 404);
             }
 
+            // Viewer cannot perform write operations
+            if (($project['access_role'] ?? 'owner') === 'viewer') {
+                ob_end_clean();
+                jsonResponse(['error' => 'Non hai i permessi per questa operazione'], 403);
+            }
+
             if (($project['type'] ?? 'negative-kw') !== 'campaign') {
+                ob_end_clean();
                 jsonResponse(['error' => 'Operazione non disponibile per questo tipo di progetto'], 400);
             }
 
@@ -268,12 +276,17 @@ class CampaignController
             }
 
             if (!$run) {
+                ob_end_clean();
                 jsonResponse(['error' => 'Nessun dato campagne disponibile. Esegui prima lo script Google Ads.'], 400);
             }
 
+            // Route credits to project owner
+            $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
             // Verifica crediti
             $cost = Credits::getCost('campaign_evaluation', 'ads-analyzer', 7);
-            if (!Credits::hasEnough($user['id'], $cost)) {
+            if (!Credits::hasEnough($creditUserId, $cost)) {
+                ob_end_clean();
                 jsonResponse(['error' => "Crediti insufficienti. Necessari: {$cost}"], 400);
             }
 
@@ -297,6 +310,7 @@ class CampaignController
             $keywordsData = AdGroupKeyword::getByRun($run['id']);
 
             if (empty($campaigns)) {
+                ob_end_clean();
                 jsonResponse(['error' => 'Nessuna campagna trovata nel run selezionato'], 400);
             }
 
@@ -374,7 +388,7 @@ class CampaignController
             CampaignEvaluation::updateStatus($evalId, 'completed');
 
             // Consuma crediti
-            Credits::consume($user['id'], $cost, 'campaign_evaluation', 'ads-analyzer', [
+            Credits::consume($creditUserId, $cost, 'campaign_evaluation', 'ads-analyzer', [
                 'run_id' => $run['id'],
                 'campaigns' => count($campaigns),
                 'ad_groups' => count($adGroupsData),
@@ -418,6 +432,13 @@ class CampaignController
         if (!$project) {
             http_response_code(404);
             echo json_encode(['error' => 'Progetto non trovato']);
+            exit;
+        }
+
+        // Viewer cannot perform write operations
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Non hai i permessi per questa operazione']);
             exit;
         }
 
@@ -495,7 +516,7 @@ class CampaignController
         $project = Project::findAccessible($user['id'], $projectId);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/ads-analyzer'));
             exit;
         }
@@ -507,7 +528,7 @@ class CampaignController
 
         $evaluation = CampaignEvaluation::find($evalId);
         if (!$evaluation || $evaluation['project_id'] != $projectId) {
-            $_SESSION['flash_error'] = 'Valutazione non trovata';
+            $_SESSION['_flash']['error'] = 'Valutazione non trovata';
             header('Location: ' . url("/ads-analyzer/projects/{$projectId}/campaigns"));
             exit;
         }
@@ -589,6 +610,14 @@ class CampaignController
                 exit;
             }
 
+            // Viewer cannot perform write operations
+            if (($project['access_role'] ?? 'owner') === 'viewer') {
+                ob_end_clean();
+                http_response_code(403);
+                echo json_encode(['error' => 'Non hai i permessi per questa operazione']);
+                exit;
+            }
+
             $evaluation = CampaignEvaluation::find($evalId);
             if (!$evaluation || $evaluation['project_id'] != $projectId || $evaluation['status'] !== 'completed') {
                 ob_end_clean();
@@ -608,8 +637,11 @@ class CampaignController
                 exit;
             }
 
+            // Route credits to project owner
+            $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
             // AiService::complete() verifica e consuma crediti internamente
-            if (!Credits::hasEnough($user['id'], 1)) {
+            if (!Credits::hasEnough($creditUserId, 1)) {
                 ob_end_clean();
                 echo json_encode(['error' => 'Crediti insufficienti. Necessario almeno 1 credito.']);
                 exit;
@@ -663,20 +695,20 @@ class CampaignController
         $project = Project::findAccessible($user['id'], $projectId);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/ads-analyzer'));
             exit;
         }
 
         if (($project['type'] ?? 'negative-kw') !== 'campaign') {
-            $_SESSION['flash_error'] = 'Operazione non disponibile per questo tipo di progetto';
+            $_SESSION['_flash']['error'] = 'Operazione non disponibile per questo tipo di progetto';
             header('Location: ' . url("/ads-analyzer/projects/{$projectId}"));
             exit;
         }
 
         $evaluation = CampaignEvaluation::find($evalId);
         if (!$evaluation || $evaluation['project_id'] != $projectId || $evaluation['status'] !== 'completed') {
-            $_SESSION['flash_error'] = 'Valutazione non trovata o non completata';
+            $_SESSION['_flash']['error'] = 'Valutazione non trovata o non completata';
             header('Location: ' . url("/ads-analyzer/projects/{$projectId}/campaigns"));
             exit;
         }
@@ -684,7 +716,7 @@ class CampaignController
         $aiResponse = json_decode($evaluation['ai_response'] ?? '{}', true) ?: [];
 
         if (empty($aiResponse)) {
-            $_SESSION['flash_error'] = 'Nessun dato AI disponibile per questa valutazione';
+            $_SESSION['_flash']['error'] = 'Nessun dato AI disponibile per questa valutazione';
             header('Location: ' . url("/ads-analyzer/projects/{$projectId}/campaigns/evaluations/{$evalId}"));
             exit;
         }
@@ -696,7 +728,7 @@ class CampaignController
             $pdfContent = $service->generate($evaluation, $aiResponse, $project);
         } catch (\Exception $e) {
             Logger::channel('ai')->error("PDF export error", ['error' => $e->getMessage()]);
-            $_SESSION['flash_error'] = 'Errore nella generazione del PDF: ' . $e->getMessage();
+            $_SESSION['_flash']['error'] = 'Errore nella generazione del PDF: ' . $e->getMessage();
             header('Location: ' . url("/ads-analyzer/projects/{$projectId}/campaigns/evaluations/{$evalId}"));
             exit;
         }
@@ -731,6 +763,13 @@ class CampaignController
         if (!$project || ($project['type'] ?? 'negative-kw') !== 'campaign') {
             http_response_code(400);
             echo json_encode(['error' => 'Progetto non valido']);
+            exit;
+        }
+
+        // Viewer cannot perform write operations
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Non hai i permessi per questa operazione']);
             exit;
         }
 

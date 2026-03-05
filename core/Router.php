@@ -85,7 +85,7 @@ class Router
 
         // 404 Not Found
         http_response_code(404);
-        View::render('errors/404');
+        echo View::render('errors/404', [], null);
     }
 
     public static function redirect(string $path): void
@@ -101,8 +101,15 @@ class Router
 
     public static function back(): void
     {
-        $referer = $_SERVER['HTTP_REFERER'] ?? self::$basePath . '/';
-        header('Location: ' . $referer);
+        $referer = $_SERVER['HTTP_REFERER'] ?? '';
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+
+        // Only allow same-origin redirects
+        if ($referer && parse_url($referer, PHP_URL_HOST) === $host) {
+            header('Location: ' . $referer);
+        } else {
+            header('Location: ' . self::$basePath . '/');
+        }
         exit;
     }
 

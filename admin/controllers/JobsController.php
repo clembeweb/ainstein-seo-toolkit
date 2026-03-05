@@ -56,6 +56,15 @@ class JobsController
             'failed_col' => 'items_failed',
             'extra_cols' => ['current_item'],
         ],
+        'seo-audit' => [
+            'table' => 'sa_crawl_jobs',
+            'label' => 'SEO Audit',
+            'project_table' => 'sa_projects',
+            'items_col' => 'items_total',
+            'completed_col' => 'items_completed',
+            'failed_col' => 'items_failed',
+            'extra_cols' => ['current_item'],
+        ],
         'seo-onpage' => [
             'table' => 'sop_jobs',
             'label' => 'SEO Onpage',

@@ -53,6 +53,11 @@ class CrawlController
             return;
         }
 
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            jsonResponse(['error' => true, 'message' => 'Non hai i permessi per questa operazione'], 403);
+            return;
+        }
+
         // Verifica che non ci sia già una sessione attiva
         $activeSession = $this->sessionModel->findActiveByProject($id);
         if ($activeSession) {
@@ -83,7 +88,7 @@ class CrawlController
         $config = [
             'max_pages' => min((int) ($_POST['max_pages'] ?? $project['max_pages'] ?? 500), 2000),
             'crawl_mode' => 'spider', // Solo spider mode supportato
-            'respect_robots' => isset($_POST['respect_robots']) ? 1 : (int) ($_POST['respect_robots'] ?? 1),
+            'respect_robots' => !empty($_POST['respect_robots']) ? 1 : 0,
             // Configurazione avanzata spider
             'max_depth' => max(1, min((int) ($_POST['max_depth'] ?? 3), 10)),
             'request_delay' => max(0, min((int) ($_POST['request_delay'] ?? 200), 5000)),
@@ -93,11 +98,14 @@ class CrawlController
             'follow_redirects' => isset($_POST['follow_redirects']) ? 1 : 1,
         ];
 
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
         // Verifica crediti
         $crawlCost = Credits::getCost('crawl_per_page') ?? 0.2;
         $estimatedCost = $config['max_pages'] * $crawlCost;
 
-        if (!Credits::hasEnough($user['id'], $estimatedCost * 0.1)) {
+        if (!Credits::hasEnough($creditUserId, $estimatedCost * 0.1)) {
             jsonResponse(['error' => true, 'message' => 'Crediti insufficienti']);
             return;
         }
@@ -535,6 +543,10 @@ class CrawlController
             jsonResponse(['error' => true, 'message' => 'Progetto non trovato'], 404);
         }
 
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            jsonResponse(['error' => true, 'message' => 'Non hai i permessi per questa operazione'], 403);
+        }
+
         // Trova sessione attiva
         $activeSession = $this->sessionModel->findActiveByProject($id);
 
@@ -584,6 +596,10 @@ class CrawlController
 
         if (!$project) {
             jsonResponse(['error' => true, 'message' => 'Progetto non trovato'], 404);
+        }
+
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            jsonResponse(['error' => true, 'message' => 'Non hai i permessi per questa operazione'], 403);
         }
 
         $activeSession = $this->sessionModel->findActiveByProject($id);
@@ -697,7 +713,7 @@ class CrawlController
                         'Analisi SEO interrotta', [
                         'icon' => 'exclamation-triangle',
                         'color' => 'red',
-                        'action_url' => '/seo-audit/projects/' . $id . '/results',
+                        'action_url' => url('/seo-audit/projects/' . $id . '/audit'),
                         'body' => 'La scansione e stata annullata dall\'utente.',
                         'data' => ['module' => 'seo-audit', 'project_id' => $id],
                     ]);
@@ -759,7 +775,7 @@ class CrawlController
                         "Analisi SEO completata per {$projectName}", [
                         'icon' => 'check-circle',
                         'color' => 'emerald',
-                        'action_url' => '/seo-audit/projects/' . $id . '/results',
+                        'action_url' => url('/seo-audit/projects/' . $id . '/audit'),
                         'body' => "Scansionate {$completed} pagine, trovati {$totalIssuesFound} problemi.",
                         'data' => ['module' => 'seo-audit', 'project_id' => $id],
                     ]);

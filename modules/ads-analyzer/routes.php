@@ -75,7 +75,7 @@ Router::get('/ads-analyzer/projects/{id}', function ($id) {
     $project = \Modules\AdsAnalyzer\Models\Project::findAccessible($user['id'], (int) $id);
 
     if (!$project) {
-        $_SESSION['flash_error'] = 'Progetto non trovato';
+        $_SESSION['_flash']['error'] = 'Progetto non trovato';
         header('Location: ' . url('/ads-analyzer'));
         exit;
     }
@@ -86,7 +86,7 @@ Router::get('/ads-analyzer/projects/{id}', function ($id) {
     }
 
     if (($project['type'] ?? 'negative-kw') === 'negative-kw') {
-        $_SESSION['flash_error'] = 'Questa modalita non e piu disponibile.';
+        $_SESSION['_flash']['error'] = 'Questa modalita non e piu disponibile.';
         header('Location: ' . url('/ads-analyzer'));
         exit;
     }
@@ -298,6 +298,7 @@ Router::get('/ads-analyzer/projects/{id}/search-term-analysis/results', function
 // AJAX: toggle keyword
 Router::post('/ads-analyzer/projects/{id}/search-term-analysis/keywords/{keywordId}/toggle', function ($id, $keywordId) {
     Middleware::auth();
+    Middleware::csrf();
     $controller = new SearchTermAnalysisController();
     return $controller->toggleKeyword((int) $id, (int) $keywordId);
 });
@@ -305,6 +306,7 @@ Router::post('/ads-analyzer/projects/{id}/search-term-analysis/keywords/{keyword
 // AJAX: azioni bulk categoria
 Router::post('/ads-analyzer/projects/{id}/search-term-analysis/categories/{categoryId}/{action}', function ($id, $categoryId, $action) {
     Middleware::auth();
+    Middleware::csrf();
     $controller = new SearchTermAnalysisController();
     return $controller->toggleCategory((int) $id, (int) $categoryId, $action);
 });
@@ -362,6 +364,7 @@ Router::post('/ads-analyzer/projects/{id}/campaign-creator/generate-kw', functio
 // Toggle keyword selezionata (AJAX rapido)
 Router::post('/ads-analyzer/projects/{id}/campaign-creator/toggle-kw/{kwId}', function ($id, $kwId) {
     Middleware::auth();
+    Middleware::csrf();
     $controller = new CampaignCreatorController();
     return $controller->toggleKeyword((int) $id, (int) $kwId);
 });
@@ -369,6 +372,7 @@ Router::post('/ads-analyzer/projects/{id}/campaign-creator/toggle-kw/{kwId}', fu
 // Aggiorna match type keyword (AJAX rapido)
 Router::post('/ads-analyzer/projects/{id}/campaign-creator/update-match/{kwId}', function ($id, $kwId) {
     Middleware::auth();
+    Middleware::csrf();
     $controller = new CampaignCreatorController();
     return $controller->updateMatchType((int) $id, (int) $kwId);
 });
@@ -411,6 +415,7 @@ Router::post('/ads-analyzer/projects/{id}/campaign-creator/regenerate', function
 // Salva contesto (AJAX)
 Router::post('/ads-analyzer/contexts/save', function () {
     Middleware::auth();
+    Middleware::csrf();
     $controller = new SettingsController();
     return $controller->saveContext();
 });

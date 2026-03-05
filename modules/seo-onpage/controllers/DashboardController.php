@@ -36,7 +36,7 @@ class DashboardController
     public function index(int $id): string
     {
         $user = Auth::user();
-        $project = $this->project->findWithStats($id, $user['id']);
+        $project = $this->project->findWithStatsAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';

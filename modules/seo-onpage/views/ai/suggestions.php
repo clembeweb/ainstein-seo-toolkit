@@ -306,7 +306,7 @@ function aiManager() {
             this.generating = true;
 
             const formData = new FormData();
-            formData.append('_token', csrfToken);
+            formData.append('_csrf_token', csrfToken);
             formData.append('page_id', pageId);
 
             try {
@@ -332,7 +332,7 @@ function aiManager() {
 
         async markApplied(id) {
             const formData = new FormData();
-            formData.append('_token', csrfToken);
+            formData.append('_csrf_token', csrfToken);
 
             try {
                 const resp = await fetch(`${baseUrl}/seo-onpage/project/${projectId}/ai/${id}/apply`, {
@@ -355,7 +355,7 @@ function aiManager() {
 
         async reject(id) {
             const formData = new FormData();
-            formData.append('_token', csrfToken);
+            formData.append('_csrf_token', csrfToken);
 
             try {
                 const resp = await fetch(`${baseUrl}/seo-onpage/project/${projectId}/ai/${id}/reject`, {

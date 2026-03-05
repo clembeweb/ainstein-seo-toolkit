@@ -4,6 +4,7 @@ namespace Modules\SeoTracking\Controllers;
 
 use Core\View;
 use Core\Auth;
+use Core\Router;
 use Core\Credits;
 use Core\Database;
 use Core\ModuleLoader;
@@ -36,7 +37,7 @@ class RankCheckController
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
-            header('Location: /seo-tracking');
+            Router::redirect('/seo-tracking');
             exit;
         }
 
@@ -87,6 +88,11 @@ class RankCheckController
             exit;
         }
 
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            echo json_encode(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
+            exit;
+        }
+
         // Input
         $keyword = trim($_POST['keyword'] ?? '');
         $targetDomain = trim($_POST['target_domain'] ?? '');
@@ -104,8 +110,11 @@ class RankCheckController
             exit;
         }
 
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
         // Verifica crediti
-        if (!Credits::hasEnough($user['id'], self::CREDIT_COST)) {
+        if (!Credits::hasEnough($creditUserId, self::CREDIT_COST)) {
             echo json_encode([
                 'success' => false,
                 'error' => 'Crediti insufficienti. Necessari: ' . self::CREDIT_COST
@@ -180,7 +189,7 @@ class RankCheckController
             }
 
             // Scala crediti
-            Credits::consume($user['id'], self::CREDIT_COST, 'rank_check', 'seo-tracking', [
+            Credits::consume($creditUserId, self::CREDIT_COST, 'rank_check', 'seo-tracking', [
                 'project_id' => $projectId,
                 'keyword' => $keyword,
                 'check_id' => $checkId,
@@ -230,6 +239,11 @@ class RankCheckController
             exit;
         }
 
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            echo json_encode(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
+            exit;
+        }
+
         // Input
         $keywordsRaw = trim($_POST['keywords'] ?? '');
         $targetDomain = trim($_POST['target_domain'] ?? '');
@@ -256,11 +270,14 @@ class RankCheckController
 
         $totalCost = count($keywords) * self::CREDIT_COST;
 
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
         // Verifica crediti
-        if (!Credits::hasEnough($user['id'], $totalCost)) {
+        if (!Credits::hasEnough($creditUserId, $totalCost)) {
             echo json_encode([
                 'success' => false,
-                'error' => "Crediti insufficienti. Necessari: {$totalCost} (hai: " . Credits::getBalance($user['id']) . ")"
+                'error' => "Crediti insufficienti. Necessari: {$totalCost} (hai: " . Credits::getBalance($creditUserId) . ")"
             ]);
             exit;
         }
@@ -335,7 +352,7 @@ class RankCheckController
                     }
 
                     // Scala crediti per questa keyword
-                    Credits::consume($user['id'], self::CREDIT_COST, 'rank_check', 'seo-tracking', [
+                    Credits::consume($creditUserId, self::CREDIT_COST, 'rank_check', 'seo-tracking', [
                         'project_id' => $projectId,
                         'keyword' => $keyword,
                         'check_id' => $checkId,
@@ -395,7 +412,7 @@ class RankCheckController
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
-            header('Location: /seo-tracking');
+            Router::redirect('/seo-tracking');
             exit;
         }
 
@@ -555,6 +572,11 @@ class RankCheckController
             exit;
         }
 
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            echo json_encode(['error' => 'Non hai i permessi per questa operazione']);
+            exit;
+        }
+
         $keyword = trim($_POST['keyword'] ?? '');
         $targetDomain = trim($_POST['target_domain'] ?? '');
         if (empty($targetDomain)) {
@@ -571,9 +593,12 @@ class RankCheckController
             exit;
         }
 
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
         // Verifica crediti
         $cost = self::CREDIT_COST;
-        if (!Credits::hasEnough($user['id'], $cost)) {
+        if (!Credits::hasEnough($creditUserId, $cost)) {
             echo json_encode(['error' => 'Crediti insufficienti']);
             exit;
         }
@@ -647,7 +672,7 @@ class RankCheckController
             Database::reconnect();
 
             // Scala crediti
-            Credits::consume($user['id'], $cost, 'rank_check', 'seo-tracking', [
+            Credits::consume($creditUserId, $cost, 'rank_check', 'seo-tracking', [
                 'keyword' => $keyword,
                 'project_id' => $projectId,
             ]);
@@ -772,6 +797,11 @@ class RankCheckController
             exit;
         }
 
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            echo json_encode(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
+            exit;
+        }
+
         // Input
         $keywordIds = $_POST['keyword_ids'] ?? [];
         $device = $_POST['device'] ?? 'desktop';
@@ -786,12 +816,15 @@ class RankCheckController
             exit;
         }
 
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
         // Verifica crediti
         $totalCost = count($keywordIds) * self::CREDIT_COST;
-        if (!Credits::hasEnough($user['id'], $totalCost)) {
+        if (!Credits::hasEnough($creditUserId, $totalCost)) {
             echo json_encode([
                 'success' => false,
-                'error' => "Crediti insufficienti. Necessari: {$totalCost}, disponibili: " . Credits::getBalance($user['id'])
+                'error' => "Crediti insufficienti. Necessari: {$totalCost}, disponibili: " . Credits::getBalance($creditUserId)
             ]);
             exit;
         }
@@ -844,6 +877,9 @@ class RankCheckController
      */
     public function processStream(int $projectId): void
     {
+        ignore_user_abort(true);
+        set_time_limit(0);
+
         // Verifica auth manualmente per evitare redirect su SSE
         $user = Auth::user();
         if (!$user) {
@@ -856,6 +892,9 @@ class RankCheckController
             header('HTTP/1.1 404 Not Found');
             exit('Progetto non trovato');
         }
+
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
 
         $jobId = (int) ($_GET['job_id'] ?? 0);
         if (!$jobId) {
@@ -883,7 +922,7 @@ class RankCheckController
         $sendEvent = function (string $event, array $data) {
             echo "event: {$event}\n";
             echo "data: " . json_encode($data) . "\n\n";
-            ob_flush();
+            if (ob_get_level()) ob_flush();
             flush();
         };
 
@@ -1045,7 +1084,7 @@ class RankCheckController
                 $queueModel->markCompleted($item['id'], $result['position'], $result['url'], $checkId);
 
                 // Scala crediti
-                Credits::consume($user['id'], self::CREDIT_COST, 'rank_check', 'seo-tracking', [
+                Credits::consume($creditUserId, self::CREDIT_COST, 'rank_check', 'seo-tracking', [
                     'keyword' => $item['keyword'],
                     'project_id' => $projectId,
                     'job_id' => $jobId,
@@ -1144,6 +1183,11 @@ class RankCheckController
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
+            exit;
+        }
+
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            echo json_encode(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
             exit;
         }
 

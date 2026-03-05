@@ -31,7 +31,7 @@ class SearchTermAnalysisController
         $project = Project::findAccessible($user['id'], $projectId);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/ads-analyzer'));
             exit;
         }
@@ -265,6 +265,7 @@ class SearchTermAnalysisController
 
         $ctx = $this->requireCampaignProjectJson($projectId);
         $user = $ctx['user'];
+        $project = $ctx['project'];
 
         $runId = (int)($_POST['run_id'] ?? 0);
         if (!$runId) {
@@ -282,10 +283,13 @@ class SearchTermAnalysisController
             exit;
         }
 
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
         // Verifica crediti
         $contextCost = Credits::getCost('context_extraction', 'ads-analyzer');
         $creditsNeeded = count($withUrl) * $contextCost;
-        if (!Credits::hasEnough($user['id'], $creditsNeeded)) {
+        if (!Credits::hasEnough($creditUserId, $creditsNeeded)) {
             ob_end_clean();
             echo json_encode(['error' => "Crediti insufficienti (servono {$creditsNeeded} crediti)"]);
             exit;
@@ -305,7 +309,7 @@ class SearchTermAnalysisController
             if ($result['success']) {
                 AdGroup::saveScrapedContent($ag['id'], $result['scraped_content']);
                 AdGroup::saveExtractedContext($ag['id'], $result['extracted_context']);
-                Credits::consume($user['id'], $contextCost, 'context_extraction', 'ads-analyzer', [
+                Credits::consume($creditUserId, $contextCost, 'context_extraction', 'ads-analyzer', [
                     'ad_group' => $ag['name'],
                     'run_id' => $runId,
                 ]);
@@ -390,10 +394,13 @@ class SearchTermAnalysisController
 
             // Calcola crediti - livello Standard (3 cr) per ogni ad group, nessuno sconto bulk
             $adGroupCount = count($adGroupsWithTerms);
+            // Route credits to project owner
+            $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
             $singleCost = Credits::getCost('ad_group_analysis', 'ads-analyzer', 3);
             $creditsNeeded = $adGroupCount * $singleCost;
 
-            if (!Credits::hasEnough($user['id'], $creditsNeeded)) {
+            if (!Credits::hasEnough($creditUserId, $creditsNeeded)) {
                 ob_end_clean();
                 echo json_encode(['error' => "Crediti insufficienti. Necessari: {$creditsNeeded}"]);
                 exit;
@@ -472,7 +479,7 @@ class SearchTermAnalysisController
             Analysis::updateStatus($analysisId, 'completed');
 
             // Consuma crediti
-            Credits::consume($user['id'], $creditsNeeded, 'negative_kw_analysis', 'ads-analyzer', [
+            Credits::consume($creditUserId, $creditsNeeded, 'negative_kw_analysis', 'ads-analyzer', [
                 'run_id' => $runId,
                 'ad_groups' => $adGroupCount,
                 'source' => 'campaign_project',
@@ -710,14 +717,14 @@ class SearchTermAnalysisController
         $format = $_GET['format'] ?? 'csv';
 
         if (!$analysisId) {
-            $_SESSION['flash_error'] = 'Analisi non specificata';
+            $_SESSION['_flash']['error'] = 'Analisi non specificata';
             header('Location: ' . url("/ads-analyzer/projects/{$projectId}/search-term-analysis"));
             exit;
         }
 
         $analysis = Analysis::find($analysisId);
         if (!$analysis || $analysis['project_id'] != $projectId) {
-            $_SESSION['flash_error'] = 'Analisi non trovata';
+            $_SESSION['_flash']['error'] = 'Analisi non trovata';
             header('Location: ' . url("/ads-analyzer/projects/{$projectId}/search-term-analysis"));
             exit;
         }

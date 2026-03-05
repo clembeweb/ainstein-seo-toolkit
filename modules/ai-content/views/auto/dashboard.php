@@ -296,7 +296,7 @@ async function startProcess() {
 
     try {
         const formData = new FormData();
-        formData.append('_token', csrfToken);
+        formData.append('_csrf_token', csrfToken);
 
         const response = await fetch(`${baseUrl}/ai-content/projects/${projectId}/auto/process/start`, {
             method: 'POST',
@@ -482,7 +482,7 @@ async function cancelProcess() {
 
     try {
         const formData = new FormData();
-        formData.append('_token', csrfToken);
+        formData.append('_csrf_token', csrfToken);
         formData.append('job_id', currentJobId);
 
         const response = await fetch(`${baseUrl}/ai-content/projects/${projectId}/auto/process/cancel`, {

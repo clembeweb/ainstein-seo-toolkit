@@ -88,6 +88,9 @@ class Connector
         if (isset($data['is_active'])) {
             $updateData['is_active'] = (int) $data['is_active'];
         }
+        if (isset($data['categories_cache'])) {
+            $updateData['categories_cache'] = is_array($data['categories_cache']) ? json_encode($data['categories_cache']) : $data['categories_cache'];
+        }
 
         if (empty($updateData)) {
             return false;

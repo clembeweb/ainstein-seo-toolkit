@@ -113,6 +113,12 @@ class GroupController
             return;
         }
 
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/seo-tracking/project/' . $projectId . '/groups');
+            return;
+        }
+
         $name = trim($_POST['name'] ?? '');
         $description = trim($_POST['description'] ?? '');
         $color = $_POST['color'] ?? '#006e96';
@@ -244,6 +250,12 @@ class GroupController
             return;
         }
 
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/seo-tracking/project/' . $projectId . '/groups');
+            return;
+        }
+
         $group = $this->group->findByProject($groupId, $projectId);
 
         if (!$group) {
@@ -299,6 +311,12 @@ class GroupController
             return;
         }
 
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/seo-tracking/project/' . $projectId . '/groups');
+            return;
+        }
+
         $group = $this->group->findByProject($groupId, $projectId);
 
         if (!$group) {
@@ -323,6 +341,10 @@ class GroupController
 
         if (!$project) {
             return View::json(['error' => 'Progetto non trovato'], 404);
+        }
+
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            return View::json(['error' => 'Non hai i permessi per questa operazione'], 403);
         }
 
         $group = $this->group->findByProject($groupId, $projectId);
@@ -363,6 +385,10 @@ class GroupController
 
         if (!$project) {
             return View::json(['error' => 'Progetto non trovato'], 404);
+        }
+
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            return View::json(['error' => 'Non hai i permessi per questa operazione'], 403);
         }
 
         $group = $this->group->findByProject($groupId, $projectId);
@@ -456,6 +482,10 @@ class GroupController
 
         if (!$project) {
             return View::json(['error' => 'Progetto non trovato'], 404);
+        }
+
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            return View::json(['error' => 'Non hai i permessi per questa operazione'], 403);
         }
 
         $stats = $this->group->syncAllFromKeywords($projectId);

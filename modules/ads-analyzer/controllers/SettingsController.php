@@ -45,7 +45,7 @@ class SettingsController
         Settings::setUser($user['id'], 'ads_analyzer_auto_medium', isset($_POST['auto_select_medium_priority']));
         Settings::setUser($user['id'], 'ads_analyzer_match_type', $_POST['default_match_type'] ?? 'phrase');
 
-        $_SESSION['flash_success'] = 'Impostazioni salvate';
+        $_SESSION['_flash']['success'] = 'Impostazioni salvate';
         header('Location: ' . url('/ads-analyzer/settings'));
         exit;
     }

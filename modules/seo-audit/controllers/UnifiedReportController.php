@@ -33,11 +33,8 @@ class UnifiedReportController
 
         $project = $this->projectModel->findAccessible($id, $userId);
         if (!$project) {
-            return View::render('seo-audit::errors/not-found', [
-                'title' => 'Progetto non trovato',
-                'user' => $user,
-                'modules' => \Core\ModuleLoader::getActiveModules(),
-            ]);
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
+            Router::redirect("/seo-audit/projects/{$id}/audit");
         }
 
         $report = $this->reportModel->findLatest($id);

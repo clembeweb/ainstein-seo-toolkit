@@ -122,7 +122,7 @@ class ProjectController
     public function show(int $id): string
     {
         $user = Auth::user();
-        $project = $this->project->findAccessible($id, $user['id']);
+        $project = $this->project->findWithStats($id, $user['id']);
 
         if (!$project) {
             $_SESSION['flash_error'] = 'Progetto non trovato';
@@ -135,7 +135,6 @@ class ProjectController
         $actualUrlCount = $this->url->countByProject($id);
         if ((int) ($project['total_urls'] ?? 0) !== $actualUrlCount) {
             $this->project->updateStats($id);
-            // Refresh project data — keep access_role
             $accessRole = $project['access_role'] ?? 'owner';
             $project = $this->project->findWithStats($id, (int)$project['user_id']);
             if ($project) {

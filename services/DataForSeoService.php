@@ -519,9 +519,12 @@ class DataForSeoService
             }
 
             try {
+                $startTime = microtime(true);
+                $endpoint = '/serp/google/organic/live/regular';
+
                 $ch = curl_init();
                 curl_setopt_array($ch, [
-                    CURLOPT_URL => $this->baseUrl . '/serp/google/organic/live/regular',
+                    CURLOPT_URL => $this->baseUrl . $endpoint,
                     CURLOPT_RETURNTRANSFER => true,
                     CURLOPT_POST => true,
                     CURLOPT_POSTFIELDS => json_encode($postData),
@@ -538,6 +541,11 @@ class DataForSeoService
                 curl_close($ch);
 
                 if ($error || $httpCode !== 200) {
+                    ApiLoggerService::log('dataforseo', $endpoint, $postData, null, $httpCode, $startTime, [
+                        'module' => 'seo-tracking',
+                        'error' => $error ?: "HTTP {$httpCode}",
+                        'context' => 'batch_keywords=' . count($chunk),
+                    ]);
                     // In caso di errore, segna tutte le keyword del chunk come fallite
                     foreach ($chunk as $keyword) {
                         $allResults[$keyword] = [
@@ -552,7 +560,15 @@ class DataForSeoService
                 }
 
                 $data = json_decode($response, true);
-                $totalCost += $data['cost'] ?? 0;
+                $chunkCost = $data['cost'] ?? 0;
+                $totalCost += $chunkCost;
+
+                // Log chiamata API
+                ApiLoggerService::log('dataforseo', $endpoint, $postData, $data, $httpCode, $startTime, [
+                    'module' => 'seo-tracking',
+                    'cost' => $chunkCost,
+                    'context' => 'batch_keywords=' . count($chunk) . ', target=' . $targetDomain,
+                ]);
 
                 // Parse ogni task
                 $tasks = $data['tasks'] ?? [];
@@ -738,11 +754,23 @@ class DataForSeoService
             curl_close($ch);
 
             if ($error) {
+                ApiLoggerService::log('dataforseo', $endpoint, $postData, null, 0, $startTime, [
+                    'module' => 'seo-onpage',
+                    'error' => "CURL error: {$error}",
+                    'context' => "url={$url}",
+                ]);
                 return ['success' => false, 'error' => "CURL error: {$error}"];
             }
 
             $data = json_decode($response, true);
             $cost = $data['cost'] ?? 0;
+
+            // Log chiamata API
+            ApiLoggerService::log('dataforseo', $endpoint, $postData, $data, $httpCode, $startTime, [
+                'module' => 'seo-onpage',
+                'cost' => $cost,
+                'context' => "url={$url}",
+            ]);
 
             if ($httpCode !== 200) {
                 return ['success' => false, 'error' => "HTTP {$httpCode}: " . substr($response, 0, 200)];

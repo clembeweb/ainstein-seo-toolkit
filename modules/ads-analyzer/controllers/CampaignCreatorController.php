@@ -26,7 +26,7 @@ class CampaignCreatorController
         $project = Project::findAccessible($user['id'], $id);
 
         if (!$project || $project['type'] !== 'campaign-creator') {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/ads-analyzer'));
             exit;
         }
@@ -88,6 +88,14 @@ class CampaignCreatorController
                 exit;
             }
 
+            // Viewer cannot perform write operations
+            if (($project['access_role'] ?? 'owner') === 'viewer') {
+                ob_end_clean();
+                http_response_code(403);
+                echo json_encode(['error' => 'Non hai i permessi per questa operazione']);
+                exit;
+            }
+
             if (empty($project['landing_url'])) {
                 ob_end_clean();
                 http_response_code(400);
@@ -108,9 +116,12 @@ class CampaignCreatorController
                 exit;
             }
 
+            // Route credits to project owner
+            $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
             $scrapeCost = CampaignCreatorService::getCost('scrape');
 
-            if (!Credits::hasEnough($user['id'], $scrapeCost)) {
+            if (!Credits::hasEnough($creditUserId, $scrapeCost)) {
                 ob_end_clean();
                 http_response_code(400);
                 echo json_encode(['error' => "Crediti insufficienti. Richiesti: {$scrapeCost}"]);
@@ -138,7 +149,7 @@ class CampaignCreatorController
                 'scraped_context' => $scrapeResult['extracted_context'],
             ]);
 
-            Credits::consume($user['id'], $scrapeCost, 'creator_scrape', 'ads-analyzer');
+            Credits::consume($creditUserId, $scrapeCost, 'creator_scrape', 'ads-analyzer');
 
             // Rileggi progetto
             $project = Project::find($id);
@@ -198,6 +209,13 @@ class CampaignCreatorController
             exit;
         }
 
+        // Viewer cannot perform write operations
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Non hai i permessi per questa operazione']);
+            exit;
+        }
+
         $brief = trim($_POST['brief'] ?? '');
 
         if (mb_strlen($brief) < 20) {
@@ -236,6 +254,14 @@ class CampaignCreatorController
                 exit;
             }
 
+            // Viewer cannot perform write operations
+            if (($project['access_role'] ?? 'owner') === 'viewer') {
+                ob_end_clean();
+                http_response_code(403);
+                echo json_encode(['error' => 'Non hai i permessi per questa operazione']);
+                exit;
+            }
+
             // Prerequisito: brief o scraped_context devono esistere
             if (empty($project['brief']) && empty($project['scraped_context'])) {
                 ob_end_clean();
@@ -244,9 +270,12 @@ class CampaignCreatorController
                 exit;
             }
 
+            // Route credits to project owner
+            $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
             $kwCost = CampaignCreatorService::getCost('keywords');
 
-            if (!Credits::hasEnough($user['id'], $kwCost)) {
+            if (!Credits::hasEnough($creditUserId, $kwCost)) {
                 ob_end_clean();
                 http_response_code(400);
                 echo json_encode(['error' => "Crediti insufficienti. Richiesti: {$kwCost}"]);
@@ -314,7 +343,7 @@ class CampaignCreatorController
             CreatorKeyword::deleteByProject($id);
             $savedCount = self::saveKeywordsFromAiResponse($id, $generation, $kwResult['data'], $project['campaign_type_gads'], $volumeMap);
 
-            Credits::consume($user['id'], $kwCost, 'creator_keywords', 'ads-analyzer');
+            Credits::consume($creditUserId, $kwCost, 'creator_keywords', 'ads-analyzer');
 
             // Aggiorna status progetto
             Project::update($id, ['status' => 'analyzing']);
@@ -352,8 +381,15 @@ class CampaignCreatorController
             exit;
         }
 
+        // Viewer cannot perform write operations
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Non hai i permessi per questa operazione']);
+            exit;
+        }
+
         $kw = CreatorKeyword::find($kwId);
-        if (!$kw || $kw['project_id'] !== $id) {
+        if (!$kw || (int)$kw['project_id'] !== $id) {
             http_response_code(404);
             echo json_encode(['error' => 'Keyword non trovata']);
             exit;
@@ -378,6 +414,13 @@ class CampaignCreatorController
         if (!$project || $project['type'] !== 'campaign-creator') {
             http_response_code(404);
             echo json_encode(['error' => 'Progetto non trovato']);
+            exit;
+        }
+
+        // Viewer cannot perform write operations
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Non hai i permessi per questa operazione']);
             exit;
         }
 
@@ -415,9 +458,20 @@ class CampaignCreatorController
                 exit;
             }
 
+            // Viewer cannot perform write operations
+            if (($project['access_role'] ?? 'owner') === 'viewer') {
+                ob_end_clean();
+                http_response_code(403);
+                echo json_encode(['error' => 'Non hai i permessi per questa operazione']);
+                exit;
+            }
+
+            // Route credits to project owner
+            $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
             $campaignCost = CampaignCreatorService::getCost('campaign');
 
-            if (!Credits::hasEnough($user['id'], $campaignCost)) {
+            if (!Credits::hasEnough($creditUserId, $campaignCost)) {
                 ob_end_clean();
                 http_response_code(400);
                 echo json_encode(['error' => "Crediti insufficienti. Richiesti: {$campaignCost}"]);
@@ -473,7 +527,7 @@ class CampaignCreatorController
                 'assets_json' => $result['data'],
             ]);
 
-            Credits::consume($user['id'], $campaignCost, 'creator_campaign', 'ads-analyzer');
+            Credits::consume($creditUserId, $campaignCost, 'creator_campaign', 'ads-analyzer');
 
             // Aggiorna status progetto
             Project::update($id, ['status' => 'completed']);
@@ -539,14 +593,14 @@ class CampaignCreatorController
         $project = Project::findAccessible($user['id'], $id);
 
         if (!$project || $project['type'] !== 'campaign-creator') {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/ads-analyzer'));
             exit;
         }
 
         $campaign = CreatorCampaign::getLatestByProject($id);
         if (!$campaign) {
-            $_SESSION['flash_error'] = 'Nessuna campagna generata';
+            $_SESSION['_flash']['error'] = 'Nessuna campagna generata';
             header('Location: ' . url("/ads-analyzer/projects/{$id}/campaign-creator"));
             exit;
         }
@@ -580,6 +634,13 @@ class CampaignCreatorController
         if (!$project || $project['type'] !== 'campaign-creator') {
             http_response_code(404);
             echo json_encode(['error' => 'Progetto non trovato']);
+            exit;
+        }
+
+        // Viewer cannot perform write operations
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Non hai i permessi per questa operazione']);
             exit;
         }
 

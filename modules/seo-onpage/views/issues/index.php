@@ -224,7 +224,7 @@ function issueManager() {
 
         async markAs(checkName, status) {
             const formData = new FormData();
-            formData.append('_token', csrfToken);
+            formData.append('_csrf_token', csrfToken);
             formData.append('check_name', checkName);
             formData.append('status', status);
 

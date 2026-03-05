@@ -31,7 +31,7 @@ class PageController
     public function index(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->findWithStats($projectId, $user['id']);
+        $project = $this->project->findWithStatsAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -63,7 +63,7 @@ class PageController
     public function import(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->findWithStats($projectId, $user['id']);
+        $project = $this->project->findWithStatsAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -85,7 +85,7 @@ class PageController
     public function importSitemap(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $this->jsonResponse(['success' => false, 'error' => 'Progetto non trovato']);
@@ -142,7 +142,7 @@ class PageController
     public function importCsv(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $this->jsonResponse(['success' => false, 'error' => 'Progetto non trovato']);
@@ -202,7 +202,7 @@ class PageController
     public function importManual(int $projectId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $this->jsonResponse(['success' => false, 'error' => 'Progetto non trovato']);
@@ -256,7 +256,7 @@ class PageController
     public function show(int $projectId, int $pageId): string
     {
         $user = Auth::user();
-        $project = $this->project->findWithStats($projectId, $user['id']);
+        $project = $this->project->findWithStatsAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -299,7 +299,7 @@ class PageController
     public function destroy(int $projectId, int $pageId): void
     {
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';

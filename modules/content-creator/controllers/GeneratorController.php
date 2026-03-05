@@ -77,6 +77,12 @@ class GeneratorController
             return;
         }
 
+        // Viewer cannot perform write operations
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            echo json_encode(['error' => true, 'message' => 'Non hai i permessi per questa operazione']);
+            return;
+        }
+
         $jobModel = new Job();
 
         // Verifica nessun job attivo di tipo scrape
@@ -99,10 +105,13 @@ class GeneratorController
             return;
         }
 
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
         // Verifica crediti
         $estimatedCredits = $pendingCount * self::SCRAPE_CREDIT_COST;
-        if (!Credits::hasEnough($user['id'], $estimatedCredits)) {
-            $balance = Credits::getBalance($user['id']);
+        if (!Credits::hasEnough($creditUserId, $estimatedCredits)) {
+            $balance = Credits::getBalance($creditUserId);
             echo json_encode([
                 'error' => true,
                 'message' => "Crediti insufficienti. Richiesti: {$estimatedCredits}, disponibili: {$balance}",
@@ -145,6 +154,16 @@ class GeneratorController
             echo json_encode(['error' => true, 'message' => 'Progetto non trovato']);
             return;
         }
+
+        // Viewer cannot perform write operations
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            http_response_code(403);
+            echo json_encode(['error' => true, 'message' => 'Non hai i permessi per questa operazione']);
+            return;
+        }
+
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
 
         $jobId = (int) ($_GET['job_id'] ?? 0);
         $jobModel = new Job();
@@ -270,7 +289,7 @@ class GeneratorController
                 }
 
                 // Consuma crediti
-                Credits::consume($user['id'], self::SCRAPE_CREDIT_COST, 'cc_scrape', 'content-creator', [
+                Credits::consume($creditUserId, self::SCRAPE_CREDIT_COST, 'cc_scrape', 'content-creator', [
                     'url' => $item['url'],
                     'word_count' => $result['word_count'],
                 ]);
@@ -368,6 +387,12 @@ class GeneratorController
             return;
         }
 
+        // Viewer cannot perform write operations
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            echo json_encode(['error' => true, 'message' => 'Non hai i permessi per questa operazione']);
+            return;
+        }
+
         $jobId = (int) ($_POST['job_id'] ?? 0);
         $jobModel = new Job();
         $job = $jobModel->findByUser($jobId, $user['id']);
@@ -407,6 +432,12 @@ class GeneratorController
             return;
         }
 
+        // Viewer cannot perform write operations
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            echo json_encode(['error' => true, 'message' => 'Non hai i permessi per questa operazione']);
+            return;
+        }
+
         // Verifica AI configurata
         $ai = new AiService('content-creator');
         if (!$ai->isConfigured()) {
@@ -435,10 +466,13 @@ class GeneratorController
             return;
         }
 
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
         // Verifica crediti
         $estimatedCredits = $readyCount * self::GENERATE_CREDIT_COST;
-        if (!Credits::hasEnough($user['id'], $estimatedCredits)) {
-            $balance = Credits::getBalance($user['id']);
+        if (!Credits::hasEnough($creditUserId, $estimatedCredits)) {
+            $balance = Credits::getBalance($creditUserId);
             echo json_encode([
                 'error' => true,
                 'message' => "Crediti insufficienti. Richiesti: {$estimatedCredits}, disponibili: {$balance}",
@@ -481,6 +515,16 @@ class GeneratorController
             echo json_encode(['error' => true, 'message' => 'Progetto non trovato']);
             return;
         }
+
+        // Viewer cannot perform write operations
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            http_response_code(403);
+            echo json_encode(['error' => true, 'message' => 'Non hai i permessi per questa operazione']);
+            return;
+        }
+
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
 
         $jobId = (int) ($_GET['job_id'] ?? 0);
         $jobModel = new Job();
@@ -627,7 +671,7 @@ class GeneratorController
                 $this->url->updateGeneratedData($item['id'], $htmlContent, $h1, $wordCount);
 
                 // Consuma crediti per generazione
-                Credits::consume($user['id'], self::GENERATE_CREDIT_COST, 'cc_generate', 'content-creator', [
+                Credits::consume($creditUserId, self::GENERATE_CREDIT_COST, 'cc_generate', 'content-creator', [
                     'url' => $item['url'],
                     'keyword' => $item['keyword'] ?? '',
                     'word_count' => $wordCount,
@@ -727,6 +771,12 @@ class GeneratorController
             return;
         }
 
+        // Viewer cannot perform write operations
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            echo json_encode(['error' => true, 'message' => 'Non hai i permessi per questa operazione']);
+            return;
+        }
+
         $jobId = (int) ($_POST['job_id'] ?? 0);
         $jobModel = new Job();
         $job = $jobModel->findByUser($jobId, $user['id']);
@@ -762,9 +812,9 @@ class GeneratorController
 
         $project = $this->getProject($id, $user['id']);
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
-            header('Location: /content-creator');
-            exit;
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
+            Router::redirect('/content-creator');
+
         }
 
         // Filtri da GET
@@ -802,7 +852,8 @@ class GeneratorController
             'stats' => $stats,
             'filters' => $filters,
             'currentPage' => 'results',
-            'modules' => ModuleLoader::getActiveModules(),
+            'title' => 'Risultati - Content Creator',
+            'modules' => ModuleLoader::getUserModules($user['id']),
         ]);
     }
 

@@ -69,7 +69,7 @@ class ProjectController
             $errors = ValidationService::validateCampaignCreator($data);
 
             if (!empty($errors)) {
-                $_SESSION['flash_error'] = implode(', ', $errors);
+                $_SESSION['_flash']['error'] = implode(', ', $errors);
                 $_SESSION['old_input'] = $data;
                 header('Location: ' . url('/projects/create'));
                 exit;
@@ -77,7 +77,7 @@ class ProjectController
 
             $projectId = Project::create($data);
 
-            $_SESSION['flash_success'] = 'Progetto creato con successo';
+            $_SESSION['_flash']['success'] = 'Progetto creato con successo';
             header('Location: ' . url("/ads-analyzer/projects/{$projectId}/campaign-creator"));
             exit;
         }
@@ -93,7 +93,7 @@ class ProjectController
         $errors = ValidationService::validateProject($data);
 
         if (!empty($errors)) {
-            $_SESSION['flash_error'] = implode(', ', $errors);
+            $_SESSION['_flash']['error'] = implode(', ', $errors);
             $_SESSION['old_input'] = $data;
             header('Location: ' . url('/projects/create'));
             exit;
@@ -102,7 +102,7 @@ class ProjectController
         $projectId = Project::create($data);
         Project::generateToken($projectId);
 
-        $_SESSION['flash_success'] = 'Progetto creato con successo';
+        $_SESSION['_flash']['success'] = 'Progetto creato con successo';
         header('Location: ' . url("/ads-analyzer/projects/{$projectId}/script"));
         exit;
     }
@@ -113,14 +113,14 @@ class ProjectController
         $project = Project::findAccessible($user['id'], $id);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/ads-analyzer'));
             exit;
         }
 
         // Edit: solo owner
         if (($project['access_role'] ?? 'owner') !== 'owner') {
-            $_SESSION['flash_error'] = 'Non hai i permessi per questa operazione';
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
             header('Location: ' . url("/ads-analyzer/projects/{$id}"));
             exit;
         }
@@ -140,14 +140,14 @@ class ProjectController
         $project = Project::findAccessible($user['id'], $id);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/ads-analyzer'));
             exit;
         }
 
         // Update: solo owner
         if (($project['access_role'] ?? 'owner') !== 'owner') {
-            $_SESSION['flash_error'] = 'Non hai i permessi per questa operazione';
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
             header('Location: ' . url("/ads-analyzer/projects/{$id}/edit"));
             exit;
         }
@@ -161,14 +161,14 @@ class ProjectController
         $errors = ValidationService::validateProject($data);
 
         if (!empty($errors)) {
-            $_SESSION['flash_error'] = implode(', ', $errors);
+            $_SESSION['_flash']['error'] = implode(', ', $errors);
             header('Location: ' . url("/ads-analyzer/projects/{$id}/edit"));
             exit;
         }
 
         Project::update($id, $data);
 
-        $_SESSION['flash_success'] = 'Progetto aggiornato';
+        $_SESSION['_flash']['success'] = 'Progetto aggiornato';
         header('Location: ' . url("/ads-analyzer/projects/{$id}"));
         exit;
     }
@@ -178,12 +178,12 @@ class ProjectController
         $user = Auth::user();
 
         if (!Project::deleteByUser($user['id'], $id)) {
-            $_SESSION['flash_error'] = 'Impossibile eliminare il progetto';
+            $_SESSION['_flash']['error'] = 'Impossibile eliminare il progetto';
             header('Location: ' . url('/ads-analyzer'));
             exit;
         }
 
-        $_SESSION['flash_success'] = 'Progetto eliminato';
+        $_SESSION['_flash']['success'] = 'Progetto eliminato';
         header('Location: ' . url('/ads-analyzer'));
         exit;
     }
@@ -194,7 +194,7 @@ class ProjectController
         $project = Project::findAccessible($user['id'], $id);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/ads-analyzer'));
             exit;
         }
@@ -211,7 +211,7 @@ class ProjectController
         // Genera token API
         Project::generateToken($newProjectId);
 
-        $_SESSION['flash_success'] = 'Progetto duplicato';
+        $_SESSION['_flash']['success'] = 'Progetto duplicato';
         header('Location: ' . url("/ads-analyzer/projects/{$newProjectId}"));
         exit;
     }
@@ -222,7 +222,7 @@ class ProjectController
         $project = Project::findAccessible($user['id'], $id);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: ' . url('/ads-analyzer'));
             exit;
         }
@@ -231,7 +231,7 @@ class ProjectController
         Project::update($id, ['status' => $newStatus]);
 
         $message = $newStatus === 'archived' ? 'Progetto archiviato' : 'Progetto ripristinato';
-        $_SESSION['flash_success'] = $message;
+        $_SESSION['_flash']['success'] = $message;
         header('Location: ' . url('/ads-analyzer'));
         exit;
     }

@@ -38,7 +38,7 @@ class OptimizationController
         Middleware::auth();
         $user = Auth::user();
 
-        $project = $this->projectModel->find($projectId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -65,7 +65,7 @@ class OptimizationController
         Middleware::csrf();
         $user = Auth::user();
 
-        $project = $this->projectModel->find($projectId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -134,7 +134,7 @@ class OptimizationController
         Middleware::auth();
         $user = Auth::user();
 
-        $project = $this->projectModel->find($projectId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
         $optimization = $this->optimizationModel->find($id, $user['id']);
 
         if (!$project || !$optimization) {
@@ -169,7 +169,7 @@ class OptimizationController
 
         $user = Auth::user();
 
-        $project = $this->projectModel->find($projectId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
         $optimization = $this->optimizationModel->find($id, $user['id']);
 
         if (!$project || !$optimization) {
@@ -226,7 +226,7 @@ class OptimizationController
         Middleware::auth();
         $user = Auth::user();
 
-        $project = $this->projectModel->find($projectId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
         $optimization = $this->optimizationModel->find($id, $user['id']);
 
         if (!$project || !$optimization) {
@@ -268,7 +268,7 @@ class OptimizationController
 
         $user = Auth::user();
 
-        $project = $this->projectModel->find($projectId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
         $optimization = $this->optimizationModel->find($id, $user['id']);
 
         if (!$project || !$optimization) {
@@ -338,7 +338,7 @@ class OptimizationController
         Middleware::auth();
         $user = Auth::user();
 
-        $project = $this->projectModel->find($projectId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
         $optimization = $this->optimizationModel->find($id, $user['id']);
 
         if (!$project || !$optimization) {
@@ -365,7 +365,7 @@ class OptimizationController
         Middleware::auth();
         $user = Auth::user();
 
-        $project = $this->projectModel->find($projectId, $user['id']);
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
         $optimization = $this->optimizationModel->find($id, $user['id']);
 
         if (!$project || !$optimization) {

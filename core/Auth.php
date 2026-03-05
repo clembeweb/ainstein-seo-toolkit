@@ -46,6 +46,7 @@ class Auth
                 'expires' => time() + (86400 * 30), // 30 giorni
                 'path' => '/',
                 'httponly' => true,
+                'secure' => !empty($_SERVER['HTTPS']),
                 'samesite' => 'Lax',
             ]);
         }

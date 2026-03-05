@@ -157,12 +157,14 @@ Router::get('/seo-tracking/project/{id}/keywords-overview', function ($id) {
 // Delete singola keyword (AJAX)
 Router::post('/seo-tracking/project/{id}/keywords/delete/{keywordId}', function ($id, $keywordId) {
     Middleware::auth();
+    Middleware::csrf();
     return (new DashboardController())->deleteKeyword((int) $id, (int) $keywordId);
 });
 
 // Bulk delete keywords (AJAX)
 Router::post('/seo-tracking/project/{id}/keywords/bulk-delete', function ($id) {
     Middleware::auth();
+    Middleware::csrf();
     return (new DashboardController())->bulkDeleteKeywords((int) $id);
 });
 
@@ -227,12 +229,14 @@ Router::get('/seo-tracking/project/{id}/rank-check/gsc-keywords', function ($id)
 // API: Check singolo keyword (per bulk sequenziale)
 Router::post('/seo-tracking/project/{id}/rank-check/single', function ($id) {
     Middleware::auth();
+    Middleware::csrf();
     return (new RankCheckController())->checkSingle((int) $id);
 });
 
 // API: Import keyword manuali (textarea o CSV)
 Router::post('/seo-tracking/project/{id}/rank-check/import-keywords', function ($id) {
     Middleware::auth();
+    Middleware::csrf();
     return (new RankCheckController())->importKeywords((int) $id);
 });
 
@@ -243,6 +247,7 @@ Router::post('/seo-tracking/project/{id}/rank-check/import-keywords', function (
 // Avvia job in background
 Router::post('/seo-tracking/project/{id}/rank-check/start-job', function ($id) {
     Middleware::auth();
+    Middleware::csrf();
     return (new RankCheckController())->startJob((int) $id);
 });
 
@@ -260,6 +265,7 @@ Router::get('/seo-tracking/project/{id}/rank-check/job-status', function ($id) {
 // Annulla job in esecuzione
 Router::post('/seo-tracking/project/{id}/rank-check/cancel-job', function ($id) {
     Middleware::auth();
+    Middleware::csrf();
     return (new RankCheckController())->cancelJob((int) $id);
 });
 
@@ -320,6 +326,7 @@ Router::post('/seo-tracking/project/{id}/keywords/bulk', function ($id) {
 // Avvia job posizioni in background (solo admin)
 Router::post('/seo-tracking/project/{id}/keywords/start-positions-job', function ($id) {
     Middleware::admin();
+    Middleware::csrf();
     return (new KeywordController())->startPositionsJob((int) $id);
 });
 
@@ -337,6 +344,7 @@ Router::get('/seo-tracking/project/{id}/keywords/positions-job-status', function
 // Annulla job posizioni in esecuzione
 Router::post('/seo-tracking/project/{id}/keywords/cancel-positions-job', function ($id) {
     Middleware::auth();
+    Middleware::csrf();
     return (new KeywordController())->cancelPositionsJob((int) $id);
 });
 
@@ -393,6 +401,7 @@ Router::post('/seo-tracking/project/{id}/keywords/{keywordId}/delete', function 
 // Aggiorna volumi di ricerca (AJAX - DataForSEO) - DEPRECATO, usa refresh-volumes
 Router::post('/seo-tracking/project/{id}/keywords/update-volumes', function ($id) {
     Middleware::auth();
+    Middleware::csrf();
     return (new KeywordController())->updateVolumes((int) $id);
 });
 
@@ -409,18 +418,21 @@ Router::get('/seo-tracking/project/{id}/keywords/check-volume-service', function
 // Refresh volumi (DataForSEO) - solo admin
 Router::post('/seo-tracking/project/{id}/keywords/refresh-volumes', function ($id) {
     Middleware::admin();
+    Middleware::csrf();
     return (new KeywordController())->refreshVolumes((int) $id);
 });
 
 // Refresh posizioni SERP - solo admin
 Router::post('/seo-tracking/project/{id}/keywords/refresh-positions', function ($id) {
     Middleware::admin();
+    Middleware::csrf();
     return (new KeywordController())->refreshPositions((int) $id);
 });
 
 // Refresh completo (volumi + posizioni) - solo admin
 Router::post('/seo-tracking/project/{id}/keywords/refresh-all', function ($id) {
     Middleware::admin();
+    Middleware::csrf();
     return (new KeywordController())->refreshAll((int) $id);
 });
 
@@ -430,9 +442,9 @@ Router::get('/seo-tracking/project/{id}/keywords/refresh-cost', function ($id) {
     return (new KeywordController())->getRefreshCost((int) $id);
 });
 
-// Debug SERP check (temporaneo per diagnostica)
+// Debug SERP check (temporaneo per diagnostica - solo admin)
 Router::get('/seo-tracking/project/{id}/debug-serp', function ($id) {
-    Middleware::auth();
+    Middleware::admin();
 
     $user = \Core\Auth::user();
     $project = (new \Modules\SeoTracking\Models\Project())->findAccessible((int) $id, $user['id']);
@@ -502,18 +514,21 @@ Router::post('/seo-tracking/project/{id}/groups/{groupId}/delete', function ($id
 // API: Aggiungi keyword a gruppo
 Router::post('/seo-tracking/project/{id}/groups/{groupId}/add-keyword', function ($id, $groupId) {
     Middleware::auth();
+    Middleware::csrf();
     return (new GroupController())->addKeyword((int) $id, (int) $groupId);
 });
 
 // API: Rimuovi keyword da gruppo
 Router::post('/seo-tracking/project/{id}/groups/{groupId}/remove-keyword', function ($id, $groupId) {
     Middleware::auth();
+    Middleware::csrf();
     return (new GroupController())->removeKeyword((int) $id, (int) $groupId);
 });
 
 // API: Sincronizza gruppi da st_keywords.group_name
 Router::post('/seo-tracking/project/{id}/groups/sync-from-keywords', function ($id) {
     Middleware::auth();
+    Middleware::csrf();
     return (new GroupController())->syncFromKeywords((int) $id);
 });
 
@@ -544,28 +559,28 @@ Router::get('/seo-tracking/project/{id}/alerts', function ($id) {
 });
 
 // Impostazioni alert
-Router::get('/seo-tracking/project/{id}/alerts/settings', function ($id) {
-    Middleware::auth();
-    return (new AlertController())->settings((int) $id);
-});
+// Router::get('/seo-tracking/project/{id}/alerts/settings', function ($id) {
+//     Middleware::auth();
+//     return (new AlertController())->settings((int) $id);
+// });
 
-Router::post('/seo-tracking/project/{id}/alerts/settings', function ($id) {
-    Middleware::auth();
-    Middleware::csrf();
-    return (new AlertController())->updateSettings((int) $id);
-});
+// Router::post('/seo-tracking/project/{id}/alerts/settings', function ($id) {
+//     Middleware::auth();
+//     Middleware::csrf();
+//     return (new AlertController())->updateSettings((int) $id);
+// });
 
 // Storico alert
-Router::get('/seo-tracking/project/{id}/alerts/history', function ($id) {
-    Middleware::auth();
-    return (new AlertController())->history((int) $id);
-});
+// Router::get('/seo-tracking/project/{id}/alerts/history', function ($id) {
+//     Middleware::auth();
+//     return (new AlertController())->history((int) $id);
+// });
 
 // Marca alert come letto
 Router::post('/seo-tracking/project/{id}/alerts/{alertId}/read', function ($id, $alertId) {
     Middleware::auth();
     Middleware::csrf();
-    return (new AlertController())->markRead((int) $id, (int) $alertId);
+    return (new AlertController())->markRead((int) $alertId);
 });
 
 // Archivia/Elimina alert
@@ -587,6 +602,7 @@ Router::get('/seo-tracking/project/{id}/quick-wins', function ($id) {
 
 Router::post('/seo-tracking/project/{id}/quick-wins/analyze', function ($id) {
     Middleware::auth();
+    Middleware::csrf();
     return (new AiController())->analyzeQuickWins((int) $id);
 });
 
@@ -598,6 +614,7 @@ Router::get('/seo-tracking/project/{id}/groups/{groupId}/quick-wins', function (
 
 Router::post('/seo-tracking/project/{id}/groups/{groupId}/quick-wins/analyze', function ($id, $groupId) {
     Middleware::auth();
+    Middleware::csrf();
     return (new AiController())->analyzeQuickWinsGroup((int) $id, (int) $groupId);
 });
 
@@ -614,6 +631,7 @@ Router::get('/seo-tracking/project/{id}/page-analyzer', function ($id) {
 // Analizza pagina per keyword (POST AJAX)
 Router::post('/seo-tracking/project/{id}/analyze-page', function ($id) {
     Middleware::auth();
+    Middleware::csrf();
     return (new AiController())->analyzePage((int) $id);
 });
 
@@ -646,16 +664,16 @@ Router::get('/seo-tracking/project/{id}/reports', function ($id) {
 });
 
 // Report settimanali
-Router::get('/seo-tracking/project/{id}/reports/weekly', function ($id) {
-    Middleware::auth();
-    return (new ReportController())->weekly((int) $id);
-});
+// Router::get('/seo-tracking/project/{id}/reports/weekly', function ($id) {
+//     Middleware::auth();
+//     return (new ReportController())->weekly((int) $id);
+// });
 
 // Report mensili
-Router::get('/seo-tracking/project/{id}/reports/monthly', function ($id) {
-    Middleware::auth();
-    return (new ReportController())->monthly((int) $id);
-});
+// Router::get('/seo-tracking/project/{id}/reports/monthly', function ($id) {
+//     Middleware::auth();
+//     return (new ReportController())->monthly((int) $id);
+// });
 
 // Genera Weekly Digest
 Router::post('/seo-tracking/project/{id}/reports/generate/weekly', function ($id) {
@@ -681,20 +699,20 @@ Router::post('/seo-tracking/project/{id}/reports/generate/keywords', function ($
 // Visualizza report
 Router::get('/seo-tracking/project/{id}/reports/{reportId}', function ($id, $reportId) {
     Middleware::auth();
-    return (new ReportController())->show((int) $id, (int) $reportId);
+    return (new ReportController())->show((int) $reportId);
 });
 
 // Download report PDF
 Router::get('/seo-tracking/project/{id}/reports/{reportId}/download', function ($id, $reportId) {
     Middleware::auth();
-    return (new ReportController())->download((int) $id, (int) $reportId);
+    return (new ReportController())->downloadPdf((int) $reportId);
 });
 
 // Elimina report
 Router::post('/seo-tracking/project/{id}/reports/{reportId}/delete', function ($id, $reportId) {
     Middleware::auth();
     Middleware::csrf();
-    return (new ReportController())->destroy((int) $id, (int) $reportId);
+    return (new ReportController())->destroy((int) $reportId);
 });
 
 // =============================================
@@ -706,10 +724,11 @@ Router::get('/seo-tracking/project/{id}/export/keywords', function ($id) {
     return (new ExportController())->keywords((int) $id);
 });
 
-Router::get('/seo-tracking/project/{id}/export/positions', function ($id) {
-    Middleware::auth();
-    return (new ExportController())->keywords((int) $id);
-});
+// Route duplicata di export/keywords - commentata
+// Router::get('/seo-tracking/project/{id}/export/positions', function ($id) {
+//     Middleware::auth();
+//     return (new ExportController())->keywords((int) $id);
+// });
 
 // =============================================
 // API AJAX (per grafici e aggiornamenti)

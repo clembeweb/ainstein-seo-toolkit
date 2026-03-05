@@ -136,7 +136,8 @@ class SitemapService
             CURLOPT_NOBODY => true,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_TIMEOUT => 10,
-            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
         ]);
         curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -338,7 +339,8 @@ class SitemapService
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_TIMEOUT => $this->timeout,
-            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; SEOToolkit/1.0; +https://example.com/bot)',
             CURLOPT_HTTPHEADER => [
                 'Accept: application/xml, text/xml, */*',

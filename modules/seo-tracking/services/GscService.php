@@ -4,6 +4,7 @@ namespace Modules\SeoTracking\Services;
 
 use Core\Database;
 use Core\Settings;
+use Services\ApiLoggerService;
 use Modules\SeoTracking\Models\GscConnection;
 use Modules\SeoTracking\Models\GscData;
 use Modules\SeoTracking\Models\GscDaily;
@@ -231,6 +232,7 @@ class GscService
             // 1. Fetch dati per query + page + country
             // Dimensions: query[0], page[1], date[2], country[3]
             $queryPageData = $this->fetchSearchAnalytics($token, $connection['property_url'], $startDate, $endDate, ['query', 'page', 'date', 'country']);
+            Database::reconnect();
             $result['records_fetched'] += count($queryPageData);
 
             foreach ($queryPageData as $row) {
@@ -474,6 +476,8 @@ class GscService
                 }
 
                 $totalInserted += $this->batchUpsertGsc($db, $batch);
+                Database::reconnect();
+                $db = Database::getInstance();
                 unset($batch); // Libera memoria
             }
 
@@ -584,6 +588,8 @@ class GscService
             $endDate,
             ['query', 'page', 'date', 'country']
         );
+
+        Database::reconnect();
 
         // Filtra e salva solo i dati delle keyword tracciate
         $gscDataByKeyword = [];
@@ -785,6 +791,8 @@ class GscService
      */
     private function httpGet(string $url, string $token): array
     {
+        $startTime = microtime(true);
+
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -799,6 +807,11 @@ class GscService
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
+        $parsedUrl = parse_url($url);
+        ApiLoggerService::log('google_gsc', $parsedUrl['path'] ?? $url, ['method' => 'GET'], $response ? json_decode($response, true) : null, $httpCode, $startTime, [
+            'module' => 'seo-tracking', 'cost' => 0, 'context' => 'GSC API GET'
+        ]);
+
         if ($httpCode >= 400) {
             $error = json_decode($response, true);
             return ['error' => $error['error'] ?? ['message' => 'HTTP ' . $httpCode]];
@@ -812,6 +825,8 @@ class GscService
      */
     private function httpPost(string $url, array $data): array
     {
+        $startTime = microtime(true);
+
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -824,7 +839,13 @@ class GscService
         ]);
 
         $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
+
+        $parsedUrl = parse_url($url);
+        ApiLoggerService::log('google_oauth', $parsedUrl['path'] ?? $url, ['grant_type' => $data['grant_type'] ?? 'unknown'], $response ? json_decode($response, true) : null, $httpCode, $startTime, [
+            'module' => 'seo-tracking', 'cost' => 0, 'context' => 'GSC OAuth token'
+        ]);
 
         return json_decode($response, true) ?? [];
     }
@@ -834,6 +855,8 @@ class GscService
      */
     private function httpPostJson(string $url, array $data, string $token): array
     {
+        $startTime = microtime(true);
+
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -850,6 +873,11 @@ class GscService
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
+
+        $parsedUrl = parse_url($url);
+        ApiLoggerService::log('google_gsc', $parsedUrl['path'] ?? $url, ['dimensions' => $data['dimensions'] ?? [], 'startDate' => $data['startDate'] ?? '', 'endDate' => $data['endDate'] ?? ''], $response ? json_decode($response, true) : null, $httpCode, $startTime, [
+            'module' => 'seo-tracking', 'cost' => 0, 'context' => 'GSC Search Analytics'
+        ]);
 
         if ($httpCode >= 400) {
             $error = json_decode($response, true);

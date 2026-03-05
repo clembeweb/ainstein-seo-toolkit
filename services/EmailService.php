@@ -143,7 +143,7 @@ class EmailService
     {
         // Variabili globali sempre disponibili
         $data['app_name'] = $data['app_name'] ?? Settings::get('site_name', 'Ainstein');
-        $data['app_url'] = $data['app_url'] ?? rtrim(env('APP_URL', 'https://ainstein.it'), '/');
+        $data['app_url'] = $data['app_url'] ?? rtrim(Settings::get('app_url', 'https://ainstein.it'), '/');
         $data['year'] = date('Y');
 
         // Unsubscribe URL
@@ -231,7 +231,7 @@ class EmailService
             }
         }
         // Rimuovi placeholder non sostituiti
-        $html = preg_replace('/\{\{[a-z_]+\}\}/', '', $html);
+        $html = preg_replace('/\{\{[a-zA-Z_]+\}\}/', '', $html);
         return $html;
     }
 
@@ -240,7 +240,7 @@ class EmailService
      */
     public static function getUnsubscribeUrl(int $userId): string
     {
-        $appUrl = rtrim(env('APP_URL', 'https://ainstein.it'), '/');
+        $appUrl = rtrim(Settings::get('app_url', 'https://ainstein.it'), '/');
 
         $existing = \Core\Database::fetch(
             "SELECT token FROM email_unsubscribe_tokens WHERE user_id = ?",
@@ -276,7 +276,7 @@ class EmailService
 
         $sampleData = self::getSampleData($slug);
         $sampleData['app_name'] = Settings::get('site_name', 'Ainstein');
-        $sampleData['app_url'] = rtrim(env('APP_URL', 'https://ainstein.it'), '/');
+        $sampleData['app_url'] = rtrim(Settings::get('app_url', 'https://ainstein.it'), '/');
         $sampleData['year'] = date('Y');
         $sampleData['unsubscribe_url'] = '#';
 
@@ -444,7 +444,7 @@ class EmailService
     public static function sendWelcome(string $to, string $name, int $freeCredits = 30, ?int $userId = null): array
     {
         $appName = Settings::get('site_name', 'Ainstein');
-        $appUrl = rtrim(env('APP_URL', 'https://ainstein.it'), '/');
+        $appUrl = rtrim(Settings::get('app_url', 'https://ainstein.it'), '/');
 
         return self::sendTemplate($to, "Benvenuto su {$appName}!", 'welcome', [
             'userName' => $name,
@@ -463,7 +463,7 @@ class EmailService
     public static function sendPasswordReset(string $to, string $token, ?int $userId = null): array
     {
         $appName = Settings::get('site_name', 'Ainstein');
-        $appUrl = rtrim(env('APP_URL', 'https://ainstein.it'), '/');
+        $appUrl = rtrim(Settings::get('app_url', 'https://ainstein.it'), '/');
         $resetUrl = $appUrl . '/reset-password?token=' . urlencode($token);
 
         return self::sendTemplate($to, "Reimposta la tua password - {$appName}", 'password-reset', [

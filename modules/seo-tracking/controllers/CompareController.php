@@ -4,6 +4,7 @@ namespace Modules\SeoTracking\Controllers;
 
 use Core\View;
 use Core\Auth;
+use Core\Router;
 use Core\ModuleLoader;
 use Modules\SeoTracking\Models\Project;
 use Modules\SeoTracking\Services\PositionCompareService;
@@ -24,8 +25,8 @@ class CompareController
         $project = $projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
-            header('Location: /seo-tracking');
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
+            Router::redirect('/seo-tracking');
             exit;
         }
 
@@ -131,8 +132,8 @@ class CompareController
         $project = $projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
-            header('Location: /seo-tracking');
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
+            Router::redirect('/seo-tracking');
             exit;
         }
 

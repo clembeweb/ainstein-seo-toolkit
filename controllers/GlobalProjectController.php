@@ -149,6 +149,7 @@ class GlobalProjectController
         }
 
         if (!empty($errors)) {
+            $_SESSION['_old_input'] = $_POST;
             $_SESSION['_flash']['error'] = implode('. ', $errors);
             Router::redirect('/projects/create');
             return;
@@ -214,10 +215,14 @@ class GlobalProjectController
             }
         }
 
-        // Load WordPress sites linked to this project
-        $wpSiteModel = new \Modules\AiContent\Models\WpSite();
-        $wpSites = $wpSiteModel->getAllByProject($id);
-        $unlinkedWpSites = $wpSiteModel->getUnlinkedByUser($user['id']);
+        // Load WordPress sites linked to this project (only for owner)
+        $wpSites = [];
+        $unlinkedWpSites = [];
+        if (($project['access_role'] ?? 'owner') === 'owner') {
+            $wpSiteModel = new \Modules\AiContent\Models\WpSite();
+            $wpSites = $wpSiteModel->getAllByProject($id);
+            $unlinkedWpSites = $wpSiteModel->getUnlinkedByUser($user['id']);
+        }
 
         return View::render('projects/dashboard', [
             'title' => $project['name'],
@@ -926,7 +931,7 @@ class GlobalProjectController
             'members' => $members,
             'invitations' => $invitations,
             'activeModules' => $activeModules,
-            'modules' => ModuleLoader::getActiveModules()
+            'modules' => ModuleLoader::getUserModules($user['id'])
         ]);
     }
 
@@ -939,6 +944,11 @@ class GlobalProjectController
         Middleware::auth();
         Middleware::csrf();
         $user = Auth::user();
+
+        // Rate limit: max 10 inviti al minuto per utente
+        if (method_exists(Middleware::class, 'rateLimit')) {
+            Middleware::rateLimit('project_invite_' . $user['id'], 10, 60);
+        }
 
         // Solo il proprietario puo invitare
         if (!\Services\ProjectAccessService::isOwner($id, $user['id'])) {

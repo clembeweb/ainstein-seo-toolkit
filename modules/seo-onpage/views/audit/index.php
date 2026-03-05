@@ -201,7 +201,7 @@ function auditManager() {
             this.error = '';
 
             const formData = new FormData();
-            formData.append('_token', csrfToken);
+            formData.append('_csrf_token', csrfToken);
             formData.append('scope', this.scope);
 
             try {
@@ -309,7 +309,7 @@ function auditManager() {
             this.cancelling = true;
 
             const formData = new FormData();
-            formData.append('_token', csrfToken);
+            formData.append('_csrf_token', csrfToken);
             formData.append('job_id', this.jobId);
 
             await fetch(`${baseUrl}/seo-onpage/project/${projectId}/audit/cancel`, {

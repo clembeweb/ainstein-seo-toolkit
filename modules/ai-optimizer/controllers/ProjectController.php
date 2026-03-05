@@ -106,7 +106,7 @@ class ProjectController
         Middleware::auth();
         $user = Auth::user();
 
-        $project = $this->projectModel->find($id, $user['id']);
+        $project = $this->projectModel->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -136,7 +136,7 @@ class ProjectController
         Middleware::auth();
         $user = Auth::user();
 
-        $project = $this->projectModel->find($id, $user['id']);
+        $project = $this->projectModel->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -162,7 +162,7 @@ class ProjectController
         Middleware::csrf();
         $user = Auth::user();
 
-        $project = $this->projectModel->find($id, $user['id']);
+        $project = $this->projectModel->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -211,7 +211,7 @@ class ProjectController
         Middleware::csrf();
         $user = Auth::user();
 
-        $project = $this->projectModel->find($id, $user['id']);
+        $project = $this->projectModel->findAccessible($id, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';

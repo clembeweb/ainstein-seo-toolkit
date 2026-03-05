@@ -11,6 +11,7 @@ use Modules\AiContent\Models\Project;
 use Modules\AiContent\Models\SerpResult;
 use Modules\AiContent\Models\Source;
 use Modules\AiContent\Models\WpSite;
+use Core\Middleware;
 
 /**
  * KeywordController
@@ -400,7 +401,7 @@ class KeywordController
 
         foreach ($ids as $id) {
             $id = (int) $id;
-            $keyword = $this->keyword->find($id);
+            $keyword = $this->keyword->find($id, $user['id']);
             if (!$keyword) continue;
 
             // Skip keywords with articles

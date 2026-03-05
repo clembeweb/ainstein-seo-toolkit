@@ -78,7 +78,7 @@
             "label": "Costi Operazioni",
             "icon": "currency-euro",
             "description": "Crediti consumati per ogni operazione",
-            "order": 4,
+            "order": 99,
             "collapsed": true
         }
     },

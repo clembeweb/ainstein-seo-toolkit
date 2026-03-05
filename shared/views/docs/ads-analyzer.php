@@ -132,7 +132,7 @@
                 </div>
                 <h3 class="font-medium text-slate-900 dark:text-white text-sm">Analisi keyword negative</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Identifica i termini di ricerca irrilevanti dai dati raccolti dallo script, classificati per categoria e priorita con AI. Seleziona il periodo (7g/14g/30g) per analizzare solo i termini recenti ed escludere quelli gia negati.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Identifica i termini di ricerca irrilevanti dai dati raccolti dallo script, classificati per categoria e priorita con AI. Il sistema confronta automaticamente con l'analisi precedente mostrando keyword risolte, ricorrenti e nuove per tracciare i progressi nel tempo.</p>
         </div>
         <!-- Contesti business salvati -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -180,7 +180,7 @@
                 </div>
                 <h3 class="font-medium text-slate-900 dark:text-white text-sm">Campaign Creator AI</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Genera campagne Google Ads complete (Search o PMax) con un wizard guidato in 3 step: analisi landing page, keyword research con volumi reali da Google Keyword Insight API (3 fasi: AI seed &rarr; espansione API &rarr; organizzazione AI), generazione copy/asset completi con raccomandazione budget giornaliero a 3 livelli. Export CSV compatibile con Google Ads Editor.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Genera campagne Google Ads complete (Search o PMax) con un wizard guidato in 3 step: analisi landing page, keyword research con volumi reali da Google Keyword Insight API (3 fasi: AI seed &rarr; espansione API &rarr; organizzazione AI), generazione copy/asset completi. Output organizzato in 4 tab (Annunci, Estensioni, Keywords, Budget) con hero riepilogativo, KPI cards e raccomandazione budget a 3 livelli. Export CSV compatibile con Google Ads Editor.</p>
         </div>
         <!-- Asset completi -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -311,8 +311,8 @@
                 </svg>
             </div>
             <div>
-                <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Usa il periodo 7g per keyword negative</h3>
-                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Dopo aver aggiunto keyword negative, seleziona il run a 7 giorni nell'analisi successiva: vedrai solo i termini di ricerca recenti, senza quelli gia negati che inquinano i risultati a 30 giorni.</p>
+                <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Traccia i progressi tra analisi</h3>
+                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Dopo ogni analisi, il sistema confronta i risultati con l'analisi precedente: le keyword risolte (non piu presenti) confermano che le negazioni funzionano, le ricorrenti richiedono attenzione, le nuove sono scoperte recenti.</p>
             </div>
         </div>
     </div>

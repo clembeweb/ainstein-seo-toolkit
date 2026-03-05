@@ -122,7 +122,7 @@ function importManager() {
             this.message = '';
 
             const formData = new FormData();
-            formData.append('_token', csrfToken);
+            formData.append('_csrf_token', csrfToken);
             formData.append('sitemap_url', this.sitemapUrl);
 
             try {
@@ -154,7 +154,7 @@ function importManager() {
             this.message = '';
 
             const formData = new FormData();
-            formData.append('_token', csrfToken);
+            formData.append('_csrf_token', csrfToken);
             formData.append('csv_content', this.csvContent);
 
             try {
@@ -195,7 +195,7 @@ function importManager() {
             }).filter(u => u).join('\n');
 
             const formData = new FormData();
-            formData.append('_token', csrfToken);
+            formData.append('_csrf_token', csrfToken);
             formData.append('urls', urls);
 
             try {

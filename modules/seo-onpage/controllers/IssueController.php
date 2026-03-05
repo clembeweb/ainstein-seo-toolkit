@@ -33,7 +33,7 @@ class IssueController
     public function index(int $projectId): string
     {
         $user = Auth::user();
-        $project = $this->project->findWithStats($projectId, $user['id']);
+        $project = $this->project->findWithStatsAccessible($projectId, $user['id']);
 
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
@@ -73,7 +73,7 @@ class IssueController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);
@@ -99,7 +99,7 @@ class IssueController
         header('Content-Type: application/json');
 
         $user = Auth::user();
-        $project = $this->project->find($projectId, $user['id']);
+        $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato']);

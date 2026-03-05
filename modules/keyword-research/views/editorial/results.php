@@ -333,6 +333,7 @@ function editorialResults() {
                     method: 'POST',
                     body: formData,
                 });
+                if (!resp.ok) { throw new Error('Errore server: ' + resp.status); }
                 const data = await resp.json();
 
                 if (data.success) {

@@ -46,6 +46,12 @@ class GscController
             return;
         }
 
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/seo-tracking/project/' . $id . '/settings');
+            return;
+        }
+
         // Usa servizio OAuth centralizzato
         $oauth = new \Services\GoogleOAuthService();
 
@@ -168,6 +174,12 @@ class GscController
             return;
         }
 
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/seo-tracking/project/' . $id . '/settings');
+            return;
+        }
+
         $siteUrl = $_POST['site_url'] ?? '';
 
         if (empty($siteUrl)) {
@@ -208,6 +220,12 @@ class GscController
             return;
         }
 
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/seo-tracking/project/' . $id . '/settings');
+            return;
+        }
+
         $this->gscConnection->delete($id);
         $this->project->setGscConnected($id, false);
 
@@ -225,6 +243,11 @@ class GscController
 
         if (!$project) {
             $this->jsonResponse(['success' => false, 'error' => 'Progetto non trovato']);
+            return;
+        }
+
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            $this->jsonResponse(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
             return;
         }
 
@@ -315,6 +338,11 @@ class GscController
 
         if (!$project) {
             $this->sendSSE(['status' => 'error', 'message' => 'Progetto non trovato', 'error' => true]);
+            return;
+        }
+
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            $this->sendSSE(['status' => 'error', 'message' => 'Non hai i permessi per questa operazione', 'error' => true]);
             return;
         }
 
@@ -466,15 +494,24 @@ class GscController
             return;
         }
 
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/seo-tracking/project/' . $id . '/settings');
+            return;
+        }
+
         if (!$project['gsc_connected']) {
             $_SESSION['_flash']['error'] = 'GSC non connesso';
             Router::redirect('/seo-tracking/project/' . $id . '/settings');
             return;
         }
 
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
         // Verifica crediti
         $creditCost = Credits::getCost('gsc_full_sync', 'seo-tracking');
-        if (!Credits::hasEnough($user['id'], $creditCost)) {
+        if (!Credits::hasEnough($creditUserId, $creditCost)) {
             $_SESSION['_flash']['error'] = 'Crediti insufficienti. Richiesti: ' . $creditCost;
             Router::redirect('/seo-tracking/project/' . $id . '/settings');
             return;
@@ -482,7 +519,7 @@ class GscController
 
         try {
             // Consuma crediti
-            Credits::consume($user['id'], $creditCost, 'gsc_full_sync', 'seo-tracking', [
+            Credits::consume($creditUserId, $creditCost, 'gsc_full_sync', 'seo-tracking', [
                 'project_id' => $id,
             ]);
 
@@ -613,7 +650,7 @@ class GscController
         return View::render('seo-tracking/gsc/data', [
             'title' => 'Search Console - ' . $project['name'],
             'user' => $user,
-            'modules' => ModuleLoader::getActiveModules(),
+            'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
             'connection' => $connection,
             'topQueries' => array_values($topQueries),

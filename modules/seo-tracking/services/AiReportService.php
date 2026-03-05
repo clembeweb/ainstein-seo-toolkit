@@ -11,6 +11,7 @@ use Modules\SeoTracking\Models\GscDaily;
 use Modules\SeoTracking\Models\Keyword;
 use Modules\SeoTracking\Models\Alert;
 use Services\AiService;
+use Core\Database;
 use Core\Logger;
 
 /**
@@ -414,6 +415,8 @@ Rispondi in italiano con formattazione markdown.";
                 'max_tokens' => $maxTokens,
             ]);
 
+            Database::reconnect();
+
             if (isset($response['error'])) {
                 Logger::channel('ai')->error('AiReportService: ' . ($response['message'] ?? 'Errore sconosciuto'));
                 return null;
@@ -421,6 +424,7 @@ Rispondi in italiano con formattazione markdown.";
 
             return $response['result'] ?? null;
         } catch (\Exception $e) {
+            Database::reconnect();
             Logger::channel('ai')->error('AiReportService: ' . $e->getMessage(), ['error' => $e->getMessage()]);
             return null;
         }

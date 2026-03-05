@@ -636,7 +636,7 @@ function coverImageManager(config) {
 
             try {
                 const formData = new FormData();
-                formData.append('_token', '<?= csrf_token() ?>');
+                formData.append('_csrf_token', '<?= csrf_token() ?>');
 
                 const resp = await fetch(`<?= url('/ai-content/articles') ?>/${this.articleId}/regenerate-cover`, {
                     method: 'POST',
@@ -669,7 +669,7 @@ function coverImageManager(config) {
 
             try {
                 const formData = new FormData();
-                formData.append('_token', '<?= csrf_token() ?>');
+                formData.append('_csrf_token', '<?= csrf_token() ?>');
 
                 const resp = await fetch(`<?= url('/ai-content/articles') ?>/${this.articleId}/remove-cover`, {
                     method: 'POST',
@@ -742,7 +742,7 @@ function articleEditor(initialData) {
 
             try {
                 const formData = new FormData();
-                formData.append('_token', '<?= csrf_token() ?>');
+                formData.append('_csrf_token', '<?= csrf_token() ?>');
                 formData.append('title', this.title);
                 formData.append('meta_description', this.metaDescription);
                 formData.append('content', this.content);

@@ -379,6 +379,7 @@ function editorialWizard() {
                     method: 'POST',
                     body: formData,
                 });
+                if (!resp.ok) { throw new Error('Errore server: ' + resp.status); }
                 const data = await resp.json();
 
                 if (!data.success) {
@@ -476,6 +477,7 @@ function editorialWizard() {
             }
             try {
                 const resp = await fetch(`<?= url('/keyword-research/project/' . $project['id'] . '/editorial/collection-results') ?>?research_id=${this.researchId}`);
+                if (!resp.ok) { throw new Error('Errore server: ' + resp.status); }
                 const data = await resp.json();
                 if (data.success && data.status === 'collecting') {
                     setTimeout(() => this.pollCollectionResults(attempts + 1), 2000);

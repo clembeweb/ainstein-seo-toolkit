@@ -51,12 +51,30 @@ class WizardController
         $rawInput = file_get_contents('php://input');
         $input = json_decode($rawInput, true) ?? [];
 
-        // Find keyword
+        // Find keyword with ownership check
         $keyword = $this->keyword->find($keywordId);
         if (!$keyword) {
             echo json_encode(['success' => false, 'error' => 'Keyword non trovata']);
             exit;
         }
+        $project = Project::findAccessible($user['id'], $keyword['project_id']);
+        if (!$project) {
+            ob_end_clean();
+            echo json_encode(['success' => false, 'error' => 'Non autorizzato']);
+            exit;
+        }
+
+        // Viewer cannot perform write operations
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            ob_end_clean();
+            echo json_encode(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
+            exit;
+        }
+
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
+        session_write_close();
 
         // Get sources from input
         $sources = $input['sources'] ?? [];
@@ -78,9 +96,9 @@ class WizardController
         $briefCost = Credits::getCost('brief_generation', 'ai-content');
         $totalCost = $scrapingCost + $briefCost;
 
-        $currentBalance = Credits::getBalance($user['id']);
+        $currentBalance = Credits::getBalance($creditUserId);
 
-        if (!Credits::hasEnough($user['id'], $totalCost)) {
+        if (!Credits::hasEnough($creditUserId, $totalCost)) {
             echo json_encode(['success' => false, 'error' => "Crediti insufficienti. Richiesti: {$totalCost}, Disponibili: {$currentBalance}"]);
             exit;
         }
@@ -107,7 +125,7 @@ class WizardController
             }
 
             // Consume scraping credits
-            Credits::consume($user['id'], $scrapingCost, 'source_scraping', 'ai-content', ['urls_count' => count($scrapedSources)]);
+            Credits::consume($creditUserId, $scrapingCost, 'source_scraping', 'ai-content', ['urls_count' => count($scrapedSources)]);
 
             // Get SERP results
             $serpResults = $this->serpResult->getByKeyword($keywordId);
@@ -130,7 +148,7 @@ class WizardController
             }
 
             // Consume brief credits
-            Credits::consume($user['id'], $briefCost, 'brief_generation', 'ai-content', ['keyword' => $keyword['keyword']]);
+            Credits::consume($creditUserId, $briefCost, 'brief_generation', 'ai-content', ['keyword' => $keyword['keyword']]);
 
             // Create or update article with brief
             $articleId = $this->article->createWithBrief($keywordId, $user['id'], $brief, $sources, $customUrls, $selectedPaa);
@@ -213,11 +231,27 @@ class WizardController
             exit;
         }
 
+        // Viewer cannot perform write operations
+        $project = null;
+        if (!empty($keyword['project_id'])) {
+            $project = Project::findAccessible($user['id'], $keyword['project_id']);
+            if ($project && ($project['access_role'] ?? 'owner') === 'viewer') {
+                ob_end_clean();
+                echo json_encode(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
+                exit;
+            }
+        }
+
+        // Route credits to project owner
+        $creditUserId = $project
+            ? \Services\ProjectAccessService::getCreditUserId($project, $user['id'])
+            : $user['id'];
+
         // Check credits for article generation
         $cost = Credits::getCost('article_generation', 'ai-content');
-        $currentBalance = Credits::getBalance($user['id']);
+        $currentBalance = Credits::getBalance($creditUserId);
 
-        if (!Credits::hasEnough($user['id'], $cost)) {
+        if (!Credits::hasEnough($creditUserId, $cost)) {
             echo json_encode(['success' => false, 'error' => "Crediti insufficienti. Richiesti: {$cost}, Disponibili: {$currentBalance}"]);
             exit;
         }
@@ -300,7 +334,7 @@ class WizardController
             $this->article->updateContent($articleId, $result);
 
             // Consume credits
-            Credits::consume($user['id'], $cost, 'article_generation', 'ai-content', ['keyword' => $keyword['keyword']]);
+            Credits::consume($creditUserId, $cost, 'article_generation', 'ai-content', ['keyword' => $keyword['keyword']]);
 
             // Generate cover image (optional)
             $coverPath = null;
@@ -310,7 +344,7 @@ class WizardController
                 try {
                     $coverCost = Credits::getCost('cover_image_generation', 'ai-content');
 
-                    if (Credits::hasEnough($user['id'], $coverCost)) {
+                    if (Credits::hasEnough($creditUserId, $coverCost)) {
                         $coverService = new \Modules\AiContent\Services\CoverImageService();
                         $coverResult = $coverService->generate(
                             $articleId,
@@ -326,7 +360,7 @@ class WizardController
                             $this->article->updateCoverImage($articleId, $coverResult['path']);
                             $coverPath = $coverResult['path'];
 
-                            Credits::consume($user['id'], $coverCost, 'cover_image_generation', 'ai-content', [
+                            Credits::consume($creditUserId, $coverCost, 'cover_image_generation', 'ai-content', [
                                 'keyword' => $keyword['keyword'],
                                 'article_id' => $articleId
                             ]);

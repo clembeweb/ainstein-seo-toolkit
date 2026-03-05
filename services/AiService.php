@@ -181,6 +181,10 @@ class AiService
             return $result;
         }
 
+        if (empty($result) || empty($result['content'])) {
+            return ['success' => false, 'error' => 'Risposta AI vuota'];
+        }
+
         // Consume credits
         Credits::consume($userId, $cost, $costType, $this->moduleSlug, [
             'tokens_estimate' => $tokenEstimate,
@@ -222,7 +226,7 @@ class AiService
             $contentSize += strlen($system);
         }
 
-        $tokenEstimate = $this->estimateTokens(str_repeat('x', $contentSize));
+        $tokenEstimate = (int)ceil($contentSize / 4);
         $costType = $this->getCostType($tokenEstimate);
         $cost = Credits::getCost($costType);
 
@@ -240,6 +244,10 @@ class AiService
 
         if (isset($result['error'])) {
             return $result;
+        }
+
+        if (empty($result) || empty($result['content'])) {
+            return ['success' => false, 'error' => 'Risposta AI vuota'];
         }
 
         // Consume credits

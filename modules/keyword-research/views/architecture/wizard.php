@@ -283,6 +283,7 @@ function architectureWizard() {
                     method: 'POST',
                     body: formData,
                 });
+                if (!resp.ok) { throw new Error('Errore server: ' + resp.status); }
                 const data = await resp.json();
 
                 if (!data.success) {
@@ -366,6 +367,7 @@ function architectureWizard() {
             }
             try {
                 const resp = await fetch(`<?= url('/keyword-research/project/' . $project['id'] . '/architecture/collection-results') ?>?research_id=${this.researchId}`);
+                if (!resp.ok) { throw new Error('Errore server: ' + resp.status); }
                 const data = await resp.json();
                 if (data.success && data.status === 'collecting') {
                     setTimeout(() => this.pollCollectionResults(attempts + 1), 2000);
@@ -404,6 +406,7 @@ function architectureWizard() {
                     method: 'POST',
                     body: formData,
                 });
+                if (!resp.ok) { throw new Error('Errore server: ' + resp.status); }
                 const data = await resp.json();
 
                 if (!data.success) {

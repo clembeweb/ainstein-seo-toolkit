@@ -175,6 +175,16 @@ class ArticleController
             exit;
         }
 
+        // Route credits to project owner
+        $project = null;
+        if (!empty($keyword['project_id'])) {
+            $projectModel = new Project();
+            $project = $projectModel->findAccessible($keyword['project_id'], $user['id']);
+        }
+        $creditUserId = $project
+            ? \Services\ProjectAccessService::getCreditUserId($project, $user['id'])
+            : $user['id'];
+
         // Calculate credits needed
         $scrapeCostPerUrl = Credits::getCost('content_scrape', 'ai-content');
         $generateCost = Credits::getCost('article_generation', 'ai-content');
@@ -182,7 +192,7 @@ class ArticleController
         $totalCredits = $scrapeCredits + $generateCost;
 
         // Check credits
-        if (!Credits::hasEnough($user['id'], $totalCredits)) {
+        if (!Credits::hasEnough($creditUserId, $totalCredits)) {
             echo json_encode([
                 'success' => false,
                 'error' => "Crediti insufficienti. Richiesti: {$totalCredits} (scraping: {$scrapeCredits} + generazione: {$generateCost})"
@@ -216,7 +226,7 @@ class ArticleController
 
             // Consume credits upfront
             Credits::consume(
-                $user['id'],
+                $creditUserId,
                 $totalCredits,
                 'article_generation',
                 'ai-content',
@@ -260,14 +270,19 @@ class ArticleController
      */
     public function progress(int $id): void
     {
+        ignore_user_abort(true);
+        set_time_limit(0);
+
         $user = Auth::user();
 
         // Verify ownership
-        $article = $this->article->find($id);
+        $article = $this->article->find($id, $user['id']);
         if (!$article) {
             http_response_code(404);
             exit;
         }
+
+        session_write_close();
 
         // Set SSE headers
         header('Content-Type: text/event-stream');
@@ -338,7 +353,7 @@ class ArticleController
         $user = Auth::user();
 
         // Verify ownership
-        $article = $this->article->find($id);
+        $article = $this->article->find($id, $user['id']);
         if (!$article) {
             if ($this->isAjax()) {
                 header('Content-Type: application/json');
@@ -405,18 +420,29 @@ class ArticleController
         $user = Auth::user();
 
         // Verify ownership
-        $article = $this->article->find($id);
+        $article = $this->article->find($id, $user['id']);
 
-        // Get project_id for redirect (before deletion)
+        if (!$article) {
+            $_SESSION['_flash']['error'] = 'Articolo non trovato';
+            header('Location: ' . url('/ai-content/articles'));
+            exit;
+        }
+
+        // Get project_id for redirect (after null check)
         $projectId = $article['project_id'] ?? null;
         $redirectUrl = $projectId
             ? url('/ai-content/projects/' . $projectId . '/articles')
             : url('/ai-content/articles');
 
-        if (!$article) {
-            $_SESSION['_flash']['error'] = 'Articolo non trovato';
-            header('Location: ' . $redirectUrl);
-            exit;
+        // Viewer check: if article belongs to a shared project, check access role
+        if ($projectId) {
+            $projectModel = new Project();
+            $project = $projectModel->findAccessible($projectId, $user['id']);
+            if ($project && ($project['access_role'] ?? 'owner') === 'viewer') {
+                $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+                header('Location: ' . $redirectUrl);
+                exit;
+            }
         }
 
         // Cannot delete published articles
@@ -455,11 +481,27 @@ class ArticleController
         $user = Auth::user();
 
         // Verify ownership
-        $article = $this->article->find($id);
+        $article = $this->article->find($id, $user['id']);
         if (!$article) {
             echo json_encode(['success' => false, 'error' => 'Articolo non trovato']);
             exit;
         }
+
+        // Viewer check: if article belongs to a shared project, check access role
+        $project = null;
+        if (!empty($article['project_id'])) {
+            $projectModel = new Project();
+            $project = $projectModel->findAccessible($article['project_id'], $user['id']);
+            if ($project && ($project['access_role'] ?? 'owner') === 'viewer') {
+                echo json_encode(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
+                exit;
+            }
+        }
+
+        // Route credits to project owner
+        $creditUserId = $project
+            ? \Services\ProjectAccessService::getCreditUserId($project, $user['id'])
+            : $user['id'];
 
         // Cannot regenerate published articles
         if ($article['status'] === 'published') {
@@ -475,7 +517,7 @@ class ArticleController
 
         // 1. Check credits BEFORE
         $generateCost = Credits::getCost('article_generation', 'ai-content');
-        if (!Credits::hasEnough($user['id'], $generateCost)) {
+        if (!Credits::hasEnough($creditUserId, $generateCost)) {
             echo json_encode([
                 'success' => false,
                 'error' => 'Crediti insufficienti. Richiesti: ' . $generateCost
@@ -524,7 +566,7 @@ class ArticleController
 
             // 7. Consume credits ONLY on success
             Credits::consume(
-                $user['id'],
+                $creditUserId,
                 $generateCost,
                 'article_regeneration',
                 'ai-content',
@@ -570,10 +612,20 @@ class ArticleController
         $user = Auth::user();
 
         // Verify ownership
-        $article = $this->article->find($id);
+        $article = $this->article->find($id, $user['id']);
         if (!$article) {
             echo json_encode(['success' => false, 'error' => 'Articolo non trovato']);
             exit;
+        }
+
+        // Viewer check: if article belongs to a shared project, check access role
+        if (!empty($article['project_id'])) {
+            $projectModel = new Project();
+            $project = $projectModel->findAccessible($article['project_id'], $user['id']);
+            if ($project && ($project['access_role'] ?? 'owner') === 'viewer') {
+                echo json_encode(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
+                exit;
+            }
         }
 
         // Only reset if status is "generating"
@@ -710,9 +762,19 @@ class ArticleController
             exit;
         }
 
+        // Route credits to project owner
+        $project = null;
+        if (!empty($article['project_id'])) {
+            $projectModel = new Project();
+            $project = $projectModel->findAccessible($article['project_id'], $user['id']);
+        }
+        $creditUserId = $project
+            ? \Services\ProjectAccessService::getCreditUserId($project, $user['id'])
+            : $user['id'];
+
         // Check credits
         $coverCost = Credits::getCost('cover_image_generation', 'ai-content');
-        if (!Credits::hasEnough($user['id'], $coverCost)) {
+        if (!Credits::hasEnough($creditUserId, $coverCost)) {
             echo json_encode([
                 'success' => false,
                 'error' => "Crediti insufficienti. Richiesti: {$coverCost}"
@@ -748,7 +810,7 @@ class ArticleController
 
             $this->article->updateCoverImage($id, $coverResult['path']);
 
-            Credits::consume($user['id'], $coverCost, 'cover_image_generation', 'ai-content', [
+            Credits::consume($creditUserId, $coverCost, 'cover_image_generation', 'ai-content', [
                 'article_id' => $id
             ]);
 
@@ -779,7 +841,7 @@ class ArticleController
 
         $user = Auth::user();
 
-        $article = $this->article->find($id);
+        $article = $this->article->find($id, $user['id']);
         if (!$article) {
             echo json_encode(['success' => false, 'error' => 'Articolo non trovato']);
             exit;
@@ -807,7 +869,7 @@ class ArticleController
     {
         $user = Auth::user();
 
-        $article = $this->article->find($id);
+        $article = $this->article->find($id, $user['id']);
         if (!$article || empty($article['cover_image_path'])) {
             http_response_code(404);
             exit;

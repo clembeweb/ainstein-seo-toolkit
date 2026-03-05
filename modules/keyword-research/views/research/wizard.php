@@ -394,6 +394,7 @@ function researchWizard() {
                     method: 'POST',
                     body: formData,
                 });
+                if (!resp.ok) { throw new Error('Errore server: ' + resp.status); }
                 const data = await resp.json();
 
                 if (!data.success) {
@@ -496,6 +497,7 @@ function researchWizard() {
             }
             try {
                 const resp = await fetch(`<?= url('/keyword-research/project/' . $project['id'] . '/research/collection-results') ?>?research_id=${this.researchId}`);
+                if (!resp.ok) { throw new Error('Errore server: ' + resp.status); }
                 const data = await resp.json();
                 if (data.success && data.status === 'collecting') {
                     // Ancora in corso, riprova tra 2 secondi
@@ -533,6 +535,7 @@ function researchWizard() {
                     method: 'POST',
                     body: formData,
                 });
+                if (!resp.ok) { throw new Error('Errore server: ' + resp.status); }
                 const data = await resp.json();
 
                 if (!data.success) {

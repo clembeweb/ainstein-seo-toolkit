@@ -61,6 +61,12 @@ class ArchitectureController
             return;
         }
 
+        // Viewer cannot perform write operations
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            echo json_encode(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
+            return;
+        }
+
         $brief = [
             'business' => trim($_POST['business'] ?? ''),
             'target' => trim($_POST['target'] ?? 'B2B'),
@@ -244,38 +250,52 @@ class ArchitectureController
 
     public function aiAnalyze(int $projectId): void
     {
+        ignore_user_abort(true);
         set_time_limit(0);
+        ob_start();
         header('Content-Type: application/json');
+        session_write_close();
 
         $user = Auth::user();
         $project = $this->projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato.']);
-            return;
+            exit;
+        }
+
+        // Viewer cannot perform write operations
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            ob_end_clean();
+            echo json_encode(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
+            exit;
         }
 
         $researchId = (int) ($_POST['research_id'] ?? 0);
         $research = $this->researchModel->find($researchId);
 
         if (!$research || $research['project_id'] !== $projectId) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Ricerca non trovata.']);
-            return;
+            exit;
         }
 
         $keywordsJson = $_POST['keywords'] ?? '[]';
         $keywords = json_decode($keywordsJson, true);
 
         if (empty($keywords)) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Nessuna keyword da analizzare.']);
-            return;
+            exit;
         }
 
         $cost = (float) (ModuleLoader::getSetting('keyword-research', 'cost_kr_ai_architecture') ?? 5);
 
         if (!Credits::hasEnough($user['id'], $cost)) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => "Crediti insufficienti. Richiesti: {$cost}"]);
-            return;
+            exit;
         }
 
         $brief = json_decode($research['brief'], true);
@@ -338,8 +358,9 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
         $ai = new AiService('keyword-research');
 
         if (!$ai->isConfigured()) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'AI non configurata.']);
-            return;
+            exit;
         }
 
         $aiStart = microtime(true);
@@ -350,8 +371,9 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
 
         if (isset($aiResult['error']) && $aiResult['error']) {
             $this->researchModel->updateStatus($researchId, 'error');
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => $aiResult['message'] ?? 'Errore AI.']);
-            return;
+            exit;
         }
 
         $aiContent = $aiResult['result'] ?? '';
@@ -363,8 +385,9 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
 
         if ($parsed === null) {
             $this->researchModel->updateStatus($researchId, 'error');
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Impossibile parsare la risposta AI.']);
-            return;
+            exit;
         }
 
         $clusters = $parsed['clusters'] ?? [];
@@ -429,7 +452,8 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
             ]);
         }
 
-        Credits::consume($user['id'], $cost, 'kr_ai_architecture', 'keyword-research', [
+        $ownerId = \Services\ProjectAccessService::getOwnerId($project['global_project_id'] ?? $project['id']);
+        Credits::consume($ownerId ?? $user['id'], $cost, 'kr_ai_architecture', 'keyword-research', [
             'research_id' => $researchId,
             'keywords_count' => count($keywords),
         ]);
@@ -442,6 +466,7 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
             'status' => 'completed',
         ]);
 
+        ob_end_clean();
         echo json_encode([
             'success' => true,
             'research_id' => $researchId,
@@ -449,6 +474,7 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
             'credits_used' => $cost,
             'redirect' => url('/keyword-research/project/' . $projectId . '/architecture/' . $researchId),
         ]);
+        exit;
     }
 
     public function results(int $projectId, int $researchId): string
@@ -521,6 +547,12 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
 
         if (!$project || !$research || $research['project_id'] !== $projectId) {
             echo json_encode(['success' => false, 'error' => 'Dati non trovati.']);
+            return;
+        }
+
+        // Viewer cannot perform write operations
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            echo json_encode(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
             return;
         }
 

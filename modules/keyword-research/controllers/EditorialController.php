@@ -78,6 +78,12 @@ class EditorialController
             return;
         }
 
+        // Viewer cannot perform write operations
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            echo json_encode(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
+            return;
+        }
+
         $rawCategories = $_POST['categories'] ?? '';
         if (is_array($rawCategories)) {
             $categories = array_filter(array_map('trim', $rawCategories));
@@ -375,6 +381,13 @@ class EditorialController
                 exit;
             }
 
+            // Viewer cannot perform write operations
+            if (($project['access_role'] ?? 'owner') === 'viewer') {
+                ob_end_clean();
+                echo json_encode(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
+                exit;
+            }
+
             $researchId = (int) ($_POST['research_id'] ?? 0);
             $research = $this->researchModel->find($researchId);
 
@@ -517,8 +530,9 @@ class EditorialController
                 }
             }
 
-            // Consuma crediti
-            Credits::consume($user['id'], $cost, 'kr_editorial_plan', 'keyword-research', [
+            // Consuma crediti (owner billing per shared projects)
+            $ownerId = \Services\ProjectAccessService::getOwnerId($project['global_project_id'] ?? $project['id']);
+            Credits::consume($ownerId ?? $user['id'], $cost, 'kr_editorial_plan', 'keyword-research', [
                 'research_id' => $researchId,
                 'articles_count' => $totalArticles,
             ]);
@@ -664,6 +678,12 @@ class EditorialController
 
         if (!$project || !$research || $research['project_id'] !== $projectId) {
             echo json_encode(['success' => false, 'error' => 'Dati non trovati.']);
+            return;
+        }
+
+        // Viewer cannot perform write operations
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            echo json_encode(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
             return;
         }
 

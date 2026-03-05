@@ -14,7 +14,7 @@
     <div class="bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10">
         <?php if (!empty($error)): ?>
         <div class="mb-4 p-4 rounded-lg bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400">
-            <?= $error ?>
+            <?= htmlspecialchars($error ?? '', ENT_QUOTES, 'UTF-8') ?>
         </div>
         <?php endif; ?>
 

@@ -714,6 +714,7 @@
 
                 try {
                     const resp = await fetch('<?= url('/keyword-research/quick-check/project-groups') ?>?project_id=' + this.stSelectedProject);
+                    if (!resp.ok) { throw new Error('Errore server: ' + resp.status); }
                     const data = await resp.json();
                     if (data.success) {
                         this.stProjectGroups = data.groups;
@@ -756,6 +757,7 @@
                         body: formData,
                     });
 
+                    if (!resp.ok) { throw new Error('Errore server: ' + resp.status); }
                     const data = await resp.json();
 
                     if (data.success) {

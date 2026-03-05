@@ -277,7 +277,7 @@ Router::post('/register', function () {
         $_SESSION['_old_input'] = ['name' => $name, 'email' => $email];
         return View::render('auth/register', [
             'title' => 'Registrazione',
-            'error' => implode('<br>', $errors),
+            'error' => implode('. ', $errors),
         ], null);
     }
 
@@ -439,7 +439,7 @@ Router::post('/reset-password', function () {
     if (!empty($errors)) {
         return View::render('auth/reset-password', [
             'title' => 'Reimposta Password',
-            'error' => implode('<br>', $errors),
+            'error' => implode('. ', $errors),
             'token' => $token,
         ], null);
     }
@@ -586,9 +586,12 @@ Router::get('/profile', function () {
 
     $user = Auth::user();
 
+    $plan = Database::fetch("SELECT * FROM plans WHERE id = ?", [$user['plan_id'] ?? 0]);
+
     return View::render('profile', [
         'title' => 'Profilo',
         'user' => $user,
+        'plan' => $plan,
         'modules' => ModuleLoader::getUserModules($user['id']),
         'notificationPrefs' => \Services\NotificationService::getPreferences($user['id']),
     ]);
@@ -680,6 +683,7 @@ Router::post('/onboarding/welcome/complete', function () {
     Middleware::auth();
     Middleware::csrf();
     OnboardingService::completeWelcome(Auth::id());
+    header('Content-Type: application/json');
     echo json_encode(['success' => true]);
 });
 
@@ -687,6 +691,7 @@ Router::post('/onboarding/{moduleSlug}/complete', function (string $moduleSlug) 
     Middleware::auth();
     Middleware::csrf();
     OnboardingService::completeModule(Auth::id(), $moduleSlug);
+    header('Content-Type: application/json');
     echo json_encode(['success' => true]);
 });
 
@@ -694,12 +699,14 @@ Router::post('/onboarding/{moduleSlug}/reset', function (string $moduleSlug) {
     Middleware::auth();
     Middleware::csrf();
     OnboardingService::resetModule(Auth::id(), $moduleSlug);
+    header('Content-Type: application/json');
     echo json_encode(['success' => true]);
 });
 
 Router::get('/onboarding/status', function () {
     Middleware::auth();
     $userId = Auth::id();
+    header('Content-Type: application/json');
     echo json_encode([
         'success' => true,
         'welcome_completed' => OnboardingService::isWelcomeCompleted($userId),

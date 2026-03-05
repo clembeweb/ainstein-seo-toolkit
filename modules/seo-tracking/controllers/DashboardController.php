@@ -609,6 +609,11 @@ class DashboardController
             return;
         }
 
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            $this->jsonResponse(['success' => false, 'error' => 'Non hai i permessi per questa operazione'], 403);
+            return;
+        }
+
         Database::query(
             "DELETE FROM st_gsc_data WHERE id = ? AND project_id = ?",
             [$keywordId, $projectId]
@@ -627,6 +632,11 @@ class DashboardController
 
         if (!$project) {
             $this->jsonResponse(['success' => false, 'error' => 'Progetto non trovato'], 404);
+            return;
+        }
+
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            $this->jsonResponse(['success' => false, 'error' => 'Non hai i permessi per questa operazione'], 403);
             return;
         }
 

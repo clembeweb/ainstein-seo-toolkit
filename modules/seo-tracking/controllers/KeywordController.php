@@ -222,6 +222,12 @@ class KeywordController
             return;
         }
 
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/seo-tracking/project/' . $projectId . '/keywords');
+            return;
+        }
+
         $keywordsInput = trim($_POST['keywords'] ?? '');
         $groupName = trim($_POST['group_name'] ?? '');
         $locationCode = trim($_POST['location_code'] ?? 'IT');
@@ -278,6 +284,7 @@ class KeywordController
 
         // Auto-fetch dati keyword se richiesto
         $fetchedMsg = '';
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
         if ($autoFetch && $added > 0 && !empty($keywordIds)) {
             // Verifica DataForSEO configurato
             $dataForSeo = new \Services\DataForSeoService();
@@ -286,12 +293,12 @@ class KeywordController
                 // Calcola costo: 1 credito/kw (livello Base)
                 $cost = $added * 1;
 
-                if (Credits::hasEnough($user['id'], $cost)) {
+                if (Credits::hasEnough($creditUserId, $cost)) {
                     // Aggiorna volumi solo per le keyword appena inserite
                     $result = $this->keyword->updateSearchVolumesForIds($keywordIds);
 
                     Database::reconnect();
-                    Credits::consume($user['id'], $cost, 'auto_fetch_volumes', 'seo-tracking', [
+                    Credits::consume($creditUserId, $cost, 'auto_fetch_volumes', 'seo-tracking', [
                         'project_id' => $projectId,
                         'keywords' => $added,
                         'updated' => $result['updated'] ?? 0,
@@ -406,6 +413,12 @@ class KeywordController
             return;
         }
 
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/seo-tracking/project/' . $projectId . '/keywords');
+            return;
+        }
+
         $keyword = $this->keyword->find($keywordId);
 
         if (!$keyword || (int)$keyword['project_id'] !== $projectId) {
@@ -465,6 +478,15 @@ class KeywordController
             return null;
         }
 
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            if ($isAjax) {
+                return View::json(['success' => false, 'error' => 'Non hai i permessi per questa operazione'], 403);
+            }
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/seo-tracking/project/' . $projectId . '/keywords');
+            return null;
+        }
+
         $this->keyword->delete($keywordId);
 
         if ($isAjax) {
@@ -494,6 +516,10 @@ class KeywordController
             return View::json(['error' => 'Progetto non trovato'], 403);
         }
 
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            return View::json(['success' => false, 'error' => 'Non hai i permessi per questa operazione'], 403);
+        }
+
         $input = json_decode(file_get_contents('php://input'), true);
         $track = $input['track'] ?? !$keyword['is_tracked'];
 
@@ -513,6 +539,12 @@ class KeywordController
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
             Router::redirect('/seo-tracking');
+            return;
+        }
+
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/seo-tracking/project/' . $projectId . '/keywords');
             return;
         }
 
@@ -626,6 +658,12 @@ class KeywordController
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
             Router::redirect('/seo-tracking');
+            return;
+        }
+
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/seo-tracking/project/' . $projectId . '/keywords');
             return;
         }
 
@@ -794,6 +832,10 @@ class KeywordController
             return View::json(['success' => false, 'error' => 'Progetto non trovato'], 404);
         }
 
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            return View::json(['success' => false, 'error' => 'Non hai i permessi per questa operazione'], 403);
+        }
+
         $result = $this->keyword->updateSearchVolumes($projectId);
 
         return View::json($result);
@@ -917,6 +959,9 @@ class KeywordController
             return View::json(['success' => false, 'error' => 'Nessun provider volumi configurato. Vai in Admin > Impostazioni per configurare RapidAPI, DataForSEO o Keywords Everywhere']);
         }
 
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
         // Verifica se sono stati passati ID specifici
         $keywordIds = $_POST['keyword_ids'] ?? [];
 
@@ -929,10 +974,10 @@ class KeywordController
             $cost = $this->calculateRefreshCost($keywordCount, 'volumes');
 
             // Verifica crediti
-            if (!Credits::hasEnough($user['id'], $cost)) {
+            if (!Credits::hasEnough($creditUserId, $cost)) {
                 return View::json([
                     'success' => false,
-                    'error' => "Crediti insufficienti. Richiesti: {$cost}, disponibili: " . Credits::getBalance($user['id'])
+                    'error' => "Crediti insufficienti. Richiesti: {$cost}, disponibili: " . Credits::getBalance($creditUserId)
                 ]);
             }
 
@@ -949,10 +994,10 @@ class KeywordController
             $cost = $this->calculateRefreshCost($keywordCount, 'volumes');
 
             // Verifica crediti
-            if (!Credits::hasEnough($user['id'], $cost)) {
+            if (!Credits::hasEnough($creditUserId, $cost)) {
                 return View::json([
                     'success' => false,
-                    'error' => "Crediti insufficienti. Richiesti: {$cost}, disponibili: " . Credits::getBalance($user['id'])
+                    'error' => "Crediti insufficienti. Richiesti: {$cost}, disponibili: " . Credits::getBalance($creditUserId)
                 ]);
             }
 
@@ -966,7 +1011,7 @@ class KeywordController
 
         // Consuma crediti
         Database::reconnect();
-        Credits::consume($user['id'], $cost, 'refresh_volumes', 'seo-tracking', [
+        Credits::consume($creditUserId, $cost, 'refresh_volumes', 'seo-tracking', [
             'project_id' => $projectId,
             'keywords' => $keywordCount,
             'updated' => $result['updated'] ?? 0,
@@ -990,6 +1035,9 @@ class KeywordController
         if (!$project) {
             return View::json(['success' => false, 'error' => 'Progetto non trovato'], 404);
         }
+
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
 
         // Verifica RankChecker configurato
         $rankChecker = new RankCheckerService();
@@ -1024,10 +1072,10 @@ class KeywordController
         $cost = $this->calculateRefreshCost($keywordCount, 'positions');
 
         // Verifica crediti
-        if (!Credits::hasEnough($user['id'], $cost)) {
+        if (!Credits::hasEnough($creditUserId, $cost)) {
             return View::json([
                 'success' => false,
-                'error' => "Crediti insufficienti. Richiesti: {$cost}, disponibili: " . Credits::getBalance($user['id'])
+                'error' => "Crediti insufficienti. Richiesti: {$cost}, disponibili: " . Credits::getBalance($creditUserId)
             ]);
         }
 
@@ -1118,7 +1166,7 @@ class KeywordController
 
         // Consuma crediti
         Database::reconnect();
-        Credits::consume($user['id'], $cost, 'refresh_positions', 'seo-tracking', [
+        Credits::consume($creditUserId, $cost, 'refresh_positions', 'seo-tracking', [
             'project_id' => $projectId,
             'keywords' => $keywordCount,
             'updated' => $updated,
@@ -1131,7 +1179,7 @@ class KeywordController
             'not_found' => $notFound,
             'total' => $keywordCount,
             'credits_used' => $cost,
-            'new_balance' => Credits::getBalance($user['id']),
+            'new_balance' => Credits::getBalance($creditUserId),
             'message' => "Posizioni aggiornate: {$updated} trovate" . ($notFound > 0 ? ", {$notFound} non in top 100" : ''),
             'details' => $details,
             'errors' => $errors,
@@ -1187,6 +1235,9 @@ class KeywordController
             return View::json(['success' => false, 'error' => 'Nessuna keyword da aggiornare']);
         }
 
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
         // Calcola costo totale
         $volumeCost = $hasVolumeProvider ? $this->calculateRefreshCost($allCount, 'volumes') : 0;
         $positionCost = $rankChecker->isConfigured() && $trackedCount > 0
@@ -1195,10 +1246,10 @@ class KeywordController
         $totalCost = $volumeCost + $positionCost;
 
         // Verifica crediti
-        if (!Credits::hasEnough($user['id'], $totalCost)) {
+        if (!Credits::hasEnough($creditUserId, $totalCost)) {
             return View::json([
                 'success' => false,
-                'error' => "Crediti insufficienti. Richiesti: {$totalCost}, disponibili: " . Credits::getBalance($user['id'])
+                'error' => "Crediti insufficienti. Richiesti: {$totalCost}, disponibili: " . Credits::getBalance($creditUserId)
             ]);
         }
 
@@ -1307,7 +1358,7 @@ class KeywordController
 
         // Consuma crediti
         Database::reconnect();
-        Credits::consume($user['id'], $totalCost, 'refresh_all', 'seo-tracking', [
+        Credits::consume($creditUserId, $totalCost, 'refresh_all', 'seo-tracking', [
             'project_id' => $projectId,
             'volumes' => $results['volumes'],
             'positions' => $results['positions'],
@@ -1384,12 +1435,15 @@ class KeywordController
             exit;
         }
 
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
         // Verifica crediti
         $totalCost = count($keywordIds) * self::POSITION_CREDIT_COST;
-        if (!Credits::hasEnough($user['id'], $totalCost)) {
+        if (!Credits::hasEnough($creditUserId, $totalCost)) {
             echo json_encode([
                 'success' => false,
-                'error' => "Crediti insufficienti. Necessari: {$totalCost}, disponibili: " . Credits::getBalance($user['id'])
+                'error' => "Crediti insufficienti. Necessari: {$totalCost}, disponibili: " . Credits::getBalance($creditUserId)
             ]);
             exit;
         }
@@ -1467,6 +1521,9 @@ class KeywordController
             header('HTTP/1.1 404 Not Found');
             exit('Progetto non trovato');
         }
+
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
 
         $jobId = (int) ($_GET['job_id'] ?? 0);
         if (!$jobId) {
@@ -1637,7 +1694,7 @@ class KeywordController
                 $queueModel->markCompleted($item['id'], $result['position'], $result['url'], $checkId);
 
                 // Scala crediti
-                Credits::consume($user['id'], self::POSITION_CREDIT_COST, 'refresh_positions', 'seo-tracking', [
+                Credits::consume($creditUserId, self::POSITION_CREDIT_COST, 'refresh_positions', 'seo-tracking', [
                     'keyword' => $item['keyword'],
                     'project_id' => $projectId,
                     'job_id' => $jobId,

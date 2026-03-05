@@ -35,11 +35,15 @@ class SerpController
 
         $user = Auth::user();
 
-        // Find keyword
+        // Find keyword with ownership check
         $keyword = $this->keyword->find($id);
-
         if (!$keyword) {
             echo json_encode(['success' => false, 'error' => 'Keyword non trovata']);
+            exit;
+        }
+        $project = Project::findAccessible($user['id'], $keyword['project_id']);
+        if (!$project) {
+            echo json_encode(['success' => false, 'error' => 'Non autorizzato']);
             exit;
         }
 

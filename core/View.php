@@ -9,7 +9,7 @@ class View
 
     public static function render(string $view, array $data = [], ?string $layout = null): string
     {
-        self::$data = array_merge(self::$data, $data);
+        self::$data = $data;
 
         $viewPath = self::resolvePath($view);
 

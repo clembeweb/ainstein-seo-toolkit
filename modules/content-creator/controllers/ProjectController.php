@@ -75,7 +75,7 @@ class ProjectController
         if (strlen($name) > 255) {
             $errors[] = 'Il nome non può superare 255 caratteri';
         }
-        if (!in_array($contentType, ['product', 'category', 'article', 'custom'])) {
+        if (!in_array($contentType, ['product', 'category', 'article', 'service', 'custom'])) {
             $contentType = 'product';
         }
 

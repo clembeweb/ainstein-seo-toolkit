@@ -41,6 +41,7 @@
         <div class="px-4 py-5 sm:p-6">
             <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white">Cambia password</h3>
 
+            <?php if (!empty($user['password'])): ?>
             <form action="<?= \Core\Router::url('/profile/password') ?>" method="POST" class="mt-6 space-y-6">
                 <?= csrf_field() ?>
 
@@ -70,6 +71,13 @@
                     </button>
                 </div>
             </form>
+            <?php else: ?>
+            <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <p class="text-sm text-blue-700 dark:text-blue-300">
+                    Hai effettuato la registrazione tramite Google. La password non e gestita da Ainstein.
+                </p>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 

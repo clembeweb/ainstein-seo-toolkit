@@ -5,6 +5,7 @@ namespace Modules\ContentCreator\Controllers;
 use Core\View;
 use Core\Auth;
 use Core\Router;
+use Core\Middleware;
 use Core\ModuleLoader;
 use Modules\ContentCreator\Models\Connector;
 use Modules\ContentCreator\Services\Connectors\ConnectorInterface;
@@ -60,6 +61,7 @@ class ConnectorController
      */
     public function store(): void
     {
+        Middleware::csrf();
         $user = Auth::user();
 
         $name = trim($_POST['name'] ?? '');
@@ -170,6 +172,7 @@ class ConnectorController
      */
     public function test(int $id): void
     {
+        Middleware::csrf();
         header('Content-Type: application/json');
 
         $user = Auth::user();
@@ -208,6 +211,7 @@ class ConnectorController
      */
     public function delete(int $id): void
     {
+        Middleware::csrf();
         $user = Auth::user();
         $connector = $this->connector->findByUser($id, $user['id']);
 
@@ -240,6 +244,7 @@ class ConnectorController
      */
     public function toggle(int $id): void
     {
+        Middleware::csrf();
         header('Content-Type: application/json');
 
         $user = Auth::user();

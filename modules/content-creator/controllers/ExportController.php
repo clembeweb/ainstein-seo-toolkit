@@ -64,7 +64,7 @@ class ExportController
 
         $project = $this->getProject($id, $user['id']);
         if (!$project) {
-            $_SESSION['flash_error'] = 'Progetto non trovato';
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
             header('Location: /content-creator');
             exit;
         }
@@ -77,7 +77,7 @@ class ExportController
         });
 
         if (empty($urls)) {
-            $_SESSION['flash_error'] = 'Nessuna URL da esportare';
+            $_SESSION['_flash']['error'] = 'Nessuna URL da esportare';
             header("Location: /content-creator/projects/{$id}/results");
             exit;
         }

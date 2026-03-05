@@ -204,12 +204,16 @@ class ReportController
         }
 
         // Per ora output come HTML stampabile
+        $safeTitle = htmlspecialchars($report['title'], ENT_QUOTES, 'UTF-8');
+        $safeName = htmlspecialchars($project['name'], ENT_QUOTES, 'UTF-8');
+        $safeDomain = htmlspecialchars($project['domain'], ENT_QUOTES, 'UTF-8');
+
         header('Content-Type: text/html; charset=utf-8');
-        echo "<!DOCTYPE html><html><head><title>{$report['title']}</title>";
+        echo "<!DOCTYPE html><html><head><title>{$safeTitle}</title>";
         echo "<style>body{font-family:system-ui;max-width:800px;margin:40px auto;padding:20px;line-height:1.6}</style>";
         echo "</head><body>";
-        echo "<h1>{$report['title']}</h1>";
-        echo "<p><small>{$project['name']} - {$project['domain']}</small></p>";
+        echo "<h1>{$safeTitle}</h1>";
+        echo "<p><small>{$safeName} - {$safeDomain}</small></p>";
         echo "<hr>";
         echo \Parsedown::instance()->text($report['content']);
         echo "</body></html>";

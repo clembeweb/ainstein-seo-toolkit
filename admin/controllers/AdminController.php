@@ -529,10 +529,14 @@ class AdminController
         }
         if (isset($_POST['email_logo_url'])) {
             $emailLogoUrl = trim($_POST['email_logo_url']);
+            if ($emailLogoUrl && !filter_var($emailLogoUrl, FILTER_VALIDATE_URL)) {
+                $_SESSION['_flash']['error'] = 'URL logo non valido';
+                Router::redirect('/admin/settings');
+            }
             Settings::set('email_logo_url', $emailLogoUrl, $userId);
         }
         if (isset($_POST['email_footer_text'])) {
-            $emailFooterText = trim($_POST['email_footer_text']);
+            $emailFooterText = strip_tags(trim($_POST['email_footer_text']), '<a><br><p><strong><em>');
             Settings::set('email_footer_text', $emailFooterText, $userId);
         }
 
