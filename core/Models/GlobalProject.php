@@ -860,11 +860,16 @@ class GlobalProject
                     return Database::insert('aic_projects', $insertData);
 
                 case 'seo-audit':
+                    // Normalizza dominio: aggiungi https:// se manca schema
+                    $baseUrl = $domain ?: null;
+                    if ($baseUrl && !preg_match('#^https?://#i', $baseUrl)) {
+                        $baseUrl = 'https://' . $baseUrl;
+                    }
                     $projectId = Database::insert('sa_projects', [
                         'user_id' => $userId,
                         'global_project_id' => $globalProjectId,
                         'name' => $name,
-                        'base_url' => $domain ?: null,
+                        'base_url' => $baseUrl,
                         'status' => 'pending',
                     ]);
                     // Crea record configurazione sito

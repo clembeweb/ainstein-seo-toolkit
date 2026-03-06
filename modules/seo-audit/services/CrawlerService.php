@@ -35,7 +35,7 @@ class CrawlerService
     private int $timeout = 20;            // timeout HTTP in secondi
     private int $maxDepth = 5;            // profondità massima link
     private int $maxRetries = 2;          // tentativi su errore
-    private string $userAgent = 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)';
+    private string $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36';
     private bool $followRedirects = true;
     private bool $respectRobots = true;
 
@@ -213,7 +213,7 @@ class CrawlerService
         }
 
         // Nessun URL pre-importato: spider ricorsivo dalla homepage
-        $baseUrl = $this->project['base_url'];
+        $baseUrl = $this->ensureScheme($this->project['base_url']);
         $maxPages = $this->project['max_pages'] ?? 500;
 
         // Spider dalla homepage
@@ -484,6 +484,18 @@ class CrawlerService
     }
 
     /**
+     * Assicura che un URL abbia lo schema (https:// di default)
+     */
+    private function ensureScheme(string $url): string
+    {
+        $url = trim($url);
+        if (!preg_match('#^https?://#i', $url)) {
+            $url = 'https://' . $url;
+        }
+        return $url;
+    }
+
+    /**
      * Estrai tutti i link da HTML - regex robusta
      */
     private function extractAllLinks(string $html, string $currentUrl): array
@@ -627,7 +639,7 @@ class CrawlerService
         $data['images_data'] = json_encode($images);
 
         // Links
-        $links = $this->scraperService->extractLinks($html, $this->project['base_url']);
+        $links = $this->scraperService->extractLinks($html, $this->ensureScheme($this->project['base_url']));
         $data['internal_links_count'] = count($links['internal'] ?? []);
         $data['external_links_count'] = count($links['external'] ?? []);
         $data['links_data'] = json_encode($links);
@@ -768,7 +780,7 @@ class CrawlerService
      */
     private function saveSiteConfigForSpider(): void
     {
-        $baseUrl = $this->project['base_url'];
+        $baseUrl = $this->ensureScheme($this->project['base_url']);
 
         // Fetch robots.txt
         $robotsUrl = rtrim($baseUrl, '/') . '/robots.txt';
