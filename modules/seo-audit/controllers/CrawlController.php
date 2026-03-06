@@ -94,7 +94,7 @@ class CrawlController
             'request_delay' => max(0, min((int) ($_POST['request_delay'] ?? 200), 5000)),
             'timeout' => max(5, min((int) ($_POST['timeout'] ?? 20), 60)),
             'max_retries' => max(0, min((int) ($_POST['max_retries'] ?? 2), 5)),
-            'user_agent' => $_POST['user_agent'] ?? 'googlebot',
+            'user_agent' => $_POST['user_agent'] ?? 'chrome',
             'follow_redirects' => isset($_POST['follow_redirects']) ? 1 : 1,
         ];
 
