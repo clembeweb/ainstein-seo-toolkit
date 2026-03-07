@@ -30,6 +30,7 @@ class LinkStructureController
      */
     public function overview(int $id): string
     {
+        set_time_limit(60);
         $user = Auth::user();
         $project = $this->projectModel->findWithStats($id, $user['id']);
 

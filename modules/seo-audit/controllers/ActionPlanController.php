@@ -85,6 +85,10 @@ class ActionPlanController
      */
     public function generate(int $id): void
     {
+        // La generazione AI può richiedere minuti su siti con molte issue
+        ignore_user_abort(true);
+        set_time_limit(0);
+        ob_start();
         header('Content-Type: application/json');
 
         $user = Auth::user();
@@ -92,6 +96,7 @@ class ActionPlanController
 
         if (!$project) {
             http_response_code(404);
+            if (ob_get_level()) ob_end_clean();
             echo json_encode(['error' => true, 'message' => 'Progetto non trovato']);
             exit;
         }
@@ -100,6 +105,7 @@ class ActionPlanController
         $input = json_decode(file_get_contents('php://input'), true);
         if (empty($input['_csrf_token']) || $input['_csrf_token'] !== csrf_token()) {
             http_response_code(403);
+            if (ob_get_level()) ob_end_clean();
             echo json_encode(['error' => true, 'message' => 'Token CSRF non valido']);
             exit;
         }
@@ -107,6 +113,7 @@ class ActionPlanController
         // Verifica che ci siano issues
         $issueCounts = $this->issueModel->countBySeverity($id);
         if ($issueCounts['total'] === 0) {
+            if (ob_get_level()) ob_end_clean();
             echo json_encode([
                 'error' => true,
                 'message' => 'Nessun problema rilevato. Health Score: 100!'
@@ -114,10 +121,15 @@ class ActionPlanController
             exit;
         }
 
+        // Rilascia sessione prima dell'operazione lunga
+        session_write_close();
+
         // Genera piano
         $sessionId = $project['current_session_id'] ?? null;
         $result = $this->actionPlanService->generatePlan($id, $sessionId, $user['id']);
 
+        Database::reconnect();
+        if (ob_get_level()) ob_end_clean();
         echo json_encode($result);
         exit;
     }

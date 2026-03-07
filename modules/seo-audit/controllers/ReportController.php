@@ -84,6 +84,9 @@ class ReportController
      */
     public function exportPagesCsv(int $id): void
     {
+        ignore_user_abort(true);
+        set_time_limit(120);
+
         $user = Auth::user();
         $project = $this->projectModel->findWithStats($id, $user['id']);
 
@@ -176,6 +179,7 @@ class ReportController
      */
     public function summary(int $id): void
     {
+        set_time_limit(60);
         $user = Auth::user();
         $project = $this->projectModel->findWithStats($id, $user['id']);
 

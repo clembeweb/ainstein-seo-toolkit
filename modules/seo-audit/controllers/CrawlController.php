@@ -277,6 +277,11 @@ class CrawlController
      */
     public function crawlBatch(int $id): void
     {
+        ignore_user_abort(true);
+        set_time_limit(300);
+        ob_start();
+        session_write_close();
+
         $user = Auth::user();
         $project = $this->projectModel->findAccessible($id, $user['id']);
 
