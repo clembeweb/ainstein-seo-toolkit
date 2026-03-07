@@ -299,7 +299,9 @@ class ResearchController
      */
     public function aiAnalyze(int $projectId): void
     {
+        ignore_user_abort(true);
         set_time_limit(0);
+        ob_start();
         header('Content-Type: application/json');
 
         $user = Auth::user();
@@ -403,6 +405,9 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
             return;
         }
 
+        // Rilascia sessione prima dell'operazione lunga
+        session_write_close();
+
         $aiStart = microtime(true);
         $aiResult = $ai->analyzeWithSystem($user['id'], $systemPrompt, $userPrompt, 'keyword-research');
         $aiElapsed = (int) round((microtime(true) - $aiStart) * 1000);
@@ -426,6 +431,7 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
                 // silently fail
             }
 
+            if (ob_get_level()) ob_end_clean();
             echo json_encode(['success' => false, 'error' => $aiResult['message'] ?? 'Errore AI.']);
             return;
         }
@@ -440,6 +446,7 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
 
         if ($parsed === null) {
             $this->researchModel->updateStatus($researchId, 'error');
+            if (ob_get_level()) ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Impossibile parsare la risposta AI. ' . json_last_error_msg()]);
             return;
         }
@@ -538,6 +545,7 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
             // Non-blocking: notification failure should not affect the operation
         }
 
+        if (ob_get_level()) ob_end_clean();
         echo json_encode([
             'success' => true,
             'research_id' => $researchId,

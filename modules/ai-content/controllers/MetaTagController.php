@@ -551,6 +551,9 @@ class MetaTagController
      */
     public function scrape(int $projectId): void
     {
+        ignore_user_abort(true);
+        set_time_limit(300);
+        ob_start();
         header('Content-Type: application/json');
 
         $user = Auth::user();
@@ -587,6 +590,9 @@ class MetaTagController
             ]);
             return;
         }
+
+        // Rilascia sessione prima dell'operazione lunga
+        session_write_close();
 
         $scraper = new ScraperService();
         $scraped = 0;
@@ -631,6 +637,7 @@ class MetaTagController
 
         $stats = $this->metaTag->getStats($projectId);
 
+        if (ob_get_level()) ob_end_clean();
         echo json_encode([
             'success' => true,
             'scraped' => $scraped,
@@ -647,6 +654,9 @@ class MetaTagController
      */
     public function generate(int $projectId): void
     {
+        ignore_user_abort(true);
+        set_time_limit(0);
+        ob_start();
         header('Content-Type: application/json');
 
         $user = Auth::user();
@@ -687,9 +697,13 @@ class MetaTagController
         $ai = new AiService('ai-content');
 
         if (!$ai->isConfigured()) {
+            if (ob_get_level()) ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'AI non configurata']);
             return;
         }
+
+        // Rilascia sessione prima dell'operazione lunga
+        session_write_close();
 
         $generated = 0;
         $errors = 0;
@@ -739,6 +753,7 @@ class MetaTagController
 
         $stats = $this->metaTag->getStats($projectId);
 
+        if (ob_get_level()) ob_end_clean();
         echo json_encode([
             'success' => true,
             'generated' => $generated,
@@ -1082,6 +1097,9 @@ PROMPT;
      */
     public function bulkPublish(int $projectId): void
     {
+        ignore_user_abort(true);
+        set_time_limit(300);
+        ob_start();
         header('Content-Type: application/json');
 
         $user = Auth::user();
@@ -1104,6 +1122,9 @@ PROMPT;
             echo json_encode(['success' => false, 'error' => 'Nessun meta tag da pubblicare']);
             return;
         }
+
+        // Rilascia sessione prima dell'operazione lunga
+        session_write_close();
 
         $published = 0;
         $errors = 0;
@@ -1129,6 +1150,8 @@ PROMPT;
             }
         }
 
+        Database::reconnect();
+        if (ob_get_level()) ob_end_clean();
         echo json_encode([
             'success' => true,
             'published' => $published,

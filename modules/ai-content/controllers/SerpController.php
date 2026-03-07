@@ -31,6 +31,7 @@ class SerpController
      */
     public function extract(int $id): void
     {
+        set_time_limit(60);
         header('Content-Type: application/json');
 
         $user = Auth::user();

@@ -5,6 +5,7 @@ namespace Modules\SeoAudit\Controllers;
 use Core\View;
 use Core\Auth;
 use Core\Credits;
+use Core\Database;
 use Core\Router;
 use Core\ModuleLoader;
 use Modules\SeoAudit\Models\Project;

@@ -399,6 +399,8 @@ class GscController
 
                 $totalRecords += $records;
 
+                Database::reconnect();
+
                 $this->sendSSE([
                     'status' => 'batch_complete',
                     'message' => "{$monthLabel}: {$records} record",
@@ -485,6 +487,9 @@ class GscController
      */
     public function fullSync(int $id): void
     {
+        ignore_user_abort(true);
+        set_time_limit(0);
+
         $user = Auth::user();
         $project = $this->project->findAccessible($id, $user['id']);
 
@@ -517,6 +522,9 @@ class GscController
             return;
         }
 
+        // Rilascia sessione prima dell'operazione lunga
+        session_write_close();
+
         try {
             // Consuma crediti
             Credits::consume($creditUserId, $creditCost, 'gsc_full_sync', 'seo-tracking', [
@@ -525,10 +533,14 @@ class GscController
 
             $result = $this->gscService->fullHistoricalSync($id);
 
+            Database::reconnect();
+            @session_start();
             $_SESSION['_flash']['success'] = 'Sincronizzazione storica completata: ' . $result['records_fetched'] . ' record elaborati';
             Router::redirect('/seo-tracking/project/' . $id . '/dashboard');
 
         } catch (\Exception $e) {
+            Database::reconnect();
+            @session_start();
             $_SESSION['_flash']['error'] = 'Errore sync storico: ' . $e->getMessage();
             Router::redirect('/seo-tracking/project/' . $id . '/settings');
         }

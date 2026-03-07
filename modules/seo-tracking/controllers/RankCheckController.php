@@ -228,6 +228,9 @@ class RankCheckController
      */
     public function checkBulk(int $projectId): void
     {
+        ignore_user_abort(true);
+        set_time_limit(300);
+        ob_start();
         header('Content-Type: application/json');
 
         $user = Auth::user();
@@ -292,6 +295,9 @@ class RankCheckController
                 ]);
                 exit;
             }
+
+            // Rilascia sessione prima dell'operazione lunga
+            session_write_close();
 
             $rankCheckModel = new RankCheck();
             $results = [];
@@ -381,6 +387,8 @@ class RankCheckController
                 usleep(200000); // 200ms
             }
 
+            Database::reconnect();
+            if (ob_get_level()) ob_end_clean();
             echo json_encode([
                 'success' => true,
                 'data' => [
@@ -392,6 +400,7 @@ class RankCheckController
             ]);
 
         } catch (\Exception $e) {
+            if (ob_get_level()) ob_end_clean();
             echo json_encode([
                 'success' => false,
                 'error' => 'Errore durante il check bulk: ' . $e->getMessage()

@@ -1029,6 +1029,10 @@ class KeywordController
      */
     public function refreshPositions(int $projectId): string
     {
+        ignore_user_abort(true);
+        set_time_limit(0);
+        ob_start();
+
         $user = Auth::user();
         $project = $this->project->findAccessible($projectId, $user['id']);
 
@@ -1084,6 +1088,9 @@ class KeywordController
         if (empty($targetDomain)) {
             return View::json(['success' => false, 'error' => 'URL sito web non configurato nel progetto']);
         }
+
+        // Rilascia sessione prima dell'operazione lunga
+        session_write_close();
 
         // Esegui check posizioni
         $updated = 0;
@@ -1192,6 +1199,10 @@ class KeywordController
      */
     public function refreshAll(int $projectId): string
     {
+        ignore_user_abort(true);
+        set_time_limit(0);
+        ob_start();
+
         $user = Auth::user();
         $project = $this->project->findAccessible($projectId, $user['id']);
 
@@ -1252,6 +1263,9 @@ class KeywordController
                 'error' => "Crediti insufficienti. Richiesti: {$totalCost}, disponibili: " . Credits::getBalance($creditUserId)
             ]);
         }
+
+        // Rilascia sessione prima dell'operazione lunga
+        session_write_close();
 
         $results = [
             'volumes' => null,
