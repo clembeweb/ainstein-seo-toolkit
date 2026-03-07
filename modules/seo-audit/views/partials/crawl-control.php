@@ -585,8 +585,47 @@ window.crawlJob = function() {
                     this.status = 'error';
                 }
             } catch (e) {
-                this.showError('Errore di connessione al server');
+                // La discovery può superare il timeout del proxy (30s) su siti grandi.
+                // Il backend continua con ignore_user_abort(true).
+                // Polling per verificare se il crawl è partito.
+                this.status = 'starting';
+                this.awaitDiscovery();
+            }
+        },
+
+        /**
+         * Poll per verificare se la discovery è completata dopo timeout proxy.
+         */
+        async awaitDiscovery(attempts = 0) {
+            if (attempts > 20) { // max ~2 minuti
+                this.showError('La scansione sta impiegando troppo tempo. Ricarica la pagina per verificare lo stato.');
                 this.status = 'error';
+                return;
+            }
+            await new Promise(r => setTimeout(r, 6000));
+            try {
+                const resp = await fetch(baseUrl + '/crawl/status');
+                if (!resp.ok) { this.awaitDiscovery(attempts + 1); return; }
+                const data = await resp.json();
+                if (data.status === 'crawling' || data.status === 'completed') {
+                    // Discovery finita, crawl partito
+                    const p = data.progress || {};
+                    this.total = p.pages_found || 0;
+                    this.completed = p.pages_crawled || 0;
+                    this.percent = this.total > 0 ? Math.round((this.completed / this.total) * 100) : 0;
+                    if (data.active_job_id) this.jobId = data.active_job_id;
+                    this.status = 'running';
+                    this.startTimer();
+                    this.connectSSE();
+                } else if (data.status === 'failed' || data.status === 'stopped') {
+                    this.showError('Scansione fallita. Riprova.');
+                    this.status = 'error';
+                } else {
+                    // Ancora in discovery, riprova
+                    this.awaitDiscovery(attempts + 1);
+                }
+            } catch (_) {
+                this.awaitDiscovery(attempts + 1);
             }
         },
 

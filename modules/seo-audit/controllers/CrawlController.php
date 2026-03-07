@@ -45,6 +45,11 @@ class CrawlController
      */
     public function start(int $id): void
     {
+        // Discovery può essere lenta su siti grandi — non interrompere
+        ignore_user_abort(true);
+        set_time_limit(300);
+        ob_start();
+
         $user = Auth::user();
         $project = $this->projectModel->findAccessible($id, $user['id']);
 
@@ -110,6 +115,9 @@ class CrawlController
             return;
         }
 
+        // Rilascia sessione per non bloccare altre richieste (es. polling status)
+        session_write_close();
+
         try {
             // Pulisci dati crawl precedente per fresh start
             Database::delete('sa_pages', 'project_id = ?', [$id]);
@@ -172,12 +180,16 @@ class CrawlController
             $crawler->setSitemapUrls($sitemapUrls);
             $crawler->setRobotsRules($robotsRules);
 
-            // Fase 1: Discovery URL
+            // Fase 1: Discovery URL (può richiedere minuti su siti grandi)
             $urls = $crawler->discoverUrls();
+
+            // Reconnect dopo operazione lunga
+            Database::reconnect();
 
             if (empty($urls)) {
                 $this->sessionModel->fail($sessionId, 'Nessun URL trovato nel sito');
                 $this->projectModel->update($id, ['status' => 'failed']);
+                if (ob_get_level()) ob_end_clean();
                 jsonResponse(['error' => true, 'message' => 'Nessun URL trovato nel sito']);
                 return;
             }
@@ -234,6 +246,7 @@ class CrawlController
                 'crawl_mode' => $config['crawl_mode'],
             ]);
 
+            if (ob_get_level()) ob_end_clean();
             jsonResponse([
                 'success' => true,
                 'session_id' => $sessionId,
@@ -248,9 +261,11 @@ class CrawlController
             Logger::channel('scraping')->error("CRAWL ERROR", ['error' => $e->getMessage()]);
 
             if (isset($sessionId)) {
+                Database::reconnect();
                 $this->sessionModel->fail($sessionId, $e->getMessage());
             }
             $this->projectModel->update($id, ['status' => 'failed']);
+            if (ob_get_level()) ob_end_clean();
             jsonResponse(['error' => true, 'message' => 'Errore: ' . $e->getMessage()]);
         }
     }
