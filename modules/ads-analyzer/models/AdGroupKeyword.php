@@ -10,7 +10,7 @@ class AdGroupKeyword
     {
         return Database::insert('ga_ad_group_keywords', [
             'project_id' => $data['project_id'],
-            'run_id' => $data['run_id'],
+            'sync_id' => $data['sync_id'] ?? $data['run_id'] ?? null,
             'campaign_id_google' => $data['campaign_id_google'],
             'campaign_name' => $data['campaign_name'] ?? null,
             'ad_group_id_google' => $data['ad_group_id_google'],
@@ -32,7 +32,7 @@ class AdGroupKeyword
     public static function getByRun(int $runId): array
     {
         return Database::fetchAll(
-            "SELECT * FROM ga_ad_group_keywords WHERE run_id = ? ORDER BY campaign_name, ad_group_name, cost DESC",
+            "SELECT * FROM ga_ad_group_keywords WHERE sync_id = ? ORDER BY campaign_name, ad_group_name, cost DESC",
             [$runId]
         );
     }
@@ -53,7 +53,7 @@ class AdGroupKeyword
     public static function countByRun(int $runId): int
     {
         $result = Database::fetch(
-            "SELECT COUNT(*) as cnt FROM ga_ad_group_keywords WHERE run_id = ?",
+            "SELECT COUNT(*) as cnt FROM ga_ad_group_keywords WHERE sync_id = ?",
             [$runId]
         );
         return (int) ($result['cnt'] ?? 0);
@@ -61,6 +61,6 @@ class AdGroupKeyword
 
     public static function deleteByRun(int $runId): bool
     {
-        return Database::delete('ga_ad_group_keywords', 'run_id = ?', [$runId]) >= 0;
+        return Database::delete('ga_ad_group_keywords', 'sync_id = ?', [$runId]) >= 0;
     }
 }

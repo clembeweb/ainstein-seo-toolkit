@@ -22,8 +22,14 @@ class SearchTerm
             'is_zero_ctr' => (int)($data['is_zero_ctr'] ?? 0)
         ];
 
-        if (isset($data['run_id'])) {
-            $record['run_id'] = $data['run_id'];
+        if (isset($data['sync_id']) || isset($data['run_id'])) {
+            $record['sync_id'] = $data['sync_id'] ?? $data['run_id'];
+        }
+        if (isset($data['campaign_name'])) {
+            $record['campaign_name'] = $data['campaign_name'];
+        }
+        if (isset($data['ad_group_name'])) {
+            $record['ad_group_name'] = $data['ad_group_name'];
         }
 
         return Database::insert('ga_search_terms', $record);
@@ -84,7 +90,7 @@ class SearchTerm
     public static function getByRun(int $runId): array
     {
         return Database::fetchAll(
-            "SELECT * FROM ga_search_terms WHERE run_id = ? ORDER BY impressions DESC",
+            "SELECT * FROM ga_search_terms WHERE sync_id = ? ORDER BY impressions DESC",
             [$runId]
         );
     }
@@ -92,7 +98,7 @@ class SearchTerm
     public static function getByRunAndAdGroup(int $runId, int $adGroupId): array
     {
         return Database::fetchAll(
-            "SELECT * FROM ga_search_terms WHERE run_id = ? AND ad_group_id = ? ORDER BY impressions DESC",
+            "SELECT * FROM ga_search_terms WHERE sync_id = ? AND ad_group_id = ? ORDER BY impressions DESC",
             [$runId, $adGroupId]
         );
     }
@@ -108,7 +114,7 @@ class SearchTerm
                 SUM(impressions) as total_impressions,
                 SUM(cost) as total_cost
             FROM ga_search_terms
-            WHERE run_id = ?
+            WHERE sync_id = ?
         ";
 
         return Database::fetch($sql, [$runId]) ?: [
@@ -123,7 +129,7 @@ class SearchTerm
 
     public static function countByRun(int $runId): int
     {
-        return Database::count('ga_search_terms', 'run_id = ?', [$runId]);
+        return Database::count('ga_search_terms', 'sync_id = ?', [$runId]);
     }
 
     public static function getStatsByProject(int $projectId): array

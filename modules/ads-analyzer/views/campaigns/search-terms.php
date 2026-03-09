@@ -6,469 +6,387 @@ include __DIR__ . '/../partials/project-nav.php';
 $config = json_encode([
     'projectId' => $project['id'],
     'baseUrl' => url("/ads-analyzer/projects/{$project['id']}/search-term-analysis"),
-    'saveContextUrl' => url('/ads-analyzer/contexts/save'),
     'csrfToken' => csrf_token(),
-    'runs' => array_map(fn($r) => [
-        'id' => $r['id'],
-        'label' => date('d/m/Y H:i', strtotime($r['created_at'])),
-        'date_start' => $r['date_range_start'] ?? null,
-        'date_end' => $r['date_range_end'] ?? null,
-        'run_type' => $r['run_type'],
-    ], $searchTermRuns),
-    'selectedRunId' => $selectedRun ? $selectedRun['id'] : null,
+    'syncs' => array_map(fn($s) => [
+        'id' => $s['id'],
+        'label' => date('d/m/Y H:i', strtotime($s['started_at'])),
+        'date_start' => $s['date_range_start'] ?? null,
+        'date_end' => $s['date_range_end'] ?? null,
+        'search_terms_synced' => (int)($s['search_terms_synced'] ?? 0),
+    ], $searchTermSyncs),
+    'selectedSyncId' => $selectedSync ? $selectedSync['id'] : null,
     'initialStats' => $searchTermStats,
-    'initialAdGroups' => array_map(fn($ag) => [
-        'id' => $ag['id'],
-        'name' => $ag['name'],
-        'terms_count' => (int)$ag['terms_count'],
-        'zero_ctr_count' => (int)$ag['zero_ctr_count'],
-        'wasted_impressions' => (int)$ag['wasted_impressions'],
-        'landing_url' => $ag['landing_url'] ?? '',
-        'extracted_context' => $ag['extracted_context'] ?? '',
-        'negatives_count' => (int)($ag['negatives_count'] ?? 0),
-    ], $adGroups),
     'analyses' => array_map(fn($a) => [
         'id' => $a['id'],
         'name' => $a['name'],
         'status' => $a['status'],
         'total_keywords' => (int)($a['total_keywords'] ?? 0),
         'total_categories' => (int)($a['total_categories'] ?? 0),
-        'run_id' => $a['run_id'] ?? null,
+        'sync_id' => $a['sync_id'] ?? null,
         'created_at' => date('d/m/Y H:i', strtotime($a['created_at'])),
     ], $analyses),
-    'savedContexts' => array_map(fn($c) => [
-        'id' => $c['id'],
-        'name' => $c['name'],
-        'context' => $c['context'],
-    ], $savedContexts ?? []),
-    'userCredits' => $userCredits,
+    'latestAnalysisId' => $latestAnalysis ? $latestAnalysis['id'] : null,
+    'appliedCount' => $appliedCount ?? 0,
+    'lastAppliedDate' => $lastAppliedDate ? date('d/m/Y', strtotime($lastAppliedDate)) : null,
+    'canEdit' => $canEdit,
+    'userCredits' => $userCredits ?? 0,
 ]);
 ?>
 
-<div class="space-y-6" x-data="searchTermAnalysis(<?= htmlspecialchars($config) ?>)">
+<div x-data="searchTermAnalysis(<?= htmlspecialchars($config, ENT_QUOTES) ?>)" class="space-y-6">
 
-    <?php if (empty($searchTermRuns)): ?>
-    <!-- Empty State: nessun run con search terms -->
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
-        <div class="mx-auto h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mb-4">
-            <svg class="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-            </svg>
-        </div>
-        <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">Nessun dato Search Terms</h3>
-        <p class="text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
-            Lo script Google Ads deve raccogliere i termini di ricerca. Verifica che la configurazione includa "Search Terms" o "Entrambi".
-        </p>
-        <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/script') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors">
-            <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-            </svg>
-            Configura Script
-        </a>
-    </div>
-    <?php else: ?>
-
-    <!-- SEZIONE 1: Run Selector + Stats -->
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Termini di Ricerca</h2>
-            <div class="flex items-center gap-3">
-                <label class="text-sm text-slate-500 dark:text-slate-400">Run:</label>
-                <select x-model="selectedRunId" @change="loadRunData()" class="text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500">
-                    <template x-for="run in runs" :key="run.id">
-                        <option :value="run.id" x-text="run.label + (run.date_start ? ' (' + run.date_start + ' - ' + run.date_end + ')' : '')"></option>
-                    </template>
-                </select>
+    <!-- ========== KPI HEADER ========== -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Termini totali -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+            <div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+                Termini di ricerca
+            </div>
+            <div class="text-2xl font-bold text-slate-900 dark:text-white" x-text="stats.total_terms?.toLocaleString('it-IT') || '0'"></div>
+            <div class="text-xs text-slate-400 dark:text-slate-500 mt-0.5" x-show="stats.zero_ctr_count > 0">
+                <span x-text="stats.zero_ctr_count?.toLocaleString('it-IT')"></span> con CTR zero
             </div>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4 text-center">
-                <p class="text-2xl font-bold text-slate-900 dark:text-white" x-text="stats.total_terms"></p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Termini totali</p>
+        <!-- Spreco stimato -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+            <div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Spreco stimato
             </div>
-            <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 text-center">
-                <p class="text-2xl font-bold text-red-600 dark:text-red-400" x-text="stats.zero_ctr_count"></p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Zero CTR</p>
-            </div>
-            <div class="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 text-center">
-                <p class="text-2xl font-bold text-amber-600 dark:text-amber-400" x-text="formatNumber(stats.wasted_impressions)"></p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Impression sprecate</p>
-            </div>
-            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-center">
-                <p class="text-2xl font-bold text-blue-600 dark:text-blue-400" x-text="'€' + parseFloat(stats.total_cost || 0).toFixed(2)"></p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Spesa totale</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- SEZIONE 2: Search Terms Table -->
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700" x-show="adGroups.length > 0">
-        <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <button @click="showTerms = !showTerms" class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400">
-                <svg class="w-4 h-4 transition-transform" :class="showTerms && 'rotate-90'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-                Mostra termini di ricerca
-                <span class="text-xs text-slate-400" x-text="'(' + stats.total_terms + ' termini)'"></span>
-            </button>
-            <div class="flex items-center gap-3" x-show="showTerms">
-                <label class="inline-flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 cursor-pointer">
-                    <input type="checkbox" x-model="showOnlyZeroCtr" class="rounded border-slate-300 dark:border-slate-600 text-red-600 focus:ring-red-500">
-                    Solo zero-CTR
-                </label>
-                <input type="text" x-model="searchFilter" placeholder="Cerca termine..."
-                       class="text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 bg-white dark:bg-slate-700 text-slate-900 dark:text-white w-48">
+            <div class="text-2xl font-bold text-rose-600 dark:text-rose-400">&euro;<span x-text="Number(stats.total_cost || 0).toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span></div>
+            <div class="text-xs text-slate-400 dark:text-slate-500 mt-0.5" x-show="stats.wasted_impressions > 0">
+                <span x-text="stats.wasted_impressions?.toLocaleString('it-IT')"></span> impression sprecate
             </div>
         </div>
 
-        <div x-show="showTerms && !loadingRunData" x-collapse>
-            <!-- Ad Group tabs -->
-            <div class="border-b border-slate-200 dark:border-slate-700 overflow-x-auto" x-show="adGroups.length > 1">
-                <nav class="flex -mb-px">
-                    <template x-for="ag in adGroups" :key="ag.id">
-                        <button @click="activeAdGroupTab = ag.id"
-                                :class="activeAdGroupTab === ag.id ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
-                                class="px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors">
-                            <span x-text="ag.name"></span>
-                            <span class="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-slate-100 dark:bg-slate-700" x-text="ag.terms_count"></span>
-                        </button>
-                    </template>
-                </nav>
+        <!-- Negative applicate -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+            <div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Negative applicate
             </div>
+            <div class="text-2xl font-bold text-emerald-600 dark:text-emerald-400" x-text="appliedCount.toLocaleString('it-IT')"></div>
+            <div class="text-xs text-slate-400 dark:text-slate-500 mt-0.5" x-show="lastAppliedDate" x-text="'Ultima: ' + (lastAppliedDate || '')"></div>
+        </div>
 
-            <!-- Terms list -->
-            <div class="max-h-96 overflow-y-auto">
-                <table class="w-full divide-y divide-slate-200 dark:divide-slate-700">
-                    <thead class="bg-slate-50 dark:bg-slate-700/50 sticky top-0">
-                        <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Termine</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Click</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Impression</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">CTR</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Costo</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                        <template x-for="term in filteredTerms" :key="term.id">
-                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                                <td class="px-4 py-3 text-sm text-slate-900 dark:text-white">
-                                    <span x-text="term.term"></span>
-                                    <span x-show="term.is_zero_ctr" class="ml-1 px-1.5 py-0.5 rounded text-xs bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400">0 CTR</span>
-                                </td>
-                                <td class="px-4 py-3 text-sm text-right text-slate-900 dark:text-white" x-text="term.clicks"></td>
-                                <td class="px-4 py-3 text-sm text-right text-slate-900 dark:text-white" x-text="formatNumber(term.impressions)"></td>
-                                <td class="px-4 py-3 text-sm text-right" :class="term.ctr === 0 ? 'text-red-500' : 'text-slate-900 dark:text-white'" x-text="term.ctr.toFixed(2) + '%'"></td>
-                                <td class="px-4 py-3 text-sm text-right text-slate-900 dark:text-white" x-text="'€' + term.cost.toFixed(2)"></td>
-                            </tr>
+        <!-- Ultima sync -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+            <div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Ultima sync
+            </div>
+            <template x-if="syncs.length > 0">
+                <div>
+                    <div class="text-2xl font-bold text-slate-900 dark:text-white" x-text="syncs[0]?.label || '-'"></div>
+                    <div class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                        <!-- Dropdown sync secondario -->
+                        <template x-if="syncs.length > 1">
+                            <select x-model="selectedSyncId" @change="changeSyncId()" class="text-xs bg-transparent border-none p-0 text-slate-400 dark:text-slate-500 cursor-pointer focus:ring-0">
+                                <template x-for="s in syncs" :key="s.id">
+                                    <option :value="s.id" x-text="s.label + ' (' + s.search_terms_synced + ' termini)'"></option>
+                                </template>
+                            </select>
                         </template>
-                        <template x-if="filteredTerms.length === 0">
-                            <tr>
-                                <td colspan="5" class="px-4 py-3 text-center text-sm text-slate-400">
-                                    <span x-show="loadingRunData">Caricamento...</span>
-                                    <span x-show="!loadingRunData">Nessun termine trovato</span>
-                                </td>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- SEZIONE 3: Contesto & Analisi -->
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6" x-show="adGroups.length > 0">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Analisi Keyword Negative</h2>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Colonna sinistra: URL Landing -->
-            <div>
-                <h3 class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">URL Landing Pages</h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
-                    Rileva automaticamente gli URL delle landing page dagli annunci Google Ads per estrarre il contesto business.
-                </p>
-
-                <!-- Bottone rileva URL -->
-                <button @click="detectUrls()" :disabled="isDetecting"
-                        class="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mb-4">
-                    <svg x-show="!isDetecting" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    <svg x-show="isDetecting" class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                    <span x-text="isDetecting ? 'Rilevamento...' : 'Rileva URL dagli annunci'"></span>
-                </button>
-
-                <!-- Ad Groups con URL -->
-                <div class="space-y-2 max-h-64 overflow-y-auto">
-                    <template x-for="ag in adGroups" :key="ag.id">
-                        <div class="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-700/30 text-sm">
-                            <span class="font-medium text-slate-700 dark:text-slate-300 flex-shrink-0" x-text="ag.name"></span>
-                            <template x-if="ag.landing_url">
-                                <div class="flex items-center gap-1 min-w-0">
-                                    <svg class="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                    <span class="text-xs text-slate-500 dark:text-slate-400 truncate" x-text="ag.landing_url"></span>
-                                </div>
-                            </template>
-                            <template x-if="!ag.landing_url">
-                                <span class="text-xs text-slate-400">Nessun URL</span>
-                            </template>
-                        </div>
-                    </template>
-                </div>
-
-                <!-- Bottone estrai contesti -->
-                <div class="mt-4" x-show="adGroups.filter(a => a.landing_url).length > 0">
-                    <button @click="extractContexts()" :disabled="isExtracting"
-                            class="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                        <svg x-show="!isExtracting" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/>
-                        </svg>
-                        <svg x-show="isExtracting" class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                        <span x-text="isExtracting ? 'Estrazione contesto...' : 'Estrai contesto landing pages'"></span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Colonna destra: Contesto Business + Analisi -->
-            <div>
-                <h3 class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Contesto Business</h3>
-
-                <!-- Contesti salvati -->
-                <div class="mb-3" x-show="savedContexts.length > 0">
-                    <select @change="loadSavedContext($event.target.value); $event.target.value = ''"
-                            class="w-full text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500">
-                        <option value="">Carica contesto salvato...</option>
-                        <template x-for="ctx in savedContexts" :key="ctx.id">
-                            <option :value="ctx.id" x-text="ctx.name"></option>
-                        </template>
-                    </select>
-                </div>
-
-                <textarea x-model="businessContext" rows="5" placeholder="Descrivi l'attivita, i prodotti/servizi offerti, il target di riferimento..."
-                          class="w-full text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
-
-                <!-- Salva contesto -->
-                <div class="flex items-center gap-2 mt-2">
-                    <p class="text-xs text-slate-400 flex-1">
-                        I contesti estratti dalle landing pages verranno integrati automaticamente. Min 20 caratteri.
-                    </p>
-                    <button @click="showSaveContext = !showSaveContext" type="button"
-                            class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 whitespace-nowrap"
-                            x-show="businessContext.length >= 20">
-                        Salva contesto
-                    </button>
-                </div>
-                <div x-show="showSaveContext" x-transition class="mt-2 flex items-center gap-2">
-                    <input type="text" x-model="saveContextName" placeholder="Nome contesto..."
-                           class="flex-1 text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500">
-                    <button @click="saveBusinessContext()" :disabled="!saveContextName || isSavingContext"
-                            class="px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
-                        <span x-text="isSavingContext ? 'Salvataggio...' : 'Salva'"></span>
-                    </button>
-                </div>
-
-                <?php if ($canEdit): ?>
-                <!-- Bottone Analisi AI -->
-                <div class="mt-4">
-                    <button @click="startAnalysis()" :disabled="isAnalyzing || businessContext.length < 20"
-                            class="inline-flex items-center px-4 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                        <svg x-show="!isAnalyzing" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                        </svg>
-                        <svg x-show="isAnalyzing" class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                        <span x-text="isAnalyzing ? 'Analisi in corso...' : 'Analizza con AI'"></span>
-                    </button>
-                    <span class="ml-2 text-xs text-slate-400" x-text="'Crediti: ' + userCredits"></span>
-                </div>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <!-- Status messages -->
-        <div x-show="statusMessage" class="mt-4">
-            <div :class="statusType === 'error' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300'"
-                 class="rounded-lg border px-4 py-3 text-sm">
-                <span x-text="statusMessage"></span>
-            </div>
-        </div>
-    </div>
-
-    <!-- SEZIONE 4: Risultati -->
-    <div x-show="analysisResults !== null" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-        <!-- Header risultati -->
-        <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-                <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Keyword Negative Trovate</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-400">
-                    <span x-text="selectedCount"></span> selezionate su <span x-text="totalCount"></span> totali
-                </p>
-            </div>
-            <div class="flex items-center gap-2">
-                <!-- Copy button -->
-                <button @click="copyAllKeywords()"
-                   x-show="currentAnalysisId"
-                   class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 transition-colors">
-                    <svg class="w-3.5 h-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-                    <span x-text="copyButtonText">Copia tutte</span>
-                </button>
-                <!-- Export buttons -->
-                <a :href="baseUrl + '/export?analysis_id=' + currentAnalysisId + '&format=csv'"
-                   x-show="currentAnalysisId"
-                   class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 transition-colors">
-                    <svg class="w-3.5 h-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    CSV
-                </a>
-                <a :href="baseUrl + '/export?analysis_id=' + currentAnalysisId + '&format=google-ads-editor'"
-                   x-show="currentAnalysisId"
-                   class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:hover:bg-blue-800/50 transition-colors">
-                    <svg class="w-3.5 h-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    Google Ads Editor
-                </a>
-            </div>
-        </div>
-
-        <!-- Banner confronto cross-analisi -->
-        <div x-show="comparison.has_previous" x-cloak class="px-4 py-4 border-b border-slate-200 dark:border-slate-700">
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
-                Confronto con "<span x-text="comparison.previous_analysis_name"></span>"
-            </p>
-            <div class="grid grid-cols-3 gap-3 mb-3">
-                <!-- Risolte -->
-                <div class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 p-3 text-center">
-                    <div class="flex items-center justify-center gap-1.5 mb-1">
-                        <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <span class="text-xs font-medium text-emerald-700 dark:text-emerald-300">Risolte</span>
                     </div>
-                    <span class="text-xl font-bold text-emerald-800 dark:text-emerald-200" x-text="comparison.resolved"></span>
                 </div>
-                <!-- Ricorrenti -->
-                <div class="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-3 text-center">
-                    <div class="flex items-center justify-center gap-1.5 mb-1">
-                        <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M2.985 19.644l3.181-3.182"/></svg>
-                        <span class="text-xs font-medium text-amber-700 dark:text-amber-300">Ricorrenti</span>
-                    </div>
-                    <span class="text-xl font-bold text-amber-800 dark:text-amber-200" x-text="comparison.recurring"></span>
-                </div>
-                <!-- Nuove -->
-                <div class="rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-3 text-center">
-                    <div class="flex items-center justify-center gap-1.5 mb-1">
-                        <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"/></svg>
-                        <span class="text-xs font-medium text-blue-700 dark:text-blue-300">Nuove</span>
-                    </div>
-                    <span class="text-xl font-bold text-blue-800 dark:text-blue-200" x-text="comparison.new"></span>
-                </div>
-            </div>
-            <!-- Keyword risolte collapsible -->
-            <div x-show="resolvedKeywords.length > 0">
-                <button @click="showResolved = !showResolved" class="flex items-center gap-1.5 text-xs text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors">
-                    <svg class="w-3.5 h-3.5 transition-transform" :class="showResolved && 'rotate-90'" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    Mostra <span x-text="resolvedKeywords.length"></span> keyword risolte
-                </button>
-                <div x-show="showResolved" x-cloak class="mt-2 flex flex-wrap gap-1.5">
-                    <template x-for="rk in resolvedKeywords" :key="rk">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 line-through">
-                            <span x-text="rk"></span>
-                        </span>
-                    </template>
-                </div>
-            </div>
-        </div>
-
-        <!-- Analisi selector (se piu analisi) -->
-        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700" x-show="analyses.length > 1">
-            <select x-model="currentAnalysisId" @change="loadResults(currentAnalysisId)"
-                    class="text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
-                <template x-for="a in analyses" :key="a.id">
-                    <option :value="a.id" x-text="a.name + ' (' + a.total_keywords + ' kw)'"></option>
-                </template>
-            </select>
-        </div>
-
-        <!-- Ad Group tabs -->
-        <div class="border-b border-slate-200 dark:border-slate-700 overflow-x-auto" x-show="Object.keys(categoriesByAdGroup).length > 1">
-            <nav class="flex -mb-px">
-                <template x-for="(cats, agId) in categoriesByAdGroup" :key="agId">
-                    <button @click="activeResultTab = parseInt(agId)"
-                            :class="activeResultTab === parseInt(agId) ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
-                            class="px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors">
-                        <span x-text="adGroupNames[agId] || 'Gruppo ' + agId"></span>
-                        <span class="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-slate-100 dark:bg-slate-700"
-                              x-text="cats.reduce((sum, c) => sum + c.keywords.length, 0)"></span>
-                    </button>
-                </template>
-            </nav>
-        </div>
-
-        <!-- Categories & Keywords -->
-        <div class="p-4 space-y-4">
-            <template x-for="(cats, agId) in categoriesByAdGroup" :key="'results-' + agId">
-                <div x-show="activeResultTab === parseInt(agId) || Object.keys(categoriesByAdGroup).length === 1">
-                    <template x-for="cat in cats" :key="cat.id">
-                        <div class="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden mb-3" x-data="{ expanded: true }">
-                            <!-- Category Header -->
-                            <div class="bg-slate-50 dark:bg-slate-700/50 px-4 py-3 flex items-center justify-between cursor-pointer" @click="expanded = !expanded">
-                                <div class="flex items-center gap-3">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                          :class="cat.priority === 'high' ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' : cat.priority === 'medium' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'"
-                                          x-text="cat.priority === 'high' ? 'Alta' : cat.priority === 'medium' ? 'Media' : 'Valuta'"></span>
-                                    <span class="font-medium text-slate-900 dark:text-white text-sm" x-text="cat.category_name"></span>
-                                    <span class="text-xs text-slate-400" x-text="cat.selected_keywords + '/' + cat.total_keywords + ' selezionate'"></span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <!-- Bulk actions -->
-                                    <button @click.stop="toggleCategoryAction(cat.id, 'select_all')" class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400">Tutti</button>
-                                    <button @click.stop="toggleCategoryAction(cat.id, 'deselect_all')" class="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400">Nessuno</button>
-                                    <button @click.stop="toggleCategoryAction(cat.id, 'invert')" class="text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">Inverti</button>
-                                    <svg class="w-4 h-4 text-slate-400 transition-transform" :class="expanded && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                    </svg>
-                                </div>
-                            </div>
-                            <!-- Description -->
-                            <div x-show="expanded && cat.description" class="px-4 py-2 bg-slate-50/50 dark:bg-slate-700/20 border-b border-slate-200 dark:border-slate-700">
-                                <p class="text-xs text-slate-500 dark:text-slate-400" x-text="cat.description"></p>
-                            </div>
-                            <!-- Keywords -->
-                            <div x-show="expanded" class="p-4">
-                                <div class="flex flex-wrap gap-2">
-                                    <template x-for="kw in cat.keywords" :key="kw.id">
-                                        <button @click="toggleKeywordAction(kw.id, kw, cat)"
-                                                :class="kw.is_selected ? 'bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-700' : 'bg-slate-100 text-slate-500 border-slate-200 line-through dark:bg-slate-700 dark:text-slate-400 dark:border-slate-600'"
-                                                :title="kw.status === 'recurring' ? 'Gia suggerita precedentemente' : kw.status === 'new' ? 'Nuova keyword' : ''"
-                                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border transition-colors hover:opacity-80">
-                                            <span x-show="kw.status === 'recurring'" class="w-1.5 h-1.5 rounded-full bg-amber-400 mr-1.5 flex-shrink-0"></span>
-                                            <span x-show="kw.status === 'new'" class="w-1.5 h-1.5 rounded-full bg-blue-400 mr-1.5 flex-shrink-0"></span>
-                                            <span x-text="kw.keyword"></span>
-                                        </button>
-                                    </template>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-                </div>
+            </template>
+            <template x-if="syncs.length === 0">
+                <div class="text-lg text-slate-400 dark:text-slate-500">Nessuna sync</div>
             </template>
         </div>
     </div>
 
-    <!-- Storico analisi precedenti -->
-    <div x-show="analyses.length > 0 && analysisResults === null" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Analisi Precedenti</h2>
-        <div class="space-y-2">
-            <template x-for="a in analyses" :key="a.id">
-                <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-700/30 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
-                     @click="loadResults(a.id)">
+    <!-- ========== BANNER POST-APPLICAZIONE ========== -->
+    <template x-if="justApplied">
+        <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div>
+                    <p class="font-medium text-emerald-800 dark:text-emerald-300" x-text="justAppliedMessage"></p>
+                    <p class="text-sm text-emerald-600 dark:text-emerald-400 mt-1">La prossima sincronizzazione mostrera l'effetto delle negative applicate. Consigliamo di attendere 2-3 giorni.</p>
+                    <a :href="'<?= url('/ads-analyzer/projects/' . $project['id'] . '/connect') ?>'" class="inline-flex items-center gap-1 text-sm text-emerald-700 dark:text-emerald-300 hover:underline mt-2">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Nuova sincronizzazione
+                    </a>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- ========== NO SYNC STATE ========== -->
+    <template x-if="syncs.length === 0">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-12 text-center">
+            <svg class="w-16 h-16 mx-auto text-slate-300 dark:text-slate-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Nessuna sincronizzazione disponibile</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">Sincronizza i dati da Google Ads per iniziare l'analisi dei termini di ricerca.</p>
+            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/connect') ?>" class="inline-flex items-center gap-2 px-5 py-2.5 bg-rose-600 text-white rounded-lg text-sm font-medium hover:bg-rose-700 transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                Vai alla Connessione
+            </a>
+        </div>
+    </template>
+
+    <!-- ========== CTA ANALISI ========== -->
+    <template x-if="syncs.length > 0 && !analyzing && !currentAnalysis">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-8 text-center">
+            <div class="max-w-lg mx-auto">
+                <svg class="w-12 h-12 mx-auto text-rose-500 dark:text-rose-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Analizza i termini di ricerca con AI</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">L'AI analizzera i tuoi termini di ricerca, identifichera quelli fuori target e suggerira le keyword negative da aggiungere su Google Ads.</p>
+
+                <!-- Contesto opzionale collapsato -->
+                <div class="mb-6">
+                    <button @click="showContextInput = !showContextInput" type="button" class="text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors flex items-center gap-1 mx-auto">
+                        <svg class="w-3.5 h-3.5 transition-transform" :class="showContextInput ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        Aggiungi contesto business (opzionale)
+                    </button>
+                    <div x-show="showContextInput" x-transition class="mt-3 text-left">
+                        <textarea x-model="manualContext" rows="3" placeholder="Es: Agenzia che promuove universita telematiche (Mercatorum, Pegaso, San Raffaele)..." class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-rose-500 focus:border-rose-500"></textarea>
+                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Il contesto verra arricchito automaticamente con le informazioni delle campagne.</p>
+                    </div>
+                </div>
+
+                <button @click="startAnalysis()" :disabled="analyzing" class="inline-flex items-center gap-2 px-6 py-3 bg-rose-600 text-white rounded-lg text-sm font-semibold hover:bg-rose-700 transition-colors disabled:opacity-50">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                    Analizza con AI
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <!-- ========== ANALYZING STATE ========== -->
+    <template x-if="analyzing">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-12 text-center">
+            <div class="animate-spin w-10 h-10 border-4 border-rose-200 dark:border-rose-800 border-t-rose-600 dark:border-t-rose-400 rounded-full mx-auto mb-4"></div>
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Analisi in corso...</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">L'AI sta analizzando i termini di ricerca. Questo puo richiedere 30-60 secondi.</p>
+        </div>
+    </template>
+
+    <!-- ========== RISULTATI ANALISI ========== -->
+    <template x-if="currentAnalysis && !analyzing">
+        <div class="space-y-4">
+
+            <!-- Riepilogo -->
+            <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+                <div class="flex items-start justify-between gap-4 flex-wrap">
                     <div>
-                        <p class="text-sm font-medium text-slate-900 dark:text-white" x-text="a.name"></p>
-                        <p class="text-xs text-slate-500 dark:text-slate-400" x-text="a.created_at + ' - ' + a.total_keywords + ' keyword, ' + a.total_categories + ' categorie'"></p>
+                        <h3 class="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                            <svg class="w-5 h-5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                            Risultati analisi
+                        </h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                            <span class="font-medium text-slate-700 dark:text-slate-300" x-text="totalCount"></span> keyword negative trovate in
+                            <span class="font-medium text-slate-700 dark:text-slate-300" x-text="categories.length"></span> categorie
+                        </p>
                     </div>
-                    <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    <div class="flex items-center gap-2">
+                        <button @click="startAnalysis()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            Ri-analizza
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Confronto con analisi precedente -->
+                <template x-if="comparison.has_previous">
+                    <div class="mt-4 flex flex-wrap gap-3 text-sm">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 text-xs font-medium" x-show="comparison.resolved > 0">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            <span x-text="comparison.resolved"></span> risolte
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 text-xs font-medium" x-show="comparison.recurring > 0">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                            <span x-text="comparison.recurring"></span> ricorrenti
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 text-xs font-medium" x-show="comparison.new > 0">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                            <span x-text="comparison.new"></span> nuove
+                        </span>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Categorie accordion -->
+            <template x-for="(cat, catIdx) in categories" :key="cat.id">
+                <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <!-- Header categoria -->
+                    <button @click="cat._open = !cat._open" class="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <svg class="w-4 h-4 text-slate-400 shrink-0 transition-transform" :class="cat._open ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            <span class="font-medium text-slate-900 dark:text-white truncate" x-text="cat.category_name"></span>
+                            <!-- Priority badge -->
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium shrink-0"
+                                  :class="{
+                                      'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300': cat.priority === 'high',
+                                      'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300': cat.priority === 'medium',
+                                      'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400': cat.priority === 'evaluate'
+                                  }" x-text="cat.priority === 'high' ? 'Alta' : cat.priority === 'medium' ? 'Media' : 'Da valutare'"></span>
+                            <span class="text-xs text-slate-400 dark:text-slate-500 shrink-0" x-text="cat.keywords.length + ' keyword'"></span>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0 ml-2">
+                            <!-- Select all toggle -->
+                            <label @click.stop class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                                <input type="checkbox" :checked="cat.keywords.every(k => k.is_selected)" @change="toggleAllCategory(cat, $event.target.checked)" class="rounded border-slate-300 dark:border-slate-600 text-rose-600 focus:ring-rose-500">
+                                Tutte
+                            </label>
+                        </div>
+                    </button>
+
+                    <!-- Descrizione -->
+                    <template x-if="cat.description && cat._open">
+                        <div class="px-4 pb-2 text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-700 pt-2" x-text="cat.description"></div>
+                    </template>
+
+                    <!-- Keyword list -->
+                    <div x-show="cat._open" x-transition class="border-t border-slate-100 dark:border-slate-700">
+                        <template x-for="kw in cat.keywords" :key="kw.id">
+                            <div class="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/30 border-b border-slate-50 dark:border-slate-700/50 last:border-0">
+                                <input type="checkbox" :checked="kw.is_selected" @change="toggleKeyword(kw)" class="rounded border-slate-300 dark:border-slate-600 text-rose-600 focus:ring-rose-500 shrink-0">
+                                <div class="flex-1 min-w-0">
+                                    <span class="text-sm text-slate-900 dark:text-white font-mono" x-text="kw.keyword"></span>
+                                </div>
+                                <!-- Match type badge -->
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium uppercase shrink-0"
+                                      :class="{
+                                          'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300': kw.suggested_match_type === 'exact',
+                                          'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300': kw.suggested_match_type === 'phrase',
+                                          'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400': kw.suggested_match_type === 'broad'
+                                      }" x-text="kw.suggested_match_type || 'phrase'"></span>
+                                <!-- Level badge -->
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium shrink-0"
+                                      :class="kw.suggested_level === 'ad_group' ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'">
+                                    <template x-if="kw.suggested_level === 'campaign'">
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
+                                    </template>
+                                    <template x-if="kw.suggested_level === 'ad_group'">
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    </template>
+                                    <span x-text="kw.suggested_level === 'ad_group' ? 'Ad Group' : 'Campagna'"></span>
+                                </span>
+                                <!-- Status badge (new/recurring) -->
+                                <template x-if="kw.status === 'recurring'">
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 shrink-0">Ricorrente</span>
+                                </template>
+                                <template x-if="kw.status === 'new'">
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 shrink-0">Nuova</span>
+                                </template>
+                                <!-- Applied -->
+                                <template x-if="kw.applied_at">
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 shrink-0">Applicata</span>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </template>
         </div>
-    </div>
+    </template>
 
-    <?php endif; ?>
+    <!-- ========== BARRA STICKY AZIONI ========== -->
+    <template x-if="currentAnalysis && !analyzing && selectedCount > 0">
+        <div class="sticky bottom-4 z-30">
+            <div class="bg-slate-900 dark:bg-slate-700 rounded-xl shadow-2xl px-5 py-3 flex items-center justify-between gap-4 border border-slate-700 dark:border-slate-600">
+                <div class="text-sm text-white">
+                    <span class="font-semibold" x-text="selectedCount"></span>/<span x-text="totalCount"></span> selezionate
+                </div>
+                <div class="flex items-center gap-2">
+                    <!-- Export CSV -->
+                    <a :href="baseUrl + '/export?analysis_id=' + currentAnalysis.id + '&format=csv'" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 dark:bg-slate-600 rounded-lg hover:bg-slate-700 dark:hover:bg-slate-500 transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        CSV
+                    </a>
+                    <!-- Export Google Ads Editor -->
+                    <a :href="baseUrl + '/export?analysis_id=' + currentAnalysis.id + '&format=google-ads-editor'" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 dark:bg-slate-600 rounded-lg hover:bg-slate-700 dark:hover:bg-slate-500 transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Google Ads Editor
+                    </a>
+                    <!-- Applica su Google Ads -->
+                    <?php if ($canEdit): ?>
+                    <button @click="showApplyModal = true" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-rose-600 rounded-lg hover:bg-rose-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        Applica su Google Ads
+                    </button>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- ========== MODALE CONFERMA APPLICAZIONE ========== -->
+    <template x-if="showApplyModal">
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4" @keydown.escape.window="showApplyModal = false">
+            <div class="absolute inset-0 bg-black/50" @click="showApplyModal = false"></div>
+            <div class="relative bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Conferma applicazione</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-300">
+                    Stai per aggiungere <span class="font-semibold" x-text="selectedCount"></span> negative keywords su Google Ads:
+                </p>
+
+                <!-- Riepilogo per livello -->
+                <div class="space-y-2">
+                    <template x-if="applySummary.campaign > 0">
+                        <div class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 rounded-lg px-3 py-2">
+                            <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
+                            <span x-text="applySummary.campaign"></span> a livello campagna
+                        </div>
+                    </template>
+                    <template x-if="applySummary.ad_group > 0">
+                        <div class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 rounded-lg px-3 py-2">
+                            <svg class="w-4 h-4 text-cyan-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <span x-text="applySummary.ad_group"></span> a livello ad group
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Warning -->
+                <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-300 flex items-start gap-2">
+                    <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                    Questa azione applichera le keyword direttamente sul tuo account Google Ads. L'operazione non e reversibile automaticamente.
+                </div>
+
+                <div class="flex justify-end gap-3 pt-2">
+                    <button @click="showApplyModal = false" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white transition-colors">Annulla</button>
+                    <button @click="applyNegatives()" :disabled="applying" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-rose-600 rounded-lg hover:bg-rose-700 transition-colors disabled:opacity-50">
+                        <template x-if="applying">
+                            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                        </template>
+                        <span x-text="applying ? 'Applicazione...' : 'Applica ' + selectedCount + ' keyword'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- ========== STORICO ANALISI ========== -->
+    <template x-if="analyses.length > 0">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700" x-data="{ historyOpen: false }">
+            <button @click="historyOpen = !historyOpen" class="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                <span class="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Analisi precedenti (<span x-text="analyses.length"></span>)
+                </span>
+                <svg class="w-4 h-4 text-slate-400 transition-transform" :class="historyOpen ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div x-show="historyOpen" x-transition class="border-t border-slate-100 dark:border-slate-700">
+                <template x-for="a in analyses" :key="a.id">
+                    <div class="flex items-center justify-between px-4 py-3 border-b border-slate-50 dark:border-slate-700/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                        <div class="min-w-0">
+                            <div class="text-sm text-slate-900 dark:text-white truncate" x-text="a.name"></div>
+                            <div class="text-xs text-slate-400 dark:text-slate-500" x-text="a.created_at"></div>
+                        </div>
+                        <div class="flex items-center gap-3 shrink-0 ml-3">
+                            <span class="text-xs text-slate-500 dark:text-slate-400" x-text="a.total_keywords + ' keyword'"></span>
+                            <button @click="loadAnalysis(a.id)" class="text-xs text-rose-600 dark:text-rose-400 hover:underline font-medium">Carica</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </template>
+
 </div>
 
 <script>
@@ -477,330 +395,233 @@ function searchTermAnalysis(config) {
         // Config
         projectId: config.projectId,
         baseUrl: config.baseUrl,
-        saveContextUrl: config.saveContextUrl,
         csrfToken: config.csrfToken,
-        runs: config.runs,
-        userCredits: config.userCredits,
+        canEdit: config.canEdit,
 
-        // State
-        selectedRunId: config.selectedRunId,
-        stats: config.initialStats || { total_terms: 0, zero_ctr_count: 0, wasted_impressions: 0, total_clicks: 0, total_impressions: 0, total_cost: 0 },
-        adGroups: config.initialAdGroups || [],
-        searchTermsByGroup: {},
+        // Sync
+        syncs: config.syncs || [],
+        selectedSyncId: config.selectedSyncId,
+
+        // Stats
+        stats: config.initialStats || {},
+
+        // Analisi
         analyses: config.analyses || [],
+        currentAnalysis: null,
+        categories: [],
+        comparison: { has_previous: false, resolved: 0, recurring: 0, new: 0 },
 
-        // UI
-        showTerms: false,
-        showOnlyZeroCtr: false,
-        searchFilter: '',
-        activeAdGroupTab: (config.initialAdGroups && config.initialAdGroups.length > 0) ? config.initialAdGroups[0].id : null,
-        loadingRunData: false,
-
-        // Analysis
-        businessContext: '',
-        isDetecting: false,
-        isExtracting: false,
-        isAnalyzing: false,
-        statusMessage: '',
-        statusType: 'info',
-
-        // Saved contexts
-        savedContexts: config.savedContexts || [],
-        showSaveContext: false,
-        saveContextName: '',
-        isSavingContext: false,
-
-        // Results
-        analysisResults: null,
-        categoriesByAdGroup: {},
-        adGroupNames: {},
-        currentAnalysisId: null,
+        // Contatori
         selectedCount: 0,
         totalCount: 0,
-        activeResultTab: null,
-        copyButtonText: 'Copia tutte',
+        appliedCount: config.appliedCount || 0,
+        lastAppliedDate: config.lastAppliedDate,
 
-        // Cross-analysis comparison
-        comparison: { resolved: 0, recurring: 0, new: 0, has_previous: false, previous_analysis_name: '' },
-        resolvedKeywords: [],
-        showResolved: false,
+        // UI state
+        analyzing: false,
+        applying: false,
+        showApplyModal: false,
+        showContextInput: false,
+        manualContext: '',
+        justApplied: false,
+        justAppliedMessage: '',
 
-        formatNumber(n) {
-            return new Intl.NumberFormat('it-IT').format(n);
-        },
-
-        get filteredTerms() {
-            const terms = this.searchTermsByGroup[this.activeAdGroupTab] || [];
-            return terms.filter(t => {
-                if (this.showOnlyZeroCtr && !t.is_zero_ctr) return false;
-                if (this.searchFilter && !t.term.toLowerCase().includes(this.searchFilter.toLowerCase())) return false;
-                return true;
-            });
-        },
-
-        async loadRunData() {
-            this.loadingRunData = true;
-            try {
-                const resp = await fetch(this.baseUrl + '/run-data?run_id=' + this.selectedRunId);
-                const data = await resp.json();
-                if (data.success) {
-                    this.adGroups = data.adGroups;
-                    this.stats = data.stats;
-                    this.searchTermsByGroup = data.searchTermsByGroup;
-                    if (this.adGroups.length > 0) {
-                        this.activeAdGroupTab = this.adGroups[0].id;
+        get applySummary() {
+            let campaign = 0, ad_group = 0;
+            for (const cat of this.categories) {
+                for (const kw of cat.keywords) {
+                    if (kw.is_selected && !kw.applied_at) {
+                        if (kw.suggested_level === 'ad_group') ad_group++;
+                        else campaign++;
                     }
                 }
-            } catch (e) {
-                console.error('loadRunData error:', e);
             }
-            this.loadingRunData = false;
+            return { campaign, ad_group };
         },
 
-        async detectUrls() {
-            this.isDetecting = true;
-            this.statusMessage = '';
-            try {
-                const formData = new FormData();
-                formData.append('_csrf_token', this.csrfToken);
-                formData.append('run_id', this.selectedRunId);
-
-                const resp = await fetch(this.baseUrl + '/detect-urls', { method: 'POST', body: formData });
-                const data = await resp.json();
-
-                if (data.success) {
-                    this.statusMessage = `URL rilevati: ${data.matched} su ${data.total_ad_groups} Ad Group`;
-                    this.statusType = 'info';
-                    await this.loadRunData();
-                } else {
-                    this.statusMessage = data.error || 'Errore nel rilevamento URL';
-                    this.statusType = 'error';
-                }
-            } catch (e) {
-                this.statusMessage = 'Errore di connessione';
-                this.statusType = 'error';
+        init() {
+            if (config.latestAnalysisId) {
+                this.loadAnalysis(config.latestAnalysisId);
             }
-            this.isDetecting = false;
         },
 
-        async extractContexts() {
-            this.isExtracting = true;
-            this.statusMessage = 'Estrazione contesti in corso... potrebbe richiedere qualche minuto.';
-            this.statusType = 'info';
-            try {
-                const formData = new FormData();
-                formData.append('_csrf_token', this.csrfToken);
-                formData.append('run_id', this.selectedRunId);
-
-                const resp = await fetch(this.baseUrl + '/extract-contexts', { method: 'POST', body: formData });
-
-                if (!resp.ok) {
-                    this.statusMessage = 'Errore del server (timeout). Riprova tra qualche istante.';
-                    this.statusType = 'error';
-                    this.isExtracting = false;
-                    return;
-                }
-
-                const data = await resp.json();
-                if (data.success) {
-                    const ok = data.results.filter(r => r.success).length;
-                    const fail = data.results.filter(r => !r.success).length;
-                    this.statusMessage = `Contesti estratti: ${ok} OK` + (fail > 0 ? `, ${fail} errori` : '');
-                    this.statusType = 'info';
-
-                    // Aggiorna i contesti negli ad groups
-                    data.results.forEach(r => {
-                        if (r.success) {
-                            const ag = this.adGroups.find(a => a.id === r.ad_group_id);
-                            if (ag) ag.extracted_context = r.context;
-                        }
-                    });
-
-                    // Prepopola business context con primo contesto
-                    if (!this.businessContext && ok > 0) {
-                        const first = data.results.find(r => r.success);
-                        if (first) this.businessContext = first.context;
+        changeSyncId() {
+            // Ricarica stats per la sync selezionata
+            fetch(this.baseUrl + '/sync-data?sync_id=' + this.selectedSyncId)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        this.stats = data.stats;
                     }
-                } else {
-                    this.statusMessage = data.error || 'Errore estrazione';
-                    this.statusType = 'error';
-                }
-            } catch (e) {
-                this.statusMessage = 'Errore di connessione';
-                this.statusType = 'error';
-            }
-            this.isExtracting = false;
+                });
         },
 
         async startAnalysis() {
-            this.isAnalyzing = true;
-            this.statusMessage = 'Analisi AI in corso... potrebbe richiedere qualche minuto.';
-            this.statusType = 'info';
+            this.analyzing = true;
+            this.currentAnalysis = null;
+            this.categories = [];
+
             try {
                 const formData = new FormData();
                 formData.append('_csrf_token', this.csrfToken);
-                formData.append('run_id', this.selectedRunId);
-                formData.append('business_context', this.businessContext);
+                formData.append('sync_id', this.selectedSyncId);
+                if (this.manualContext) {
+                    formData.append('business_context', this.manualContext);
+                }
 
-                const resp = await fetch(this.baseUrl + '/analyze', { method: 'POST', body: formData });
+                const resp = await fetch(this.baseUrl + '/analyze', {
+                    method: 'POST',
+                    body: formData,
+                });
 
                 if (!resp.ok) {
-                    this.statusMessage = 'Errore del server (timeout). Riprova.';
-                    this.statusType = 'error';
-                    this.isAnalyzing = false;
-                    return;
+                    const err = await resp.json();
+                    throw new Error(err.error || 'Errore analisi');
                 }
 
                 const data = await resp.json();
-                if (data.success) {
-                    this.statusMessage = `Analisi completata: ${data.total_negatives} keyword negative in ${data.total_categories} categorie`;
-                    this.statusType = 'info';
-                    this.currentAnalysisId = data.analysis_id;
+                if (data.error) throw new Error(data.error);
 
-                    // Aggiungi all'elenco
-                    this.analyses.unshift({
-                        id: data.analysis_id,
-                        name: 'Analisi KW Negative ' + new Date().toLocaleString('it-IT'),
-                        status: 'completed',
-                        total_keywords: data.total_negatives,
-                        total_categories: data.total_categories,
-                        run_id: this.selectedRunId,
-                        created_at: new Date().toLocaleString('it-IT'),
-                    });
+                // Aggiungi alla lista analisi
+                this.analyses.unshift({
+                    id: data.analysis_id,
+                    name: 'Analisi KW Negative ' + new Date().toLocaleString('it-IT'),
+                    status: 'completed',
+                    total_keywords: data.total_negatives,
+                    total_categories: data.total_categories,
+                    created_at: new Date().toLocaleString('it-IT'),
+                });
 
-                    await this.loadResults(data.analysis_id);
-                } else {
-                    this.statusMessage = data.error || 'Errore analisi';
-                    this.statusType = 'error';
-                }
+                // Carica risultati
+                await this.loadAnalysis(data.analysis_id);
+
             } catch (e) {
-                this.statusMessage = 'Errore di connessione';
-                this.statusType = 'error';
+                alert('Errore: ' + e.message);
+            } finally {
+                this.analyzing = false;
             }
-            this.isAnalyzing = false;
         },
 
-        async loadResults(analysisId) {
+        async loadAnalysis(analysisId) {
             try {
                 const resp = await fetch(this.baseUrl + '/results?analysis_id=' + analysisId);
                 const data = await resp.json();
-                if (data.success) {
-                    this.analysisResults = data;
-                    this.categoriesByAdGroup = data.categoriesByAdGroup;
-                    this.adGroupNames = data.adGroupNames;
-                    this.selectedCount = data.selectedCount;
-                    this.totalCount = data.totalCount;
-                    this.currentAnalysisId = analysisId;
+                if (!data.success) return;
 
-                    // Cross-analysis comparison
-                    this.comparison = data.comparison || { resolved: 0, recurring: 0, new: 0, has_previous: false, previous_analysis_name: '' };
-                    this.resolvedKeywords = data.resolvedKeywords || [];
-                    this.showResolved = false;
+                this.currentAnalysis = data.analysis;
+                this.comparison = data.comparison || { has_previous: false };
+                this.selectedCount = data.selectedCount || 0;
+                this.totalCount = data.totalCount || 0;
 
-                    // Seleziona primo tab risultati
-                    const firstKey = Object.keys(this.categoriesByAdGroup)[0];
-                    if (firstKey) this.activeResultTab = parseInt(firstKey);
-                }
-            } catch (e) {
-                console.error('loadResults error:', e);
-            }
-        },
-
-        async toggleKeywordAction(keywordId, kw, cat) {
-            try {
-                const formData = new FormData();
-                formData.append('_csrf_token', this.csrfToken);
-
-                const resp = await fetch(this.baseUrl + '/keywords/' + keywordId + '/toggle', { method: 'POST', body: formData });
-                const data = await resp.json();
-
-                if (data.success) {
-                    kw.is_selected = data.is_selected;
-                    this.selectedCount = data.selected_count;
-
-                    // Aggiorna conteggio categoria
-                    cat.selected_keywords += data.is_selected ? 1 : -1;
-                }
-            } catch (e) {
-                console.error('toggleKeyword error:', e);
-            }
-        },
-
-        async toggleCategoryAction(categoryId, action) {
-            try {
-                const formData = new FormData();
-                formData.append('_csrf_token', this.csrfToken);
-
-                const resp = await fetch(this.baseUrl + '/categories/' + categoryId + '/' + action, { method: 'POST', body: formData });
-                const data = await resp.json();
-
-                if (data.success) {
-                    this.selectedCount = data.selected_count;
-                    // Reload results to refresh keyword states
-                    if (this.currentAnalysisId) {
-                        await this.loadResults(this.currentAnalysisId);
+                // Flat categories con _open
+                const cats = [];
+                for (const [agId, agCats] of Object.entries(data.categoriesByAdGroup || {})) {
+                    for (const cat of agCats) {
+                        cat._open = false;
+                        cats.push(cat);
                     }
                 }
+                this.categories = cats;
+
             } catch (e) {
-                console.error('toggleCategory error:', e);
+                console.error('Error loading analysis:', e);
             }
         },
 
-        // === Copia rapida keyword ===
+        async toggleKeyword(kw) {
+            kw.is_selected = !kw.is_selected;
+            this.recountSelected();
 
-        async copyAllKeywords(adGroupId = null) {
-            if (!this.currentAnalysisId) return;
+            const formData = new FormData();
+            formData.append('_csrf_token', this.csrfToken);
+            await fetch(this.baseUrl + '/keywords/' + kw.id + '/toggle', {
+                method: 'POST',
+                body: formData,
+            });
+        },
+
+        async toggleAllCategory(cat, checked) {
+            cat.keywords.forEach(kw => kw.is_selected = checked);
+            this.recountSelected();
+
+            const formData = new FormData();
+            formData.append('_csrf_token', this.csrfToken);
+            await fetch(this.baseUrl + '/categories/' + cat.id + '/' + (checked ? 'select_all' : 'deselect_all'), {
+                method: 'POST',
+                body: formData,
+            });
+        },
+
+        recountSelected() {
+            let sel = 0, tot = 0;
+            for (const cat of this.categories) {
+                for (const kw of cat.keywords) {
+                    tot++;
+                    if (kw.is_selected) sel++;
+                }
+            }
+            this.selectedCount = sel;
+            this.totalCount = tot;
+        },
+
+        async applyNegatives() {
+            this.applying = true;
+
             try {
+                const selectedIds = [];
+                for (const cat of this.categories) {
+                    for (const kw of cat.keywords) {
+                        if (kw.is_selected && !kw.applied_at) {
+                            selectedIds.push(kw.id);
+                        }
+                    }
+                }
+
+                if (selectedIds.length === 0) {
+                    alert('Nessuna keyword da applicare');
+                    return;
+                }
+
                 const formData = new FormData();
                 formData.append('_csrf_token', this.csrfToken);
-                formData.append('analysis_id', this.currentAnalysisId);
-                if (adGroupId) formData.append('ad_group_id', adGroupId);
+                selectedIds.forEach(id => formData.append('keyword_ids[]', id));
 
-                const resp = await fetch(this.baseUrl + '/copy-text', { method: 'POST', body: formData });
-                const data = await resp.json();
+                const resp = await fetch(this.baseUrl + '/apply-negatives', {
+                    method: 'POST',
+                    body: formData,
+                });
 
-                if (data.success) {
-                    await navigator.clipboard.writeText(data.text);
-                    this.copyButtonText = `Copiate ${data.count}!`;
-                    setTimeout(() => { this.copyButtonText = 'Copia tutte'; }, 2000);
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    throw new Error(err.error || 'Errore applicazione');
                 }
+
+                const data = await resp.json();
+                if (data.error) throw new Error(data.error);
+
+                // Aggiorna UI
+                this.showApplyModal = false;
+                this.justApplied = true;
+                this.justAppliedMessage = data.message;
+                this.appliedCount += data.applied;
+                this.lastAppliedDate = new Date().toLocaleDateString('it-IT');
+
+                // Segna le keyword come applicate
+                const now = new Date().toISOString();
+                for (const cat of this.categories) {
+                    for (const kw of cat.keywords) {
+                        if (kw.is_selected && selectedIds.includes(kw.id)) {
+                            kw.applied_at = now;
+                        }
+                    }
+                }
+
             } catch (e) {
-                console.error('copyAllKeywords error:', e);
+                alert('Errore: ' + e.message);
+            } finally {
+                this.applying = false;
             }
         },
-
-        // === Contesti salvati ===
-
-        loadSavedContext(contextId) {
-            if (!contextId) return;
-            const ctx = this.savedContexts.find(c => c.id == contextId);
-            if (ctx) this.businessContext = ctx.context;
-        },
-
-        async saveBusinessContext() {
-            if (!this.saveContextName || this.businessContext.length < 20) return;
-            this.isSavingContext = true;
-            try {
-                const formData = new FormData();
-                formData.append('_csrf_token', this.csrfToken);
-                formData.append('context_name', this.saveContextName);
-                formData.append('context', this.businessContext);
-
-                const resp = await fetch(this.saveContextUrl, { method: 'POST', body: formData });
-                const data = await resp.json();
-
-                if (data.success) {
-                    this.savedContexts.push({ id: data.id, name: this.saveContextName, context: this.businessContext });
-                    this.saveContextName = '';
-                    this.showSaveContext = false;
-                    this.statusMessage = 'Contesto salvato con successo';
-                    this.statusType = 'info';
-                }
-            } catch (e) {
-                console.error('saveBusinessContext error:', e);
-            }
-            this.isSavingContext = false;
-        }
     };
 }
 </script>

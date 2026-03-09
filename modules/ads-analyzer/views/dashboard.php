@@ -107,7 +107,7 @@ endif;
                     ];
                     $projectUrl = url('/ads-analyzer/projects/' . $project['id']);
                 ?>
-                <div class="px-6 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                <div class="px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                     <div class="flex items-center gap-3">
                         <div class="h-9 w-9 rounded-lg bg-gradient-to-br <?= $typeConfig['gradient'] ?> flex items-center justify-center shadow-sm">
                             <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">

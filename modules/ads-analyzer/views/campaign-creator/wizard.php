@@ -919,6 +919,67 @@ $kwCost = \Modules\AdsAnalyzer\Services\CampaignCreatorService::getCost('keyword
                  class="fixed bottom-6 right-6 bg-emerald-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium z-50">
                 Copiato negli appunti!
             </div>
+
+            <!-- ============================================ -->
+            <!-- PUBBLICA SU GOOGLE ADS -->
+            <!-- ============================================ -->
+            <?php if (!empty($project['google_ads_customer_id'])): ?>
+            <div class="mt-6 p-6 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                    Pubblica su Google Ads
+                </h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                    La campagna verrà creata in stato <strong>In pausa</strong> sul tuo account Google Ads.
+                    Potrai attivarla direttamente dalla console Google Ads.
+                </p>
+
+                <div x-data="{ publishing: false, published: false, publishError: null }">
+                    <button
+                        @click="if(confirm('Confermi la pubblicazione su Google Ads? La campagna verrà creata in pausa.')) {
+                            publishing = true;
+                            publishError = null;
+                            fetch('<?= url("/ads-analyzer/projects/{$project['id']}/campaign-creator/publish") ?>', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                body: '_csrf_token=' + encodeURIComponent('<?= csrf_token() ?>')
+                            })
+                            .then(r => r.ok ? r.json() : Promise.reject('Errore di connessione'))
+                            .then(data => {
+                                publishing = false;
+                                if (data.success) { published = true; }
+                                else { publishError = data.error || 'Errore sconosciuto'; }
+                            })
+                            .catch(e => { publishing = false; publishError = String(e); });
+                        }"
+                        :disabled="publishing || published"
+                        class="inline-flex items-center px-6 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium disabled:opacity-50 transition"
+                    >
+                        <template x-if="publishing">
+                            <svg class="animate-spin -ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </template>
+                        <template x-if="!publishing && !published">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                        </template>
+                        <span x-text="published ? 'Pubblicata' : (publishing ? 'Pubblicazione...' : 'Pubblica su Google Ads')"></span>
+                    </button>
+
+                    <template x-if="published">
+                        <p class="mt-3 text-sm text-emerald-600 dark:text-emerald-400">
+                            Campagna creata con successo in stato <strong>In pausa</strong>.
+                            Vai su Google Ads per attivarla.
+                        </p>
+                    </template>
+                    <template x-if="publishError">
+                        <p class="mt-3 text-sm text-red-600 dark:text-red-400" x-text="publishError"></p>
+                    </template>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

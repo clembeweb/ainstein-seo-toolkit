@@ -27,7 +27,7 @@ use Modules\AdsAnalyzer\Models\Extension;
 use Modules\AdsAnalyzer\Models\CampaignAdGroup;
 use Modules\AdsAnalyzer\Models\AdGroupKeyword;
 use Modules\AdsAnalyzer\Models\CampaignEvaluation;
-use Modules\AdsAnalyzer\Models\ScriptRun;
+use Modules\AdsAnalyzer\Models\Sync;
 use Modules\AdsAnalyzer\Services\CampaignEvaluatorService;
 use Modules\AdsAnalyzer\Services\MetricComparisonService;
 
@@ -71,9 +71,9 @@ try {
 
         $queueId = $item['id'];
         $projectId = $item['project_id'];
-        $runId = $item['run_id'];
+        $syncId = $item['sync_id'];
 
-        logMessage("Processing queue #{$queueId}: project={$projectId}, run={$runId}");
+        logMessage("Processing queue #{$queueId}: project={$projectId}, sync={$syncId}");
 
         try {
             // Verifica progetto
@@ -105,20 +105,20 @@ try {
             }
 
             // Carica dati del run
-            $campaigns = Campaign::getByRun($runId);
+            $campaigns = Campaign::getByRun($syncId);
             if (empty($campaigns)) {
                 AutoEvalQueue::markSkipped($queueId, 'no_campaigns');
-                logMessage("  SKIP: nessuna campagna nel run");
+                logMessage("  SKIP: nessuna campagna nel sync");
                 $processed++;
                 continue;
             }
 
-            // Trova run precedente per confronto
-            $runs = ScriptRun::getByProject($projectId, 10);
-            $campaignRuns = array_values(array_filter($runs, fn($r) =>
-                in_array($r['run_type'], ['campaign_performance', 'both']) && $r['status'] === 'completed' && $r['id'] != $runId
+            // Trova sync precedente per confronto
+            $syncs = Sync::getCompletedSyncs($projectId, 10);
+            $previousSyncs = array_values(array_filter($syncs, fn($s) =>
+                $s['status'] === 'completed' && $s['id'] != $syncId
             ));
-            $previousRun = !empty($campaignRuns) ? $campaignRuns[0] : null;
+            $previousRun = !empty($previousSyncs) ? $previousSyncs[0] : null;
 
             // Confronta metriche
             $metricDeltas = null;
@@ -129,7 +129,7 @@ try {
 
             if ($previousRun) {
                 $significanceThreshold = (float)ModuleLoader::getSetting('ads-analyzer', 'auto_eval_significance_threshold', 10) / 100;
-                $comparison = MetricComparisonService::compareRuns($runId, $previousRun['id'], $significanceThreshold);
+                $comparison = MetricComparisonService::compareRuns($syncId, $previousRun['id'], $significanceThreshold);
                 $metricDeltas = $comparison['deltas'];
                 $alerts = $comparison['alerts'];
                 $isSignificant = $comparison['is_significant'];
@@ -148,12 +148,12 @@ try {
             }
 
             // Se non significativo, skip (risparmia crediti)
-            if (!$isSignificant && !empty($campaignRuns)) {
+            if (!$isSignificant && !empty($previousSyncs)) {
                 // Salva comunque un record eval di tipo "no_change" con i delta
                 $evalId = CampaignEvaluation::create([
                     'project_id' => $projectId,
                     'user_id' => $userId,
-                    'run_id' => $runId,
+                    'sync_id' => $syncId,
                     'eval_type' => 'auto',
                     'previous_eval_id' => $previousEvalId,
                     'name' => 'Auto-check ' . date('d/m/Y H:i') . ' (nessun cambiamento)',
@@ -173,16 +173,16 @@ try {
             }
 
             // Carica tutti i dati
-            $ads = Ad::getByRun($runId);
-            $extensions = Extension::getByRun($runId);
-            $adGroupsData = CampaignAdGroup::getByRun($runId);
-            $keywordsData = AdGroupKeyword::getByRun($runId);
+            $ads = Ad::getByRun($syncId);
+            $extensions = Extension::getByRun($syncId);
+            $adGroupsData = CampaignAdGroup::getByRun($syncId);
+            $keywordsData = AdGroupKeyword::getByRun($syncId);
 
             // Crea record valutazione
             $evalId = CampaignEvaluation::create([
                 'project_id' => $projectId,
                 'user_id' => $userId,
-                'run_id' => $runId,
+                'sync_id' => $syncId,
                 'eval_type' => 'auto',
                 'previous_eval_id' => $previousEvalId,
                 'name' => 'Auto-valutazione ' . date('d/m/Y H:i'),
@@ -256,7 +256,7 @@ try {
 
             // Consuma crediti
             Credits::consume($userId, $cost, 'campaign_evaluation', 'ads-analyzer', [
-                'run_id' => $runId,
+                'sync_id' => $syncId,
                 'eval_type' => 'auto',
                 'campaigns' => count($campaigns),
             ]);

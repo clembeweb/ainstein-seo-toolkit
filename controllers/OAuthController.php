@@ -83,6 +83,19 @@ class OAuthController
         ];
 
         // Redirect al modulo per completare la connessione
+        if ($type === 'google_ads') {
+            // Google Ads: salva token in DB e redirect a selezione account
+            $user = \Core\Auth::user();
+            Database::execute(
+                "INSERT INTO google_oauth_tokens (user_id, service, access_token, refresh_token, token_expires_at, created_at)
+                 VALUES (?, 'google_ads', ?, ?, DATE_ADD(NOW(), INTERVAL ? SECOND), NOW())
+                 ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), refresh_token = COALESCE(VALUES(refresh_token), refresh_token), token_expires_at = VALUES(token_expires_at)",
+                [$user['id'], $tokens['access_token'], $tokens['refresh_token'], $tokens['expires_in']]
+            );
+            unset($_SESSION['google_oauth_tokens']);
+            Router::redirect("/{$moduleSlug}/projects/{$projectId}/connect");
+            return '';
+        }
         $endpoint = ($type === 'ga4') ? 'ga4' : 'gsc';
         Router::redirect("/{$moduleSlug}/{$endpoint}/connected");
         return '';

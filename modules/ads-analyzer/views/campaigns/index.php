@@ -93,9 +93,9 @@ include __DIR__ . '/../partials/project-nav.php';
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             <div>
-                <p class="text-sm font-medium text-amber-800 dark:text-amber-300">Nessun dato ricevuto</p>
+                <p class="text-sm font-medium text-amber-800 dark:text-amber-300">Nessun dato sincronizzato</p>
                 <p class="text-sm text-amber-700 dark:text-amber-400 mt-1">
-                    Configura lo script Google Ads per iniziare a ricevere dati delle campagne automaticamente.
+                    Collega il tuo account Google Ads dalla pagina <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/connect') ?>" class="underline font-medium">Connessione</a> e avvia una sincronizzazione.
                 </p>
             </div>
         </div>
@@ -138,12 +138,12 @@ include __DIR__ . '/../partials/project-nav.php';
                 <?php endif; ?>
             </div>
 
-            <!-- Script Setup Link -->
-            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/script') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm">
+            <!-- Connessione Google Ads -->
+            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/connect') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm">
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                 </svg>
-                Configura Script
+                Connessione
             </a>
         </div>
 
@@ -170,19 +170,19 @@ include __DIR__ . '/../partials/project-nav.php';
     <!-- Run List -->
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Ricezioni Dati</h2>
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Sincronizzazioni</h2>
         </div>
 
-        <?php if (empty($campaignRuns)): ?>
+        <?php if (empty($campaignSyncs)): ?>
         <div class="p-12 text-center">
             <div class="mx-auto h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mb-3">
                 <svg class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-4l-2-2H6a2 2 0 00-2 2z"/>
                 </svg>
             </div>
-            <h3 class="text-sm font-medium text-slate-900 dark:text-white">Nessun dato ricevuto</h3>
+            <h3 class="text-sm font-medium text-slate-900 dark:text-white">Nessuna sincronizzazione</h3>
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                I dati arriveranno automaticamente dopo aver configurato lo script Google Ads.
+                Collega Google Ads e avvia una sincronizzazione per vedere i dati.
             </p>
         </div>
         <?php else: ?>
@@ -193,26 +193,26 @@ include __DIR__ . '/../partials/project-nav.php';
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Data</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tipo</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Periodo</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Elementi</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Campagne</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stato</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                    <?php foreach ($campaignRuns as $run): ?>
+                    <?php foreach ($campaignSyncs as $run): ?>
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-900 dark:text-white">
-                            <?= date('d/m/Y H:i', strtotime($run['created_at'])) ?>
+                            <?= date('d/m/Y H:i', strtotime($run['started_at'] ?? $run['completed_at'] ?? 'now')) ?>
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                <?php if ($run['run_type'] === 'scheduled'): ?>
+                                <?php if (($run['sync_type'] ?? '') === 'scheduled'): ?>
                                 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300
                                 <?php else: ?>
                                 bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300
                                 <?php endif; ?>
                             ">
-                                <?= $run['run_type'] === 'scheduled' ? 'Schedulato' : 'Manuale' ?>
+                                <?= ($run['sync_type'] ?? '') === 'scheduled' ? 'Schedulato' : 'Manuale' ?>
                             </span>
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
@@ -223,7 +223,8 @@ include __DIR__ . '/../partials/project-nav.php';
                             <?php endif; ?>
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">
-                            <?= number_format($run['items_received'] ?? 0) ?>
+                            <?= number_format($run['campaigns_synced'] ?? 0) ?>
+                            <span class="text-xs text-slate-400 dark:text-slate-500 font-normal ml-1">camp.</span>
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap">
                             <?php
@@ -385,10 +386,9 @@ include __DIR__ . '/../partials/project-nav.php';
         </div>
         <?php endif; ?>
     </div>
-</div>
 
-<!-- Campaign Selection Modal -->
-<template x-if="showCampaignModal">
+    <!-- Campaign Selection Modal -->
+    <template x-if="showCampaignModal">
     <div class="fixed inset-0 z-50 overflow-y-auto" x-transition>
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="fixed inset-0 bg-black/50" @click="showCampaignModal = false"></div>
@@ -463,17 +463,18 @@ include __DIR__ . '/../partials/project-nav.php';
             </div>
         </div>
     </div>
-</template>
+    </template>
 
-<!-- Hidden CSRF token for AJAX -->
-<input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
+    <!-- Hidden CSRF token for AJAX -->
+    <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
+</div>
 
 <script>
 function campaignPageManager() {
     return {
         loading: false,
         errorMsg: '',
-        canEvaluate: <?= ($latestRun && $userCredits >= $evalCost) ? 'true' : 'false' ?>,
+        canEvaluate: <?= ($latestSync && $userCredits >= $evalCost) ? 'true' : 'false' ?>,
         showCampaignModal: false,
         allCampaigns: <?= json_encode($campaignsList ?? [], JSON_UNESCAPED_UNICODE) ?>,
         selectedCampaigns: [],

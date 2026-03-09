@@ -124,7 +124,7 @@ class Project
         $campaign = Database::fetchAll("
             SELECT p.*,
                 CASE WHEN p.user_id = ? THEN 'owner' ELSE 'shared' END as access_role,
-                (SELECT COUNT(*) FROM ga_script_runs WHERE project_id = p.id AND status = 'completed') as total_runs,
+                (SELECT COUNT(*) FROM ga_syncs WHERE project_id = p.id AND status = 'completed') as total_runs,
                 (SELECT COUNT(DISTINCT c.id) FROM ga_campaigns c WHERE c.project_id = p.id) as total_campaigns,
                 (SELECT COUNT(*) FROM ga_campaign_evaluations WHERE project_id = p.id AND status = 'completed') as total_evaluations
             FROM ga_projects p
@@ -271,55 +271,48 @@ class Project
     }
 
     /**
-     * Trova progetto per API token (usato dall'endpoint API pubblico)
+     * Update Google Ads connection info
      */
-    public static function findByToken(string $token): ?array
+    public static function updateGoogleAdsConnection(int $projectId, array $data): bool
     {
-        return Database::fetch(
-            "SELECT * FROM ga_projects WHERE api_token = ?",
-            [$token]
-        ) ?: null;
+        $allowed = ['google_ads_customer_id', 'google_ads_account_name', 'oauth_token_id', 'last_sync_at', 'sync_enabled'];
+        $fields = [];
+        $values = [];
+        foreach ($data as $key => $value) {
+            if (in_array($key, $allowed)) {
+                $fields[] = "$key = ?";
+                $values[] = $value;
+            }
+        }
+        if (empty($fields)) return false;
+        $values[] = $projectId;
+        $sql = "UPDATE ga_projects SET " . implode(', ', $fields) . " WHERE id = ?";
+        Database::query($sql, $values);
+        return true;
     }
 
     /**
-     * Genera un nuovo API token per il progetto
+     * Disconnect Google Ads from project
      */
-    public static function generateToken(int $projectId): string
+    public static function disconnectGoogleAds(int $projectId): bool
     {
-        $token = bin2hex(random_bytes(32));
-
-        Database::update('ga_projects', [
-            'api_token' => $token,
-            'api_token_created_at' => date('Y-m-d H:i:s')
-        ], 'id = ?', [$projectId]);
-
-        return $token;
+        Database::query(
+            "UPDATE ga_projects SET google_ads_customer_id = NULL, google_ads_account_name = NULL, oauth_token_id = NULL WHERE id = ?",
+            [$projectId]
+        );
+        return true;
     }
 
     /**
-     * Aggiorna la configurazione script del progetto
+     * Check if project has Google Ads connected
      */
-    public static function updateScriptConfig(int $projectId, array $config): bool
+    public static function isGoogleAdsConnected(int $projectId): bool
     {
-        return Database::update('ga_projects', [
-            'script_config' => json_encode($config)
-        ], 'id = ?', [$projectId]) > 0;
-    }
-
-    /**
-     * Ottiene la configurazione script con defaults
-     */
-    public static function getScriptConfig(int $projectId): array
-    {
-        $project = self::find($projectId);
-        $config = json_decode($project['script_config'] ?? '{}', true) ?: [];
-
-        return array_merge([
-            'enable_search_terms' => true,
-            'enable_campaign_performance' => true,
-            'date_range' => 'LAST_30_DAYS',
-            'campaign_filter' => '',
-        ], $config);
+        $result = Database::query(
+            "SELECT google_ads_customer_id FROM ga_projects WHERE id = ? AND google_ads_customer_id IS NOT NULL AND google_ads_customer_id != ''",
+            [$projectId]
+        );
+        return !empty($result);
     }
 
     /**

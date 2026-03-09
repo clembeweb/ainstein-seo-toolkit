@@ -10,7 +10,7 @@ class AutoEvalQueue
     {
         return Database::insert('ga_auto_eval_queue', [
             'project_id' => $data['project_id'],
-            'run_id' => $data['run_id'],
+            'sync_id' => $data['sync_id'] ?? $data['run_id'] ?? null,
             'scheduled_for' => $data['scheduled_for'],
         ]);
     }
@@ -73,7 +73,7 @@ class AutoEvalQueue
     public static function existsForRun(int $runId): bool
     {
         $result = Database::fetch(
-            "SELECT COUNT(*) as cnt FROM ga_auto_eval_queue WHERE run_id = ?",
+            "SELECT COUNT(*) as cnt FROM ga_auto_eval_queue WHERE sync_id = ?",
             [$runId]
         );
         return ((int)($result['cnt'] ?? 0)) > 0;

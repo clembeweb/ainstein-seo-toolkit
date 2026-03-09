@@ -105,14 +105,6 @@ Router::get('/', function () {
     if (Auth::check()) {
         Router::redirect('/dashboard');
     }
-    require BASE_PATH . '/public/coming-soon.php';
-    exit;
-});
-
-Router::get('/home', function () {
-    if (Auth::check()) {
-        Router::redirect('/dashboard');
-    }
     require BASE_PATH . '/public/landing4.php';
     exit;
 });
@@ -122,20 +114,6 @@ Router::get('/pricing', function () {
     exit;
 });
 
-Router::get('/landing', function () {
-    require BASE_PATH . '/public/landing.php';
-    exit;
-});
-
-Router::get('/landing2', function () {
-    require BASE_PATH . '/public/landing2.php';
-    exit;
-});
-
-Router::get('/landing3', function () {
-    require BASE_PATH . '/public/landing3.php';
-    exit;
-});
 
 // Email preferences (unsubscribe) — public, no login required
 Router::get('/email/preferences', function () {

@@ -39,28 +39,156 @@ $trendLabels = [
     'declining' => ['label' => 'In calo', 'class' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'],
     'mixed' => ['label' => 'Misto', 'class' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'],
 ];
+
+$hasGoogleAds = !empty($project['google_ads_customer_id']);
+$googleAdsAccountName = $project['google_ads_account_name'] ?? '';
 ?>
 
 <div class="space-y-6" x-data="dashboardManager()">
 
-    <?php if (empty($campaignRuns)): ?>
-    <!-- No data: Configura Script -->
+    <!-- Google Ads Connection Badge + Date Picker + Sync -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <!-- Google Ads Connection Badge -->
+        <div class="flex items-center gap-2">
+            <?php if ($hasGoogleAds): ?>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
+                <?= e($googleAdsAccountName ?: $project['google_ads_customer_id']) ?>
+            </span>
+            <?php else: ?>
+            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/connect') ?>"
+               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-900/70 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+                Connetti Google Ads
+            </a>
+            <?php endif; ?>
+        </div>
+
+        <!-- Date Picker + Sync Button -->
+        <div class="flex flex-wrap items-center gap-3"
+             x-data="{
+                 dateRange: '<?= (strtotime($dateTo) - strtotime($dateFrom)) / 86400 ?>',
+                 dateFrom: '<?= e($dateFrom) ?>',
+                 dateTo: '<?= e($dateTo) ?>',
+                 showCustom: false,
+                 setRange(days) {
+                     this.dateRange = days;
+                     this.showCustom = false;
+                     const to = new Date();
+                     const from = new Date();
+                     from.setDate(from.getDate() - days);
+                     this.dateFrom = from.toISOString().split('T')[0];
+                     this.dateTo = to.toISOString().split('T')[0];
+                     window.location.href = `?date_from=${this.dateFrom}&date_to=${this.dateTo}`;
+                 },
+                 applyCustom() {
+                     if (this.dateFrom && this.dateTo) {
+                         window.location.href = `?date_from=${this.dateFrom}&date_to=${this.dateTo}`;
+                     }
+                 }
+             }">
+            <!-- Preset Buttons -->
+            <div class="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <button @click="setRange(7)"
+                        :class="dateRange == 7 ? 'bg-rose-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'"
+                        class="px-3 py-1.5 text-xs font-medium transition-colors">
+                    7 giorni
+                </button>
+                <button @click="setRange(30)"
+                        :class="dateRange == 30 ? 'bg-rose-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'"
+                        class="px-3 py-1.5 text-xs font-medium border-l border-slate-200 dark:border-slate-700 transition-colors">
+                    30 giorni
+                </button>
+                <button @click="setRange(90)"
+                        :class="dateRange == 90 ? 'bg-rose-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'"
+                        class="px-3 py-1.5 text-xs font-medium border-l border-slate-200 dark:border-slate-700 transition-colors">
+                    90 giorni
+                </button>
+                <button @click="showCustom = !showCustom; dateRange = 'custom'"
+                        :class="dateRange == 'custom' ? 'bg-rose-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'"
+                        class="px-3 py-1.5 text-xs font-medium border-l border-slate-200 dark:border-slate-700 transition-colors">
+                    Personalizzato
+                </button>
+            </div>
+
+            <!-- Custom Date Inputs -->
+            <div x-show="showCustom" x-cloak class="flex items-center gap-2">
+                <input type="date" x-model="dateFrom"
+                       class="text-xs border border-slate-300 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500">
+                <span class="text-slate-400 text-xs">-</span>
+                <input type="date" x-model="dateTo"
+                       class="text-xs border border-slate-300 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500">
+                <button @click="applyCustom()"
+                        class="px-3 py-1.5 text-xs font-medium rounded-lg bg-rose-600 text-white hover:bg-rose-700 transition-colors">
+                    Applica
+                </button>
+            </div>
+
+            <!-- Sync Button -->
+            <?php if ($canEdit && $hasGoogleAds): ?>
+            <button @click="startSync()"
+                    :disabled="syncing"
+                    class="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                <template x-if="syncing">
+                    <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </template>
+                <template x-if="!syncing">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                </template>
+                <span x-text="syncing ? 'Sincronizzazione...' : 'Sincronizza'"></span>
+            </button>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <?php if (empty($campaignSyncs)): ?>
+    <!-- No data: Connetti o Sincronizza -->
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
-        <div class="mx-auto h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mb-4">
-            <svg class="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+        <div class="mx-auto h-16 w-16 rounded-full bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center mb-4">
+            <svg class="h-8 w-8 text-rose-600 dark:text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
             </svg>
         </div>
-        <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">Configura lo Script</h3>
+        <?php if ($hasGoogleAds): ?>
+        <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">Sincronizza i tuoi dati</h3>
         <p class="text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
-            Genera lo script Google Ads per iniziare a raccogliere automaticamente i dati delle tue campagne.
+            Il tuo account Google Ads è collegato. Avvia la prima sincronizzazione per importare le campagne.
         </p>
-        <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/script') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors">
+        <button @click="startSync()"
+                :disabled="syncing"
+                class="inline-flex items-center px-4 py-2 rounded-lg bg-rose-600 text-white font-medium hover:bg-rose-700 disabled:opacity-50 transition-colors">
+            <template x-if="syncing">
+                <svg class="w-5 h-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </template>
+            <template x-if="!syncing">
+                <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+            </template>
+            <span x-text="syncing ? 'Sincronizzazione in corso...' : 'Avvia Sincronizzazione'"></span>
+        </button>
+        <?php else: ?>
+        <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">Collega Google Ads</h3>
+        <p class="text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
+            Collega il tuo account Google Ads per iniziare a sincronizzare automaticamente i dati delle tue campagne.
+        </p>
+        <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/connect') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-rose-600 text-white font-medium hover:bg-rose-700 transition-colors">
             <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
             </svg>
-            Configura Script
+            Connetti Google Ads
         </a>
+        <?php endif; ?>
     </div>
 
     <?php else: ?>
@@ -169,7 +297,7 @@ $trendLabels = [
             ['key' => 'total_clicks', 'label' => 'Click', 'value' => $latestStats['total_clicks'] ?? 0, 'format' => 'number', 'icon' => 'M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122', 'color' => 'blue'],
             ['key' => 'total_cost', 'label' => 'Costo', 'value' => $latestStats['total_cost'] ?? 0, 'format' => 'euro', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'color' => 'red', 'invert' => true],
             ['key' => 'total_conversions', 'label' => 'Conversioni', 'value' => $latestStats['total_conversions'] ?? 0, 'format' => 'decimal', 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', 'color' => 'emerald'],
-            ['key' => 'avg_ctr', 'label' => 'CTR', 'value' => ($latestStats['avg_ctr'] ?? 0) * 100, 'format' => 'percent', 'icon' => 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6', 'color' => 'amber'],
+            ['key' => 'avg_ctr', 'label' => 'CTR', 'value' => $latestStats['avg_ctr'] ?? 0, 'format' => 'percent', 'icon' => 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6', 'color' => 'amber'],
         ];
         ?>
         <?php foreach ($kpiCards as $kpi): ?>
@@ -220,12 +348,12 @@ $trendLabels = [
     </div>
     <?php endif; ?>
 
-    <!-- Ultimo Run -->
-    <?php if ($latestRun): ?>
+    <!-- Ultima Sincronizzazione -->
+    <?php if ($latestSync): ?>
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Ultimo Run</h2>
-            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns/' . $latestRun['id']) ?>" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Ultima sincronizzazione</h2>
+            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns/' . $latestSync['id']) ?>" class="text-sm font-medium text-rose-600 dark:text-rose-400 hover:text-rose-700">
                 Dettagli
                 <svg class="w-4 h-4 ml-0.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -235,15 +363,15 @@ $trendLabels = [
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
             <div>
                 <p class="text-slate-500 dark:text-slate-400">Data</p>
-                <p class="font-medium text-slate-900 dark:text-white"><?= date('d/m/Y H:i', strtotime($latestRun['created_at'])) ?></p>
+                <p class="font-medium text-slate-900 dark:text-white"><?= date('d/m/Y H:i', strtotime($latestSync['started_at'])) ?></p>
             </div>
             <div>
                 <p class="text-slate-500 dark:text-slate-400">Tipo</p>
-                <p class="font-medium text-slate-900 dark:text-white"><?= e($latestRun['run_type']) ?></p>
+                <p class="font-medium text-slate-900 dark:text-white"><?= e($latestSync['sync_type'] ?? '-') ?></p>
             </div>
             <div>
                 <p class="text-slate-500 dark:text-slate-400">Items</p>
-                <p class="font-medium text-slate-900 dark:text-white"><?= number_format($latestRun['items_received'] ?? 0) ?></p>
+                <p class="font-medium text-slate-900 dark:text-white"><?= number_format(($latestSync['campaigns_synced'] ?? 0) + ($latestSync['ad_groups_synced'] ?? 0) + ($latestSync['keywords_synced'] ?? 0) + ($latestSync['ads_synced'] ?? 0) + ($latestSync['search_terms_synced'] ?? 0)) ?></p>
             </div>
             <div>
                 <p class="text-slate-500 dark:text-slate-400">Campagne</p>
@@ -252,8 +380,8 @@ $trendLabels = [
             <div>
                 <p class="text-slate-500 dark:text-slate-400">Periodo</p>
                 <p class="font-medium text-slate-900 dark:text-white">
-                    <?php if ($latestRun['date_range_start'] && $latestRun['date_range_end']): ?>
-                    <?= date('d/m', strtotime($latestRun['date_range_start'])) ?> - <?= date('d/m/Y', strtotime($latestRun['date_range_end'])) ?>
+                    <?php if (($latestSync['date_range_start'] ?? null) && ($latestSync['date_range_end'] ?? null)): ?>
+                    <?= date('d/m', strtotime($latestSync['date_range_start'])) ?> - <?= date('d/m/Y', strtotime($latestSync['date_range_end'])) ?>
                     <?php else: ?>
                     -
                     <?php endif; ?>
@@ -268,7 +396,7 @@ $trendLabels = [
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Andamento KPI</h2>
-            <select id="kpiMetricSelector" class="text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <select id="kpiMetricSelector" class="text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500">
                 <option value="clicks">Click</option>
                 <option value="cost">Costo</option>
                 <option value="conversions">Conversioni</option>
@@ -285,7 +413,7 @@ $trendLabels = [
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Valutazioni Timeline -->
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
                 <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Valutazioni AI</h2>
             </div>
             <?php if (empty($evaluations)): ?>
@@ -308,7 +436,7 @@ $trendLabels = [
                 ];
                 ?>
                 <a href="<?= $eval['status'] === 'completed' ? url('/ads-analyzer/projects/' . $project['id'] . '/campaigns/evaluations/' . $eval['id']) : '#' ?>"
-                   class="block px-6 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                   class="block px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2 min-w-0">
                             <?php if ($evalScore !== null): ?>
@@ -364,15 +492,19 @@ $trendLabels = [
                     </div>
                 </a>
 
-                <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/script') ?>" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <div class="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-                        <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/connect') ?>" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <div class="h-10 w-10 rounded-lg bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center">
+                        <svg class="h-5 w-5 text-rose-600 dark:text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                         </svg>
                     </div>
                     <div>
-                        <p class="font-medium text-slate-900 dark:text-white">Configura Script</p>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">Genera e gestisci lo script Google Ads</p>
+                        <p class="font-medium text-slate-900 dark:text-white">
+                            <?= $hasGoogleAds ? 'Gestisci Connessione' : 'Connetti Google Ads' ?>
+                        </p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">
+                            <?= $hasGoogleAds ? 'Account collegato: ' . e($googleAdsAccountName ?: $project['google_ads_customer_id']) : 'Collega il tuo account Google Ads' ?>
+                        </p>
                     </div>
                 </a>
 
@@ -386,7 +518,7 @@ $trendLabels = [
                     </div>
                     <div class="flex-1">
                         <p class="font-medium text-slate-900 dark:text-white">Auto-valutazione</p>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">Valuta automaticamente ad ogni run</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Valuta automaticamente ad ogni sincronizzazione</p>
                     </div>
                     <button @click="toggleAutoEval()"
                             :disabled="togglingAutoEval"
@@ -415,6 +547,32 @@ $trendLabels = [
         </form>
     </div>
     <?php endif; ?>
+
+    <!-- Sync Status Toast -->
+    <div x-show="syncMessage" x-cloak
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0 translate-y-2"
+     x-transition:enter-end="opacity-100 translate-y-0"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="opacity-100 translate-y-0"
+     x-transition:leave-end="opacity-0 translate-y-2"
+     class="fixed bottom-6 right-6 z-50 max-w-sm"
+     :class="syncError ? 'bg-red-50 dark:bg-red-900/90 border-red-200 dark:border-red-800' : 'bg-emerald-50 dark:bg-emerald-900/90 border-emerald-200 dark:border-emerald-800'"
+     style="border-width: 1px; border-radius: 0.75rem; padding: 1rem;">
+    <div class="flex items-start gap-3">
+        <template x-if="syncError">
+            <svg class="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        </template>
+        <template x-if="!syncError">
+            <svg class="h-5 w-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        </template>
+        <p class="text-sm" :class="syncError ? 'text-red-800 dark:text-red-300' : 'text-emerald-800 dark:text-emerald-300'" x-text="syncMessage"></p>
+    </div>
+    </div>
 </div>
 
 <script>
@@ -422,6 +580,9 @@ function dashboardManager() {
     return {
         autoEvalEnabled: <?= $autoEvalEnabled ? 'true' : 'false' ?>,
         togglingAutoEval: false,
+        syncing: false,
+        syncMessage: '',
+        syncError: false,
 
         async toggleAutoEval() {
             this.togglingAutoEval = true;
@@ -440,6 +601,53 @@ function dashboardManager() {
                 console.error('Toggle auto-eval failed:', err);
             } finally {
                 this.togglingAutoEval = false;
+            }
+        },
+
+        async startSync() {
+            if (this.syncing) return;
+            this.syncing = true;
+            this.syncMessage = '';
+            this.syncError = false;
+
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '<?= csrf_token() ?>';
+                const formData = new FormData();
+                formData.append('_csrf_token', csrfToken);
+                formData.append('date_from', '<?= e($dateFrom) ?>');
+                formData.append('date_to', '<?= e($dateTo) ?>');
+
+                const resp = await fetch('<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns/sync') ?>', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.success) {
+                        this.syncMessage = 'Sincronizzazione completata! ' + (data.campaigns_count || 0) + ' campagne importate.';
+                        this.syncError = false;
+                        // Ricarica la pagina dopo 2 secondi per mostrare i nuovi dati
+                        setTimeout(() => window.location.reload(), 2000);
+                    } else {
+                        this.syncMessage = data.error || 'Errore durante la sincronizzazione.';
+                        this.syncError = true;
+                    }
+                } else {
+                    const data = await resp.json().catch(() => ({}));
+                    this.syncMessage = data.error || 'Errore durante la sincronizzazione (HTTP ' + resp.status + ').';
+                    this.syncError = true;
+                }
+            } catch (err) {
+                console.error('Sync failed:', err);
+                this.syncMessage = 'Errore di connessione. Riprova.';
+                this.syncError = true;
+            } finally {
+                this.syncing = false;
+                // Nascondi il messaggio dopo 5 secondi
+                if (this.syncMessage) {
+                    setTimeout(() => { this.syncMessage = ''; }, 5000);
+                }
             }
         }
     };

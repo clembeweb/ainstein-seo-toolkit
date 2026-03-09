@@ -10,7 +10,7 @@ class Ad
     {
         return Database::insert('ga_ads', [
             'project_id' => $data['project_id'],
-            'run_id' => $data['run_id'],
+            'sync_id' => $data['sync_id'] ?? $data['run_id'] ?? null,
             'campaign_id_google' => $data['campaign_id_google'],
             'campaign_name' => $data['campaign_name'] ?? null,
             'ad_group_id_google' => $data['ad_group_id_google'],
@@ -43,7 +43,7 @@ class Ad
     public static function getByRun(int $runId): array
     {
         return Database::fetchAll(
-            "SELECT * FROM ga_ads WHERE run_id = ? ORDER BY campaign_name, ad_group_name, cost DESC",
+            "SELECT * FROM ga_ads WHERE sync_id = ? ORDER BY campaign_name, ad_group_name, cost DESC",
             [$runId]
         );
     }
@@ -51,7 +51,7 @@ class Ad
     public static function getByCampaign(int $runId, string $campaignIdGoogle): array
     {
         return Database::fetchAll(
-            "SELECT * FROM ga_ads WHERE run_id = ? AND campaign_id_google = ? ORDER BY ad_group_name, cost DESC",
+            "SELECT * FROM ga_ads WHERE sync_id = ? AND campaign_id_google = ? ORDER BY ad_group_name, cost DESC",
             [$runId, $campaignIdGoogle]
         );
     }
@@ -62,7 +62,7 @@ class Ad
             "SELECT COUNT(*) as total_ads, COUNT(DISTINCT ad_group_id_google) as total_ad_groups,
                     SUM(clicks) as total_clicks, SUM(impressions) as total_impressions,
                     SUM(cost) as total_cost, AVG(quality_score) as avg_quality_score
-             FROM ga_ads WHERE run_id = ?",
+             FROM ga_ads WHERE sync_id = ?",
             [$runId]
         ) ?: [];
     }
@@ -76,8 +76,8 @@ class Ad
             "SELECT a.final_url, COUNT(*) as ad_count,
                     GROUP_CONCAT(DISTINCT a.ad_group_name SEPARATOR ', ') as ad_groups
              FROM ga_ads a
-             INNER JOIN ga_campaigns c ON c.campaign_id_google = a.campaign_id_google AND c.run_id = a.run_id
-             WHERE a.run_id = ? AND a.final_url IS NOT NULL AND a.final_url != ''
+             INNER JOIN ga_campaigns c ON c.campaign_id_google = a.campaign_id_google AND c.sync_id = a.sync_id
+             WHERE a.sync_id = ? AND a.final_url IS NOT NULL AND a.final_url != ''
                AND (a.ad_status IS NULL OR a.ad_status = 'ENABLED')
                AND (c.campaign_status IS NULL OR c.campaign_status = 'ENABLED')
              GROUP BY a.final_url
@@ -110,7 +110,7 @@ class Ad
 
     public static function deleteByRun(int $runId): bool
     {
-        return Database::delete('ga_ads', 'run_id = ?', [$runId]) >= 0;
+        return Database::delete('ga_ads', 'sync_id = ?', [$runId]) >= 0;
     }
 
     /**
@@ -121,7 +121,7 @@ class Ad
         return Database::fetchAll(
             "SELECT ad_group_name, ad_group_id_google, final_url, COUNT(*) as url_count
              FROM ga_ads
-             WHERE run_id = ? AND final_url IS NOT NULL AND final_url != ''
+             WHERE sync_id = ? AND final_url IS NOT NULL AND final_url != ''
                AND (ad_status IS NULL OR ad_status = 'ENABLED')
              GROUP BY ad_group_name, ad_group_id_google, final_url
              ORDER BY ad_group_name, url_count DESC",

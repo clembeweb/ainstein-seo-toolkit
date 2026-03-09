@@ -12,8 +12,6 @@ use Core\ModuleLoader;
 use Modules\AdsAnalyzer\Controllers\DashboardController;
 use Modules\AdsAnalyzer\Controllers\ProjectController;
 use Modules\AdsAnalyzer\Controllers\SettingsController;
-use Modules\AdsAnalyzer\Controllers\ApiController;
-use Modules\AdsAnalyzer\Controllers\ScriptController;
 use Modules\AdsAnalyzer\Controllers\CampaignController;
 use Modules\AdsAnalyzer\Controllers\CampaignCreatorController;
 use Modules\AdsAnalyzer\Controllers\SearchTermAnalysisController;
@@ -24,15 +22,6 @@ $moduleSlug = 'ads-analyzer';
 if (!ModuleLoader::isModuleActive($moduleSlug)) {
     return;
 }
-
-// ============================================
-// API PUBBLICA (no auth sessione, no CSRF)
-// ============================================
-
-Router::post('/api/v1/ads-analyzer/ingest', function () {
-    $controller = new ApiController();
-    return $controller->ingest();
-});
 
 // ============================================
 // DASHBOARD
@@ -142,42 +131,56 @@ Router::post('/ads-analyzer/projects/{id}/toggle-archive', function ($id) {
 });
 
 // ============================================
-// GOOGLE ADS SCRIPT
+// GOOGLE ADS API CONNECTION
 // ============================================
 
-// Setup script (genera, copia, configura)
-Router::get('/ads-analyzer/projects/{id}/script', function ($id) {
+// Selezione account Google Ads (GET: mostra, POST: salva)
+Router::get('/ads-analyzer/projects/{id}/connect', function ($id) {
     Middleware::auth();
-    $controller = new ScriptController();
-    return $controller->setup((int) $id);
+    $controller = new ProjectController();
+    return $controller->selectAccount((int) $id);
 });
 
-// Rigenera token API (AJAX)
-Router::post('/ads-analyzer/projects/{id}/script/regenerate-token', function ($id) {
+Router::post('/ads-analyzer/projects/{id}/connect', function ($id) {
     Middleware::auth();
     Middleware::csrf();
-    $controller = new ScriptController();
-    return $controller->regenerateToken((int) $id);
+    $controller = new ProjectController();
+    return $controller->selectAccount((int) $id);
 });
 
-// Aggiorna configurazione script
-Router::post('/ads-analyzer/projects/{id}/script/config', function ($id) {
+// Redirect a OAuth Google Ads
+Router::get('/ads-analyzer/projects/{id}/connect-google-ads', function ($id) {
+    Middleware::auth();
+    $controller = new ProjectController();
+    return $controller->connectGoogleAds((int) $id);
+});
+
+// Disconnetti account Google Ads
+Router::post('/ads-analyzer/projects/{id}/disconnect-google-ads', function ($id) {
     Middleware::auth();
     Middleware::csrf();
-    $controller = new ScriptController();
-    return $controller->updateConfig((int) $id);
+    $controller = new ProjectController();
+    return $controller->disconnectGoogleAds((int) $id);
 });
 
-// Storico esecuzioni script
-Router::get('/ads-analyzer/projects/{id}/script/runs', function ($id) {
+// ============================================
+// DATI CAMPAGNE
+// ============================================
+
+// Sync campagne da Google Ads API (AJAX)
+Router::post('/ads-analyzer/projects/{id}/campaigns/sync', function ($id) {
     Middleware::auth();
-    $controller = new ScriptController();
-    return $controller->runs((int) $id);
+    Middleware::csrf();
+    $controller = new CampaignController();
+    return $controller->sync((int) $id);
 });
 
-// ============================================
-// DATI CAMPAGNE (Tool 2)
-// ============================================
+// Stato sync in corso (polling)
+Router::get('/ads-analyzer/projects/{id}/campaigns/sync-status', function ($id) {
+    Middleware::auth();
+    $controller = new CampaignController();
+    return $controller->syncStatus((int) $id);
+});
 
 // Lista campagne per progetto
 Router::get('/ads-analyzer/projects/{id}/campaigns', function ($id) {
@@ -186,11 +189,11 @@ Router::get('/ads-analyzer/projects/{id}/campaigns', function ($id) {
     return $controller->index((int) $id);
 });
 
-// Dettaglio run campagne
-Router::get('/ads-analyzer/projects/{id}/campaigns/{runId}', function ($id, $runId) {
+// Dettaglio sync campagne
+Router::get('/ads-analyzer/projects/{id}/campaigns/{syncId}', function ($id, $syncId) {
     Middleware::auth();
     $controller = new CampaignController();
-    return $controller->show((int) $id, (int) $runId);
+    return $controller->show((int) $id, (int) $syncId);
 });
 
 // Avvia valutazione AI campagne (AJAX)
@@ -209,11 +212,11 @@ Router::post('/ads-analyzer/projects/{id}/campaigns/toggle-auto-evaluate', funct
     return $controller->toggleAutoEvaluate((int) $id);
 });
 
-// Run disponibili per selettore periodo (AJAX)
-Router::get('/ads-analyzer/projects/{id}/campaigns/available-runs', function ($id) {
+// Sync disponibili per selettore periodo (AJAX)
+Router::get('/ads-analyzer/projects/{id}/campaigns/available-syncs', function ($id) {
     Middleware::auth();
     $controller = new CampaignController();
-    return $controller->availableRuns((int) $id);
+    return $controller->availableSyncs((int) $id);
 });
 
 // Dettaglio valutazione AI
@@ -246,6 +249,14 @@ Router::post('/ads-analyzer/projects/{id}/campaigns/evaluations/{evalId}/export-
     return $controller->exportCsv((int) $id, (int) $evalId);
 });
 
+// Applica suggerimento generato direttamente su Google Ads
+Router::post('/ads-analyzer/projects/{id}/campaigns/evaluations/{evalId}/apply', function ($id, $evalId) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new CampaignController();
+    return $controller->applyToGoogleAds((int) $id, (int) $evalId);
+});
+
 // ============================================
 // ANALISI KEYWORD NEGATIVE (Campaign Projects)
 // ============================================
@@ -257,11 +268,11 @@ Router::get('/ads-analyzer/projects/{id}/search-term-analysis', function ($id) {
     return $controller->index((int) $id);
 });
 
-// AJAX: dati per run selezionato
-Router::get('/ads-analyzer/projects/{id}/search-term-analysis/run-data', function ($id) {
+// AJAX: dati per sync selezionata
+Router::get('/ads-analyzer/projects/{id}/search-term-analysis/sync-data', function ($id) {
     Middleware::auth();
     $controller = new SearchTermAnalysisController();
-    return $controller->getRunData((int) $id);
+    return $controller->getSyncData((int) $id);
 });
 
 // AJAX: rileva URL landing dagli annunci
@@ -324,6 +335,21 @@ Router::get('/ads-analyzer/projects/{id}/search-term-analysis/export', function 
     Middleware::auth();
     $controller = new SearchTermAnalysisController();
     return $controller->export((int) $id);
+});
+
+// AJAX: lista campagne per modale applicazione negatives
+Router::get('/ads-analyzer/projects/{id}/campaigns-list', function ($id) {
+    Middleware::auth();
+    $controller = new SearchTermAnalysisController();
+    return $controller->campaignsList((int) $id);
+});
+
+// AJAX: applica negative keywords su Google Ads via API
+Router::post('/ads-analyzer/projects/{id}/search-term-analysis/apply-negatives', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new SearchTermAnalysisController();
+    return $controller->applyNegativeKeywords((int) $id);
 });
 
 // ============================================
@@ -398,6 +424,14 @@ Router::get('/ads-analyzer/projects/{id}/campaign-creator/export', function ($id
     Middleware::auth();
     $controller = new CampaignCreatorController();
     return $controller->exportCsv((int) $id);
+});
+
+// Pubblica su Google Ads (AJAX lungo)
+Router::post('/ads-analyzer/projects/{id}/campaign-creator/publish', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new CampaignCreatorController();
+    return $controller->publishToGoogleAds((int) $id);
 });
 
 // Rigenera (AJAX rapido)

@@ -10,7 +10,7 @@ class Extension
     {
         return Database::insert('ga_extensions', [
             'project_id' => $data['project_id'],
-            'run_id' => $data['run_id'],
+            'sync_id' => $data['sync_id'] ?? $data['run_id'] ?? null,
             'campaign_id_google' => $data['campaign_id_google'] ?? null,
             'extension_type' => $data['extension_type'],
             'extension_text' => $data['extension_text'] ?? null,
@@ -23,7 +23,7 @@ class Extension
     public static function getByRun(int $runId): array
     {
         return Database::fetchAll(
-            "SELECT * FROM ga_extensions WHERE run_id = ? ORDER BY extension_type, clicks DESC",
+            "SELECT * FROM ga_extensions WHERE sync_id = ? ORDER BY extension_type, clicks DESC",
             [$runId]
         );
     }
@@ -49,6 +49,6 @@ class Extension
 
     public static function deleteByRun(int $runId): bool
     {
-        return Database::delete('ga_extensions', 'run_id = ?', [$runId]) >= 0;
+        return Database::delete('ga_extensions', 'sync_id = ?', [$runId]) >= 0;
     }
 }

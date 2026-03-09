@@ -223,19 +223,89 @@ $currentPage = 'home';
         }
         .btn-secondary:hover { border-color: var(--amber); color: var(--amber-dark); }
 
-        /* Hero screenshot */
-        .hero-screenshot {
+        /* Hero mockup */
+        .hero-mockup {
             margin-top: 64px; position: relative; max-width: 960px; margin-inline: auto;
         }
-        .hero-screenshot img {
-            width: 100%; border-radius: 16px;
-            box-shadow: 0 32px 80px rgba(0,0,0,0.1), 0 4px 20px rgba(0,0,0,0.06);
-            border: 1px solid var(--border);
-        }
-        .hero-screenshot .glow {
+        .hero-mockup .glow {
             position: absolute; inset: -40px; z-index: -1; border-radius: 32px;
             background: radial-gradient(ellipse at center, rgba(245,158,11,0.12) 0%, transparent 70%);
             filter: blur(40px);
+        }
+        .mockup-frame {
+            border-radius: 16px; overflow: hidden;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.1), 0 4px 20px rgba(0,0,0,0.06);
+            border: 1px solid var(--border); background: var(--white);
+        }
+        .mockup-bar {
+            height: 36px; background: #f9fafb; display: flex; align-items: center;
+            gap: 6px; padding: 0 14px; border-bottom: 1px solid var(--border);
+        }
+        .mockup-content {
+            display: grid; grid-template-columns: 1fr 1.4fr; min-height: 320px;
+        }
+        .mockup-input {
+            padding: 28px 24px; border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; gap: 16px;
+        }
+        .mockup-label {
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--text-light);
+        }
+        .mockup-field {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border-radius: 10px; border: 2px solid var(--amber);
+            background: #fffbeb; font-size: 16px; font-weight: 600; color: var(--text);
+        }
+        .mockup-module-tag {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 12px; border-radius: 8px;
+            background: var(--amber-light); color: var(--amber-dark);
+            font-size: 12px; font-weight: 700; width: fit-content;
+        }
+        .mockup-steps { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+        .mockup-step {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 13px; color: var(--text-muted);
+        }
+        .mockup-step.done { color: #10b981; }
+        .mockup-step.active { color: var(--amber-dark); font-weight: 600; }
+        .mockup-spinner {
+            width: 14px; height: 14px; border: 2px solid var(--amber-light);
+            border-top-color: var(--amber); border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .mockup-output {
+            padding: 28px 24px; display: flex; flex-direction: column; gap: 16px;
+        }
+        .mockup-output-header {
+            display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+        }
+        .mockup-output-title {
+            font-size: 17px; font-weight: 700; color: var(--text);
+            line-height: 1.35; flex: 1;
+        }
+        .mockup-score {
+            font-size: 28px; font-weight: 800; color: #10b981;
+            background: #d1fae5; padding: 6px 14px; border-radius: 12px;
+            line-height: 1; white-space: nowrap;
+        }
+        .mockup-score small { font-size: 14px; color: #065f46; font-weight: 600; }
+        .mockup-output-structure {
+            display: flex; flex-direction: column; gap: 6px;
+        }
+        .mockup-h2 {
+            font-size: 13px; color: var(--text-muted); padding: 8px 12px;
+            background: var(--bg); border-radius: 8px; border-left: 3px solid var(--amber);
+        }
+        .mockup-output-stats {
+            display: flex; gap: 16px; margin-top: auto;
+            padding-top: 12px; border-top: 1px solid var(--border);
+        }
+        .mockup-output-stats span {
+            font-size: 12px; font-weight: 600; color: var(--text-muted);
+            padding: 4px 10px; background: var(--bg); border-radius: 6px;
         }
 
         /* Hero stats */
@@ -248,6 +318,58 @@ $currentPage = 'home';
             font-size: 28px; font-weight: 800; letter-spacing: -0.03em; color: var(--text);
         }
         .hero-stat-label { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+
+        /* ---------- PIPELINE ---------- */
+        .pipeline-section {
+            background: var(--bg); padding: 100px 24px;
+        }
+        .pipeline-header {
+            text-align: center; margin-bottom: 64px;
+        }
+        .pipeline-flow {
+            display: flex; align-items: flex-start; justify-content: center; gap: 12px;
+            max-width: var(--max-w); margin: 0 auto;
+        }
+        .pipeline-step {
+            flex: 1; max-width: 200px; text-align: center;
+        }
+        .pipeline-step-icon {
+            width: 52px; height: 52px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 12px; background: var(--amber-light); color: var(--amber-dark);
+        }
+        .pipeline-step-icon svg { width: 24px; height: 24px; }
+        .pipeline-step-label {
+            font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 12px;
+        }
+        .pipeline-mini {
+            border-radius: 12px; overflow: hidden; border: 1px solid var(--border);
+            background: var(--white); box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+        }
+        .pipeline-mini-bar {
+            height: 24px; background: #f9fafb; display: flex; align-items: center;
+            gap: 4px; padding: 0 10px; border-bottom: 1px solid var(--border);
+        }
+        .pipeline-mini-bar span { width: 7px; height: 7px; border-radius: 50%; }
+        .pipeline-mini-content {
+            padding: 14px 12px; font-size: 12px; color: var(--text-md); text-align: left;
+            min-height: 80px; display: flex; flex-direction: column; gap: 4px;
+        }
+        .pipeline-mini-content .mini-highlight {
+            font-weight: 700; color: var(--text); font-size: 13px;
+        }
+        .pipeline-mini-content .mini-muted {
+            color: var(--text-light); font-size: 11px;
+        }
+        .pipeline-mini-content .mini-badge {
+            display: inline-flex; padding: 2px 8px; border-radius: 6px;
+            font-size: 11px; font-weight: 700; width: fit-content;
+        }
+        .pipeline-arrow {
+            display: flex; align-items: center; padding-top: 60px;
+            color: var(--text-light); flex-shrink: 0;
+        }
+        .pipeline-arrow svg { width: 20px; height: 20px; }
 
         /* ---------- HOW IT WORKS ---------- */
         .how-section { background: var(--bg); }
@@ -287,34 +409,16 @@ $currentPage = 'home';
         .how-connector:last-of-type { left: calc(66.666% - 16px); }
         .how-connector svg { width: 24px; height: 24px; }
 
-        /* ---------- TOOLKIT TABS ---------- */
-        .toolkit-tabs {
-            display: flex; flex-wrap: wrap; gap: 4px; margin-top: 48px;
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 0;
+        /* ---------- FEATURE BLOCKS ---------- */
+        .feature-block { padding: 100px 24px; }
+        .feature-block.bg-alt { background: var(--bg); }
+        .feature-inner {
+            max-width: var(--max-w); margin: 0 auto;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
         }
-        .toolkit-tab {
-            padding: 14px 24px; font-size: 14px; font-weight: 600;
-            color: var(--text-muted); cursor: pointer; border: none; background: none;
-            border-bottom: 3px solid transparent; margin-bottom: -2px;
-            transition: all 0.2s; white-space: nowrap;
-        }
-        .toolkit-tab:hover { color: var(--text); }
-        .toolkit-tab.active { color: var(--text); }
-        .toolkit-tab.active.tab-amber { border-bottom-color: #f59e0b; }
-        .toolkit-tab.active.tab-purple { border-bottom-color: #8b5cf6; }
-        .toolkit-tab.active.tab-emerald { border-bottom-color: #10b981; }
-        .toolkit-tab.active.tab-blue { border-bottom-color: #3b82f6; }
-        .toolkit-tab.active.tab-rose { border-bottom-color: #f43f5e; }
-        .toolkit-tab.active.tab-cyan { border-bottom-color: #06b6d4; }
-
-        .toolkit-panel {
-            display: none; grid-template-columns: 1fr 1fr; gap: 64px;
-            align-items: center; padding-top: 56px;
-        }
-        .toolkit-panel.active { display: grid; }
-        .toolkit-info {}
-        .toolkit-badge {
+        .feature-inner.reverse .feature-text { order: 2; }
+        .feature-inner.reverse .feature-mockup-wrap { order: 1; }
+        .feature-badge {
             display: inline-flex; padding: 5px 14px; border-radius: 8px;
             font-size: 12px; font-weight: 700; text-transform: uppercase;
             letter-spacing: 0.06em; margin-bottom: 16px;
@@ -325,22 +429,22 @@ $currentPage = 'home';
         .badge-blue { background: #dbeafe; color: #1e40af; }
         .badge-rose { background: #ffe4e6; color: #9f1239; }
         .badge-cyan { background: #cffafe; color: #155e75; }
-        .toolkit-headline {
+        .feature-headline {
             font-size: clamp(24px, 3vw, 34px); font-weight: 800;
             letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 20px;
         }
-        .toolkit-bullets { list-style: none; margin-bottom: 28px; }
-        .toolkit-bullets li {
+        .feature-bullets { list-style: none; margin-bottom: 28px; }
+        .feature-bullets li {
             display: flex; align-items: flex-start; gap: 12px;
             font-size: 16px; color: var(--text-md); padding: 8px 0; line-height: 1.5;
         }
-        .toolkit-bullets li svg { width: 20px; height: 20px; color: #10b981; flex-shrink: 0; margin-top: 2px; }
-        .toolkit-screenshot {
-            position: relative; border-radius: 16px; overflow: hidden;
+        .feature-bullets li svg { width: 20px; height: 20px; color: #10b981; flex-shrink: 0; margin-top: 2px; }
+        .feature-mockup-frame {
+            border-radius: 16px; overflow: hidden;
             box-shadow: 0 24px 64px rgba(0,0,0,0.1), 0 4px 16px rgba(0,0,0,0.06);
             border: 1px solid var(--border); background: var(--white);
         }
-        .toolkit-screenshot .screen-bar {
+        .feature-mockup-bar {
             height: 36px; background: #f9fafb; display: flex; align-items: center;
             gap: 6px; padding: 0 14px; border-bottom: 1px solid var(--border);
         }
@@ -348,7 +452,112 @@ $currentPage = 'home';
         .screen-dot.r { background: #fca5a5; }
         .screen-dot.y { background: #fcd34d; }
         .screen-dot.g { background: #86efac; }
-        .toolkit-screenshot img { display: block; width: 100%; }
+        .feature-mockup-body { padding: 24px; }
+
+        /* Keyword cluster mockup */
+        .cluster-viz { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+        .cluster-seed {
+            padding: 12px 24px; border-radius: 50px; font-weight: 700; font-size: 15px;
+            background: var(--amber-light); color: var(--amber-dark); border: 2px solid var(--amber);
+        }
+        .cluster-branches { display: flex; gap: 16px; width: 100%; }
+        .cluster-branch {
+            flex: 1; border-radius: 12px; padding: 14px; border: 1px solid var(--border);
+            background: var(--bg); font-size: 13px;
+        }
+        .cluster-branch-title {
+            font-weight: 700; font-size: 12px; text-transform: uppercase;
+            letter-spacing: 0.06em; margin-bottom: 8px;
+        }
+        .cluster-kw {
+            display: flex; justify-content: space-between; padding: 4px 0;
+            font-size: 12px; color: var(--text-md);
+        }
+        .cluster-kw .vol { font-weight: 700; color: var(--text); }
+        .cluster-stats {
+            display: flex; gap: 16px; justify-content: center;
+            padding: 12px 0 0; border-top: 1px solid var(--border);
+            font-size: 13px; color: var(--text-muted); font-weight: 600;
+        }
+
+        /* Article gen mockup */
+        .article-mockup { display: flex; flex-direction: column; gap: 16px; }
+        .article-kw-badge {
+            display: inline-flex; padding: 6px 14px; border-radius: 8px;
+            background: var(--amber-light); color: var(--amber-dark);
+            font-size: 13px; font-weight: 700; width: fit-content;
+        }
+        .article-structure { display: flex; flex-direction: column; gap: 6px; }
+        .article-h2 {
+            font-size: 13px; color: var(--text-md); padding: 8px 12px;
+            background: var(--bg); border-radius: 8px; border-left: 3px solid var(--amber);
+        }
+        .article-stats {
+            display: flex; gap: 12px; padding: 12px 0 0; border-top: 1px solid var(--border);
+        }
+        .article-stats span {
+            font-size: 12px; font-weight: 600; color: var(--text-muted);
+            padding: 4px 10px; background: var(--bg); border-radius: 6px;
+        }
+        .article-stats .score-badge {
+            background: #d1fae5; color: #065f46;
+        }
+
+        /* Campaign mockup */
+        .campaign-mockup { display: flex; flex-direction: column; gap: 14px; }
+        .campaign-header {
+            font-size: 16px; font-weight: 700; color: var(--text);
+            padding-bottom: 10px; border-bottom: 1px solid var(--border);
+        }
+        .campaign-group {
+            padding: 14px; border-radius: 12px; border: 1px solid var(--border);
+            background: var(--bg);
+        }
+        .campaign-group-title {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px;
+        }
+        .campaign-group-title .kw-count {
+            font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 50px;
+            background: #ffe4e6; color: #9f1239;
+        }
+        .campaign-group-keywords {
+            display: flex; flex-wrap: wrap; gap: 4px;
+        }
+        .campaign-group-keywords span {
+            font-size: 11px; padding: 3px 8px; border-radius: 6px;
+            background: var(--white); border: 1px solid var(--border); color: var(--text-muted);
+        }
+        .campaign-stats {
+            display: flex; gap: 12px; padding: 12px 0 0; border-top: 1px solid var(--border);
+            font-size: 13px; color: var(--text-muted); font-weight: 600;
+        }
+
+        /* ---------- MODULES GRID ---------- */
+        .modules-section { background: var(--bg); }
+        .modules-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 24px; margin-top: 56px;
+        }
+        .module-card {
+            background: var(--white); border-radius: 20px; border: 1px solid var(--border);
+            padding: 32px; transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .module-card:hover { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,0.06); }
+        .module-icon {
+            width: 48px; height: 48px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 16px;
+        }
+        .module-icon svg { width: 24px; height: 24px; }
+        .module-card h4 { font-size: 18px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.02em; }
+        .module-card p { font-size: 14px; color: var(--text-muted); line-height: 1.55; margin-bottom: 16px; }
+        .module-link {
+            font-size: 14px; font-weight: 600; display: inline-flex;
+            align-items: center; gap: 4px; transition: gap 0.2s;
+        }
+        .module-link:hover { gap: 8px; }
+        .module-link svg { width: 16px; height: 16px; }
 
         /* ---------- PAIN/SOLUTION ---------- */
         .pain-section { background: var(--bg); }
@@ -436,7 +645,7 @@ $currentPage = 'home';
             background: #d1fae5; color: #065f46; font-size: 12px; font-weight: 700;
         }
         .pricing-grid {
-            display: grid; grid-template-columns: repeat(4, 1fr);
+            display: grid; grid-template-columns: repeat(3, 1fr);
             gap: 20px; margin-top: 48px;
         }
         .pricing-card {
@@ -567,8 +776,12 @@ $currentPage = 'home';
 
         /* ---------- RESPONSIVE ---------- */
         @media (max-width: 1024px) {
-            .toolkit-panel { grid-template-columns: 1fr; gap: 40px; }
-            .toolkit-panel .toolkit-screenshot { order: -1; }
+            .feature-inner { grid-template-columns: 1fr; gap: 40px; }
+            .feature-inner.reverse .feature-text { order: 1; }
+            .feature-inner.reverse .feature-mockup-wrap { order: -1; }
+            .feature-mockup-wrap { order: -1; }
+            .cluster-branches { flex-direction: column; }
+            .modules-grid { grid-template-columns: repeat(2, 1fr); }
             .pricing-grid { grid-template-columns: repeat(2, 1fr); }
             .footer-grid { grid-template-columns: repeat(2, 1fr); }
             .proof-grid { grid-template-columns: repeat(2, 1fr); gap: 32px; }
@@ -589,12 +802,17 @@ $currentPage = 'home';
             .pain-row:first-child .pain-cell:last-child,
             .pain-row:last-child .pain-cell:first-child,
             .pain-row:last-child .pain-cell:last-child { border-radius: inherit; }
-            .toolkit-tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
             .hero-stats { gap: 32px; }
             .hero h1 { font-size: clamp(32px, 7vw, 48px); }
+            .mockup-content { grid-template-columns: 1fr; }
+            .mockup-input { border-right: none; border-bottom: 1px solid var(--border); }
+            .pipeline-flow { flex-direction: column; align-items: center; gap: 8px; }
+            .pipeline-step { max-width: 320px; width: 100%; }
+            .pipeline-arrow { padding-top: 0; transform: rotate(90deg); }
         }
         @media (max-width: 640px) {
             .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin-inline: auto; }
+            .modules-grid { grid-template-columns: 1fr; }
             .hero-ctas { flex-direction: column; }
             .footer-grid { grid-template-columns: 1fr; gap: 32px; }
             .proof-grid { grid-template-columns: 1fr; }
@@ -610,29 +828,75 @@ $currentPage = 'home';
 <section class="hero">
     <div class="hero-content">
         <div class="hero-badge reveal">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-            Potenziato da Claude AI
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            Creata da professionisti SEO e ADV
         </div>
 
         <h1 class="reveal reveal-d1">
-            Automatizza il tuo<br><span class="accent">marketing digitale</span><br>con l'AI
+            Dai la keyword.<br><span class="accent">Ainstein fa il resto.</span>
         </h1>
 
         <p class="hero-sub reveal reveal-d2">
-            Dai la keyword, Ainstein fa il resto. Ricerca, analisi, contenuti e pubblicazione &mdash; processi che richiedono giorni, completati in minuti.
+            Ricerca, piano editoriale, articoli SEO, pubblicazione. Processi che richiedono giorni, completati in minuti. Non AI generica &mdash; automazione costruita da chi fa SEO ogni giorno.
         </p>
 
         <div class="hero-ctas reveal reveal-d3">
             <a href="<?= url('/register') ?>" class="btn-primary">
-                Prova gratis
+                Prova gratis &mdash; 30 crediti
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
             </a>
-            <a href="#come-funziona" class="btn-secondary">Scopri come funziona</a>
+            <a href="#come-funziona" class="btn-secondary">Guarda come funziona &darr;</a>
         </div>
 
-        <div class="hero-screenshot reveal reveal-d4">
+        <div class="hero-mockup reveal reveal-d4">
             <div class="glow"></div>
-            <img src="<?= url('/assets/images/screenshots/output-dashboard.png') ?>" alt="Ainstein Dashboard - Panoramica dei moduli AI">
+            <div class="mockup-frame">
+                <div class="mockup-bar"><span class="screen-dot r"></span><span class="screen-dot y"></span><span class="screen-dot g"></span></div>
+                <div class="mockup-content">
+                    <div class="mockup-input">
+                        <div class="mockup-label">Keyword</div>
+                        <div class="mockup-field">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:16px;height:16px;color:var(--text-light);flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            <span>scarpe running</span>
+                        </div>
+                        <div class="mockup-module-tag">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                            AI Content Generator
+                        </div>
+                        <div class="mockup-steps">
+                            <div class="mockup-step done">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                Analisi SERP
+                            </div>
+                            <div class="mockup-step done">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                Brief generato
+                            </div>
+                            <div class="mockup-step active">
+                                <div class="mockup-spinner"></div>
+                                Scrittura articolo...
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mockup-output">
+                        <div class="mockup-output-header">
+                            <span class="mockup-output-title">Le migliori scarpe da running per principianti: guida 2026</span>
+                            <span class="mockup-score">92<small>/100</small></span>
+                        </div>
+                        <div class="mockup-output-structure">
+                            <div class="mockup-h2">H2: Come scegliere le scarpe da running</div>
+                            <div class="mockup-h2">H2: Top 10 scarpe running principianti</div>
+                            <div class="mockup-h2">H2: Ammortizzazione vs reattivita</div>
+                            <div class="mockup-h2">H2: Errori da evitare nella scelta</div>
+                        </div>
+                        <div class="mockup-output-stats">
+                            <span>2.800 parole</span>
+                            <span>12 H2/H3</span>
+                            <span>Tempo: 8 min</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="hero-stats reveal">
@@ -652,21 +916,119 @@ $currentPage = 'home';
     </div>
 </section>
 
+<!-- ====== PIPELINE ====== -->
+<section class="pipeline-section">
+    <div class="pipeline-header">
+        <div class="section-label reveal">Il flusso</div>
+        <h2 class="section-title reveal reveal-d1">Dall'idea alla pubblicazione</h2>
+        <p class="section-desc mx-auto reveal reveal-d2">Zero copia-incolla tra tool diversi. Un flusso unico dalla ricerca alla pubblicazione.</p>
+    </div>
+
+    <div class="pipeline-flow reveal reveal-d3">
+        <!-- Step 1 -->
+        <div class="pipeline-step">
+            <div class="pipeline-step-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            <div class="pipeline-step-label">Keyword seed</div>
+            <div class="pipeline-mini">
+                <div class="pipeline-mini-bar"><span style="background:#fca5a5;"></span><span style="background:#fcd34d;"></span><span style="background:#86efac;"></span></div>
+                <div class="pipeline-mini-content">
+                    <div class="mini-muted">Inserisci keyword</div>
+                    <div class="mini-highlight" style="padding:6px 10px;border:2px solid var(--amber);border-radius:8px;background:#fffbeb;">scarpe running</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pipeline-arrow"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></div>
+
+        <!-- Step 2 -->
+        <div class="pipeline-step">
+            <div class="pipeline-step-icon" style="background:#ede9fe;color:#6d28d9;">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+            </div>
+            <div class="pipeline-step-label">Ricerca AI</div>
+            <div class="pipeline-mini">
+                <div class="pipeline-mini-bar"><span style="background:#fca5a5;"></span><span style="background:#fcd34d;"></span><span style="background:#86efac;"></span></div>
+                <div class="pipeline-mini-content">
+                    <div class="mini-highlight">120+ keyword</div>
+                    <div class="mini-muted">5 cluster &middot; volumi &middot; intent</div>
+                    <div class="mini-badge" style="background:#ede9fe;color:#6d28d9;">Completato</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pipeline-arrow"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></div>
+
+        <!-- Step 3 -->
+        <div class="pipeline-step">
+            <div class="pipeline-step-icon" style="background:#dbeafe;color:#1e40af;">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </div>
+            <div class="pipeline-step-label">Piano editoriale</div>
+            <div class="pipeline-mini">
+                <div class="pipeline-mini-bar"><span style="background:#fca5a5;"></span><span style="background:#fcd34d;"></span><span style="background:#86efac;"></span></div>
+                <div class="pipeline-mini-content">
+                    <div class="mini-highlight">12 mesi di contenuti</div>
+                    <div class="mini-muted">48 articoli pianificati</div>
+                    <div class="mini-badge" style="background:#dbeafe;color:#1e40af;">Pronto</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pipeline-arrow"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></div>
+
+        <!-- Step 4 -->
+        <div class="pipeline-step">
+            <div class="pipeline-step-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <div class="pipeline-step-label">Articolo SEO</div>
+            <div class="pipeline-mini">
+                <div class="pipeline-mini-bar"><span style="background:#fca5a5;"></span><span style="background:#fcd34d;"></span><span style="background:#86efac;"></span></div>
+                <div class="pipeline-mini-content">
+                    <div class="mini-highlight">2.800 parole</div>
+                    <div class="mini-muted">SEO Score: 92/100</div>
+                    <div class="mini-badge" style="background:#d1fae5;color:#065f46;">8 min</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pipeline-arrow"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></div>
+
+        <!-- Step 5 -->
+        <div class="pipeline-step">
+            <div class="pipeline-step-icon" style="background:#d1fae5;color:#047857;">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div class="pipeline-step-label">Pubblicato su WP</div>
+            <div class="pipeline-mini">
+                <div class="pipeline-mini-bar"><span style="background:#fca5a5;"></span><span style="background:#fcd34d;"></span><span style="background:#86efac;"></span></div>
+                <div class="pipeline-mini-content">
+                    <div class="mini-highlight">Post pubblicato</div>
+                    <div class="mini-muted">WordPress &middot; 1 click</div>
+                    <div class="mini-badge" style="background:#d1fae5;color:#065f46;">Live</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- ====== COME FUNZIONA ====== -->
 <section class="section-pad how-section" id="come-funziona">
     <div class="section-inner text-center">
         <div class="section-label reveal">Come funziona</div>
         <h2 class="section-title reveal reveal-d1">Tre passi. Risultati reali.</h2>
-        <p class="section-desc mx-auto reveal reveal-d2">Ainstein non e l'ennesimo tool AI generico. E un sistema che replica il lavoro di un team di specialisti SEO.</p>
+        <p class="section-desc mx-auto reveal reveal-d2">Ainstein non e l'ennesimo tool AI generico. E un sistema costruito da professionisti SEO e ADV.</p>
 
         <div class="how-grid">
             <div class="how-card reveal">
                 <div class="how-num">01</div>
                 <div class="how-icon amber-bg">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </div>
-                <h3>Configura</h3>
-                <p>Scegli il modulo, inserisci la keyword o l'URL del tuo sito, imposta le preferenze. Due minuti e sei pronto.</p>
+                <h3>Inserisci la keyword</h3>
+                <p>Scrivi "scarpe running" e scegli il modulo. Ainstein si occupa del resto.</p>
             </div>
 
             <div class="how-card reveal reveal-d1">
@@ -674,197 +1036,263 @@ $currentPage = 'home';
                 <div class="how-icon purple-bg">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
                 </div>
-                <h3>L'AI lavora</h3>
-                <p>Claude AI analizza i competitor, studia la SERP di Google, genera contenuti ottimizzati e strategici.</p>
+                <h3>L'AI analizza e crea</h3>
+                <p>Studia la SERP di Google, analizza i competitor, genera output strategici &mdash; non contenuti generici.</p>
             </div>
 
             <div class="how-card reveal reveal-d2">
                 <div class="how-num">03</div>
                 <div class="how-icon emerald-bg">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 </div>
-                <h3>Pubblica</h3>
-                <p>Articoli su WordPress, report SEO, campagne Google Ads &mdash; output pronti all'uso, non bozze da rifare.</p>
+                <h3>Risultati pronti all'uso</h3>
+                <p>Articoli SEO, piani editoriali, campagne Ads. Output professionali, non bozze da rifare.</p>
             </div>
         </div>
     </div>
 </section>
 
-<!-- ====== TOOLKIT MODULES ====== -->
-<section class="section-pad" id="funzionalita">
-    <div class="section-inner">
-        <div class="section-label reveal">I moduli</div>
-        <h2 class="section-title reveal reveal-d1">Cosa automatizza Ainstein</h2>
-        <p class="section-desc reveal reveal-d2">Sei strumenti integrati. Un'unica piattaforma. Zero copia-incolla tra tool diversi.</p>
-
-        <div class="toolkit-tabs reveal reveal-d3" id="toolkitTabs">
-            <button class="toolkit-tab tab-amber active" data-panel="tab-ai-content">Contenuti AI</button>
-            <button class="toolkit-tab tab-purple" data-panel="tab-keyword-research">Keyword Research</button>
-            <button class="toolkit-tab tab-emerald" data-panel="tab-seo-audit">SEO Audit</button>
-            <button class="toolkit-tab tab-blue" data-panel="tab-seo-tracking">Position Tracking</button>
-            <button class="toolkit-tab tab-rose" data-panel="tab-ads-analyzer">Google Ads</button>
-            <button class="toolkit-tab tab-cyan" data-panel="tab-content-creator">Content Creator</button>
+<!-- ====== FEATURE 1: KEYWORD RESEARCH (purple) ====== -->
+<section class="feature-block" id="funzionalita">
+    <div class="feature-inner reveal">
+        <div class="feature-text">
+            <div class="feature-badge badge-purple">AI Keyword Research</div>
+            <h3 class="feature-headline">Da 3 keyword a un piano editoriale completo</h3>
+            <ul class="feature-bullets">
+                <li>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Espansione AI: da 2-3 seed a 120+ keyword con volumi e intent
+                </li>
+                <li>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Clustering automatico per intento di ricerca
+                </li>
+                <li>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Piano editoriale 12 mesi pronto per la produzione
+                </li>
+            </ul>
+            <a href="<?= url('/register') ?>" class="btn-primary" style="display:inline-flex;">Prova gratis</a>
         </div>
-
-        <!-- AI Content -->
-        <div class="toolkit-panel active" id="tab-ai-content">
-            <div class="toolkit-info">
-                <div class="toolkit-badge badge-amber">AI Content Generator</div>
-                <h3 class="toolkit-headline">Da keyword ad articolo pubblicato in 10 minuti</h3>
-                <ul class="toolkit-bullets">
-                    <li>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Analisi SERP automatica dei top 10 risultati Google
-                    </li>
-                    <li>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Brief AI strategico con struttura e parole chiave
-                    </li>
-                    <li>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Pubblicazione WordPress automatica in 1 click
-                    </li>
-                </ul>
-                <a href="<?= url('/register') ?>" class="btn-primary" style="display:inline-flex;">Prova gratis</a>
-            </div>
-            <div class="toolkit-screenshot">
-                <div class="screen-bar"><span class="screen-dot r"></span><span class="screen-dot y"></span><span class="screen-dot g"></span></div>
-                <img src="<?= url('/assets/images/screenshots/ai-content.png') ?>" alt="AI Content Generator" loading="lazy">
-            </div>
-        </div>
-
-        <!-- Keyword Research -->
-        <div class="toolkit-panel" id="tab-keyword-research">
-            <div class="toolkit-info">
-                <div class="toolkit-badge badge-purple">AI Keyword Research</div>
-                <h3 class="toolkit-headline">120+ keyword clusterizzate in 2 minuti</h3>
-                <ul class="toolkit-bullets">
-                    <li>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Espansione AI a partire da 2-3 keyword seed
-                    </li>
-                    <li>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Clustering automatico per intento di ricerca
-                    </li>
-                    <li>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Piano editoriale completo pronto per la produzione
-                    </li>
-                </ul>
-                <a href="<?= url('/register') ?>" class="btn-primary" style="display:inline-flex;">Prova gratis</a>
-            </div>
-            <div class="toolkit-screenshot">
-                <div class="screen-bar"><span class="screen-dot r"></span><span class="screen-dot y"></span><span class="screen-dot g"></span></div>
-                <img src="<?= url('/assets/images/screenshots/keyword-research.png') ?>" alt="Keyword Research" loading="lazy">
+        <div class="feature-mockup-wrap">
+            <div class="feature-mockup-frame">
+                <div class="feature-mockup-bar"><span class="screen-dot r"></span><span class="screen-dot y"></span><span class="screen-dot g"></span></div>
+                <div class="feature-mockup-body">
+                    <div class="cluster-viz">
+                        <div class="cluster-seed">scarpe running</div>
+                        <div class="cluster-branches">
+                            <div class="cluster-branch" style="border-left:3px solid #3b82f6;">
+                                <div class="cluster-branch-title" style="color:#1e40af;">Informazionale</div>
+                                <div class="cluster-kw"><span>come scegliere scarpe running</span><span class="vol">2.400</span></div>
+                                <div class="cluster-kw"><span>migliori scarpe running 2026</span><span class="vol">5.400</span></div>
+                                <div class="cluster-kw"><span>scarpe running principianti</span><span class="vol">1.900</span></div>
+                            </div>
+                            <div class="cluster-branch" style="border-left:3px solid #10b981;">
+                                <div class="cluster-branch-title" style="color:#065f46;">Commerciale</div>
+                                <div class="cluster-kw"><span>scarpe running offerte</span><span class="vol">3.600</span></div>
+                                <div class="cluster-kw"><span>scarpe running economiche</span><span class="vol">1.300</span></div>
+                                <div class="cluster-kw"><span>scarpe running Nike prezzi</span><span class="vol">2.900</span></div>
+                            </div>
+                            <div class="cluster-branch" style="border-left:3px solid var(--amber);">
+                                <div class="cluster-branch-title" style="color:var(--amber-dark);">Transazionale</div>
+                                <div class="cluster-kw"><span>comprare scarpe running online</span><span class="vol">880</span></div>
+                                <div class="cluster-kw"><span>scarpe running uomo saldi</span><span class="vol">1.600</span></div>
+                                <div class="cluster-kw"><span>scarpe running donna leggere</span><span class="vol">720</span></div>
+                            </div>
+                        </div>
+                        <div class="cluster-stats">
+                            <span>127 keyword</span>
+                            <span>&middot;</span>
+                            <span>5 cluster</span>
+                            <span>&middot;</span>
+                            <span>Volume totale: 48.200/mese</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
+</section>
 
-        <!-- SEO Audit -->
-        <div class="toolkit-panel" id="tab-seo-audit">
-            <div class="toolkit-info">
-                <div class="toolkit-badge badge-emerald">SEO Audit</div>
-                <h3 class="toolkit-headline">Audit completo + action plan AI in 5 minuti</h3>
-                <ul class="toolkit-bullets">
-                    <li>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Spider automatico che analizza ogni pagina del sito
-                    </li>
-                    <li>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Scoring problemi con priorita per impatto SEO
-                    </li>
-                    <li>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Piano d'azione AI con fix prioritizzate e concrete
-                    </li>
-                </ul>
-                <a href="<?= url('/register') ?>" class="btn-primary" style="display:inline-flex;">Prova gratis</a>
-            </div>
-            <div class="toolkit-screenshot">
-                <div class="screen-bar"><span class="screen-dot r"></span><span class="screen-dot y"></span><span class="screen-dot g"></span></div>
-                <img src="<?= url('/assets/images/screenshots/seo-audit.png') ?>" alt="SEO Audit" loading="lazy">
+<!-- ====== FEATURE 2: AI CONTENT (amber) ====== -->
+<section class="feature-block bg-alt">
+    <div class="feature-inner reverse reveal">
+        <div class="feature-text">
+            <div class="feature-badge badge-amber">AI Content Generator</div>
+            <h3 class="feature-headline">Da keyword ad articolo pubblicato in 10 minuti</h3>
+            <ul class="feature-bullets">
+                <li>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Analisi SERP automatica dei top 10 risultati Google
+                </li>
+                <li>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Brief AI strategico + articolo completo ottimizzato
+                </li>
+                <li>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Pubblicazione WordPress automatica in 1 click
+                </li>
+            </ul>
+            <a href="<?= url('/register') ?>" class="btn-primary" style="display:inline-flex;">Prova gratis</a>
+        </div>
+        <div class="feature-mockup-wrap">
+            <div class="feature-mockup-frame">
+                <div class="feature-mockup-bar"><span class="screen-dot r"></span><span class="screen-dot y"></span><span class="screen-dot g"></span></div>
+                <div class="feature-mockup-body">
+                    <div class="article-mockup">
+                        <div class="article-kw-badge">scarpe running principianti</div>
+                        <div class="article-structure">
+                            <div class="article-h2">H2: Come scegliere le scarpe da running</div>
+                            <div class="article-h2">H2: Top 10 scarpe running per principianti 2026</div>
+                            <div class="article-h2">H2: Ammortizzazione vs reattivita: cosa conta</div>
+                            <div class="article-h2">H2: Errori da evitare nella scelta</div>
+                            <div class="article-h2">H2: FAQ: domande frequenti sulle scarpe running</div>
+                        </div>
+                        <div class="article-stats">
+                            <span>2.800 parole</span>
+                            <span class="score-badge">SEO Score: 92/100</span>
+                            <span>Tempo: 8 min</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
+</section>
 
-        <!-- SEO Tracking -->
-        <div class="toolkit-panel" id="tab-seo-tracking">
-            <div class="toolkit-info">
-                <div class="toolkit-badge badge-blue">Position Tracking</div>
-                <h3 class="toolkit-headline">Monitora posizioni e ricevi report AI automatici</h3>
-                <ul class="toolkit-bullets">
-                    <li>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Check posizioni giornaliero su Google
-                    </li>
-                    <li>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Alert automatici per variazioni significative
-                    </li>
-                    <li>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Report settimanale AI con insight e opportunita
-                    </li>
-                </ul>
-                <a href="<?= url('/register') ?>" class="btn-primary" style="display:inline-flex;">Prova gratis</a>
-            </div>
-            <div class="toolkit-screenshot">
-                <div class="screen-bar"><span class="screen-dot r"></span><span class="screen-dot y"></span><span class="screen-dot g"></span></div>
-                <img src="<?= url('/assets/images/screenshots/seo-tracking.png') ?>" alt="SEO Tracking" loading="lazy">
+<!-- ====== FEATURE 3: GOOGLE ADS (rose) ====== -->
+<section class="feature-block">
+    <div class="feature-inner reveal">
+        <div class="feature-text">
+            <div class="feature-badge badge-rose">Google Ads Analyzer</div>
+            <h3 class="feature-headline">Campagne Google Ads complete, generate dall'AI</h3>
+            <ul class="feature-bullets">
+                <li>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Analisi approfondita dei competitor e della landing page
+                </li>
+                <li>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Keyword negative + struttura gruppi di annunci automatica
+                </li>
+                <li>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Campagna pronta per Google Ads Editor
+                </li>
+            </ul>
+            <a href="<?= url('/register') ?>" class="btn-primary" style="display:inline-flex;">Prova gratis</a>
+        </div>
+        <div class="feature-mockup-wrap">
+            <div class="feature-mockup-frame">
+                <div class="feature-mockup-bar"><span class="screen-dot r"></span><span class="screen-dot y"></span><span class="screen-dot g"></span></div>
+                <div class="feature-mockup-body">
+                    <div class="campaign-mockup">
+                        <div class="campaign-header">Campagna: Scarpe Running Online</div>
+                        <div class="campaign-group">
+                            <div class="campaign-group-title">
+                                <span>Scarpe Running Generiche</span>
+                                <span class="kw-count">8 keyword</span>
+                            </div>
+                            <div class="campaign-group-keywords">
+                                <span>scarpe running</span>
+                                <span>scarpe da corsa</span>
+                                <span>running shoes</span>
+                                <span>scarpe jogging</span>
+                            </div>
+                        </div>
+                        <div class="campaign-group">
+                            <div class="campaign-group-title">
+                                <span>Scarpe Running Brand</span>
+                                <span class="kw-count">12 keyword</span>
+                            </div>
+                            <div class="campaign-group-keywords">
+                                <span>scarpe running Nike</span>
+                                <span>scarpe running Asics</span>
+                                <span>Hoka running</span>
+                                <span>Brooks Ghost</span>
+                            </div>
+                        </div>
+                        <div class="campaign-group">
+                            <div class="campaign-group-title">
+                                <span>Scarpe Running Offerte</span>
+                                <span class="kw-count">6 keyword</span>
+                            </div>
+                            <div class="campaign-group-keywords">
+                                <span>scarpe running saldi</span>
+                                <span>scarpe running economiche</span>
+                                <span>offerte running</span>
+                            </div>
+                        </div>
+                        <div class="campaign-stats">
+                            <span>14 keyword negative</span>
+                            <span>&middot;</span>
+                            <span>3 gruppi annunci</span>
+                            <span>&middot;</span>
+                            <span>Pronto per Ads Editor</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
+</section>
 
-        <!-- Ads Analyzer -->
-        <div class="toolkit-panel" id="tab-ads-analyzer">
-            <div class="toolkit-info">
-                <div class="toolkit-badge badge-rose">Google Ads Analyzer</div>
-                <h3 class="toolkit-headline">Campagne Google Ads complete, generate dall'AI</h3>
-                <ul class="toolkit-bullets">
-                    <li>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Analisi approfondita dei competitor e della landing page
-                    </li>
-                    <li>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Keyword negative e struttura gruppi di annunci
-                    </li>
-                    <li>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Campagna completa pronta per Google Ads Editor
-                    </li>
-                </ul>
-                <a href="<?= url('/register') ?>" class="btn-primary" style="display:inline-flex;">Prova gratis</a>
-            </div>
-            <div class="toolkit-screenshot">
-                <div class="screen-bar"><span class="screen-dot r"></span><span class="screen-dot y"></span><span class="screen-dot g"></span></div>
-                <img src="<?= url('/assets/images/screenshots/ads-analyzer.png') ?>" alt="Google Ads Analyzer" loading="lazy">
-            </div>
-        </div>
+<!-- ====== TOOLKIT GRID ====== -->
+<section class="section-pad modules-section">
+    <div class="section-inner text-center">
+        <div class="section-label reveal">La suite completa</div>
+        <h2 class="section-title reveal reveal-d1">7 moduli integrati. Un'unica piattaforma.</h2>
+        <p class="section-desc mx-auto reveal reveal-d2">Ogni modulo risolve un pezzo del puzzle. Insieme, automatizzano l'intero flusso SEO e ADV.</p>
 
-        <!-- Content Creator -->
-        <div class="toolkit-panel" id="tab-content-creator">
-            <div class="toolkit-info">
-                <div class="toolkit-badge badge-cyan">Content Creator</div>
-                <h3 class="toolkit-headline">Contenuti HTML per qualsiasi CMS, anche in bulk</h3>
-                <ul class="toolkit-bullets">
-                    <li>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        4 connectors CMS: WordPress, Shopify, PrestaShop, Magento
-                    </li>
-                    <li>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Template personalizzabili per ogni tipo di pagina
-                    </li>
-                    <li>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Generazione in bulk da lista keyword o piano editoriale
-                    </li>
-                </ul>
-                <a href="<?= url('/register') ?>" class="btn-primary" style="display:inline-flex;">Prova gratis</a>
+        <div class="modules-grid">
+            <div class="module-card reveal">
+                <div class="module-icon" style="background:#fef3c7;color:#92400e;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                </div>
+                <h4>AI Content Generator</h4>
+                <p>Da keyword ad articolo SEO pubblicato su WordPress in 10 minuti.</p>
+                <a href="#funzionalita" class="module-link" style="color:#92400e;">Scopri di piu <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
             </div>
-            <div class="toolkit-screenshot">
-                <div class="screen-bar"><span class="screen-dot r"></span><span class="screen-dot y"></span><span class="screen-dot g"></span></div>
-                <img src="<?= url('/assets/images/screenshots/dashboard.png') ?>" alt="Content Creator" loading="lazy">
+            <div class="module-card reveal reveal-d1">
+                <div class="module-icon" style="background:#ede9fe;color:#5b21b6;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+                <h4>AI Keyword Research</h4>
+                <p>120+ keyword clusterizzate con volumi, intent e piano editoriale.</p>
+                <a href="#funzionalita" class="module-link" style="color:#5b21b6;">Scopri di piu <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+            </div>
+            <div class="module-card reveal reveal-d2">
+                <div class="module-icon" style="background:#d1fae5;color:#065f46;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h4>SEO Audit</h4>
+                <p>Audit tecnico completo con AI action plan prioritizzato.</p>
+                <a href="#funzionalita" class="module-link" style="color:#065f46;">Scopri di piu <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+            </div>
+            <div class="module-card reveal reveal-d3">
+                <div class="module-icon" style="background:#dbeafe;color:#1e40af;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                </div>
+                <h4>Position Tracking</h4>
+                <p>Monitora posizioni su Google con report AI settimanali automatici.</p>
+                <a href="#funzionalita" class="module-link" style="color:#1e40af;">Scopri di piu <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+            </div>
+            <div class="module-card reveal reveal-d4">
+                <div class="module-icon" style="background:#ffe4e6;color:#9f1239;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+                </div>
+                <h4>Google Ads Analyzer</h4>
+                <p>Campagne Ads complete generate dall'AI, pronte per Ads Editor.</p>
+                <a href="#funzionalita" class="module-link" style="color:#9f1239;">Scopri di piu <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+            </div>
+            <div class="module-card reveal reveal-d4">
+                <div class="module-icon" style="background:#cffafe;color:#155e75;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                </div>
+                <h4>Content Creator</h4>
+                <p>Contenuti HTML per WordPress, Shopify, PrestaShop e Magento.</p>
+                <a href="#funzionalita" class="module-link" style="color:#155e75;">Scopri di piu <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
             </div>
         </div>
     </div>
@@ -930,17 +1358,6 @@ $currentPage = 'home';
                     Check automatici + report AI settimanali
                 </div>
             </div>
-            <div class="pain-row">
-                <div class="pain-cell">
-                    <svg class="pain-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    Creare campagne Ads richiede esperienza
-                </div>
-                <div class="pain-arrow"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></div>
-                <div class="pain-cell">
-                    <svg class="pain-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    AI analizza competitor e genera campagna completa
-                </div>
-            </div>
         </div>
     </div>
 </section>
@@ -966,6 +1383,9 @@ $currentPage = 'home';
                 <div class="proof-label">Keyword analizzate</div>
             </div>
         </div>
+        <p class="reveal" style="text-align:center;color:#94a3b8;font-size:17px;max-width:600px;margin:40px auto 0;line-height:1.7;">
+            Ainstein e costruita da professionisti SEO e ADV che automatizzano i processi che fanno ogni giorno. Non AI generica &mdash; automazione di qualita.
+        </p>
     </div>
 </section>
 
@@ -994,6 +1414,7 @@ $currentPage = 'home';
             ?>
             <?php foreach ($plans as $plan):
                 $slug = $plan['slug'] ?? strtolower($plan['name']);
+                if ($slug === 'starter') continue;
                 $features = $planFeatures[$slug] ?? $planFeatures['starter'];
                 $isFeatured = ($plan['features'] ?? false) && isset(json_decode($plan['features'], true)['recommended']);
                 $desc = json_decode($plan['features'] ?? '{}', true)['description'] ?? '';
@@ -1043,9 +1464,9 @@ $currentPage = 'home';
             <a href="<?= url('/docs/credits') ?>">Vedi tutti i costi &rarr;</a>
         </p>
 
-        <div class="text-center reveal">
+        <div class="text-center reveal" style="margin-top:32px;">
             <a href="<?= url('/pricing') ?>" class="pricing-more">
-                Confronta tutti i dettagli
+                Confronta tutti i piani nel dettaglio
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
             </a>
         </div>
@@ -1054,11 +1475,11 @@ $currentPage = 'home';
 
 <!-- ====== CTA FINALE ====== -->
 <section class="section-pad cta-final">
-    <h2 class="reveal">Inizia ad automatizzare il tuo marketing</h2>
-    <p class="reveal reveal-d1">Prova gratuita di 7 giorni. Nessuna carta di credito richiesta.</p>
+    <h2 class="reveal">Inizia ad automatizzare il tuo SEO</h2>
+    <p class="reveal reveal-d1">30 crediti gratuiti alla registrazione. Nessuna carta di credito richiesta.</p>
     <div class="reveal reveal-d2">
         <a href="<?= url('/register') ?>" class="btn-cta-large">
-            Inizia gratis
+            Crea account gratis
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
         </a>
     </div>
@@ -1085,16 +1506,6 @@ const revealObserver = new IntersectionObserver((entries) => {
     entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
 document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
-
-// Toolkit tabs
-document.querySelectorAll('.toolkit-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-        document.querySelectorAll('.toolkit-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.toolkit-panel').forEach(p => p.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById(tab.dataset.panel).classList.add('active');
-    });
-});
 
 // Pricing toggle
 const pricingSwitch = document.getElementById('pricingSwitch');

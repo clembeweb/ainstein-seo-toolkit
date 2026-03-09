@@ -72,7 +72,26 @@ $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
 $generatableAreas = ['copy', 'extensions', 'keywords'];
 
 // Helper: render area risultato AI inline
-function renderAiGenerator(string $key): string {
+function renderAiGenerator(string $key, bool $showApply = false): string {
+    $applyBtn = '';
+    if ($showApply) {
+        $applyBtn = <<<APPLY
+            <button x-show="generators['{$key}']?.data && ['copy','extensions','keywords'].includes(generators['{$key}']?.type) && !generators['{$key}']?.applied"
+                @click="openApplyModal('{$key}')"
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors">
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                Applica su Google Ads
+            </button>
+            <span x-show="generators['{$key}']?.applied" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-emerald-700 bg-emerald-100 dark:text-emerald-300 dark:bg-emerald-900/40">
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Applicato
+            </span>
+APPLY;
+    }
     return <<<HTML
 <div x-show="generators['{$key}']?.loading" class="mt-3 flex items-center gap-2 text-xs text-primary-600 dark:text-primary-400">
     <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -104,6 +123,7 @@ function renderAiGenerator(string $key): string {
                 </svg>
                 Esporta CSV Ads Editor
             </button>
+{$applyBtn}
         </div>
     </div>
     <pre x-text="generators['{$key}']?.result" class="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-sans leading-relaxed max-h-96 overflow-y-auto"></pre>
@@ -957,7 +977,7 @@ HTML;
                     <svg x-show="generators['ext_main']?.loading" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                     <span x-text="generators['ext_main']?.loading ? 'Generazione...' : 'Genera Estensioni Mancanti'"></span>
                 </button>
-                <?= renderAiGenerator('ext_main') ?>
+                <?= renderAiGenerator('ext_main', $canEdit && !empty($project['google_ads_customer_id'])) ?>
             </div>
             <?php endif; ?>
         </div>
@@ -1051,7 +1071,7 @@ HTML;
                             <svg x-show="generators['<?= $sugKey ?>']?.loading" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                             <span x-text="generators['<?= $sugKey ?>']?.loading ? 'Generazione...' : 'Genera con AI'"></span>
                         </button>
-                        <?= renderAiGenerator($sugKey) ?>
+                        <?= renderAiGenerator($sugKey, $canEdit && !empty($project['google_ads_customer_id'])) ?>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -1106,6 +1126,121 @@ HTML;
     </div>
 
     <?php endif; ?>
+
+    <!-- Modal Doppia Conferma Applica su Google Ads -->
+    <div x-show="applyModal.open" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4" @keydown.escape.window="applyModal.open = false">
+        <div class="fixed inset-0 bg-black/50" @click="applyModal.open = false"></div>
+        <div class="relative bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6 z-10">
+            <!-- Step 1: Prima conferma -->
+            <template x-if="!applyModal.confirmed && !applyModal.applying && !applyModal.done">
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Applica su Google Ads</h3>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">Questa azione modifica il tuo account</p>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 mb-4">
+                        <p class="text-sm text-slate-700 dark:text-slate-300 mb-2">Stai per applicare:</p>
+                        <p class="text-sm font-medium text-slate-900 dark:text-white" x-text="applyModal.description"></p>
+                    </div>
+                    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-5">
+                        <p class="text-xs text-amber-800 dark:text-amber-300">
+                            <strong>Attenzione:</strong> Le modifiche verranno applicate direttamente sul tuo account Google Ads.
+                            I nuovi annunci saranno creati in <strong>pausa</strong>. Le estensioni saranno attive.
+                        </p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button @click="applyModal.open = false" class="flex-1 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-lg transition-colors">
+                            Annulla
+                        </button>
+                        <button @click="applyModal.confirmed = true" class="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                            Continua
+                        </button>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Step 2: Seconda conferma (digitare CONFERMA) -->
+            <template x-if="applyModal.confirmed && !applyModal.applying && !applyModal.done">
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Conferma finale</h3>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">Scrivi CONFERMA per procedere</p>
+                        </div>
+                    </div>
+                    <input type="text" x-model="applyModal.confirmText"
+                        placeholder="Scrivi CONFERMA"
+                        class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
+                        @keydown.enter="applyModal.confirmText.toUpperCase() === 'CONFERMA' && executeApply()">
+                    <div class="flex gap-3">
+                        <button @click="applyModal.confirmed = false; applyModal.confirmText = ''" class="flex-1 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-lg transition-colors">
+                            Indietro
+                        </button>
+                        <button @click="executeApply()" :disabled="applyModal.confirmText.toUpperCase() !== 'CONFERMA'"
+                            :class="applyModal.confirmText.toUpperCase() === 'CONFERMA' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-700 dark:text-slate-500'"
+                            class="flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors">
+                            Applica ora
+                        </button>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Step 3: In corso -->
+            <template x-if="applyModal.applying">
+                <div class="text-center py-4">
+                    <svg class="w-10 h-10 mx-auto mb-3 text-blue-500 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Applicazione in corso su Google Ads...</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Non chiudere questa finestra</p>
+                </div>
+            </template>
+
+            <!-- Step 4: Completato -->
+            <template x-if="applyModal.done">
+                <div class="text-center py-4">
+                    <template x-if="!applyModal.error">
+                        <div>
+                            <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </div>
+                            <p class="text-sm font-medium text-slate-900 dark:text-white" x-text="applyModal.resultMessage"></p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Le modifiche sono attive sul tuo account Google Ads</p>
+                        </div>
+                    </template>
+                    <template x-if="applyModal.error">
+                        <div>
+                            <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </div>
+                            <p class="text-sm font-medium text-red-700 dark:text-red-400" x-text="applyModal.error"></p>
+                        </div>
+                    </template>
+                    <button @click="applyModal.open = false; resetApplyModal()" class="mt-4 px-4 py-2 text-sm font-medium text-white bg-slate-600 hover:bg-slate-700 rounded-lg transition-colors">
+                        Chiudi
+                    </button>
+                </div>
+            </template>
+        </div>
+    </div>
+
 </div>
 
 <?php if ($hasResults): ?>
@@ -1116,7 +1251,9 @@ function evaluationDashboard() {
         drawerOpen: false,
         selectedCampaign: null,
         generators: {},
+        applyModal: { open: false, key: '', confirmed: false, confirmText: '', applying: false, done: false, error: null, resultMessage: '', description: '' },
         generateUrl: '<?= e($generateUrl ?? '') ?>',
+        applyUrl: '<?= e($applyUrl ?? '') ?>',
         csrfToken: '<?= csrf_token() ?>',
 
         // Campaign data for drawer (populated from PHP)
@@ -1289,6 +1426,74 @@ function evaluationDashboard() {
                 form.appendChild(input);
             }
             document.body.appendChild(form); form.submit(); document.body.removeChild(form);
+        },
+
+        openApplyModal(key) {
+            const gen = this.generators[key];
+            if (!gen || !gen.data) return;
+            const typeDescriptions = {
+                'copy': 'Verra creato un nuovo annuncio RSA in stato PAUSED nel gruppo di annunci della campagna. Potrai attivarlo manualmente da Google Ads.',
+                'extensions': 'Verranno aggiunte le estensioni generate (sitelink, callout, snippet strutturati) alla campagna. Le estensioni esistenti non verranno modificate.',
+                'keywords': 'Verranno aggiunte le keyword negative alla campagna a livello di campagna. Le keyword negative esistenti non verranno modificate.',
+            };
+            this.applyModal = {
+                open: true,
+                key: key,
+                confirmed: false,
+                confirmText: '',
+                applying: false,
+                done: false,
+                error: null,
+                resultMessage: '',
+                description: typeDescriptions[gen.type] || 'Verranno applicate le modifiche generate su Google Ads.',
+            };
+        },
+
+        async executeApply() {
+            if (this.applyModal.confirmText.toUpperCase() !== 'CONFERMA') return;
+            const key = this.applyModal.key;
+            const gen = this.generators[key];
+            if (!gen || !gen.data) return;
+
+            this.applyModal.applying = true;
+            this.applyModal.confirmed = false;
+
+            try {
+                const formData = new FormData();
+                formData.append('_csrf_token', this.csrfToken);
+                formData.append('type', gen.type);
+                formData.append('data', JSON.stringify(gen.data));
+
+                const resp = await fetch(this.applyUrl, { method: 'POST', body: formData });
+
+                if (!resp.ok) {
+                    if (resp.status === 502 || resp.status === 504) {
+                        throw new Error('Timeout del server. Riprova tra qualche istante.');
+                    }
+                    const errData = await resp.json().catch(() => null);
+                    throw new Error(errData?.error || 'Errore HTTP ' + resp.status);
+                }
+
+                const data = await resp.json();
+                if (data.error) throw new Error(data.error);
+
+                this.applyModal.applying = false;
+                this.applyModal.done = true;
+                this.applyModal.resultMessage = data.message || 'Modifiche applicate con successo su Google Ads.';
+
+                // Mark generator as applied
+                if (this.generators[key]) {
+                    this.generators[key].applied = true;
+                }
+            } catch (e) {
+                this.applyModal.applying = false;
+                this.applyModal.done = true;
+                this.applyModal.error = e.message || 'Errore di connessione. Riprova.';
+            }
+        },
+
+        resetApplyModal() {
+            this.applyModal = { open: false, key: '', confirmed: false, confirmText: '', applying: false, done: false, error: null, resultMessage: '', description: '' };
         },
     };
 }

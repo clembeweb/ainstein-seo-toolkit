@@ -25,6 +25,7 @@ $aiConfigured = $aiStatus[$currentProvider]['configured'] ?? false;
 $serpConfigured = !empty($settings['serper_api_key']['value'] ?? '');
 $googleConfigured = !empty($settings['gsc_client_id']['value'] ?? '') && !empty($settings['gsc_client_secret']['value'] ?? '');
 $keywordConfigured = !empty($settings['rapidapi_keyword_key']['value'] ?? '') || !empty($settings['dataforseo_login']['value'] ?? '') || !empty($settings['keywordseverywhere_api_key']['value'] ?? '');
+$gadsConfigured = !empty($settings['gads_developer_token']['value'] ?? '');
 $stripeConfigured = !empty($settings['stripe_public_key']['value'] ?? '') && !empty($settings['stripe_secret_key']['value'] ?? '');
 $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
 ?>
@@ -368,6 +369,69 @@ $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
                                         class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700" title="Copia">
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Google Ads API -->
+            <div x-data="{ open: false }" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <button type="button" @click="open = !open" class="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 rounded-lg bg-rose-100 dark:bg-rose-900/30">
+                            <svg class="w-5 h-5 text-rose-600 dark:text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+                            </svg>
+                        </div>
+                        <div class="text-left">
+                            <h3 class="font-semibold text-slate-900 dark:text-white">Google Ads API</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Developer Token e MCC per Google Ads</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <?php if ($gadsConfigured): ?>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                Configurato
+                            </span>
+                        <?php else: ?>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400">Opzionale</span>
+                        <?php endif; ?>
+                        <svg class="w-5 h-5 text-slate-400 transition-transform" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </button>
+                <div x-show="open" x-collapse>
+                    <div class="px-6 pb-6 pt-2 border-t border-slate-200 dark:border-slate-700 space-y-4">
+                        <div class="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-lg p-3 text-sm text-rose-700 dark:text-rose-300">
+                            <p class="font-medium mb-1">Credenziali Google Ads API:</p>
+                            <ol class="list-decimal list-inside space-y-0.5 text-rose-600 dark:text-rose-400 text-xs">
+                                <li>Richiedi un <a href="https://developers.google.com/google-ads/api/docs/get-started/dev-token" target="_blank" class="underline">Developer Token</a> dalla Google Ads API Center</li>
+                                <li>Il MCC Customer ID e l'account manager che gestisce gli account client</li>
+                                <li>Queste credenziali sono globali e usate da tutti i moduli che integrano Google Ads</li>
+                            </ol>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="gads_developer_token" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Developer Token</label>
+                                <div class="relative">
+                                    <input type="password" name="gads_developer_token" id="gads_developer_token"
+                                           value="<?= e($settings['gads_developer_token']['value'] ?? '') ?>"
+                                           placeholder="xxxxxxxxxxxxxxxx"
+                                           class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 pr-10 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm">
+                                    <button type="button" onclick="togglePassword('gads_developer_token')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="gads_mcc_customer_id" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">MCC Customer ID</label>
+                                <input type="text" name="gads_mcc_customer_id" id="gads_mcc_customer_id"
+                                       value="<?= e($settings['gads_mcc_customer_id']['value'] ?? '') ?>"
+                                       placeholder="123-456-7890"
+                                       class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm">
+                                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Formato: 123-456-7890 o 1234567890</p>
                             </div>
                         </div>
                     </div>

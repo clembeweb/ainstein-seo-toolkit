@@ -1256,11 +1256,11 @@ erDiagram
     <!-- ==================== ADS ANALYZER ==================== -->
     <section id="ga" class="mb-16 print-break">
         <h2 class="text-2xl font-bold text-rose-400 mb-6">Google Ads Analyzer (ga_)</h2>
-        <p class="text-slate-500 dark:text-slate-400 mb-6">18 tabelle. Analisi negative keywords, valutazione campagne AI, Google Ads Script integration, Campaign Creator AI.</p>
+        <p class="text-slate-500 dark:text-slate-400 mb-6">19 tabelle. Analisi negative keywords, valutazione campagne AI, Google Ads API REST v20 integration, Campaign Creator AI.</p>
 
         <div class="mermaid">
 erDiagram
-    ga_projects ||--o{ ga_script_runs : "runs"
+    ga_projects ||--o{ ga_syncs : "sincronizzazioni"
     ga_projects ||--o{ ga_analyses : "analisi"
     ga_projects ||--o{ ga_ad_groups : "ad groups"
     ga_projects ||--o{ ga_campaigns : "campagne"
@@ -1268,8 +1268,11 @@ erDiagram
     ga_ad_groups ||--o{ ga_search_terms : "search terms"
     ga_ad_groups ||--o{ ga_negative_categories : "categorie"
     ga_negative_categories ||--o{ ga_negative_keywords : "kw negative"
-    ga_script_runs ||--o{ ga_campaigns : "dati campagne"
-    ga_script_runs ||--o{ ga_ads : "annunci"
+    ga_syncs ||--o{ ga_campaigns : "dati campagne"
+    ga_syncs ||--o{ ga_ads : "annunci"
+    ga_syncs ||--o{ ga_extensions : "estensioni"
+    ga_syncs ||--o{ ga_campaign_ad_groups : "ad groups"
+    ga_syncs ||--o{ ga_ad_group_keywords : "keywords"
     ga_projects ||--o{ ga_creator_generations : "generazioni"
     ga_projects ||--o{ ga_creator_keywords : "keywords"
     ga_projects ||--o{ ga_creator_campaigns : "campagne AI"
@@ -1279,10 +1282,28 @@ erDiagram
         int id PK
         int user_id FK
         enum type "negative-kw/campaign/campaign-creator"
+        varchar google_ads_customer_id
+        varchar google_ads_account_name
+        varchar login_customer_id "nullable - MCC ID"
         varchar api_token UK
         varchar landing_url
         enum campaign_type_gads "search/pmax"
         text brief
+    }
+    ga_syncs {
+        int id PK
+        int project_id FK
+        int user_id FK
+        enum sync_type "manual/cron/on_demand"
+        enum status "running/completed/error"
+        date date_range_start
+        date date_range_end
+        int campaigns_synced
+        int ad_groups_synced
+        int keywords_synced
+        int ads_synced
+        int extensions_synced
+        int search_terms_synced
     }
     ga_analyses {
         int id PK
@@ -1329,7 +1350,7 @@ erDiagram
         <details class="mt-6 bg-white dark:bg-slate-800 rounded-lg border border-rose-200 dark:border-rose-900/50 shadow-sm">
             <summary class="p-4 font-semibold text-slate-900 dark:text-white">Negative Keywords: ga_projects &middot; ga_analyses &middot; ga_ad_groups &middot; ga_search_terms &middot; ga_negative_categories &middot; ga_negative_keywords &middot; ga_saved_contexts</summary>
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
-                <div><strong class="text-slate-900 dark:text-white">ga_projects</strong>: id(PK), user_id(FK), type(negative-kw/campaign), name, description, business_context, status, api_token(UK), api_token_created_at, script_config(JSON), auto_evaluate, total_terms, total_negatives_found</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_projects</strong>: id(PK), user_id(FK), type(negative-kw/campaign/campaign-creator), name, description, business_context, status, api_token(UK), google_ads_customer_id(VARCHAR), google_ads_account_name(VARCHAR), login_customer_id(VARCHAR nullable — MCC ID per account sotto MCC), sync_enabled(TINYINT), auto_evaluate, total_terms, total_negatives_found</div>
                 <div><strong class="text-slate-900 dark:text-white">ga_analyses</strong>: id(PK), project_id(FK), user_id(FK), name, business_context, context_mode, status, run_id(FK), total_categories/keywords, error_message, started/completed_at</div>
                 <div><strong class="text-slate-900 dark:text-white">ga_ad_groups</strong>: id(PK), project_id(FK), run_id(FK), name, terms_count, zero_ctr_count, wasted_impressions, analysis_status, landing_url, scraped_content, extracted_context</div>
                 <div><strong class="text-slate-900 dark:text-white">ga_search_terms</strong>: id(PK), project_id(FK), ad_group_id(FK), run_id(FK), term, match_type, clicks, impressions, ctr, cost, conversions, conversion_value, is_zero_ctr</div>
@@ -1339,16 +1360,16 @@ erDiagram
             </div>
         </details>
         <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-rose-200 dark:border-rose-900/50 shadow-sm">
-            <summary class="p-4 font-semibold text-slate-900 dark:text-white">Campaign Analysis: ga_script_runs &middot; ga_campaigns &middot; ga_ads &middot; ga_extensions &middot; ga_campaign_evaluations &middot; ga_campaign_ad_groups &middot; ga_ad_group_keywords &middot; ga_auto_eval_queue</summary>
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">Campaign Analysis: ga_syncs &middot; ga_campaigns &middot; ga_ads &middot; ga_extensions &middot; ga_campaign_evaluations &middot; ga_campaign_ad_groups &middot; ga_ad_group_keywords &middot; ga_auto_eval_queue</summary>
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
-                <div><strong class="text-slate-900 dark:text-white">ga_script_runs</strong>: id(PK), project_id(FK), run_type, status(received/processing/completed/error), items_received, error_message, script_version, date_range</div>
-                <div><strong class="text-slate-900 dark:text-white">ga_campaigns</strong>: id(PK), project_id(FK), run_id(FK), campaign_id_google, campaign_name, status/type, bidding_strategy, budget, clicks, impressions, ctr, avg_cpc, cost, conversions, conversion_value, conv_rate</div>
-                <div><strong class="text-slate-900 dark:text-white">ga_ads</strong>: id(PK), project_id(FK), run_id(FK), campaign/ad_group IDs, ad_type, headline1-3, description1-2, final_url, path1-2, status, metrics, quality_score</div>
-                <div><strong class="text-slate-900 dark:text-white">ga_extensions</strong>: id(PK), project_id(FK), run_id(FK), extension_type, extension_text, status, clicks, impressions</div>
-                <div><strong class="text-slate-900 dark:text-white">ga_campaign_evaluations</strong>: id(PK), project_id(FK), user_id(FK), run_id(FK), eval_type(manual/auto), previous_eval_id, name, campaigns/ads/ad_groups/keywords_evaluated, landing_pages_analyzed, ai_response(LONGTEXT), metric_deltas(JSON), campaigns_filter(JSON), status, credits_used</div>
-                <div><strong class="text-slate-900 dark:text-white">ga_campaign_ad_groups</strong>: id(PK), project_id(FK), run_id(FK), campaign info, ad_group info, all metrics</div>
-                <div><strong class="text-slate-900 dark:text-white">ga_ad_group_keywords</strong>: id(PK), project_id(FK), run_id(FK), campaign/ad_group info, keyword_text, match_type, status, metrics, quality_score, first_page_cpc</div>
-                <div><strong class="text-slate-900 dark:text-white">ga_auto_eval_queue</strong>: id(PK), project_id(FK), run_id(FK UK), status(pending/processing/completed/skipped/error), skip_reason, attempts, scheduled_for, timestamps</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_syncs</strong>: id(PK), project_id(FK), user_id(FK), sync_type(ENUM manual/cron/on_demand), status(running/completed/error), date_range_start(DATE), date_range_end(DATE), campaigns_synced, ad_groups_synced, keywords_synced, ads_synced, extensions_synced, search_terms_synced, error_message, started_at, completed_at</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_campaigns</strong>: id(PK), project_id(FK), sync_id(FK), campaign_id_google, campaign_name, campaign_status, campaign_type, bidding_strategy, budget, clicks, impressions, ctr, avg_cpc, cost, conversions, conversion_value, conv_rate</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_ads</strong>: id(PK), project_id(FK), sync_id(FK), campaign/ad_group IDs, ad_type, headline1-3, description1-2, final_url, path1-2, status, metrics, quality_score</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_extensions</strong>: id(PK), project_id(FK), sync_id(FK), extension_type, extension_text, status, clicks, impressions</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_campaign_evaluations</strong>: id(PK), project_id(FK), user_id(FK), sync_id(FK), eval_type(manual/auto), previous_eval_id, name, campaigns/ads/ad_groups/keywords_evaluated, landing_pages_analyzed, ai_response(LONGTEXT), metric_deltas(JSON), campaigns_filter(JSON), status, credits_used</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_campaign_ad_groups</strong>: id(PK), project_id(FK), sync_id(FK), campaign info, ad_group info, all metrics</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_ad_group_keywords</strong>: id(PK), project_id(FK), sync_id(FK), campaign/ad_group info, keyword_text, match_type, status, metrics, quality_score, first_page_cpc</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_auto_eval_queue</strong>: id(PK), project_id(FK), sync_id(FK UK), status(pending/processing/completed/skipped/error), skip_reason, attempts, scheduled_for, timestamps</div>
             </div>
         </details>
         <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-rose-200 dark:border-rose-900/50 shadow-sm">

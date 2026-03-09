@@ -16,8 +16,7 @@ $basePath = "/ads-analyzer/projects/{$projectId}";
 // Tabs progetto campagne
 $tabs = [
     'dashboard'   => ['path' => '/campaign-dashboard', 'label' => 'Dashboard',      'icon' => 'chart-bar'],
-    'script'      => ['path' => '/script',             'label' => 'Script Setup',    'icon' => 'code-bracket'],
-    'runs'        => ['path' => '/script/runs',        'label' => 'Esecuzioni',      'icon' => 'clock'],
+    'connect'     => ['path' => '/connect',            'label' => 'Connessione',    'icon' => 'link'],
     'campaigns'   => ['path' => '/campaigns',          'label' => 'Campagne',        'icon' => 'presentation-chart-bar'],
     'search-term-analysis' => ['path' => '/search-term-analysis', 'label' => 'Keyword Negative', 'icon' => 'funnel'],
     'settings'    => ['path' => '/edit',               'label' => 'Impostazioni',    'icon' => 'cog'],
@@ -28,8 +27,7 @@ function isActiveTabGa($tabKey, $currentPage) {
     $currentPage = $currentPage ?? 'dashboard';
     $aliases = [
         'dashboard'   => ['dashboard', 'overview', 'campaign-dashboard'],
-        'script'      => ['script'],
-        'runs'        => ['runs'],
+        'connect'     => ['connect'],
         'campaigns'   => ['campaigns', 'evaluation', 'evaluations'],
         'search-term-analysis' => ['search-term-analysis'],
         'settings'    => ['settings', 'edit'],
@@ -42,6 +40,7 @@ $icons = [
     'chart-bar' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>',
     'clock' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
     'cog' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>',
+    'link' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>',
     'code-bracket' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>',
     'presentation-chart-bar' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18M3 3v18M3 3l6 6m-6 6l6-6m12-6l-6 6m6 6l-6-6M9 17v-4m3 4v-6m3 6v-2"/></svg>',
     'funnel' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>',
@@ -49,6 +48,7 @@ $icons = [
 ];
 
 $currentPage = $currentPage ?? 'dashboard';
+$isGoogleAdsConnected = !empty($project['google_ads_customer_id']);
 ?>
 
 <!-- Header -->
@@ -96,6 +96,9 @@ $currentPage = $currentPage ?? 'dashboard';
                       : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-300' ?>">
             <?= $icons[$tab['icon']] ?? '' ?>
             <?= $tab['label'] ?>
+            <?php if ($key === 'connect'): ?>
+            <span class="h-2 w-2 rounded-full <?= $isGoogleAdsConnected ? 'bg-emerald-500' : 'bg-slate-400 dark:bg-slate-500' ?>"></span>
+            <?php endif; ?>
         </a>
         <?php endforeach; ?>
     </nav>

@@ -8,7 +8,7 @@ use Core\Credits;
 use Core\Database;
 use Core\ModuleLoader;
 use Modules\AdsAnalyzer\Models\Project;
-use Modules\AdsAnalyzer\Models\ScriptRun;
+use Modules\AdsAnalyzer\Models\Sync;
 use Modules\AdsAnalyzer\Models\Campaign;
 use Modules\AdsAnalyzer\Models\Ad;
 use Modules\AdsAnalyzer\Models\Extension;
@@ -16,7 +16,9 @@ use Modules\AdsAnalyzer\Models\CampaignAdGroup;
 use Modules\AdsAnalyzer\Models\AdGroupKeyword;
 use Modules\AdsAnalyzer\Models\CampaignEvaluation;
 use Modules\AdsAnalyzer\Services\CampaignEvaluatorService;
+use Modules\AdsAnalyzer\Services\CampaignSyncService;
 use Modules\AdsAnalyzer\Services\MetricComparisonService;
+use Services\GoogleAdsService;
 use Core\Logger;
 
 class CampaignController
@@ -40,14 +42,18 @@ class CampaignController
             exit;
         }
 
-        // Prendi tutti i run con dati campagna
-        $runs = ScriptRun::getByProject($projectId, 10);
-        $campaignRuns = array_values(array_filter($runs, fn($r) =>
-            in_array($r['run_type'], ['campaign_performance', 'both']) && $r['status'] === 'completed'
+        // Date range dai parametri (default ultimi 7 giorni)
+        $dateFrom = $_GET['date_from'] ?? date('Y-m-d', strtotime('-7 days'));
+        $dateTo = $_GET['date_to'] ?? date('Y-m-d');
+
+        // Prendi tutti i sync completati
+        $syncs = Sync::getByProject($projectId, 10);
+        $campaignSyncs = array_values(array_filter($syncs, fn($s) =>
+            $s['status'] === 'completed'
         ));
 
-        $latestRun = !empty($campaignRuns) ? reset($campaignRuns) : null;
-        $latestStats = $latestRun ? Campaign::getStatsByRun($latestRun['id']) : [];
+        $latestSync = Sync::getLatestByProject($projectId);
+        $latestStats = $latestSync ? Campaign::getStatsByRun($latestSync['id']) : [];
 
         // Valutazioni recenti
         $evaluations = CampaignEvaluation::getByProject($projectId, 10);
@@ -55,9 +61,9 @@ class CampaignController
         // Conteggi generali
         $totalCampaigns = 0;
         $totalAds = 0;
-        if ($latestRun) {
-            $totalCampaigns = count(Campaign::getByRun($latestRun['id']));
-            $totalAds = count(Ad::getByRun($latestRun['id']));
+        if ($latestSync) {
+            $totalCampaigns = count(Campaign::getByRun($latestSync['id']));
+            $totalAds = count(Ad::getByRun($latestSync['id']));
         }
 
         // Ultima valutazione completata CON AI response reale (per Health Score)
@@ -67,12 +73,12 @@ class CampaignController
         // Ultima eval in assoluto (per link dettagli, può essere no_change)
         $latestEval = $latestEvalWithAi ?: CampaignEvaluation::getLatestByProject($projectId);
 
-        // KPI deltas (confronto con run precedente)
+        // KPI deltas (confronto con sync precedente)
         $kpiDeltas = null;
-        if ($latestRun && count($campaignRuns) >= 2) {
-            $previousRun = $campaignRuns[1] ?? null;
-            if ($previousRun) {
-                $previousStats = Campaign::getStatsByRun($previousRun['id']);
+        if ($latestSync && count($campaignSyncs) >= 2) {
+            $previousSync = $campaignSyncs[1] ?? null;
+            if ($previousSync) {
+                $previousStats = Campaign::getStatsByRun($previousSync['id']);
                 $kpiDeltas = MetricComparisonService::computeDeltas($latestStats, $previousStats);
             }
         }
@@ -80,17 +86,17 @@ class CampaignController
         // Auto-eval status
         $autoEvalEnabled = (bool)($project['auto_evaluate'] ?? false);
 
-        // Trend storico KPI (tutti i run completati, ordine cronologico)
+        // Trend storico KPI (tutti i sync completati, ordine cronologico)
         $kpiTrend = [];
-        foreach (array_reverse($campaignRuns) as $run) {
-            $runStats = ($run['id'] == ($latestRun['id'] ?? 0)) ? $latestStats : Campaign::getStatsByRun($run['id']);
+        foreach (array_reverse($campaignSyncs) as $sync) {
+            $syncStats = ($sync['id'] == ($latestSync['id'] ?? 0)) ? $latestStats : Campaign::getStatsByRun($sync['id']);
             $kpiTrend[] = [
-                'date' => $run['date_range_end'] ?? date('Y-m-d', strtotime($run['created_at'])),
-                'label' => date('d/m', strtotime($run['date_range_end'] ?? $run['created_at'])),
-                'clicks' => (int)($runStats['total_clicks'] ?? 0),
-                'cost' => round((float)($runStats['total_cost'] ?? 0), 2),
-                'conversions' => round((float)($runStats['total_conversions'] ?? 0), 1),
-                'ctr' => round((float)($runStats['avg_ctr'] ?? 0) * 100, 2),
+                'date' => $sync['date_range_end'] ?? date('Y-m-d', strtotime($sync['started_at'] ?? $sync['created_at'] ?? 'now')),
+                'label' => date('d/m', strtotime($sync['date_range_end'] ?? $sync['started_at'] ?? $sync['created_at'] ?? 'now')),
+                'clicks' => (int)($syncStats['total_clicks'] ?? 0),
+                'cost' => round((float)($syncStats['total_cost'] ?? 0), 2),
+                'conversions' => round((float)($syncStats['total_conversions'] ?? 0), 1),
+                'ctr' => round((float)($syncStats['avg_ctr'] ?? 0), 2),
             ];
         }
 
@@ -99,8 +105,8 @@ class CampaignController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
-            'campaignRuns' => $campaignRuns,
-            'latestRun' => $latestRun,
+            'campaignSyncs' => $campaignSyncs,
+            'latestSync' => $latestSync,
             'latestStats' => $latestStats,
             'evaluations' => $evaluations,
             'totalCampaigns' => $totalCampaigns,
@@ -111,6 +117,8 @@ class CampaignController
             'kpiDeltas' => $kpiDeltas,
             'kpiTrend' => $kpiTrend,
             'autoEvalEnabled' => $autoEvalEnabled,
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
             'currentPage' => 'dashboard',
             'userCredits' => Credits::getBalance($user['id']),
             'access_role' => $project['access_role'] ?? 'owner',
@@ -118,7 +126,7 @@ class CampaignController
     }
 
     /**
-     * Lista dati campagne raggruppati per run
+     * Lista dati campagne raggruppati per sync
      */
     public function index(int $projectId): string
     {
@@ -136,24 +144,24 @@ class CampaignController
             exit;
         }
 
-        // Prendi tutti i run con dati campagna
-        $runs = ScriptRun::getByProject($projectId, 20);
-        $campaignRuns = array_filter($runs, fn($r) =>
-            in_array($r['run_type'], ['campaign_performance', 'both']) && $r['status'] === 'completed'
+        // Prendi tutti i sync completati
+        $syncs = Sync::getByProject($projectId, 20);
+        $campaignSyncs = array_filter($syncs, fn($s) =>
+            $s['status'] === 'completed'
         );
 
-        // Stats per l'ultimo run
-        $latestRun = !empty($campaignRuns) ? reset($campaignRuns) : null;
-        $latestStats = $latestRun ? Campaign::getStatsByRun($latestRun['id']) : [];
-        $latestAdStats = $latestRun ? Ad::getStatsByRun($latestRun['id']) : [];
+        // Stats per l'ultimo sync
+        $latestSync = !empty($campaignSyncs) ? reset($campaignSyncs) : null;
+        $latestStats = $latestSync ? Campaign::getStatsByRun($latestSync['id']) : [];
+        $latestAdStats = $latestSync ? Ad::getStatsByRun($latestSync['id']) : [];
 
         // Valutazioni recenti
         $evaluations = CampaignEvaluation::getByProject($projectId, 5);
 
         // Lista campagne per modale selezione
         $campaignsList = [];
-        if ($latestRun) {
-            $allCampaigns = Campaign::getByRun($latestRun['id']);
+        if ($latestSync) {
+            $allCampaigns = Campaign::getByRun($latestSync['id']);
             $campaignsList = array_map(fn($c) => [
                 'id_google' => $c['campaign_id_google'],
                 'name' => $c['campaign_name'],
@@ -170,8 +178,9 @@ class CampaignController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
-            'campaignRuns' => array_values($campaignRuns),
-            'latestRun' => $latestRun,
+            'campaignSyncs' => array_values($campaignSyncs),
+            'latestSync' => $latestSync,
+            'latestRun' => $latestSync, // alias per compatibilità view
             'latestStats' => $latestStats,
             'latestAdStats' => $latestAdStats,
             'evaluations' => $evaluations,
@@ -182,9 +191,150 @@ class CampaignController
     }
 
     /**
-     * Dettaglio run: campagne, annunci, estensioni
+     * Sincronizza dati campagne da Google Ads API (AJAX lungo)
      */
-    public function show(int $projectId, int $runId): string
+    public function sync(int $projectId): void
+    {
+        ignore_user_abort(true);
+        set_time_limit(0);
+
+        ob_start();
+        header('Content-Type: application/json');
+
+        try {
+            $user = Auth::user();
+            $project = Project::findAccessible($user['id'], $projectId);
+
+            if (!$project) {
+                ob_end_clean();
+                http_response_code(404);
+                echo json_encode(['error' => 'Progetto non trovato']);
+                exit;
+            }
+
+            // Viewer cannot perform write operations
+            if (($project['access_role'] ?? 'owner') === 'viewer') {
+                ob_end_clean();
+                http_response_code(403);
+                echo json_encode(['error' => 'Non hai i permessi per questa operazione']);
+                exit;
+            }
+
+            if (($project['type'] ?? 'negative-kw') !== 'campaign') {
+                ob_end_clean();
+                http_response_code(400);
+                echo json_encode(['error' => 'Operazione non disponibile per questo tipo di progetto']);
+                exit;
+            }
+
+            // Verifica che il progetto abbia un account Google Ads collegato
+            $customerId = $project['google_ads_customer_id'] ?? '';
+            if (empty($customerId)) {
+                ob_end_clean();
+                http_response_code(400);
+                echo json_encode(['error' => 'Nessun account Google Ads collegato. Vai nelle impostazioni per collegarlo.']);
+                exit;
+            }
+
+            // Verifica se un sync è già in corso
+            $runningSync = Sync::getRunningSync($projectId);
+            if ($runningSync) {
+                ob_end_clean();
+                http_response_code(409);
+                echo json_encode(['error' => 'Una sincronizzazione è già in corso. Attendi il completamento.']);
+                exit;
+            }
+
+            // Date range dal POST (default ultimi 7 giorni)
+            $dateFrom = $_POST['date_from'] ?? date('Y-m-d', strtotime('-7 days'));
+            $dateTo = $_POST['date_to'] ?? date('Y-m-d');
+
+            // Validazione formato date (prevenzione GAQL injection)
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)
+                || strtotime($dateFrom) === false || strtotime($dateTo) === false) {
+                ob_end_clean();
+                http_response_code(400);
+                echo json_encode(['error' => 'Formato date non valido. Usa YYYY-MM-DD.']);
+                exit;
+            }
+
+            // Chiudi sessione per non bloccare altre request
+            session_write_close();
+
+            // Crea servizi (usa login_customer_id dal progetto per account non sotto MCC)
+            // login_customer_id: valore = usa come MCC, NULL = account diretto (no header)
+            $loginCustomerId = isset($project['login_customer_id']) ? $project['login_customer_id'] : '';
+            $gadsService = new GoogleAdsService($user['id'], $customerId, $loginCustomerId);
+            $syncService = new CampaignSyncService($gadsService, $projectId);
+
+            // Esegui sync completo
+            $result = $syncService->syncAll($dateFrom, $dateTo, $user['id'], 'manual');
+
+            Database::reconnect();
+
+            ob_end_clean();
+            echo json_encode([
+                'success' => $result['success'] ?? false,
+                'sync_id' => $result['sync_id'] ?? null,
+                'counts' => $result['counts'] ?? [],
+                'error' => $result['error'] ?? null,
+            ]);
+            exit;
+
+        } catch (\Exception $e) {
+            Logger::channel('ads')->error("Campaign sync error", ['error' => $e->getMessage()]);
+
+            ob_end_clean();
+            http_response_code(500);
+            echo json_encode(['error' => 'Errore durante la sincronizzazione: ' . $e->getMessage()]);
+            exit;
+        }
+    }
+
+    /**
+     * Stato sincronizzazione corrente (AJAX)
+     */
+    public function syncStatus(int $projectId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = Project::findAccessible($user['id'], $projectId);
+
+        if (!$project || ($project['type'] ?? 'negative-kw') !== 'campaign') {
+            http_response_code(400);
+            echo json_encode(['error' => 'Progetto non valido']);
+            exit;
+        }
+
+        $runningSync = Sync::getRunningSync($projectId);
+        $latestSync = Sync::getLatestByProject($projectId);
+
+        echo json_encode([
+            'is_running' => $runningSync !== null,
+            'running_sync' => $runningSync ? [
+                'id' => (int)$runningSync['id'],
+                'status' => $runningSync['status'],
+                'campaigns_synced' => (int)($runningSync['campaigns_synced'] ?? 0),
+                'ads_synced' => (int)($runningSync['ads_synced'] ?? 0),
+                'keywords_synced' => (int)($runningSync['keywords_synced'] ?? 0),
+            ] : null,
+            'latest_sync' => $latestSync ? [
+                'id' => (int)$latestSync['id'],
+                'status' => $latestSync['status'],
+                'completed_at' => $latestSync['completed_at'] ?? null,
+                'campaigns_synced' => (int)($latestSync['campaigns_synced'] ?? 0),
+                'ads_synced' => (int)($latestSync['ads_synced'] ?? 0),
+                'keywords_synced' => (int)($latestSync['keywords_synced'] ?? 0),
+            ] : null,
+        ]);
+        exit;
+    }
+
+    /**
+     * Dettaglio sync: campagne, annunci, estensioni
+     */
+    public function show(int $projectId, int $syncId): string
     {
         $user = Auth::user();
         $project = Project::findAccessible($user['id'], $projectId);
@@ -200,18 +350,18 @@ class CampaignController
             exit;
         }
 
-        $run = ScriptRun::find($runId);
-        if (!$run || $run['project_id'] != $projectId) {
-            $_SESSION['_flash']['error'] = 'Esecuzione non trovata';
+        $sync = Sync::find($syncId);
+        if (!$sync || $sync['project_id'] != $projectId) {
+            $_SESSION['_flash']['error'] = 'Sincronizzazione non trovata';
             header('Location: ' . url("/ads-analyzer/projects/{$projectId}/campaigns"));
             exit;
         }
 
-        $campaigns = Campaign::getByRun($runId);
-        $ads = Ad::getByRun($runId);
-        $extensions = Extension::getByRunGrouped($runId);
-        $campaignStats = Campaign::getStatsByRun($runId);
-        $adStats = Ad::getStatsByRun($runId);
+        $campaigns = Campaign::getByRun($syncId);
+        $ads = Ad::getByRun($syncId);
+        $extensions = Extension::getByRunGrouped($syncId);
+        $campaignStats = Campaign::getStatsByRun($syncId);
+        $adStats = Ad::getStatsByRun($syncId);
 
         // Raggruppa annunci per campagna
         $adsByCampaign = [];
@@ -221,11 +371,11 @@ class CampaignController
         }
 
         return View::render('ads-analyzer/campaigns/show', [
-            'title' => 'Dettaglio Run - ' . $project['name'],
+            'title' => 'Dettaglio Sync - ' . $project['name'],
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
-            'run' => $run,
+            'sync' => $sync,
             'campaigns' => $campaigns,
             'adsByCampaign' => $adsByCampaign,
             'extensions' => $extensions,
@@ -267,17 +417,17 @@ class CampaignController
                 jsonResponse(['error' => 'Operazione non disponibile per questo tipo di progetto'], 400);
             }
 
-            // Determina run da valutare
-            $runId = (int) ($_POST['run_id'] ?? 0);
-            if ($runId) {
-                $run = ScriptRun::find($runId);
+            // Determina sync da valutare
+            $syncId = (int) ($_POST['sync_id'] ?? 0);
+            if ($syncId) {
+                $sync = Sync::find($syncId);
             } else {
-                $run = ScriptRun::getLatestByProject($projectId, 'campaign_performance');
+                $sync = Sync::getLatestByProject($projectId);
             }
 
-            if (!$run) {
+            if (!$sync) {
                 ob_end_clean();
-                jsonResponse(['error' => 'Nessun dato campagne disponibile. Esegui prima lo script Google Ads.'], 400);
+                jsonResponse(['error' => 'Nessun dato campagne disponibile. Esegui prima una sincronizzazione Google Ads.'], 400);
             }
 
             // Route credits to project owner
@@ -303,15 +453,15 @@ class CampaignController
             }
 
             // Carica dati
-            $campaigns = Campaign::getByRun($run['id']);
-            $ads = Ad::getByRun($run['id']);
-            $extensions = Extension::getByRun($run['id']);
-            $adGroupsData = CampaignAdGroup::getByRun($run['id']);
-            $keywordsData = AdGroupKeyword::getByRun($run['id']);
+            $campaigns = Campaign::getByRun($sync['id']);
+            $ads = Ad::getByRun($sync['id']);
+            $extensions = Extension::getByRun($sync['id']);
+            $adGroupsData = CampaignAdGroup::getByRun($sync['id']);
+            $keywordsData = AdGroupKeyword::getByRun($sync['id']);
 
             if (empty($campaigns)) {
                 ob_end_clean();
-                jsonResponse(['error' => 'Nessuna campagna trovata nel run selezionato'], 400);
+                jsonResponse(['error' => 'Nessuna campagna trovata nella sincronizzazione selezionata'], 400);
             }
 
             // Chiudi sessione per non bloccare altre request
@@ -321,7 +471,7 @@ class CampaignController
             $evalId = CampaignEvaluation::create([
                 'project_id' => $projectId,
                 'user_id' => $user['id'],
-                'run_id' => $run['id'],
+                'sync_id' => $sync['id'],
                 'name' => 'Valutazione ' . date('d/m/Y H:i'),
                 'campaigns_evaluated' => count($campaigns),
                 'ads_evaluated' => count($ads),
@@ -389,7 +539,7 @@ class CampaignController
 
             // Consuma crediti
             Credits::consume($creditUserId, $cost, 'campaign_evaluation', 'ads-analyzer', [
-                'run_id' => $run['id'],
+                'sync_id' => $sync['id'],
                 'campaigns' => count($campaigns),
                 'ad_groups' => count($adGroupsData),
                 'keywords' => count($keywordsData),
@@ -459,9 +609,9 @@ class CampaignController
     }
 
     /**
-     * Run disponibili per selettore periodo (AJAX)
+     * Sync disponibili per selettore periodo (AJAX)
      */
-    public function availableRuns(int $projectId): void
+    public function availableSyncs(int $projectId): void
     {
         header('Content-Type: application/json');
 
@@ -474,36 +624,22 @@ class CampaignController
             exit;
         }
 
-        $runs = ScriptRun::getCompletedCampaignRuns($projectId, 30);
+        $syncs = Sync::getCompletedSyncs($projectId);
 
-        $periods = ['7' => null, '14' => null, '30' => null];
-        foreach ($runs as $run) {
-            $days = (int)($run['period_days'] ?? 0);
-            $bucket = null;
-            if ($days >= 5 && $days <= 9) $bucket = '7';
-            elseif ($days >= 12 && $days <= 16) $bucket = '14';
-            elseif ($days >= 25 && $days <= 35) $bucket = '30';
-
-            if ($bucket && $periods[$bucket] === null) {
-                $periods[$bucket] = [
-                    'available' => true,
-                    'run_id' => (int)$run['id'],
-                    'date_start' => $run['date_range_start'],
-                    'date_end' => $run['date_range_end'],
-                    'period_days' => $days,
-                    'has_evaluation' => !empty($run['evaluation_id']),
-                    'evaluation_id' => $run['evaluation_id'] ? (int)$run['evaluation_id'] : null,
-                ];
-            }
+        $result = [];
+        foreach ($syncs as $sync) {
+            $result[] = [
+                'sync_id' => (int)$sync['id'],
+                'date_start' => $sync['date_range_start'] ?? null,
+                'date_end' => $sync['date_range_end'] ?? null,
+                'completed_at' => $sync['completed_at'] ?? null,
+                'campaigns_synced' => (int)($sync['campaigns_synced'] ?? 0),
+                'ads_synced' => (int)($sync['ads_synced'] ?? 0),
+                'keywords_synced' => (int)($sync['keywords_synced'] ?? 0),
+            ];
         }
 
-        foreach ($periods as $key => &$val) {
-            if ($val === null) {
-                $val = ['available' => false, 'run_id' => null, 'has_evaluation' => false, 'evaluation_id' => null];
-            }
-        }
-
-        echo json_encode(['periods' => $periods]);
+        echo json_encode(['syncs' => $result]);
         exit;
     }
 
@@ -535,43 +671,14 @@ class CampaignController
 
         $aiResponse = json_decode($evaluation['ai_response'] ?? '{}', true) ?: [];
 
-        // Run info for this evaluation
-        $currentRun = null;
-        if (!empty($evaluation['run_id'])) {
-            $currentRun = ScriptRun::find($evaluation['run_id']);
+        // Sync info for this evaluation
+        $currentSync = null;
+        if (!empty($evaluation['sync_id'])) {
+            $currentSync = Sync::find($evaluation['sync_id']);
         }
 
-        // Available runs for period selector
-        $availableRuns = ScriptRun::getCompletedCampaignRuns($projectId, 30);
-        $periods = ['7' => null, '14' => null, '30' => null];
-        $currentPeriod = null;
-
-        foreach ($availableRuns as $run) {
-            $days = (int)($run['period_days'] ?? 0);
-            $bucket = null;
-            if ($days >= 5 && $days <= 9) $bucket = '7';
-            elseif ($days >= 12 && $days <= 16) $bucket = '14';
-            elseif ($days >= 25 && $days <= 35) $bucket = '30';
-
-            if ($bucket && $periods[$bucket] === null) {
-                $periods[$bucket] = [
-                    'available' => true,
-                    'run_id' => (int)$run['id'],
-                    'has_evaluation' => !empty($run['evaluation_id']),
-                    'evaluation_id' => $run['evaluation_id'] ? (int)$run['evaluation_id'] : null,
-                ];
-            }
-
-            if ($currentRun && (int)$run['id'] === (int)$currentRun['id'] && $bucket) {
-                $currentPeriod = $bucket;
-            }
-        }
-
-        foreach ($periods as $key => &$val) {
-            if ($val === null) {
-                $val = ['available' => false, 'run_id' => null, 'has_evaluation' => false, 'evaluation_id' => null];
-            }
-        }
+        // Available syncs for period selector
+        $availableSyncs = Sync::getCompletedSyncs($projectId);
 
         return View::render('ads-analyzer/campaigns/evaluation', [
             'title' => 'Valutazione Campagne - ' . $project['name'],
@@ -581,10 +688,10 @@ class CampaignController
             'evaluation' => $evaluation,
             'aiResponse' => $aiResponse,
             'generateUrl' => url("/ads-analyzer/projects/{$projectId}/campaigns/evaluations/{$evalId}/generate"),
+            'applyUrl' => url("/ads-analyzer/projects/{$projectId}/campaigns/evaluations/{$evalId}/apply"),
             'access_role' => $project['access_role'] ?? 'owner',
-            'currentRun' => $currentRun,
-            'periods' => $periods,
-            'currentPeriod' => $currentPeriod,
+            'currentSync' => $currentSync,
+            'availableSyncs' => $availableSyncs,
         ]);
     }
 
@@ -650,12 +757,12 @@ class CampaignController
             session_write_close();
 
             // Carica dati campagna (stessi model usati in evaluate())
-            $runId = $evaluation['run_id'];
+            $syncId = $evaluation['sync_id'];
             $campaignData = [
-                'campaigns' => Campaign::getByRun($runId),
-                'ads' => Ad::getByRun($runId),
-                'extensions' => Extension::getByRun($runId),
-                'keywords' => AdGroupKeyword::getByRun($runId),
+                'campaigns' => Campaign::getByRun($syncId),
+                'ads' => Ad::getByRun($syncId),
+                'extensions' => Extension::getByRun($syncId),
+                'keywords' => AdGroupKeyword::getByRun($syncId),
                 'business_context' => $project['business_context'] ?? '',
             ];
 
@@ -805,6 +912,226 @@ class CampaignController
         header('Pragma: public');
 
         echo $csv;
+        exit;
+    }
+
+    /**
+     * Applica suggerimento AI generato direttamente su Google Ads
+     */
+    public function applyToGoogleAds(int $projectId, int $evalId): void
+    {
+        ignore_user_abort(true);
+        set_time_limit(0);
+        ob_start();
+        header('Content-Type: application/json');
+
+        try {
+            $user = Auth::user();
+            $project = Project::findAccessible($user['id'], $projectId);
+
+            if (!$project || ($project['type'] ?? 'negative-kw') !== 'campaign') {
+                ob_end_clean();
+                echo json_encode(['error' => 'Progetto non valido']);
+                exit;
+            }
+
+            if (($project['access_role'] ?? 'owner') === 'viewer') {
+                ob_end_clean();
+                echo json_encode(['error' => 'Non hai i permessi per questa operazione']);
+                exit;
+            }
+
+            $customerId = $project['google_ads_customer_id'] ?? '';
+            if (empty($customerId)) {
+                ob_end_clean();
+                echo json_encode(['error' => 'Account Google Ads non collegato. Vai alla sezione Connessione.']);
+                exit;
+            }
+
+            $type = $_POST['type'] ?? '';
+            $data = json_decode($_POST['data'] ?? '{}', true) ?: [];
+            $targetCampaign = $_POST['target_campaign'] ?? '';
+
+            if (empty($type) || empty($data)) {
+                ob_end_clean();
+                echo json_encode(['error' => 'Dati mancanti']);
+                exit;
+            }
+
+            session_write_close();
+
+            $loginCustomerId = $project['login_customer_id'] ?? '';
+            $gads = new GoogleAdsService($user['id'], $customerId, $loginCustomerId);
+
+            $applied = 0;
+            $details = [];
+
+            // Determina la campagna target (prima campagna attiva se non specificata)
+            if (empty($targetCampaign)) {
+                $latestSync = Sync::getLatestByProject($projectId);
+                if ($latestSync) {
+                    $campaigns = Campaign::getByRun($latestSync['id']);
+                    foreach ($campaigns as $c) {
+                        if (($c['campaign_status'] ?? '') === 'ENABLED' && !empty($c['campaign_id_google'])) {
+                            $targetCampaign = "customers/{$customerId}/campaigns/{$c['campaign_id_google']}";
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (str_contains($type, 'extensions')) {
+                // === ESTENSIONI: sitelink, callout, structured snippet ===
+                $mutateOps = [];
+
+                if (!empty($data['sitelinks'])) {
+                    foreach ($data['sitelinks'] as $sl) {
+                        $mutateOps[] = [
+                            'extensionFeedItemOperation' => [
+                                'create' => [
+                                    'extensionType' => 'SITELINK',
+                                    'sitelinkFeedItem' => [
+                                        'linkText' => $sl['title'] ?? '',
+                                        'line1' => $sl['desc1'] ?? '',
+                                        'line2' => $sl['desc2'] ?? '',
+                                        'finalUrls' => [$sl['url'] ?? '/'],
+                                    ]
+                                ]
+                            ]
+                        ];
+                        $applied++;
+                    }
+                }
+
+                if (!empty($data['callouts'])) {
+                    foreach ($data['callouts'] as $callout) {
+                        $text = is_string($callout) ? $callout : ($callout['text'] ?? '');
+                        if (empty($text)) continue;
+                        $mutateOps[] = [
+                            'extensionFeedItemOperation' => [
+                                'create' => [
+                                    'extensionType' => 'CALLOUT',
+                                    'calloutFeedItem' => [
+                                        'calloutText' => $text
+                                    ]
+                                ]
+                            ]
+                        ];
+                        $applied++;
+                    }
+                }
+
+                if (!empty($mutateOps)) {
+                    $gads->groupedMutate($mutateOps);
+                    Database::reconnect();
+                    $details[] = count($data['sitelinks'] ?? []) . ' sitelink';
+                    $details[] = count($data['callouts'] ?? []) . ' callout';
+                }
+
+            } elseif (str_contains($type, 'copy')) {
+                // === COPY: crea nuovo RSA nell'ad group della prima campagna ===
+                $headlines = array_map(fn($h) => ['text' => $h], $data['headlines'] ?? []);
+                $descriptions = array_map(fn($d) => ['text' => $d], $data['descriptions'] ?? []);
+
+                if (empty($headlines) || empty($descriptions)) {
+                    ob_end_clean();
+                    echo json_encode(['error' => 'Headline o description mancanti']);
+                    exit;
+                }
+
+                // Trova primo ad group della campagna target
+                $adGroupResource = '';
+                $finalUrl = '';
+                $latestSync = Sync::getLatestByProject($projectId);
+                if ($latestSync) {
+                    $ads = Ad::getByRun($latestSync['id']);
+                    if (!empty($ads)) {
+                        $firstAd = $ads[0];
+                        $adGroupResource = "customers/{$customerId}/adGroups/{$firstAd['ad_group_id_google']}";
+                        $finalUrl = $firstAd['final_url'] ?? '';
+                    }
+                }
+
+                if (empty($adGroupResource)) {
+                    ob_end_clean();
+                    echo json_encode(['error' => 'Nessun ad group trovato per creare l\'annuncio']);
+                    exit;
+                }
+
+                $gads->mutateAdGroupAds([
+                    [
+                        'create' => [
+                            'adGroup' => $adGroupResource,
+                            'status' => 'PAUSED',
+                            'ad' => [
+                                'responsiveSearchAd' => [
+                                    'headlines' => $headlines,
+                                    'descriptions' => $descriptions,
+                                ],
+                                'finalUrls' => [$finalUrl ?: ($project['landing_url'] ?? 'https://example.com')]
+                            ]
+                        ]
+                    ]
+                ]);
+                Database::reconnect();
+                $applied = 1;
+                $details[] = count($data['headlines'] ?? []) . ' headline, ' . count($data['descriptions'] ?? []) . ' description';
+
+            } elseif (str_contains($type, 'keyword')) {
+                // === KEYWORD NEGATIVE ===
+                if (empty($targetCampaign)) {
+                    ob_end_clean();
+                    echo json_encode(['error' => 'Nessuna campagna target trovata']);
+                    exit;
+                }
+
+                $ops = [];
+                foreach ($data['keywords'] ?? [] as $kw) {
+                    $text = is_string($kw) ? $kw : ($kw['keyword'] ?? $kw['text'] ?? '');
+                    if (empty($text)) continue;
+                    $matchType = strtoupper($kw['match_type'] ?? 'PHRASE');
+                    if (!in_array($matchType, ['EXACT', 'PHRASE', 'BROAD'])) $matchType = 'PHRASE';
+
+                    $ops[] = [
+                        'create' => [
+                            'campaign' => $targetCampaign,
+                            'negative' => true,
+                            'keyword' => [
+                                'text' => $text,
+                                'matchType' => $matchType
+                            ]
+                        ]
+                    ];
+                    $applied++;
+                }
+
+                if (!empty($ops)) {
+                    $gads->mutateCampaignCriteria($ops);
+                    Database::reconnect();
+                }
+            } else {
+                ob_end_clean();
+                echo json_encode(['error' => 'Tipo non supportato: ' . $type]);
+                exit;
+            }
+
+            ob_end_clean();
+            echo json_encode([
+                'success' => true,
+                'applied' => $applied,
+                'details' => implode(', ', $details),
+                'message' => "{$applied} elementi applicati su Google Ads"
+            ]);
+        } catch (\Exception $e) {
+            Database::reconnect();
+            Logger::channel('ai')->error("Evaluation applyToGoogleAds error", [
+                'error' => $e->getMessage(),
+                'project_id' => $projectId,
+                'eval_id' => $evalId
+            ]);
+            ob_end_clean();
+            echo json_encode(['error' => 'Errore applicazione: ' . $e->getMessage()]);
+        }
         exit;
     }
 

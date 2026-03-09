@@ -39,6 +39,18 @@
         "creator_campaign": {
             "cost": 10,
             "description": "Generazione campagna completa AI (Premium)"
+        },
+        "sync_data": {
+            "cost": 0,
+            "description": "Sincronizzazione dati"
+        },
+        "apply_negatives": {
+            "cost": 1,
+            "description": "Applicazione negative keywords"
+        },
+        "publish_campaign": {
+            "cost": 5,
+            "description": "Pubblicazione campagna su Google Ads"
         }
     },
     "settings_groups": {
@@ -47,6 +59,12 @@
             "icon": "sparkles",
             "description": "Provider e modello AI per questo modulo",
             "order": 0
+        },
+        "google_ads_api": {
+            "label": "Google Ads API - Limiti e Sync",
+            "icon": "arrow-path",
+            "description": "Limiti di utilizzo e configurazione sincronizzazione automatica",
+            "order": 0.5
         },
         "general": {
             "label": "Impostazioni Generali",
@@ -100,6 +118,40 @@
                 {"value": "1", "label": "Abilitato"},
                 {"value": "0", "label": "Disabilitato"}
             ]
+        },
+        "gads_daily_limit_per_user": {
+            "type": "number",
+            "label": "Limite giornaliero per utente",
+            "default": 1000,
+            "min": 100,
+            "max": 5000,
+            "group": "google_ads_api",
+            "admin_only": true
+        },
+        "gads_daily_limit_global": {
+            "type": "number",
+            "label": "Limite giornaliero globale",
+            "default": 12000,
+            "min": 1000,
+            "max": 15000,
+            "group": "google_ads_api",
+            "admin_only": true
+        },
+        "gads_sync_frequency_hours": {
+            "type": "number",
+            "label": "Frequenza sync automatico (ore)",
+            "default": 6,
+            "min": 1,
+            "max": 24,
+            "group": "google_ads_api",
+            "admin_only": true
+        },
+        "gads_auto_sync_enabled": {
+            "type": "checkbox",
+            "label": "Sync automatico attivo",
+            "default": true,
+            "group": "google_ads_api",
+            "admin_only": true
         },
         "max_terms_per_analysis": {
             "type": "number",

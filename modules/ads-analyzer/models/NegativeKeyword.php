@@ -8,15 +8,20 @@ class NegativeKeyword
 {
     public static function create(array $data): int
     {
-        return Database::insert('ga_negative_keywords', [
+        $record = [
             'project_id' => $data['project_id'],
             'ad_group_id' => $data['ad_group_id'],
             'analysis_id' => $data['analysis_id'] ?? null,
             'category_id' => $data['category_id'],
             'keyword' => $data['keyword'],
             'is_selected' => $data['is_selected'] ?? true,
-            'suggested_match_type' => $data['suggested_match_type'] ?? 'phrase'
-        ]);
+            'suggested_match_type' => $data['suggested_match_type'] ?? 'phrase',
+            'suggested_level' => $data['suggested_level'] ?? 'campaign',
+            'suggested_campaign_resource' => $data['suggested_campaign_resource'] ?? null,
+            'suggested_ad_group_resource' => $data['suggested_ad_group_resource'] ?? null,
+        ];
+
+        return Database::insert('ga_negative_keywords', $record);
     }
 
     public static function createForAnalysis(int $analysisId, array $data): int
@@ -231,6 +236,29 @@ class NegativeKeyword
     public static function countSelectedByAnalysis(int $analysisId): int
     {
         return Database::count('ga_negative_keywords', 'analysis_id = ? AND is_selected = 1', [$analysisId]);
+    }
+
+    public static function findByIds(array $ids): array
+    {
+        if (empty($ids)) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        return Database::fetchAll(
+            "SELECT * FROM ga_negative_keywords WHERE id IN ({$placeholders}) ORDER BY keyword ASC",
+            array_values(array_map('intval', $ids))
+        );
+    }
+
+    public static function markAsApplied(array $ids): int
+    {
+        if (empty($ids)) {
+            return 0;
+        }
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $sql = "UPDATE ga_negative_keywords SET applied_at = NOW() WHERE id IN ({$placeholders})";
+        $stmt = Database::query($sql, array_values(array_map('intval', $ids)));
+        return $stmt ? $stmt->rowCount() : 0;
     }
 
     public static function getDistinctKeywordTextByAnalysis(int $analysisId): array

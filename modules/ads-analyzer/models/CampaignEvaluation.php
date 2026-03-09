@@ -11,7 +11,7 @@ class CampaignEvaluation
         $record = [
             'project_id' => $data['project_id'],
             'user_id' => $data['user_id'],
-            'run_id' => $data['run_id'] ?? null,
+            'sync_id' => $data['sync_id'] ?? $data['run_id'] ?? null,
             'name' => $data['name'],
             'campaigns_evaluated' => $data['campaigns_evaluated'] ?? 0,
             'ads_evaluated' => $data['ads_evaluated'] ?? 0,

@@ -1,6 +1,6 @@
 # AINSTEIN - Istruzioni Claude Code
 
-> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-03-04 (Crawl Budget mergiato in SEO Audit)
+> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-03-09 (Google Ads API integration complete)
 
 ---
 
@@ -53,7 +53,7 @@
 |--------|------|-------------|-------|
 | AI Content Generator | `ai-content` | `aic_` | Completo (reference pattern) |
 | SEO Audit | `seo-audit` | `sa_` | Completo (+ Crawl Budget integrato) |
-| Google Ads Analyzer | `ads-analyzer` | `ga_` | Completo |
+| Google Ads Analyzer | `ads-analyzer` | `ga_` | Completo (Google Ads API v18) |
 | SEO Tracking | `seo-tracking` | `st_` | Completo |
 | AI Keyword Research | `keyword-research` | `kr_` | Completo |
 | Content Creator | `content-creator` | `cc_` | Completo (4 CMS connectors) |
@@ -423,6 +423,7 @@ cron/cleanup-ai-logs.php                           # Daily (0 4 * * *)
 cron/admin-report.php                              # Weekly (0 8 * * 1)
 modules/ai-content/cron/dispatcher.php             # Every Min (* * * * *)
 modules/ads-analyzer/cron/auto-evaluate.php        # Every 5 Min (*/5 * * * *)
+modules/ads-analyzer/cron/sync-dispatcher.php      # Every 6 Hours (0 */6 * * *)
 modules/seo-audit/cron/crawl-dispatcher.php        # Every 5 Min (*/5 * * * *)
 modules/seo-tracking/cron/rank-dispatcher.php      # Every 5 Min (*/5 * * * *)
 modules/seo-tracking/cron/gsc-sync-dispatcher.php  # Hourly (0 * * * *)
@@ -475,6 +476,11 @@ modules/crawl-budget/cron/crawl-dispatcher.php     # Every 5 Min (*/5 * * * *)
 | Modulo non visibile in prod | Creare tabelle DB + INSERT in `modules` |
 | Crediti sbagliati in view | Passare `Credits::getCost()` dal controller (no hardcode) |
 | Paginazione perde contesto | Usare `$baseUrl` project-scoped con `View::partial()` |
+| SEO Audit: falsi positivi noindex | Cloudflare bot protection → `isBotProtectionPage()` in CrawlerService |
+| SEO Audit: issues su redirect 3xx | `IssueDetector::shouldSkipAnalysis()` salta redirect, rate_limited, /cdn-cgi/ |
+| SEO Audit: pagine vuote/rate limited | `fetchRaw()` + retry backoff → status `rate_limited` in `sa_pages` |
+| SEO Audit: discovery muore su SiteGround | Discovery ora in `processStream()` background (non in `start()`) |
+| `ScraperService::fetch()` scarta 4xx/5xx | Usare `fetchRaw()` se servono tutte le risposte HTTP |
 
 ---
 

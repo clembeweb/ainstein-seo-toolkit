@@ -17,8 +17,10 @@ class Analysis
             'status' => 'draft'
         ];
 
-        if (isset($data['run_id'])) {
-            $record['run_id'] = $data['run_id'];
+        if (isset($data['sync_id'])) {
+            $record['sync_id'] = $data['sync_id'];
+        } elseif (isset($data['run_id'])) {
+            $record['sync_id'] = $data['run_id'];
         }
 
         return Database::insert('ga_analyses', $record);
@@ -113,20 +115,25 @@ class Analysis
         );
     }
 
-    public static function findByRunId(int $runId): array
+    public static function findBySyncId(int $runId): array
     {
         return Database::fetchAll(
-            "SELECT * FROM ga_analyses WHERE run_id = ? ORDER BY created_at DESC",
+            "SELECT * FROM ga_analyses WHERE sync_id = ? ORDER BY created_at DESC",
             [$runId]
         );
     }
 
     public static function getCompletedByProjectWithRun(int $projectId): array
     {
+        return self::getCompletedByProjectWithSync($projectId);
+    }
+
+    public static function getCompletedByProjectWithSync(int $projectId): array
+    {
         return Database::fetchAll(
-            "SELECT a.*, r.date_range_start, r.date_range_end, r.created_at as run_created_at
+            "SELECT a.*, s.date_range_start, s.date_range_end, s.started_at as sync_started_at
              FROM ga_analyses a
-             LEFT JOIN ga_script_runs r ON r.id = a.run_id
+             LEFT JOIN ga_syncs s ON s.id = a.sync_id
              WHERE a.project_id = ? AND a.status = 'completed'
              ORDER BY a.created_at DESC",
             [$projectId]

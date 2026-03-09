@@ -8,8 +8,8 @@ use Core\Settings;
 /**
  * GoogleOAuthService - Servizio centralizzato per OAuth2 Google
  *
- * Gestisce autenticazione OAuth per Google Search Console e GA4.
- * Usato da: seo-audit, seo-tracking (e futuri moduli)
+ * Gestisce autenticazione OAuth per Google Search Console, GA4 e Google Ads.
+ * Usato da: seo-audit, seo-tracking, ads-analyzer (e futuri moduli)
  */
 class GoogleOAuthService
 {
@@ -21,6 +21,7 @@ class GoogleOAuthService
     // Scope disponibili
     public const SCOPE_GSC = 'https://www.googleapis.com/auth/webmasters.readonly';
     public const SCOPE_GA4 = 'https://www.googleapis.com/auth/analytics.readonly';
+    public const SCOPE_GOOGLE_ADS = 'https://www.googleapis.com/auth/adwords';
     public const SCOPE_LOGIN = 'openid email profile';
 
     private ?string $clientId = null;

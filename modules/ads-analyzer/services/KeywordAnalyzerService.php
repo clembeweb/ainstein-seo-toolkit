@@ -21,7 +21,8 @@ class KeywordAnalyzerService
         int $userId,
         string $businessContext,
         array $terms,
-        int $maxTerms = 300
+        int $maxTerms = 300,
+        string $campaignStructure = ''
     ): array {
         \Core\Logger::channel('ai')->debug('KeywordAnalyzerService::analyzeAdGroup START', [
             'user_id' => $userId,
@@ -36,14 +37,14 @@ class KeywordAnalyzerService
             \Core\Logger::channel('ai')->debug('Terms for prompt', ['count' => count($termsForPrompt)]);
 
             $termsSummary = array_map(
-                fn($t) => "{$t['term']} | {$t['clicks']} clic | {$t['impressions']} imp",
+                fn($t) => "{$t['term']} | {$t['clicks']} clic | {$t['impressions']} imp | €" . round((float)($t['cost'] ?? 0), 2) . " | " . ($t['campaign_name'] ?? '?') . " > " . ($t['ad_group_name'] ?? '?'),
                 $termsForPrompt
             );
             $termsText = implode("\n", $termsSummary);
             \Core\Logger::channel('ai')->debug('Terms text built', ['length' => strlen($termsText)]);
 
             // Costruisci prompt
-            $prompt = $this->buildPrompt($businessContext, $termsText);
+            $prompt = $this->buildPrompt($businessContext, $termsText, $campaignStructure);
             \Core\Logger::channel('ai')->debug('Prompt built', [
                 'length' => strlen($prompt),
                 'preview' => substr($prompt, 0, 300),
@@ -93,15 +94,20 @@ class KeywordAnalyzerService
     /**
      * Costruisce prompt dinamico basato su contesto business
      */
-    private function buildPrompt(string $businessContext, string $terms): string
+    private function buildPrompt(string $businessContext, string $terms, string $campaignStructure = ''): string
     {
+        $structureBlock = '';
+        if (!empty($campaignStructure)) {
+            $structureBlock = "\n\nSTRUTTURA CAMPAGNE E AD GROUP:\n{$campaignStructure}\n";
+        }
+
         return <<<PROMPT
-Sei un esperto Google Ads. Analizza i termini di ricerca e identifica keyword negative da escludere per questa campagna.
+Sei un esperto Google Ads. Analizza i termini di ricerca e identifica keyword negative da escludere.
 
 CONTESTO BUSINESS:
 {$businessContext}
-
-TERMINI DI RICERCA (formato: termine | click | impressioni):
+{$structureBlock}
+TERMINI DI RICERCA (formato: termine | click | impressioni | costo | campagna > ad group):
 {$terms}
 
 ISTRUZIONI:
@@ -109,30 +115,45 @@ ISTRUZIONI:
 2. Identifica termini di ricerca NON PERTINENTI rispetto all'offerta
 3. Raggruppa le keyword negative in categorie logiche per questo specifico business
 4. Assegna priorita: "high" (escludi subito), "medium" (probabilmente da escludere), "evaluate" (valuta caso per caso)
+5. Per ogni keyword, decidi il LIVELLO di applicazione:
+   - "campaign" se il termine e irrilevante per TUTTE le campagne/ad group (es. termine completamente fuori target)
+   - "ad_group" se il termine e irrilevante solo per ALCUNI ad group ma potrebbe essere valido per altri
+6. Suggerisci il match_type piu appropriato:
+   - "exact" per termini molto specifici che devono essere bloccati esattamente come sono
+   - "phrase" per pattern che devono essere bloccati come frase (default)
+   - "broad" per concetti ampi che devono essere bloccati in qualsiasi combinazione
 
-Rispondi SOLO con un JSON valido (senza markdown, senza backtick, senza testo prima o dopo) con questa struttura:
+Rispondi SOLO con un JSON valido (senza markdown, senza backtick, senza testo prima o dopo):
 {
+  "summary": "Breve riepilogo dell'analisi (1-2 frasi)",
   "stats": {
     "total_terms": numero_termini_analizzati,
     "zero_ctr_terms": numero_termini_con_ctr_zero,
-    "wasted_impressions": impressioni_sprecate_stimate
+    "wasted_impressions": impressioni_sprecate_stimate,
+    "estimated_waste_cost": costo_stimato_spreco
   },
   "categories": {
     "NOME_CATEGORIA_1": {
       "priority": "high|medium|evaluate",
       "description": "Breve descrizione della categoria",
-      "keywords": ["keyword1", "keyword2", "keyword3"]
-    },
-    "NOME_CATEGORIA_2": { ... }
+      "keywords": [
+        {
+          "text": "keyword1",
+          "match_type": "exact|phrase|broad",
+          "level": "campaign|ad_group",
+          "target_name": "nome campagna o ad group dove applicare (se ad_group)"
+        }
+      ]
+    }
   }
 }
 
 REGOLE PER LE CATEGORIE:
-- Crea 5-12 categorie pertinenti al business (non usare categorie predefinite)
-- Esempi categorie comuni: CONCORRENTI, PRODOTTI_NON_OFFERTI, INTENTO_INFORMATIVO, NAVIGAZIONALI, BRAND_ALTRI, LOCALITA, LINGUE_STRANIERE
+- Crea 5-12 categorie pertinenti al business
 - Adatta i nomi delle categorie al contesto specifico
-- Estrai SOLO keyword singole o frasi brevi (max 3 parole), non i termini interi
+- Estrai SOLO keyword singole o frasi brevi (max 3 parole)
 - Identifica pattern ricorrenti nei termini non pertinenti
+- IMPORTANTE: per il campo "level", considera che una keyword negativa a livello campagna blocca il termine su TUTTI gli ad group. Usa "ad_group" quando il termine potrebbe essere valido per un altro ad group della stessa campagna.
 PROMPT;
     }
 

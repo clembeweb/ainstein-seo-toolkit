@@ -17,8 +17,8 @@ class AdGroup
             'analysis_status' => $data['analysis_status'] ?? 'pending'
         ];
 
-        if (isset($data['run_id'])) {
-            $record['run_id'] = $data['run_id'];
+        if (isset($data['sync_id']) || isset($data['run_id'])) {
+            $record['sync_id'] = $data['sync_id'] ?? $data['run_id'];
         }
 
         return Database::insert('ga_ad_groups', $record);
@@ -63,7 +63,7 @@ class AdGroup
     public static function getByRun(int $runId): array
     {
         return Database::fetchAll(
-            "SELECT * FROM ga_ad_groups WHERE run_id = ? ORDER BY name ASC",
+            "SELECT * FROM ga_ad_groups WHERE sync_id = ? ORDER BY name ASC",
             [$runId]
         );
     }
@@ -78,7 +78,7 @@ class AdGroup
                 (SELECT COUNT(*) FROM ga_negative_keywords nk WHERE nk.ad_group_id = ag.id) as negatives_count,
                 (SELECT COUNT(*) FROM ga_negative_keywords nk WHERE nk.ad_group_id = ag.id AND nk.is_selected = 1) as selected_count
             FROM ga_ad_groups ag
-            WHERE ag.run_id = ?
+            WHERE ag.sync_id = ?
             ORDER BY ag.name ASC
         ";
 

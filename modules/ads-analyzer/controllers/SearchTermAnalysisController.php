@@ -14,8 +14,9 @@ use Modules\AdsAnalyzer\Models\Analysis;
 use Modules\AdsAnalyzer\Models\Ad;
 use Modules\AdsAnalyzer\Models\NegativeCategory;
 use Modules\AdsAnalyzer\Models\NegativeKeyword;
-use Modules\AdsAnalyzer\Models\ScriptRun;
+use Modules\AdsAnalyzer\Models\Sync;
 use Modules\AdsAnalyzer\Models\BusinessContext;
+use Services\GoogleAdsService;
 use Modules\AdsAnalyzer\Services\KeywordAnalyzerService;
 use Modules\AdsAnalyzer\Services\ContextExtractorService;
 use Core\Logger;
@@ -76,34 +77,35 @@ class SearchTermAnalysisController
         $user = $ctx['user'];
         $project = $ctx['project'];
 
-        // Run con search terms
-        $runs = ScriptRun::getByProject($projectId, 20);
-        $searchTermRuns = array_values(array_filter($runs, fn($r) =>
-            in_array($r['run_type'], ['search_terms', 'both']) && $r['status'] === 'completed'
+        // Sync completate con search terms
+        $syncs = Sync::getCompletedSyncs($projectId);
+        $searchTermSyncs = array_values(array_filter($syncs, fn($s) =>
+            (int)($s['search_terms_synced'] ?? 0) > 0
         ));
 
-        $selectedRun = !empty($searchTermRuns) ? $searchTermRuns[0] : null;
+        $selectedSync = !empty($searchTermSyncs) ? $searchTermSyncs[0] : null;
 
-        // Dati per il run selezionato
-        $adGroups = [];
+        // Stats per la sync corrente
         $searchTermStats = [];
-        $landingUrls = [];
-
-        if ($selectedRun) {
-            $adGroups = AdGroup::getByRunWithStats($selectedRun['id']);
-            $searchTermStats = SearchTerm::getStatsByRun($selectedRun['id']);
-
-            // Rileva URL dagli annunci (ultimo run campagna)
-            $campaignRuns = array_values(array_filter($runs, fn($r) =>
-                in_array($r['run_type'], ['campaign_performance', 'both']) && $r['status'] === 'completed'
-            ));
-            if (!empty($campaignRuns)) {
-                $landingUrls = Ad::getLandingUrlsByAdGroup($campaignRuns[0]['id']);
-            }
+        if ($selectedSync) {
+            $searchTermStats = SearchTerm::getStatsByRun($selectedSync['id']);
         }
 
-        // Analisi completate per questo progetto (con run_id)
-        $analyses = Analysis::getCompletedByProjectWithRun($projectId);
+        // Ultima analisi completata
+        $analyses = Analysis::getCompletedByProjectWithSync($projectId);
+        $latestAnalysis = !empty($analyses) ? $analyses[0] : null;
+
+        // Storico negative applicate
+        $appliedCount = 0;
+        $lastAppliedDate = null;
+        $appliedKeywords = Database::fetch(
+            "SELECT COUNT(*) as cnt, MAX(applied_at) as last_applied FROM ga_negative_keywords WHERE project_id = ? AND applied_at IS NOT NULL",
+            [$projectId]
+        );
+        if ($appliedKeywords) {
+            $appliedCount = (int)$appliedKeywords['cnt'];
+            $lastAppliedDate = $appliedKeywords['last_applied'];
+        }
 
         // Contesti business salvati dall'utente
         $savedContexts = BusinessContext::getByUser($user['id']);
@@ -113,13 +115,14 @@ class SearchTermAnalysisController
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
-            'searchTermRuns' => $searchTermRuns,
-            'selectedRun' => $selectedRun,
-            'adGroups' => $adGroups,
+            'searchTermSyncs' => $searchTermSyncs,
+            'selectedSync' => $selectedSync,
             'searchTermStats' => $searchTermStats,
-            'landingUrls' => $landingUrls,
             'analyses' => $analyses,
+            'latestAnalysis' => $latestAnalysis,
             'savedContexts' => $savedContexts,
+            'appliedCount' => $appliedCount,
+            'lastAppliedDate' => $lastAppliedDate,
             'currentPage' => 'search-term-analysis',
             'userCredits' => Credits::getBalance($user['id']),
             'access_role' => $project['access_role'] ?? 'owner',
@@ -127,33 +130,33 @@ class SearchTermAnalysisController
     }
 
     /**
-     * AJAX: Dati per un run specifico
+     * AJAX: Dati per una sync specifica
      */
-    public function getRunData(int $projectId): void
+    public function getSyncData(int $projectId): void
     {
         header('Content-Type: application/json');
         $ctx = $this->requireCampaignProjectJson($projectId);
 
-        $runId = (int)($_GET['run_id'] ?? 0);
-        if (!$runId) {
-            echo json_encode(['error' => 'run_id richiesto']);
+        $syncId = (int)($_GET['sync_id'] ?? 0);
+        if (!$syncId) {
+            echo json_encode(['error' => 'sync_id richiesto']);
             exit;
         }
 
-        $run = ScriptRun::find($runId);
-        if (!$run || $run['project_id'] != $projectId) {
+        $sync = Sync::find($syncId);
+        if (!$sync || $sync['project_id'] != $projectId) {
             http_response_code(404);
-            echo json_encode(['error' => 'Run non trovato']);
+            echo json_encode(['error' => 'Sincronizzazione non trovata']);
             exit;
         }
 
-        $adGroups = AdGroup::getByRunWithStats($runId);
-        $stats = SearchTerm::getStatsByRun($runId);
+        $adGroups = AdGroup::getByRunWithStats($syncId);
+        $stats = SearchTerm::getStatsByRun($syncId);
 
         // Search terms raggruppati per ad group
         $searchTermsByGroup = [];
         foreach ($adGroups as $ag) {
-            $terms = SearchTerm::getByRunAndAdGroup($runId, $ag['id']);
+            $terms = SearchTerm::getByRunAndAdGroup($syncId, $ag['id']);
             $searchTermsByGroup[$ag['id']] = array_map(fn($t) => [
                 'id' => $t['id'],
                 'term' => $t['term'],
@@ -199,25 +202,20 @@ class SearchTermAnalysisController
         header('Content-Type: application/json');
         $ctx = $this->requireCampaignProjectJson($projectId);
 
-        $runId = (int)($_POST['run_id'] ?? 0);
-        if (!$runId) {
-            echo json_encode(['error' => 'run_id richiesto']);
+        $syncId = (int)($_POST['sync_id'] ?? 0);
+        if (!$syncId) {
+            echo json_encode(['error' => 'sync_id richiesto']);
             exit;
         }
 
-        // Trova ultimo run campagna per avere gli annunci
-        $runs = ScriptRun::getByProject($projectId, 20);
-        $campaignRuns = array_values(array_filter($runs, fn($r) =>
-            in_array($r['run_type'], ['campaign_performance', 'both']) && $r['status'] === 'completed'
-        ));
-
-        if (empty($campaignRuns)) {
-            echo json_encode(['error' => 'Nessun dato campagne disponibile. Lo script deve raccogliere anche i dati delle campagne.']);
+        // La sync include tutti i dati (campagne, annunci, search terms)
+        $sync = Sync::find($syncId);
+        if (!$sync || $sync['project_id'] != $projectId) {
+            echo json_encode(['error' => 'Sincronizzazione non trovata']);
             exit;
         }
 
-        $campaignRunId = $campaignRuns[0]['id'];
-        $urlData = Ad::getLandingUrlsByAdGroup($campaignRunId);
+        $urlData = Ad::getLandingUrlsByAdGroup($syncId);
 
         // Raggruppa: per ogni ad_group_name prendi l'URL con più annunci
         $bestUrls = [];
@@ -228,8 +226,8 @@ class SearchTermAnalysisController
             }
         }
 
-        // Match con ad groups del run search terms (case-insensitive)
-        $adGroups = AdGroup::getByRun($runId);
+        // Match con ad groups della sync (case-insensitive)
+        $adGroups = AdGroup::getByRun($syncId);
         $matched = 0;
 
         foreach ($adGroups as $ag) {
@@ -267,14 +265,14 @@ class SearchTermAnalysisController
         $user = $ctx['user'];
         $project = $ctx['project'];
 
-        $runId = (int)($_POST['run_id'] ?? 0);
-        if (!$runId) {
+        $syncId = (int)($_POST['sync_id'] ?? 0);
+        if (!$syncId) {
             ob_end_clean();
-            echo json_encode(['error' => 'run_id richiesto']);
+            echo json_encode(['error' => 'sync_id richiesto']);
             exit;
         }
 
-        $adGroups = AdGroup::getByRun($runId);
+        $adGroups = AdGroup::getByRun($syncId);
         $withUrl = array_filter($adGroups, fn($ag) => !empty($ag['landing_url']));
 
         if (empty($withUrl)) {
@@ -311,7 +309,7 @@ class SearchTermAnalysisController
                 AdGroup::saveExtractedContext($ag['id'], $result['extracted_context']);
                 Credits::consume($creditUserId, $contextCost, 'context_extraction', 'ads-analyzer', [
                     'ad_group' => $ag['name'],
-                    'run_id' => $runId,
+                    'sync_id' => $syncId,
                 ]);
 
                 $results[] = [
@@ -354,33 +352,42 @@ class SearchTermAnalysisController
             $user = $ctx['user'];
             $project = $ctx['project'];
 
-            $runId = (int)($_POST['run_id'] ?? 0);
-            $businessContext = trim($_POST['business_context'] ?? '');
+            $syncId = (int)($_POST['sync_id'] ?? 0);
 
-            if (!$runId) {
+            if (!$syncId) {
                 ob_end_clean();
-                echo json_encode(['error' => 'run_id richiesto']);
+                echo json_encode(['error' => 'sync_id richiesto']);
                 exit;
+            }
+
+            // Contesto business: opzionale dall'utente, arricchito automaticamente
+            $manualContext = trim($_POST['business_context'] ?? '');
+            $autoContext = $this->buildAutoContext($projectId, $syncId);
+
+            $businessContext = $manualContext;
+            if (!empty($autoContext)) {
+                $businessContext = (!empty($manualContext) ? $manualContext . "\n\n" : '') . $autoContext;
             }
 
             if (strlen($businessContext) < 20) {
                 ob_end_clean();
-                echo json_encode(['error' => 'Il contesto business deve avere almeno 20 caratteri']);
+                echo json_encode(['error' => 'Impossibile generare contesto automatico. Aggiungi una descrizione del business.']);
                 exit;
             }
 
-            // Carica ad groups per il run
-            $adGroups = AdGroup::getByRun($runId);
-            if (empty($adGroups)) {
-                ob_end_clean();
-                echo json_encode(['error' => 'Nessun Ad Group trovato per questo run']);
-                exit;
-            }
+            // Carica ad groups distinti dai search terms (ga_ad_groups potrebbe non avere il sync_id corretto)
+            $distinctAdGroupIds = Database::fetchAll(
+                "SELECT DISTINCT ad_group_id FROM ga_search_terms WHERE sync_id = ? AND project_id = ?",
+                [$syncId, $projectId]
+            );
 
-            // Filtra solo quelli con termini
             $adGroupsWithTerms = [];
-            foreach ($adGroups as $ag) {
-                $terms = SearchTerm::getByRunAndAdGroup($runId, $ag['id']);
+            foreach ($distinctAdGroupIds as $row) {
+                $agId = (int)$row['ad_group_id'];
+                $ag = AdGroup::find($agId);
+                if (!$ag) continue;
+
+                $terms = SearchTerm::getByRunAndAdGroup($syncId, $agId);
                 if (!empty($terms)) {
                     $adGroupsWithTerms[] = ['adGroup' => $ag, 'terms' => $terms];
                 }
@@ -408,11 +415,11 @@ class SearchTermAnalysisController
 
             session_write_close();
 
-            // Crea Analysis con run_id
+            // Crea Analysis con sync_id
             $analysisId = Analysis::create([
                 'project_id' => $projectId,
                 'user_id' => $user['id'],
-                'run_id' => $runId,
+                'sync_id' => $syncId,
                 'name' => 'Analisi KW Negative ' . date('d/m/Y H:i'),
                 'business_context' => $businessContext,
                 'context_mode' => 'auto',
@@ -424,6 +431,9 @@ class SearchTermAnalysisController
             $totalNegatives = 0;
             $totalCategories = 0;
             $errors = [];
+
+            // Struttura campagne per il prompt AI
+            $campaignStructure = $this->buildCampaignStructureForPrompt($projectId, $syncId);
 
             foreach ($adGroupsWithTerms as $item) {
                 $ag = $item['adGroup'];
@@ -440,7 +450,9 @@ class SearchTermAnalysisController
                     $aiResult = $analyzer->analyzeAdGroup(
                         $user['id'],
                         $agContext,
-                        $terms
+                        $terms,
+                        300,
+                        $campaignStructure
                     );
 
                     Database::reconnect();
@@ -480,7 +492,7 @@ class SearchTermAnalysisController
 
             // Consuma crediti
             Credits::consume($creditUserId, $creditsNeeded, 'negative_kw_analysis', 'ads-analyzer', [
-                'run_id' => $runId,
+                'sync_id' => $syncId,
                 'ad_groups' => $adGroupCount,
                 'source' => 'campaign_project',
             ]);
@@ -549,6 +561,9 @@ class SearchTermAnalysisController
                     'id' => $kw['id'],
                     'keyword' => $kw['keyword'],
                     'is_selected' => (bool)$kw['is_selected'],
+                    'suggested_match_type' => $kw['suggested_match_type'] ?? 'phrase',
+                    'suggested_level' => $kw['suggested_level'] ?? 'campaign',
+                    'applied_at' => $kw['applied_at'] ?? null,
                 ], $keywords),
             ];
         }
@@ -818,10 +833,204 @@ class SearchTermAnalysisController
     }
 
     /**
+     * AJAX: Lista campagne disponibili per il modale di applicazione
+     */
+    public function campaignsList(int $projectId): void
+    {
+        header('Content-Type: application/json');
+        $ctx = $this->requireCampaignProjectJson($projectId);
+        $project = $ctx['project'];
+
+        // Carica campagne dall'ultima sync
+        $latestSync = Sync::getLatestByProject($projectId);
+        if (!$latestSync) {
+            echo json_encode(['success' => true, 'campaigns' => []]);
+            exit;
+        }
+
+        $campaigns = Database::fetchAll(
+            "SELECT DISTINCT campaign_name, campaign_id_google FROM ga_campaigns WHERE project_id = ? AND sync_id = ? ORDER BY campaign_name ASC",
+            [$projectId, $latestSync['id']]
+        );
+
+        $customerId = $project['google_ads_customer_id'] ?? '';
+
+        $result = array_map(function ($c) use ($customerId) {
+            $gadsId = $c['campaign_id_google'] ?? '';
+            return [
+                'name' => $c['campaign_name'],
+                'resource_name' => $gadsId ? "customers/{$customerId}/campaigns/{$gadsId}" : '',
+            ];
+        }, $campaigns);
+
+        // Filtra campagne senza resource name valido
+        $result = array_values(array_filter($result, fn($c) => !empty($c['resource_name'])));
+
+        echo json_encode(['success' => true, 'campaigns' => $result]);
+        exit;
+    }
+
+    /**
+     * AJAX: Applica negative keywords selezionate direttamente su Google Ads via API
+     */
+    public function applyNegativeKeywords(int $projectId): void
+    {
+        \Core\Middleware::auth();
+        $user = Auth::user();
+        $project = Project::findAccessible($user['id'], $projectId);
+
+        if (!$project) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Progetto non trovato']);
+            exit;
+        }
+
+        $role = $project['access_role'] ?? 'owner';
+        if ($role === 'viewer') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Non hai i permessi per applicare modifiche']);
+            exit;
+        }
+
+        $customerId = $project['google_ads_customer_id'] ?? '';
+        if (empty($customerId)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Account Google Ads non connesso. Vai nelle impostazioni per collegarlo.']);
+            exit;
+        }
+
+        ignore_user_abort(true);
+        set_time_limit(0);
+        ob_start();
+        header('Content-Type: application/json');
+        session_write_close();
+
+        $keywordIds = $_POST['keyword_ids'] ?? [];
+
+        if (empty($keywordIds) || !is_array($keywordIds)) {
+            ob_end_clean();
+            echo json_encode(['error' => 'Nessuna keyword selezionata']);
+            exit;
+        }
+
+        $keywords = NegativeKeyword::findByIds($keywordIds);
+
+        if (empty($keywords)) {
+            ob_end_clean();
+            echo json_encode(['error' => 'Nessuna keyword trovata']);
+            exit;
+        }
+
+        try {
+            $loginCustomerId = $project['login_customer_id'] ?? '';
+            $gads = new GoogleAdsService($user['id'], $customerId, $loginCustomerId);
+
+            // Raggruppa per livello suggerito
+            $campaignOps = [];
+            $adGroupOps = [];
+
+            // Fallback: prima campagna disponibile
+            $defaultCampaignResource = $this->getDefaultCampaignResource($projectId, $customerId);
+
+            foreach ($keywords as $kw) {
+                $matchType = strtoupper($kw['suggested_match_type'] ?? 'PHRASE');
+                if (!in_array($matchType, ['EXACT', 'PHRASE', 'BROAD'])) {
+                    $matchType = 'PHRASE';
+                }
+
+                $level = $kw['suggested_level'] ?? 'campaign';
+
+                if ($level === 'ad_group' && !empty($kw['suggested_ad_group_resource'])) {
+                    $adGroupOps[] = [
+                        'create' => [
+                            'adGroup' => $kw['suggested_ad_group_resource'],
+                            'negative' => true,
+                            'keyword' => [
+                                'text' => $kw['keyword'],
+                                'matchType' => $matchType,
+                            ],
+                        ],
+                    ];
+                } else {
+                    $campaignResource = $kw['suggested_campaign_resource'] ?? $defaultCampaignResource;
+                    if (!empty($campaignResource)) {
+                        $campaignOps[] = [
+                            'create' => [
+                                'campaign' => $campaignResource,
+                                'negative' => true,
+                                'keyword' => [
+                                    'text' => $kw['keyword'],
+                                    'matchType' => $matchType,
+                                ],
+                            ],
+                        ];
+                    }
+                }
+            }
+
+            $appliedCount = 0;
+
+            if (!empty($campaignOps)) {
+                $gads->mutateCampaignCriteria($campaignOps);
+                $appliedCount += count($campaignOps);
+            }
+
+            Database::reconnect();
+
+            if (!empty($adGroupOps)) {
+                $gads->mutateAdGroupCriteria($adGroupOps);
+                $appliedCount += count($adGroupOps);
+            }
+
+            Database::reconnect();
+
+            NegativeKeyword::markAsApplied($keywordIds);
+
+            ob_end_clean();
+            echo json_encode([
+                'success' => true,
+                'applied' => $appliedCount,
+                'campaign_level' => count($campaignOps),
+                'ad_group_level' => count($adGroupOps),
+                'message' => $appliedCount . ' negative keywords applicate su Google Ads (' . count($campaignOps) . ' a livello campagna, ' . count($adGroupOps) . ' a livello ad group)',
+            ]);
+            exit;
+
+        } catch (\Exception $e) {
+            Database::reconnect();
+            Logger::channel('api')->error('applyNegativeKeywords error', [
+                'project_id' => $projectId,
+                'error' => $e->getMessage(),
+            ]);
+
+            ob_end_clean();
+            http_response_code(500);
+            echo json_encode(['error' => 'Errore Google Ads API: ' . $e->getMessage()]);
+            exit;
+        }
+    }
+
+    private function getDefaultCampaignResource(int $projectId, string $customerId): string
+    {
+        $campaign = Database::fetch(
+            "SELECT campaign_id_google FROM ga_campaigns WHERE project_id = ? AND campaign_id_google IS NOT NULL ORDER BY id DESC LIMIT 1",
+            [$projectId]
+        );
+        if ($campaign && !empty($campaign['campaign_id_google'])) {
+            return "customers/{$customerId}/campaigns/{$campaign['campaign_id_google']}";
+        }
+        return '';
+    }
+
+    /**
      * Salva risultati analisi AI in DB (replica AnalysisController::saveAnalysisResults)
      */
     private function saveAnalysisResults(int $projectId, int $adGroupId, array $analysis, int $analysisId): void
     {
+        // Mappa nomi campagna/ad group a resource names
+        $campaignResources = $this->getCampaignResourceMap($projectId);
+        $adGroupResources = $this->getAdGroupResourceMap($projectId);
+
         $sortOrder = 0;
         foreach ($analysis['categories'] ?? [] as $key => $data) {
             $categoryId = NegativeCategory::create([
@@ -837,14 +1046,33 @@ class SearchTermAnalysisController
             ]);
 
             foreach ($data['keywords'] ?? [] as $keyword) {
-                NegativeKeyword::create([
-                    'project_id' => $projectId,
-                    'ad_group_id' => $adGroupId,
-                    'analysis_id' => $analysisId,
-                    'category_id' => $categoryId,
-                    'keyword' => $keyword,
-                    'is_selected' => ($data['priority'] ?? 'medium') !== 'evaluate',
-                ]);
+                // Supporta sia formato vecchio (stringa) che nuovo (oggetto)
+                if (is_string($keyword)) {
+                    NegativeKeyword::create([
+                        'project_id' => $projectId,
+                        'ad_group_id' => $adGroupId,
+                        'analysis_id' => $analysisId,
+                        'category_id' => $categoryId,
+                        'keyword' => $keyword,
+                        'is_selected' => ($data['priority'] ?? 'medium') !== 'evaluate',
+                    ]);
+                } else {
+                    $level = $keyword['level'] ?? 'campaign';
+                    $targetName = $keyword['target_name'] ?? '';
+
+                    NegativeKeyword::create([
+                        'project_id' => $projectId,
+                        'ad_group_id' => $adGroupId,
+                        'analysis_id' => $analysisId,
+                        'category_id' => $categoryId,
+                        'keyword' => $keyword['text'] ?? $keyword['keyword'] ?? '',
+                        'is_selected' => ($data['priority'] ?? 'medium') !== 'evaluate',
+                        'suggested_match_type' => $keyword['match_type'] ?? 'phrase',
+                        'suggested_level' => $level,
+                        'suggested_campaign_resource' => ($level === 'campaign') ? ($campaignResources[$targetName] ?? null) : null,
+                        'suggested_ad_group_resource' => ($level === 'ad_group') ? ($adGroupResources[$targetName] ?? null) : null,
+                    ]);
+                }
             }
         }
     }
@@ -852,5 +1080,134 @@ class SearchTermAnalysisController
     private function formatCategoryName(string $key): string
     {
         return ucwords(str_replace('_', ' ', strtolower($key)));
+    }
+
+    /**
+     * Costruisce contesto business automatico dalla struttura campagne
+     */
+    private function buildAutoContext(int $projectId, int $syncId): string
+    {
+        $parts = [];
+
+        // 1. Struttura campagne → ad groups
+        $campaignAdGroups = Database::fetchAll(
+            "SELECT campaign_name, ad_group_name FROM ga_campaign_ad_groups WHERE project_id = ? AND sync_id = ? ORDER BY campaign_name, ad_group_name",
+            [$projectId, $syncId]
+        );
+        $adGroupsByCampaign = [];
+        foreach ($campaignAdGroups as $cag) {
+            $adGroupsByCampaign[$cag['campaign_name']][] = $cag['ad_group_name'];
+        }
+        if (!empty($adGroupsByCampaign)) {
+            $structure = "STRUTTURA ACCOUNT:\n";
+            foreach ($adGroupsByCampaign as $campName => $agNames) {
+                $structure .= "- Campagna: {$campName}\n";
+                foreach ($agNames as $agName) {
+                    $structure .= "  - Ad Group: {$agName}\n";
+                }
+            }
+            $parts[] = $structure;
+        }
+
+        // 2. Landing URL dagli annunci
+        $landingUrls = Database::fetchAll(
+            "SELECT DISTINCT ad_group_name, final_url FROM ga_ads WHERE project_id = ? AND sync_id = ? AND final_url IS NOT NULL AND final_url != '' ORDER BY ad_group_name",
+            [$projectId, $syncId]
+        );
+        if (!empty($landingUrls)) {
+            $urlSection = "LANDING PAGE PER AD GROUP:\n";
+            foreach ($landingUrls as $lu) {
+                $urlSection .= "- {$lu['ad_group_name']}: {$lu['final_url']}\n";
+            }
+            $parts[] = $urlSection;
+        }
+
+        // 3. Keyword attive
+        $activeKeywords = Database::fetchAll(
+            "SELECT campaign_name, ad_group_name, keyword_text, match_type FROM ga_ad_group_keywords WHERE project_id = ? AND sync_id = ? AND keyword_status = 'ENABLED' ORDER BY campaign_name, ad_group_name LIMIT 100",
+            [$projectId, $syncId]
+        );
+        if (!empty($activeKeywords)) {
+            $kwSection = "KEYWORD ATTIVE (max 100):\n";
+            foreach ($activeKeywords as $kw) {
+                $kwSection .= "- [{$kw['match_type']}] {$kw['keyword_text']} ({$kw['campaign_name']} > {$kw['ad_group_name']})\n";
+            }
+            $parts[] = $kwSection;
+        }
+
+        // 4. Contesti landing estratti (se disponibili)
+        $adGroupsWithContext = AdGroup::getByProject($projectId);
+        $contexts = array_filter($adGroupsWithContext, fn($ag) => !empty($ag['extracted_context']));
+        if (!empty($contexts)) {
+            $ctxSection = "CONTESTO LANDING PAGE (estratto da AI):\n";
+            foreach ($contexts as $ag) {
+                $ctxSection .= "- {$ag['name']}: {$ag['extracted_context']}\n";
+            }
+            $parts[] = $ctxSection;
+        }
+
+        return implode("\n", $parts);
+    }
+
+    /**
+     * Costruisce la struttura campagne per il prompt AI
+     */
+    private function buildCampaignStructureForPrompt(int $projectId, int $syncId): string
+    {
+        $campaignAdGroups = Database::fetchAll(
+            "SELECT campaign_name, ad_group_name, ad_group_id_google, campaign_id_google FROM ga_campaign_ad_groups WHERE project_id = ? AND sync_id = ? ORDER BY campaign_name, ad_group_name",
+            [$projectId, $syncId]
+        );
+
+        $structure = [];
+        foreach ($campaignAdGroups as $cag) {
+            $structure[$cag['campaign_name']][] = $cag['ad_group_name'];
+        }
+
+        $lines = [];
+        foreach ($structure as $campName => $agNames) {
+            $lines[] = "Campagna '{$campName}': Ad Groups = " . implode(', ', $agNames);
+        }
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Mappa nomi campagna → resource names
+     */
+    private function getCampaignResourceMap(int $projectId): array
+    {
+        $project = Project::find($projectId);
+        $customerId = $project['google_ads_customer_id'] ?? '';
+        $campaigns = Database::fetchAll(
+            "SELECT campaign_name, campaign_id_google FROM ga_campaigns WHERE project_id = ? ORDER BY id DESC",
+            [$projectId]
+        );
+        $map = [];
+        foreach ($campaigns as $c) {
+            if (!empty($c['campaign_id_google']) && !empty($customerId)) {
+                $map[$c['campaign_name']] = "customers/{$customerId}/campaigns/{$c['campaign_id_google']}";
+            }
+        }
+        return $map;
+    }
+
+    /**
+     * Mappa nomi ad group → resource names
+     */
+    private function getAdGroupResourceMap(int $projectId): array
+    {
+        $project = Project::find($projectId);
+        $customerId = $project['google_ads_customer_id'] ?? '';
+        $adGroups = Database::fetchAll(
+            "SELECT ad_group_name, ad_group_id_google FROM ga_campaign_ad_groups WHERE project_id = ? ORDER BY id DESC",
+            [$projectId]
+        );
+        $map = [];
+        foreach ($adGroups as $ag) {
+            if (!empty($ag['ad_group_id_google']) && !empty($customerId)) {
+                $map[$ag['ad_group_name']] = "customers/{$customerId}/adGroups/{$ag['ad_group_id_google']}";
+            }
+        }
+        return $map;
     }
 }

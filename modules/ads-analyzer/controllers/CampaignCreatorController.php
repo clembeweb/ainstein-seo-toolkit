@@ -13,6 +13,7 @@ use Modules\AdsAnalyzer\Models\CreatorKeyword;
 use Modules\AdsAnalyzer\Models\CreatorCampaign;
 use Modules\AdsAnalyzer\Services\CampaignCreatorService;
 use Modules\AdsAnalyzer\Services\ContextExtractorService;
+use Services\GoogleAdsService;
 use Core\Logger;
 
 class CampaignCreatorController
@@ -676,6 +677,206 @@ class CampaignCreatorController
         }
 
         echo json_encode(['success' => true]);
+        exit;
+    }
+
+    /**
+     * Pubblica la campagna generata su Google Ads via API grouped mutate
+     * POST AJAX
+     */
+    public function publishToGoogleAds(int $projectId): void
+    {
+        $user = Auth::user();
+        $project = Project::findAccessible($user['id'], $projectId);
+
+        if (!$project || $project['type'] !== 'campaign-creator') {
+            http_response_code(404);
+            echo json_encode(['error' => 'Progetto non trovato']);
+            exit;
+        }
+
+        // Viewer cannot perform write operations
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Non hai i permessi per questa operazione']);
+            exit;
+        }
+
+        if (empty($project['google_ads_customer_id'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Nessun account Google Ads collegato. Collega il tuo account nelle impostazioni del progetto.']);
+            exit;
+        }
+
+        ignore_user_abort(true);
+        set_time_limit(0);
+        ob_start();
+        header('Content-Type: application/json');
+        session_write_close();
+
+        $customerId = $project['google_ads_customer_id'];
+
+        // Load generated campaign data
+        $campaign = CreatorCampaign::getLatestByProject($projectId);
+        $keywords = CreatorKeyword::getSelectedByProject($projectId);
+
+        if (!$campaign) {
+            ob_end_clean();
+            echo json_encode(['success' => false, 'error' => 'Nessuna campagna generata']);
+            exit;
+        }
+
+        // Parse campaign JSON data
+        $assets = is_string($campaign['assets_json'] ?? null)
+            ? (json_decode($campaign['assets_json'], true) ?? [])
+            : ($campaign['assets_json'] ?? []);
+
+        // Build grouped mutate operations with temporary resource names
+        $loginCustomerId = isset($project['login_customer_id']) ? $project['login_customer_id'] : '';
+        $gads = new GoogleAdsService($user['id'], $customerId, $loginCustomerId);
+
+        $mutateOperations = [];
+        $tempIdCounter = -1;
+
+        // 1. Campaign Budget
+        $budgetTempId = $tempIdCounter--;
+        $mutateOperations[] = [
+            'campaignBudgetOperation' => [
+                'create' => [
+                    'resourceName' => "customers/{$customerId}/campaignBudgets/{$budgetTempId}",
+                    'name' => $campaign['campaign_name'] . ' Budget',
+                    'amountMicros' => ($assets['daily_budget'] ?? 10) * 1000000,
+                    'deliveryMethod' => 'STANDARD'
+                ]
+            ]
+        ];
+
+        // 2. Campaign (PAUSED)
+        $campaignTempId = $tempIdCounter--;
+        $mutateOperations[] = [
+            'campaignOperation' => [
+                'create' => [
+                    'resourceName' => "customers/{$customerId}/campaigns/{$campaignTempId}",
+                    'name' => $campaign['campaign_name'],
+                    'status' => 'PAUSED',
+                    'advertisingChannelType' => strtoupper($campaign['campaign_type'] ?? 'SEARCH'),
+                    'campaignBudget' => "customers/{$customerId}/campaignBudgets/{$budgetTempId}",
+                ]
+            ]
+        ];
+
+        // 3. Ad Groups (one per unique ad_group_name in keywords)
+        $adGroups = [];
+        foreach ($keywords as $kw) {
+            $agName = $kw['ad_group_name'] ?? 'Default';
+            if (!isset($adGroups[$agName])) {
+                $agTempId = $tempIdCounter--;
+                $adGroups[$agName] = $agTempId;
+                $mutateOperations[] = [
+                    'adGroupOperation' => [
+                        'create' => [
+                            'resourceName' => "customers/{$customerId}/adGroups/{$agTempId}",
+                            'name' => $agName,
+                            'campaign' => "customers/{$customerId}/campaigns/{$campaignTempId}",
+                            'status' => 'ENABLED',
+                            'type' => 'SEARCH_STANDARD'
+                        ]
+                    ]
+                ];
+            }
+        }
+
+        // 4. Keywords (positive)
+        foreach ($keywords as $kw) {
+            if ($kw['is_negative']) continue;
+            $agTempId = $adGroups[$kw['ad_group_name'] ?? 'Default'];
+            $mutateOperations[] = [
+                'adGroupCriterionOperation' => [
+                    'create' => [
+                        'adGroup' => "customers/{$customerId}/adGroups/{$agTempId}",
+                        'status' => 'ENABLED',
+                        'keyword' => [
+                            'text' => $kw['keyword'],
+                            'matchType' => strtoupper($kw['match_type'] ?? 'BROAD')
+                        ]
+                    ]
+                ]
+            ];
+        }
+
+        // 5. Negative Keywords (campaign level)
+        foreach ($keywords as $kw) {
+            if (!$kw['is_negative']) continue;
+            $mutateOperations[] = [
+                'campaignCriterionOperation' => [
+                    'create' => [
+                        'campaign' => "customers/{$customerId}/campaigns/{$campaignTempId}",
+                        'negative' => true,
+                        'keyword' => [
+                            'text' => $kw['keyword'],
+                            'matchType' => strtoupper($kw['match_type'] ?? 'PHRASE')
+                        ]
+                    ]
+                ]
+            ];
+        }
+
+        // 6. Responsive Search Ads (from assets)
+        if (!empty($assets['ad_groups'])) {
+            foreach ($assets['ad_groups'] as $ag) {
+                $agName = $ag['name'] ?? 'Default';
+                $agTempId = $adGroups[$agName] ?? null;
+                if (!$agTempId || empty($ag['ads'])) continue;
+
+                foreach ($ag['ads'] as $ad) {
+                    $headlines = array_map(fn($h) => ['text' => $h], $ad['headlines'] ?? []);
+                    $descriptions = array_map(fn($d) => ['text' => $d], $ad['descriptions'] ?? []);
+
+                    $mutateOperations[] = [
+                        'adGroupAdOperation' => [
+                            'create' => [
+                                'adGroup' => "customers/{$customerId}/adGroups/{$agTempId}",
+                                'status' => 'ENABLED',
+                                'ad' => [
+                                    'responsiveSearchAd' => [
+                                        'headlines' => $headlines,
+                                        'descriptions' => $descriptions
+                                    ],
+                                    'finalUrls' => [$project['landing_url'] ?? $ad['final_url'] ?? '']
+                                ]
+                            ]
+                        ]
+                    ];
+                }
+            }
+        }
+
+        try {
+            $result = $gads->groupedMutate($mutateOperations);
+            Database::reconnect();
+
+            // Save publish info
+            CreatorCampaign::update($campaign['id'], [
+                'published_to_google_ads' => 1,
+                'google_ads_campaign_id' => $result['mutateOperationResponses'][1]['campaignResult']['resourceName'] ?? null,
+                'published_at' => date('Y-m-d H:i:s')
+            ]);
+
+            ob_end_clean();
+            echo json_encode([
+                'success' => true,
+                'message' => 'Campagna pubblicata su Google Ads (in pausa)',
+                'operations' => count($mutateOperations)
+            ]);
+        } catch (\Exception $e) {
+            Database::reconnect();
+            Logger::channel('ai')->error("CampaignCreator publishToGoogleAds error", ['error' => $e->getMessage()]);
+            ob_end_clean();
+            echo json_encode([
+                'success' => false,
+                'error' => 'Errore pubblicazione: ' . $e->getMessage()
+            ]);
+        }
         exit;
     }
 
