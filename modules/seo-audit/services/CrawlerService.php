@@ -551,8 +551,11 @@ class CrawlerService
         // Rate limiting
         $this->rateLimit();
 
-        // Fetch pagina usando ScraperService (consuma crediti)
-        $result = $this->scraperService->fetch($this->userId, $url, 'seo-audit');
+        // Fetch pagina usando fetchRaw (non blocca 4xx/5xx — li salviamo come dati SEO)
+        $result = $this->scraperService->fetchRaw($url, [
+            'timeout' => $this->config['timeout'] ?? 20,
+            'follow_redirects' => !empty($this->config['follow_redirects']),
+        ]);
 
         if (!empty($result['error'])) {
             return [
@@ -562,8 +565,18 @@ class CrawlerService
             ];
         }
 
-        $html = $result['html'];
-        $httpCode = $result['http_code'];
+        $html = $result['body'] ?? '';
+        $httpCode = $result['http_code'] ?? 0;
+
+        // Consuma crediti (fetchRaw non li consuma automaticamente)
+        $crawlCost = \Core\Credits::getCost('crawl_per_page') ?? 0.2;
+        if (\Core\Credits::hasEnough($this->userId, $crawlCost)) {
+            \Core\Credits::consume($this->userId, $crawlCost, 'crawl_per_page', 'seo-audit', [
+                'url' => $url,
+                'http_code' => $httpCode,
+            ]);
+        }
+
         $startTime = microtime(true);
 
         // Estrai dati SEO
