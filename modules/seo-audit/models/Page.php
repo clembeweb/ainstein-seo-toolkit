@@ -126,8 +126,26 @@ class Page
      * Crea o aggiorna pagina (upsert)
      * Automatically sets status='crawled' when saving crawl data
      */
+    /** Colonne valide della tabella sa_pages (per filtrare dati extra da crawlPage) */
+    private const VALID_COLUMNS = [
+        'project_id', 'session_id', 'url', 'status', 'status_code', 'load_time_ms',
+        'content_length', 'title', 'title_length', 'meta_description',
+        'meta_description_length', 'meta_robots', 'canonical_url', 'og_title',
+        'og_description', 'og_image', 'h1_count', 'h1_texts', 'h2_count', 'h3_count',
+        'h4_count', 'h5_count', 'h6_count', 'word_count', 'images_count',
+        'images_without_alt', 'images_data', 'internal_links_count',
+        'external_links_count', 'broken_links_count', 'nofollow_links_count',
+        'links_data', 'has_schema', 'schema_types', 'hreflang_tags', 'is_indexable',
+        'indexability_reason', 'html_content', 'crawled_at', 'redirect_chain',
+        'redirect_hops', 'redirect_target', 'is_redirect_loop', 'depth',
+        'has_parameters', 'in_sitemap', 'in_robots_allowed',
+    ];
+
     public function upsert(int $projectId, string $url, array $data): int
     {
+        // Filtra colonne non valide (crawlPage ritorna campi extra come 'error', 'links', etc.)
+        $data = array_intersect_key($data, array_flip(self::VALID_COLUMNS));
+
         // Set status to crawled when we have crawl data
         if (isset($data['status_code']) || isset($data['title'])) {
             $data['status'] = 'crawled';

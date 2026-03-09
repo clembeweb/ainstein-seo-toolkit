@@ -965,7 +965,7 @@ class CrawlerService
         $elapsed = $now - $this->lastRequestTime;
 
         if ($elapsed < $this->requestDelay) {
-            usleep(($this->requestDelay - $elapsed) * 1000);
+            usleep((int) (($this->requestDelay - $elapsed) * 1000));
         }
 
         $this->lastRequestTime = microtime(true) * 1000;
