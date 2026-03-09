@@ -144,7 +144,15 @@ if ($isStopping) {
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 <p class="text-sm font-medium text-slate-600 dark:text-slate-300">Avvio scansione in corso...</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Ricerca URL nel sito</p>
+            </div>
+
+            <div x-show="status === 'discovering'" class="text-center py-4 mb-4">
+                <svg class="w-8 h-8 mx-auto mb-2 animate-spin text-emerald-500" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="text-sm font-medium text-slate-600 dark:text-slate-300">Scoperta URL in corso...</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Analisi della struttura del sito. Potrebbe richiedere alcuni minuti per siti grandi.</p>
             </div>
 
             <!-- Progress Bar -->
@@ -510,7 +518,7 @@ window.crawlJob = function() {
             });
 
             // If server already knows we're crawling, check for active job
-            if (this.status === 'running' || this.status === 'cancelling') {
+            if (this.status === 'running' || this.status === 'cancelling' || this.status === 'discovering') {
                 try {
                     const resp = await fetch(baseUrl + '/crawl/status');
                     if (resp.ok) {
@@ -523,6 +531,11 @@ window.crawlJob = function() {
                                 this.total = data.session.pages_found || this.total;
                                 this.percent = this.total > 0 ? Math.round((this.completed / this.total) * 100) : 0;
                                 this.currentUrl = data.session.current_url || this.currentUrl;
+                            }
+                            // Se pages_found è 0, siamo ancora in discovery
+                            if (this.total === 0) {
+                                this.status = 'discovering';
+                                this.currentUrl = 'Scoperta URL in corso...';
                             }
                             if (data.issues) {
                                 this.issues = (data.issues.critical || 0) + (data.issues.warning || 0) + (data.issues.notice || 0);
@@ -582,7 +595,8 @@ window.crawlJob = function() {
                 if (data.success) {
                     this.jobId = data.job_id;
                     this.total = data.urls_found || 0;
-                    this.status = 'running';
+                    this.status = data.urls_found ? 'running' : 'discovering';
+                    this.currentUrl = data.urls_found ? '' : 'Scoperta URL in corso...';
                     this.startTimer();
                     this.connectSSE();
                 } else {
@@ -646,6 +660,17 @@ window.crawlJob = function() {
             this.eventSource = new EventSource(
                 baseUrl + '/crawl/stream?job_id=' + this.jobId
             );
+
+            this.eventSource.addEventListener('discovery_started', (e) => {
+                this.status = 'discovering';
+                this.currentUrl = 'Scoperta URL in corso...';
+            });
+
+            this.eventSource.addEventListener('discovery_completed', (e) => {
+                const d = JSON.parse(e.data);
+                this.total = d.urls_found || 0;
+                this.currentUrl = '';
+            });
 
             this.eventSource.addEventListener('started', (e) => {
                 const d = JSON.parse(e.data);
@@ -724,7 +749,7 @@ window.crawlJob = function() {
             if (this.polling) return; // Avoid duplicate polling loops
             this.polling = true;
 
-            while (this.polling && this.status === 'running') {
+            while (this.polling && (this.status === 'running' || this.status === 'discovering')) {
                 try {
                     const resp = await fetch(baseUrl + '/crawl/job-status?job_id=' + this.jobId);
                     if (resp.ok) {
@@ -736,6 +761,12 @@ window.crawlJob = function() {
                             this.failed = job.items_failed || 0;
                             this.currentUrl = job.current_item || '';
                             this.percent = Math.round(job.progress || 0);
+
+                            // Discovery completata → passa a running
+                            if (this.status === 'discovering' && this.total > 0) {
+                                this.status = 'running';
+                                this.currentUrl = '';
+                            }
 
                             // Update issues from session stats
                             if (data.issues) {

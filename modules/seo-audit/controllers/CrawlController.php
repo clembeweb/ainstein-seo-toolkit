@@ -45,9 +45,6 @@ class CrawlController
      */
     public function start(int $id): void
     {
-        // Discovery può essere lenta su siti grandi — non interrompere
-        ignore_user_abort(true);
-        set_time_limit(300);
         ob_start();
 
         $user = Auth::user();
@@ -145,96 +142,16 @@ class CrawlController
             // Avvia sessione
             $this->sessionModel->start($sessionId);
 
-            $crawler = new CrawlerService();
-            $crawler->init($id, $user['id']);
-            $crawler->setSessionId($sessionId);
-            $crawler->setConfig($config); // Passa configurazione spider
-
-            // Crawl Budget: fetch robots.txt + sitemaps before discovery
-            $baseUrl = rtrim($project['url'] ?? $project['domain'] ?? '', '/');
-            if (!str_starts_with($baseUrl, 'http')) {
-                $baseUrl = 'https://' . $baseUrl;
-            }
-            $robotsContent = @file_get_contents($baseUrl . '/robots.txt');
-            $robotsRules = [];
-            $sitemapUrls = [];
-            $crawlDelay = null;
-
-            if ($robotsContent) {
-                $robotsParser = new RobotsTxtParser();
-                $robotsRules = $robotsParser->parse($robotsContent);
-                $crawlDelay = $robotsParser->extractCrawlDelay($robotsContent);
-            }
-
-            $sitemapParser = new SitemapParser();
-            $sitemapResult = $sitemapParser->discoverAndParse($baseUrl, $robotsContent ?: null);
-            $sitemapUrls = $sitemapResult['urls'] ?? [];
-
-            // Save budget data to sa_site_config
-            Database::execute(
-                "UPDATE sa_site_config SET robots_rules = ?, crawl_delay = ? WHERE project_id = ?",
-                [!empty($robotsRules) ? json_encode($robotsRules) : null, $crawlDelay, $id]
-            );
-
-            // Pass to crawler for per-page budget checks
-            $crawler->setSitemapUrls($sitemapUrls);
-            $crawler->setRobotsRules($robotsRules);
-
-            // Fase 1: Discovery URL (può richiedere minuti su siti grandi)
-            $urls = $crawler->discoverUrls();
-
-            // Reconnect dopo operazione lunga
-            Database::reconnect();
-
-            if (empty($urls)) {
-                $this->sessionModel->fail($sessionId, 'Nessun URL trovato nel sito');
-                $this->projectModel->update($id, ['status' => 'failed']);
-                if (ob_get_level()) ob_end_clean();
-                jsonResponse(['error' => true, 'message' => 'Nessun URL trovato nel sito']);
-                return;
-            }
-
-            // Aggiorna sessione con pagine trovate
-            $this->sessionModel->setPagesFound($sessionId, count($urls));
-
-            // Aggiorna anche pages_found nel progetto (getCrawlProgress lo legge da qui)
-            $this->projectModel->update($id, ['pages_found' => count($urls)]);
-
-            // Inserisci URL scoperti in sa_pages come pending (per processStream SSE)
-            // Necessario perché discoverUrls() salva in sa_site_config ma processStream
-            // legge da sa_pages filtrato per session_id
-            $pendingCount = 0;
-            foreach ($urls as $url) {
-                $exists = Database::fetch(
-                    "SELECT id FROM sa_pages WHERE project_id = ? AND url = ?",
-                    [$id, $url]
-                );
-                if (!$exists) {
-                    Database::insert('sa_pages', [
-                        'project_id' => $id,
-                        'session_id' => $sessionId,
-                        'url' => $url,
-                        'status' => 'pending',
-                    ]);
-                    $pendingCount++;
-                } else {
-                    // Pagina esiste già, aggiorna session_id e status
-                    Database::execute(
-                        "UPDATE sa_pages SET session_id = ?, status = 'pending' WHERE id = ?",
-                        [$sessionId, $exists['id']]
-                    );
-                    $pendingCount++;
-                }
-            }
-
-            // Crea background job per SSE processing
+            // Crea job subito — discovery + crawl avverranno in processStream (background)
+            // Questo evita che SiteGround uccida il processo PHP durante la discovery
             $jobModel = new CrawlJob();
+            $config['phase'] = 'discovery'; // processStream farà prima discovery poi crawl
             $jobId = $jobModel->create([
                 'project_id' => $id,
                 'session_id' => $sessionId,
                 'user_id' => $user['id'],
                 'type' => 'crawl',
-                'items_total' => (int) $pendingCount,
+                'items_total' => 0, // Sarà aggiornato dopo discovery
                 'config' => json_encode($config),
             ]);
 
@@ -242,7 +159,6 @@ class CrawlController
             $this->projectModel->logActivity($id, $user['id'], 'crawl_started', [
                 'session_id' => $sessionId,
                 'job_id' => $jobId,
-                'urls_found' => count($urls),
                 'crawl_mode' => $config['crawl_mode'],
             ]);
 
@@ -252,9 +168,9 @@ class CrawlController
                 'session_id' => $sessionId,
                 'job_id' => $jobId,
                 'phase' => 'discovery',
-                'urls_found' => count($urls),
+                'urls_found' => 0,
                 'config' => $config,
-                'message' => 'Trovati ' . count($urls) . ' URL da scansionare',
+                'message' => 'Avvio scansione...',
             ]);
 
         } catch (\Exception $e) {
@@ -686,25 +602,122 @@ class CrawlController
             $crawlerService->setConfig($config);
         }
 
+        $sessionId = (int) $job['session_id'];
+
+        // === FASE DISCOVERY (se il job è in fase discovery) ===
+        if (($config['phase'] ?? '') === 'discovery') {
+            $this->sendEvent('discovery_started', [
+                'job_id' => $jobId,
+                'message' => 'Scoperta URL in corso...',
+            ]);
+
+            // Fetch robots.txt + sitemaps
+            $project = $this->projectModel->find($id);
+            $baseUrl = rtrim($project['base_url'] ?? '', '/');
+            if (!str_starts_with($baseUrl, 'http')) {
+                $baseUrl = 'https://' . $baseUrl;
+            }
+
+            $robotsContent = @file_get_contents($baseUrl . '/robots.txt');
+            $robotsRules = [];
+            $sitemapUrls = [];
+            $crawlDelay = null;
+
+            if ($robotsContent) {
+                $robotsParser = new RobotsTxtParser();
+                $robotsRules = $robotsParser->parse($robotsContent);
+                $crawlDelay = $robotsParser->extractCrawlDelay($robotsContent);
+            }
+
+            $sitemapParser = new SitemapParser();
+            $sitemapResult = $sitemapParser->discoverAndParse($baseUrl, $robotsContent ?: null);
+            $sitemapUrls = $sitemapResult['urls'] ?? [];
+
+            Database::reconnect();
+
+            // Save budget data to sa_site_config
+            Database::execute(
+                "UPDATE sa_site_config SET robots_rules = ?, crawl_delay = ? WHERE project_id = ?",
+                [!empty($robotsRules) ? json_encode($robotsRules) : null, $crawlDelay, $id]
+            );
+
+            $crawlerService->setSitemapUrls($sitemapUrls);
+            $crawlerService->setRobotsRules($robotsRules);
+
+            // Spider discovery
+            $urls = $crawlerService->discoverUrls();
+            Database::reconnect();
+
+            if (empty($urls)) {
+                $this->sessionModel->fail($sessionId, 'Nessun URL trovato nel sito');
+                $this->projectModel->update($id, ['status' => 'failed']);
+                $jobModel->markError($jobId, 'Nessun URL trovato');
+                $this->sendEvent('error', ['message' => 'Nessun URL trovato nel sito']);
+                exit;
+            }
+
+            // Inserisci URL scoperti in sa_pages
+            $pendingCount = 0;
+            foreach ($urls as $url) {
+                $exists = Database::fetch(
+                    "SELECT id FROM sa_pages WHERE project_id = ? AND url = ?",
+                    [$id, $url]
+                );
+                if (!$exists) {
+                    Database::insert('sa_pages', [
+                        'project_id' => $id,
+                        'session_id' => $sessionId,
+                        'url' => $url,
+                        'status' => 'pending',
+                    ]);
+                } else {
+                    Database::execute(
+                        "UPDATE sa_pages SET session_id = ?, status = 'pending' WHERE id = ?",
+                        [$sessionId, $exists['id']]
+                    );
+                }
+                $pendingCount++;
+            }
+
+            // Aggiorna sessione, progetto e job con totale pagine trovate
+            $this->sessionModel->setPagesFound($sessionId, $pendingCount);
+            $this->projectModel->update($id, ['pages_found' => $pendingCount]);
+            $jobModel->update($jobId, ['items_total' => $pendingCount]);
+
+            // Aggiorna config: fase discovery completata
+            $config['phase'] = 'crawl';
+            $jobModel->update($jobId, ['config' => json_encode($config)]);
+
+            $this->sendEvent('discovery_completed', [
+                'urls_found' => $pendingCount,
+                'message' => "Trovati {$pendingCount} URL da scansionare",
+            ]);
+
+            Database::reconnect();
+        } else {
+            // Job in fase crawl (ripresa) — carica robots/sitemap da DB
+            $siteConfig = Database::fetch(
+                "SELECT robots_rules, sitemap_urls FROM sa_site_config WHERE project_id = ?",
+                [$id]
+            );
+            if ($siteConfig) {
+                $robotsRules = $siteConfig['robots_rules'] ? json_decode($siteConfig['robots_rules'], true) : [];
+                $sitemapUrls = $siteConfig['sitemap_urls'] ? json_decode($siteConfig['sitemap_urls'], true) : [];
+                if ($robotsRules) $crawlerService->setRobotsRules($robotsRules);
+                if ($sitemapUrls) $crawlerService->setSitemapUrls($sitemapUrls);
+            }
+        }
+
+        // Ricarica job aggiornato (items_total potrebbe essere cambiato dopo discovery)
+        $job = $jobModel->find($jobId);
+
         $issueDetector = new IssueDetector();
         $issueDetector->init($id);
-        $issueDetector->setSessionId((int) $job['session_id']);
+        $issueDetector->setSessionId($sessionId);
 
         // Budget issue detector
         $budgetDetector = new BudgetIssueDetector();
-        $budgetDetector->init($id)->setSessionId((int) $job['session_id']);
-
-        // Load robots/sitemap data for crawler budget checks
-        $siteConfig = Database::fetch(
-            "SELECT robots_rules, sitemap_urls FROM sa_site_config WHERE project_id = ?",
-            [$id]
-        );
-        if ($siteConfig) {
-            $robotsRules = $siteConfig['robots_rules'] ? json_decode($siteConfig['robots_rules'], true) : [];
-            $sitemapUrls = $siteConfig['sitemap_urls'] ? json_decode($siteConfig['sitemap_urls'], true) : [];
-            if ($robotsRules) $crawlerService->setRobotsRules($robotsRules);
-            if ($sitemapUrls) $crawlerService->setSitemapUrls($sitemapUrls);
-        }
+        $budgetDetector->init($id)->setSessionId($sessionId);
 
         $this->sendEvent('started', [
             'total' => (int) $job['items_total'],

@@ -99,6 +99,14 @@ class CrawlJob
     }
 
     /**
+     * Aggiorna campi job
+     */
+    public function update(int $id, array $data): bool
+    {
+        return Database::update(self::TABLE, $data, 'id = ?', [$id]) > 0;
+    }
+
+    /**
      * Avvia esecuzione job
      */
     public function start(int $id): bool
