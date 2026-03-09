@@ -41,6 +41,7 @@ class CrawlerService
 
     // Rate limiting
     private float $lastRequestTime = 0;
+    private int $rateLimitHits = 0;        // Contatore pagine rate_limited consecutive
 
     // Crawl state
     private array $crawledUrls = [];
@@ -551,22 +552,66 @@ class CrawlerService
         // Rate limiting
         $this->rateLimit();
 
-        // Fetch pagina usando fetchRaw (non blocca 4xx/5xx — li salviamo come dati SEO)
-        $result = $this->scraperService->fetchRaw($url, [
-            'timeout' => $this->config['timeout'] ?? 20,
-            'follow_redirects' => !empty($this->config['follow_redirects']),
-        ]);
+        // Fetch con retry per bot protection (Cloudflare, Sucuri, ecc.)
+        $maxRetries = $this->maxRetries;
+        $html = '';
+        $httpCode = 0;
+        $attempt = 0;
 
-        if (!empty($result['error'])) {
+        do {
+            if ($attempt > 0) {
+                // Backoff esponenziale: 2s, 5s, 10s
+                $backoffMs = min(10000, (int) (2000 * pow(2, $attempt - 1)));
+                usleep($backoffMs * 1000);
+            }
+
+            $result = $this->scraperService->fetchRaw($url, [
+                'timeout' => $this->config['timeout'] ?? 20,
+                'follow_redirects' => !empty($this->config['follow_redirects']),
+            ]);
+
+            if (!empty($result['error'])) {
+                return [
+                    'url' => $url,
+                    'status_code' => 0,
+                    'error' => $result['message'] ?? 'Errore fetch',
+                ];
+            }
+
+            $html = $result['body'] ?? '';
+            $httpCode = $result['http_code'] ?? 0;
+            $attempt++;
+
+            // Se non è bot protection, esci dal loop
+            if (!$this->isBotProtectionPage($html, $httpCode)) {
+                break;
+            }
+        } while ($attempt <= $maxRetries);
+
+        // Se dopo tutti i retry è ancora bot protection → marcare come rate_limited
+        if ($this->isBotProtectionPage($html, $httpCode)) {
+            // Auto-throttle: aumenta delay se troppi rate limit consecutivi
+            $this->rateLimitHits++;
+            if ($this->rateLimitHits >= 3) {
+                $this->requestDelay = min(5000, $this->requestDelay * 2);
+            }
+
             return [
                 'url' => $url,
-                'status_code' => 0,
-                'error' => $result['message'] ?? 'Errore fetch',
+                'status' => 'rate_limited',
+                'status_code' => $httpCode,
+                'title' => null,
+                'meta_description' => null,
+                'meta_robots' => null,
+                'word_count' => 0,
+                'is_indexable' => 0,
+                'indexability_reason' => 'Bot protection (Cloudflare/WAF) - contenuto non accessibile',
+                'crawled_at' => date('Y-m-d H:i:s'),
             ];
         }
 
-        $html = $result['body'] ?? '';
-        $httpCode = $result['http_code'] ?? 0;
+        // Pagina OK: resetta contatore rate limit
+        $this->rateLimitHits = 0;
 
         // Consuma crediti (fetchRaw non li consuma automaticamente)
         $crawlCost = \Core\Credits::getCost('crawl_per_page') ?? 0.2;
@@ -967,6 +1012,56 @@ class CrawlerService
         }
 
         return '/' . implode('/', $resolved);
+    }
+
+    /**
+     * Rileva pagine di bot protection (Cloudflare, Sucuri, Akamai, ecc.)
+     * Queste pagine hanno contenuto falso che non va analizzato come SEO data
+     */
+    private function isBotProtectionPage(string $html, int $httpCode): bool
+    {
+        // HTTP 429 Too Many Requests è il segnale più comune
+        if ($httpCode === 429) {
+            return true;
+        }
+
+        // HTTP 403 con challenge page
+        if ($httpCode === 403) {
+            // Cloudflare challenge
+            if (stripos($html, 'cf-browser-verification') !== false
+                || stripos($html, 'cf_chl_opt') !== false
+                || stripos($html, 'cloudflare') !== false && stripos($html, 'challenge') !== false) {
+                return true;
+            }
+        }
+
+        // Cloudflare "Just a moment..." (qualsiasi HTTP code)
+        if (preg_match('/<title[^>]*>\s*Just a moment\.\.\.?\s*<\/title>/i', $html)) {
+            return true;
+        }
+
+        // Cloudflare challenge markers
+        if (stripos($html, 'cf-spinner-please-wait') !== false
+            || stripos($html, '_cf_chl_opt') !== false
+            || stripos($html, 'cf-challenge-running') !== false) {
+            return true;
+        }
+
+        // Sucuri WAF
+        if (stripos($html, 'sucuri-firewall') !== false
+            || stripos($html, 'Access Denied - Sucuri') !== false) {
+            return true;
+        }
+
+        // Pagina molto corta con 503 (maintenance/protection)
+        if ($httpCode === 503 && strlen($html) < 2000) {
+            if (stripos($html, 'please wait') !== false
+                || stripos($html, 'checking your browser') !== false) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

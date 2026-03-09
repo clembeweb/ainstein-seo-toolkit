@@ -330,7 +330,20 @@ class CrawlController
                 // Crawl pagina
                 $pageData = $crawler->crawlPage($url);
 
-                if ($pageData && empty($pageData['error'])) {
+                if ($pageData && ($pageData['status'] ?? '') === 'rate_limited') {
+                    // Bot protection (Cloudflare/WAF) — salva come rate_limited, no analisi issues
+                    $crawler->savePage($pageData);
+                    $crawled++;
+                    $this->projectModel->update($id, [
+                        'pages_crawled' => $pagesCrawled + $crawled,
+                    ]);
+                    $this->sessionModel->updateProgress(
+                        $activeSession['id'],
+                        $pagesCrawled + $crawled,
+                        $url,
+                        $activeSession['issues_found'] + $totalIssuesFound
+                    );
+                } elseif ($pageData && empty($pageData['error'])) {
                     // Salva pagina
                     $pageId = $crawler->savePage($pageData);
 
@@ -824,7 +837,33 @@ class CrawlController
                 $pageData = $crawlerService->crawlPage($pendingPage['url']);
                 Database::reconnect();
 
-                if ($pageData && empty($pageData['error'])) {
+                if ($pageData && ($pageData['status'] ?? '') === 'rate_limited') {
+                    // Bot protection (Cloudflare/WAF) — salva dati minimi, no analisi issues
+                    $crawlerService->savePage($pageData);
+
+                    $completed++;
+                    $jobModel->incrementCompleted($jobId);
+                    $jobModel->updateProgress($jobId, $completed, $pendingPage['url']);
+
+                    $this->projectModel->update($id, [
+                        'pages_crawled' => $completed,
+                    ]);
+                    $this->sessionModel->updateProgress(
+                        (int) $job['session_id'],
+                        $completed,
+                        $pendingPage['url'],
+                        $totalIssuesFound
+                    );
+
+                    $this->sendEvent('page_completed', [
+                        'url' => $pendingPage['url'],
+                        'completed' => $completed,
+                        'total' => (int) $job['items_total'],
+                        'issues' => 0,
+                        'percent' => round(($completed / max((int) $job['items_total'], 1)) * 100, 1),
+                        'rate_limited' => true,
+                    ]);
+                } elseif ($pageData && empty($pageData['error'])) {
                     // Salva dati pagina
                     $pageId = $crawlerService->savePage($pageData);
 

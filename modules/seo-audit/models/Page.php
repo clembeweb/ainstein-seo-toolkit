@@ -146,9 +146,13 @@ class Page
         // Filtra colonne non valide (crawlPage ritorna campi extra come 'error', 'links', etc.)
         $data = array_intersect_key($data, array_flip(self::VALID_COLUMNS));
 
-        // Set status to crawled when we have crawl data
-        if (isset($data['status_code']) || isset($data['title'])) {
-            $data['status'] = 'crawled';
+        // Set status to crawled when we have crawl data (ma non sovrascrivere rate_limited)
+        if (($data['status'] ?? '') !== 'rate_limited') {
+            if (isset($data['status_code']) || isset($data['title'])) {
+                $data['status'] = 'crawled';
+                $data['crawled_at'] = date('Y-m-d H:i:s');
+            }
+        } else {
             $data['crawled_at'] = date('Y-m-d H:i:s');
         }
 
