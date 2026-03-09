@@ -121,9 +121,46 @@ class IssueDetector
      */
     public function analyzeAndSave(array $pageData, int $pageId): int
     {
+        // Skip issue detection per pagine che non hanno contenuto reale
+        if ($this->shouldSkipAnalysis($pageData)) {
+            return 0;
+        }
+
         $issues = $this->analyzePage($pageData);
         $source = ($pageData['source'] ?? 'crawl') === 'wordpress' ? 'wordpress' : 'crawler';
         return $this->saveIssues($pageId, $issues, $source);
+    }
+
+    /**
+     * Determina se una pagina deve essere esclusa dall'analisi issues
+     * Redirect, bot protection e URL infrastruttura non vanno analizzati
+     */
+    private function shouldSkipAnalysis(array $pageData): bool
+    {
+        $statusCode = (int) ($pageData['status_code'] ?? 0);
+        $url = $pageData['url'] ?? '';
+
+        // Redirect (3xx) — il contenuto è vuoto/parziale, non è un errore SEO
+        if ($statusCode >= 300 && $statusCode < 400) {
+            return true;
+        }
+
+        // Nessuna risposta HTTP (errore di rete)
+        if ($statusCode === 0) {
+            return true;
+        }
+
+        // URL infrastruttura Cloudflare
+        if (preg_match('#/cdn-cgi/#i', $url)) {
+            return true;
+        }
+
+        // Rate limited / bot protection (status già gestito nel crawler)
+        if (($pageData['status'] ?? '') === 'rate_limited') {
+            return true;
+        }
+
+        return false;
     }
 
     /**

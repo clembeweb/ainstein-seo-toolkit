@@ -58,6 +58,12 @@ class BudgetIssueDetector
      */
     public function analyzeAndSave(array $pageData, int $pageId): int
     {
+        // Skip per pagine senza contenuto reale (rate_limited, errori rete)
+        $statusCode = (int) ($pageData['status_code'] ?? 0);
+        if ($statusCode === 0 || ($pageData['status'] ?? '') === 'rate_limited') {
+            return 0;
+        }
+
         $issues = $this->analyzePage($pageData);
 
         foreach ($issues as $issue) {
