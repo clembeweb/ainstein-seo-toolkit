@@ -41,6 +41,11 @@ $config = array_merge([
     'respect_robots' => 1,
     'follow_redirects' => 1,
 ], $config);
+// Forza Chrome come UA default: googlebot viene bloccato dalla maggior parte dei siti
+// L'utente può ancora scegliere googlebot dal dropdown se vuole
+if (($config['user_agent'] ?? '') === 'googlebot') {
+    $config['user_agent'] = 'chrome';
+}
 
 // Preset configurations
 $presets = [
