@@ -4,11 +4,20 @@
  * SEO Toolkit - Entry Point
  */
 
-// Errori in dev
+// Error reporting (display in dev only)
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+$isDebug = (getenv('APP_DEBUG') === 'true' || getenv('APP_DEBUG') === '1');
+ini_set('display_errors', $isDebug ? '1' : '0');
+ini_set('log_errors', '1');
 
-// Sessione
+// Session security
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'secure' => !empty($_SERVER['HTTPS']),
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
 session_start();
 
 // Timezone Italia

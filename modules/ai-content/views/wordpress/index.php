@@ -434,7 +434,7 @@ function wpSitesManager() {
                         'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({
-                        _token: '<?= csrf_token() ?>',
+                        _csrf_token: '<?= csrf_token() ?>',
                         ...this.newSite
                     })
                 });
@@ -475,7 +475,7 @@ function wpSitesManager() {
                         'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: JSON.stringify({ _token: '<?= csrf_token() ?>' })
+                    body: JSON.stringify({ _csrf_token: '<?= csrf_token() ?>' })
                 });
 
                 const data = await response.json();
@@ -513,7 +513,7 @@ function wpSitesManager() {
                         'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: JSON.stringify({ _token: '<?= csrf_token() ?>' })
+                    body: JSON.stringify({ _csrf_token: '<?= csrf_token() ?>' })
                 });
 
                 const data = await response.json();
@@ -549,7 +549,7 @@ function wpSitesManager() {
                         'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: JSON.stringify({ _token: '<?= csrf_token() ?>' })
+                    body: JSON.stringify({ _csrf_token: '<?= csrf_token() ?>' })
                 });
 
                 const data = await response.json();
@@ -589,7 +589,7 @@ function wpSitesManager() {
                         'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: JSON.stringify({ _token: '<?= csrf_token() ?>' })
+                    body: JSON.stringify({ _csrf_token: '<?= csrf_token() ?>' })
                 });
 
                 const data = await response.json();

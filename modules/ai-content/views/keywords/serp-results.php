@@ -260,7 +260,7 @@ function serpManager() {
                         'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({
-                        _token: '<?= csrf_token() ?>',
+                        _csrf_token: '<?= csrf_token() ?>',
                         keyword_id: <?= $keyword['id'] ?>,
                         sources: this.selectedSources
                     })

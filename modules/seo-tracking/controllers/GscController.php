@@ -238,20 +238,28 @@ class GscController
      */
     public function sync(int $id): void
     {
+        ignore_user_abort(true);
+        set_time_limit(300);
+        ob_start();
+        header('Content-Type: application/json');
+
         $user = Auth::user();
         $project = $this->project->findAccessible($id, $user['id']);
 
         if (!$project) {
+            if (ob_get_level()) ob_end_clean();
             $this->jsonResponse(['success' => false, 'error' => 'Progetto non trovato']);
             return;
         }
 
         if (($project['access_role'] ?? 'owner') === 'viewer') {
+            if (ob_get_level()) ob_end_clean();
             $this->jsonResponse(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
             return;
         }
 
         if (!$project['gsc_connected']) {
+            if (ob_get_level()) ob_end_clean();
             $this->jsonResponse(['success' => false, 'error' => 'GSC non connesso']);
             return;
         }
@@ -267,6 +275,7 @@ class GscController
                 . ($result['keywords_updated'] ?? 0) . ' keyword aggiornate, '
                 . ($result['gsc_records'] ?? 0) . ' record GSC';
 
+            if (ob_get_level()) ob_end_clean();
             $this->jsonResponse([
                 'success' => true,
                 'message' => $msg,
@@ -278,6 +287,7 @@ class GscController
             Database::reconnect();
             $this->project->updateSyncStatus($id, 'failed');
 
+            if (ob_get_level()) ob_end_clean();
             $this->jsonResponse([
                 'success' => false,
                 'error' => $e->getMessage()

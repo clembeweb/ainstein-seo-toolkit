@@ -308,22 +308,25 @@ class ResearchController
         $project = $this->projectModel->findAccessible($projectId, $user['id']);
 
         if (!$project) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Progetto non trovato.']);
-            return;
+            exit;
         }
 
         // Write operation: viewer non autorizzato
         if (($project['access_role'] ?? 'owner') === 'viewer') {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
-            return;
+            exit;
         }
 
         $researchId = (int) ($_POST['research_id'] ?? 0);
         $research = $this->researchModel->find($researchId);
 
         if (!$research || $research['project_id'] !== $projectId) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Ricerca non trovata.']);
-            return;
+            exit;
         }
 
         // Keyword dal frontend (JSON)
@@ -331,8 +334,9 @@ class ResearchController
         $keywords = json_decode($keywordsJson, true);
 
         if (empty($keywords)) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Nessuna keyword da analizzare.']);
-            return;
+            exit;
         }
 
         // Costo crediti - livello Standard (3 cr) unificato per qualsiasi numero di keyword
@@ -348,8 +352,9 @@ class ResearchController
         }
 
         if (!Credits::hasEnough($creditUserId, $cost)) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => "Crediti insufficienti. Richiesti: {$cost}"]);
-            return;
+            exit;
         }
 
         $brief = json_decode($research['brief'], true);
@@ -401,8 +406,9 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
         $ai = new AiService('keyword-research');
 
         if (!$ai->isConfigured()) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'AI non configurata.']);
-            return;
+            exit;
         }
 
         // Rilascia sessione prima dell'operazione lunga
@@ -433,7 +439,7 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
 
             if (ob_get_level()) ob_end_clean();
             echo json_encode(['success' => false, 'error' => $aiResult['message'] ?? 'Errore AI.']);
-            return;
+            exit;
         }
 
         // Parse JSON response
@@ -448,7 +454,7 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
             $this->researchModel->updateStatus($researchId, 'error');
             if (ob_get_level()) ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Impossibile parsare la risposta AI. ' . json_last_error_msg()]);
-            return;
+            exit;
         }
 
         // Salva cluster e keyword nel DB

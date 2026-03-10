@@ -102,15 +102,6 @@ class ActionPlanController
             exit;
         }
 
-        // Verifica CSRF
-        $input = json_decode(file_get_contents('php://input'), true);
-        if (empty($input['_csrf_token']) || $input['_csrf_token'] !== csrf_token()) {
-            http_response_code(403);
-            if (ob_get_level()) ob_end_clean();
-            echo json_encode(['error' => true, 'message' => 'Token CSRF non valido']);
-            exit;
-        }
-
         // Verifica che ci siano issues
         $issueCounts = $this->issueModel->countBySeverity($id);
         if ($issueCounts['total'] === 0) {
@@ -148,14 +139,6 @@ class ActionPlanController
         if (!$project) {
             http_response_code(404);
             echo json_encode(['error' => true, 'message' => 'Progetto non trovato']);
-            exit;
-        }
-
-        // Verifica CSRF
-        $input = json_decode(file_get_contents('php://input'), true);
-        if (empty($input['_csrf_token']) || $input['_csrf_token'] !== csrf_token()) {
-            http_response_code(403);
-            echo json_encode(['error' => true, 'message' => 'Token CSRF non valido']);
             exit;
         }
 
@@ -214,14 +197,6 @@ class ActionPlanController
         if (!$project) {
             http_response_code(404);
             echo json_encode(['error' => true, 'message' => 'Progetto non trovato']);
-            exit;
-        }
-
-        // Verifica CSRF
-        $input = json_decode(file_get_contents('php://input'), true);
-        if (empty($input['_csrf_token']) || $input['_csrf_token'] !== csrf_token()) {
-            http_response_code(403);
-            echo json_encode(['error' => true, 'message' => 'Token CSRF non valido']);
             exit;
         }
 

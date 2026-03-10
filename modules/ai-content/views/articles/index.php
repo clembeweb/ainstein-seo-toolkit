@@ -432,7 +432,7 @@ function articlesManager() {
                         'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({
-                        _token: '<?= csrf_token() ?>',
+                        _csrf_token: '<?= csrf_token() ?>',
                         wp_site_id: this.publishSiteId,
                         status: this.publishStatus
                     })
@@ -477,7 +477,7 @@ function articlesManager() {
                         'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({
-                        _token: '<?= csrf_token() ?>'
+                        _csrf_token: '<?= csrf_token() ?>'
                     })
                 });
 

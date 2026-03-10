@@ -368,9 +368,12 @@ function actionPlan(config) {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ _token: this.csrfToken })
+                    body: JSON.stringify({ _csrf_token: this.csrfToken })
                 });
 
+                if (!response.ok) {
+                    throw new Error(`Errore server (${response.status})`);
+                }
                 const data = await response.json();
 
                 if (data.success) {
@@ -394,9 +397,12 @@ function actionPlan(config) {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ _token: this.csrfToken })
+                    body: JSON.stringify({ _csrf_token: this.csrfToken })
                 });
 
+                if (!response.ok) {
+                    throw new Error(`Errore server (${response.status})`);
+                }
                 const data = await response.json();
 
                 if (data.success) {

@@ -797,7 +797,7 @@ function articleEditor(initialData) {
                         'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({
-                        _token: '<?= csrf_token() ?>'
+                        _csrf_token: '<?= csrf_token() ?>'
                     })
                 });
 
@@ -839,7 +839,7 @@ function articleEditor(initialData) {
                         'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({
-                        _token: '<?= csrf_token() ?>'
+                        _csrf_token: '<?= csrf_token() ?>'
                     })
                 });
 
@@ -877,7 +877,7 @@ function articleEditor(initialData) {
                         'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({
-                        _token: '<?= csrf_token() ?>',
+                        _csrf_token: '<?= csrf_token() ?>',
                         wp_site_id: this.publishSiteId,
                         category: this.publishCategory,
                         status: this.publishStatus

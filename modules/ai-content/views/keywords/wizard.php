@@ -920,7 +920,7 @@ function keywordWizard(initialData) {
             this.extractingSerp = true;
 
             const url = '<?= url('/ai-content/keywords') ?>/' + this.keywordId + '/serp';
-            const body = JSON.stringify({ _token: '<?= csrf_token() ?>' });
+            const body = JSON.stringify({ _csrf_token: '<?= csrf_token() ?>' });
 
             // DEBUG LOGGING
             console.log('=== SERP REQUEST ===');
@@ -1002,7 +1002,7 @@ function keywordWizard(initialData) {
                         'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({
-                        _token: '<?= csrf_token() ?>',
+                        _csrf_token: '<?= csrf_token() ?>',
                         sources: this.selectedSources,
                         customUrls: this.customUrls,
                         paaQuestions: this.selectedPaa
@@ -1066,7 +1066,7 @@ function keywordWizard(initialData) {
                         'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({
-                        _token: '<?= csrf_token() ?>',
+                        _csrf_token: '<?= csrf_token() ?>',
                         articleId: this.articleId,
                         briefData: this.briefData,
                         generateCover: this.generateCover
@@ -1141,7 +1141,7 @@ function keywordWizard(initialData) {
                         'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({
-                        _token: '<?= csrf_token() ?>',
+                        _csrf_token: '<?= csrf_token() ?>',
                         wp_site_id: this.publishData.wpSiteId,
                         category_id: this.publishData.categoryId,
                         status: this.publishData.status

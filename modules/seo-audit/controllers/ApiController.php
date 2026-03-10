@@ -252,11 +252,14 @@ class ApiController
         ignore_user_abort(true);
         set_time_limit(300);
 
+        // Recupera utente PRIMA di chiudere la sessione
+        $user = Auth::user();
+
         // CRITICAL: Chiudi sessione prima del loop (non blocca altre request)
         session_write_close();
 
-        // Carica progetto seo-audit
-        $project = Database::fetch("SELECT * FROM sa_projects WHERE id = ?", [$id]);
+        // Carica progetto seo-audit (con verifica ownership/accesso)
+        $project = $this->projectModel->findAccessible($id, $user['id']);
         if (!$project) {
             $this->sendSseEvent('error', ['message' => 'Progetto non trovato']);
             exit;

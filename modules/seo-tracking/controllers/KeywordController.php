@@ -1037,6 +1037,7 @@ class KeywordController
         $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
+            if (ob_get_level()) ob_end_clean();
             return View::json(['success' => false, 'error' => 'Progetto non trovato'], 404);
         }
 
@@ -1046,6 +1047,7 @@ class KeywordController
         // Verifica RankChecker configurato
         $rankChecker = new RankCheckerService();
         if (!$rankChecker->isConfigured()) {
+            if (ob_get_level()) ob_end_clean();
             return View::json(['success' => false, 'error' => 'Servizio SERP non configurato. Vai in Admin > Impostazioni']);
         }
 
@@ -1069,6 +1071,7 @@ class KeywordController
         $keywordCount = count($keywords);
 
         if ($keywordCount === 0) {
+            if (ob_get_level()) ob_end_clean();
             return View::json(['success' => false, 'error' => 'Nessuna keyword da aggiornare']);
         }
 
@@ -1077,6 +1080,7 @@ class KeywordController
 
         // Verifica crediti
         if (!Credits::hasEnough($creditUserId, $cost)) {
+            if (ob_get_level()) ob_end_clean();
             return View::json([
                 'success' => false,
                 'error' => "Crediti insufficienti. Richiesti: {$cost}, disponibili: " . Credits::getBalance($creditUserId)
@@ -1086,6 +1090,7 @@ class KeywordController
         // Estrai dominio target dal progetto
         $targetDomain = $project['domain'] ?? '';
         if (empty($targetDomain)) {
+            if (ob_get_level()) ob_end_clean();
             return View::json(['success' => false, 'error' => 'URL sito web non configurato nel progetto']);
         }
 
@@ -1180,6 +1185,7 @@ class KeywordController
             'not_found' => $notFound,
         ]);
 
+        if (ob_get_level()) ob_end_clean();
         return View::json([
             'success' => true,
             'updated' => $updated,
@@ -1207,6 +1213,7 @@ class KeywordController
         $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
+            if (ob_get_level()) ob_end_clean();
             return View::json(['success' => false, 'error' => 'Progetto non trovato'], 404);
         }
 
@@ -1216,6 +1223,7 @@ class KeywordController
         $hasVolumeProvider = !empty($keywordModel->getAllVolumeServices());
 
         if (!$hasVolumeProvider && !$rankChecker->isConfigured()) {
+            if (ob_get_level()) ob_end_clean();
             return View::json(['success' => false, 'error' => 'Nessun servizio configurato. Vai in Admin > Impostazioni']);
         }
 
@@ -1243,6 +1251,7 @@ class KeywordController
         $trackedCount = count($trackedKeywords);
 
         if ($allCount === 0) {
+            if (ob_get_level()) ob_end_clean();
             return View::json(['success' => false, 'error' => 'Nessuna keyword da aggiornare']);
         }
 
@@ -1258,6 +1267,7 @@ class KeywordController
 
         // Verifica crediti
         if (!Credits::hasEnough($creditUserId, $totalCost)) {
+            if (ob_get_level()) ob_end_clean();
             return View::json([
                 'success' => false,
                 'error' => "Crediti insufficienti. Richiesti: {$totalCost}, disponibili: " . Credits::getBalance($creditUserId)
@@ -1378,6 +1388,7 @@ class KeywordController
             'positions' => $results['positions'],
         ]);
 
+        if (ob_get_level()) ob_end_clean();
         return View::json([
             'success' => true,
             'results' => $results,

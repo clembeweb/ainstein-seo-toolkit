@@ -444,19 +444,17 @@ class Url
     /**
      * Approva bulk
      */
-    public function approveBulk(array $ids): int
+    public function approveBulk(array $ids, int $projectId): int
     {
-        if (empty($ids)) {
-            return 0;
-        }
-
+        if (empty($ids)) return 0;
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
         $stmt = $this->db->prepare("
             UPDATE {$this->table}
             SET status = 'approved'
-            WHERE id IN ({$placeholders}) AND status IN ('generated', 'error')
+            WHERE id IN ({$placeholders}) AND project_id = ? AND status IN ('generated', 'error')
         ");
-        $stmt->execute($ids);
+        $params = array_merge($ids, [$projectId]);
+        $stmt->execute($params);
         return $stmt->rowCount();
     }
 
@@ -498,15 +496,13 @@ class Url
     /**
      * Elimina URL bulk
      */
-    public function deleteBulk(array $ids): int
+    public function deleteBulk(array $ids, int $projectId): int
     {
-        if (empty($ids)) {
-            return 0;
-        }
-
+        if (empty($ids)) return 0;
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        $stmt = $this->db->prepare("DELETE FROM {$this->table} WHERE id IN ({$placeholders})");
-        $stmt->execute($ids);
+        $stmt = $this->db->prepare("DELETE FROM {$this->table} WHERE id IN ({$placeholders}) AND project_id = ?");
+        $params = array_merge($ids, [$projectId]);
+        $stmt->execute($params);
         return $stmt->rowCount();
     }
 

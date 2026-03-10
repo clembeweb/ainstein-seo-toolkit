@@ -12,6 +12,7 @@ use Modules\SeoTracking\Models\KeywordGroup;
 use Modules\SeoTracking\Services\AiReportService;
 use Modules\SeoTracking\Services\QuickWinsService;
 use Modules\SeoTracking\Services\SeoPageAnalyzerService;
+use Core\Database;
 use Core\Logger;
 
 /**
@@ -383,10 +384,15 @@ class AiController
      */
     public function analyzePage(int $projectId): string
     {
+        ignore_user_abort(true);
+        set_time_limit(300);
+        ob_start();
+
         $user = Auth::user();
         $project = $this->project->findAccessible($projectId, $user['id']);
 
         if (!$project) {
+            if (ob_get_level()) ob_end_clean();
             return View::json(['error' => 'Progetto non trovato'], 404);
         }
 
@@ -395,11 +401,13 @@ class AiController
         $url = trim($_POST['url'] ?? '');
 
         if (empty($keyword) || empty($url)) {
+            if (ob_get_level()) ob_end_clean();
             return View::json(['error' => 'Keyword e URL sono obbligatori'], 400);
         }
 
         // Valida URL
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            if (ob_get_level()) ob_end_clean();
             return View::json(['error' => 'URL non valido'], 400);
         }
 
@@ -410,6 +418,7 @@ class AiController
 
         // Verifica configurazione
         if (!$this->pageAnalyzer->isConfigured()) {
+            if (ob_get_level()) ob_end_clean();
             return View::json([
                 'error' => 'Servizio non configurato. Verifica API AI e SERP nelle impostazioni.'
             ], 400);
@@ -429,11 +438,15 @@ class AiController
                 ]
             );
 
+            Database::reconnect();
+
             if (isset($result['error'])) {
                 $code = str_contains($result['message'] ?? '', 'Crediti') ? 402 : 400;
+                if (ob_get_level()) ob_end_clean();
                 return View::json(['error' => $result['message']], $code);
             }
 
+            if (ob_get_level()) ob_end_clean();
             return View::json([
                 'success' => true,
                 'analysis_id' => $result['analysis_id'],
@@ -444,6 +457,7 @@ class AiController
             ]);
         } catch (\Exception $e) {
             Logger::channel('ai')->error("Page Analyzer Error", ['error' => $e->getMessage()]);
+            if (ob_get_level()) ob_end_clean();
             return View::json(['error' => 'Errore durante l\'analisi: ' . $e->getMessage()], 500);
         }
     }

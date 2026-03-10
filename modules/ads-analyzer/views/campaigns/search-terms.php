@@ -448,12 +448,16 @@ function searchTermAnalysis(config) {
         changeSyncId() {
             // Ricarica stats per la sync selezionata
             fetch(this.baseUrl + '/sync-data?sync_id=' + this.selectedSyncId)
-                .then(r => r.json())
+                .then(r => {
+                    if (!r.ok) throw new Error(`Errore server (${r.status})`);
+                    return r.json();
+                })
                 .then(data => {
                     if (data.success) {
                         this.stats = data.stats;
                     }
-                });
+                })
+                .catch(err => console.error('Error loading sync data:', err));
         },
 
         async startAnalysis() {
@@ -532,24 +536,38 @@ function searchTermAnalysis(config) {
             kw.is_selected = !kw.is_selected;
             this.recountSelected();
 
-            const formData = new FormData();
-            formData.append('_csrf_token', this.csrfToken);
-            await fetch(this.baseUrl + '/keywords/' + kw.id + '/toggle', {
-                method: 'POST',
-                body: formData,
-            });
+            try {
+                const formData = new FormData();
+                formData.append('_csrf_token', this.csrfToken);
+                const resp = await fetch(this.baseUrl + '/keywords/' + kw.id + '/toggle', {
+                    method: 'POST',
+                    body: formData,
+                });
+                if (!resp.ok) {
+                    throw new Error(`Errore server (${resp.status})`);
+                }
+            } catch (e) {
+                console.error('Toggle keyword failed:', e);
+            }
         },
 
         async toggleAllCategory(cat, checked) {
             cat.keywords.forEach(kw => kw.is_selected = checked);
             this.recountSelected();
 
-            const formData = new FormData();
-            formData.append('_csrf_token', this.csrfToken);
-            await fetch(this.baseUrl + '/categories/' + cat.id + '/' + (checked ? 'select_all' : 'deselect_all'), {
-                method: 'POST',
-                body: formData,
-            });
+            try {
+                const formData = new FormData();
+                formData.append('_csrf_token', this.csrfToken);
+                const resp = await fetch(this.baseUrl + '/categories/' + cat.id + '/' + (checked ? 'select_all' : 'deselect_all'), {
+                    method: 'POST',
+                    body: formData,
+                });
+                if (!resp.ok) {
+                    throw new Error(`Errore server (${resp.status})`);
+                }
+            } catch (e) {
+                console.error('Toggle category failed:', e);
+            }
         },
 
         recountSelected() {

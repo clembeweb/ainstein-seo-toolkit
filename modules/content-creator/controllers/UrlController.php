@@ -458,7 +458,7 @@ class UrlController
         $urlIds = array_map('intval', $urlIds);
 
         try {
-            $count = $this->url->approveBulk($urlIds);
+            $count = $this->url->approveBulk($urlIds, $project['id']);
             echo json_encode([
                 'success' => true,
                 'approved' => $count,
@@ -495,7 +495,7 @@ class UrlController
         $urlIds = array_map('intval', $urlIds);
 
         try {
-            $count = $this->url->deleteBulk($urlIds);
+            $count = $this->url->deleteBulk($urlIds, $project['id']);
             echo json_encode([
                 'success' => true,
                 'deleted' => $count,

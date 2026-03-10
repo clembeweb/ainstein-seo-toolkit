@@ -33,6 +33,7 @@ class SerpController
     {
         ignore_user_abort(true);
         set_time_limit(60);
+        ob_start();
         header('Content-Type: application/json');
 
         $user = Auth::user();
@@ -40,11 +41,13 @@ class SerpController
         // Find keyword with ownership check
         $keyword = $this->keyword->find($id);
         if (!$keyword) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Keyword non trovata']);
             exit;
         }
         $project = Project::findAccessible($user['id'], $keyword['project_id']);
         if (!$project) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Non autorizzato']);
             exit;
         }
@@ -52,6 +55,7 @@ class SerpController
         // Check credits for SERP extraction
         $cost = Credits::getCost('serp_extraction', 'ai-content');
         if (!Credits::hasEnough($user['id'], $cost)) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Crediti insufficienti. Richiesti: ' . $cost]);
             exit;
         }
@@ -81,6 +85,7 @@ class SerpController
             $savedResults = $this->serpResult->getByKeyword($id);
             $savedPaa = $this->keyword->getPaaQuestions($id);
 
+            ob_end_clean();
             echo json_encode([
                 'success' => true,
                 'message' => "Estratti {$count} risultati SERP",
@@ -93,6 +98,7 @@ class SerpController
             ]);
 
         } catch (\Exception $e) {
+            ob_end_clean();
             echo json_encode([
                 'success' => false,
                 'error' => 'Errore estrazione SERP: ' . $e->getMessage()

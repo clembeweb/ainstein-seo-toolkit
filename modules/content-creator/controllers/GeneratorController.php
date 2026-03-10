@@ -814,7 +814,7 @@ class GeneratorController
         if (!$project) {
             $_SESSION['_flash']['error'] = 'Progetto non trovato';
             Router::redirect('/content-creator');
-
+            exit;
         }
 
         // Filtri da GET

@@ -349,9 +349,12 @@ function crawlManager() {
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: '_token=' + csrfToken
+                    body: '_csrf_token=' + csrfToken
                 });
 
+                if (!response.ok) {
+                    throw new Error(`Errore server (${response.status})`);
+                }
                 const data = await response.json();
 
                 if (data.error) {
@@ -383,9 +386,12 @@ function crawlManager() {
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: '_token=' + csrfToken
+                    body: '_csrf_token=' + csrfToken
                 });
 
+                if (!response.ok) {
+                    throw new Error(`Errore server (${response.status})`);
+                }
                 const data = await response.json();
 
                 if (data.error) {
@@ -433,7 +439,7 @@ function crawlManager() {
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: '_token=' + csrfToken
+                    body: '_csrf_token=' + csrfToken
                 });
             } catch (e) {
                 console.error('Stop error:', e);
@@ -468,11 +474,14 @@ function pagesManager() {
                             'X-Requested-With': 'XMLHttpRequest'
                         },
                         body: JSON.stringify({
-                            _token: '<?= csrf_token() ?>',
+                            _csrf_token: '<?= csrf_token() ?>',
                             ids: this.selectedIds
                         })
                     });
 
+                    if (!response.ok) {
+                        throw new Error(`Errore server (${response.status})`);
+                    }
                     const data = await response.json();
 
                     if (data.success) {
@@ -496,11 +505,14 @@ function pagesManager() {
                             'X-Requested-With': 'XMLHttpRequest'
                         },
                         body: JSON.stringify({
-                            _token: '<?= csrf_token() ?>',
+                            _csrf_token: '<?= csrf_token() ?>',
                             ids: [id]
                         })
                     });
 
+                    if (!response.ok) {
+                        throw new Error(`Errore server (${response.status})`);
+                    }
                     const data = await response.json();
 
                     if (data.success) {
