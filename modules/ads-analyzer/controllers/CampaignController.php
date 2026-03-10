@@ -747,10 +747,11 @@ class CampaignController
             // Route credits to project owner
             $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
 
-            // AiService::complete() verifica e consuma crediti internamente
-            if (!Credits::hasEnough($creditUserId, 1)) {
+            // Verifica crediti per generazione fix AI
+            $fixCost = Credits::getCost('generate_fix', 'ads-analyzer');
+            if (!Credits::hasEnough($creditUserId, $fixCost)) {
                 ob_end_clean();
-                echo json_encode(['error' => 'Crediti insufficienti. Necessario almeno 1 credito.']);
+                echo json_encode(['error' => "Crediti insufficienti. Necessari almeno {$fixCost} crediti."]);
                 exit;
             }
 

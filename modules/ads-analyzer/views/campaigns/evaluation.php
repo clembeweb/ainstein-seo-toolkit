@@ -309,7 +309,7 @@ HTML;
         $val = (float)$value;
         return match(true) {
             str_contains($key, 'cpc') => '€' . number_format($val, 2, ',', '.'),
-            str_contains($key, 'ctr') => number_format($val * 100, 2, ',', '.') . '%',
+            str_contains($key, 'ctr') => number_format($val, 2, ',', '.') . '%',
             str_contains($key, 'cost') => '€' . number_format($val, 0, ',', '.'),
             str_contains($key, 'value') => '€' . number_format($val, 0, ',', '.'),
             default => number_format($val, 0, ',', '.'),

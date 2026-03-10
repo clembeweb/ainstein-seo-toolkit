@@ -257,6 +257,8 @@ CONTESTO LANDING PAGES:
 {$landingText}
 
 ISTRUZIONI DI VALUTAZIONE:
+LINGUA: rispondi nella STESSA LINGUA usata negli annunci, nelle keyword e nelle landing page. Se le copy sono in italiano rispondi in italiano, se in inglese rispondi in inglese. Tutti i campi testuali (summary, strengths, issues, suggestions) devono essere nella lingua rilevata.
+
 Valuta a 3 livelli: Account > Campagna > Gruppo Annunci.
 
 PER OGNI CAMPAGNA valuta in base al TIPO SPECIFICO:
@@ -428,12 +430,12 @@ PROMPT;
                 $c['budget_type'] ?? 'DAILY',
                 $c['clicks'],
                 $c['impressions'],
-                ($c['ctr'] ?? 0) * 100,
+                $c['ctr'] ?? 0,
                 $c['avg_cpc'] ?? 0,
                 $c['cost'],
                 $c['conversions'],
                 $c['conversion_value'] ?? 0,
-                ($c['conv_rate'] ?? 0) * 100
+                $c['conv_rate'] ?? 0
             );
         }
         return implode("\n", $lines);
@@ -503,11 +505,11 @@ PROMPT;
                     "  Metriche: Click: %d | Imp: %d | CTR: %.2f%% | CPC: %.2f | Costo: %.2f | Conv: %.1f | Conv Rate: %.2f%%",
                     $ag['clicks'],
                     $ag['impressions'],
-                    ($ag['ctr'] ?? 0) * 100,
+                    $ag['ctr'] ?? 0,
                     $ag['avg_cpc'] ?? 0,
                     $ag['cost'] ?? 0,
                     $ag['conversions'] ?? 0,
-                    ($ag['conv_rate'] ?? 0) * 100
+                    $ag['conv_rate'] ?? 0
                 );
 
                 // Annunci di questo ad group (max N)
@@ -527,7 +529,7 @@ PROMPT;
                             implode(' | ', $descriptions) ?: 'N/D',
                             $ad['final_url'] ?? 'N/D',
                             $ad['clicks'],
-                            ($ad['ctr'] ?? 0) * 100
+                            $ad['ctr'] ?? 0
                         );
                     }
                 }
@@ -546,7 +548,7 @@ PROMPT;
                             $kw['keyword_text'],
                             $kw['clicks'],
                             $kw['impressions'],
-                            ($kw['ctr'] ?? 0) * 100,
+                            $kw['ctr'] ?? 0,
                             $kw['quality_score'] ?? 'N/D',
                             $kw['avg_cpc'] ?? 0
                         );
@@ -590,7 +592,7 @@ PROMPT;
                     $ad['final_url'] ?? 'N/D',
                     $ad['quality_score'] ?? 'N/D',
                     $ad['clicks'],
-                    ($ad['ctr'] ?? 0) * 100,
+                    $ad['ctr'] ?? 0,
                     $ad['avg_cpc'] ?? 0
                 );
             }

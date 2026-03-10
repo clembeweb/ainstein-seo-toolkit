@@ -162,7 +162,7 @@ class SearchTermAnalysisController
                 'term' => $t['term'],
                 'clicks' => (int)$t['clicks'],
                 'impressions' => (int)$t['impressions'],
-                'ctr' => round((float)$t['ctr'] * 100, 2),
+                'ctr' => round((float)$t['ctr'], 2),
                 'cost' => round((float)$t['cost'], 2),
                 'conversions' => (int)$t['conversions'],
                 'is_zero_ctr' => (bool)$t['is_zero_ctr'],
@@ -447,12 +447,16 @@ class SearchTermAnalysisController
                     }
 
                     set_time_limit(0);
+                    // Determina nome campagna dal primo termine
+                    $currentCampaignName = $terms[0]['campaign_name'] ?? '';
                     $aiResult = $analyzer->analyzeAdGroup(
                         $user['id'],
                         $agContext,
                         $terms,
                         300,
-                        $campaignStructure
+                        $campaignStructure,
+                        $ag['name'] ?? '',
+                        $currentCampaignName
                     );
 
                     Database::reconnect();
@@ -1031,6 +1035,17 @@ class SearchTermAnalysisController
         $campaignResources = $this->getCampaignResourceMap($projectId);
         $adGroupResources = $this->getAdGroupResourceMap($projectId);
 
+        // Fallback: resource dell'ad group corrente (per quando target_name AI non matcha esattamente)
+        $currentAdGroup = AdGroup::find($adGroupId);
+        $currentAdGroupResource = null;
+        if ($currentAdGroup) {
+            // Cerca il resource name dell'ad group corrente nella mappa
+            $currentAdGroupResource = $adGroupResources[$currentAdGroup['name']] ?? null;
+        }
+
+        // Fallback campagna: prima campagna disponibile (il progetto ha solitamente 1 campagna)
+        $defaultCampaignResource = !empty($campaignResources) ? reset($campaignResources) : null;
+
         $sortOrder = 0;
         foreach ($analysis['categories'] ?? [] as $key => $data) {
             $categoryId = NegativeCategory::create([
@@ -1060,6 +1075,18 @@ class SearchTermAnalysisController
                     $level = $keyword['level'] ?? 'campaign';
                     $targetName = $keyword['target_name'] ?? '';
 
+                    // Risolvi resource names con fallback
+                    $campaignResource = null;
+                    $adGroupResource = null;
+
+                    if ($level === 'ad_group') {
+                        // Cerca il resource per nome esatto, fallback all'ad group corrente
+                        $adGroupResource = $adGroupResources[$targetName] ?? $currentAdGroupResource;
+                    } else {
+                        // Campaign level: cerca per nome, fallback alla prima campagna
+                        $campaignResource = $campaignResources[$targetName] ?? $defaultCampaignResource;
+                    }
+
                     NegativeKeyword::create([
                         'project_id' => $projectId,
                         'ad_group_id' => $adGroupId,
@@ -1069,8 +1096,8 @@ class SearchTermAnalysisController
                         'is_selected' => ($data['priority'] ?? 'medium') !== 'evaluate',
                         'suggested_match_type' => $keyword['match_type'] ?? 'phrase',
                         'suggested_level' => $level,
-                        'suggested_campaign_resource' => ($level === 'campaign') ? ($campaignResources[$targetName] ?? null) : null,
-                        'suggested_ad_group_resource' => ($level === 'ad_group') ? ($adGroupResources[$targetName] ?? null) : null,
+                        'suggested_campaign_resource' => $campaignResource,
+                        'suggested_ad_group_resource' => $adGroupResource,
                     ]);
                 }
             }

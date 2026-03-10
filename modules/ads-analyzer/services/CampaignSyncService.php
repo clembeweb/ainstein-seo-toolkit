@@ -158,7 +158,7 @@ class CampaignSyncService
                 "metrics.conversions, metrics.conversions_value " .
                 "FROM campaign " .
                 "WHERE segments.date BETWEEN '{$dateFrom}' AND '{$dateTo}' " .
-                "AND campaign.status != 'REMOVED'";
+                "AND campaign.status = 'ENABLED'";
 
         $response = $this->gadsService->searchStream($gaql);
         $rows = $this->extractRows($response);
@@ -211,9 +211,9 @@ class CampaignSyncService
             $impressions = $agg['impressions'];
             $clicks = $agg['clicks'];
             $cost = $agg['cost_micros'] / 1000000;
-            $ctr = $impressions > 0 ? ($clicks / $impressions) * 100 : 0;
+            $ctr = $this->calcCtr($clicks, $impressions);
             $avgCpc = $clicks > 0 ? $cost / $clicks : 0;
-            $convRate = $clicks > 0 ? ($agg['conversions'] / $clicks) * 100 : 0;
+            $convRate = $clicks > 0 ? min(($agg['conversions'] / $clicks) * 100, 100.0) : 0;
 
             Campaign::create([
                 'project_id' => $this->projectId,
@@ -227,7 +227,7 @@ class CampaignSyncService
                 'budget_type' => 'DAILY',
                 'clicks' => $clicks,
                 'impressions' => $impressions,
-                'ctr' => round($ctr, 2),
+                'ctr' => $ctr,
                 'avg_cpc' => round($avgCpc, 2),
                 'cost' => round($cost, 2),
                 'conversions' => round($agg['conversions'], 2),
@@ -254,7 +254,8 @@ class CampaignSyncService
                 "metrics.conversions " .
                 "FROM ad_group " .
                 "WHERE segments.date BETWEEN '{$dateFrom}' AND '{$dateTo}' " .
-                "AND campaign.status != 'REMOVED'";
+                "AND campaign.status = 'ENABLED' " .
+                "AND ad_group.status != 'REMOVED'";
 
         $response = $this->gadsService->searchStream($gaql);
         $rows = $this->extractRows($response);
@@ -300,9 +301,9 @@ class CampaignSyncService
             $impressions = $agg['impressions'];
             $clicks = $agg['clicks'];
             $cost = $agg['cost_micros'] / 1000000;
-            $ctr = $impressions > 0 ? ($clicks / $impressions) * 100 : 0;
+            $ctr = $this->calcCtr($clicks, $impressions);
             $avgCpc = $clicks > 0 ? $cost / $clicks : 0;
-            $convRate = $clicks > 0 ? ($agg['conversions'] / $clicks) * 100 : 0;
+            $convRate = $clicks > 0 ? min(($agg['conversions'] / $clicks) * 100, 100.0) : 0;
 
             CampaignAdGroup::create([
                 'project_id' => $this->projectId,
@@ -315,7 +316,7 @@ class CampaignSyncService
                 'ad_group_status' => $agg['status'],
                 'clicks' => $clicks,
                 'impressions' => $impressions,
-                'ctr' => round($ctr, 2),
+                'ctr' => $ctr,
                 'avg_cpc' => round($avgCpc, 2),
                 'cost' => round($cost, 2),
                 'conversions' => round($agg['conversions'], 2),
@@ -342,7 +343,8 @@ class CampaignSyncService
                 "metrics.average_cpc, metrics.cost_micros " .
                 "FROM keyword_view " .
                 "WHERE segments.date BETWEEN '{$dateFrom}' AND '{$dateTo}' " .
-                "AND campaign.status != 'REMOVED'";
+                "AND campaign.status = 'ENABLED' " .
+                "AND ad_group.status != 'REMOVED'";
 
         $response = $this->gadsService->searchStream($gaql);
         $rows = $this->extractRows($response);
@@ -392,7 +394,7 @@ class CampaignSyncService
             $impressions = $agg['impressions'];
             $clicks = $agg['clicks'];
             $cost = $agg['cost_micros'] / 1000000;
-            $ctr = $impressions > 0 ? ($clicks / $impressions) * 100 : 0;
+            $ctr = $this->calcCtr($clicks, $impressions);
             $avgCpc = $clicks > 0 ? $cost / $clicks : 0;
 
             AdGroupKeyword::create([
@@ -407,7 +409,7 @@ class CampaignSyncService
                 'keyword_status' => $agg['status'],
                 'clicks' => $clicks,
                 'impressions' => $impressions,
-                'ctr' => round($ctr, 2),
+                'ctr' => $ctr,
                 'avg_cpc' => round($avgCpc, 2),
                 'cost' => round($cost, 2),
                 'conversions' => 0,
@@ -437,7 +439,8 @@ class CampaignSyncService
                 "metrics.conversions " .
                 "FROM ad_group_ad " .
                 "WHERE segments.date BETWEEN '{$dateFrom}' AND '{$dateTo}' " .
-                "AND campaign.status != 'REMOVED'";
+                "AND campaign.status = 'ENABLED' " .
+                "AND ad_group.status != 'REMOVED'";
 
         $response = $this->gadsService->searchStream($gaql);
         $rows = $this->extractRows($response);
@@ -504,7 +507,7 @@ class CampaignSyncService
             $impressions = $agg['impressions'];
             $clicks = $agg['clicks'];
             $cost = $agg['cost_micros'] / 1000000;
-            $ctr = $impressions > 0 ? ($clicks / $impressions) * 100 : 0;
+            $ctr = $this->calcCtr($clicks, $impressions);
             $avgCpc = $clicks > 0 ? $cost / $clicks : 0;
 
             Ad::create([
@@ -526,7 +529,7 @@ class CampaignSyncService
                 'ad_status' => $agg['status'],
                 'clicks' => $clicks,
                 'impressions' => $impressions,
-                'ctr' => round($ctr, 2),
+                'ctr' => $ctr,
                 'avg_cpc' => round($avgCpc, 2),
                 'cost' => round($cost, 2),
                 'conversions' => round($agg['conversions'], 2),
@@ -546,9 +549,13 @@ class CampaignSyncService
     public function syncExtensions(): int
     {
         $gaql = "SELECT asset.id, asset.name, asset.type, asset.resource_name, " .
+                "asset.callout_asset.callout_text, " .
+                "asset.sitelink_asset.link_text, asset.sitelink_asset.description1, asset.sitelink_asset.description2, " .
+                "asset.structured_snippet_asset.header, asset.structured_snippet_asset.values, " .
+                "asset.image_asset.file_size, " .
                 "campaign_asset.status, campaign.id, campaign.status " .
                 "FROM campaign_asset " .
-                "WHERE campaign.status != 'REMOVED'";
+                "WHERE campaign.status = 'ENABLED'";
 
         $response = $this->gadsService->searchStream($gaql);
         $rows = $this->extractRows($response);
@@ -564,12 +571,15 @@ class CampaignSyncService
                 continue;
             }
 
+            // Estrai testo in base al tipo di asset
+            $text = $this->extractAssetText($asset);
+
             Extension::create([
                 'project_id' => $this->projectId,
                 'sync_id' => $this->syncId,
                 'campaign_id_google' => (string) ($campaign['id'] ?? ''),
                 'extension_type' => $asset['type'] ?? 'UNKNOWN',
-                'extension_text' => $asset['name'] ?? null,
+                'extension_text' => $text,
                 'status' => $campaignAsset['status'] ?? null,
                 'clicks' => 0,
                 'impressions' => 0,
@@ -578,6 +588,43 @@ class CampaignSyncService
         }
 
         return $count;
+    }
+
+    /**
+     * Estrae il testo leggibile da un asset in base al tipo
+     */
+    private function extractAssetText(array $asset): ?string
+    {
+        $type = $asset['type'] ?? '';
+
+        // Callout: testo del callout
+        if (!empty($asset['calloutAsset']['calloutText'])) {
+            return $asset['calloutAsset']['calloutText'];
+        }
+
+        // Sitelink: testo del link + descrizioni
+        if (!empty($asset['sitelinkAsset']['linkText'])) {
+            $text = $asset['sitelinkAsset']['linkText'];
+            $desc1 = $asset['sitelinkAsset']['description1'] ?? '';
+            $desc2 = $asset['sitelinkAsset']['description2'] ?? '';
+            if ($desc1 || $desc2) {
+                $text .= ' — ' . trim("$desc1 $desc2");
+            }
+            return $text;
+        }
+
+        // Structured snippet: header + valori
+        if (!empty($asset['structuredSnippetAsset']['header'])) {
+            $header = $asset['structuredSnippetAsset']['header'];
+            $values = $asset['structuredSnippetAsset']['values'] ?? [];
+            if (is_array($values)) {
+                return $header . ': ' . implode(', ', $values);
+            }
+            return $header;
+        }
+
+        // Fallback: nome asset
+        return $asset['name'] ?? null;
     }
 
     /**
@@ -593,7 +640,8 @@ class CampaignSyncService
                 "metrics.cost_micros, metrics.conversions, metrics.conversions_value " .
                 "FROM search_term_view " .
                 "WHERE segments.date BETWEEN '{$dateFrom}' AND '{$dateTo}' " .
-                "AND campaign.status != 'REMOVED' " .
+                "AND campaign.status = 'ENABLED' " .
+                "AND ad_group.status != 'REMOVED' " .
                 "AND metrics.impressions > 0";
 
         $response = $this->gadsService->searchStream($gaql);
@@ -648,7 +696,7 @@ class CampaignSyncService
             $impressions = $agg['impressions'];
             $clicks = $agg['clicks'];
             $cost = $agg['cost_micros'] / 1000000;
-            $ctr = $impressions > 0 ? ($clicks / $impressions) * 100 : 0;
+            $ctr = $this->calcCtr($clicks, $impressions);
             $isZeroCtr = ($ctr == 0 && $impressions > 0) ? 1 : 0;
 
             $localAdGroupId = $adGroupLocalIds[$agg['ad_group_id']] ?? 0;
@@ -661,7 +709,7 @@ class CampaignSyncService
                 'match_type' => null,
                 'clicks' => $clicks,
                 'impressions' => $impressions,
-                'ctr' => round($ctr, 2),
+                'ctr' => $ctr,
                 'cost' => round($cost, 2),
                 'conversions' => round($agg['conversions'], 2),
                 'conversion_value' => round($agg['conversion_value'], 2),
@@ -678,6 +726,22 @@ class CampaignSyncService
     // =========================================================================
     // HELPER METHODS
     // =========================================================================
+
+    /**
+     * Calcola CTR con cap al 100% per evitare valori impossibili.
+     *
+     * Google Ads search_term_view può restituire clicks > impressions
+     * per artefatti dell'attribution model (broad match, sitelinks).
+     * Valori > 100% sono fuorvianti per l'analisi, quindi li limitiamo.
+     */
+    private function calcCtr(int $clicks, int $impressions): float
+    {
+        if ($impressions <= 0) {
+            return 0.0;
+        }
+        $ctr = ($clicks / $impressions) * 100;
+        return min(round($ctr, 2), 100.0);
+    }
 
     /**
      * Estrae le righe dalla risposta searchStream.

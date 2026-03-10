@@ -189,11 +189,11 @@ Router::get('/ads-analyzer/projects/{id}/campaigns', function ($id) {
     return $controller->index((int) $id);
 });
 
-// Dettaglio sync campagne
-Router::get('/ads-analyzer/projects/{id}/campaigns/{syncId}', function ($id, $syncId) {
+// Sync disponibili per selettore periodo (AJAX) — DEVE stare PRIMA di campaigns/{syncId}
+Router::get('/ads-analyzer/projects/{id}/campaigns/available-syncs', function ($id) {
     Middleware::auth();
     $controller = new CampaignController();
-    return $controller->show((int) $id, (int) $syncId);
+    return $controller->availableSyncs((int) $id);
 });
 
 // Avvia valutazione AI campagne (AJAX)
@@ -212,11 +212,11 @@ Router::post('/ads-analyzer/projects/{id}/campaigns/toggle-auto-evaluate', funct
     return $controller->toggleAutoEvaluate((int) $id);
 });
 
-// Sync disponibili per selettore periodo (AJAX)
-Router::get('/ads-analyzer/projects/{id}/campaigns/available-syncs', function ($id) {
+// Dettaglio sync campagne — DOPO le route specifiche per evitare conflitti con {syncId}
+Router::get('/ads-analyzer/projects/{id}/campaigns/{syncId}', function ($id, $syncId) {
     Middleware::auth();
     $controller = new CampaignController();
-    return $controller->availableSyncs((int) $id);
+    return $controller->show((int) $id, (int) $syncId);
 });
 
 // Dettaglio valutazione AI

@@ -872,6 +872,7 @@ class CampaignCreatorController
             Database::reconnect();
             Logger::channel('ai')->error("CampaignCreator publishToGoogleAds error", ['error' => $e->getMessage()]);
             ob_end_clean();
+            http_response_code(500);
             echo json_encode([
                 'success' => false,
                 'error' => 'Errore pubblicazione: ' . $e->getMessage()

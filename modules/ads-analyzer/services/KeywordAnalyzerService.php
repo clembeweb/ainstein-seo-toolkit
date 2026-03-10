@@ -22,7 +22,9 @@ class KeywordAnalyzerService
         string $businessContext,
         array $terms,
         int $maxTerms = 300,
-        string $campaignStructure = ''
+        string $campaignStructure = '',
+        string $currentAdGroupName = '',
+        string $currentCampaignName = ''
     ): array {
         \Core\Logger::channel('ai')->debug('KeywordAnalyzerService::analyzeAdGroup START', [
             'user_id' => $userId,
@@ -44,7 +46,7 @@ class KeywordAnalyzerService
             \Core\Logger::channel('ai')->debug('Terms text built', ['length' => strlen($termsText)]);
 
             // Costruisci prompt
-            $prompt = $this->buildPrompt($businessContext, $termsText, $campaignStructure);
+            $prompt = $this->buildPrompt($businessContext, $termsText, $campaignStructure, $currentAdGroupName, $currentCampaignName);
             \Core\Logger::channel('ai')->debug('Prompt built', [
                 'length' => strlen($prompt),
                 'preview' => substr($prompt, 0, 300),
@@ -58,6 +60,8 @@ class KeywordAnalyzerService
                 '', // Content vuoto, tutto nel prompt
                 'ads-analyzer'
             );
+
+            \Core\Database::reconnect();
 
             \Core\Logger::channel('ai')->debug('AiService response received', ['keys' => array_keys($response)]);
 
@@ -94,11 +98,21 @@ class KeywordAnalyzerService
     /**
      * Costruisce prompt dinamico basato su contesto business
      */
-    private function buildPrompt(string $businessContext, string $terms, string $campaignStructure = ''): string
+    private function buildPrompt(string $businessContext, string $terms, string $campaignStructure = '', string $currentAdGroupName = '', string $currentCampaignName = ''): string
     {
         $structureBlock = '';
         if (!empty($campaignStructure)) {
             $structureBlock = "\n\nSTRUTTURA CAMPAGNE E AD GROUP:\n{$campaignStructure}\n";
+        }
+
+        $currentAdGroupBlock = '';
+        if (!empty($currentAdGroupName)) {
+            $currentAdGroupBlock = "\n\nAD GROUP IN ANALISI: \"{$currentAdGroupName}\"";
+            if (!empty($currentCampaignName)) {
+                $currentAdGroupBlock .= " (nella campagna \"{$currentCampaignName}\")";
+            }
+            $currentAdGroupBlock .= "\nTutti i termini sotto appartengono a questo ad group. " .
+                "Quando suggerisci livello \"ad_group\", usa ESATTAMENTE \"{$currentAdGroupName}\" come target_name.\n";
         }
 
         return <<<PROMPT
@@ -106,7 +120,7 @@ Sei un esperto Google Ads. Analizza i termini di ricerca e identifica keyword ne
 
 CONTESTO BUSINESS:
 {$businessContext}
-{$structureBlock}
+{$structureBlock}{$currentAdGroupBlock}
 TERMINI DI RICERCA (formato: termine | click | impressioni | costo | campagna > ad group):
 {$terms}
 
@@ -115,9 +129,12 @@ ISTRUZIONI:
 2. Identifica termini di ricerca NON PERTINENTI rispetto all'offerta
 3. Raggruppa le keyword negative in categorie logiche per questo specifico business
 4. Assegna priorita: "high" (escludi subito), "medium" (probabilmente da escludere), "evaluate" (valuta caso per caso)
-5. Per ogni keyword, decidi il LIVELLO di applicazione:
-   - "campaign" se il termine e irrilevante per TUTTE le campagne/ad group (es. termine completamente fuori target)
-   - "ad_group" se il termine e irrilevante solo per ALCUNI ad group ma potrebbe essere valido per altri
+5. Per ogni keyword, decidi il LIVELLO di applicazione (CRITICO — leggi con attenzione):
+   - "ad_group" (DEFAULT — usa questo nel 80-90% dei casi): il termine non e pertinente per QUESTO specifico ad group "{$currentAdGroupName}", ma potrebbe essere rilevante per altri ad group nella stessa campagna o in altre campagne. Usa target_name = "{$currentAdGroupName}".
+     Esempi: un competitor di un altro ad group, un prodotto/servizio trattato da un altro ad group, termini generici che non matchano questo specifico ad group.
+   - "campaign" (RARO — max 10-20% dei casi): SOLO per termini completamente estranei a TUTTO il business dell'inserzionista (spam, settori completamente diversi, errori). Usa il nome della campagna come target_name.
+     Esempi: "download gratis", "torrent", nomi di settori totalmente diversi.
+   REGOLA D'ORO: nel dubbio, usa SEMPRE "ad_group". E meglio bloccare troppo poco a livello campagna che troppo.
 6. Suggerisci il match_type piu appropriato:
    - "exact" per termini molto specifici che devono essere bloccati esattamente come sono
    - "phrase" per pattern che devono essere bloccati come frase (default)
@@ -141,7 +158,7 @@ Rispondi SOLO con un JSON valido (senza markdown, senza backtick, senza testo pr
           "text": "keyword1",
           "match_type": "exact|phrase|broad",
           "level": "campaign|ad_group",
-          "target_name": "nome campagna o ad group dove applicare (se ad_group)"
+          "target_name": "nome ESATTO della campagna (se level=campaign) o dell'ad group (se level=ad_group)"
         }
       ]
     }
@@ -149,11 +166,13 @@ Rispondi SOLO con un JSON valido (senza markdown, senza backtick, senza testo pr
 }
 
 REGOLE PER LE CATEGORIE:
+- LINGUA: usa la STESSA LINGUA dei termini di ricerca, delle copy degli annunci e delle landing page. Se i termini sono in italiano, i nomi delle categorie, le descrizioni e il summary DEVONO essere in italiano. Se sono in inglese, usa l'inglese. MAI mischiare lingue.
 - Crea 5-12 categorie pertinenti al business
 - Adatta i nomi delle categorie al contesto specifico
 - Estrai SOLO keyword singole o frasi brevi (max 3 parole)
 - Identifica pattern ricorrenti nei termini non pertinenti
-- IMPORTANTE: per il campo "level", considera che una keyword negativa a livello campagna blocca il termine su TUTTI gli ad group. Usa "ad_group" quando il termine potrebbe essere valido per un altro ad group della stessa campagna.
+- LIVELLO (FONDAMENTALE): l'80-90% delle keyword DEVE avere level="ad_group". Usa "campaign" SOLO per spam/settori totalmente estranei (max 10-20%). Se un termine menziona un competitor o un servizio diverso, usa "ad_group" perche potrebbe essere utile in un altro ad group
+- TARGET_NAME: usa ESATTAMENTE i nomi delle campagne/ad group come indicati nella struttura sopra. Per ad_group usa "{$currentAdGroupName}"
 PROMPT;
     }
 

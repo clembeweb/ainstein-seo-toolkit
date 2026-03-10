@@ -181,7 +181,7 @@
                             <p class="text-xs text-slate-500 dark:text-slate-400">Impression</p>
                         </div>
                         <div class="text-center">
-                            <p class="text-lg font-bold text-slate-900 dark:text-white"><?= number_format(($campaign['ctr'] ?? 0) * 100, 2, ',', '.') ?>%</p>
+                            <p class="text-lg font-bold text-slate-900 dark:text-white"><?= number_format($campaign['ctr'] ?? 0, 2, ',', '.') ?>%</p>
                             <p class="text-xs text-slate-500 dark:text-slate-400">CTR</p>
                         </div>
                         <div class="text-center">
@@ -201,7 +201,7 @@
                             <p class="text-xs text-slate-500 dark:text-slate-400">Valore conv.</p>
                         </div>
                         <div class="text-center">
-                            <p class="text-lg font-bold text-slate-900 dark:text-white"><?= number_format(($campaign['conv_rate'] ?? 0) * 100, 2, ',', '.') ?>%</p>
+                            <p class="text-lg font-bold text-slate-900 dark:text-white"><?= number_format($campaign['conv_rate'] ?? 0, 2, ',', '.') ?>%</p>
                             <p class="text-xs text-slate-500 dark:text-slate-400">Tasso conv.</p>
                         </div>
                     </div>
@@ -303,7 +303,7 @@
                                         <?= number_format($ad['clicks'] ?? 0, 0, ',', '.') ?>
                                     </td>
                                     <td class="px-4 py-3 text-sm text-right text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                                        <?= number_format(($ad['ctr'] ?? 0) * 100, 2, ',', '.') ?>%
+                                        <?= number_format($ad['ctr'] ?? 0, 2, ',', '.') ?>%
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>

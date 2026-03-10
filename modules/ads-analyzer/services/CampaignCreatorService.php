@@ -171,6 +171,8 @@ class CampaignCreatorService
             'max_tokens' => 6000,
         ], 'ads-analyzer');
 
+        \Core\Database::reconnect();
+
         if (!empty($result['error'])) {
             return $result;
         }
@@ -208,6 +210,8 @@ class CampaignCreatorService
             'system' => $systemPrompt,
             'max_tokens' => 8000,
         ], 'ads-analyzer');
+
+        \Core\Database::reconnect();
 
         if (!empty($result['error'])) {
             return $result;
