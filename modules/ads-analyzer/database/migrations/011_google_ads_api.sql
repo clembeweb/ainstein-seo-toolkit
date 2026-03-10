@@ -6,6 +6,22 @@
 --   ga_campaign_evaluations, ga_auto_eval_queue, ga_analyses, ga_ad_groups
 
 -- ============================================
+-- 0. Create google_oauth_tokens (shared, if not exists)
+-- ============================================
+CREATE TABLE IF NOT EXISTS google_oauth_tokens (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    service VARCHAR(50) NOT NULL DEFAULT 'gsc',
+    access_token TEXT NULL,
+    refresh_token TEXT NULL,
+    token_expires_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY idx_user_service (user_id, service),
+    KEY idx_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
 -- 1. Create ga_syncs table (replaces ga_script_runs)
 -- ============================================
 CREATE TABLE IF NOT EXISTS ga_syncs (
@@ -20,6 +36,7 @@ CREATE TABLE IF NOT EXISTS ga_syncs (
     ad_groups_synced INT DEFAULT 0,
     keywords_synced INT DEFAULT 0,
     ads_synced INT DEFAULT 0,
+    extensions_synced INT DEFAULT 0,
     search_terms_synced INT DEFAULT 0,
     error_message TEXT NULL,
     started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -44,7 +61,8 @@ BEGIN
         ALTER TABLE ga_projects
             ADD COLUMN google_ads_customer_id VARCHAR(20) NULL AFTER user_id,
             ADD COLUMN google_ads_account_name VARCHAR(255) NULL AFTER google_ads_customer_id,
-            ADD COLUMN oauth_token_id INT NULL AFTER google_ads_account_name;
+            ADD COLUMN login_customer_id VARCHAR(20) NULL AFTER google_ads_account_name,
+            ADD COLUMN oauth_token_id INT NULL AFTER login_customer_id;
     END IF;
 
     IF NOT EXISTS (
