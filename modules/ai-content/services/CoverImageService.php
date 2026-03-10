@@ -240,6 +240,8 @@ PROMPT;
         }
 
         // Download immagine
+        $startTime = microtime(true);
+
         $ch = curl_init($imageUrl);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -251,6 +253,17 @@ PROMPT;
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
         curl_close($ch);
+
+        // Log image download API call
+        ApiLoggerService::log('openai_dalle', '/download', ['url' => substr($imageUrl, 0, 100)], [
+            'http_code' => $httpCode,
+            'size' => strlen($imageData ?: ''),
+            'error' => $curlError ?: null,
+        ], $httpCode, $startTime, [
+            'module' => 'ai-content',
+            'cost' => 0,
+            'context' => 'cover_image_download',
+        ]);
 
         if ($curlError || $httpCode !== 200 || empty($imageData)) {
             return null;

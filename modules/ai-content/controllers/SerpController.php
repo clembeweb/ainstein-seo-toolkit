@@ -31,6 +31,7 @@ class SerpController
      */
     public function extract(int $id): void
     {
+        ignore_user_abort(true);
         set_time_limit(60);
         header('Content-Type: application/json');
 

@@ -9,6 +9,7 @@ use Modules\AiContent\Models\WpSite;
 use Modules\AiContent\Models\Article;
 use Modules\AiContent\Models\Project;
 use Services\ScraperService;
+use Services\ApiLoggerService;
 
 /**
  * WordPressController
@@ -78,6 +79,7 @@ class WordPressController
      */
     public function addSite(?int $projectId = null): void
     {
+        ignore_user_abort(true);
         // Cattura qualsiasi output accidentale
         ob_start();
 
@@ -168,6 +170,7 @@ class WordPressController
      */
     public function removeSite(int $id): void
     {
+        ignore_user_abort(true);
         ob_start();
 
         $user = Auth::user();
@@ -200,6 +203,7 @@ class WordPressController
      */
     public function testConnection(int $id): void
     {
+        ignore_user_abort(true);
         ob_start();
 
         $user = Auth::user();
@@ -236,6 +240,7 @@ class WordPressController
      */
     public function syncCategories(int $id): void
     {
+        ignore_user_abort(true);
         ob_start();
 
         $user = Auth::user();
@@ -268,6 +273,7 @@ class WordPressController
      */
     public function getCategories(int $id): void
     {
+        ignore_user_abort(true);
         ob_start();
 
         $user = Auth::user();
@@ -300,6 +306,7 @@ class WordPressController
      */
     public function publish(int $articleId): void
     {
+        ignore_user_abort(true);
         ob_start();
 
         $user = Auth::user();
@@ -439,6 +446,7 @@ class WordPressController
      */
     public function toggleActive(int $id): void
     {
+        ignore_user_abort(true);
         ob_start();
 
         $user = Auth::user();
@@ -549,12 +557,26 @@ class WordPressController
             'api_mode' => true, // Skip default browser headers that may trigger WAF
         ];
 
+        // Extract endpoint path for logging (remove domain)
+        $parsedUrl = parse_url($url);
+        $endpoint = $parsedUrl['path'] ?? $url;
+
+        $startTime = microtime(true);
+
         if ($method === 'GET') {
             $result = $this->scraper->fetchJson($url, $options);
         } else {
             // POST or other methods - pass api_mode in options
             $result = $this->scraper->postJson($url, $data ?? [], $headers, $options);
         }
+
+        // Log WordPress API call (redact API key from request)
+        $logRequest = ['method' => $method, 'data' => $data ? array_keys($data) : null];
+        ApiLoggerService::log('wordpress', $endpoint, $logRequest, $result['data'] ?? ['error' => $result['message'] ?? null], $result['http_code'] ?? 0, $startTime, [
+            'module' => 'ai-content',
+            'cost' => 0,
+            'context' => 'wp_api_' . strtolower($method),
+        ]);
 
         if (isset($result['error'])) {
             // Map error to user-friendly message

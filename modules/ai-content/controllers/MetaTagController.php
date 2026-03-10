@@ -716,6 +716,8 @@ class MetaTagController
                     'skip_credits' => true, // Gestiamo i crediti manualmente
                 ]);
 
+                Database::reconnect();
+
                 if (isset($result['error'])) {
                     $this->metaTag->markGenerationError($item['id'], $result['message'] ?? 'AI error');
                     $errors++;
