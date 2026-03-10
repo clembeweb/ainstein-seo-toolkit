@@ -1,6 +1,6 @@
 # AINSTEIN - Istruzioni Claude Code
 
-> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-03-10 (Migrazione produzione da SiteGround a Hetzner VPS)
+> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-03-10 (Audit piattaforma completo + fix 11 critical)
 
 ---
 
@@ -43,6 +43,9 @@
 20. Tabelle standard CSS uniforme   → rounded-xl, px-4 py-3, bg-slate-700/50
 21. return View::render() SEMPRE    → Controller E route handler ritornano il risultato
 22. 'user' => $user in View::render → SEMPRE per pagine con layout (sidebar dipende da $user)
+23. ob_end_clean() prima di output  → SEMPRE prima di echo json_encode() se ob_start() attivo
+24. response.ok check nel frontend  → SEMPRE prima di response.json() in fetch AJAX
+25. display_errors off in prod      → Controllato da APP_DEBUG env var (MAI hardcoded)
 ```
 
 ---
@@ -288,7 +291,16 @@ Pattern obbligatorio:
 3. `session_write_close()` prima operazioni lunghe
 4. Operazione + `Database::reconnect()`
 5. `ob_end_clean()` + `echo json_encode([...])` + `exit` (NON `jsonResponse()`)
-6. Frontend: controllare `resp.ok` PRIMA di `resp.json()`
+6. **Early returns**: `ob_end_clean()` ANCHE prima di ogni `echo json_encode` su error path
+7. Frontend: controllare `resp.ok` PRIMA di `resp.json()` (GR #24)
+
+```javascript
+// Pattern frontend obbligatorio per AJAX:
+if (!response.ok) {
+    throw new Error(`Errore server (${response.status})`);
+}
+const data = await response.json();
+```
 
 ### Background Processing (SSE)
 
@@ -462,16 +474,19 @@ modules/crawl-budget/cron/crawl-dispatcher.php     # Every 5 Min (*/5 * * * *)
 [ ] Prefisso DB corretto per modulo
 [ ] Nessuna API key in file
 [ ] Query SQL con prepared statements
-[ ] CSRF: campo `_csrf_token`, valore `csrf_token()`
+[ ] CSRF: campo `_csrf_token`, valore `csrf_token()` (MAI `_token`)
 [ ] Database::reconnect() dopo chiamate lunghe
 [ ] Scraping via ScraperService::scrape()
 [ ] API esterne loggate con ApiLoggerService
 [ ] php -l su file modificati
 [ ] Operazioni lunghe: SSE o pattern AJAX lungo (ob_start + ignore_user_abort)
+[ ] ob_end_clean() prima di OGNI echo json_encode (inclusi early returns!)
 [ ] return View::render() nel controller + return nel route handler
 [ ] 'user' => $user passato a View::render() per tutte le pagine con layout
 [ ] Tabelle: componenti shared, rounded-xl, px-4 py-3, dark:bg-slate-700/50
 [ ] Link project-scoped (MAI percorsi legacy)
+[ ] Frontend AJAX: response.ok check prima di response.json()
+[ ] IDOR: bulk operations filtrate per project_id (MAI solo per ID)
 [ ] Docs aggiornate se feature significativa
 ```
 
@@ -501,6 +516,11 @@ modules/crawl-budget/cron/crawl-dispatcher.php     # Every 5 Min (*/5 * * * *)
 | SEO Audit: pagine vuote/rate limited | `fetchRaw()` + retry backoff → status `rate_limited` in `sa_pages` |
 | SEO Audit: discovery timeout | Discovery in `processStream()` background (non in `start()`) |
 | `ScraperService::fetch()` scarta 4xx/5xx | Usare `fetchRaw()` se servono tutte le risposte HTTP |
+| AJAX "403 Forbidden" | CSRF: usare `_csrf_token` nei JS (MAI `_token`) — controller potrebbe fare check manuale |
+| AJAX restituisce vuoto (buffer) | `ob_end_clean()` mancante prima di `echo json_encode()` su early return |
+| Bulk op tocca dati altrui (IDOR) | Aggiungere `AND project_id = ?` nelle query bulk (approveBulk, deleteBulk) |
+| `display_errors` in produzione | Controllato da `APP_DEBUG` env var — default off. MAI hardcodare `display_errors=1` |
+| fetch().json() fallisce silente | Aggiungere `if (!response.ok) throw new Error(...)` prima di `response.json()` |
 
 ---
 
