@@ -29,8 +29,8 @@ try {
     $jobModel = new CrawlJob();
     $sessionModel = new CrawlSession();
 
-    // 1. Reset stuck jobs (running da oltre 30 minuti)
-    $resetCount = $jobModel->resetStuckJobs(30);
+    // 1. Reset stuck jobs (running da oltre 10 minuti — VPS: processi stabili)
+    $resetCount = $jobModel->resetStuckJobs(10);
 
     if ($resetCount > 0) {
         error_log("{$prefix} Reset {$resetCount} stuck crawl job(s)");
@@ -49,7 +49,7 @@ try {
         $sessionsUpdated = 0;
         foreach ($stuckSessions as $row) {
             $sessionId = (int) $row['session_id'];
-            $sessionModel->fail($sessionId, 'Timeout - job rimasto in esecuzione per oltre 30 minuti');
+            $sessionModel->fail($sessionId, 'Timeout - job rimasto in esecuzione per oltre 10 minuti');
             $sessionsUpdated++;
         }
 
@@ -58,8 +58,8 @@ try {
         }
     }
 
-    // 2. Reset orphaned sessions (running >30 min senza job attivo)
-    $cutoffTime = date('Y-m-d H:i:s', time() - (30 * 60));
+    // 2. Reset orphaned sessions (running >10 min senza job attivo — VPS: recovery rapido)
+    $cutoffTime = date('Y-m-d H:i:s', time() - (10 * 60));
     $orphanedSessions = Database::fetchAll(
         "SELECT s.id, s.project_id
          FROM sa_crawl_sessions s
@@ -77,7 +77,7 @@ try {
         $sessionId = (int) $row['id'];
         $projectId = (int) $row['project_id'];
 
-        $sessionModel->fail($sessionId, 'Timeout - sessione orfana senza job attivo');
+        $sessionModel->fail($sessionId, 'Timeout - sessione orfana (10 min senza job attivo)');
 
         // Reset anche lo stato del progetto
         Database::update('sa_projects', [

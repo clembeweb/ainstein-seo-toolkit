@@ -259,7 +259,7 @@ class SearchTermAnalysisController
     public function extractContexts(int $projectId): void
     {
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
 
         header('Content-Type: application/json');
         ob_start();
@@ -305,7 +305,7 @@ class SearchTermAnalysisController
         $results = [];
 
         foreach ($withUrl as $ag) {
-            set_time_limit(0);
+            set_time_limit(300);
             $result = $extractor->extractFromUrl($user['id'], $ag['landing_url'], 'negative-kw');
 
             Database::reconnect();
@@ -348,7 +348,7 @@ class SearchTermAnalysisController
     public function analyze(int $projectId): void
     {
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
 
         header('Content-Type: application/json');
         ob_start();
@@ -456,7 +456,7 @@ class SearchTermAnalysisController
                         $agContext = $businessContext . "\n\nCONTESTO LANDING PAGE ({$ag['name']}):\n" . $ag['extracted_context'];
                     }
 
-                    set_time_limit(0);
+                    set_time_limit(300);
                     // Determina nome campagna dal primo termine
                     $currentCampaignName = $terms[0]['campaign_name'] ?? '';
                     $aiResult = $analyzer->analyzeAdGroup(
@@ -916,7 +916,7 @@ class SearchTermAnalysisController
         }
 
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
         ob_start();
         header('Content-Type: application/json');
         session_write_close();

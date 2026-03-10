@@ -196,7 +196,7 @@ class CampaignController
     public function sync(int $projectId): void
     {
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
 
         ob_start();
         header('Content-Type: application/json');
@@ -392,7 +392,7 @@ class CampaignController
     {
         // Operazione lunga: scraping + AI (pattern da ai-content WizardController)
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
 
         ob_start();
         header('Content-Type: application/json');
@@ -514,7 +514,7 @@ class CampaignController
 
             $landingPagesAnalyzed = count($landingContexts);
 
-            set_time_limit(0);
+            set_time_limit(300);
             $evaluator = new CampaignEvaluatorService();
             $aiResult = $evaluator->evaluate(
                 $user['id'],
@@ -701,7 +701,7 @@ class CampaignController
     public function generateFix(int $projectId, int $evalId): void
     {
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
 
         ob_start();
         header('Content-Type: application/json');
@@ -767,7 +767,7 @@ class CampaignController
                 'business_context' => $project['business_context'] ?? '',
             ];
 
-            set_time_limit(0);
+            set_time_limit(300);
 
             require_once __DIR__ . '/../services/EvaluationGeneratorService.php';
             $service = new \Modules\AdsAnalyzer\Services\EvaluationGeneratorService();
@@ -922,7 +922,7 @@ class CampaignController
     public function applyToGoogleAds(int $projectId, int $evalId): void
     {
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
         ob_start();
         header('Content-Type: application/json');
 

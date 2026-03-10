@@ -128,7 +128,7 @@ class ResearchController
         header('X-Accel-Buffering: no');
 
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
         session_write_close();
 
         $sendEvent = function (string $event, array $data) {
@@ -300,7 +300,7 @@ class ResearchController
     public function aiAnalyze(int $projectId): void
     {
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
         ob_start();
         header('Content-Type: application/json');
 

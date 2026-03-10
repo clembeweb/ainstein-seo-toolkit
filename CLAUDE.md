@@ -1,6 +1,6 @@
 # AINSTEIN - Istruzioni Claude Code
 
-> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-03-09 (Google Ads API integration complete)
+> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-03-10 (Migrazione produzione da SiteGround a Hetzner VPS)
 
 ---
 
@@ -14,7 +14,7 @@
 | **Stack** | PHP 8+, MySQL, Tailwind CSS, Alpine.js, HTMX |
 | **AI Provider** | Claude API (Anthropic) + OpenAI fallback |
 | **Lingua UI** | Italiano (sempre) |
-| **Database** | MySQL `seo_toolkit` (locale) / `dbj0xoiwysdlk1` (prod) |
+| **Database** | MySQL `seo_toolkit` (locale) / `ainstein_seo` (prod Hetzner) |
 
 ---
 
@@ -283,7 +283,7 @@ ApiLoggerService::log('provider', '/endpoint', $request, $response, $httpCode, $
 **Reference**: `ai-content/WizardController::generateBrief()`, `ads-analyzer/CampaignController::evaluate()`
 
 Pattern obbligatorio:
-1. `ignore_user_abort(true)` + `set_time_limit(0)`
+1. `ignore_user_abort(true)` + `set_time_limit(300)`
 2. `ob_start()` + `header('Content-Type: application/json')`
 3. `session_write_close()` prima operazioni lunghe
 4. Operazione + `Database::reconnect()`
@@ -299,11 +299,11 @@ Usare quando: operazioni > 5s, batch 3+ items, rate limits, cancellabile.
 Pattern: `startJob()` → `processStream()` (SSE) → `jobStatus()` (polling fallback) → `cancelJob()`
 
 Regole critiche SSE:
-- `ignore_user_abort(true)` + `set_time_limit(0)` + `session_write_close()`
-- `Database::reconnect()` dopo ogni chiamata API
+- `ignore_user_abort(true)` + `set_time_limit(300)` + `session_write_close()`
+- `Database::reconnect()` dopo ogni chiamata AI (non dopo ogni query breve)
 - `if (ob_get_level()) ob_flush(); flush();` per inviare eventi
 - Salvare risultati nel DB PRIMA dell'evento `completed`
-- Polling fallback obbligatorio (proxy SiteGround chiude SSE)
+- Polling fallback opzionale (Hetzner VPS supporta SSE nativamente, no proxy)
 
 Eventi standard: `started`, `progress`, `item_completed`, `item_error`, `completed`, `cancelled`
 
@@ -374,23 +374,29 @@ Colori bordi modulo: amber(aic), emerald(sa), blue(st), purple(kr), cyan(il), ro
 ## COMANDI FREQUENTI
 
 ```bash
-# SSH Produzione
-ssh -i ~/.ssh/siteground_key -p 18765 u1608-ykgnd3z1twn4@ssh.ainstein.it
-cd ~/www/ainstein.it/public_html
+# SSH Produzione (Hetzner VPS)
+ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247
+cd /var/www/ainstein.it/public_html
 
 # Deploy
 git push origin main          # locale
 git pull origin main          # produzione (da SSH)
+# One-liner deploy da locale:
+ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247 "cd /var/www/ainstein.it/public_html && git pull origin main"
 
 # Verifica sintassi PHP
 php -l path/to/file.php
 
-# Database produzione
-mysql -u u6iaaermphtha -pexkwryfz7ieh dbj0xoiwysdlk1 < file.sql
-mysql -u u6iaaermphtha -pexkwryfz7ieh dbj0xoiwysdlk1 -e "SHOW TABLES LIKE 'prefisso_%';"
+# Database produzione (Hetzner)
+mysql -u ainstein -p'Ainstein_DB_2026!Secure' ainstein_seo < file.sql
+mysql -u ainstein -p'Ainstein_DB_2026!Secure' ainstein_seo -e "SHOW TABLES LIKE 'prefisso_%';"
 
 # Database locale
 mysql -u root seo_toolkit -e "SHOW TABLES;"
+
+# Log produzione
+ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247 "tail -f /var/log/ainstein/cron.log"
+ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247 "tail -f /var/log/apache2/ainstein-error.log"
 
 # Test locale
 # URL: http://localhost/seo-toolkit
@@ -410,11 +416,25 @@ mysql -u root seo_toolkit -e "SHOW TABLES;"
 
 **IMPORTANTE**: MAI usare l'email personale dell'utente per test automatici.
 
-### Cron Jobs SiteGround
+### Produzione: Hetzner VPS
 
-Formato: `/usr/bin/php /home/u1608-ykgnd3z1twn4/www/ainstein.it/public_html/<path>.php`
+| Dettaglio | Valore |
+|-----------|--------|
+| Server | CPX22, Nuremberg (eu-central), Ubuntu 24.04 |
+| IP | `91.99.20.247` |
+| SSH Key | `~/.ssh/ainstein_hetzner` |
+| Utente | `ainstein` (sudo NOPASSWD) |
+| Web root | `/var/www/ainstein.it/public_html` |
+| DocumentRoot | `.../public_html/public` |
+| DB | `ainstein_seo` / user `ainstein` |
+| PHP | 8.3-fpm, 512MB, Europe/Rome |
+| Logs cron | `/var/log/ainstein/cron.log` |
+| Logs Apache | `/var/log/apache2/ainstein-error.log` |
+| Backup DB | `/home/ainstein/backups/` (daily, 7gg retention) |
 
-Regole: NON usare `~`, `$HOME`, redirect `>>`. Logs scritti dallo script stesso.
+### Cron Jobs (crontab utente ainstein)
+
+Gestiti via `crontab -e` (pieno controllo, redirect `>>` supportato).
 
 ```
 cron/cleanup-data.php                              # Daily (0 0 * * *)
@@ -423,12 +443,12 @@ cron/cleanup-ai-logs.php                           # Daily (0 4 * * *)
 cron/admin-report.php                              # Weekly (0 8 * * 1)
 modules/ai-content/cron/dispatcher.php             # Every Min (* * * * *)
 modules/ads-analyzer/cron/auto-evaluate.php        # Every 5 Min (*/5 * * * *)
-modules/ads-analyzer/cron/sync-dispatcher.php      # Every 6 Hours (0 */6 * * *)
 modules/seo-audit/cron/crawl-dispatcher.php        # Every 5 Min (*/5 * * * *)
 modules/seo-tracking/cron/rank-dispatcher.php      # Every 5 Min (*/5 * * * *)
 modules/seo-tracking/cron/gsc-sync-dispatcher.php  # Hourly (0 * * * *)
 modules/seo-tracking/cron/ai-report-dispatcher.php # Hourly (0 * * * *)
 modules/crawl-budget/cron/crawl-dispatcher.php     # Every 5 Min (*/5 * * * *)
+/home/ainstein/backup-db.sh                        # Daily (0 2 * * *) — backup DB
 ```
 
 ---
@@ -469,7 +489,7 @@ modules/crawl-budget/cron/crawl-dispatcher.php     # Every 5 Min (*/5 * * * *)
 | AJAX lungo: processo muore | Manca `ob_start()` → warning corrompe JSON (GR #17) |
 | AJAX lungo: JSON corrotto | `ob_end_clean()` prima di `echo json_encode()` + `exit` |
 | SSE blocca altre request | `session_write_close()` prima del loop |
-| SSE "Connessione persa" | `ignore_user_abort(true)` + polling fallback (proxy SiteGround) |
+| SSE "Connessione persa" | `ignore_user_abort(true)` — su Hetzner VPS SSE funziona nativamente (no proxy) |
 | SSE dati persi | Salvare nel DB PRIMA dell'evento `completed` |
 | `ob_flush(): Failed to flush` | `if (ob_get_level()) ob_flush()` |
 | `getModuleSetting()` undefined | Usare `ModuleLoader::getSetting(slug, key, default)` |
@@ -479,7 +499,7 @@ modules/crawl-budget/cron/crawl-dispatcher.php     # Every 5 Min (*/5 * * * *)
 | SEO Audit: falsi positivi noindex | Cloudflare bot protection → `isBotProtectionPage()` in CrawlerService |
 | SEO Audit: issues su redirect 3xx | `IssueDetector::shouldSkipAnalysis()` salta redirect, rate_limited, /cdn-cgi/ |
 | SEO Audit: pagine vuote/rate limited | `fetchRaw()` + retry backoff → status `rate_limited` in `sa_pages` |
-| SEO Audit: discovery muore su SiteGround | Discovery ora in `processStream()` background (non in `start()`) |
+| SEO Audit: discovery timeout | Discovery in `processStream()` background (non in `start()`) |
 | `ScraperService::fetch()` scarta 4xx/5xx | Usare `fetchRaw()` se servono tutte le risposte HTTP |
 
 ---

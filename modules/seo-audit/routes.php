@@ -493,7 +493,7 @@ Router::post('/seo-audit/api/spider', function () {
 
     // Long-running AJAX pattern (GR #15, #17)
     ignore_user_abort(true);
-    set_time_limit(0);
+    set_time_limit(300);
     ob_start();
     header('Content-Type: application/json');
     session_write_close();

@@ -265,7 +265,7 @@ class ExportController
 
         // CRITICO: continua esecuzione anche se proxy chiude connessione
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
 
         // Headers SSE
         header('Content-Type: text/event-stream');

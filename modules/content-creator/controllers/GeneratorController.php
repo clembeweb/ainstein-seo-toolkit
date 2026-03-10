@@ -180,7 +180,7 @@ class GeneratorController
 
         // CRITICO: continua esecuzione anche se proxy chiude connessione
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
 
         // Headers SSE
         header('Content-Type: text/event-stream');
@@ -541,7 +541,7 @@ class GeneratorController
 
         // CRITICO: continua esecuzione anche se proxy chiude connessione
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
 
         // Headers SSE
         header('Content-Type: text/event-stream');
@@ -643,7 +643,7 @@ class GeneratorController
                 $prompt = $this->buildPrompt($item, $project, $settings);
 
                 // IMPORTANTE: reset time limit prima di ogni chiamata AI
-                set_time_limit(0);
+                set_time_limit(300);
 
                 // Chiamata AI
                 $result = $ai->analyze($user['id'], $prompt, '', 'content-creator');

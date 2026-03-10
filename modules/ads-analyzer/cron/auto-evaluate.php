@@ -32,10 +32,10 @@ use Modules\AdsAnalyzer\Services\CampaignEvaluatorService;
 use Modules\AdsAnalyzer\Services\MetricComparisonService;
 
 // Configurazione
-$maxItemsPerRun = 3;
+$maxItemsPerRun = 10;
 $logFile = BASE_PATH . '/storage/logs/auto-eval.log';
 
-set_time_limit(0);
+set_time_limit(300);
 
 function logMessage(string $message): void
 {
@@ -55,8 +55,8 @@ function logMessage(string $message): void
 try {
     logMessage("=== Inizio auto-evaluation ===");
 
-    // Reset items bloccati
-    $reset = AutoEvalQueue::resetStuckProcessing(30);
+    // Reset items bloccati (10 min — VPS: processi stabili)
+    $reset = AutoEvalQueue::resetStuckProcessing(10);
     if ($reset > 0) {
         logMessage("Reset {$reset} items bloccati in processing");
     }
@@ -281,9 +281,9 @@ try {
 
         $processed++;
 
-        // Pausa tra items
+        // Pausa tra items (1s su VPS)
         if ($processed < $maxItemsPerRun) {
-            sleep(2);
+            sleep(1);
         }
     }
 

@@ -655,7 +655,7 @@ class MetaTagController
     public function generate(int $projectId): void
     {
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
         ob_start();
         header('Content-Type: application/json');
 
@@ -1402,7 +1402,7 @@ PROMPT;
         // CRITICAL: Prevent proxy/PHP timeout killing the script
         // Batch scraping 10-50 URLs can take 100-1500s
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
 
         // Setup SSE headers
         header('Content-Type: text/event-stream');
@@ -1753,7 +1753,7 @@ PROMPT;
         // CRITICAL: Prevent proxy/PHP timeout killing the script
         // AI generation for 10-20 meta tags can take 150-600s
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
 
         // Setup SSE headers
         header('Content-Type: text/event-stream');

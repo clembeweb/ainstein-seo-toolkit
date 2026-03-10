@@ -585,9 +585,9 @@ class CrawlController
         header('Connection: keep-alive');
         header('X-Accel-Buffering: no');
 
-        // CRITICAL: Continua esecuzione anche se proxy chiude connessione
+        // CRITICAL: Continua esecuzione anche se client chiude connessione
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(0); // SSE crawl può durare ore — nessun limite
 
         // CRITICAL: Chiudi sessione prima del loop (non blocca altre request)
         session_write_close();
@@ -778,7 +778,7 @@ class CrawlController
 
             if (!$pendingPage) {
                 // Tutte le pagine processate - finalizza
-                // CRITICO: Salvare nel DB PRIMA dell'evento completed (polling fallback)
+                // CRITICO: Salvare nel DB PRIMA dell'evento completed
                 Database::reconnect();
 
                 // Budget post-analysis (orphans, duplicates, canonical chains, noindex with links)
@@ -870,7 +870,6 @@ class CrawlController
                     // Rileva issues (on-page + budget)
                     $issueCount = $issueDetector->analyzeAndSave($pageData, $pageId);
                     $budgetIssueCount = $budgetDetector->analyzeAndSave($pageData, $pageId);
-                    Database::reconnect();
 
                     $completed++;
                     $totalIssuesFound += $issueCount + $budgetIssueCount;
@@ -911,7 +910,7 @@ class CrawlController
                     ]);
                 }
             } catch (\Exception $e) {
-                Database::reconnect();
+                try { Database::reconnect(); } catch (\Exception $_) {}
                 Database::execute(
                     "UPDATE sa_pages SET status = 'error' WHERE id = ?",
                     [$pendingPage['id']]

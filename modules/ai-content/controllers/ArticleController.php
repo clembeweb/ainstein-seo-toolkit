@@ -271,7 +271,7 @@ class ArticleController
     public function progress(int $id): void
     {
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
 
         $user = Auth::user();
 

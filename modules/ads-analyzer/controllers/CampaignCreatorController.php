@@ -74,7 +74,7 @@ class CampaignCreatorController
     public function analyzeLanding(int $id): void
     {
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
         ob_start();
         header('Content-Type: application/json');
 
@@ -240,7 +240,7 @@ class CampaignCreatorController
     public function generateKeywords(int $id): void
     {
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
         ob_start();
         header('Content-Type: application/json');
 
@@ -444,7 +444,7 @@ class CampaignCreatorController
     public function generateCampaign(int $id): void
     {
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
         ob_start();
         header('Content-Type: application/json');
 
@@ -709,7 +709,7 @@ class CampaignCreatorController
         }
 
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
         ob_start();
         header('Content-Type: application/json');
         session_write_close();

@@ -4,7 +4,7 @@
  *
  * Widget unificato per configurazione e controllo crawl
  * Include preset rapidi e impostazioni avanzate
- * Usa SSE (Server-Sent Events) con polling fallback per progress real-time
+ * Usa SSE (Server-Sent Events) con auto-reconnect per progress real-time
  *
  * Variabili richieste:
  * - $project: array con dati progetto
@@ -261,14 +261,14 @@ if ($isStopping) {
                 </button>
             </div>
 
-            <!-- Polling indicator -->
-            <div class="text-center mt-3" x-show="polling">
+            <!-- Reconnecting indicator -->
+            <div class="text-center mt-3" x-show="reconnecting">
                 <p class="text-xs text-slate-400 dark:text-slate-500">
                     <svg class="inline w-3 h-3 mr-1 animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Connessione in modalita polling
+                    Riconnessione in corso...
                 </p>
             </div>
         </div>
@@ -464,14 +464,13 @@ window.crawlConfigForm = function() {
 };
 
 /**
- * Alpine.js component: Crawl Job (SSE + Polling Fallback)
+ * Alpine.js component: Crawl Job (SSE with auto-reconnect)
  *
  * Manages the full crawl lifecycle:
  * 1. Check for active job on init (recover after navigation)
  * 2. Start crawl via POST /crawl/start
- * 3. Connect to SSE stream for real-time progress
- * 4. Fall back to polling if SSE disconnects (proxy timeout)
- * 5. Cancel crawl via POST /crawl/cancel-job
+ * 3. Connect to SSE stream for real-time progress (auto-reconnect on disconnect)
+ * 4. Cancel crawl via POST /crawl/cancel-job
  */
 window.crawlJob = function() {
     const projectId = <?= $project['id'] ?? 0 ?>;
@@ -491,7 +490,8 @@ window.crawlJob = function() {
         jobId: null,
         status: initialStatus,   // idle, starting, running, completed, cancelled, cancelling, error
         eventSource: null,
-        polling: false,
+        reconnecting: false,
+        _reconnectAttempts: 0,
         errorMsg: '',
 
         // Progress
@@ -549,10 +549,8 @@ window.crawlJob = function() {
                         }
                     }
                 } catch (e) {
-                    // Network error, try polling
-                    if (this.status === 'running') {
-                        this.startPolling();
-                    }
+                    // Network error on init - status check will retry on next page load
+                    console.warn('Status check failed on init:', e);
                 }
             }
         },
@@ -604,9 +602,9 @@ window.crawlJob = function() {
                     this.status = 'error';
                 }
             } catch (e) {
-                // La discovery può superare il timeout del proxy (30s) su siti grandi.
+                // La discovery può impiegare tempo su siti grandi.
                 // Il backend continua con ignore_user_abort(true).
-                // Polling per verificare se il crawl è partito.
+                // Verifica periodicamente se il crawl è partito.
                 this.status = 'starting';
                 this.awaitDiscovery();
             }
@@ -656,7 +654,8 @@ window.crawlJob = function() {
                 this.eventSource.close();
             }
 
-            this.polling = false;
+            this.reconnecting = false;
+            this._reconnectAttempts = 0;
             this.eventSource = new EventSource(
                 baseUrl + '/crawl/stream?job_id=' + this.jobId
             );
@@ -731,85 +730,74 @@ window.crawlJob = function() {
                 }
             });
 
-            // Native SSE error = disconnection (proxy timeout on SiteGround)
-            // Backend continues with ignore_user_abort(true), so we fall back to polling
+            // Native SSE error = disconnection
+            // Backend continues with ignore_user_abort(true), auto-reconnect SSE
             this.eventSource.onerror = () => {
                 this.eventSource.close();
                 this.eventSource = null;
-                // Don't change status - backend continues processing
-                this.startPolling();
+                this._reconnectAttempts++;
+
+                // Max 10 reconnect attempts, then check status via HTTP
+                if (this._reconnectAttempts > 10) {
+                    this.checkFinalStatus();
+                    return;
+                }
+
+                // Auto-reconnect with exponential backoff (1s, 2s, 4s, max 10s)
+                const delay = Math.min(1000 * Math.pow(2, this._reconnectAttempts - 1), 10000);
+                this.reconnecting = true;
+                setTimeout(() => {
+                    if (this.status === 'running' || this.status === 'discovering') {
+                        this.connectSSE();
+                    }
+                }, delay);
             };
         },
 
         /**
-         * Polling fallback when SSE disconnects.
-         * Uses GET /crawl/job-status endpoint to read progress from DB.
+         * Check final status via HTTP when SSE reconnect fails.
          */
-        async startPolling() {
-            if (this.polling) return; // Avoid duplicate polling loops
-            this.polling = true;
+        async checkFinalStatus() {
+            try {
+                const resp = await fetch(baseUrl + '/crawl/job-status?job_id=' + this.jobId);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.success && data.job) {
+                        const job = data.job;
+                        this.completed = job.items_completed || 0;
+                        this.total = job.items_total || 0;
+                        this.percent = Math.round(job.progress || 0);
 
-            while (this.polling && (this.status === 'running' || this.status === 'discovering')) {
-                try {
-                    const resp = await fetch(baseUrl + '/crawl/job-status?job_id=' + this.jobId);
-                    if (resp.ok) {
-                        const data = await resp.json();
-                        if (data.success && data.job) {
-                            const job = data.job;
-                            this.completed = job.items_completed || 0;
-                            this.total = job.items_total || 0;
-                            this.failed = job.items_failed || 0;
-                            this.currentUrl = job.current_item || '';
-                            this.percent = Math.round(job.progress || 0);
-
-                            // Discovery completata → passa a running
-                            if (this.status === 'discovering' && this.total > 0) {
-                                this.status = 'running';
-                                this.currentUrl = '';
+                        if (job.status === 'completed') {
+                            this.stopTimer();
+                            this.status = 'completed';
+                            this.percent = 100;
+                            if (window.ainstein && window.ainstein.toast) {
+                                window.ainstein.toast('Scansione completata! ' + this.completed + ' pagine analizzate.', 'success');
                             }
-
-                            // Update issues from session stats
-                            if (data.issues) {
-                                this.issues = (data.issues.critical || 0) + (data.issues.warning || 0) + (data.issues.notice || 0);
-                            }
-
-                            if (job.status === 'completed') {
-                                this.polling = false;
-                                this.stopTimer();
-                                this.status = 'completed';
-                                this.percent = 100;
-                                if (window.ainstein && window.ainstein.toast) {
-                                    window.ainstein.toast('Scansione completata! ' + this.completed + ' pagine analizzate.', 'success');
-                                }
-                                setTimeout(() => location.reload(), 2000);
-                                return;
-                            }
-
-                            if (job.status === 'cancelled') {
-                                this.polling = false;
-                                this.stopTimer();
-                                this.status = 'cancelled';
-                                if (window.ainstein && window.ainstein.toast) {
-                                    window.ainstein.toast('Scansione annullata.', 'warning');
-                                }
-                                setTimeout(() => location.reload(), 2000);
-                                return;
-                            }
-
-                            if (job.status === 'error') {
-                                this.polling = false;
-                                this.stopTimer();
-                                this.showError(job.error_message || 'Errore durante la scansione');
-                                this.status = 'error';
-                                return;
-                            }
+                            setTimeout(() => location.reload(), 2000);
+                            return;
                         }
+                        if (job.status === 'cancelled') {
+                            this.stopTimer();
+                            this.status = 'cancelled';
+                            setTimeout(() => location.reload(), 2000);
+                            return;
+                        }
+                        if (job.status === 'error') {
+                            this.stopTimer();
+                            this.showError(job.error_message || 'Errore durante la scansione');
+                            this.status = 'error';
+                            return;
+                        }
+                        // Still running - try SSE again
+                        this._reconnectAttempts = 0;
+                        this.connectSSE();
                     }
-                } catch (e) {
-                    // Network error, continue polling
                 }
-                // Poll every 3 seconds
-                await new Promise(r => setTimeout(r, 3000));
+            } catch (_) {
+                this.showError('Connessione persa. Ricarica la pagina per verificare lo stato.');
+                this.status = 'error';
             }
         },
 
@@ -831,10 +819,10 @@ window.crawlJob = function() {
                     method: 'POST',
                     body: formData,
                 });
-                // The SSE stream or polling will detect the cancellation
+                // The SSE stream will detect the cancellation
             } catch (e) {
                 this.showError('Errore durante l\'annullamento');
-                this.status = 'running'; // Revert, let SSE/polling handle it
+                this.status = 'running'; // Revert, let SSE handle it
             }
         },
 
@@ -909,7 +897,7 @@ window.crawlJob = function() {
                 this.eventSource.close();
                 this.eventSource = null;
             }
-            this.polling = false;
+            this.reconnecting = false;
             this.stopTimer();
         }
     };

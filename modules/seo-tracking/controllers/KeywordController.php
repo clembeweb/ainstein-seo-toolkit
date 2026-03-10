@@ -1030,7 +1030,7 @@ class KeywordController
     public function refreshPositions(int $projectId): string
     {
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
         ob_start();
 
         $user = Auth::user();
@@ -1200,7 +1200,7 @@ class KeywordController
     public function refreshAll(int $projectId): string
     {
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
         ob_start();
 
         $user = Auth::user();
@@ -1560,7 +1560,7 @@ class KeywordController
 
         // Safety guards SSE
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
 
         // Chiudi la sessione PRIMA del loop per non bloccare altre richieste
         session_write_close();

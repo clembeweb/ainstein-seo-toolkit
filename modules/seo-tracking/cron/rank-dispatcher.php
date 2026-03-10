@@ -531,117 +531,131 @@ function runDispatcher(): void
         }
     }
 
-    // Processa UN item dalla coda (one-at-a-time per evitare timeout)
-    $queueItem = getNextPendingItem();
+    // Processa batch di keyword dalla coda (VPS: batch processing)
+    $batchSize = 10;
+    $processedCount = 0;
+    $startTime = time();
+    $maxRunTime = 240; // 4 minuti max per run (cron ogni 5 min)
 
-    if (!$queueItem) {
-        logRankDispatcher("Coda vuota, nessun item da processare");
-        logRankDispatcher("=== RANK DISPATCHER END ===\n");
-        return;
-    }
+    $rankChecker = null;
 
-    $keyword = $queueItem['keyword'];
-    $projectId = (int) $queueItem['project_id'];
-    $userId = (int) $queueItem['user_id'];
-    $queueId = (int) $queueItem['id'];
-    $keywordId = $queueItem['keyword_id'] ? (int) $queueItem['keyword_id'] : null;
-    $jobId = $queueItem['job_id'] ? (int) $queueItem['job_id'] : null;
-    $targetDomain = $queueItem['target_domain'];
-    $locationCode = $queueItem['location_code'] ?? 'IT';
-    $device = $queueItem['device'] ?? 'mobile';
+    while ($processedCount < $batchSize && (time() - $startTime) < $maxRunTime) {
+        $queueItem = getNextPendingItem();
 
-    logRankDispatcher("Processo keyword: {$keyword} (progetto: {$queueItem['project_name']})");
-
-    // Marca come processing
-    Database::update('st_rank_queue', [
-        'status' => 'processing',
-        'started_at' => date('Y-m-d H:i:s'),
-    ], 'id = ?', [$queueId]);
-
-    try {
-        // Verifica configurazione SERP API
-        $rankChecker = new RankCheckerService();
-
-        if (!$rankChecker->isConfigured()) {
-            throw new \Exception('Nessun provider SERP configurato (Serper.dev o SERP API)');
+        if (!$queueItem) {
+            if ($processedCount === 0) {
+                logRankDispatcher("Coda vuota, nessun item da processare");
+            }
+            break;
         }
 
-        // Esegui rank check
-        $result = $rankChecker->checkPosition($keyword, $targetDomain, [
-            'location_code' => $locationCode,
-            'device' => $device,
-        ]);
+        $keyword = $queueItem['keyword'];
+        $projectId = (int) $queueItem['project_id'];
+        $userId = (int) $queueItem['user_id'];
+        $queueId = (int) $queueItem['id'];
+        $keywordId = $queueItem['keyword_id'] ? (int) $queueItem['keyword_id'] : null;
+        $jobId = $queueItem['job_id'] ? (int) $queueItem['job_id'] : null;
+        $targetDomain = $queueItem['target_domain'];
+        $locationCode = $queueItem['location_code'] ?? 'IT';
+        $device = $queueItem['device'] ?? 'mobile';
 
-        // Reconnect al database dopo chiamata API lunga
-        Database::reconnect();
+        logRankDispatcher("Processo keyword [{$processedCount}]: {$keyword} (progetto: {$queueItem['project_name']})");
 
-        // Recupera posizione GSC per confronto
-        $gscPosition = getGscPosition($projectId, $keyword);
-        $positionDiff = null;
+        // Marca come processing
+        Database::update('st_rank_queue', [
+            'status' => 'processing',
+            'started_at' => date('Y-m-d H:i:s'),
+        ], 'id = ?', [$queueId]);
 
-        if ($result['found'] && $result['position'] !== null && $gscPosition !== null) {
-            $positionDiff = round($result['position'] - $gscPosition, 1);
-        }
+        try {
+            // Verifica configurazione SERP API (riusa istanza)
+            if (!$rankChecker) {
+                $rankChecker = new RankCheckerService();
+                if (!$rankChecker->isConfigured()) {
+                    throw new \Exception('Nessun provider SERP configurato (Serper.dev o SERP API)');
+                }
+            }
 
-        // Salva risultato in st_rank_checks
-        $rankCheckModel = new RankCheck();
-        $serpPosition = $result['found'] ? $result['position'] : null;
-        $serpUrl = $result['url'] ?? null;
-
-        $checkId = $rankCheckModel->create([
-            'project_id' => $projectId,
-            'user_id' => $userId,
-            'keyword' => $keyword,
-            'target_domain' => $targetDomain,
-            'location' => $result['location'] ?? $locationCode,
-            'language' => $result['language'] ?? 'it',
-            'device' => $device,
-            'serp_position' => $serpPosition,
-            'serp_url' => $serpUrl,
-            'serp_title' => $result['title'] ?? null,
-            'serp_snippet' => $result['snippet'] ?? null,
-            'gsc_position' => $gscPosition,
-            'position_diff' => $positionDiff,
-            'total_organic_results' => $result['total_organic_results'] ?? null,
-            'credits_used' => 0, // Automatico, gratuito
-            'checked_at' => date('Y-m-d H:i:s'), // Usa timezone PHP (Europe/Rome)
-        ]);
-
-        // Aggiorna last_position nella tabella keywords
-        if ($result['found'] && $serpPosition !== null && $keywordId) {
-            Database::update('st_keywords', [
-                'last_position' => $serpPosition,
-                'last_updated_at' => date('Y-m-d H:i:s'),
-            ], 'id = ?', [$keywordId]);
-
-            // Upsert snapshot giornaliero per storico posizioni
-            $kpModel = new KeywordPosition();
-            $kpModel->upsert([
-                'project_id' => $projectId,
-                'keyword_id' => $keywordId,
-                'date' => date('Y-m-d'),
-                'avg_position' => $serpPosition,
+            // Esegui rank check
+            $result = $rankChecker->checkPosition($keyword, $targetDomain, [
+                'location_code' => $locationCode,
+                'device' => $device,
             ]);
+
+            // Reconnect al database dopo chiamata API
+            Database::reconnect();
+
+            // Recupera posizione GSC per confronto
+            $gscPosition = getGscPosition($projectId, $keyword);
+            $positionDiff = null;
+
+            if ($result['found'] && $result['position'] !== null && $gscPosition !== null) {
+                $positionDiff = round($result['position'] - $gscPosition, 1);
+            }
+
+            // Salva risultato in st_rank_checks
+            $rankCheckModel = new RankCheck();
+            $serpPosition = $result['found'] ? $result['position'] : null;
+            $serpUrl = $result['url'] ?? null;
+
+            $checkId = $rankCheckModel->create([
+                'project_id' => $projectId,
+                'user_id' => $userId,
+                'keyword' => $keyword,
+                'target_domain' => $targetDomain,
+                'location' => $result['location'] ?? $locationCode,
+                'language' => $result['language'] ?? 'it',
+                'device' => $device,
+                'serp_position' => $serpPosition,
+                'serp_url' => $serpUrl,
+                'serp_title' => $result['title'] ?? null,
+                'serp_snippet' => $result['snippet'] ?? null,
+                'gsc_position' => $gscPosition,
+                'position_diff' => $positionDiff,
+                'total_organic_results' => $result['total_organic_results'] ?? null,
+                'credits_used' => 0, // Automatico, gratuito
+                'checked_at' => date('Y-m-d H:i:s'), // Usa timezone PHP (Europe/Rome)
+            ]);
+
+            // Aggiorna last_position nella tabella keywords
+            if ($result['found'] && $serpPosition !== null && $keywordId) {
+                Database::update('st_keywords', [
+                    'last_position' => $serpPosition,
+                    'last_updated_at' => date('Y-m-d H:i:s'),
+                ], 'id = ?', [$keywordId]);
+
+                // Upsert snapshot giornaliero per storico posizioni
+                $kpModel = new KeywordPosition();
+                $kpModel->upsert([
+                    'project_id' => $projectId,
+                    'keyword_id' => $keywordId,
+                    'date' => date('Y-m-d'),
+                    'avg_position' => $serpPosition,
+                ]);
+            }
+
+            // Marca item come completato con posizione e URL
+            markItemCompleted($queueId, $checkId, $serpPosition, $serpUrl, $jobId);
+
+            $positionStr = $result['found'] ? "#{$serpPosition}" : 'NON TROVATO';
+            logRankDispatcher("  OK: posizione {$positionStr}");
+
+        } catch (\Exception $e) {
+            // Reconnect in caso di errore
+            Database::reconnect();
+
+            // Marca errore
+            markItemError($queueId, $e->getMessage(), $jobId);
+            logRankDispatcher("  ERRORE: " . $e->getMessage(), 'ERROR');
         }
 
-        // Marca item come completato con posizione e URL
-        markItemCompleted($queueId, $checkId, $serpPosition, $serpUrl, $jobId);
-
-        $positionStr = $result['found'] ? "#{$serpPosition}" : 'NON TROVATO';
-        logRankDispatcher("  OK: posizione {$positionStr}");
-
-    } catch (\Exception $e) {
-        // Reconnect in caso di errore
-        Database::reconnect();
-
-        // Marca errore
-        markItemError($queueId, $e->getMessage(), $jobId);
-        logRankDispatcher("  ERRORE: " . $e->getMessage(), 'ERROR');
+        $processedCount++;
     }
 
     // Statistiche finali
     $remainingCount = countPendingItems();
-    logRankDispatcher("Item rimanenti in coda: {$remainingCount}");
+    $elapsed = time() - $startTime;
+    logRankDispatcher("Batch completato: {$processedCount} keyword in {$elapsed}s, rimanenti: {$remainingCount}");
     logRankDispatcher("=== RANK DISPATCHER END ===\n");
 }
 

@@ -88,7 +88,7 @@ class ActionPlanController
     {
         // La generazione AI può richiedere minuti su siti con molte issue
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
         ob_start();
         header('Content-Type: application/json');
 

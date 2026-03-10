@@ -86,7 +86,6 @@ function processKeyword(array $queueItem, int $userId): array
             $queueItem['language'] ?? 'it',
             $queueItem['location'] ?? 'Italy'
         );
-        Database::reconnect();
 
         // Step 2: Scraping
         logDispatcher("    [2/5] Scraping " . min($autoSelectSources, count($serpResults['organic'])) . " fonti...");
@@ -108,7 +107,6 @@ function processKeyword(array $queueItem, int $userId): array
         if (empty($scrapedSources)) {
             throw new \Exception('Impossibile estrarre contenuto dalle fonti');
         }
-        Database::reconnect();
 
         // Step 3: Brief generation
         logDispatcher("    [3/5] Generazione brief...");

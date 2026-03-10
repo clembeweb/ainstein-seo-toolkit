@@ -323,7 +323,7 @@ class GscController
         flush();
 
         // Aumenta timeout
-        set_time_limit(0);
+        set_time_limit(300);
         ignore_user_abort(true);
 
         $user = Auth::user();
@@ -488,7 +488,7 @@ class GscController
     public function fullSync(int $id): void
     {
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
 
         $user = Auth::user();
         $project = $this->project->findAccessible($id, $user['id']);

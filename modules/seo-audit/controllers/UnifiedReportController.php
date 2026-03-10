@@ -72,7 +72,7 @@ class UnifiedReportController
         Middleware::csrf();
 
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
         ob_start();
         header('Content-Type: application/json');
         session_write_close();

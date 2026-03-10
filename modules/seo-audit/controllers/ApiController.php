@@ -250,7 +250,7 @@ class ApiController
 
         // CRITICAL: Continua esecuzione anche se proxy chiude connessione
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
 
         // CRITICAL: Chiudi sessione prima del loop (non blocca altre request)
         session_write_close();

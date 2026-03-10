@@ -155,7 +155,7 @@ class EditorialController
         header('X-Accel-Buffering: no');
 
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
         session_write_close();
 
         $sendEvent = function (string $event, array $data) {
@@ -367,7 +367,7 @@ class EditorialController
     public function aiAnalyze(int $projectId): void
     {
         ignore_user_abort(true);
-        set_time_limit(0);
+        set_time_limit(300);
         ob_start();
         header('Content-Type: application/json');
 
@@ -456,7 +456,7 @@ class EditorialController
                 $prompt = $this->buildAiPrompt($chunkBrief, $categoriesData);
                 $maxTokens = max(4096, min(16000, $chunkMonths * $articlesPerMonth * 350));
 
-                set_time_limit(0);
+                set_time_limit(300);
                 $aiStart2 = microtime(true);
                 $aiResult = $ai->complete($user['id'], [
                     ['role' => 'user', 'content' => $prompt],
