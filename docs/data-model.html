@@ -1256,7 +1256,7 @@ erDiagram
     <!-- ==================== ADS ANALYZER ==================== -->
     <section id="ga" class="mb-16 print-break">
         <h2 class="text-2xl font-bold text-rose-400 mb-6">Google Ads Analyzer (ga_)</h2>
-        <p class="text-slate-500 dark:text-slate-400 mb-6">19 tabelle. Analisi negative keywords, valutazione campagne AI, Google Ads API REST v20 integration, Campaign Creator AI.</p>
+        <p class="text-slate-500 dark:text-slate-400 mb-6">20 tabelle. Analisi negative keywords, valutazione campagne AI, Google Ads API v18 integration, Campaign Creator AI.</p>
 
         <div class="mermaid">
 erDiagram
@@ -1276,6 +1276,7 @@ erDiagram
     ga_projects ||--o{ ga_creator_generations : "generazioni"
     ga_projects ||--o{ ga_creator_keywords : "keywords"
     ga_projects ||--o{ ga_creator_campaigns : "campagne AI"
+    ga_projects ||--o{ ga_api_usage : "utilizzo API"
     ga_creator_generations ||--o{ ga_creator_keywords : "keywords"
     ga_creator_generations ||--o{ ga_creator_campaigns : "campagna"
     ga_projects {
@@ -1285,10 +1286,16 @@ erDiagram
         varchar google_ads_customer_id
         varchar google_ads_account_name
         varchar login_customer_id "nullable - MCC ID"
-        varchar api_token UK
+        int oauth_token_id FK
         varchar landing_url
         enum campaign_type_gads "search/pmax"
         text brief
+    }
+    ga_api_usage {
+        int id PK
+        int user_id FK
+        date date
+        int operations_count
     }
     ga_syncs {
         int id PK
@@ -1350,12 +1357,12 @@ erDiagram
         <details class="mt-6 bg-white dark:bg-slate-800 rounded-lg border border-rose-200 dark:border-rose-900/50 shadow-sm">
             <summary class="p-4 font-semibold text-slate-900 dark:text-white">Negative Keywords: ga_projects &middot; ga_analyses &middot; ga_ad_groups &middot; ga_search_terms &middot; ga_negative_categories &middot; ga_negative_keywords &middot; ga_saved_contexts</summary>
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
-                <div><strong class="text-slate-900 dark:text-white">ga_projects</strong>: id(PK), user_id(FK), type(negative-kw/campaign/campaign-creator), name, description, business_context, status, api_token(UK), google_ads_customer_id(VARCHAR), google_ads_account_name(VARCHAR), login_customer_id(VARCHAR nullable — MCC ID per account sotto MCC), sync_enabled(TINYINT), auto_evaluate, total_terms, total_negatives_found</div>
-                <div><strong class="text-slate-900 dark:text-white">ga_analyses</strong>: id(PK), project_id(FK), user_id(FK), name, business_context, context_mode, status, run_id(FK), total_categories/keywords, error_message, started/completed_at</div>
-                <div><strong class="text-slate-900 dark:text-white">ga_ad_groups</strong>: id(PK), project_id(FK), run_id(FK), name, terms_count, zero_ctr_count, wasted_impressions, analysis_status, landing_url, scraped_content, extracted_context</div>
-                <div><strong class="text-slate-900 dark:text-white">ga_search_terms</strong>: id(PK), project_id(FK), ad_group_id(FK), run_id(FK), term, match_type, clicks, impressions, ctr, cost, conversions, conversion_value, is_zero_ctr</div>
-                <div><strong class="text-slate-900 dark:text-white">ga_negative_categories</strong>: id(PK), project_id(FK), ad_group_id(FK), analysis_id(FK), category_key, category_name, description, priority(high/medium/low), keywords_count, sort_order</div>
-                <div><strong class="text-slate-900 dark:text-white">ga_negative_keywords</strong>: id(PK), project_id(FK), ad_group_id(FK), analysis_id(FK), category_id(FK), keyword, is_selected, suggested_match_type</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_projects</strong>: id(PK), user_id(FK), type(negative-kw/campaign/campaign-creator), name, description, business_context, status, google_ads_customer_id(VARCHAR), google_ads_account_name(VARCHAR), login_customer_id(VARCHAR nullable — MCC ID), oauth_token_id(FK), sync_enabled(TINYINT), auto_evaluate, last_sync_at, total_terms, total_negatives_found</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_analyses</strong>: id(PK), project_id(FK), user_id(FK), name, business_context, context_mode, status, sync_id(FK), total_categories/keywords, error_message, started/completed_at</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_ad_groups</strong>: id(PK), project_id(FK), sync_id(FK), name, terms_count, zero_ctr_count, wasted_impressions, analysis_status, landing_url, scraped_content, extracted_context</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_search_terms</strong>: id(PK), project_id(FK), ad_group_id(FK), sync_id(FK), term, match_type, clicks, impressions, ctr, cost, conversions, conversion_value, is_zero_ctr, campaign_name, ad_group_name</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_negative_categories</strong>: id(PK), project_id(FK), ad_group_id(FK), analysis_id(FK), category_key, category_name, description, priority(high/medium/evaluate), keywords_count, sort_order</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_negative_keywords</strong>: id(PK), project_id(FK), ad_group_id(FK), analysis_id(FK), category_id(FK), keyword, is_selected, suggested_match_type, suggested_level(campaign/ad_group), suggested_campaign_resource, suggested_ad_group_resource, applied_at</div>
                 <div><strong class="text-slate-900 dark:text-white">ga_saved_contexts</strong>: id(PK), user_id(FK), name, context(LONGTEXT)</div>
             </div>
         </details>
@@ -1378,7 +1385,8 @@ erDiagram
                 <div><strong class="text-slate-900 dark:text-white">ga_projects (colonne aggiuntive)</strong>: landing_url(VARCHAR 2048), campaign_type_gads(ENUM search/pmax), brief(TEXT), scraped_content(LONGTEXT), scraped_context(TEXT)</div>
                 <div><strong class="text-slate-900 dark:text-white">ga_creator_generations</strong>: id(PK), project_id(FK), user_id(FK), step(ENUM keywords/campaign), status(pending/processing/completed/error), ai_response(LONGTEXT), credits_used(DECIMAL), error_message, completed_at</div>
                 <div><strong class="text-slate-900 dark:text-white">ga_creator_keywords</strong>: id(PK), project_id(FK), generation_id(FK), keyword(TEXT), match_type(ENUM broad/phrase/exact), ad_group_name, intent, is_negative, is_selected, reason, sort_order, search_volume(INT), cpc(DECIMAL 10,2), competition_level(VARCHAR 20), competition_index(INT)</div>
-                <div><strong class="text-slate-900 dark:text-white">ga_creator_campaigns</strong>: id(PK), project_id(FK), generation_id(FK), campaign_type(ENUM search/pmax), campaign_name, assets_json(LONGTEXT — JSON con headlines, descriptions, sitelinks, callouts, structured_snippets, display_paths, business_name)</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_creator_campaigns</strong>: id(PK), project_id(FK), generation_id(FK), campaign_type(ENUM search/pmax), campaign_name, assets_json(LONGTEXT — JSON), published_to_google_ads(TINYINT), google_ads_campaign_id(VARCHAR), published_at</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_api_usage</strong>: id(PK), user_id(FK), date(DATE), operations_count(INT) — UNIQUE(user_id, date)</div>
             </div>
         </details>
     </section>

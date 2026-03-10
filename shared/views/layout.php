@@ -57,7 +57,9 @@ $_accentShades = \Core\BrandingHelper::generateShades($_brandAccent);
         }
     </script>
 
-    <!-- Alpine.js -->
+    <!-- Alpine.js Plugins -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <!-- Alpine.js (DEVE stare DOPO i plugin) -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <!-- HTMX -->

@@ -139,6 +139,7 @@ class SearchTermAnalysisController
 
         $syncId = (int)($_GET['sync_id'] ?? 0);
         if (!$syncId) {
+            http_response_code(400);
             echo json_encode(['error' => 'sync_id richiesto']);
             exit;
         }
@@ -204,6 +205,7 @@ class SearchTermAnalysisController
 
         $syncId = (int)($_POST['sync_id'] ?? 0);
         if (!$syncId) {
+            http_response_code(400);
             echo json_encode(['error' => 'sync_id richiesto']);
             exit;
         }
@@ -211,6 +213,7 @@ class SearchTermAnalysisController
         // La sync include tutti i dati (campagne, annunci, search terms)
         $sync = Sync::find($syncId);
         if (!$sync || $sync['project_id'] != $projectId) {
+            http_response_code(404);
             echo json_encode(['error' => 'Sincronizzazione non trovata']);
             exit;
         }
@@ -268,6 +271,7 @@ class SearchTermAnalysisController
         $syncId = (int)($_POST['sync_id'] ?? 0);
         if (!$syncId) {
             ob_end_clean();
+            http_response_code(400);
             echo json_encode(['error' => 'sync_id richiesto']);
             exit;
         }
@@ -277,6 +281,7 @@ class SearchTermAnalysisController
 
         if (empty($withUrl)) {
             ob_end_clean();
+            http_response_code(400);
             echo json_encode(['error' => 'Nessun Ad Group con URL landing. Rileva prima gli URL.']);
             exit;
         }
@@ -289,6 +294,7 @@ class SearchTermAnalysisController
         $creditsNeeded = count($withUrl) * $contextCost;
         if (!Credits::hasEnough($creditUserId, $creditsNeeded)) {
             ob_end_clean();
+            http_response_code(402);
             echo json_encode(['error' => "Crediti insufficienti (servono {$creditsNeeded} crediti)"]);
             exit;
         }
@@ -356,6 +362,7 @@ class SearchTermAnalysisController
 
             if (!$syncId) {
                 ob_end_clean();
+                http_response_code(400);
                 echo json_encode(['error' => 'sync_id richiesto']);
                 exit;
             }
@@ -371,6 +378,7 @@ class SearchTermAnalysisController
 
             if (strlen($businessContext) < 20) {
                 ob_end_clean();
+                http_response_code(400);
                 echo json_encode(['error' => 'Impossibile generare contesto automatico. Aggiungi una descrizione del business.']);
                 exit;
             }
@@ -395,6 +403,7 @@ class SearchTermAnalysisController
 
             if (empty($adGroupsWithTerms)) {
                 ob_end_clean();
+                http_response_code(400);
                 echo json_encode(['error' => 'Nessun termine di ricerca trovato']);
                 exit;
             }
@@ -409,6 +418,7 @@ class SearchTermAnalysisController
 
             if (!Credits::hasEnough($creditUserId, $creditsNeeded)) {
                 ob_end_clean();
+                http_response_code(402);
                 echo json_encode(['error' => "Crediti insufficienti. Necessari: {$creditsNeeded}"]);
                 exit;
             }
@@ -536,6 +546,7 @@ class SearchTermAnalysisController
 
         $analysisId = (int)($_GET['analysis_id'] ?? 0);
         if (!$analysisId) {
+            http_response_code(400);
             echo json_encode(['error' => 'analysis_id richiesto']);
             exit;
         }
@@ -806,6 +817,7 @@ class SearchTermAnalysisController
         $adGroupId = (int)($_POST['ad_group_id'] ?? 0);
 
         if (!$analysisId) {
+            http_response_code(400);
             echo json_encode(['error' => 'analysis_id richiesto']);
             exit;
         }
@@ -913,6 +925,7 @@ class SearchTermAnalysisController
 
         if (empty($keywordIds) || !is_array($keywordIds)) {
             ob_end_clean();
+            http_response_code(400);
             echo json_encode(['error' => 'Nessuna keyword selezionata']);
             exit;
         }
@@ -921,6 +934,7 @@ class SearchTermAnalysisController
 
         if (empty($keywords)) {
             ob_end_clean();
+            http_response_code(404);
             echo json_encode(['error' => 'Nessuna keyword trovata']);
             exit;
         }
