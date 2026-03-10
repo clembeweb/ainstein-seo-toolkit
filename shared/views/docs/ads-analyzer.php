@@ -28,7 +28,7 @@
     </h2>
     <div class="prose dark:prose-invert max-w-none">
         <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
-            Due modalita per Google Ads: <strong class="text-slate-900 dark:text-white">Analisi Campagne</strong> per monitorare e valutare campagne esistenti tramite Google Ads Script, e <strong class="text-slate-900 dark:text-white">Campaign Creator</strong> per generare da zero campagne complete (Search o PMax) con AI, pronte da copiare in piattaforma o importare via CSV.
+            Due modalita per Google Ads: <strong class="text-slate-900 dark:text-white">Analisi Campagne</strong> per monitorare, valutare e ottimizzare campagne esistenti tramite connessione diretta all'API Google Ads, e <strong class="text-slate-900 dark:text-white">Campaign Creator</strong> per generare da zero campagne complete (Search o PMax) con AI, pronte da pubblicare direttamente su Google Ads o importare via CSV.
         </p>
     </div>
 </section>
@@ -46,32 +46,32 @@
         <div class="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">1</div>
             <div>
-                <h3 class="font-medium text-slate-900 dark:text-white">Crea un progetto</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Accedi a Google Ads Analyzer e crea un nuovo progetto. Assegna un nome descrittivo per identificare facilmente l'account o la campagna che vuoi monitorare.</p>
+                <h3 class="font-medium text-slate-900 dark:text-white">Crea un progetto e collega Google Ads</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Crea un nuovo progetto e collegalo al tuo account Google Ads tramite OAuth. Se il tuo account e sotto un MCC, seleziona l'account specifico da analizzare.</p>
             </div>
         </div>
         <!-- Step 2 -->
         <div class="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">2</div>
             <div>
-                <h3 class="font-medium text-slate-900 dark:text-white">Configura lo script Google Ads</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Copia lo script v2.0 generato automaticamente e incollalo nel tuo account Google Ads (Strumenti > Script). Ogni esecuzione raccoglie automaticamente dati per 3 periodi (7, 14 e 30 giorni).</p>
+                <h3 class="font-medium text-slate-900 dark:text-white">Sincronizza i dati delle campagne</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Avvia una sincronizzazione manuale o attiva il sync automatico (ogni 6 ore). I dati vengono importati direttamente dall'API Google Ads v18: campagne, ad group, annunci, estensioni, keyword e search terms.</p>
             </div>
         </div>
         <!-- Step 3 -->
         <div class="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">3</div>
             <div>
-                <h3 class="font-medium text-slate-900 dark:text-white">Avvia la valutazione AI delle campagne</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Dopo aver ricevuto i dati, avvia la valutazione AI per ottenere un'analisi dettagliata delle performance, suggerimenti sui copy degli annunci e raccomandazioni di ottimizzazione.</p>
+                <h3 class="font-medium text-slate-900 dark:text-white">Valuta le campagne con AI</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Avvia la valutazione AI per ottenere un'analisi dettagliata delle performance, suggerimenti sui copy degli annunci, estensioni mancanti e raccomandazioni di ottimizzazione. Puoi generare fix pronti da applicare.</p>
             </div>
         </div>
         <!-- Step 4 -->
         <div class="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">4</div>
             <div>
-                <h3 class="font-medium text-slate-900 dark:text-white">Analizza le keyword negative</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Usa il tab "Keyword Negative" per analizzare i search terms raccolti. L'AI identifica i termini irrilevanti, li classifica per categoria e priorita, e puoi esportarli per Google Ads Editor.</p>
+                <h3 class="font-medium text-slate-900 dark:text-white">Analizza e applica keyword negative</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Usa il tab "Keyword Negative" per analizzare i search terms. L'AI classifica i termini irrilevanti per categoria, priorita e livello (ad group o campagna). Puoi applicare le negatives direttamente su Google Ads con un click, oppure esportarle in CSV.</p>
             </div>
         </div>
     </div>
@@ -86,17 +86,17 @@
         Funzionalita principali
     </h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Google Ads Script -->
+        <!-- Google Ads API -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <div class="flex items-center gap-3 mb-2">
                 <div class="shrink-0 w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
                     <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                 </div>
-                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Google Ads Script</h3>
+                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Connessione Google Ads API</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Script v2.0 con raccolta automatica multi-periodo: ogni esecuzione invia i dati per 7, 14 e 30 giorni, abilitando analisi su finestre temporali diverse.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Connessione diretta via OAuth all'API Google Ads v18. Sincronizzazione automatica ogni 6 ore (cron) o manuale: campagne, ad groups, annunci, estensioni, keyword e search terms. Supporto account MCC.</p>
         </div>
         <!-- Valutazione campagne -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -108,7 +108,7 @@
                 </div>
                 <h3 class="font-medium text-slate-900 dark:text-white text-sm">Valutazione campagne AI</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Dashboard a tab con panoramica KPI, dettaglio campagne, estensioni, landing page e azioni. Selettore periodo (7g/14g/30g) per confrontare performance su finestre temporali diverse. Report esportabile in PDF.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Dashboard a tab con panoramica KPI, dettaglio campagne, estensioni e azioni. Selettore sync per confrontare periodi diversi. Genera fix AI pronti all'uso per copy annunci, estensioni e keyword. Report esportabile in PDF. Suggerimenti applicabili direttamente su Google Ads.</p>
         </div>
         <!-- Genera con AI -->
         <div class="p-4 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20">
@@ -132,7 +132,7 @@
                 </div>
                 <h3 class="font-medium text-slate-900 dark:text-white text-sm">Analisi keyword negative</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Identifica i termini di ricerca irrilevanti dai dati raccolti dallo script, classificati per categoria e priorita con AI. Il sistema confronta automaticamente con l'analisi precedente mostrando keyword risolte, ricorrenti e nuove per tracciare i progressi nel tempo.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Identifica i termini di ricerca irrilevanti dai dati sincronizzati, classificati per categoria, priorita e livello (ad group o campagna). Applica le negatives direttamente su Google Ads con un click, oppure esporta in CSV per Google Ads Editor. Il sistema confronta con l'analisi precedente mostrando keyword risolte, ricorrenti e nuove.</p>
         </div>
         <!-- Contesti business salvati -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -154,9 +154,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                     </svg>
                 </div>
-                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Auto-evaluation</h3>
+                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Sync automatico e auto-evaluation</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Valutazione automatica dopo ogni esecuzione dello script per monitoraggio continuo senza intervento manuale.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Sincronizzazione automatica ogni 6 ore via cron e valutazione AI automatica dopo ogni sync per monitoraggio continuo senza intervento manuale.</p>
         </div>
         <!-- Export e copia rapida -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -180,7 +180,7 @@
                 </div>
                 <h3 class="font-medium text-slate-900 dark:text-white text-sm">Campaign Creator AI</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Genera campagne Google Ads complete (Search o PMax) con un wizard guidato in 3 step: analisi landing page, keyword research con volumi reali da Google Keyword Insight API (3 fasi: AI seed &rarr; espansione API &rarr; organizzazione AI), generazione copy/asset completi. Output organizzato in 4 tab (Annunci, Estensioni, Keywords, Budget) con hero riepilogativo, KPI cards e raccomandazione budget a 3 livelli. Export CSV compatibile con Google Ads Editor.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Genera campagne Google Ads complete (Search o PMax) con un wizard guidato in 3 step: analisi landing page, keyword research con volumi reali da Google Keyword Insight API, generazione copy/asset completi. Output organizzato in 4 tab (Annunci, Estensioni, Keywords, Budget) con raccomandazione budget a 3 livelli. Pubblica direttamente su Google Ads o esporta CSV per Google Ads Editor.</p>
         </div>
         <!-- Asset completi -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -214,6 +214,12 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                <tr class="bg-white dark:bg-slate-800/50">
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Sync dati Google Ads (manuale o automatico)</td>
+                    <td class="px-4 py-3 text-right">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">Gratis</span>
+                    </td>
+                </tr>
                 <tr class="bg-white dark:bg-slate-800/50">
                     <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Valutazione AI campagne</td>
                     <td class="px-4 py-3 text-right">
@@ -287,8 +293,8 @@
                 </svg>
             </div>
             <div>
-                <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Pianifica lo script come cron</h3>
-                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">In Google Ads, programma lo script per eseguirsi automaticamente ogni giorno o settimana. Cosi avrai sempre dati aggiornati senza doverlo eseguire manualmente.</p>
+                <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Attiva il sync automatico</h3>
+                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Il sync automatico ogni 6 ore mantiene i dati aggiornati senza intervento manuale. Combinato con l'auto-evaluation, ricevi analisi AI fresche ad ogni sincronizzazione.</p>
             </div>
         </div>
         <!-- Tip 2 -->
@@ -299,8 +305,8 @@
                 </svg>
             </div>
             <div>
-                <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Attiva l'auto-evaluation</h3>
-                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Abilita la valutazione automatica per ricevere analisi aggiornate dopo ogni sincronizzazione. Monitora l'andamento delle campagne senza intervento manuale.</p>
+                <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Applica le negatives direttamente</h3>
+                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Dopo l'analisi AI, seleziona le keyword negative e applicale direttamente su Google Ads con un click. L'AI suggerisce il livello corretto (ad group o campagna) per ogni keyword, evitando di bloccare traffico utile in altri gruppi.</p>
             </div>
         </div>
         <!-- Tip 3 -->
