@@ -11,7 +11,7 @@
     </div>
 
     <!-- Form -->
-    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <form action="<?= url('/seo-audit/store') ?>" method="POST" class="p-6 space-y-6">
             <?= csrf_field() ?>
 

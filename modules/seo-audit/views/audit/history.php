@@ -159,7 +159,7 @@ $currentPage = 'history';
     </div>
 
     <!-- Legenda -->
-    <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
+    <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4">
         <h4 class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Legenda Health Score</h4>
         <div class="flex flex-wrap gap-4 text-sm">
             <div class="flex items-center gap-2">

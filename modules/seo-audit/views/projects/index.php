@@ -201,7 +201,7 @@ endif;
 </div>
 
 <!-- Hero Educativo -->
-<div class="bg-gradient-to-br from-emerald-50/50 via-white to-teal-50/30 dark:from-emerald-950/20 dark:via-slate-900 dark:to-teal-950/10 rounded-2xl border border-emerald-200/50 dark:border-emerald-800/30 p-8 lg:p-12">
+<div class="bg-gradient-to-br from-emerald-50/50 via-white to-teal-50/30 dark:from-emerald-950/20 dark:via-slate-900 dark:to-teal-950/10 rounded-xl border border-emerald-200/50 dark:border-emerald-800/30 p-8 lg:p-12">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
         <!-- Left: Text -->
         <div>
@@ -681,7 +681,7 @@ endif;
 
     <!-- CTA Finale -->
     <div class="mt-20 mb-8">
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 p-8 lg:p-12">
+        <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 p-8 lg:p-12">
             <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3"></div>
             <div class="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/4"></div>
 

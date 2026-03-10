@@ -759,7 +759,7 @@ class CrawlController
                         'Analisi SEO interrotta', [
                         'icon' => 'exclamation-triangle',
                         'color' => 'red',
-                        'action_url' => url('/seo-audit/projects/' . $id . '/audit'),
+                        'action_url' => url('/seo-audit/project/' . $id . '/audit'),
                         'body' => 'La scansione e stata annullata dall\'utente.',
                         'data' => ['module' => 'seo-audit', 'project_id' => $id],
                     ]);
@@ -821,7 +821,7 @@ class CrawlController
                         "Analisi SEO completata per {$projectName}", [
                         'icon' => 'check-circle',
                         'color' => 'emerald',
-                        'action_url' => url('/seo-audit/projects/' . $id . '/audit'),
+                        'action_url' => url('/seo-audit/project/' . $id . '/audit'),
                         'body' => "Scansionate {$completed} pagine, trovati {$totalIssuesFound} problemi.",
                         'data' => ['module' => 'seo-audit', 'project_id' => $id],
                     ]);

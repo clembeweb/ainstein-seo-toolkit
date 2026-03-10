@@ -490,7 +490,13 @@ Router::post('/seo-audit/api/sitemap', function () {
 Router::post('/seo-audit/api/spider', function () {
     Middleware::auth();
     Middleware::csrf();
+
+    // Long-running AJAX pattern (GR #15, #17)
+    ignore_user_abort(true);
+    set_time_limit(0);
+    ob_start();
     header('Content-Type: application/json');
+    session_write_close();
 
     try {
         $user = Auth::user();
@@ -526,6 +532,7 @@ Router::post('/seo-audit/api/spider', function () {
         }
 
         $baseUrl = rtrim($project['base_url'], '/');
+        $spiderStartTime = microtime(true);
 
         // Spider crawl - discover URLs by following links
         $discovered = [$baseUrl];
@@ -546,18 +553,22 @@ Router::post('/seo-audit/api/spider', function () {
                 usleep($requestDelay * 1000);
             }
 
-            // HTTP fetch con impostazioni avanzate
-            $ctx = stream_context_create([
-                'http' => [
-                    'timeout' => $timeout,
-                    'user_agent' => $userAgent,
-                    'follow_location' => $followRedirects,
-                ],
-                'ssl' => ['verify_peer' => false, 'verify_peer_name' => false]
+            // HTTP fetch con curl (più robusto di file_get_contents)
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT => $timeout,
+                CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_USERAGENT => $userAgent,
+                CURLOPT_FOLLOWLOCATION => $followRedirects,
+                CURLOPT_MAXREDIRS => 5,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false,
             ]);
-
-            $html = @file_get_contents($url, false, $ctx);
-            if (!$html) continue;
+            $html = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            if (!$html || $httpCode >= 400) continue;
 
             // Extract links
             preg_match_all('/<a[^>]+href=["\']([^"\'#]+)["\'][^>]*>/i', $html, $matches);
@@ -596,6 +607,17 @@ Router::post('/seo-audit/api/spider', function () {
             usleep(100000); // 100ms
         }
 
+        // Log spider crawl aggregato (GR #14)
+        \Services\ApiLoggerService::log(
+            'seo_audit_spider',
+            $baseUrl,
+            ['max_pages' => $maxPages, 'max_depth' => $maxDepth, 'user_agent' => $userAgentSetting],
+            ['pages_visited' => count($visited), 'urls_discovered' => count($discovered)],
+            200,
+            $spiderStartTime,
+            ['module' => 'seo-audit', 'cost' => 0, 'context' => "Spider crawl progetto #{$projectId}"]
+        );
+
         // Auto-save URLs and start crawl
         if ($autoCrawl && !empty($discovered)) {
             // Save URLs as pending pages
@@ -608,6 +630,7 @@ Router::post('/seo-audit/api/spider', function () {
             // Check for active session
             $activeSession = $sessionModel->findActiveByProject($projectId);
             if ($activeSession) {
+                ob_end_clean();
                 echo json_encode([
                     'success' => true,
                     'urls' => $discovered,
@@ -647,6 +670,7 @@ Router::post('/seo-audit/api/spider', function () {
                 'pages_crawled' => 0, // Reset per nuova sessione
             ]);
 
+            ob_end_clean();
             echo json_encode([
                 'success' => true,
                 'urls' => $discovered,
@@ -657,6 +681,7 @@ Router::post('/seo-audit/api/spider', function () {
                 'message' => "Trovati {$imported} URL. Analisi avviata automaticamente."
             ]);
         } else {
+            ob_end_clean();
             echo json_encode([
                 'success' => true,
                 'urls' => $discovered,
@@ -666,6 +691,7 @@ Router::post('/seo-audit/api/spider', function () {
         }
 
     } catch (\Exception $e) {
+        if (ob_get_level()) ob_end_clean();
         echo json_encode([
             'success' => false,
             'error' => 'Errore spider: ' . $e->getMessage()

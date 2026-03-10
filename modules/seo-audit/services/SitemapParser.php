@@ -296,6 +296,7 @@ class SitemapParser
      */
     private function fetchRaw(string $url): ?string
     {
+        $startTime = microtime(true);
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -318,6 +319,17 @@ class SitemapParser
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
         curl_close($ch);
+
+        // Log sitemap fetch (GR #14)
+        \Services\ApiLoggerService::log(
+            'seo_audit_sitemap',
+            $url,
+            [],
+            ['size' => strlen($content ?: ''), 'error' => $error ?: null],
+            $httpCode,
+            $startTime,
+            ['module' => 'seo-audit', 'cost' => 0, 'context' => 'Sitemap fetch']
+        );
 
         if ($error) {
             $this->errors[] = "Errore curl per {$url}: {$error}";
