@@ -374,11 +374,55 @@ class ProjectController
                     }
                 }
 
-                // 3. Costruisci lista account
+                // 3. Fetch sub-accounts for each MCC
+                $mccSubAccounts = []; // mccId => [subAccount, ...]
+                $subAccountParent = []; // subAccountId => mccId (for deduplication)
+
+                foreach ($accountNames as $accId => $accInfo) {
+                    if (!empty($accInfo['is_manager'])) {
+                        try {
+                            $mccGadsLocal = new GoogleAdsService($user['id'], $accId);
+                            $subResult = $mccGadsLocal->search(
+                                "SELECT customer_client.id, customer_client.descriptive_name, " .
+                                "customer_client.manager, customer_client.currency_code, customer_client.status " .
+                                "FROM customer_client WHERE customer_client.level <= 1"
+                            );
+                            $subs = [];
+                            foreach (($subResult['results'] ?? []) as $subRow) {
+                                $sc = $subRow['customerClient'] ?? [];
+                                $scId = (string)($sc['id'] ?? '');
+                                // Skip the MCC itself (it appears in its own customer_client results)
+                                if (empty($scId) || $scId === $accId) continue;
+                                // Skip sub-MCC accounts (non-selezionabili, livello 1 only)
+                                if (!empty($sc['manager'])) continue;
+                                $scDisplayId = substr($scId, 0, 3) . '-' . substr($scId, 3, 3) . '-' . substr($scId, 6);
+                                $subs[] = [
+                                    'customer_id' => $scId,
+                                    'display_id' => $scDisplayId,
+                                    'name' => ($sc['descriptiveName'] ?? '') ?: 'Account ' . $scDisplayId,
+                                    'is_manager' => false,
+                                    'currency' => $sc['currencyCode'] ?? '',
+                                    'status' => $sc['status'] ?? '',
+                                    'mcc_parent_id' => $accId,
+                                ];
+                                $subAccountParent[$scId] = $accId;
+                            }
+                            $mccSubAccounts[$accId] = $subs;
+                        } catch (\Exception $e) {
+                            // MCC sub-account query failed — show MCC with error
+                            $mccSubAccounts[$accId] = null; // null = error state
+                        }
+                    }
+                }
+
+                // 4. Build hierarchical account list
                 foreach ($customerIds as $customerId) {
+                    // Skip accounts that appear as sub-accounts of an MCC (deduplication)
+                    if (isset($subAccountParent[$customerId])) continue;
+
                     $info = $accountNames[$customerId] ?? [];
                     $displayId = substr($customerId, 0, 3) . '-' . substr($customerId, 3, 3) . '-' . substr($customerId, 6);
-                    $accounts[] = [
+                    $account = [
                         'customer_id' => $customerId,
                         'display_id' => $displayId,
                         'name' => ($info['name'] ?? '') ?: 'Account ' . $displayId,
@@ -386,6 +430,13 @@ class ProjectController
                         'currency' => $info['currency'] ?? '',
                         'status' => $info['status'] ?? '',
                     ];
+
+                    if (!empty($account['is_manager'])) {
+                        $account['sub_accounts'] = $mccSubAccounts[$customerId] ?? [];
+                        $account['sub_accounts_error'] = !isset($mccSubAccounts[$customerId]);
+                    }
+
+                    $accounts[] = $account;
                 }
             } catch (\Exception $e) {
                 $error = 'Impossibile recuperare gli account Google Ads: ' . $e->getMessage();
@@ -429,14 +480,18 @@ class ProjectController
     {
         $customerId = trim($_POST['customer_id'] ?? '');
         $accountName = trim($_POST['account_name'] ?? '');
+        $mccParentId = trim($_POST['mcc_parent_id'] ?? '');
 
         if (empty($customerId)) {
             $_SESSION['_flash']['error'] = 'Seleziona un account Google Ads';
-            header('Location: ' . url("/ads-analyzer/projects/{$projectId}/google-ads/select-account"));
+            header('Location: ' . url("/ads-analyzer/projects/{$projectId}/connect"));
             exit;
         }
 
-        // Verifica che il customer_id sia nella lista degli account accessibili
+        $cleanCustomerId = preg_replace('/[^0-9]/', '', $customerId);
+        $cleanMccParentId = !empty($mccParentId) ? preg_replace('/[^0-9]/', '', $mccParentId) : '';
+
+        // Verify the customer_id is accessible
         try {
             $gads = new GoogleAdsService($user['id'], '0');
             $result = $gads->listAccessibleCustomers();
@@ -446,43 +501,65 @@ class ProjectController
                 return str_replace('customers/', '', $rn);
             }, $resourceNames);
 
-            $cleanCustomerId = preg_replace('/[^0-9]/', '', $customerId);
-
-            if (!in_array($cleanCustomerId, $validIds, true)) {
-                $_SESSION['_flash']['error'] = 'Account non valido o non accessibile';
-                header('Location: ' . url("/ads-analyzer/projects/{$projectId}/google-ads/select-account"));
-                exit;
+            // If selected via MCC sub-account, validate via MCC's customer_client
+            if (!empty($cleanMccParentId)) {
+                // The MCC itself must be in the accessible list
+                if (!in_array($cleanMccParentId, $validIds, true)) {
+                    $_SESSION['_flash']['error'] = 'Account MCC non accessibile';
+                    header('Location: ' . url("/ads-analyzer/projects/{$projectId}/connect"));
+                    exit;
+                }
+                // Verify the sub-account is under this MCC
+                $mccGads = new GoogleAdsService($user['id'], $cleanMccParentId);
+                $clientsResult = $mccGads->search(
+                    "SELECT customer_client.id, customer_client.manager FROM customer_client WHERE customer_client.level <= 1"
+                );
+                $validSubIds = [];
+                foreach (($clientsResult['results'] ?? []) as $row) {
+                    $cc = $row['customerClient'] ?? [];
+                    $ccId = (string)($cc['id'] ?? '');
+                    if (!empty($ccId) && empty($cc['manager'])) {
+                        $validSubIds[] = $ccId;
+                    }
+                }
+                if (!in_array($cleanCustomerId, $validSubIds, true)) {
+                    $_SESSION['_flash']['error'] = 'Account non trovato sotto questo MCC';
+                    header('Location: ' . url("/ads-analyzer/projects/{$projectId}/connect"));
+                    exit;
+                }
+            } else {
+                // Direct account selection — must be in accessible list and NOT an MCC
+                if (!in_array($cleanCustomerId, $validIds, true)) {
+                    $_SESSION['_flash']['error'] = 'Account non valido o non accessibile';
+                    header('Location: ' . url("/ads-analyzer/projects/{$projectId}/connect"));
+                    exit;
+                }
+                // Check it's not an MCC
+                try {
+                    $directGads = new GoogleAdsService($user['id'], $cleanCustomerId, '');
+                    $directResult = $directGads->search(
+                        "SELECT customer.manager FROM customer LIMIT 1"
+                    );
+                    $isManager = ($directResult['results'][0]['customer']['manager'] ?? false);
+                    if ($isManager) {
+                        $_SESSION['_flash']['error'] = 'Non puoi selezionare un account MCC. Espandilo per scegliere un sub-account.';
+                        header('Location: ' . url("/ads-analyzer/projects/{$projectId}/connect"));
+                        exit;
+                    }
+                } catch (\Exception $e) {
+                    // Can't verify manager status — allow selection
+                }
             }
         } catch (\Exception $e) {
             $_SESSION['_flash']['error'] = 'Errore nella verifica dell\'account: ' . $e->getMessage();
-            header('Location: ' . url("/ads-analyzer/projects/{$projectId}/google-ads/select-account"));
+            header('Location: ' . url("/ads-analyzer/projects/{$projectId}/connect"));
             exit;
         }
 
-        // Determina login_customer_id: verifica se l'account è sotto l'MCC
-        $mccCustomerId = \Core\Settings::get('gads_mcc_customer_id', '');
-        $mccClean = preg_replace('/[^0-9]/', '', $mccCustomerId);
-        $loginCustomerId = null; // default: nessun login-customer-id
+        // login_customer_id = MCC parent if sub-account, null otherwise
+        $loginCustomerId = !empty($cleanMccParentId) ? $cleanMccParentId : null;
 
-        if (!empty($mccClean)) {
-            try {
-                $mccGads = new GoogleAdsService($user['id'], $mccClean);
-                $clientsResult = $mccGads->search(
-                    "SELECT customer_client.id FROM customer_client WHERE customer_client.level <= 1"
-                );
-                $mccChildIds = [];
-                foreach (($clientsResult['results'] ?? []) as $row) {
-                    $mccChildIds[] = (string)($row['customerClient']['id'] ?? '');
-                }
-                if (in_array($cleanCustomerId, $mccChildIds, true) || $cleanCustomerId === $mccClean) {
-                    $loginCustomerId = $mccClean; // Account sotto l'MCC
-                }
-            } catch (\Exception $e) {
-                // Se la query MCC fallisce, salva senza login_customer_id
-            }
-        }
-
-        // Aggiorna il progetto con l'account selezionato
+        // Update project
         Project::update($projectId, [
             'google_ads_customer_id' => $cleanCustomerId,
             'google_ads_account_name' => $accountName ?: $cleanCustomerId,

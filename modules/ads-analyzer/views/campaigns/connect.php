@@ -96,36 +96,116 @@ include __DIR__ . '/../partials/project-nav.php';
                 </div>
             </div>
 
-            <form action="<?= url('/ads-analyzer/projects/' . $project['id'] . '/connect') ?>" method="POST" class="space-y-4">
+            <form action="<?= url('/ads-analyzer/projects/' . $project['id'] . '/connect') ?>" method="POST" class="space-y-4"
+                  x-data="{
+                      expandedMcc: {},
+                      selectedCustomerId: '',
+                      selectedAccountName: '',
+                      selectedMccParentId: '',
+                      selectAccount(customerId, accountName, mccParentId) {
+                          this.selectedCustomerId = customerId;
+                          this.selectedAccountName = accountName;
+                          this.selectedMccParentId = mccParentId || '';
+                      },
+                      toggleMcc(mccId) {
+                          this.expandedMcc[mccId] = !this.expandedMcc[mccId];
+                      }
+                  }">
                 <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
-                <input type="hidden" name="account_name" id="selected_account_name" value="">
+                <input type="hidden" name="customer_id" :value="selectedCustomerId">
+                <input type="hidden" name="account_name" :value="selectedAccountName">
+                <input type="hidden" name="mcc_parent_id" :value="selectedMccParentId">
 
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Account Google Ads</label>
                     <?php foreach ($accounts as $account): ?>
-                    <label class="flex items-center gap-4 p-4 rounded-lg border border-slate-200 dark:border-slate-600 hover:border-rose-300 dark:hover:border-rose-600 cursor-pointer transition-colors has-[:checked]:border-rose-500 has-[:checked]:bg-rose-50 dark:has-[:checked]:bg-rose-900/20">
-                        <input type="radio" name="customer_id" value="<?= e($account['customer_id']) ?>"
-                               data-account-name="<?= e($account['name']) ?>"
-                               onchange="document.getElementById('selected_account_name').value=this.dataset.accountName"
-                               class="text-rose-600 focus:ring-rose-500">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2">
-                                <span class="font-medium text-slate-900 dark:text-white"><?= e($account['name']) ?></span>
-                                <?php if (!empty($account['is_manager'])): ?>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">MCC</span>
-                                <?php endif; ?>
-                                <?php if (!empty($account['status']) && $account['status'] !== 'ENABLED'): ?>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"><?= e($account['status']) ?></span>
-                                <?php endif; ?>
+
+                        <?php if (!empty($account['is_manager'])): ?>
+                        <!-- MCC Account — expandable container, NOT selectable -->
+                        <div class="rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden">
+                            <!-- MCC Header (click to expand) -->
+                            <div @click="toggleMcc('<?= e($account['customer_id']) ?>')"
+                                 class="flex items-center gap-4 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                <div class="flex-shrink-0 text-slate-400">
+                                    <svg class="h-5 w-5 transition-transform duration-200" :class="expandedMcc['<?= e($account['customer_id']) ?>'] ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-medium text-slate-900 dark:text-white"><?= e($account['name']) ?></span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">MCC</span>
+                                    </div>
+                                    <span class="text-sm text-slate-500 dark:text-slate-400"><?= e($account['display_id']) ?><?= !empty($account['currency']) ? ' · ' . e($account['currency']) : '' ?></span>
+                                </div>
+                                <span class="text-xs text-slate-400 dark:text-slate-500" x-text="expandedMcc['<?= e($account['customer_id']) ?>'] ? 'Chiudi' : '<?= count($account['sub_accounts'] ?? []) ?> account'"></span>
                             </div>
-                            <span class="text-sm text-slate-500 dark:text-slate-400"><?= e($account['display_id']) ?><?= !empty($account['currency']) ? ' · ' . e($account['currency']) : '' ?></span>
+
+                            <!-- Sub-accounts (expandable) -->
+                            <div x-show="expandedMcc['<?= e($account['customer_id']) ?>']" x-collapse>
+                                <div class="border-t border-slate-200 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-800/50">
+                                    <?php if (isset($account['sub_accounts_error']) && $account['sub_accounts_error']): ?>
+                                    <div class="p-4 pl-14">
+                                        <p class="text-sm text-red-500 dark:text-red-400">Impossibile caricare i sub-account di questo MCC.</p>
+                                    </div>
+                                    <?php elseif (empty($account['sub_accounts'])): ?>
+                                    <div class="p-4 pl-14">
+                                        <p class="text-sm text-slate-500 dark:text-slate-400">Nessun sub-account trovato in questo MCC.</p>
+                                    </div>
+                                    <?php else: ?>
+                                        <?php foreach ($account['sub_accounts'] as $sub): ?>
+                                        <label @click.stop
+                                               class="flex items-center gap-4 p-3 pl-14 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-colors"
+                                               :class="selectedCustomerId === '<?= e($sub['customer_id']) ?>' ? 'bg-rose-50 dark:bg-rose-900/20' : ''">
+                                            <input type="radio" name="customer_id_radio"
+                                                   value="<?= e($sub['customer_id']) ?>"
+                                                   @change="selectAccount('<?= e($sub['customer_id']) ?>', '<?= e(addslashes($sub['name'])) ?>', '<?= e($account['customer_id']) ?>')"
+                                                   :checked="selectedCustomerId === '<?= e($sub['customer_id']) ?>'"
+                                                   class="text-rose-600 focus:ring-rose-500">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="font-medium text-slate-900 dark:text-white text-sm"><?= e($sub['name']) ?></span>
+                                                    <?php if (!empty($sub['status']) && $sub['status'] !== 'ENABLED'): ?>
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"><?= e($sub['status']) ?></span>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <span class="text-xs text-slate-500 dark:text-slate-400"><?= e($sub['display_id']) ?><?= !empty($sub['currency']) ? ' · ' . e($sub['currency']) : '' ?></span>
+                                            </div>
+                                        </label>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         </div>
-                    </label>
+
+                        <?php else: ?>
+                        <!-- Regular Account — selectable -->
+                        <label class="flex items-center gap-4 p-4 rounded-lg border border-slate-200 dark:border-slate-600 hover:border-rose-300 dark:hover:border-rose-600 cursor-pointer transition-colors"
+                               :class="selectedCustomerId === '<?= e($account['customer_id']) ?>' ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20' : ''">
+                            <input type="radio" name="customer_id_radio"
+                                   value="<?= e($account['customer_id']) ?>"
+                                   @change="selectAccount('<?= e($account['customer_id']) ?>', '<?= e(addslashes($account['name'])) ?>', '')"
+                                   :checked="selectedCustomerId === '<?= e($account['customer_id']) ?>'"
+                                   class="text-rose-600 focus:ring-rose-500">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium text-slate-900 dark:text-white"><?= e($account['name']) ?></span>
+                                    <?php if (!empty($account['status']) && $account['status'] !== 'ENABLED'): ?>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"><?= e($account['status']) ?></span>
+                                    <?php endif; ?>
+                                </div>
+                                <span class="text-sm text-slate-500 dark:text-slate-400"><?= e($account['display_id']) ?><?= !empty($account['currency']) ? ' · ' . e($account['currency']) : '' ?></span>
+                            </div>
+                        </label>
+                        <?php endif; ?>
+
                     <?php endforeach; ?>
                 </div>
 
                 <button type="submit"
-                        class="inline-flex items-center px-6 py-3 rounded-lg bg-rose-600 text-white font-medium hover:bg-rose-700 transition-colors">
+                        :disabled="!selectedCustomerId"
+                        :class="selectedCustomerId ? 'bg-rose-600 hover:bg-rose-700' : 'bg-slate-400 cursor-not-allowed'"
+                        class="inline-flex items-center px-6 py-3 rounded-lg text-white font-medium transition-colors">
                     <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
