@@ -54,8 +54,8 @@
         <div class="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">2</div>
             <div>
-                <h3 class="font-medium text-slate-900 dark:text-white">Sincronizza i dati delle campagne</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Avvia una sincronizzazione manuale o attiva il sync automatico (ogni 6 ore). I dati vengono importati direttamente dall'API Google Ads v18: campagne, ad group, annunci, estensioni, keyword e search terms.</p>
+                <h3 class="font-medium text-slate-900 dark:text-white">Sincronizza e monitora in tempo reale</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Avvia una sincronizzazione manuale o attiva il sync automatico (ogni 6 ore). I dati vengono importati direttamente dall'API Google Ads v20: campagne, ad group, annunci, estensioni, keyword e search terms. Dalla dashboard, cambia periodo (7/30/90 giorni) per visualizzare i KPI live senza ricaricare la pagina.</p>
             </div>
         </div>
         <!-- Step 3 -->
@@ -97,6 +97,18 @@
                 <h3 class="font-medium text-slate-900 dark:text-white text-sm">Connessione Google Ads API</h3>
             </div>
             <p class="text-sm text-slate-600 dark:text-slate-400">Connessione diretta via OAuth all'API Google Ads v18. Sincronizzazione automatica ogni 6 ore (cron) o manuale: campagne, ad groups, annunci, estensioni, keyword e search terms. Supporto account MCC.</p>
+        </div>
+        <!-- Dashboard KPI Live -->
+        <div class="p-4 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="shrink-0 w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                </div>
+                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Dashboard KPI Live</h3>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Cambia periodo (7, 30, 90 giorni o personalizzato) e visualizza i KPI aggiornati in tempo reale da Google Ads senza ricaricare la pagina. I dati vengono cachati 15 minuti per velocita. Se l'API non e disponibile, il sistema usa automaticamente l'ultima sync dal database come fallback. Un badge "Live" o "DB" indica la fonte dati.</p>
         </div>
         <!-- Valutazione campagne -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -216,6 +228,12 @@
             <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                 <tr class="bg-white dark:bg-slate-800/50">
                     <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Sync dati Google Ads (manuale o automatico)</td>
+                    <td class="px-4 py-3 text-right">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">Gratis</span>
+                    </td>
+                </tr>
+                <tr class="bg-white dark:bg-slate-800/50">
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">KPI live da Google Ads (cambio periodo)</td>
                     <td class="px-4 py-3 text-right">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">Gratis</span>
                     </td>
