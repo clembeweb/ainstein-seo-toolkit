@@ -212,6 +212,13 @@ Router::post('/ads-analyzer/projects/{id}/campaigns/toggle-auto-evaluate', funct
     return $controller->toggleAutoEvaluate((int) $id);
 });
 
+// KPI live da Google Ads API (AJAX)
+Router::get('/ads-analyzer/projects/{id}/campaigns/live-kpis', function ($id) {
+    Middleware::auth();
+    $controller = new CampaignController();
+    return $controller->liveKpis((int) $id);
+});
+
 // Dettaglio sync campagne — DOPO le route specifiche per evitare conflitti con {syncId}
 Router::get('/ads-analyzer/projects/{id}/campaigns/{syncId}', function ($id, $syncId) {
     Middleware::auth();

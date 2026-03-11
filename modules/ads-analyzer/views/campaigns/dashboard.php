@@ -67,28 +67,7 @@ $googleAdsAccountName = $project['google_ads_account_name'] ?? '';
         </div>
 
         <!-- Date Picker + Sync Button -->
-        <div class="flex flex-wrap items-center gap-3"
-             x-data="{
-                 dateRange: '<?= (strtotime($dateTo) - strtotime($dateFrom)) / 86400 ?>',
-                 dateFrom: '<?= e($dateFrom) ?>',
-                 dateTo: '<?= e($dateTo) ?>',
-                 showCustom: false,
-                 setRange(days) {
-                     this.dateRange = days;
-                     this.showCustom = false;
-                     const to = new Date();
-                     const from = new Date();
-                     from.setDate(from.getDate() - days);
-                     this.dateFrom = from.toISOString().split('T')[0];
-                     this.dateTo = to.toISOString().split('T')[0];
-                     window.location.href = `?date_from=${this.dateFrom}&date_to=${this.dateTo}`;
-                 },
-                 applyCustom() {
-                     if (this.dateFrom && this.dateTo) {
-                         window.location.href = `?date_from=${this.dateFrom}&date_to=${this.dateTo}`;
-                     }
-                 }
-             }">
+        <div class="flex flex-wrap items-center gap-3">
             <!-- Preset Buttons -->
             <div class="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <button @click="setRange(7)"
@@ -125,6 +104,17 @@ $googleAdsAccountName = $project['google_ads_account_name'] ?? '';
                     Applica
                 </button>
             </div>
+
+            <!-- Data source indicator -->
+            <span x-show="kpiSource === 'api'" x-cloak
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Live
+            </span>
+            <span x-show="kpiSource === 'db'" x-cloak
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400">
+                DB
+            </span>
 
             <!-- Sync Button -->
             <?php if ($canEdit && $hasGoogleAds): ?>
@@ -291,13 +281,13 @@ $googleAdsAccountName = $project['google_ads_account_name'] ?? '';
         </div>
         <?php endif; ?>
 
-        <!-- KPI Cards (4) -->
+        <!-- KPI Cards (4) — valori dinamici Alpine.js -->
         <?php
         $kpiCards = [
-            ['key' => 'total_clicks', 'label' => 'Click', 'value' => $latestStats['total_clicks'] ?? 0, 'format' => 'number', 'icon' => 'M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122', 'color' => 'blue'],
-            ['key' => 'total_cost', 'label' => 'Costo', 'value' => $latestStats['total_cost'] ?? 0, 'format' => 'euro', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'color' => 'red', 'invert' => true],
-            ['key' => 'total_conversions', 'label' => 'Conversioni', 'value' => $latestStats['total_conversions'] ?? 0, 'format' => 'decimal', 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', 'color' => 'emerald'],
-            ['key' => 'avg_ctr', 'label' => 'CTR', 'value' => $latestStats['avg_ctr'] ?? 0, 'format' => 'percent', 'icon' => 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6', 'color' => 'amber'],
+            ['key' => 'total_clicks', 'alpine' => 'kpiClicks', 'label' => 'Click', 'value' => $latestStats['total_clicks'] ?? 0, 'format' => 'number', 'icon' => 'M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122', 'color' => 'blue'],
+            ['key' => 'total_cost', 'alpine' => 'kpiCost', 'label' => 'Costo', 'value' => $latestStats['total_cost'] ?? 0, 'format' => 'euro', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'color' => 'red', 'invert' => true],
+            ['key' => 'total_conversions', 'alpine' => 'kpiConversions', 'label' => 'Conversioni', 'value' => $latestStats['total_conversions'] ?? 0, 'format' => 'decimal', 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', 'color' => 'emerald'],
+            ['key' => 'avg_ctr', 'alpine' => 'kpiCtr', 'label' => 'CTR', 'value' => $latestStats['avg_ctr'] ?? 0, 'format' => 'percent', 'icon' => 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6', 'color' => 'amber'],
         ];
         ?>
         <?php foreach ($kpiCards as $kpi): ?>
@@ -314,22 +304,27 @@ $googleAdsAccountName = $project['google_ads_account_name'] ?? '';
                     </svg>
                 </div>
                 <?php if ($delta): ?>
-                <span class="text-xs font-medium <?= deltaClass($delta['percent_display'], $invertColor) ?>">
+                <span x-show="kpiSource !== 'api'" class="text-xs font-medium <?= deltaClass($delta['percent_display'], $invertColor) ?>">
                     <?= deltaArrow($delta['percent_display']) ?>
                     <?= $delta['percent_display'] >= 0 ? '+' : '' ?><?= $delta['percent_display'] ?>%
                 </span>
                 <?php endif; ?>
             </div>
             <p class="text-2xl font-bold text-slate-900 dark:text-white">
-                <?php if ($kpi['format'] === 'euro'): ?>
-                    <?= number_format((float)$kpi['value'], 2, ',', '.') ?>&euro;
-                <?php elseif ($kpi['format'] === 'percent'): ?>
-                    <?= number_format((float)$kpi['value'], 2) ?>%
-                <?php elseif ($kpi['format'] === 'decimal'): ?>
-                    <?= number_format((float)$kpi['value'], 1) ?>
-                <?php else: ?>
-                    <?= number_format((int)$kpi['value']) ?>
-                <?php endif; ?>
+                <template x-if="loadingKpis">
+                    <span class="inline-block h-7 w-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></span>
+                </template>
+                <template x-if="!loadingKpis">
+                    <?php if ($kpi['format'] === 'euro'): ?>
+                        <span x-text="formatEuro(<?= $kpi['alpine'] ?>)"></span>
+                    <?php elseif ($kpi['format'] === 'percent'): ?>
+                        <span x-text="formatPercent(<?= $kpi['alpine'] ?>)"></span>
+                    <?php elseif ($kpi['format'] === 'decimal'): ?>
+                        <span x-text="formatDecimal(<?= $kpi['alpine'] ?>)"></span>
+                    <?php else: ?>
+                        <span x-text="formatNumber(<?= $kpi['alpine'] ?>)"></span>
+                    <?php endif; ?>
+                </template>
             </p>
             <p class="text-sm text-slate-500 dark:text-slate-400"><?= $kpi['label'] ?></p>
         </div>
@@ -584,6 +579,91 @@ function dashboardManager() {
         syncMessage: '',
         syncError: false,
 
+        // Live KPI properties
+        dateRange: '<?= (strtotime($dateTo) - strtotime($dateFrom)) / 86400 ?>',
+        dateFrom: '<?= e($dateFrom) ?>',
+        dateTo: '<?= e($dateTo) ?>',
+        showCustom: false,
+        loadingKpis: false,
+        kpiSource: '<?= !empty($campaignSyncs) ? "db" : "none" ?>',
+
+        // KPI values (inizializzati da PHP)
+        kpiClicks: <?= (int)($latestStats['total_clicks'] ?? 0) ?>,
+        kpiImpressions: <?= (int)($latestStats['total_impressions'] ?? 0) ?>,
+        kpiCost: <?= round((float)($latestStats['total_cost'] ?? 0), 2) ?>,
+        kpiConversions: <?= round((float)($latestStats['total_conversions'] ?? 0), 1) ?>,
+        kpiCtr: <?= round((float)($latestStats['avg_ctr'] ?? 0), 2) ?>,
+        kpiAvgCpc: <?= round((float)($latestStats['avg_cpc'] ?? 0), 2) ?>,
+        kpiCampaigns: <?= $totalCampaigns ?? 0 ?>,
+
+        setRange(days) {
+            this.dateRange = days;
+            this.showCustom = false;
+            const to = new Date();
+            const from = new Date();
+            from.setDate(from.getDate() - days);
+            this.dateFrom = from.toISOString().split('T')[0];
+            this.dateTo = to.toISOString().split('T')[0];
+            this.fetchLiveKpis();
+        },
+
+        applyCustom() {
+            if (this.dateFrom && this.dateTo) {
+                this.fetchLiveKpis();
+            }
+        },
+
+        async fetchLiveKpis() {
+            this.loadingKpis = true;
+            try {
+                const url = `<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns/live-kpis') ?>?date_from=${this.dateFrom}&date_to=${this.dateTo}`;
+                const resp = await fetch(url);
+
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    throw new Error(err.error || `Errore server (${resp.status})`);
+                }
+
+                const data = await resp.json();
+                if (data.success && data.kpis) {
+                    const k = data.kpis;
+                    this.kpiClicks = k.clicks;
+                    this.kpiImpressions = k.impressions;
+                    this.kpiCost = k.cost;
+                    this.kpiConversions = k.conversions;
+                    this.kpiCtr = k.ctr;
+                    this.kpiAvgCpc = k.avg_cpc;
+                    this.kpiCampaigns = k.campaigns;
+                    this.kpiSource = k.source; // 'api', 'db', 'none'
+                }
+
+                // Aggiorna URL senza reload (per bookmark / sync button)
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.set('date_from', this.dateFrom);
+                newUrl.searchParams.set('date_to', this.dateTo);
+                history.replaceState(null, '', newUrl);
+
+            } catch (err) {
+                console.error('LiveKPI fetch failed:', err);
+                // Non mostrare errore bloccante — i KPI precedenti restano visibili
+            } finally {
+                this.loadingKpis = false;
+            }
+        },
+
+        formatNumber(n) {
+            return Number(n).toLocaleString('it-IT');
+        },
+        formatEuro(n) {
+            return Number(n).toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '\u20ac';
+        },
+        formatDecimal(n) {
+            return Number(n).toLocaleString('it-IT', {minimumFractionDigits: 1, maximumFractionDigits: 1});
+        },
+        formatPercent(n) {
+            return Number(n).toFixed(2) + '%';
+        },
+
         async toggleAutoEval() {
             this.togglingAutoEval = true;
             try {
@@ -617,8 +697,8 @@ function dashboardManager() {
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '<?= csrf_token() ?>';
                 const formData = new FormData();
                 formData.append('_csrf_token', csrfToken);
-                formData.append('date_from', '<?= e($dateFrom) ?>');
-                formData.append('date_to', '<?= e($dateTo) ?>');
+                formData.append('date_from', this.dateFrom);
+                formData.append('date_to', this.dateTo);
 
                 const resp = await fetch('<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns/sync') ?>', {
                     method: 'POST',

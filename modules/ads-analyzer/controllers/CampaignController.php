@@ -332,6 +332,75 @@ class CampaignController
     }
 
     /**
+     * KPI live da Google Ads API (AJAX)
+     *
+     * Endpoint chiamato dal frontend al cambio periodo.
+     * Usa LiveKpiService: API con cache 15min → fallback DB.
+     */
+    public function liveKpis(int $projectId): void
+    {
+        header('Content-Type: application/json');
+
+        try {
+            $user = Auth::user();
+            $project = Project::findAccessible($user['id'], $projectId);
+
+            if (!$project || ($project['type'] ?? 'negative-kw') !== 'campaign') {
+                http_response_code(400);
+                echo json_encode(['error' => 'Progetto non valido']);
+                exit;
+            }
+
+            $customerId = $project['google_ads_customer_id'] ?? '';
+            if (empty($customerId)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Nessun account Google Ads collegato']);
+                exit;
+            }
+
+            // Validazione date
+            $dateFrom = $_GET['date_from'] ?? date('Y-m-d', strtotime('-7 days'));
+            $dateTo = $_GET['date_to'] ?? date('Y-m-d');
+
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Formato date non valido']);
+                exit;
+            }
+
+            // Limite massimo 90 giorni
+            $daysDiff = (strtotime($dateTo) - strtotime($dateFrom)) / 86400;
+            if ($daysDiff > 90 || $daysDiff < 0) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Intervallo date non valido (max 90 giorni)']);
+                exit;
+            }
+
+            $loginCustomerId = isset($project['login_customer_id']) ? $project['login_customer_id'] : '';
+            $gadsService = new GoogleAdsService($user['id'], $customerId, $loginCustomerId);
+
+            $service = new \Modules\AdsAnalyzer\Services\LiveKpiService($gadsService, $projectId);
+            $kpis = $service->getKpis($dateFrom, $dateTo);
+
+            echo json_encode([
+                'success' => true,
+                'kpis' => $kpis,
+            ]);
+            exit;
+
+        } catch (\Exception $e) {
+            Logger::channel('ads')->error("LiveKPI error", [
+                'project_id' => $projectId,
+                'error' => $e->getMessage(),
+            ]);
+
+            http_response_code(500);
+            echo json_encode(['error' => 'Errore nel recupero metriche: ' . $e->getMessage()]);
+            exit;
+        }
+    }
+
+    /**
      * Dettaglio sync: campagne, annunci, estensioni
      */
     public function show(int $projectId, int $syncId): string
