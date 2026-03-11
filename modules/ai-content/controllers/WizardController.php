@@ -10,6 +10,7 @@ use Modules\AiContent\Models\Keyword;
 use Modules\AiContent\Models\Article;
 use Modules\AiContent\Models\SerpResult;
 use Modules\AiContent\Models\Source;
+use Modules\AiContent\Models\Project;
 use Modules\AiContent\Services\BriefBuilderService;
 use Modules\AiContent\Services\ArticleGeneratorService;
 use Core\Logger;
@@ -24,12 +25,14 @@ class WizardController
     private Keyword $keyword;
     private Article $article;
     private SerpResult $serpResult;
+    private Project $project;
 
     public function __construct()
     {
         $this->keyword = new Keyword();
         $this->article = new Article();
         $this->serpResult = new SerpResult();
+        $this->project = new Project();
     }
 
     /**
@@ -53,10 +56,11 @@ class WizardController
         // Find keyword with ownership check
         $keyword = $this->keyword->find($keywordId);
         if (!$keyword) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Keyword non trovata']);
             exit;
         }
-        $project = Project::findAccessible($user['id'], $keyword['project_id']);
+        $project = $this->project->findAccessible($keyword['project_id'], $user['id']);
         if (!$project) {
             ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Non autorizzato']);
@@ -85,6 +89,7 @@ class WizardController
         $urlsToScrape = array_merge($urlsToScrape, $customUrls);
 
         if (empty($urlsToScrape)) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Seleziona almeno una fonte da analizzare']);
             exit;
         }
@@ -98,6 +103,7 @@ class WizardController
         $currentBalance = Credits::getBalance($creditUserId);
 
         if (!Credits::hasEnough($creditUserId, $totalCost)) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => "Crediti insufficienti. Richiesti: {$totalCost}, Disponibili: {$currentBalance}"]);
             exit;
         }
@@ -119,6 +125,7 @@ class WizardController
             }
 
             if (empty($scrapedSources)) {
+                ob_end_clean();
                 echo json_encode(['success' => false, 'error' => 'Impossibile estrarre contenuto dalle fonti selezionate']);
                 exit;
             }
@@ -225,6 +232,7 @@ class WizardController
         // Find keyword
         $keyword = $this->keyword->find($keywordId);
         if (!$keyword) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Keyword non trovata']);
             exit;
         }
@@ -232,7 +240,7 @@ class WizardController
         // Viewer cannot perform write operations
         $project = null;
         if (!empty($keyword['project_id'])) {
-            $project = Project::findAccessible($user['id'], $keyword['project_id']);
+            $project = $this->project->findAccessible($keyword['project_id'], $user['id']);
             if ($project && ($project['access_role'] ?? 'owner') === 'viewer') {
                 ob_end_clean();
                 echo json_encode(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
@@ -250,6 +258,7 @@ class WizardController
         $currentBalance = Credits::getBalance($creditUserId);
 
         if (!Credits::hasEnough($creditUserId, $cost)) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => "Crediti insufficienti. Richiesti: {$cost}, Disponibili: {$currentBalance}"]);
             exit;
         }
@@ -258,6 +267,7 @@ class WizardController
             // Get article
             $article = $articleId ? $this->article->find($articleId) : null;
             if (!$article) {
+                ob_end_clean();
                 echo json_encode(['success' => false, 'error' => 'Articolo non trovato. Genera prima il brief.']);
                 exit;
             }
@@ -267,6 +277,7 @@ class WizardController
             $brief = $storedBrief['brief'] ?? $briefData;
 
             if (empty($brief)) {
+                ob_end_clean();
                 echo json_encode(['success' => false, 'error' => 'Brief non trovato. Genera prima il brief.']);
                 exit;
             }
@@ -324,6 +335,7 @@ class WizardController
             Database::reconnect();
 
             if (!$result['success']) {
+                ob_end_clean();
                 echo json_encode(['success' => false, 'error' => $result['error'] ?? 'Errore generazione articolo']);
                 exit;
             }
