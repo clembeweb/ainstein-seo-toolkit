@@ -41,6 +41,7 @@ $contentTypes = [
     'product' => ['label' => 'Prodotto', 'color' => 'teal'],
     'category' => ['label' => 'Categoria', 'color' => 'blue'],
     'article' => ['label' => 'Articolo', 'color' => 'purple'],
+    'service' => ['label' => 'Servizio', 'color' => 'orange'],
     'custom' => ['label' => 'Custom', 'color' => 'slate'],
 ];
 $ct = $contentTypes[$project['content_type'] ?? 'product'] ?? $contentTypes['product'];

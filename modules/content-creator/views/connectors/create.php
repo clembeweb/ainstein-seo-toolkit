@@ -14,7 +14,7 @@
 
     <!-- Form -->
     <div class="max-w-2xl">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700" x-data="{ type: 'wordpress' }">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700" x-data="{ type: 'wordpress' }">
             <form action="<?= url('/content-creator/connectors') ?>" method="POST" class="p-6 space-y-6">
                 <?= csrf_field() ?>
 

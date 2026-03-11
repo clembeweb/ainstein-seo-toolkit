@@ -51,6 +51,7 @@ $statusTabs = [
     'scraped' => ['label' => 'Scrappate', 'count' => $stats['scraped']],
     'generated' => ['label' => 'Generate', 'count' => $stats['generated']],
     'approved' => ['label' => 'Approvate', 'count' => $stats['approved']],
+    'rejected' => ['label' => 'Rifiutate', 'count' => $stats['rejected'] ?? 0],
     'published' => ['label' => 'Pubblicate', 'count' => $stats['published']],
     'error' => ['label' => 'Errori', 'count' => $stats['errors']],
 ];
@@ -386,8 +387,8 @@ $statusTabs = [
 
     <!-- First time empty state -->
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
-        <div class="mx-auto h-16 w-16 rounded-full bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center mb-4">
-            <svg class="h-8 w-8 text-teal-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="mx-auto h-16 w-16 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center mb-4">
+            <svg class="h-8 w-8 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
             </svg>
         </div>

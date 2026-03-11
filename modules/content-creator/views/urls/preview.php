@@ -303,7 +303,7 @@ $wordCount = (int) ($url['ai_word_count'] ?? 0);
 
     <!-- Action Buttons -->
     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        <?php if ($status === 'generated'): ?>
+        <?php if (in_array($status, ['generated', 'rejected', 'error'])): ?>
         <!-- Approve -->
         <form action="<?= url("/content-creator/projects/{$projectId}/urls/{$urlId}/approve") ?>" method="POST" class="inline">
             <?= csrf_field() ?>
@@ -315,7 +315,9 @@ $wordCount = (int) ($url['ai_word_count'] ?? 0);
                 Approva
             </button>
         </form>
+        <?php endif; ?>
 
+        <?php if (in_array($status, ['generated', 'approved', 'error'])): ?>
         <!-- Reject -->
         <form action="<?= url("/content-creator/projects/{$projectId}/urls/{$urlId}/reject") ?>" method="POST" class="inline">
             <?= csrf_field() ?>

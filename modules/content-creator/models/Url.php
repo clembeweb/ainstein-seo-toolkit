@@ -421,7 +421,7 @@ class Url
         $stmt = $this->db->prepare("
             UPDATE {$this->table}
             SET status = 'approved'
-            WHERE id = ? AND status IN ('generated', 'error')
+            WHERE id = ? AND status IN ('generated', 'error', 'rejected')
         ");
         $stmt->execute([$id]);
         return $stmt->rowCount() > 0;
@@ -451,7 +451,7 @@ class Url
         $stmt = $this->db->prepare("
             UPDATE {$this->table}
             SET status = 'approved'
-            WHERE id IN ({$placeholders}) AND project_id = ? AND status IN ('generated', 'error')
+            WHERE id IN ({$placeholders}) AND project_id = ? AND status IN ('generated', 'error', 'rejected')
         ");
         $params = array_merge($ids, [$projectId]);
         $stmt->execute($params);

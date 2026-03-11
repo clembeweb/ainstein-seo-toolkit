@@ -116,6 +116,44 @@ $statusTabs = [
                 </svg>
                 Annulla generazione
             </button>
+
+            <!-- Separator -->
+            <div class="w-px h-6 bg-slate-300 dark:bg-slate-600 hidden sm:block"></div>
+
+            <!-- CSV Export -->
+            <?php if ($stats['generated'] + $stats['approved'] + $stats['published'] > 0): ?>
+            <a href="<?= url("/content-creator/projects/{$project['id']}/export/csv") ?>"
+               class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Esporta CSV
+            </a>
+            <?php endif; ?>
+
+            <!-- CMS Push -->
+            <?php if (!empty($project['connector_id']) && $stats['approved'] > 0): ?>
+            <button type="button"
+                    @click="startCmsPush()"
+                    :disabled="pushing || scraping || generating"
+                    x-show="!pushing"
+                    class="inline-flex items-center px-3 py-2 rounded-lg bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                Pubblica su CMS (<?= $stats['approved'] ?>)
+            </button>
+            <!-- Cancel CMS push -->
+            <button type="button"
+                    @click="cancelCmsPush()"
+                    x-show="pushing" x-cloak
+                    class="inline-flex items-center px-3 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                Annulla push
+            </button>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -171,6 +209,33 @@ $statusTabs = [
                  :style="'width: ' + genPercent + '%'"></div>
         </div>
         <p class="text-xs text-purple-500 dark:text-purple-400 mt-1 truncate" x-text="genCurrentUrl"></p>
+    </div>
+
+    <!-- SSE Progress bar - CMS Push -->
+    <div x-show="pushing" x-cloak x-transition
+         class="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-xl p-4">
+        <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-teal-600 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-sm font-medium text-teal-700 dark:text-teal-300">
+                    Pubblicazione CMS in corso...
+                </span>
+            </div>
+            <span class="text-sm text-teal-600 dark:text-teal-400">
+                <span x-text="pushCompleted"></span>/<span x-text="pushTotal"></span>
+                <template x-if="pushFailed > 0">
+                    <span class="text-red-500 ml-2">(<span x-text="pushFailed"></span> errori)</span>
+                </template>
+            </span>
+        </div>
+        <div class="w-full bg-teal-200 dark:bg-teal-800 rounded-full h-2">
+            <div class="bg-teal-600 h-2 rounded-full transition-all duration-300"
+                 :style="'width: ' + pushPercent + '%'"></div>
+        </div>
+        <p class="text-xs text-teal-500 dark:text-teal-400 mt-1 truncate" x-text="pushCurrentUrl"></p>
     </div>
 
     <!-- Status filter tabs -->
@@ -441,7 +506,7 @@ $statusTabs = [
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                                     </svg>
                                 </a>
-                                <?php if ($itemStatus === 'generated'): ?>
+                                <?php if (in_array($itemStatus, ['generated', 'rejected', 'error'])): ?>
                                 <!-- Approva rapido -->
                                 <button type="button"
                                         @click="approveOne(<?= $item['id'] ?>)"
@@ -451,6 +516,8 @@ $statusTabs = [
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                     </svg>
                                 </button>
+                                <?php endif; ?>
+                                <?php if (in_array($itemStatus, ['generated', 'approved'])): ?>
                                 <!-- Rifiuta rapido -->
                                 <button type="button"
                                         @click="rejectOne(<?= $item['id'] ?>)"
@@ -503,6 +570,16 @@ function resultsManager() {
         genFailed: 0,
         genPercent: 0,
         genCurrentUrl: '',
+
+        // CMS Push SSE state
+        pushing: false,
+        pushJobId: null,
+        pushCompleted: 0,
+        pushTotal: 0,
+        pushFailed: 0,
+        pushPercent: 0,
+        pushCurrentUrl: '',
+        pushEventSource: null,
 
         // SSE connection
         eventSource: null,
@@ -1018,6 +1095,121 @@ function resultsManager() {
                 }
             } catch (error) {
                 window.ainstein?.alert?.('Errore di connessione', 'error');
+            }
+        },
+
+        // =====================
+        // CMS PUSH SSE
+        // =====================
+
+        async startCmsPush() {
+            if (!confirm('Pubblicare tutte le URL approvate sul CMS?')) return;
+
+            this.pushing = true;
+            this.pushCompleted = 0;
+            this.pushFailed = 0;
+            this.pushPercent = 0;
+            this.pushCurrentUrl = 'Avvio pubblicazione...';
+
+            try {
+                const formData = new FormData();
+                formData.append('_csrf_token', '<?= csrf_token() ?>');
+
+                const resp = await fetch('<?= url("/content-creator/projects/{$project['id']}/push/start") ?>', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const data = await resp.json();
+
+                if (data.error) {
+                    window.ainstein?.alert?.(data.message || 'Errore avvio push', 'error');
+                    this.pushing = false;
+                    return;
+                }
+
+                this.pushJobId = data.job_id;
+                this.pushTotal = data.items_queued || 0;
+                this.listenPushStream(data.job_id);
+            } catch (error) {
+                window.ainstein?.alert?.('Errore avvio push CMS: ' + error.message, 'error');
+                this.pushing = false;
+            }
+        },
+
+        listenPushStream(jobId) {
+            const es = new EventSource('<?= url("/content-creator/projects/{$project['id']}/push/stream") ?>?job_id=' + jobId);
+            this.pushEventSource = es;
+
+            es.addEventListener('progress', (e) => {
+                const d = JSON.parse(e.data);
+                this.pushCompleted = d.completed;
+                this.pushFailed = d.failed;
+                this.pushTotal = d.total;
+                this.pushPercent = d.percent;
+                this.pushCurrentUrl = d.current_url || '';
+            });
+
+            es.addEventListener('item_completed', (e) => {
+                const d = JSON.parse(e.data);
+                this.pushCompleted = d.completed;
+                this.pushFailed = d.failed;
+                this.pushPercent = d.percent;
+            });
+
+            es.addEventListener('item_error', (e) => {
+                const d = JSON.parse(e.data);
+                this.pushCompleted = d.completed;
+                this.pushFailed = d.failed;
+                this.pushPercent = d.percent;
+            });
+
+            es.addEventListener('completed', (e) => {
+                const d = JSON.parse(e.data);
+                es.close();
+                this.pushing = false;
+                this.pushPercent = 100;
+                window.ainstein?.toast?.(`Push completato: ${d.completed} pubblicati, ${d.failed} errori`, 'success');
+                setTimeout(() => location.reload(), 2000);
+            });
+
+            es.addEventListener('cancelled', () => {
+                es.close();
+                this.pushing = false;
+                window.ainstein?.toast?.('Push CMS annullato', 'info');
+            });
+
+            es.onerror = () => {
+                es.close();
+                this.pushing = false;
+                window.ainstein?.alert?.('Connessione SSE push persa', 'error');
+            };
+        },
+
+        async cancelCmsPush() {
+            if (!this.pushJobId) return;
+
+            try {
+                const formData = new FormData();
+                formData.append('_csrf_token', '<?= csrf_token() ?>');
+                formData.append('job_id', this.pushJobId);
+
+                const resp = await fetch('<?= url("/content-creator/projects/{$project['id']}/push/cancel") ?>', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const data = await resp.json();
+
+                if (data.success) {
+                    if (this.pushEventSource) this.pushEventSource.close();
+                    this.pushing = false;
+                    window.ainstein?.toast?.('Push CMS annullato', 'info');
+                }
+            } catch (error) {
+                window.ainstein?.alert?.('Errore annullamento push', 'error');
             }
         },
 

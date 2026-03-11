@@ -80,7 +80,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                Colonna URL (0-based)
+                                Colonna URL (0 = prima colonna)
                             </label>
                             <input type="number"
                                    x-model="csvUrlColumn"
@@ -92,7 +92,7 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                Colonna Keyword (-1 = nessuna)
+                                Colonna Keyword (-1 per ignorare)
                             </label>
                             <input type="number"
                                    x-model="csvKeywordColumn"
@@ -101,7 +101,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                Colonna Categoria (-1 = nessuna)
+                                Colonna Categoria (-1 per ignorare)
                             </label>
                             <input type="number"
                                    x-model="csvCategoryColumn"

@@ -14,7 +14,7 @@
 
     <!-- Form -->
     <div class="max-w-2xl">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
             <form action="<?= url('/content-creator/projects') ?>" method="POST" class="p-6 space-y-6">
                 <?= csrf_field() ?>
 
@@ -113,14 +113,14 @@
                 <?php endif; ?>
 
                 <!-- Info Box -->
-                <div class="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-xl p-4">
+                <div class="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-4">
                     <div class="flex">
-                        <svg class="w-5 h-5 text-teal-600 dark:text-teal-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="w-5 h-5 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <div class="ml-3">
-                            <h4 class="text-sm font-medium text-teal-800 dark:text-teal-200">Dopo la creazione potrai</h4>
-                            <ul class="mt-1 text-sm text-teal-700 dark:text-teal-300 list-disc list-inside space-y-0.5">
+                            <h4 class="text-sm font-medium text-orange-800 dark:text-orange-200">Dopo la creazione potrai</h4>
+                            <ul class="mt-1 text-sm text-orange-700 dark:text-orange-300 list-disc list-inside space-y-0.5">
                                 <li>Importare URL da sitemap, CSV o connettore CMS</li>
                                 <li>Generare contenuti HTML completi con AI</li>
                                 <li>Pubblicare direttamente sul CMS collegato</li>
