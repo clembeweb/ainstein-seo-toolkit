@@ -7,6 +7,7 @@ use Core\Auth;
 use Core\Credits;
 use Core\ModuleLoader;
 use Modules\AiContent\Models\Keyword;
+use Modules\AiContent\Models\Project;
 use Modules\AiContent\Models\SerpResult;
 use Modules\AiContent\Services\SerpApiService;
 
@@ -18,11 +19,13 @@ use Modules\AiContent\Services\SerpApiService;
 class SerpController
 {
     private Keyword $keyword;
+    private Project $project;
     private SerpResult $serpResult;
 
     public function __construct()
     {
         $this->keyword = new Keyword();
+        $this->project = new Project();
         $this->serpResult = new SerpResult();
     }
 
@@ -45,7 +48,7 @@ class SerpController
             echo json_encode(['success' => false, 'error' => 'Keyword non trovata']);
             exit;
         }
-        $project = Project::findAccessible($user['id'], $keyword['project_id']);
+        $project = $this->project->findAccessible($keyword['project_id'], $user['id']);
         if (!$project) {
             ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Non autorizzato']);

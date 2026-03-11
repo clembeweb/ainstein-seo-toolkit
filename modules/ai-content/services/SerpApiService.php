@@ -15,11 +15,10 @@ use Core\Logger;
  */
 class SerpApiService
 {
-    private string $apiKey;
     private string $provider;
-    private ?string $fallbackApiKey = null;
-    private ?string $fallbackProvider = null;
     private ScraperService $scraper;
+    /** @var array{provider: string, key: string}[] Cascade di chiavi da provare in ordine */
+    private array $keyCascade = [];
 
     public function __construct(?string $apiKey = null)
     {
@@ -27,29 +26,28 @@ class SerpApiService
         $this->provider = getModuleSetting('ai-content', 'serp_provider', 'serper');
         $this->scraper = new ScraperService();
 
+        // Build key cascade: primary key → secondary key → other provider key → other provider secondary key
         if ($this->provider === 'serper') {
-            $this->apiKey = $apiKey ?? Settings::get('serper_api_key', '');
-            if (empty($this->apiKey)) {
-                throw new \Exception('Serper.dev API key non configurata. Vai in Admin > Impostazioni > Essenziali > Rank Tracking');
-            }
-            // Setup fallback: SerpAPI
-            $serpApiKey = getModuleSetting('ai-content', 'serpapi_key', '');
-            if (!empty($serpApiKey)) {
-                $this->fallbackProvider = 'serpapi';
-                $this->fallbackApiKey = $serpApiKey;
-            }
+            $keys = [
+                ['provider' => 'serper', 'key' => $apiKey ?? Settings::get('serper_api_key', '')],
+                ['provider' => 'serper', 'key' => Settings::get('serper_api_key_2', '')],
+                ['provider' => 'serpapi', 'key' => getModuleSetting('ai-content', 'serpapi_key', '')],
+                ['provider' => 'serpapi', 'key' => Settings::get('serp_api_key_2', '')],
+            ];
         } else {
-            $this->provider = 'serpapi';
-            $this->apiKey = $apiKey ?? getModuleSetting('ai-content', 'serpapi_key', '');
-            if (empty($this->apiKey)) {
-                throw new \Exception('SerpAPI key non configurata. Vai in Admin > Moduli > AI Content > Impostazioni');
-            }
-            // Setup fallback: Serper.dev
-            $serperKey = Settings::get('serper_api_key', '');
-            if (!empty($serperKey)) {
-                $this->fallbackProvider = 'serper';
-                $this->fallbackApiKey = $serperKey;
-            }
+            $keys = [
+                ['provider' => 'serpapi', 'key' => $apiKey ?? getModuleSetting('ai-content', 'serpapi_key', '')],
+                ['provider' => 'serpapi', 'key' => Settings::get('serp_api_key_2', '')],
+                ['provider' => 'serper', 'key' => Settings::get('serper_api_key', '')],
+                ['provider' => 'serper', 'key' => Settings::get('serper_api_key_2', '')],
+            ];
+        }
+
+        // Filter out empty keys
+        $this->keyCascade = array_values(array_filter($keys, fn($k) => !empty($k['key'])));
+
+        if (empty($this->keyCascade)) {
+            throw new \Exception('Nessuna API key SERP configurata. Vai in Admin > Impostazioni.');
         }
     }
 
@@ -64,34 +62,27 @@ class SerpApiService
      */
     public function search(string $keyword, string $language = 'it', string $location = 'Italy'): array
     {
-        // Prova provider primario
-        try {
-            if ($this->provider === 'serper') {
-                return $this->searchWithSerper($keyword, $language, $location, $this->apiKey);
-            }
-            return $this->searchWithSerpApi($keyword, $language, $location, $this->apiKey);
-        } catch (\Exception $primaryError) {
-            // Se non c'e' fallback, rilancia l'errore
-            if (!$this->fallbackProvider || !$this->fallbackApiKey) {
-                throw $primaryError;
-            }
+        $errors = [];
 
-            Logger::channel('api')->warning("[SerpService] Primario ({$this->provider}) fallito - Provo fallback ({$this->fallbackProvider})", ['error' => $primaryError->getMessage()]);
-
-            // Prova fallback
+        foreach ($this->keyCascade as $i => $entry) {
             try {
-                if ($this->fallbackProvider === 'serper') {
-                    return $this->searchWithSerper($keyword, $language, $location, $this->fallbackApiKey);
+                if ($entry['provider'] === 'serper') {
+                    return $this->searchWithSerper($keyword, $language, $location, $entry['key']);
                 }
-                return $this->searchWithSerpApi($keyword, $language, $location, $this->fallbackApiKey);
-            } catch (\Exception $fallbackError) {
-                // Entrambi falliti: lancia errore con info su entrambi
-                throw new \Exception(
-                    "Primario ({$this->provider}): " . $primaryError->getMessage() .
-                    " | Fallback ({$this->fallbackProvider}): " . $fallbackError->getMessage()
-                );
+                return $this->searchWithSerpApi($keyword, $language, $location, $entry['key']);
+            } catch (\Exception $e) {
+                $keyLabel = $entry['provider'] . ($i > 0 ? ' #' . ($i + 1) : '');
+                $errors[] = "{$keyLabel}: " . $e->getMessage();
+
+                Logger::channel('api')->warning("[SerpService] {$keyLabel} fallito, provo successivo", [
+                    'error' => $e->getMessage(),
+                    'remaining' => count($this->keyCascade) - $i - 1,
+                ]);
             }
         }
+
+        // Tutte le chiavi fallite
+        throw new \Exception("Tutti i provider SERP falliti: " . implode(' | ', $errors));
     }
 
     /**
