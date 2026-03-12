@@ -318,8 +318,8 @@ class AdminController
         }
 
         $authUrl = $oauth->getMccAuthUrl();
-        \Core\Router::redirect($authUrl);
-        return '';
+        header('Location: ' . $authUrl);
+        exit;
     }
 
     public function modules(): string
