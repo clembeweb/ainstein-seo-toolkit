@@ -371,6 +371,88 @@ class GoogleOAuthService
     }
 
     /**
+     * Genera URL per OAuth MCC piattaforma (admin-only).
+     * Non richiede module/project — state contiene action=mcc_connect.
+     */
+    public function getMccAuthUrl(): string
+    {
+        if (!$this->isConfigured()) {
+            throw new \Exception('Google OAuth non configurato. Configura Client ID e Secret in Admin > Impostazioni.');
+        }
+
+        $state = base64_encode(json_encode([
+            'action' => 'mcc_connect',
+            'csrf' => bin2hex(random_bytes(16)),
+        ]));
+
+        $_SESSION['google_oauth_state'] = $state;
+
+        $params = [
+            'client_id' => $this->clientId,
+            'redirect_uri' => $this->getRedirectUri(),
+            'response_type' => 'code',
+            'scope' => self::SCOPE_GOOGLE_ADS,
+            'access_type' => 'offline',
+            'prompt' => 'consent',
+            'state' => $state,
+        ];
+
+        return self::AUTH_URL . '?' . http_build_query($params);
+    }
+
+    /**
+     * Verifica state dal callback MCC.
+     *
+     * @return array|null ['action' => 'mcc_connect'] o null se invalido
+     */
+    public function verifyMccState(string $state): ?array
+    {
+        if (!isset($_SESSION['google_oauth_state']) || $_SESSION['google_oauth_state'] !== $state) {
+            return null;
+        }
+
+        unset($_SESSION['google_oauth_state']);
+
+        $decoded = json_decode(base64_decode($state), true);
+
+        if (!$decoded || ($decoded['action'] ?? '') !== 'mcc_connect') {
+            return null;
+        }
+
+        return ['action' => 'mcc_connect'];
+    }
+
+    /**
+     * Salva token OAuth per MCC piattaforma (user_id=0).
+     */
+    public function saveMccToken(string $accessToken, string $refreshToken, int $expiresIn): void
+    {
+        $expiresAt = date('Y-m-d H:i:s', time() + $expiresIn);
+
+        Database::execute(
+            "INSERT INTO google_oauth_tokens (user_id, service, access_token, refresh_token, token_expires_at, created_at, updated_at)
+             VALUES (0, 'google_ads_mcc', ?, ?, ?, NOW(), NOW())
+             ON DUPLICATE KEY UPDATE
+                access_token = VALUES(access_token),
+                refresh_token = VALUES(refresh_token),
+                token_expires_at = VALUES(token_expires_at),
+                updated_at = NOW()",
+            [$accessToken, $refreshToken, $expiresAt]
+        );
+    }
+
+    /**
+     * Verifica se il token MCC piattaforma è configurato.
+     */
+    public function hasMccToken(): bool
+    {
+        $row = Database::fetch(
+            "SELECT id FROM google_oauth_tokens WHERE user_id = 0 AND service = 'google_ads_mcc' LIMIT 1"
+        );
+        return !empty($row);
+    }
+
+    /**
      * Ottieni Client ID (per debug/display)
      */
     public function getClientId(): ?string

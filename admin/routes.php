@@ -24,6 +24,7 @@ Router::post('/admin/modules/{id}/rename', [AdminController::class, 'moduleRenam
 Router::post('/admin/settings/branding', [AdminController::class, 'brandingUpdate']);
 Router::post('/admin/settings/test-smtp', [AdminController::class, 'testSmtp']);
 Router::post('/admin/settings/test-email', [AdminController::class, 'testEmail']);
+Router::get('/admin/settings/mcc-connect', [AdminController::class, 'mccConnect']);
 
 // Email Templates
 Router::get('/admin/email-templates', [EmailTemplateController::class, 'index']);

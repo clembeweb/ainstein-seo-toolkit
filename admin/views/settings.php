@@ -26,6 +26,8 @@ $serpConfigured = !empty($settings['serper_api_key']['value'] ?? '');
 $googleConfigured = !empty($settings['gsc_client_id']['value'] ?? '') && !empty($settings['gsc_client_secret']['value'] ?? '');
 $keywordConfigured = !empty($settings['rapidapi_keyword_key']['value'] ?? '') || !empty($settings['dataforseo_login']['value'] ?? '') || !empty($settings['keywordseverywhere_api_key']['value'] ?? '');
 $gadsConfigured = !empty($settings['gads_developer_token']['value'] ?? '');
+$kpEnabled = ($settings['kp_enabled']['value'] ?? '0') === '1';
+$kpConfigured = $kpEnabled && $gadsConfigured && ($hasMccToken ?? false);
 $stripeConfigured = !empty($settings['stripe_public_key']['value'] ?? '') && !empty($settings['stripe_secret_key']['value'] ?? '');
 $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
 ?>
@@ -432,6 +434,116 @@ $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
                                        placeholder="123-456-7890"
                                        class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm">
                                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Formato: 123-456-7890 o 1234567890</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keyword Planner (Google Ads) -->
+            <div x-data="{ open: false }" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <button type="button" @click="open = !open" class="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                            <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                            </svg>
+                        </div>
+                        <div class="text-left">
+                            <h3 class="font-semibold text-slate-900 dark:text-white">Keyword Planner (Google Ads)</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Volumi di ricerca ufficiali via Google Ads API</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <?php if ($kpConfigured): ?>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                Attivo
+                            </span>
+                        <?php elseif ($kpEnabled): ?>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">Parziale</span>
+                        <?php else: ?>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400">Disabilitato</span>
+                        <?php endif; ?>
+                        <svg class="w-5 h-5 text-slate-400 transition-transform" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </button>
+                <div x-show="open" x-collapse>
+                    <div class="px-6 pb-6 pt-2 border-t border-slate-200 dark:border-slate-700 space-y-4">
+                        <div class="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3 text-sm text-purple-700 dark:text-purple-300">
+                            <p class="font-medium mb-1">Requisiti:</p>
+                            <ol class="list-decimal list-inside space-y-0.5 text-purple-600 dark:text-purple-400 text-xs">
+                                <li>Configura Developer Token e MCC nella sezione Google Ads API qui sopra</li>
+                                <li>Collega l'account MCC con OAuth (bottone sotto)</li>
+                                <li>Abilita il Keyword Planner e configura i limiti</li>
+                            </ol>
+                        </div>
+
+                        <!-- MCC OAuth Connection Status -->
+                        <div class="p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="text-sm font-medium text-slate-900 dark:text-white">Connessione OAuth MCC</h4>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Token piattaforma per accedere a Google Ads API (Keyword Planner)</p>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <?php if ($hasMccToken ?? false): ?>
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                            Collegato
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">Non collegato</span>
+                                    <?php endif; ?>
+                                    <a href="<?= url('/admin/settings/mcc-connect') ?>"
+                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 transition-colors <?= !$googleConfigured ? 'opacity-50 pointer-events-none' : '' ?>">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                                        </svg>
+                                        <?= ($hasMccToken ?? false) ? 'Ricollega' : 'Collega Account' ?>
+                                    </a>
+                                </div>
+                            </div>
+                            <?php if (!$googleConfigured): ?>
+                                <p class="mt-2 text-xs text-amber-600 dark:text-amber-400">Configura prima Client ID e Client Secret nella sezione Google OAuth.</p>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- KP Settings -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="sm:col-span-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="hidden" name="kp_enabled" value="0">
+                                    <input type="checkbox" name="kp_enabled" value="1"
+                                           <?= ($settings['kp_enabled']['value'] ?? '0') === '1' ? 'checked' : '' ?>
+                                           class="rounded border-slate-300 dark:border-slate-600 text-purple-600 focus:ring-purple-500">
+                                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Abilita Keyword Planner</span>
+                                </label>
+                                <p class="ml-6 text-xs text-slate-500 dark:text-slate-400">Usa Google Ads Keyword Planner come provider volumi di ricerca</p>
+                            </div>
+                            <div>
+                                <label for="kp_daily_limit_per_user" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Limite giornaliero per utente</label>
+                                <input type="number" name="kp_daily_limit_per_user" id="kp_daily_limit_per_user"
+                                       value="<?= e($settings['kp_daily_limit_per_user']['value'] ?? '100') ?>"
+                                       min="1" max="10000"
+                                       class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm">
+                                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Richieste keyword al giorno per singolo utente</p>
+                            </div>
+                            <div>
+                                <label for="kp_daily_limit_global" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Limite giornaliero globale</label>
+                                <input type="number" name="kp_daily_limit_global" id="kp_daily_limit_global"
+                                       value="<?= e($settings['kp_daily_limit_global']['value'] ?? '5000') ?>"
+                                       min="1" max="100000"
+                                       class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm">
+                                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Richieste keyword al giorno per tutta la piattaforma</p>
+                            </div>
+                            <div>
+                                <label for="kp_cache_ttl_days" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Cache TTL (giorni)</label>
+                                <input type="number" name="kp_cache_ttl_days" id="kp_cache_ttl_days"
+                                       value="<?= e($settings['kp_cache_ttl_days']['value'] ?? '7') ?>"
+                                       min="1" max="90"
+                                       class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm">
+                                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Durata cache dei risultati Keyword Planner</p>
                             </div>
                         </div>
                     </div>

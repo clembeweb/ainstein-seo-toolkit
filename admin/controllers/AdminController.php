@@ -226,11 +226,16 @@ class AdminController
             $settingsMap[$s['key_name']] = $s;
         }
 
+        // Check MCC OAuth token status
+        $oauth = new \Services\GoogleOAuthService();
+        $hasMccToken = $oauth->hasMccToken();
+
         return View::render('admin/settings', [
             'title' => 'Impostazioni',
             'user' => Auth::user(),
             'modules' => ModuleLoader::getActiveModules(),
             'settings' => $settingsMap,
+            'hasMccToken' => $hasMccToken,
         ]);
     }
 
@@ -297,6 +302,24 @@ class AdminController
 
         header('Content-Type: application/json');
         return json_encode($result);
+    }
+
+    /**
+     * Redirect a Google OAuth per collegare MCC piattaforma
+     */
+    public function mccConnect(): string
+    {
+        $oauth = new \Services\GoogleOAuthService();
+
+        if (!$oauth->isConfigured()) {
+            $_SESSION['_flash']['error'] = 'Configura prima Client ID e Client Secret nella sezione Google OAuth.';
+            \Core\Router::redirect('/admin/settings?tab=integrations');
+            return '';
+        }
+
+        $authUrl = $oauth->getMccAuthUrl();
+        \Core\Router::redirect($authUrl);
+        return '';
     }
 
     public function modules(): string

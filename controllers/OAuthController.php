@@ -50,7 +50,13 @@ class OAuthController
             return $this->handleLoginCallback($oauth, $code, $loginState);
         }
 
-        // 2. Flusso MODULO (GSC/GA4) - richiede autenticazione
+        // 2. Flusso MCC CONNECT (admin-only, piattaforma)
+        $mccState = $oauth->verifyMccState($state);
+        if ($mccState) {
+            return $this->handleMccCallback($oauth, $code);
+        }
+
+        // 3. Flusso MODULO (GSC/GA4) - richiede autenticazione
         Middleware::auth();
 
         $stateData = $oauth->verifyState($state);
@@ -98,6 +104,34 @@ class OAuthController
         }
         $endpoint = ($type === 'ga4') ? 'ga4' : 'gsc';
         Router::redirect("/{$moduleSlug}/{$endpoint}/connected");
+        return '';
+    }
+
+    /**
+     * Gestisce callback per MCC OAuth (admin-only, piattaforma)
+     */
+    private function handleMccCallback(GoogleOAuthService $oauth, string $code): string
+    {
+        Middleware::admin();
+
+        $tokens = $oauth->exchangeCode($code);
+
+        if (isset($tokens['error'])) {
+            $_SESSION['_flash']['error'] = 'Errore OAuth MCC: ' . $tokens['message'];
+            Router::redirect('/admin/settings?tab=integrations');
+            return '';
+        }
+
+        if (empty($tokens['refresh_token'])) {
+            $_SESSION['_flash']['error'] = 'Token MCC non valido: refresh_token mancante. Riprova con "prompt=consent".';
+            Router::redirect('/admin/settings?tab=integrations');
+            return '';
+        }
+
+        $oauth->saveMccToken($tokens['access_token'], $tokens['refresh_token'], $tokens['expires_in']);
+
+        $_SESSION['_flash']['success'] = 'Account MCC Google Ads collegato con successo.';
+        Router::redirect('/admin/settings?tab=integrations');
         return '';
     }
 
