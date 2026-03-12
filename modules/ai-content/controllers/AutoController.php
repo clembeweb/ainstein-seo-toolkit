@@ -259,6 +259,13 @@ class AutoController
         // Lista siti WordPress per select
         $wpSites = $this->wpSite->allByUser($user['id']);
 
+        // Internal links pool stats
+        $ilPool = new \Modules\AiContent\Models\InternalLinksPool();
+        $ilStats = $ilPool->getStats($id);
+
+        // Check WP site linked for internal links
+        $wpSiteLinked = $this->wpSite->getActiveByProject($project['global_project_id'] ?? 0);
+
         return View::render('ai-content/auto/settings', [
             'title' => 'Impostazioni Auto - ' . $project['name'],
             'user' => $user,
@@ -266,6 +273,8 @@ class AutoController
             'project' => $project,
             'config' => $config,
             'wpSites' => $wpSites,
+            'ilStats' => $ilStats,
+            'wpSiteLinked' => $wpSiteLinked,
         ]);
     }
 

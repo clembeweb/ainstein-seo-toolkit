@@ -315,12 +315,75 @@ class WizardController
                 ];
             }, $scrapedSources);
 
-            // Add internal links pool if project has them
-            if (!empty($keyword['project_id'])) {
+            // Add internal links pool if project has them + WP published posts
+            $useInternalLinks = $input['useInternalLinks'] ?? true;
+            if ($useInternalLinks && !empty($keyword['project_id'])) {
+                $allInternalLinks = [];
+
+                // Source 1: Manual/sitemap pool
                 $internalLinksPool = new \Modules\AiContent\Models\InternalLinksPool();
-                $internalLinks = $internalLinksPool->getActiveByProject($keyword['project_id'], 50);
-                if (!empty($internalLinks)) {
-                    $brief['internal_links_pool'] = $internalLinks;
+                $poolLinks = $internalLinksPool->getActiveByProject($keyword['project_id'], 50);
+                if (!empty($poolLinks)) {
+                    $allInternalLinks = $poolLinks;
+                }
+
+                // Source 2: Published posts from connected WordPress site
+                try {
+                    $wpSiteModel = new \Modules\AiContent\Models\WpSite();
+                    $wpSite = null;
+
+                    // Priority 1: Direct wp_site_id on project
+                    if (!empty($project['wp_site_id'])) {
+                        $wpSite = $wpSiteModel->find($project['wp_site_id']);
+                    }
+
+                    // Priority 2: WP site linked via global project
+                    if (!$wpSite) {
+                        $globalProjectId = $project['global_project_id'] ?? 0;
+                        $wpSite = $globalProjectId ? $wpSiteModel->getActiveByProject($globalProjectId) : null;
+                    }
+
+                    // Priority 3: Single WP site for user
+                    if (!$wpSite) {
+                        $userWpSites = $wpSiteModel->getActiveSites($user['id']);
+                        if (count($userWpSites) === 1) {
+                            $wpSite = $userWpSites[0];
+                        }
+                    }
+
+                    if ($wpSite) {
+                        $connector = new \Modules\ContentCreator\Services\Connectors\WordPressConnector([
+                            'url' => $wpSite['url'],
+                            'api_key' => $wpSite['api_key']
+                        ]);
+                        $wpPosts = $connector->fetchItems('posts', 100);
+                        Database::reconnect();
+
+                        if (!empty($wpPosts)) {
+                            // Avoid duplicates with pool URLs
+                            $existingUrls = array_column($allInternalLinks, 'url');
+                            foreach ($wpPosts as $post) {
+                                $postUrl = $post['url'] ?? '';
+                                if ($postUrl && !in_array($postUrl, $existingUrls)) {
+                                    $allInternalLinks[] = [
+                                        'url' => $postUrl,
+                                        'title' => $post['title'] ?? '',
+                                        'description' => mb_substr($post['content'] ?? '', 0, 200)
+                                    ];
+                                    $existingUrls[] = $postUrl;
+                                }
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // WP fetch failed — continue with pool links only (graceful degradation)
+                    Logger::channel('ai')->warning("WP internal links fetch failed", ['error' => $e->getMessage()]);
+                    Database::reconnect();
+                }
+
+                // Limit total to 80 and inject into brief
+                if (!empty($allInternalLinks)) {
+                    $brief['internal_links_pool'] = array_slice($allInternalLinks, 0, 80);
                 }
             }
 

@@ -92,6 +92,67 @@
                 </div>
             </div>
 
+            <!-- Internal Links Section -->
+            <div>
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider mb-4">Link Interni</h3>
+
+                <?php
+                $poolActive = $ilStats['active'] ?? 0;
+                $hasWpSite = !empty($wpSiteLinked);
+                $hasAnySource = $poolActive > 0 || $hasWpSite;
+                ?>
+
+                <?php if ($hasAnySource): ?>
+                <div class="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/50 rounded-lg p-4">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-emerald-800 dark:text-emerald-300">Link interni attivi</p>
+                            <div class="mt-1 space-y-0.5 text-xs text-emerald-700 dark:text-emerald-400">
+                                <?php if ($poolActive > 0): ?>
+                                <p>Pool URL importati: <?= $poolActive ?> attivi</p>
+                                <?php endif; ?>
+                                <?php if ($hasWpSite): ?>
+                                <p>WordPress: articoli pubblicati da <?= e($wpSiteLinked['name']) ?></p>
+                                <?php endif; ?>
+                            </div>
+                            <p class="mt-1.5 text-xs text-emerald-600/70 dark:text-emerald-500/70">
+                                L'AI inserirà automaticamente link interni pertinenti negli articoli generati
+                            </p>
+                            <a href="<?= url('/ai-content/projects/' . $project['id'] . '/internal-links') ?>" class="inline-flex items-center mt-2 text-xs text-emerald-700 dark:text-emerald-400 hover:underline">
+                                Gestisci pool
+                                <svg class="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <?php else: ?>
+                <div class="bg-slate-50 dark:bg-slate-700/30 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-slate-400 dark:text-slate-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                        </svg>
+                        <div>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">Nessun link interno configurato</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-500 mt-1">
+                                Importa URL dal sitemap o collega un sito WordPress per inserire link interni automaticamente negli articoli.
+                            </p>
+                            <a href="<?= url('/ai-content/projects/' . $project['id'] . '/internal-links/import') ?>" class="inline-flex items-center mt-2 text-xs text-primary-600 dark:text-primary-400 hover:underline">
+                                Importa URL
+                                <svg class="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+            </div>
+
             <!-- Info Box -->
             <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                 <div class="flex">

@@ -22,14 +22,14 @@ endif;
 <!-- Hero Value Block -->
 <div class="mb-6">
 <?= \Core\View::partial('components/dashboard-hero-banner', [
-    'title' => 'Genera articoli SEO e meta tag con l\'AI',
-    'description' => 'Dalla keyword all\'articolo pubblicato: l\'AI analizza la SERP, genera un brief strategico, scrive contenuti ottimizzati e crea meta tag per le pagine esistenti. Programmazione automatica e pubblicazione su WordPress.',
+    'title' => 'Genera articoli SEO con l\'AI',
+    'description' => 'Dalla keyword all\'articolo pubblicato: l\'AI analizza la SERP, genera un brief strategico e scrive contenuti ottimizzati. Programmazione automatica e pubblicazione su WordPress.',
     'color' => 'amber',
     'badge' => 'Come funziona',
     'storageKey' => 'ainstein_hero_ai_content',
     'steps' => [
         ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>', 'title' => 'Scegli keyword', 'subtitle' => 'Brief AI strategico'],
-        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>', 'title' => 'Genera contenuto', 'subtitle' => 'Articolo o meta tag'],
+        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>', 'title' => 'Genera contenuto', 'subtitle' => 'Articolo SEO ottimizzato'],
         ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>', 'title' => 'Pubblica', 'subtitle' => 'WordPress automatico'],
     ],
     'ctaText' => 'Nuovo Progetto',
@@ -42,7 +42,7 @@ endif;
     <div class="sm:flex sm:items-center sm:justify-between" data-tour="aic-header">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AI Content Generator</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Genera articoli SEO, contenuti automatici e meta tag ottimizzati con intelligenza artificiale</p>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Genera articoli SEO e contenuti automatici ottimizzati con intelligenza artificiale</p>
         </div>
         <div class="mt-4 sm:mt-0 flex items-center gap-3" data-tour="aic-quickactions">
             <a href="<?= url('/ai-content/wordpress') ?>" class="inline-flex items-center rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
@@ -60,8 +60,8 @@ endif;
         </div>
     </div>
 
-    <!-- 3 Mode Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" data-tour="aic-modes">
+    <!-- Mode Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" data-tour="aic-modes">
         <!-- Articoli Manuali -->
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
             <div class="p-6">
@@ -122,36 +122,8 @@ endif;
             </div>
         </div>
 
-        <!-- SEO Meta Tags -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
-            <div class="p-6">
-                <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm mb-4">
-                    <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6h.008v.008H6V6z"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">SEO Meta Tags</h3>
-                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                    Scrapa pagine esistenti e genera title e description ottimizzati con AI. Pubblica direttamente su WordPress.
-                </p>
-                <div class="mt-3 flex items-center gap-2">
-                    <?= credit_badge($metaCost) ?>
-                    <span class="text-xs text-slate-400 dark:text-slate-500">/pagina</span>
-                    <?php if ($stats['meta_count'] > 0): ?>
-                    <span class="text-xs text-slate-400 dark:text-slate-500"><?= $stats['meta_count'] ?> progetti</span>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <div class="px-6 py-4 bg-slate-50 dark:bg-slate-700/50 border-t border-slate-200 dark:border-slate-700">
-                <a href="<?= url('/ai-content/projects?tab=meta-tag') ?>" class="inline-flex items-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700">
-                    Vai ai progetti
-                    <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
-            </div>
-        </div>
+        <!-- SEO Meta Tags: rimosso dalla dashboard (UX audit 2026-03-11, task A1) -->
+        <!-- TODO: migrazione a seo-onpage -->
     </div>
 
     <!-- Progetti recenti -->
@@ -354,10 +326,10 @@ endif;
                         <div class="h-2 bg-slate-100 dark:bg-slate-700 rounded w-full"></div>
                         <div class="h-2 bg-slate-100 dark:bg-slate-700 rounded w-4/5"></div>
                     </div>
-                    <!-- Meta tags row -->
+                    <!-- Article stats row -->
                     <div class="flex gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-700">
-                        <span class="text-[10px] px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 font-medium">Meta Title ✓</span>
-                        <span class="text-[10px] px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 font-medium">Meta Desc ✓</span>
+                        <span class="text-[10px] px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 font-medium">SEO Score 92 ✓</span>
+                        <span class="text-[10px] px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 font-medium">3 Link interni</span>
                         <span class="text-[10px] px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 font-medium">2.450 parole</span>
                     </div>
                 </div>
@@ -770,15 +742,15 @@ endif;
                 <p class="text-sm text-slate-500 dark:text-slate-400">Riscrivi e ottimizza articoli esistenti con dati SERP aggiornati. Migliora il posizionamento di contenuti già pubblicati.</p>
             </div>
 
-            <!-- Card 6: Meta tags in bulk -->
+            <!-- Card 6: Link interni -->
             <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 hover:shadow-md hover:border-amber-300 dark:hover:border-amber-700 transition-all">
                 <div class="h-10 w-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-4">
                     <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                     </svg>
                 </div>
-                <h4 class="font-semibold text-slate-900 dark:text-white mb-2">Meta tags in bulk</h4>
-                <p class="text-sm text-slate-500 dark:text-slate-400">Genera meta title e description per pagine esistenti. Ottimizzazione rapida dell'intero sito.</p>
+                <h4 class="font-semibold text-slate-900 dark:text-white mb-2">Link interni coerenti</h4>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Inserisci automaticamente link interni pertinenti durante la generazione. Migliora la struttura del sito e il link juice.</p>
             </div>
         </div>
     </div>

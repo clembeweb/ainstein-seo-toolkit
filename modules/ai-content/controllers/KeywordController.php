@@ -138,6 +138,39 @@ class KeywordController
         // Load WordPress sites for step 4
         $wpSites = $this->wpSite->getActiveSites($user['id']);
 
+        // Load internal links info for generation panel
+        $internalLinksCount = 0;
+        $wpLinksAvailable = false;
+        $wpSiteLinked = null;
+        if ($projectId) {
+            $ilPool = new \Modules\AiContent\Models\InternalLinksPool();
+            $ilStats = $ilPool->getStats($projectId);
+            $internalLinksCount = $ilStats['active'] ?? 0;
+
+            // Check if a WP site is connected to this project (for fetching published posts)
+            // Priority 1: Direct wp_site_id on project
+            if (!empty($project['wp_site_id'])) {
+                foreach ($wpSites as $ws) {
+                    if ($ws['id'] == $project['wp_site_id']) {
+                        $wpSiteLinked = $ws;
+                        break;
+                    }
+                }
+            }
+
+            // Priority 2: WP site linked via global project
+            if (!$wpSiteLinked) {
+                $globalPid = $project['global_project_id'] ?? 0;
+                $wpSiteLinked = $globalPid ? $this->wpSite->getActiveByProject($globalPid) : null;
+            }
+
+            // Priority 3: If only one active WP site for this user, use it implicitly
+            if (!$wpSiteLinked && count($wpSites) === 1) {
+                $wpSiteLinked = $wpSites[0];
+            }
+            $wpLinksAvailable = !empty($wpSiteLinked);
+        }
+
         // Prepare wizard data for JavaScript
         $wizardData = [
             'keywordId' => $id,
@@ -171,7 +204,13 @@ class KeywordController
                     'name' => $site['name'],
                     'url' => $site['url']
                 ];
-            }, $wpSites)
+            }, $wpSites),
+            'internalLinks' => [
+                'poolCount' => $internalLinksCount,
+                'wpAvailable' => $wpLinksAvailable,
+                'wpSiteName' => $wpSiteLinked['name'] ?? null,
+                'useInternalLinks' => true,  // default: enabled
+            ]
         ];
 
         return View::render('ai-content/keywords/wizard', [

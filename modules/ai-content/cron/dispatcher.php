@@ -138,14 +138,57 @@ function processKeyword(array $queueItem, int $userId): array
             ];
         }, $scrapedSources);
 
-        // Add internal links pool if available
+        // Add internal links pool + WP published posts if available
         $projectId = $queueItem['project_id'] ?? null;
         if ($projectId) {
+            $allInternalLinks = [];
+
+            // Source 1: Manual/sitemap pool
             $internalLinksPool = new \Modules\AiContent\Models\InternalLinksPool();
-            $internalLinks = $internalLinksPool->getActiveByProject($projectId, 50);
-            if (!empty($internalLinks)) {
-                $brief['internal_links_pool'] = $internalLinks;
-                logDispatcher("    Pool link interni: " . count($internalLinks) . " link attivi");
+            $poolLinks = $internalLinksPool->getActiveByProject($projectId, 50);
+            if (!empty($poolLinks)) {
+                $allInternalLinks = $poolLinks;
+                logDispatcher("    Pool link interni: " . count($poolLinks) . " link attivi");
+            }
+
+            // Source 2: Published posts from connected WordPress site
+            $wpSiteId = $config['wp_site_id'] ?? null;
+            if ($wpSiteId) {
+                try {
+                    $wpSiteModel = new \Modules\AiContent\Models\WpSite();
+                    $wpSite = $wpSiteModel->find((int) $wpSiteId);
+                    if ($wpSite && $wpSite['is_active']) {
+                        $connector = new \Modules\ContentCreator\Services\Connectors\WordPressConnector([
+                            'url' => $wpSite['url'],
+                            'api_key' => $wpSite['api_key']
+                        ]);
+                        $wpPosts = $connector->fetchItems('posts', 100);
+                        \Core\Database::reconnect();
+
+                        if (!empty($wpPosts)) {
+                            $existingUrls = array_column($allInternalLinks, 'url');
+                            foreach ($wpPosts as $post) {
+                                $postUrl = $post['url'] ?? '';
+                                if ($postUrl && !in_array($postUrl, $existingUrls)) {
+                                    $allInternalLinks[] = [
+                                        'url' => $postUrl,
+                                        'title' => $post['title'] ?? '',
+                                        'description' => mb_substr($post['content'] ?? '', 0, 200)
+                                    ];
+                                    $existingUrls[] = $postUrl;
+                                }
+                            }
+                            logDispatcher("    WP link interni: " . count($wpPosts) . " articoli da " . $wpSite['name']);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    logDispatcher("    WP link fetch fallito: " . $e->getMessage());
+                    \Core\Database::reconnect();
+                }
+            }
+
+            if (!empty($allInternalLinks)) {
+                $brief['internal_links_pool'] = array_slice($allInternalLinks, 0, 80);
             }
         }
 

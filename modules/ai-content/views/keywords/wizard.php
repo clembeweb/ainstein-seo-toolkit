@@ -518,6 +518,40 @@ $baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['
                         </div>
 
                         <div x-show="!generatingArticle" class="mt-6 space-y-4">
+                            <!-- Internal Links Info Panel -->
+                            <div class="max-w-md mx-auto">
+                                <template x-if="internalLinks.poolCount > 0 || internalLinks.wpAvailable">
+                                    <div class="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/50 rounded-lg p-4">
+                                        <div class="flex items-start gap-3">
+                                            <svg class="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                                            </svg>
+                                            <div class="flex-1">
+                                                <div class="flex items-center justify-between">
+                                                    <p class="text-sm font-medium text-amber-800 dark:text-amber-300">Link Interni</p>
+                                                    <label class="inline-flex items-center cursor-pointer">
+                                                        <input type="checkbox" x-model="useInternalLinks" class="h-3.5 w-3.5 text-amber-600 border-amber-300 dark:border-amber-700 rounded focus:ring-amber-500">
+                                                        <span class="ml-1.5 text-xs text-amber-700 dark:text-amber-400" x-text="useInternalLinks ? 'Attivo' : 'Disattivato'"></span>
+                                                    </label>
+                                                </div>
+                                                <p class="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                                                    <template x-if="internalLinks.poolCount > 0 && internalLinks.wpAvailable">
+                                                        <span><span x-text="internalLinks.poolCount"></span> URL importati + articoli da <span x-text="internalLinks.wpSiteName"></span></span>
+                                                    </template>
+                                                    <template x-if="internalLinks.poolCount > 0 && !internalLinks.wpAvailable">
+                                                        <span><span x-text="internalLinks.poolCount"></span> URL disponibili dal pool importato</span>
+                                                    </template>
+                                                    <template x-if="internalLinks.poolCount === 0 && internalLinks.wpAvailable">
+                                                        <span>Articoli pubblicati da <span x-text="internalLinks.wpSiteName"></span></span>
+                                                    </template>
+                                                </p>
+                                                <p class="text-xs text-amber-600/70 dark:text-amber-500/70 mt-0.5">L'AI inserirà link pertinenti nell'articolo</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
                             <!-- Cover Image Toggle -->
                             <div class="flex items-center justify-center">
                                 <label class="inline-flex items-center cursor-pointer">
@@ -813,6 +847,10 @@ function keywordWizard(initialData) {
             aiAnalysis: null
         },
 
+        // Internal Links
+        internalLinks: initialData.internalLinks || { poolCount: 0, wpAvailable: false, wpSiteName: null },
+        useInternalLinks: (initialData.internalLinks?.useInternalLinks !== false) && (initialData.internalLinks?.poolCount > 0 || initialData.internalLinks?.wpAvailable),
+
         // Step 3 - Article
         articleGenerated: initialData.articleGenerated || false,
         generatingArticle: false,
@@ -1069,7 +1107,8 @@ function keywordWizard(initialData) {
                         _csrf_token: '<?= csrf_token() ?>',
                         articleId: this.articleId,
                         briefData: this.briefData,
-                        generateCover: this.generateCover
+                        generateCover: this.generateCover,
+                        useInternalLinks: this.useInternalLinks
                     })
                 });
 
