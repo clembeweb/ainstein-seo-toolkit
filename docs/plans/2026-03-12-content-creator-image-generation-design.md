@@ -66,6 +66,7 @@ CREATE TABLE cc_image_variants (
     file_size_bytes INT UNSIGNED DEFAULT NULL,
     generation_time_ms INT UNSIGNED DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_image_id (image_id),
     FOREIGN KEY (image_id) REFERENCES cc_images(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -109,15 +110,25 @@ Non serve `image_acquire`: il download foto sorgente avviene inline durante l'im
 ALTER TABLE cc_images ADD INDEX idx_user (user_id);
 ```
 
-### Colonna `updated_at` su `cc_image_variants`
-
-```sql
-ALTER TABLE cc_image_variants ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
-```
-
 ### Accesso condiviso e crediti
 
 `ImageController` usa `Project::findAccessible($id, $userId)` (NON `findByUser()`) per supportare progetti condivisi. I crediti sono sempre scalati dall'owner del progetto via `ProjectAccessService::getOwnerId()`, non dall'user_id dell'item.
+
+### Macchina a stati `cc_images.status`
+
+```
+pending          → Import completato ma foto sorgente non disponibile (download fallito, CSV con URL)
+source_acquired  → Foto sorgente disponibile in locale, pronto per generazione
+generated        → Almeno 1 variante generata, in attesa di revisione
+approved         → Almeno 1 variante con is_approved=1 (auto-settato su approve della prima variante)
+published        → Almeno 1 variante pushata sul CMS (is_pushed=1)
+error            → Errore di generazione (tutte le varianti fallite)
+```
+
+**Transizioni automatiche:**
+- Approve variante → se cc_images.status è `generated`, diventa `approved`
+- Reject ultima variante approvata → cc_images.status torna a `generated`
+- Push variante → se cc_images.status è `approved`, diventa `published`
 
 ### Campo canonico per immagine sorgente
 
@@ -165,12 +176,11 @@ modules/content-creator/
 │       └── settings.php                 # Tab preset immagini
 ├── services/
 │   └── connectors/
-│       ├── ConnectorInterface.php       # Invariato
-│       ├── ImageCapableConnectorInterface.php  # NUOVO - estende ConnectorInterface
-│       ├── WordPressConnector.php       # Implementa ImageCapableConnectorInterface
-│       ├── ShopifyConnector.php         # Implementa ImageCapableConnectorInterface
-│       ├── PrestaShopConnector.php      # Implementa ImageCapableConnectorInterface
-│       └── MagentoConnector.php         # Implementa ImageCapableConnectorInterface
+│       ├── ImageCapableConnectorInterface.php  # NUOVO - estende ConnectorInterface (invariato)
+│       ├── WordPressConnector.php       # Aggiunge implements ImageCapableConnectorInterface
+│       ├── ShopifyConnector.php         # Aggiunge implements ImageCapableConnectorInterface
+│       ├── PrestaShopConnector.php      # Aggiunge implements ImageCapableConnectorInterface
+│       └── MagentoConnector.php         # Aggiunge implements ImageCapableConnectorInterface
 ```
 
 ---
@@ -290,6 +300,20 @@ High resolution, commercial quality, inviting atmosphere.
 | `{environment}` | — | modern living room, rustic kitchen, minimal bedroom, contemporary office, garden/terrace |
 | `{photo_style}` | professional catalog, editorial magazine, minimal clean | stessa lista |
 
+### Custom category template
+
+Per items con categoria `custom`, il prompt è generico e si affida al custom_prompt dell'utente:
+
+```
+Using the product shown in the attached image, generate a professional
+commercial photo showcasing this exact product in an appealing context.
+The product must be faithfully reproduced with accurate colors, proportions
+and details — it must be clearly recognizable as the same item.
+Photography style: {photo_style}.
+No text, no watermarks, no logos.
+High resolution, commercial quality.
+```
+
 ### Custom prompt
 
 Se l'utente inserisce istruzioni aggiuntive, vengono appese:
@@ -368,6 +392,13 @@ In tutti i casi, l'utente può assegnare la categoria (fashion/home) per-item du
 
 Dalla lista immagini, click "Genera Immagini". SSE job tipo `image_generate`.
 
+Pattern SSE obbligatorio (Golden Rules):
+- `ignore_user_abort(true)` + `set_time_limit(0)` + `session_write_close()`
+- `header('Content-Type: text/event-stream')` + `header('Cache-Control: no-cache')`
+- `Database::reconnect()` dopo ogni chiamata API
+- `if (ob_get_level()) ob_flush(); flush();` per inviare eventi
+- Salvare nel DB PRIMA dell'evento `completed`
+
 Per ogni item con status `source_acquired`:
 1. Carica immagine sorgente
 2. Risolvi preset (override item > default progetto)
@@ -415,6 +446,10 @@ manifest.csv  (SKU, nome, URL prodotto, filename, dimensioni)
 
 ## 7. Routes
 
+**CSRF:** tutte le route POST usano `Middleware::csrf()` (campo `_csrf_token`), eccetto `cancel-job` (pattern piattaforma: la cancellazione SSE non invia token, usa validazione job_id + user_id).
+
+**GR #21/#22:** tutti i metodi controller che rendono view usano `return View::render()` e passano `'user' => $user`.
+
 ```
 # Lista e gestione immagini
 GET    /content-creator/projects/{id}/images                    # Lista immagini
@@ -459,7 +494,12 @@ storage/images/
 
 Conversione: generazione in PNG (massima qualità) → conversione WebP/JPEG per export/push via PHP GD (`imagecreatefrompng()` + `imagewebp()`). Formato e qualità configurabili (default: WebP 85%).
 
-Cleanup cron: varianti rifiutate eliminate dopo 30 giorni. Sorgenti orfane (item eliminato) eliminate con l'item (CASCADE).
+Cleanup cron (`cron/image-cleanup.php`): varianti rifiutate eliminate dopo 30 giorni. Sorgenti orfane (item eliminato) eliminate con l'item (CASCADE). File ZIP pre-generati eliminati dopo 24h.
+
+**Crontab produzione** (aggiungere):
+```
+0 5 * * * cd /var/www/ainstein.it/public_html && php modules/content-creator/cron/image-cleanup.php >> /var/log/ainstein/cron.log 2>&1
+```
 
 ---
 
@@ -491,6 +531,7 @@ Nuovo gruppo `image_config` (order: 3):
     "default_background": { "type": "select", "options": ["studio_white", "urban", "lifestyle", "nature"], "default": "studio_white", "group": "image_config" },
     "default_environment": { "type": "select", "options": ["living_room", "kitchen", "bedroom", "office", "outdoor"], "default": "living_room", "group": "image_config" },
     "default_photo_style": { "type": "select", "options": ["professional", "editorial", "minimal"], "default": "professional", "group": "image_config" },
+    "image_push_mode": { "type": "select", "options": ["add_as_gallery", "replace_main", "add"], "default": "add_as_gallery", "group": "image_config" },
     "image_output_format": { "type": "select", "options": ["webp", "jpeg", "png"], "default": "webp", "group": "image_config" },
     "image_output_quality": { "type": "number", "default": 85, "min": 60, "max": 100, "group": "image_config" },
     "image_cleanup_days": { "type": "number", "default": 30, "group": "image_config" }
