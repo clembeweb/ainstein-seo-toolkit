@@ -14,6 +14,13 @@
 
     <?= \Core\View::partial('components/orphaned-project-notice', ['project' => $project]) ?>
 
+    <!-- Draft Restored Toast -->
+    <div x-show="draftRestored" x-transition class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-center gap-2">
+        <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="text-sm text-blue-700 dark:text-blue-300">Bozza ripristinata dalla sessione precedente</span>
+        <button @click="brief = { business: '', target: 'B2B', geography: '<?= e($project['default_location'] ?? 'IT') ?>', objective: 'SEO', seeds: [], exclusions: [] }; clearDraft(); draftRestored = false;" class="ml-auto text-xs text-blue-500 hover:text-blue-700 font-medium">Cancella</button>
+    </div>
+
     <!-- Progress Steps -->
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <div class="flex items-center justify-between">
@@ -50,9 +57,11 @@
             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 Descrizione business <span class="text-red-500">*</span>
             </label>
-            <textarea x-model="brief.business" rows="3" required
+            <textarea x-model="brief.business" rows="3" required minlength="10"
                       placeholder="Es: Agenzia SEO a Milano che offre consulenza e servizi di ottimizzazione per PMI"
-                      class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"></textarea>
+                      class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      :class="validationAttempted && !brief.business.trim() ? 'border-red-500 dark:border-red-500' : ''"></textarea>
+            <p x-show="validationAttempted && !brief.business.trim()" class="mt-1 text-xs text-red-500">Descrizione obbligatoria</p>
         </div>
 
         <!-- Target -->
@@ -128,7 +137,8 @@
                     </template>
                 </div>
             </div>
-            <p class="mt-1 text-xs text-slate-400">Min 1, max 5 seed keyword. L'API espanderà ogni seed in decine di keyword correlate.</p>
+            <p x-show="validationAttempted && brief.seeds.length === 0" class="mt-1 text-xs text-red-500">Aggiungi almeno 1 seed keyword</p>
+            <p x-show="!validationAttempted || brief.seeds.length > 0" class="mt-1 text-xs text-slate-400">Min 1, max 5 seed keyword. L'API espanderà ogni seed in decine di keyword correlate.</p>
         </div>
 
         <!-- Exclusions -->
@@ -298,6 +308,7 @@ function researchWizard() {
         currentStep: 0,
         projectId: <?= $project['id'] ?>,
         csrfToken: '<?= csrf_token() ?>',
+        draftRestored: false,
 
         // Brief
         brief: {
@@ -310,6 +321,36 @@ function researchWizard() {
         },
         seedInput: '',
         exclusionInput: '',
+
+        init() {
+            const key = 'kr_research_draft_' + this.projectId;
+            try {
+                const saved = localStorage.getItem(key);
+                if (saved) {
+                    const draft = JSON.parse(saved);
+                    if (draft.business) this.brief.business = draft.business;
+                    if (draft.target) this.brief.target = draft.target;
+                    if (draft.geography) this.brief.geography = draft.geography;
+                    if (draft.objective) this.brief.objective = draft.objective;
+                    if (Array.isArray(draft.seeds) && draft.seeds.length) this.brief.seeds = draft.seeds;
+                    if (Array.isArray(draft.exclusions)) this.brief.exclusions = draft.exclusions;
+                    this.draftRestored = true;
+                    setTimeout(() => { this.draftRestored = false; }, 4000);
+                }
+            } catch (_) {}
+
+            this.$watch('brief', () => {
+                if (this.currentStep === 0) {
+                    localStorage.setItem(key, JSON.stringify(this.brief));
+                }
+            }, { deep: true });
+        },
+
+        clearDraft() {
+            localStorage.removeItem('kr_research_draft_' + this.projectId);
+        },
+
+        validationAttempted: false,
 
         // Collection
         researchId: null,
@@ -361,7 +402,10 @@ function researchWizard() {
 
         nextStep() {
             if (this.currentStep === 0) {
+                this.validationAttempted = true;
+                if (!this.canProceed()) return;
                 this.currentStep = 1;
+                this.clearDraft();
                 this.startCollection();
             } else if (this.currentStep === 1) {
                 this.currentStep = 2;

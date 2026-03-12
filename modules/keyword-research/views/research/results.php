@@ -81,7 +81,7 @@ sort($uniqueIntents);
     <?php endif; ?>
 
     <!-- Clusters -->
-    <div x-data="{ intentFilter: '', allExpanded: false }">
+    <div x-data="clusterResults()">
         <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div class="flex items-center gap-3">
                 <h2 class="text-lg font-semibold text-slate-900 dark:text-white">
@@ -97,27 +97,167 @@ sort($uniqueIntents);
                     <option value="<?= e($intent) ?>"><?= e(ucfirst($intent)) ?></option>
                     <?php endforeach; ?>
                 </select>
+                <input type="text" x-model="searchQuery" placeholder="Cerca cluster o keyword..."
+                       class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm py-1.5 px-3 w-48 focus:ring-2 focus:ring-primary-500">
             </div>
-            <button @click="allExpanded = !allExpanded; $dispatch('toggle-all-clusters', { expand: allExpanded })"
-                    class="inline-flex items-center px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                <svg x-show="!allExpanded" class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
-                </svg>
-                <svg x-show="allExpanded" x-cloak class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9V4.5M9 9H4.5M9 9L3.5 3.5M9 15v4.5M9 15H4.5M9 15l-5.5 5.5M15 9h4.5M15 9V4.5M15 9l5.5-5.5M15 15h4.5M15 15v4.5m0-4.5l5.5 5.5"/>
-                </svg>
-                <span x-text="allExpanded ? 'Comprimi tutti' : 'Espandi tutti'"></span>
-            </button>
+            <div class="flex items-center gap-2">
+                <!-- View Toggle -->
+                <div class="inline-flex rounded-lg border border-slate-300 dark:border-slate-600 overflow-hidden">
+                    <button @click="viewMode = 'card'" :class="viewMode === 'card' ? 'bg-primary-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-600'" class="px-3 py-1.5 text-xs font-medium transition-colors">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                    </button>
+                    <button @click="viewMode = 'table'" :class="viewMode === 'table' ? 'bg-primary-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-600'" class="px-3 py-1.5 text-xs font-medium transition-colors">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    </button>
+                </div>
+                <button x-show="viewMode === 'card'" @click="allExpanded = !allExpanded; $dispatch('toggle-all-clusters', { expand: allExpanded })"
+                        class="inline-flex items-center px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                    <svg x-show="!allExpanded" class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                    </svg>
+                    <svg x-show="allExpanded" x-cloak class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9V4.5M9 9H4.5M9 9L3.5 3.5M9 15v4.5M9 15H4.5M9 15l-5.5 5.5M15 9h4.5M15 9V4.5M15 9l5.5-5.5M15 15h4.5M15 15v4.5m0-4.5l5.5 5.5"/>
+                    </svg>
+                    <span x-text="allExpanded ? 'Comprimi tutti' : 'Espandi tutti'"></span>
+                </button>
+            </div>
         </div>
-        <div class="space-y-4">
+
+        <!-- Table View -->
+        <div x-show="viewMode === 'table'" x-cloak>
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-700/50">
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer select-none" @click="toggleTableSort('name')">
+                                    <span class="inline-flex items-center gap-1">Cluster <span x-html="tableSortIcon('name')"></span></span>
+                                </th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Main Keyword</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer select-none" @click="toggleTableSort('keywords_count')">
+                                    <span class="inline-flex items-center gap-1">Keywords <span x-html="tableSortIcon('keywords_count')"></span></span>
+                                </th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer select-none" @click="toggleTableSort('total_volume')">
+                                    <span class="inline-flex items-center gap-1 justify-end">Volume Tot. <span x-html="tableSortIcon('total_volume')"></span></span>
+                                </th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer select-none" @click="toggleTableSort('main_volume')">
+                                    <span class="inline-flex items-center gap-1 justify-end">Vol. Main <span x-html="tableSortIcon('main_volume')"></span></span>
+                                </th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Intent</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                            <template x-for="(cluster, idx) in filteredTableClusters" :key="cluster.name">
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                    <td class="px-4 py-3">
+                                        <span class="text-xs font-bold text-slate-400 mr-1" x-text="'#' + cluster._index"></span>
+                                        <span class="font-medium text-slate-900 dark:text-white" x-text="cluster.name"></span>
+                                        <template x-if="cluster.note">
+                                            <p class="text-xs text-slate-500 mt-0.5 truncate max-w-xs" x-text="cluster.note"></p>
+                                        </template>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300" x-text="cluster.main_keyword"></td>
+                                    <td class="px-4 py-3 text-center text-sm font-medium text-slate-900 dark:text-white" x-text="cluster.keywords_count"></td>
+                                    <td class="px-4 py-3 text-right text-sm font-medium text-emerald-600 dark:text-emerald-400" x-text="cluster.total_volume.toLocaleString()"></td>
+                                    <td class="px-4 py-3 text-right text-sm text-slate-700 dark:text-slate-300" x-text="cluster.main_volume.toLocaleString()"></td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" :class="intentBadgeClass(cluster.intent)" x-text="cluster.intent ? cluster.intent.charAt(0).toUpperCase() + cluster.intent.slice(1) : '-'"></span>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card View -->
+        <div x-show="viewMode === 'card'" class="space-y-4">
             <?php foreach ($clusters as $i => $cluster): ?>
-                <div x-show="!intentFilter || intentFilter === '<?= strtolower(addslashes($cluster['intent'] ?? '')) ?>'"
+                <div x-show="matchesFilter('<?= strtolower(addslashes($cluster['intent'] ?? '')) ?>', <?= json_encode($cluster['name'] . ' ' . $cluster['main_keyword'] . ' ' . implode(' ', array_column($cluster['keywords_list'] ?? [], 'text')), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP) ?>)"
                      x-transition>
                     <?php $index = $i; include __DIR__ . '/../partials/cluster-card.php'; ?>
                 </div>
             <?php endforeach; ?>
         </div>
     </div>
+
+<script>
+function clusterResults() {
+    const allClusters = <?= json_encode(array_values(array_map(function($c, $i) {
+        return [
+            '_index' => $i + 1,
+            'name' => $c['name'] ?? '',
+            'main_keyword' => $c['main_keyword'] ?? '',
+            'keywords_count' => $c['keywords_count'] ?? 0,
+            'total_volume' => $c['total_volume'] ?? 0,
+            'main_volume' => $c['main_volume'] ?? 0,
+            'intent' => strtolower($c['intent'] ?? ''),
+            'note' => $c['note'] ?? '',
+        ];
+    }, $clusters, array_keys($clusters))), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP) ?>;
+
+    return {
+        viewMode: 'card',
+        intentFilter: '',
+        searchQuery: '',
+        allExpanded: false,
+        tableSortField: 'total_volume',
+        tableSortDir: 'desc',
+
+        get filteredTableClusters() {
+            let list = [...allClusters];
+            if (this.intentFilter) {
+                list = list.filter(c => c.intent === this.intentFilter);
+            }
+            if (this.searchQuery) {
+                const q = this.searchQuery.toLowerCase();
+                list = list.filter(c => c.name.toLowerCase().includes(q) || c.main_keyword.toLowerCase().includes(q));
+            }
+            const field = this.tableSortField;
+            const dir = this.tableSortDir === 'asc' ? 1 : -1;
+            list.sort((a, b) => {
+                const va = typeof a[field] === 'string' ? a[field].toLowerCase() : a[field];
+                const vb = typeof b[field] === 'string' ? b[field].toLowerCase() : b[field];
+                return va < vb ? -dir : va > vb ? dir : 0;
+            });
+            return list;
+        },
+
+        matchesFilter(intent, text) {
+            if (this.intentFilter && intent !== this.intentFilter) return false;
+            if (this.searchQuery && !text.toLowerCase().includes(this.searchQuery.toLowerCase())) return false;
+            return true;
+        },
+
+        toggleTableSort(field) {
+            if (this.tableSortField === field) {
+                this.tableSortDir = this.tableSortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                this.tableSortField = field;
+                this.tableSortDir = field === 'name' ? 'asc' : 'desc';
+            }
+        },
+
+        tableSortIcon(field) {
+            if (this.tableSortField !== field) return '<svg class="w-3 h-3 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>';
+            return this.tableSortDir === 'asc'
+                ? '<svg class="w-3 h-3 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>'
+                : '<svg class="w-3 h-3 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
+        },
+
+        intentBadgeClass(intent) {
+            const map = {
+                'informational': 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
+                'transactional': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300',
+                'commercial': 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
+                'navigational': 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
+            };
+            return map[(intent || '').toLowerCase()] || 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
+        }
+    };
+}
+</script>
 
     <!-- Excluded Keywords -->
     <?php if (!empty($excludedKeywords)): ?>

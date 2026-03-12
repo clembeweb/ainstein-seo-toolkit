@@ -24,7 +24,7 @@
                     <label for="name" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                         Nome progetto <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" name="name" id="name" required
+                    <input type="text" name="name" id="name" required minlength="2" maxlength="100"
                            placeholder="Es. Cliente ABC"
                            value="<?= htmlspecialchars(old('name')) ?>"
                            class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
