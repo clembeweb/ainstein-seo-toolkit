@@ -204,6 +204,39 @@ $categoryColors = [
         </div>
     </div>
 
+    <!-- Azioni Prioritarie (top 3 critical issues) -->
+    <?php
+    $priorityActions = array_filter($topIssues ?? [], fn($i) => $i['severity'] === 'critical');
+    $priorityActions = array_slice($priorityActions, 0, 3);
+    ?>
+    <?php if (!empty($priorityActions)): ?>
+    <div class="bg-red-50 dark:bg-red-900/10 rounded-xl border border-red-200 dark:border-red-800/50 p-5">
+        <div class="flex items-center gap-2 mb-4">
+            <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <h2 class="text-base font-semibold text-red-800 dark:text-red-300"><?= count($priorityActions) ?> azioni prioritarie</h2>
+        </div>
+        <div class="space-y-3">
+            <?php foreach ($priorityActions as $i => $action): ?>
+            <a href="<?= url('/seo-audit/project/' . $project['id'] . '/category/' . $action['category']) ?>"
+               class="flex items-start gap-3 bg-white dark:bg-slate-800 rounded-lg p-3 hover:shadow-md transition-all group">
+                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-bold flex items-center justify-center"><?= $i + 1 ?></span>
+                <div class="flex-1 min-w-0">
+                    <p class="font-medium text-slate-900 dark:text-white text-sm group-hover:text-primary-600 dark:group-hover:text-primary-400"><?= e($action['title']) ?></p>
+                    <?php if ($action['page_url']): ?>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5"><?= e($action['page_url']) ?></p>
+                    <?php endif; ?>
+                </div>
+                <span class="flex-shrink-0 text-xs text-slate-400 dark:text-slate-500">
+                    <?= \Modules\SeoAudit\Models\Issue::CATEGORIES[$action['category']] ?? $action['category'] ?>
+                </span>
+            </a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Spider Crawl Control - SEMPRE visibile (accordion gestisce aperto/chiuso) -->
     <?php
     // Prepara variabili per il partial
@@ -270,51 +303,165 @@ $categoryColors = [
         </div>
     </div>
 
-    <!-- Top Issues -->
-    <?php if (!empty($topIssues)): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Problemi Principali</h2>
-            <a href="<?= url('/seo-audit/project/' . $project['id'] . '/issues') ?>" class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 flex items-center gap-1">
-                Vedi tutti
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-            </a>
+    <!-- Tab system: Issues / Crawl Budget -->
+    <div x-data="{ activeTab: 'issues' }" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <!-- Tab Header -->
+        <div class="border-b border-slate-200 dark:border-slate-700 px-4">
+            <nav class="flex gap-6 -mb-px">
+                <button @click="activeTab = 'issues'" :class="activeTab === 'issues' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'" class="flex items-center gap-2 py-3 px-1 border-b-2 text-sm font-medium transition-colors">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    Problemi
+                    <?php if (($issueCounts['critical'] + $issueCounts['warning']) > 0): ?>
+                    <span class="bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 text-xs px-1.5 py-0.5 rounded-full"><?= $issueCounts['critical'] + $issueCounts['warning'] ?></span>
+                    <?php endif; ?>
+                </button>
+                <button @click="activeTab = 'budget'" :class="activeTab === 'budget' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'" class="flex items-center gap-2 py-3 px-1 border-b-2 text-sm font-medium transition-colors">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    Crawl Budget
+                </button>
+            </nav>
         </div>
-        <div class="divide-y divide-slate-200 dark:divide-slate-700">
-            <?php foreach ($topIssues as $issue): ?>
-            <?php
-            $severityColors = [
-                'critical' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
-                'warning' => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300',
-                'notice' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
-                'info' => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400',
-            ];
-            $severityColor = $severityColors[$issue['severity']] ?? $severityColors['info'];
-            ?>
-            <div class="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                <div class="flex items-start gap-4">
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <?= $severityColor ?>">
-                        <?= ucfirst($issue['severity']) ?>
-                    </span>
-                    <div class="flex-1 min-w-0">
-                        <p class="font-medium text-slate-900 dark:text-white"><?= e($issue['title']) ?></p>
-                        <?php if ($issue['page_url']): ?>
-                        <a href="<?= url('/seo-audit/project/' . $project['id'] . '/page/' . $issue['page_id']) ?>" class="text-sm text-slate-500 dark:text-slate-400 hover:text-primary-600 truncate block">
-                            <?= e($issue['page_url']) ?>
+
+        <!-- Tab: Issues -->
+        <div x-show="activeTab === 'issues'" x-cloak>
+            <?php if (!empty($topIssues)): ?>
+            <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+                <span class="text-sm text-slate-600 dark:text-slate-400">Top <?= count($topIssues) ?> problemi per severità</span>
+                <a href="<?= url('/seo-audit/project/' . $project['id'] . '/issues') ?>" class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 flex items-center gap-1">
+                    Vedi tutti
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+            <div class="divide-y divide-slate-200 dark:divide-slate-700">
+                <?php foreach ($topIssues as $issue): ?>
+                <?php
+                $severityColors = [
+                    'critical' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
+                    'warning' => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300',
+                    'notice' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
+                    'info' => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400',
+                ];
+                $severityColor = $severityColors[$issue['severity']] ?? $severityColors['info'];
+                ?>
+                <div class="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <div class="flex items-start gap-4">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <?= $severityColor ?>">
+                            <?= ucfirst($issue['severity']) ?>
+                        </span>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-slate-900 dark:text-white"><?= e($issue['title']) ?></p>
+                            <?php if ($issue['page_url']): ?>
+                            <a href="<?= url('/seo-audit/project/' . $project['id'] . '/page/' . $issue['page_id']) ?>" class="text-sm text-slate-500 dark:text-slate-400 hover:text-primary-600 truncate block">
+                                <?= e($issue['page_url']) ?>
+                            </a>
+                            <?php endif; ?>
+                        </div>
+                        <a href="<?= url('/seo-audit/project/' . $project['id'] . '/category/' . $issue['category']) ?>" class="text-xs text-slate-500 dark:text-slate-400 hover:text-primary-600 whitespace-nowrap">
+                            <?= \Modules\SeoAudit\Models\Issue::CATEGORIES[$issue['category']] ?? $issue['category'] ?>
                         </a>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php else: ?>
+            <div class="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                <svg class="w-10 h-10 mx-auto mb-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="font-medium">Nessun problema trovato</p>
+                <p class="text-sm mt-1">Il sito è in buone condizioni!</p>
+            </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- Tab: Crawl Budget -->
+        <div x-show="activeTab === 'budget'" x-cloak>
+            <?php
+            // Carica dati crawl budget inline
+            $budgetProjectId = $project['id'];
+            $budgetSessionId = $project['current_session_id'] ?? null;
+            $budgetScore = null;
+            $statusDist = null;
+            if ($budgetSessionId) {
+                try {
+                    $budgetCalc = new \Modules\SeoAudit\Services\BudgetScoreCalculator();
+                    $budgetScore = $budgetCalc->calculate($budgetProjectId, $budgetSessionId);
+                    $pageModel = new \Modules\SeoAudit\Models\Page();
+                    $statusDist = $pageModel->getStatusDistribution($budgetProjectId, $budgetSessionId);
+                } catch (\Exception $e) {
+                    // Silently fail
+                }
+            }
+
+            if ($budgetScore && ($budgetScore['total_pages'] ?? 0) > 0):
+                $bs = $budgetScore['score'] ?? 0;
+                if ($bs >= 80) { $bColor = 'emerald'; }
+                elseif ($bs >= 60) { $bColor = 'blue'; }
+                elseif ($bs >= 40) { $bColor = 'amber'; }
+                else { $bColor = 'red'; }
+                $totalBudgetPages = ($statusDist['2xx'] ?? 0) + ($statusDist['3xx'] ?? 0) + ($statusDist['4xx'] ?? 0) + ($statusDist['5xx'] ?? 0);
+            ?>
+            <div class="p-5 space-y-5">
+                <!-- Budget Score + Status distribution -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="flex items-center gap-4">
+                        <div class="relative w-20 h-20 flex-shrink-0">
+                            <svg class="w-20 h-20 transform -rotate-90" viewBox="0 0 80 80">
+                                <circle cx="40" cy="40" r="32" fill="none" stroke-width="8" class="stroke-slate-200 dark:stroke-slate-700"/>
+                                <circle cx="40" cy="40" r="32" fill="none" stroke-width="8" class="stroke-<?= $bColor ?>-500" stroke-linecap="round" stroke-dasharray="<?= 201 * ($bs / 100) ?> 201"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-lg font-bold text-<?= $bColor ?>-600 dark:text-<?= $bColor ?>-400"><?= $bs ?></span>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="font-medium text-slate-900 dark:text-white">Budget Score</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400"><?= $budgetScore['label'] ?? 'N/A' ?></p>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-1.5">Spreco budget</p>
+                        <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($budgetScore['waste_percentage'] ?? 0, 1) ?>%</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400"><?= $budgetScore['waste_pages'] ?? 0 ?> pagine su <?= $budgetScore['total_pages'] ?? 0 ?></p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-1.5">Distribuzione status</p>
+                        <?php if ($totalBudgetPages > 0): ?>
+                        <div class="flex h-3 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
+                            <?php
+                            $statusColors = ['2xx' => 'bg-emerald-500', '3xx' => 'bg-amber-500', '4xx' => 'bg-red-500', '5xx' => 'bg-red-800'];
+                            foreach ($statusColors as $group => $colorCls):
+                                $cnt = $statusDist[$group] ?? 0;
+                                if ($cnt === 0) continue;
+                                $pct = ($cnt / $totalBudgetPages) * 100;
+                            ?>
+                            <div class="<?= $colorCls ?>" style="width: <?= $pct ?>%" title="<?= $group ?>: <?= $cnt ?>"></div>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="flex gap-3 mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                            <?php foreach (['2xx', '3xx', '4xx', '5xx'] as $group): ?>
+                            <?php if (($statusDist[$group] ?? 0) > 0): ?>
+                            <span><?= $group ?>: <?= $statusDist[$group] ?></span>
+                            <?php endif; ?>
+                            <?php endforeach; ?>
+                        </div>
                         <?php endif; ?>
                     </div>
-                    <a href="<?= url('/seo-audit/project/' . $project['id'] . '/category/' . $issue['category']) ?>" class="text-xs text-slate-500 dark:text-slate-400 hover:text-primary-600 whitespace-nowrap">
-                        <?= \Modules\SeoAudit\Models\Issue::CATEGORIES[$issue['category']] ?? $issue['category'] ?>
+                </div>
+                <div class="text-right">
+                    <a href="<?= url('/seo-audit/project/' . $project['id'] . '/budget') ?>" class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 inline-flex items-center gap-1">
+                        Analisi completa Crawl Budget
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
                 </div>
             </div>
-            <?php endforeach; ?>
+            <?php else: ?>
+            <div class="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                <svg class="w-10 h-10 mx-auto mb-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                <p class="font-medium">Avvia un crawl per analizzare il budget</p>
+                <p class="text-sm mt-1">Il Crawl Budget verrà calcolato dopo la prima analisi del sito.</p>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
-    <?php endif; ?>
 
     <!-- Cross-module CTA: Position Tracking -->
     <?php if ($project['status'] === 'completed'): ?>

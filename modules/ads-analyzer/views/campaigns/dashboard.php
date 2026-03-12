@@ -327,6 +327,9 @@ $googleAdsAccountName = $project['google_ads_account_name'] ?? '';
                 </template>
             </p>
             <p class="text-sm text-slate-500 dark:text-slate-400"><?= $kpi['label'] ?></p>
+            <?php if ($delta): ?>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5" x-show="kpiSource !== 'api'">vs <span x-text="dateRange + 'gg fa'"></span></p>
+            <?php endif; ?>
         </div>
         <?php endforeach; ?>
     </div>

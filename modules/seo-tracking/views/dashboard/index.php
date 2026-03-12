@@ -14,6 +14,26 @@
 
     <!-- ROW 1: KPI Cards (Semrush-style) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <?php
+        // KPI delta helper functions
+        function stDeltaColor(float $percent, bool $invert = false): string {
+            if (abs($percent) < 0.5) return 'text-slate-400 dark:text-slate-500';
+            $positive = $percent > 0;
+            if ($invert) $positive = !$positive;
+            return $positive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400';
+        }
+        function stDeltaArrow(float $percent): string {
+            if (abs($percent) < 0.5) return '&rarr;';
+            return $percent > 0
+                ? '<svg class="w-3 h-3 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>'
+                : '<svg class="w-3 h-3 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
+        }
+        // Calculate deltas from kpiStats (7-day comparison)
+        $visibilityDelta = $kpiStats['visibility_delta_7d'] ?? null;
+        $trafficDelta = $kpiStats['traffic_delta_7d'] ?? null;
+        $positionDelta = $kpiStats['position_delta_7d'] ?? null;
+        ?>
+
         <!-- Visibility Score -->
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center justify-between mb-1">
@@ -25,9 +45,18 @@
                     </svg>
                 </div>
             </div>
-            <div class="text-2xl font-bold text-slate-900 dark:text-white">
-                <?= number_format($kpiStats['visibility'] ?? 0, 2) ?>%
+            <div class="flex items-center gap-2">
+                <span class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($kpiStats['visibility'] ?? 0, 2) ?>%</span>
+                <?php if ($visibilityDelta !== null && abs($visibilityDelta) >= 0.5): ?>
+                <span class="text-xs font-medium <?= stDeltaColor($visibilityDelta) ?>">
+                    <?= stDeltaArrow($visibilityDelta) ?>
+                    <?= $visibilityDelta >= 0 ? '+' : '' ?><?= number_format($visibilityDelta, 1) ?>%
+                </span>
+                <?php endif; ?>
             </div>
+            <?php if ($visibilityDelta !== null): ?>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">vs 7gg fa</p>
+            <?php endif; ?>
         </div>
 
         <!-- Estimated Traffic -->
@@ -40,9 +69,18 @@
                     </svg>
                 </div>
             </div>
-            <div class="text-2xl font-bold text-slate-900 dark:text-white">
-                <?= number_format($kpiStats['est_traffic'] ?? 0, 1) ?>
+            <div class="flex items-center gap-2">
+                <span class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($kpiStats['est_traffic'] ?? 0, 1) ?></span>
+                <?php if ($trafficDelta !== null && abs($trafficDelta) >= 0.5): ?>
+                <span class="text-xs font-medium <?= stDeltaColor($trafficDelta) ?>">
+                    <?= stDeltaArrow($trafficDelta) ?>
+                    <?= $trafficDelta >= 0 ? '+' : '' ?><?= number_format($trafficDelta, 1) ?>%
+                </span>
+                <?php endif; ?>
             </div>
+            <?php if ($trafficDelta !== null): ?>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">vs 7gg fa</p>
+            <?php endif; ?>
         </div>
 
         <!-- Average Position -->
@@ -55,8 +93,14 @@
                     </svg>
                 </div>
             </div>
-            <div class="text-2xl font-bold text-slate-900 dark:text-white">
-                <?= ($kpiStats['avg_position'] ?? null) ? number_format($kpiStats['avg_position'], 1) : '--' ?>
+            <div class="flex items-center gap-2">
+                <span class="text-2xl font-bold text-slate-900 dark:text-white"><?= ($kpiStats['avg_position'] ?? null) ? number_format($kpiStats['avg_position'], 1) : '--' ?></span>
+                <?php if ($positionDelta !== null && abs($positionDelta) >= 0.5): ?>
+                <span class="text-xs font-medium <?= stDeltaColor($positionDelta, true) ?>">
+                    <?= stDeltaArrow($positionDelta) ?>
+                    <?= $positionDelta >= 0 ? '+' : '' ?><?= number_format($positionDelta, 1) ?>
+                </span>
+                <?php endif; ?>
             </div>
             <?php if (($kpiStats['improved_7d'] ?? 0) > 0 || ($kpiStats['declined_7d'] ?? 0) > 0): ?>
             <div class="flex items-center gap-3 mt-1 text-xs">
@@ -72,8 +116,10 @@
                     <?= $kpiStats['declined_7d'] ?>
                 </span>
                 <?php endif; ?>
-                <span class="text-slate-400">7gg</span>
+                <span class="text-slate-400">vs 7gg fa</span>
             </div>
+            <?php else: ?>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">vs 7gg fa</p>
             <?php endif; ?>
         </div>
 
@@ -151,120 +197,29 @@
         </div>
     </div>
 
-    <!-- ROW 3: AI Summary Box -->
-    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-        <div class="flex items-center gap-3 mb-3">
-            <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                </svg>
-            </div>
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Riepilogo AI</h2>
-        </div>
-        <?php if ($lastReport): ?>
-        <div class="prose prose-sm dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 leading-relaxed">
-            <?= nl2br(e(mb_substr(strip_tags($lastReport['content'] ?? $lastReport['summary'] ?? ''), 0, 500))) ?>
-            <?php if (mb_strlen($lastReport['content'] ?? $lastReport['summary'] ?? '') > 500): ?>
-            <span class="text-slate-400">...</span>
-            <?php endif; ?>
-        </div>
-        <div class="mt-3 text-xs text-slate-400">
-            Generato il <?= date('d/m/Y H:i', strtotime($lastReport['created_at'])) ?>
-        </div>
-        <?php else: ?>
-        <p class="text-sm text-slate-500 dark:text-slate-400">
-            Nessun report AI disponibile. I report vengono generati automaticamente ogni settimana.
-        </p>
-        <?php endif; ?>
-    </div>
-
-    <!-- ROW 4: 3 Mini-Tables -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Top Keywords -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Top Keywords</h3>
-            </div>
-            <?php if (empty($topKeywords)): ?>
-            <div class="p-6 text-center text-sm text-slate-500 dark:text-slate-400">Nessun dato</div>
-            <?php else: ?>
-            <div class="divide-y divide-slate-200 dark:divide-slate-700">
-                <?php foreach ($topKeywords as $kw): ?>
-                <div class="px-4 py-2.5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                    <span class="text-sm text-slate-700 dark:text-slate-300 truncate mr-3"><?= e($kw['keyword']) ?></span>
-                    <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium <?php
-                        $pos = (int)($kw['last_position'] ?? 0);
-                        echo $pos <= 3 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' :
-                            ($pos <= 10 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' :
-                            'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300');
-                    ?>"><?= $pos ?></span>
-                </div>
-                <?php endforeach; ?>
-            </div>
-            <?php endif; ?>
+    <!-- ROW 3: Movimenti (tab consolidato: Gainers / Losers / Top Keywords) -->
+    <div x-data="{ movTab: 'gainers' }" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="border-b border-slate-200 dark:border-slate-700 px-4">
+            <nav class="flex gap-6 -mb-px">
+                <button @click="movTab = 'gainers'" :class="movTab === 'gainers' ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400'" class="flex items-center gap-2 py-3 px-1 border-b-2 text-sm font-medium transition-colors">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+                    Miglioramenti
+                    <?php if (!empty($gainers)): ?><span class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 text-xs px-1.5 py-0.5 rounded-full"><?= count($gainers) ?></span><?php endif; ?>
+                </button>
+                <button @click="movTab = 'losers'" :class="movTab === 'losers' ? 'border-red-500 text-red-600 dark:text-red-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400'" class="flex items-center gap-2 py-3 px-1 border-b-2 text-sm font-medium transition-colors">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    Peggioramenti
+                    <?php if (!empty($losers)): ?><span class="bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 text-xs px-1.5 py-0.5 rounded-full"><?= count($losers) ?></span><?php endif; ?>
+                </button>
+                <button @click="movTab = 'top'" :class="movTab === 'top' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400'" class="flex items-center gap-2 py-3 px-1 border-b-2 text-sm font-medium transition-colors">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                    Top Keywords
+                </button>
+            </nav>
         </div>
 
-        <!-- Positive Impact -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
-                <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
-                </svg>
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Impatto Positivo</h3>
-            </div>
-            <?php if (empty($positiveImpact)): ?>
-            <div class="p-6 text-center text-sm text-slate-500 dark:text-slate-400">Nessun dato</div>
-            <?php else: ?>
-            <div class="divide-y divide-slate-200 dark:divide-slate-700">
-                <?php foreach ($positiveImpact as $kw): ?>
-                <div class="px-4 py-2.5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                    <span class="text-sm text-slate-700 dark:text-slate-300 truncate mr-3"><?= e($kw['keyword']) ?></span>
-                    <span class="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center">
-                        <svg class="w-3 h-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
-                        +<?= abs((int)($kw['position_change'] ?? 0)) ?>
-                    </span>
-                </div>
-                <?php endforeach; ?>
-            </div>
-            <?php endif; ?>
-        </div>
-
-        <!-- Negative Impact -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
-                <svg class="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Impatto Negativo</h3>
-            </div>
-            <?php if (empty($negativeImpact)): ?>
-            <div class="p-6 text-center text-sm text-slate-500 dark:text-slate-400">Nessun dato</div>
-            <?php else: ?>
-            <div class="divide-y divide-slate-200 dark:divide-slate-700">
-                <?php foreach ($negativeImpact as $kw): ?>
-                <div class="px-4 py-2.5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                    <span class="text-sm text-slate-700 dark:text-slate-300 truncate mr-3"><?= e($kw['keyword']) ?></span>
-                    <span class="text-xs text-red-600 dark:text-red-400 font-medium flex items-center">
-                        <svg class="w-3 h-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        <?= (int)($kw['position_change'] ?? 0) ?>
-                    </span>
-                </div>
-                <?php endforeach; ?>
-            </div>
-            <?php endif; ?>
-        </div>
-    </div>
-
-    <!-- ROW 5: Gainers / Losers -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Top 5 Gainers -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
-                <svg class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
-                </svg>
-                <h2 class="font-semibold text-slate-900 dark:text-white">Top 5 Miglioramenti</h2>
-            </div>
+        <!-- Tab: Gainers -->
+        <div x-show="movTab === 'gainers'" x-cloak>
             <?php if (empty($gainers)): ?>
             <div class="p-8 text-center text-sm text-slate-500 dark:text-slate-400">Nessun miglioramento rilevato</div>
             <?php else: ?>
@@ -298,14 +253,8 @@
             <?php endif; ?>
         </div>
 
-        <!-- Top 5 Losers -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
-                <svg class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
-                </svg>
-                <h2 class="font-semibold text-slate-900 dark:text-white">Top 5 Peggioramenti</h2>
-            </div>
+        <!-- Tab: Losers -->
+        <div x-show="movTab === 'losers'" x-cloak>
             <?php if (empty($losers)): ?>
             <div class="p-8 text-center text-sm text-slate-500 dark:text-slate-400">Nessun peggioramento rilevato</div>
             <?php else: ?>
@@ -336,6 +285,70 @@
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            <?php endif; ?>
+        </div>
+
+        <!-- Tab: Top Keywords -->
+        <div x-show="movTab === 'top'" x-cloak>
+            <?php if (empty($topKeywords)): ?>
+            <div class="p-8 text-center text-sm text-slate-500 dark:text-slate-400">Nessun dato</div>
+            <?php else: ?>
+            <table class="w-full">
+                <thead class="dark:bg-slate-700/50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Keyword</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Posizione</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                    <?php foreach ($topKeywords as $kw): ?>
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white"><?= e($kw['keyword']) ?></td>
+                        <td class="px-4 py-3 text-center">
+                            <?php
+                            $pos = (int)($kw['last_position'] ?? 0);
+                            $posClass = $pos <= 3 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' :
+                                ($pos <= 10 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' :
+                                'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300');
+                            ?>
+                            <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium <?= $posClass ?>"><?= $pos ?></span>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- ROW 4: AI Summary (collapsibile) -->
+    <div x-data="{ aiOpen: false }" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <button @click="aiOpen = !aiOpen" class="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                </div>
+                <span class="text-sm font-semibold text-slate-900 dark:text-white">Analisi AI</span>
+                <?php if ($lastReport): ?>
+                <span class="text-xs text-slate-400"><?= date('d/m/Y', strtotime($lastReport['created_at'])) ?></span>
+                <?php endif; ?>
+            </div>
+            <svg :class="aiOpen ? 'rotate-180' : ''" class="w-5 h-5 text-slate-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div x-show="aiOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" x-cloak class="px-5 pb-5 border-t border-slate-200 dark:border-slate-700">
+            <?php if ($lastReport): ?>
+            <div class="prose prose-sm dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 leading-relaxed mt-4">
+                <?= nl2br(e(mb_substr(strip_tags($lastReport['content'] ?? $lastReport['summary'] ?? ''), 0, 500))) ?>
+                <?php if (mb_strlen($lastReport['content'] ?? $lastReport['summary'] ?? '') > 500): ?>
+                <span class="text-slate-400">...</span>
+                <?php endif; ?>
+            </div>
+            <?php else: ?>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-4">
+                Nessun report AI disponibile. I report vengono generati automaticamente ogni settimana.
+            </p>
             <?php endif; ?>
         </div>
     </div>

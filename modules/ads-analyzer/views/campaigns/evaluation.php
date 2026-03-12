@@ -1097,6 +1097,10 @@ HTML;
                 <div class="bg-slate-50 dark:bg-slate-700/30 rounded-xl p-4">
                     <div class="flex items-center gap-2 mb-2">
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $lsPriorityClass ?>"><?= $lsPriorityLabel ?></span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400">
+                            <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            Azione manuale
+                        </span>
                         <?php if (!empty($ls['url'])): ?>
                         <span class="text-xs font-mono text-slate-500 dark:text-slate-400 truncate max-w-xs"><?= e($ls['url']) ?></span>
                         <?php endif; ?>
@@ -1358,6 +1362,14 @@ function evaluationDashboard() {
             }
             if (gen.result) {
                 html += '<div class="mt-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4"><pre class="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-sans leading-relaxed max-h-96 overflow-y-auto">' + this.escapeHtml(gen.result) + '</pre></div>';
+                <?php if ($canEdit && !empty($project['google_ads_customer_id'])): ?>
+                if (gen.data && ['copy','extensions','keywords'].includes(gen.type) && !gen.applied) {
+                    html += '<button onclick="document.querySelector(\'[x-data]\')._x_dataStack[0].openApplyModal(\'' + key + '\')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors mt-2"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg> Applica su Google Ads</button>';
+                }
+                if (gen.applied) {
+                    html += '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-emerald-700 bg-emerald-100 dark:text-emerald-300 dark:bg-emerald-900/40 mt-2"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Applicato</span>';
+                }
+                <?php endif; ?>
             }
             if (gen.error) {
                 html += '<div class="mt-2 text-xs text-red-600 dark:text-red-400">' + this.escapeHtml(gen.error) + '</div>';
