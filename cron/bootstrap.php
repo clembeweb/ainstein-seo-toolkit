@@ -14,6 +14,9 @@ if (php_sapi_name() !== 'cli') {
 // Timezone Italia
 date_default_timezone_set('Europe/Rome');
 
+// Umask: file group-writable (0664) per compatibilita cron (ainstein) + web (www-data)
+umask(0002);
+
 // Definizioni
 define('BASE_PATH', dirname(__DIR__));
 define('ROOT_PATH', BASE_PATH);

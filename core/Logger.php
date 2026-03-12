@@ -37,7 +37,9 @@ class Logger
         $handler = new RotatingFileHandler(
             self::getLogDir() . "/{$name}.log",
             14, // 14 days retention
-            MonologLogger::DEBUG
+            MonologLogger::DEBUG,
+            true,  // bubble
+            0664   // filePermission — group-writable per cron (ainstein) + web (www-data)
         );
 
         $formatter = new LineFormatter(
