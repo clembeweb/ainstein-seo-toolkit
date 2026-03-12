@@ -521,11 +521,17 @@ class CampaignController
                 }
             }
 
-            // Carica dati
-            $campaigns = Campaign::getByRun($sync['id']);
+            // Carica dati — solo campagne e ad group attivi
+            $campaigns = array_values(array_filter(
+                Campaign::getByRun($sync['id']),
+                fn($c) => ($c['campaign_status'] ?? '') === 'ENABLED'
+            ));
             $ads = Ad::getByRun($sync['id']);
             $extensions = Extension::getByRun($sync['id']);
-            $adGroupsData = CampaignAdGroup::getByRun($sync['id']);
+            $adGroupsData = array_values(array_filter(
+                CampaignAdGroup::getByRun($sync['id']),
+                fn($ag) => ($ag['ad_group_status'] ?? '') === 'ENABLED'
+            ));
             $keywordsData = AdGroupKeyword::getByRun($sync['id']);
 
             if (empty($campaigns)) {
@@ -1148,36 +1154,70 @@ class CampaignController
                 $details[] = count($data['headlines'] ?? []) . ' headline, ' . count($data['descriptions'] ?? []) . ' description';
 
             } elseif (str_contains($type, 'keyword')) {
-                // === KEYWORD NEGATIVE ===
-                if (empty($targetCampaign)) {
-                    ob_end_clean();
-                    echo json_encode(['error' => 'Nessuna campagna target trovata']);
-                    exit;
-                }
+                if (($data['action'] ?? '') === 'remove_duplicates') {
+                    // === RIMOZIONE KEYWORD DUPLICATE ===
+                    // Trova le keyword da rimuovere tramite GAQL query
+                    foreach ($data['duplicates'] ?? [] as $dup) {
+                        $keyword = $dup['keyword'] ?? '';
+                        $removeFrom = $dup['remove_from'] ?? [];
+                        if (empty($keyword) || empty($removeFrom)) continue;
 
-                $ops = [];
-                foreach ($data['keywords'] ?? [] as $kw) {
-                    $text = is_string($kw) ? $kw : ($kw['keyword'] ?? $kw['text'] ?? '');
-                    if (empty($text)) continue;
-                    $matchType = strtoupper($kw['match_type'] ?? 'PHRASE');
-                    if (!in_array($matchType, ['EXACT', 'PHRASE', 'BROAD'])) $matchType = 'PHRASE';
+                        // Query per trovare i resource name delle keyword duplicate
+                        $escapedKw = addslashes($keyword);
+                        $gaql = "SELECT ad_group_criterion.resource_name, ad_group_criterion.keyword.text, ad_group.name " .
+                                "FROM ad_group_criterion " .
+                                "WHERE ad_group_criterion.keyword.text = '{$escapedKw}' " .
+                                "AND ad_group_criterion.type = 'KEYWORD' " .
+                                "AND ad_group_criterion.status != 'REMOVED'";
 
-                    $ops[] = [
-                        'create' => [
-                            'campaign' => $targetCampaign,
-                            'negative' => true,
-                            'keyword' => [
-                                'text' => $text,
-                                'matchType' => $matchType
+                        $results = $gads->search($gaql);
+                        Database::reconnect();
+
+                        foreach ($results as $row) {
+                            $agName = $row['adGroup']['name'] ?? '';
+                            $resourceName = $row['adGroupCriterion']['resourceName'] ?? '';
+                            if (in_array($agName, $removeFrom) && !empty($resourceName)) {
+                                $gads->mutateAdGroupCriteria([
+                                    ['remove' => $resourceName]
+                                ]);
+                                Database::reconnect();
+                                $applied++;
+                                $details[] = "'{$keyword}' rimossa da '{$agName}'";
+                            }
+                        }
+                    }
+                } else {
+                    // === KEYWORD NEGATIVE ===
+                    if (empty($targetCampaign)) {
+                        ob_end_clean();
+                        echo json_encode(['error' => 'Nessuna campagna target trovata']);
+                        exit;
+                    }
+
+                    $ops = [];
+                    foreach ($data['keywords'] ?? [] as $kw) {
+                        $text = is_string($kw) ? $kw : ($kw['keyword'] ?? $kw['text'] ?? '');
+                        if (empty($text)) continue;
+                        $matchType = strtoupper($kw['match_type'] ?? 'PHRASE');
+                        if (!in_array($matchType, ['EXACT', 'PHRASE', 'BROAD'])) $matchType = 'PHRASE';
+
+                        $ops[] = [
+                            'create' => [
+                                'campaign' => $targetCampaign,
+                                'negative' => true,
+                                'keyword' => [
+                                    'text' => $text,
+                                    'matchType' => $matchType
+                                ]
                             ]
-                        ]
-                    ];
-                    $applied++;
-                }
+                        ];
+                        $applied++;
+                    }
 
-                if (!empty($ops)) {
-                    $gads->mutateCampaignCriteria($ops);
-                    Database::reconnect();
+                    if (!empty($ops)) {
+                        $gads->mutateCampaignCriteria($ops);
+                        Database::reconnect();
+                    }
                 }
             } else {
                 ob_end_clean();
@@ -1252,10 +1292,22 @@ class CampaignController
                 }
             }
         } elseif (str_contains($type, 'keywords')) {
-            $lines[] = "KEYWORD NEGATIVE:";
-            foreach (($data['keywords'] ?? []) as $i => $kw) {
-                $match = $kw['match_type'] ?? 'phrase';
-                $lines[] = ($i + 1) . ". " . ($kw['keyword'] ?? '') . " [{$match}]" . (!empty($kw['reason']) ? " - " . $kw['reason'] : '');
+            if (($data['action'] ?? '') === 'remove_duplicates') {
+                $lines[] = "KEYWORD DUPLICATE DA RIMUOVERE:";
+                $lines[] = "";
+                foreach (($data['duplicates'] ?? []) as $i => $dup) {
+                    $lines[] = ($i + 1) . '. "' . ($dup['keyword'] ?? '') . '"';
+                    $lines[] = "   Mantieni in: " . ($dup['keep_in'] ?? '?');
+                    $lines[] = "   Rimuovi da: " . implode(', ', $dup['remove_from'] ?? []);
+                    $lines[] = "   Motivo: " . ($dup['reason'] ?? '');
+                    $lines[] = "";
+                }
+            } else {
+                $lines[] = "KEYWORD NEGATIVE:";
+                foreach (($data['keywords'] ?? []) as $i => $kw) {
+                    $match = $kw['match_type'] ?? 'phrase';
+                    $lines[] = ($i + 1) . ". " . ($kw['keyword'] ?? '') . " [{$match}]" . (!empty($kw['reason']) ? " - " . $kw['reason'] : '');
+                }
             }
         }
 

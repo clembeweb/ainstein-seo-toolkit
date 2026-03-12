@@ -888,6 +888,20 @@ HTML;
                                                             <template x-if="agIss.recommendation">
                                                                 <p class="mt-1.5 text-xs text-amber-700 dark:text-amber-400 italic" x-text="agIss.recommendation"></p>
                                                             </template>
+                                                            <?php if ($canEdit): ?>
+                                                            <template x-if="agIss.genType">
+                                                                <div>
+                                                                    <button @click="generateFix(agIss.genType, {issue: agIss.description, recommendation: agIss.recommendation || '', campaign_name: campaignsData[selectedCampaign].name, ad_group_name: ag.name}, agIss.genKey)"
+                                                                        :disabled="isLoading(agIss.genKey)"
+                                                                        class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg text-primary-700 bg-primary-50 hover:bg-primary-100 dark:text-primary-300 dark:bg-primary-900/30 dark:hover:bg-primary-900/50 disabled:opacity-50 transition-colors mt-2">
+                                                                        <svg x-show="!isLoading(agIss.genKey)" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                                                                        <svg x-show="isLoading(agIss.genKey)" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                                        <span x-text="isLoading(agIss.genKey) ? 'Generazione...' : 'Genera con AI'"></span>
+                                                                    </button>
+                                                                    <div x-html="getGeneratorHtml(agIss.genKey)"></div>
+                                                                </div>
+                                                            </template>
+                                                            <?php endif; ?>
                                                         </div>
                                                     </template>
                                                 </div>
@@ -1283,7 +1297,7 @@ function evaluationDashboard() {
                 ];
             }, array_keys($campaign['issues'] ?? []), $campaign['issues'] ?? []);
 
-            $adGroups = array_map(function($ag) use ($severityClasses, $severityLabels, $areaLabels) {
+            $adGroups = array_map(function($agIndex, $ag) use ($cIndex, $severityClasses, $severityLabels, $areaLabels, $generatableAreas) {
                 $agScore = (float)($ag['score'] ?? 0);
                 $metrics = [];
                 if (isset($ag['keyword_coherence'])) $metrics[] = ['label' => 'Coerenza KW', 'value' => number_format((float)$ag['keyword_coherence'], 1), 'colorClass' => $agScore < 5 ? 'text-red-600 dark:text-red-400' : ($agScore <= 7 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400')];
@@ -1300,17 +1314,20 @@ function evaluationDashboard() {
                     $metrics[] = ['label' => 'QS Medio', 'value' => number_format($qsScore, 1), 'colorClass' => $qsScore < 5 ? 'text-red-600 dark:text-red-400' : ($qsScore <= 7 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400')];
                 }
 
-                $agIssues = array_map(function($agIss) use ($severityClasses, $severityLabels, $areaLabels) {
+                $agIssues = array_map(function($agIssIdx, $agIss) use ($cIndex, $agIndex, $severityClasses, $severityLabels, $areaLabels, $generatableAreas) {
                     $s = $agIss['severity'] ?? 'low';
                     $a = $agIss['area'] ?? '';
+                    $genType = in_array($a, $generatableAreas) ? $a : null;
                     return [
                         'severityClass' => $severityClasses[$s] ?? $severityClasses['low'],
                         'severityLabel' => $severityLabels[$s] ?? ucfirst($s),
                         'areaLabel' => !empty($a) ? ($areaLabels[$a] ?? ucfirst($a)) : null,
                         'description' => $agIss['description'] ?? '',
                         'recommendation' => $agIss['recommendation'] ?? null,
+                        'genType' => $genType,
+                        'genKey' => "ag_{$cIndex}_{$agIndex}_{$agIssIdx}",
                     ];
-                }, $ag['issues'] ?? []);
+                }, array_keys($ag['issues'] ?? []), $ag['issues'] ?? []);
 
                 return [
                     'name' => $ag['ad_group_name'] ?? 'Gruppo',
@@ -1322,7 +1339,7 @@ function evaluationDashboard() {
                     'issues' => $agIssues,
                     'issueCount' => count($ag['issues'] ?? []),
                 ];
-            }, $campaign['ad_groups'] ?? []);
+            }, array_keys($campaign['ad_groups'] ?? []), $campaign['ad_groups'] ?? []);
 
             return [
                 'name' => $campaign['campaign_name'] ?? 'Campagna',
@@ -1443,10 +1460,13 @@ function evaluationDashboard() {
         openApplyModal(key) {
             const gen = this.generators[key];
             if (!gen || !gen.data) return;
+            const isDuplicateRemoval = gen.data?.action === 'remove_duplicates';
             const typeDescriptions = {
                 'copy': 'Verra creato un nuovo annuncio RSA in stato PAUSED nel gruppo di annunci della campagna. Potrai attivarlo manualmente da Google Ads.',
                 'extensions': 'Verranno aggiunte le estensioni generate (sitelink, callout, snippet strutturati) alla campagna. Le estensioni esistenti non verranno modificate.',
-                'keywords': 'Verranno aggiunte le keyword negative alla campagna a livello di campagna. Le keyword negative esistenti non verranno modificate.',
+                'keywords': isDuplicateRemoval
+                    ? 'Verranno RIMOSSE le keyword duplicate dai gruppi di annunci indicati. Le keyword verranno mantenute nel gruppo piu pertinente. Questa operazione non e reversibile.'
+                    : 'Verranno aggiunte le keyword negative alla campagna a livello di campagna. Le keyword negative esistenti non verranno modificate.',
             };
             this.applyModal = {
                 open: true,

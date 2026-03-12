@@ -388,7 +388,13 @@ REGOLE:
 - severity: "high" (critico), "medium" (importante), "low" (suggerimento)
 - area per campagne: "copy", "landing", "performance", "budget", "extensions"
 - area per ad groups: "keywords", "copy", "landing", "performance", "match_type"
-- Sii specifico e azionabile nelle raccomandazioni e nei suggerimenti
+- FONDAMENTALE: Sii SPECIFICO e CONCRETO nelle descrizioni dei problemi. Cita sempre:
+  * Per problemi "copy": le headline o description esatte dell'annuncio problematico (es. "L'headline 'Buy Now' non riflette la keyword 'wedding planner cost'")
+  * Per problemi "keywords": le keyword specifiche coinvolte con il loro Quality Score
+  * Per problemi "performance": i valori metrici esatti vs il benchmark (es. "CTR 1.2% vs benchmark 3-5%")
+  * Per problemi "landing": l'URL specifico e cosa manca
+  * Per problemi strutturali: i nomi esatti dei gruppi annunci coinvolti e perche sono problematici
+- Le raccomandazioni devono essere azionabili: dire esattamente COSA fare, non solo "migliora" o "ottimizza"
 - Usa i BENCHMARK PER TIPO forniti sopra per valutare le metriche
 - Se non ci sono dati ad group, ometti il campo "ad_groups" dalle campagne
 - Se non ci sono dati landing, ometti "landing_evaluation" e "landing_suggestions"

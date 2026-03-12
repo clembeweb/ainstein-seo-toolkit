@@ -104,8 +104,11 @@ try {
                 continue;
             }
 
-            // Carica dati del run
-            $campaigns = Campaign::getByRun($syncId);
+            // Carica dati del run — solo campagne attive
+            $campaigns = array_values(array_filter(
+                Campaign::getByRun($syncId),
+                fn($c) => ($c['campaign_status'] ?? '') === 'ENABLED'
+            ));
             if (empty($campaigns)) {
                 AutoEvalQueue::markSkipped($queueId, 'no_campaigns');
                 logMessage("  SKIP: nessuna campagna nel sync");
@@ -175,7 +178,10 @@ try {
             // Carica tutti i dati
             $ads = Ad::getByRun($syncId);
             $extensions = Extension::getByRun($syncId);
-            $adGroupsData = CampaignAdGroup::getByRun($syncId);
+            $adGroupsData = array_values(array_filter(
+                CampaignAdGroup::getByRun($syncId),
+                fn($ag) => ($ag['ad_group_status'] ?? '') === 'ENABLED'
+            ));
             $keywordsData = AdGroupKeyword::getByRun($syncId);
 
             // Crea record valutazione

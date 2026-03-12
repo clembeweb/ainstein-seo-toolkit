@@ -123,12 +123,16 @@ PROMPT;
         $issue = $context['issue'] ?? $context['suggestion'] ?? '';
         $recommendation = $context['recommendation'] ?? $context['expected_impact'] ?? '';
         $campaignName = $context['campaign_name'] ?? '';
+        $adGroupName = $context['ad_group_name'] ?? '';
 
         $businessCtx = mb_substr($data['business_context'] ?? '', 0, 500);
 
-        // Ads esistenti della campagna specifica (top 3)
+        // Ads esistenti dell'ad group specifico (o campagna se non specificato)
         $existingAds = [];
         foreach (($data['ads'] ?? []) as $ad) {
+            if (!empty($adGroupName) && ($ad['ad_group_name'] ?? '') !== $adGroupName) {
+                continue;
+            }
             if (!empty($campaignName) && ($ad['campaign_name'] ?? '') !== $campaignName) {
                 continue;
             }
@@ -143,11 +147,24 @@ PROMPT;
                 if ($d) $descs[] = $d;
             }
             if (!empty($headlines)) {
-                $existingAds[] = "Headlines: " . implode(' | ', $headlines) . "\nDescriptions: " . implode(' | ', $descs);
+                $existingAds[] = "Ad Group: " . ($ad['ad_group_name'] ?? '?') . "\nHeadlines: " . implode(' | ', $headlines) . "\nDescriptions: " . implode(' | ', $descs);
             }
-            if (count($existingAds) >= 3) break;
+            if (count($existingAds) >= 5) break;
         }
         $adsText = !empty($existingAds) ? implode("\n\n", $existingAds) : 'Nessun annuncio esistente';
+
+        // Keyword dell'ad group (per coerenza copy-keyword)
+        $adGroupKeywords = [];
+        foreach (($data['keywords'] ?? []) as $kw) {
+            if (!empty($adGroupName) && ($kw['ad_group_name'] ?? '') !== $adGroupName) continue;
+            if (!empty($campaignName) && ($kw['campaign_name'] ?? '') !== $campaignName) continue;
+            $adGroupKeywords[] = ($kw['keyword_text'] ?? '') . ' [' . ($kw['match_type'] ?? '') . '] QS:' . ($kw['quality_score'] ?? '?');
+            if (count($adGroupKeywords) >= 15) break;
+        }
+        $kwText = !empty($adGroupKeywords) ? implode("\n", $adGroupKeywords) : '';
+        $kwBlock = !empty($kwText) ? "\nKEYWORD DELL'AD GROUP:\n{$kwText}\n" : '';
+
+        $adGroupBlock = !empty($adGroupName) ? "\nAD GROUP: {$adGroupName}" : '';
 
         return <<<PROMPT
 Sei un copywriter esperto Google Ads specializzato in annunci RSA ad alta conversione.
@@ -155,8 +172,8 @@ Sei un copywriter esperto Google Ads specializzato in annunci RSA ad alta conver
 CONTESTO BUSINESS:
 {$businessCtx}
 
-CAMPAGNA: {$campaignName}
-
+CAMPAGNA: {$campaignName}{$adGroupBlock}
+{$kwBlock}
 ANNUNCI ESISTENTI:
 {$adsText}
 
@@ -168,7 +185,9 @@ RACCOMANDAZIONE:
 
 ISTRUZIONI:
 Genera nuovi copy per risolvere il problema identificato.
+I copy devono essere coerenti con le keyword dell'ad group.
 Rispetta TASSATIVAMENTE i limiti caratteri Google Ads.
+IMPORTANTE: I copy degli annunci devono essere nella STESSA LINGUA degli annunci esistenti e delle keyword.
 
 GENERA in formato JSON esatto (NESSUN testo fuori dal JSON):
 {
@@ -181,6 +200,7 @@ Regole:
 - Esattamente 5 headlines, ciascuna max 30 caratteri
 - Esattamente 3 descriptions, ciascuna max 90 caratteri
 - Paths opzionali, max 15 caratteri ciascuno
+- Includi le keyword principali dell'ad group nelle headline
 - SOLO JSON valido, nessun commento o testo aggiuntivo
 PROMPT;
     }
@@ -193,11 +213,18 @@ PROMPT;
         $issue = $context['issue'] ?? $context['suggestion'] ?? '';
         $recommendation = $context['recommendation'] ?? $context['expected_impact'] ?? '';
         $campaignName = $context['campaign_name'] ?? '';
+        $adGroupName = $context['ad_group_name'] ?? '';
 
         $businessCtx = mb_substr($data['business_context'] ?? '', 0, 500);
 
-        // Keyword esistenti della campagna (top 10)
-        $existingKw = [];
+        // Determina se il problema riguarda keyword duplicate
+        $isDuplicate = str_contains(mb_strtolower($issue), 'duplicat') ||
+                       str_contains(mb_strtolower($issue), 'competizione interna') ||
+                       str_contains(mb_strtolower($issue), 'cannibaliz');
+
+        // Keyword esistenti — raggruppa per ad group per trovare duplicati
+        $allKeywords = [];
+        $keywordMap = []; // text => [ad_groups]
         foreach (($data['keywords'] ?? []) as $kw) {
             if (!empty($campaignName) && ($kw['campaign_name'] ?? '') !== $campaignName) {
                 continue;
@@ -205,12 +232,79 @@ PROMPT;
             $text = $kw['keyword_text'] ?? '';
             $match = $kw['match_type'] ?? '';
             $qs = $kw['quality_score'] ?? '';
+            $ag = $kw['ad_group_name'] ?? '?';
+            $agId = $kw['ad_group_id_google'] ?? '';
+
             if ($text) {
-                $existingKw[] = "{$text} [{$match}]" . ($qs ? " QS:{$qs}" : '');
+                $allKeywords[] = "{$text} [{$match}]" . ($qs ? " QS:{$qs}" : '') . " — {$ag}";
+                $key = mb_strtolower($text);
+                if (!isset($keywordMap[$key])) $keywordMap[$key] = [];
+                $keywordMap[$key][] = ['ad_group' => $ag, 'ad_group_id' => $agId, 'match_type' => $match, 'quality_score' => $qs, 'keyword_text' => $text];
             }
-            if (count($existingKw) >= 10) break;
         }
-        $kwText = !empty($existingKw) ? implode("\n", $existingKw) : 'Nessuna keyword disponibile';
+        $kwText = !empty($allKeywords) ? implode("\n", array_slice($allKeywords, 0, 30)) : 'Nessuna keyword disponibile';
+        $adGroupBlock = !empty($adGroupName) ? "\nAD GROUP IN ANALISI: {$adGroupName}" : '';
+
+        if ($isDuplicate) {
+            // Elenca i duplicati trovati
+            $duplicates = [];
+            foreach ($keywordMap as $kwKey => $occurrences) {
+                if (count($occurrences) > 1) {
+                    $duplicates[$kwKey] = $occurrences;
+                }
+            }
+            $dupText = '';
+            foreach ($duplicates as $kwKey => $occs) {
+                $dupText .= "\n- \"{$occs[0]['keyword_text']}\" appare in " . count($occs) . " ad group: " .
+                    implode(', ', array_map(fn($o) => $o['ad_group'] . ' [' . $o['match_type'] . '] QS:' . ($o['quality_score'] ?: '?'), $occs));
+            }
+            if (empty($dupText)) $dupText = "\nNessun duplicato trovato nei dati.";
+
+            return <<<PROMPT
+Sei un esperto Google Ads di keyword strategy e struttura account.
+
+CONTESTO BUSINESS:
+{$businessCtx}
+
+CAMPAGNA: {$campaignName}{$adGroupBlock}
+
+KEYWORD DUPLICATE TROVATE:
+{$dupText}
+
+TUTTE LE KEYWORD:
+{$kwText}
+
+PROBLEMA IDENTIFICATO:
+{$issue}
+
+RACCOMANDAZIONE:
+{$recommendation}
+
+ISTRUZIONI:
+Analizza le keyword duplicate e per ciascuna indica dove RIMUOVERLE e dove MANTENERLE.
+Per ogni keyword duplicata, decidi in quale ad group e piu pertinente e dove va rimossa.
+
+GENERA in formato JSON esatto (NESSUN testo fuori dal JSON):
+{
+  "action": "remove_duplicates",
+  "duplicates": [
+    {
+      "keyword": "keyword text",
+      "keep_in": "Nome Ad Group dove mantenere",
+      "remove_from": ["Nome Ad Group 1 da rimuovere", "Nome Ad Group 2"],
+      "reason": "Motivazione breve"
+    }
+  ]
+}
+
+Regole:
+- Elenca SOLO le keyword effettivamente duplicate (presenti in 2+ ad group)
+- Per ogni duplicata, indica ESATTAMENTE dove mantenerla (l'ad group piu pertinente)
+- remove_from: lista ad group da cui rimuovere
+- Motivazione chiara e specifica
+- SOLO JSON valido, nessun commento o testo aggiuntivo
+PROMPT;
+        }
 
         return <<<PROMPT
 Sei un esperto Google Ads di keyword strategy e gestione keyword negative.
@@ -218,7 +312,7 @@ Sei un esperto Google Ads di keyword strategy e gestione keyword negative.
 CONTESTO BUSINESS:
 {$businessCtx}
 
-CAMPAGNA: {$campaignName}
+CAMPAGNA: {$campaignName}{$adGroupBlock}
 
 KEYWORD ESISTENTI:
 {$kwText}
