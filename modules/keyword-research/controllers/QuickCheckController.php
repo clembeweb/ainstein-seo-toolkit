@@ -7,6 +7,7 @@ use Core\Auth;
 use Core\Middleware;
 use Core\ModuleLoader;
 use Modules\KeywordResearch\Services\KeywordInsightService;
+use Services\KeywordPlannerService;
 
 class QuickCheckController
 {
@@ -68,21 +69,54 @@ class QuickCheckController
         $lang = $langMap[$location] ?? 'it';
 
         $service = new KeywordInsightService();
+        $kpService = new KeywordPlannerService();
+        $result = ['success' => false, 'data' => [], 'error' => ''];
 
-        if (!$service->isConfigured()) {
-            $_SESSION['_flash']['error'] = 'API RapidAPI non configurata. Contatta l\'amministratore.';
-            return View::render('keyword-research::quick-check/index', [
-                'title' => 'Quick Check - Keyword Research',
-                'user' => $user,
-                'modules' => ModuleLoader::getUserModules($user['id']),
-                'keyword' => $keyword,
-                'location' => $location,
-                'results' => null,
-                'stProjects' => $this->getStProjects($user['id']),
-            ]);
+        // Try Keyword Planner first
+        if ($kpService->isConfigured()) {
+            $kpResults = $kpService->generateKeywordIdeasForCountry(
+                seedKeywords: [$keyword],
+                url: null,
+                countryCode: $location,
+                limit: 50
+            );
+
+            \Core\Database::reconnect();
+
+            if ($kpResults && $kpResults['success'] && !empty($kpResults['data'])) {
+                $result = ['success' => true, 'data' => []];
+                foreach ($kpResults['data'] as $item) {
+                    $result['data'][] = [
+                        'text' => $item['keyword'] ?? '',
+                        'volume' => (int) ($item['search_volume'] ?? 0),
+                        'competition_level' => $item['competition_level'] ?? '',
+                        'competition_index' => (int) (($item['competition'] ?? 0) * 100),
+                        'low_bid' => (float) ($item['cpc_low'] ?? 0),
+                        'high_bid' => (float) ($item['cpc'] ?? 0),
+                        'trend' => 0,
+                        'intent' => $item['keyword_intent'] ?? '',
+                    ];
+                }
+            }
         }
 
-        $result = $service->keySuggest($keyword, $location, $lang);
+        // Fallback: KeywordInsightService
+        if (!$result['success']) {
+            if (!$service->isConfigured()) {
+                $_SESSION['_flash']['error'] = 'Nessun servizio keyword configurato. Contatta l\'amministratore.';
+                return View::render('keyword-research::quick-check/index', [
+                    'title' => 'Quick Check - Keyword Research',
+                    'user' => $user,
+                    'modules' => ModuleLoader::getUserModules($user['id']),
+                    'keyword' => $keyword,
+                    'location' => $location,
+                    'results' => null,
+                    'stProjects' => $this->getStProjects($user['id']),
+                ]);
+            }
+
+            $result = $service->keySuggest($keyword, $location, $lang);
+        }
 
         $mainKeyword = null;
         $related = [];
