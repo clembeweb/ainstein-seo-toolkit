@@ -142,7 +142,8 @@
             "admin_only": true,
             "group": "provider_config",
             "options": [
-                {"value": "auto", "label": "Auto (cascata: RapidAPI → DataForSEO → Keywords Everywhere)"},
+                {"value": "auto", "label": "Auto (cascata: KP → RapidAPI → DataForSEO → Keywords Everywhere)"},
+                {"value": "keyword_planner", "label": "Google Keyword Planner (MCC)"},
                 {"value": "rapidapi", "label": "RapidAPI"},
                 {"value": "dataforseo", "label": "DataForSEO"},
                 {"value": "keywordseverywhere", "label": "Keywords Everywhere"}
