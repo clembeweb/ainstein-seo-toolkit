@@ -370,7 +370,7 @@
                         <td class="px-4 py-3 text-center">
                             <span :class="krCompClass(kw.competition_level)" x-text="kw.competition_level ? kw.competition_level.charAt(0).toUpperCase() + kw.competition_level.slice(1) : 'N/A'"></span>
                         </td>
-                        <td class="px-4 py-3 text-right text-slate-700 dark:text-slate-300" x-text="kw.high_bid > 0 ? kw.high_bid.toFixed(2) + ' EUR' : '-'"></td>
+                        <td class="px-4 py-3 text-right text-slate-700 dark:text-slate-300" x-text="parseFloat(kw.high_bid) > 0 ? parseFloat(kw.high_bid).toFixed(2) + ' EUR' : '-'"></td>
                         <td class="px-4 py-3 text-center">
                             <template x-if="kw.intent">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" :class="krIntentClass(kw.intent)" x-text="kw.intent.charAt(0).toUpperCase() + kw.intent.slice(1)"></span>

@@ -114,7 +114,7 @@ $intentColor = $intentColors[strtolower($cluster['intent'] ?? '')] ?? 'bg-slate-
                         <td class="px-4 py-3 text-center">
                             <span class="text-xs" :class="krCompClass(kw.competition_level)" x-text="kw.competition_level ? kw.competition_level.charAt(0).toUpperCase() + kw.competition_level.slice(1) : '-'"></span>
                         </td>
-                        <td class="px-4 py-3 text-right text-slate-500 text-xs" x-text="kw.high_bid > 0 ? kw.high_bid.toFixed(2) : '-'"></td>
+                        <td class="px-4 py-3 text-right text-slate-500 text-xs" x-text="parseFloat(kw.high_bid) > 0 ? parseFloat(kw.high_bid).toFixed(2) : '-'"></td>
                         <td class="px-4 py-3 text-center">
                             <template x-if="kw.intent">
                                 <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs" :class="krIntentClass(kw.intent)" x-text="kw.intent.charAt(0).toUpperCase() + kw.intent.slice(1)"></span>
