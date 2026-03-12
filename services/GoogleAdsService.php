@@ -30,6 +30,9 @@ class GoogleAdsService
     private ?string $developerToken;
     private ?string $mccCustomerId;
 
+    private bool $isMccMode = false;
+    private string $module = 'ads-analyzer';
+
     private ?string $accessToken = null;
     private ?string $refreshToken = null;
     private ?string $tokenExpiresAt = null;
@@ -51,6 +54,23 @@ class GoogleAdsService
             : ($loginCustomerId ?: null);
 
         $this->loadTokens();
+    }
+
+    /**
+     * Factory: crea istanza per MCC piattaforma (Keyword Planner, no OAuth utente).
+     * Token MCC in google_oauth_tokens con user_id=0, service='google_ads_mcc'.
+     */
+    public static function forMcc(): self
+    {
+        $mccId = \Core\Settings::get('gads_mcc_customer_id');
+        if (empty($mccId)) {
+            throw new \RuntimeException('MCC Customer ID non configurato (gads_mcc_customer_id)');
+        }
+        $instance = new self(0, $mccId, $mccId);
+        $instance->isMccMode = true;
+        $instance->module = 'keyword-planner';
+        $instance->loadTokens(); // Ricarica token con service='google_ads_mcc'
+        return $instance;
     }
 
     // =========================================================================
@@ -192,22 +212,50 @@ class GoogleAdsService
     }
 
     // =========================================================================
-    // KEYWORD PLANNER (Phase 2 stub)
+    // KEYWORD PLANNER
     // =========================================================================
 
     /**
-     * Genera idee keyword tramite Keyword Planner API
-     * Fase 2 — stub pronto per implementazione completa
-     *
-     * @param array $params Parametri per la generazione (keywordSeed, urlSeed, etc.)
-     * @return array Risposta API
-     * @throws \RuntimeException
+     * Keyword Planner: volumi storici per keyword specifiche.
      */
-    public function generateKeywordIdeas(array $params): array
+    public function generateKeywordHistoricalMetrics(array $keywords, string $language, array $geoTargets): array
     {
-        $url = self::BASE_URL . '/customers/' . $this->customerId . ':generateKeywordIdeas';
+        $url = self::BASE_URL . '/customers/' . $this->customerId . ':generateKeywordHistoricalMetrics';
+        $body = [
+            'keywords' => $keywords,
+            'language' => $language,
+            'geoTargetConstants' => $geoTargets,
+            'keywordPlanNetwork' => 'GOOGLE_SEARCH',
+        ];
+        return $this->request('POST', $url, $body, 'keyword historical metrics');
+    }
 
-        return $this->request('POST', $url, $params, 'keyword ideas');
+    /**
+     * Keyword Planner: genera idee keyword da seed o URL.
+     */
+    public function generateKeywordIdeas(
+        array $seedKeywords = [],
+        ?string $url = null,
+        string $language = 'languageConstants/1004',
+        array $geoTargets = ['geoTargetConstants/2380']
+    ): array {
+        $apiUrl = self::BASE_URL . '/customers/' . $this->customerId . ':generateKeywordIdeas';
+
+        $body = [
+            'language' => $language,
+            'geoTargetConstants' => $geoTargets,
+            'keywordPlanNetwork' => 'GOOGLE_SEARCH',
+        ];
+
+        if (!empty($seedKeywords) && !empty($url)) {
+            $body['keywordAndUrlSeed'] = ['keywords' => $seedKeywords, 'url' => $url];
+        } elseif (!empty($url)) {
+            $body['urlSeed'] = ['url' => $url];
+        } elseif (!empty($seedKeywords)) {
+            $body['keywordSeed'] = ['keywords' => $seedKeywords];
+        }
+
+        return $this->request('POST', $apiUrl, $body, 'keyword ideas');
     }
 
     // =========================================================================
@@ -242,7 +290,9 @@ class GoogleAdsService
      */
     private function request(string $method, string $url, ?array $body = null, string $context = ''): array
     {
-        $this->checkRateLimit();
+        if (!$this->isMccMode) {
+            $this->checkRateLimit();
+        }
         $this->refreshTokenIfNeeded();
 
         $accessToken = $this->getAccessToken();
@@ -294,13 +344,15 @@ class GoogleAdsService
             $curlError = curl_error($ch);
             curl_close($ch);
 
-            $this->incrementUsage();
+            if (!$this->isMccMode) {
+                $this->incrementUsage();
+            }
             $this->lastRequestTime = microtime(true);
 
             // Errore cURL
             if ($curlError) {
                 ApiLoggerService::log('google_ads', $endpoint, $body ?? [], null, 0, $startTime, [
-                    'module' => 'ads-analyzer',
+                    'module' => $this->module,
                     'cost' => 0,
                     'error' => "CURL error: {$curlError}",
                     'context' => $context,
@@ -315,7 +367,7 @@ class GoogleAdsService
 
             // Log chiamata API
             ApiLoggerService::log('google_ads', $endpoint, $body ?? [], $data, $httpCode, $startTime, [
-                'module' => 'ads-analyzer',
+                'module' => $this->module,
                 'cost' => 0,
                 'context' => $context,
             ]);
@@ -398,6 +450,7 @@ class GoogleAdsService
         $newExpiresAt = date('Y-m-d H:i:s', time() + $expiresIn);
 
         // Aggiorna nel database
+        $service = $this->isMccMode ? 'google_ads_mcc' : 'google_ads';
         $sql = "UPDATE google_oauth_tokens
                 SET access_token = ?, refresh_token = ?, token_expires_at = ?, updated_at = NOW()
                 WHERE user_id = ? AND service = ?";
@@ -406,7 +459,7 @@ class GoogleAdsService
             $newRefreshToken,
             $newExpiresAt,
             $this->userId,
-            'google_ads',
+            $service,
         ]);
 
         $this->refreshToken = $newRefreshToken;
@@ -453,12 +506,14 @@ class GoogleAdsService
      */
     private function loadTokens(): void
     {
+        $service = $this->isMccMode ? 'google_ads_mcc' : 'google_ads';
+
         $sql = "SELECT access_token, refresh_token, token_expires_at
                 FROM google_oauth_tokens
                 WHERE user_id = ? AND service = ?
                 LIMIT 1";
 
-        $row = Database::fetch($sql, [$this->userId, 'google_ads']);
+        $row = Database::fetch($sql, [$this->userId, $service]);
 
         if ($row) {
             $this->accessToken = $row['access_token'] ?? null;
