@@ -56,76 +56,131 @@
             <!-- CSV Tab -->
             <div x-show="activeTab === 'csv'">
                 <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                            File CSV <span class="text-red-500">*</span>
-                        </label>
-                        <input type="file"
-                               accept=".csv,.txt"
-                               @change="csvFile = $event.target.files[0]"
-                               class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-primary-100 file:text-primary-700 dark:file:bg-primary-900/50 dark:file:text-primary-300">
+                    <!-- Step 1: Upload file -->
+                    <div x-show="!csvPreviewRows.length">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                File CSV <span class="text-red-500">*</span>
+                            </label>
+                            <input type="file"
+                                   accept=".csv,.txt"
+                                   @change="previewCsv($event)"
+                                   class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-primary-100 file:text-primary-700 dark:file:bg-primary-900/50 dark:file:text-primary-300">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                    Delimitatore
+                                </label>
+                                <select x-model="csvDelimiter" class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                    <option value="auto">Auto-detect</option>
+                                    <option value=",">Virgola (,)</option>
+                                    <option value=";">Punto e virgola (;)</option>
+                                    <option value="\t">Tab</option>
+                                </select>
+                            </div>
+                            <div class="flex items-end">
+                                <label class="flex items-center pb-2">
+                                    <input type="checkbox" x-model="csvHasHeader" class="rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
+                                    <span class="ml-2 text-sm text-slate-700 dark:text-slate-300">Prima riga = intestazione</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-3">
+                            Carica un file CSV e vedrai un'anteprima delle prime righe per mappare le colonne.
+                        </p>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                Delimitatore
-                            </label>
-                            <select x-model="csvDelimiter" class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                <option value="auto">Auto-detect</option>
-                                <option value=",">Virgola (,)</option>
-                                <option value=";">Punto e virgola (;)</option>
-                                <option value="\t">Tab</option>
-                            </select>
+                    <!-- Step 2: Preview + Column Mapping -->
+                    <div x-show="csvPreviewRows.length > 0" x-cloak>
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Anteprima CSV</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400" x-text="csvTotalRows + ' righe trovate' + (csvHasHeader ? ' (esclusa intestazione)' : '')"></p>
+                            </div>
+                            <button type="button" @click="resetCsvPreview()" class="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300">
+                                Cambia file
+                            </button>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                Colonna URL (0 = prima colonna)
-                            </label>
-                            <input type="number"
-                                   x-model="csvUrlColumn"
-                                   min="0"
-                                   class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                        </div>
-                    </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                Colonna Keyword (-1 per ignorare)
-                            </label>
-                            <input type="number"
-                                   x-model="csvKeywordColumn"
-                                   min="-1"
-                                   class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <!-- Column Mapping Dropdowns -->
+                        <div class="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                            <p class="text-sm font-medium text-blue-800 dark:text-blue-300 mb-3">Mappa le colonne</p>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-blue-700 dark:text-blue-400 mb-1">
+                                        URL <span class="text-red-500">*</span>
+                                    </label>
+                                    <select x-model="csvUrlColumn" class="w-full px-3 py-1.5 rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        <template x-for="(header, idx) in csvHeaders" :key="idx">
+                                            <option :value="idx" x-text="header || ('Colonna ' + (idx + 1))"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-blue-700 dark:text-blue-400 mb-1">Keyword</label>
+                                    <select x-model="csvKeywordColumn" class="w-full px-3 py-1.5 rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="-1">-- Ignora --</option>
+                                        <template x-for="(header, idx) in csvHeaders" :key="idx">
+                                            <option :value="idx" x-text="header || ('Colonna ' + (idx + 1))"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-blue-700 dark:text-blue-400 mb-1">Categoria</label>
+                                    <select x-model="csvCategoryColumn" class="w-full px-3 py-1.5 rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="-1">-- Ignora --</option>
+                                        <template x-for="(header, idx) in csvHeaders" :key="idx">
+                                            <option :value="idx" x-text="header || ('Colonna ' + (idx + 1))"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                Colonna Categoria (-1 per ignorare)
-                            </label>
-                            <input type="number"
-                                   x-model="csvCategoryColumn"
-                                   min="-1"
-                                   class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+
+                        <!-- Preview Table -->
+                        <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xl">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="bg-slate-50 dark:bg-slate-700/50">
+                                        <template x-for="(header, idx) in csvHeaders" :key="idx">
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span x-text="header || ('Col ' + (idx + 1))"></span>
+                                                    <span x-show="parseInt(csvUrlColumn) === idx" class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">URL</span>
+                                                    <span x-show="parseInt(csvKeywordColumn) === idx" class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">KW</span>
+                                                    <span x-show="parseInt(csvCategoryColumn) === idx" class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">CAT</span>
+                                                </div>
+                                            </th>
+                                        </template>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                                    <template x-for="(row, rowIdx) in csvPreviewRows" :key="rowIdx">
+                                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                            <template x-for="(cell, cellIdx) in row" :key="cellIdx">
+                                                <td class="px-4 py-3 text-slate-700 dark:text-slate-300 max-w-xs truncate" x-text="cell"></td>
+                                            </template>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
 
-                    <label class="flex items-center">
-                        <input type="checkbox" x-model="csvHasHeader" class="rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
-                        <span class="ml-2 text-sm text-slate-700 dark:text-slate-300">Il file ha una riga di intestazione</span>
-                    </label>
-
-                    <div class="pt-4">
-                        <button type="button"
-                                @click="importFromCsv()"
-                                :disabled="!csvFile || loading"
-                                class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                            <svg x-show="loading" class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Importa CSV
-                        </button>
+                        <div class="pt-4">
+                            <button type="button"
+                                    @click="importFromCsv()"
+                                    :disabled="loading"
+                                    class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <svg x-show="loading" class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span x-text="'Importa ' + csvTotalRows + ' URL'"></span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -333,6 +388,9 @@ function importWizard() {
         csvKeywordColumn: -1,
         csvCategoryColumn: -1,
         csvHasHeader: true,
+        csvPreviewRows: [],
+        csvHeaders: [],
+        csvTotalRows: 0,
 
         // Sitemap
         siteUrl: '<?= e($project['base_url'] ?? '') ?>',
@@ -425,6 +483,93 @@ function importWizard() {
             }
 
             this.loading = false;
+        },
+
+        previewCsv(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            this.csvFile = file;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = e.target.result;
+                const lines = text.split(/\r?\n/).filter(l => l.trim());
+                if (!lines.length) return;
+
+                // Auto-detect delimiter
+                let delim = this.csvDelimiter;
+                if (delim === 'auto') {
+                    const first = lines[0];
+                    if (first.includes('\t')) delim = '\t';
+                    else if (first.includes(';')) delim = ';';
+                    else delim = ',';
+                }
+
+                // Simple CSV parse (handles quoted fields)
+                const parseLine = (line) => {
+                    const result = [];
+                    let current = '';
+                    let inQuotes = false;
+                    for (let i = 0; i < line.length; i++) {
+                        const ch = line[i];
+                        if (ch === '"') {
+                            if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+                            else inQuotes = !inQuotes;
+                        } else if (ch === delim && !inQuotes) {
+                            result.push(current.trim());
+                            current = '';
+                        } else {
+                            current += ch;
+                        }
+                    }
+                    result.push(current.trim());
+                    return result;
+                };
+
+                const allRows = lines.map(parseLine);
+
+                // Headers
+                if (this.csvHasHeader && allRows.length > 0) {
+                    this.csvHeaders = allRows[0];
+                    const dataRows = allRows.slice(1);
+                    this.csvPreviewRows = dataRows.slice(0, 5);
+                    this.csvTotalRows = dataRows.length;
+                } else {
+                    const colCount = allRows[0]?.length || 0;
+                    this.csvHeaders = Array.from({length: colCount}, (_, i) => 'Colonna ' + (i + 1));
+                    this.csvPreviewRows = allRows.slice(0, 5);
+                    this.csvTotalRows = allRows.length;
+                }
+
+                // Auto-detect URL column (first column with URLs)
+                const sampleRow = this.csvPreviewRows[0] || [];
+                for (let i = 0; i < sampleRow.length; i++) {
+                    if (/^https?:\/\//i.test(sampleRow[i]) || /\.\w{2,}\//.test(sampleRow[i])) {
+                        this.csvUrlColumn = i;
+                        break;
+                    }
+                }
+
+                // Auto-detect keyword/category from header names
+                this.csvKeywordColumn = -1;
+                this.csvCategoryColumn = -1;
+                this.csvHeaders.forEach((h, i) => {
+                    const lower = h.toLowerCase();
+                    if (this.csvKeywordColumn === -1 && /keyword|parola|kw/.test(lower)) this.csvKeywordColumn = i;
+                    if (this.csvCategoryColumn === -1 && /categ|category|tipo|type/.test(lower)) this.csvCategoryColumn = i;
+                });
+            };
+            reader.readAsText(file);
+        },
+
+        resetCsvPreview() {
+            this.csvFile = null;
+            this.csvPreviewRows = [];
+            this.csvHeaders = [];
+            this.csvTotalRows = 0;
+            this.csvUrlColumn = 0;
+            this.csvKeywordColumn = -1;
+            this.csvCategoryColumn = -1;
         },
 
         async importFromCsv() {

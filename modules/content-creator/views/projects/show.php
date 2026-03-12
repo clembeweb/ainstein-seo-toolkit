@@ -93,45 +93,95 @@ $statusTabs = [
     ]) ?>
 
     <?php if ($stats['total'] > 0): ?>
-    <!-- Progress Bar -->
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
-        <div class="flex items-center justify-between mb-2">
-            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Avanzamento</span>
-            <span class="text-sm text-slate-500 dark:text-slate-400">
-                <?php
-                $completedPct = $stats['total'] > 0
-                    ? round(($stats['approved'] + $stats['published']) / $stats['total'] * 100)
-                    : 0;
-                ?>
-                <?= $completedPct ?>% completato
-            </span>
-        </div>
-        <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
-            <?php
-            $total = max($stats['total'], 1);
-            $segments = [
-                ['pct' => $stats['published'] / $total * 100, 'color' => 'bg-emerald-500'],
-                ['pct' => $stats['approved'] / $total * 100, 'color' => 'bg-teal-500'],
-                ['pct' => $stats['generated'] / $total * 100, 'color' => 'bg-purple-500'],
-                ['pct' => $stats['scraped'] / $total * 100, 'color' => 'bg-blue-500'],
-                ['pct' => $stats['errors'] / $total * 100, 'color' => 'bg-red-500'],
-            ];
+    <!-- Pipeline Progress -->
+    <?php
+    $total = max($stats['total'], 1);
+    $scrapeDone = $stats['scraped'] + $stats['generated'] + $stats['approved'] + $stats['published'];
+    $genDone = $stats['generated'] + $stats['approved'] + $stats['published'];
+    $approveDone = $stats['approved'] + $stats['published'];
+    $pipeline = [
+        [
+            'label' => 'Scraping',
+            'done' => $scrapeDone,
+            'total' => $stats['total'],
+            'active' => $stats['pending'] > 0,
+            'color' => 'blue',
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>',
+        ],
+        [
+            'label' => 'Generazione',
+            'done' => $genDone,
+            'total' => $scrapeDone,
+            'active' => $scrapeDone > $genDone,
+            'color' => 'purple',
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>',
+        ],
+        [
+            'label' => 'Approvazione',
+            'done' => $approveDone,
+            'total' => $genDone,
+            'active' => $genDone > $approveDone,
+            'color' => 'teal',
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+        ],
+        [
+            'label' => 'Pubblicazione',
+            'done' => $stats['published'],
+            'total' => $approveDone,
+            'active' => $approveDone > $stats['published'],
+            'color' => 'emerald',
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>',
+        ],
+    ];
+    $colorMap = [
+        'blue' => ['bg' => 'bg-blue-500', 'text' => 'text-blue-700 dark:text-blue-300', 'ring' => 'ring-blue-200 dark:ring-blue-800', 'bgLight' => 'bg-blue-50 dark:bg-blue-900/20', 'bar' => 'bg-blue-500'],
+        'purple' => ['bg' => 'bg-purple-500', 'text' => 'text-purple-700 dark:text-purple-300', 'ring' => 'ring-purple-200 dark:ring-purple-800', 'bgLight' => 'bg-purple-50 dark:bg-purple-900/20', 'bar' => 'bg-purple-500'],
+        'teal' => ['bg' => 'bg-teal-500', 'text' => 'text-teal-700 dark:text-teal-300', 'ring' => 'ring-teal-200 dark:ring-teal-800', 'bgLight' => 'bg-teal-50 dark:bg-teal-900/20', 'bar' => 'bg-teal-500'],
+        'emerald' => ['bg' => 'bg-emerald-500', 'text' => 'text-emerald-700 dark:text-emerald-300', 'ring' => 'ring-emerald-200 dark:ring-emerald-800', 'bgLight' => 'bg-emerald-50 dark:bg-emerald-900/20', 'bar' => 'bg-emerald-500'],
+    ];
+    ?>
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="grid grid-cols-4 gap-3">
+            <?php foreach ($pipeline as $i => $step):
+                $c = $colorMap[$step['color']];
+                $pct = $step['total'] > 0 ? round($step['done'] / $step['total'] * 100) : 0;
+                $isComplete = $step['total'] > 0 && $step['done'] >= $step['total'];
             ?>
-            <div class="flex h-full">
-                <?php foreach ($segments as $seg): ?>
-                <?php if ($seg['pct'] > 0): ?>
-                <div class="<?= $seg['color'] ?> h-full" style="width: <?= $seg['pct'] ?>%"></div>
+            <div class="relative">
+                <?php if ($i < 3): ?>
+                <div class="absolute top-5 -right-2 w-4 text-slate-300 dark:text-slate-600 z-10">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </div>
                 <?php endif; ?>
-                <?php endforeach; ?>
+                <div class="rounded-lg p-3 <?= $step['active'] ? $c['bgLight'] : ($isComplete ? 'bg-slate-50 dark:bg-slate-700/30' : 'bg-slate-50 dark:bg-slate-800') ?>">
+                    <div class="flex items-center gap-2 mb-2">
+                        <?php if ($isComplete): ?>
+                        <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <?php else: ?>
+                        <svg class="w-4 h-4 <?= $step['active'] ? $c['text'] : 'text-slate-400 dark:text-slate-500' ?>" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <?= $step['icon'] ?>
+                        </svg>
+                        <?php endif; ?>
+                        <span class="text-xs font-semibold <?= $step['active'] ? $c['text'] : ($isComplete ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400') ?>"><?= $step['label'] ?></span>
+                    </div>
+                    <p class="text-lg font-bold <?= $step['active'] ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400' ?>">
+                        <?= $step['done'] ?><span class="text-sm font-normal text-slate-400 dark:text-slate-500">/<?= $step['total'] ?></span>
+                    </p>
+                    <div class="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-1.5 mt-2">
+                        <div class="<?= $isComplete ? 'bg-emerald-500' : $c['bar'] ?> h-1.5 rounded-full transition-all" style="width: <?= $pct ?>%"></div>
+                    </div>
+                </div>
             </div>
+            <?php endforeach; ?>
         </div>
-        <div class="flex items-center gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Pubblicati</span>
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-teal-500"></span> Approvati</span>
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-500"></span> Generati</span>
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Scrappati</span>
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500"></span> Errori</span>
+        <?php if ($stats['errors'] > 0): ?>
+        <div class="mt-3 flex items-center gap-2 text-xs text-red-600 dark:text-red-400">
+            <span class="w-2 h-2 rounded-full bg-red-500"></span>
+            <?= $stats['errors'] ?> errori
         </div>
+        <?php endif; ?>
     </div>
 
     <!-- Action Buttons -->
@@ -167,7 +217,7 @@ $statusTabs = [
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                 </svg>
-                <span x-show="!generating">Genera Contenuto (<?= $stats['pending'] + $stats['scraped'] ?>)</span>
+                <span x-show="!generating">Genera (<?= $stats['pending'] + $stats['scraped'] ?>)</span>
                 <span x-show="generating" x-cloak>Avvio...</span>
             </button>
         </form>
