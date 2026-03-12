@@ -190,7 +190,7 @@ class ResearchController
                             'competition_index' => (int) (($item['competition'] ?? 0) * 100),
                             'low_bid' => (float) ($item['cpc_low'] ?? 0),
                             'high_bid' => (float) ($item['cpc'] ?? 0),
-                            'trend' => 0,
+                            'trend' => \Services\KeywordPlannerService::calcTrend($item['monthly_searches'] ?? []),
                             'intent' => $item['keyword_intent'] ?? '',
                         ];
                         $seedCount++;
