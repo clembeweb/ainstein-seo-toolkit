@@ -555,7 +555,13 @@
                             </td>
                             <td class="px-4 py-3 text-right text-sm text-slate-500 dark:text-slate-400">
                                 <?php if (!empty($kw['cpc'])): ?>
-                                    €<?= number_format($kw['cpc'], 2) ?>
+                                    <?php if (!empty($kw['cpc_low']) && $kw['cpc_low'] != $kw['cpc']): ?>
+                                        <span title="Range CPC: €<?= number_format($kw['cpc_low'], 2) ?> - €<?= number_format($kw['cpc'], 2) ?>">
+                                            €<?= number_format($kw['cpc_low'], 2) ?> - €<?= number_format($kw['cpc'], 2) ?>
+                                        </span>
+                                    <?php else: ?>
+                                        €<?= number_format($kw['cpc'], 2) ?>
+                                    <?php endif; ?>
                                 <?php else: ?>
                                     <span class="text-slate-400 dark:text-slate-500">-</span>
                                 <?php endif; ?>
