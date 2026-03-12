@@ -83,64 +83,81 @@
             <p class="mt-1 text-xs text-slate-400">Min 2, max 6 categorie. Ogni categoria genera keyword e analisi SERP.</p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <!-- Period -->
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Periodo</label>
-                <div class="flex gap-3">
-                    <template x-for="opt in [3, 6, 12]" :key="opt">
-                        <button type="button" @click="brief.months = opt"
-                                class="flex-1 px-4 py-2 rounded-lg border text-sm font-medium transition-colors"
-                                :class="brief.months === opt ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300' : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-slate-400'"
-                                x-text="opt + ' mesi'"></button>
-                    </template>
-                </div>
-            </div>
-
-            <!-- Articles per month -->
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Articoli al mese</label>
-                <div class="flex gap-3">
-                    <template x-for="opt in [2, 4, 6, 8]" :key="opt">
-                        <button type="button" @click="brief.articles_per_month = opt"
-                                class="flex-1 px-4 py-2 rounded-lg border text-sm font-medium transition-colors"
-                                :class="brief.articles_per_month === opt ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300' : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-slate-400'"
-                                x-text="opt"></button>
-                    </template>
-                </div>
-            </div>
+        <!-- Summary of current settings -->
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
+            <span x-text="brief.months + ' mesi'"></span>
+            <span class="text-slate-300 dark:text-slate-600">·</span>
+            <span x-text="brief.articles_per_month + ' articoli/mese'"></span>
+            <span class="text-slate-300 dark:text-slate-600">·</span>
+            <span x-text="brief.target"></span>
+            <span class="text-slate-300 dark:text-slate-600">·</span>
+            <span>Totale: <span class="font-semibold text-violet-600 dark:text-violet-400" x-text="brief.months * brief.articles_per_month"></span> articoli</span>
         </div>
 
-        <!-- Target -->
-        <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Target</label>
-            <div class="flex gap-3">
-                <template x-for="opt in ['B2B', 'B2C', 'Entrambi']" :key="opt">
-                    <button type="button" @click="brief.target = opt"
-                            class="px-4 py-2 rounded-lg border text-sm font-medium transition-colors"
-                            :class="brief.target === opt ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-slate-400'"
-                            x-text="opt"></button>
-                </template>
-            </div>
-        </div>
+        <!-- Advanced Options Toggle -->
+        <div x-data="{ showAdvanced: false }">
+            <button type="button" @click="showAdvanced = !showAdvanced"
+                    class="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
+                <svg class="w-4 h-4 transition-transform" :class="showAdvanced ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                Opzioni avanzate
+            </button>
 
-        <!-- Geography -->
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Location</label>
-                <select x-model="brief.geography"
-                        class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                    <option value="IT">Italia</option>
-                    <option value="US">Stati Uniti</option>
-                    <option value="GB">Regno Unito</option>
-                    <option value="DE">Germania</option>
-                    <option value="FR">Francia</option>
-                    <option value="ES">Spagna</option>
-                </select>
-            </div>
-            <div class="flex items-end">
-                <div class="text-sm text-slate-500 dark:text-slate-400 py-2.5">
-                    Totale articoli: <span class="font-bold text-violet-600 dark:text-violet-400" x-text="brief.months * brief.articles_per_month"></span>
+            <div x-show="showAdvanced" x-collapse x-cloak class="mt-4 space-y-5 pl-6 border-l-2 border-slate-200 dark:border-slate-700">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <!-- Period -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Periodo</label>
+                        <div class="flex gap-3">
+                            <template x-for="opt in [3, 6, 12]" :key="opt">
+                                <button type="button" @click="brief.months = opt"
+                                        class="flex-1 px-4 py-2 rounded-lg border text-sm font-medium transition-colors"
+                                        :class="brief.months === opt ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300' : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-slate-400'"
+                                        x-text="opt + ' mesi'"></button>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Articles per month -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Articoli al mese</label>
+                        <div class="flex gap-3">
+                            <template x-for="opt in [2, 4, 6, 8]" :key="opt">
+                                <button type="button" @click="brief.articles_per_month = opt"
+                                        class="flex-1 px-4 py-2 rounded-lg border text-sm font-medium transition-colors"
+                                        :class="brief.articles_per_month === opt ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300' : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-slate-400'"
+                                        x-text="opt"></button>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Target -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Target</label>
+                    <div class="flex gap-3">
+                        <template x-for="opt in ['B2B', 'B2C', 'Entrambi']" :key="opt">
+                            <button type="button" @click="brief.target = opt"
+                                    class="px-4 py-2 rounded-lg border text-sm font-medium transition-colors"
+                                    :class="brief.target === opt ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-slate-400'"
+                                    x-text="opt"></button>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Geography -->
+                <div class="max-w-xs">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Location</label>
+                    <select x-model="brief.geography"
+                            class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="IT">Italia</option>
+                        <option value="US">Stati Uniti</option>
+                        <option value="GB">Regno Unito</option>
+                        <option value="DE">Germania</option>
+                        <option value="FR">Francia</option>
+                        <option value="ES">Spagna</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -233,12 +250,16 @@
             Indietro
         </button>
         <div x-show="currentStep === 0 || (currentStep > 0 && !collecting && !analyzing)" class="ml-auto"></div>
-        <button type="button" @click="nextStep()"
-                x-show="canProceed()"
-                class="inline-flex items-center px-5 py-2.5 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
-            <span x-text="nextButtonText()"></span>
-            <svg class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        </button>
+        <div class="flex items-center gap-2" x-show="canProceed()">
+            <span x-show="currentStep === 1" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                <?= \Core\ModuleLoader::getSetting('keyword-research', 'cost_kr_editorial_plan', 5) ?> crediti
+            </span>
+            <button type="button" @click="nextStep()"
+                    class="inline-flex items-center px-5 py-2.5 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
+                <span x-text="nextButtonText()"></span>
+                <svg class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
+        </div>
     </div>
 
     <!-- Piani precedenti -->
@@ -292,9 +313,9 @@ function editorialWizard() {
         brief: {
             theme: '',
             categories: [],
-            months: 6,
+            months: 3,
             articles_per_month: 4,
-            target: 'B2C',
+            target: 'Entrambi',
             geography: '<?= e($project['default_location'] ?? 'IT') ?>',
         },
         categoryInput: '',

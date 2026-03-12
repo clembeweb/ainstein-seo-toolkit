@@ -244,12 +244,16 @@
             Indietro
         </button>
         <div x-show="currentStep === 0 || (currentStep > 0 && !collecting && !analyzing)" class="ml-auto"></div>
-        <button type="button" @click="nextStep()"
-                x-show="canProceed()"
-                class="inline-flex items-center px-5 py-2.5 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
-            <span x-text="nextButtonText()"></span>
-            <svg class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        </button>
+        <div class="flex items-center gap-2" x-show="canProceed()">
+            <span x-show="currentStep === 1" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                <?= \Core\ModuleLoader::getSetting('keyword-research', 'cost_kr_ai_clustering', 3) ?> crediti
+            </span>
+            <button type="button" @click="nextStep()"
+                    class="inline-flex items-center px-5 py-2.5 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
+                <span x-text="nextButtonText()"></span>
+                <svg class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
+        </div>
     </div>
 
     <!-- Ricerche passate -->
