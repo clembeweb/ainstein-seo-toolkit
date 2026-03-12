@@ -30,7 +30,7 @@ CREATE TABLE cc_images (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     project_id INT UNSIGNED NOT NULL,
     user_id INT UNSIGNED NOT NULL,
-    url VARCHAR(2048) DEFAULT NULL,
+    product_url VARCHAR(2048) DEFAULT NULL COMMENT 'URL pagina prodotto sul sito e-commerce',
     sku VARCHAR(100) DEFAULT NULL,
     product_name VARCHAR(500) NOT NULL,
     category ENUM('fashion', 'home', 'custom') NOT NULL DEFAULT 'fashion',
@@ -60,6 +60,7 @@ CREATE TABLE cc_image_variants (
     image_path VARCHAR(500) NOT NULL,
     prompt_used TEXT DEFAULT NULL,
     revised_prompt TEXT DEFAULT NULL,
+    provider_used VARCHAR(50) DEFAULT NULL COMMENT 'gemini, fashn, stability — per quality tracking',
     is_approved TINYINT(1) NOT NULL DEFAULT 0,
     is_pushed TINYINT(1) NOT NULL DEFAULT 0,
     cms_sync_error TEXT DEFAULT NULL,
@@ -68,6 +69,7 @@ CREATE TABLE cc_image_variants (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_image_id (image_id),
+    UNIQUE KEY uq_image_variant (image_id, variant_number),
     FOREIGN KEY (image_id) REFERENCES cc_images(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
@@ -338,9 +340,9 @@ Il prompt enfatizza 3 volte la fedeltà al prodotto originale ("faithfully repro
 interface ImageCapableConnectorInterface extends ConnectorInterface {
     /**
      * Recupera prodotti con le loro immagini.
-     * @return array [['id' => string, 'name' => string, 'sku' => string, 'url' => string, 'image_url' => string, 'category' => string, 'price' => string]]
+     * @return array ['items' => [['id' => string, 'name' => string, 'sku' => string, 'url' => string, 'image_url' => string, 'category' => string, 'price' => string]], 'total' => int, 'has_more' => bool]
      */
-    public function fetchProductImages(string $entityType, int $limit = 100): array;
+    public function fetchProductImages(string $entityType, int $limit = 100, int $page = 1): array;
 
     /**
      * Carica un'immagine su un prodotto nel CMS.
@@ -367,7 +369,9 @@ interface ImageCapableConnectorInterface extends ConnectorInterface {
 
 ### Push mode configurabile
 
-Opzione nel settings progetto: `image_push_mode`
+**Precedenza:** project-level `cc_projects.ai_settings.image_defaults.push_mode` > module-level `image_push_mode` in module.json (admin default).
+
+Valori:
 - `add_as_gallery` (default) — aggiunge come immagine aggiuntiva del prodotto
 - `replace_main` — sostituisce l'immagine principale
 - `add` — aggiunge senza posizionamento specifico
@@ -414,6 +418,11 @@ Per ogni item con status `source_acquired`:
 Nessun limite batch artificiale. L'utente può annullare in qualsiasi momento. Job resume: riprende da dove si è interrotto.
 
 Rate limiting: delay di 2 secondi tra ogni chiamata API per evitare 429 (Gemini ha quota per-minuto). Il delay è configurabile nel provider.
+
+**Rigenerazione:**
+- **Rigenera singola variante:** elimina la variante esistente (file + record), genera una nuova con lo stesso `variant_number`. Il record in `cc_image_variants` viene DELETE + INSERT (non UPDATE) per mantenere `created_at` coerente.
+- **Rigenera tutte:** elimina TUTTE le varianti dell'item, genera N nuove (da `variants_count`). Status torna a `source_acquired` durante la rigenerazione, poi `generated`.
+- In entrambi i casi, se la variante era `is_approved=1`, l'approvazione viene persa (intenzionale — immagine diversa, serve nuova review).
 
 Error handling:
 - Errori transitori (429, 500, 503) → retry con backoff esponenziale (2s, 5s — max 2 tentativi)
@@ -503,13 +512,16 @@ NON usare doppia navigazione (tab sopra + tab sotto). Il segmento toggle sostitu
 
 ### 8.2 Thumbnail serving
 
-Le immagini in `storage/images/` non sono accessibili via web. Route dedicata:
+Le immagini in `storage/images/` non sono accessibili via web. Route dedicata con access control:
 
 ```php
 // ImageController::serve($type, $filename)
-// Valida $type in ['source', 'generated'], sanitizza $filename
-// Legge file da storage/images/{$type}/... e invia con header Content-Type
-// Cache header: Cache-Control: public, max-age=86400
+// 1. Middleware::auth() — solo utenti autenticati
+// 2. Valida $type in ['source', 'generated'], sanitizza $filename (no path traversal: basename only)
+// 3. Estrai image_id dal filename pattern ({image_id}_...)
+// 4. Verifica accesso: JOIN cc_images → cc_projects, check user_id o findAccessible()
+// 5. Legge file da storage/images/{$type}/... e invia con header Content-Type
+// 6. Cache header: Cache-Control: private, max-age=3600 (private, non public — autenticato)
 ```
 
 Nelle view, le thumbnail usano: `<img src="<?= url("/content-creator/images/serve/source/{$filename}") ?>" loading="lazy">`.
@@ -701,7 +713,7 @@ Cleanup cron (`cron/image-cleanup.php`): varianti rifiutate eliminate dopo 30 gi
 
 ---
 
-## 9. Costi Crediti
+## 10. Costi Crediti
 
 | Operazione | Crediti | Note |
 |------------|---------|------|
@@ -715,7 +727,7 @@ Cleanup cron (`cron/image-cleanup.php`): varianti rifiutate eliminate dopo 30 gi
 
 ---
 
-## 10. Settings module.json
+## 11. Settings module.json
 
 Nuovo gruppo `image_config` (order: 3):
 
@@ -746,7 +758,7 @@ Nuovo costo nel gruppo `costs`:
 
 ---
 
-## 11. Limiti e Guardrail
+## 12. Limiti e Guardrail
 
 | Limite | Valore | Motivazione |
 |--------|--------|-------------|
@@ -761,7 +773,7 @@ Nuovo costo nel gruppo `costs`:
 
 ---
 
-## 12. Proof of Concept (Task 0)
+## 13. Proof of Concept (Task 0)
 
 Prima di implementare l'infrastruttura completa, testare la qualità di Gemini con:
 
@@ -774,7 +786,7 @@ Se la qualità non è sufficiente → valutare provider alternativi (Fashn.ai pe
 
 ---
 
-## 13. Fuori scope (v2)
+## 14. Fuori scope (v2)
 
 - Link tra `cc_images` e `cc_urls` per correlazione testo-immagini stesso prodotto
 - Tool di editing/cropping post-generazione
