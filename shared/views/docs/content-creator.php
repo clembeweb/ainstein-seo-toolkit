@@ -433,7 +433,7 @@
         </h2>
         <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
             <p class="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-                Dopo la generazione, ogni contenuto passa in stato di revisione. Dalla pagina risultati puoi:
+                Dopo la generazione, ogni contenuto passa in stato di revisione. La dashboard del progetto mostra i contenuti organizzati per stato con tab dedicati: <strong class="text-slate-900 dark:text-white">In attesa</strong>, <strong class="text-slate-900 dark:text-white">Scrapate</strong>, <strong class="text-slate-900 dark:text-white">Generate</strong>, <strong class="text-slate-900 dark:text-white">Approvate</strong>, <strong class="text-slate-900 dark:text-white">Rifiutate</strong> e <strong class="text-slate-900 dark:text-white">Pubblicate</strong>. Dalla pagina risultati puoi:
             </p>
             <ul class="space-y-2 text-sm text-slate-700 dark:text-slate-300">
                 <li class="flex items-start gap-2">
@@ -446,13 +446,13 @@
                     <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
-                    <span><strong class="text-slate-900 dark:text-white">Approvare</strong> - Conferma il contenuto per la pubblicazione o l'export.</span>
+                    <span><strong class="text-slate-900 dark:text-white">Approvare</strong> - Conferma il contenuto per la pubblicazione o l'export. Puoi approvare anche contenuti precedentemente rifiutati.</span>
                 </li>
                 <li class="flex items-start gap-2">
                     <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
-                    <span><strong class="text-slate-900 dark:text-white">Rifiutare</strong> - Scarta il contenuto e rigeneralo con parametri diversi.</span>
+                    <span><strong class="text-slate-900 dark:text-white">Rifiutare</strong> - Scarta il contenuto. Lo stato e bidirezionale: puoi cambiare idea e riapprovare un contenuto rifiutato in qualsiasi momento.</span>
                 </li>
                 <li class="flex items-start gap-2">
                     <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -473,6 +473,9 @@
             Esportare o pubblicare
         </h2>
         <div class="space-y-4">
+            <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                Dalla toolbar della pagina Risultati hai accesso diretto a tutte le operazioni di export e pubblicazione. I pulsanti sono disponibili in base allo stato dei contenuti e alla configurazione del progetto.
+            </p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <!-- Push CMS -->
                 <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -484,7 +487,7 @@
                         </div>
                         <h3 class="font-medium text-slate-900 dark:text-white text-sm">Pubblica sul CMS</h3>
                     </div>
-                    <p class="text-sm text-slate-600 dark:text-slate-400">Invia i contenuti approvati direttamente al CMS connesso. La pubblicazione aggiorna il body HTML della pagina sul sito.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-400">Invia i contenuti approvati direttamente al CMS connesso con barra di progresso in tempo reale (SSE). Puoi annullare la pubblicazione in qualsiasi momento. Disponibile solo se il progetto ha un connettore CMS configurato.</p>
                 </div>
 
                 <!-- Export CSV -->
@@ -497,7 +500,7 @@
                         </div>
                         <h3 class="font-medium text-slate-900 dark:text-white text-sm">Esporta CSV</h3>
                     </div>
-                    <p class="text-sm text-slate-600 dark:text-slate-400">Scarica tutti i contenuti generati in formato CSV con URL, keyword, HTML e stato di approvazione.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-400">Scarica tutti i contenuti generati in formato CSV con URL, keyword, HTML e stato di approvazione. Disponibile direttamente dalla toolbar dei risultati.</p>
                 </div>
             </div>
         </div>
@@ -657,6 +660,19 @@
                 <div>
                     <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Rivedi sempre prima di pubblicare</h3>
                     <p class="mt-1 text-sm text-blue-800 dark:text-blue-300/80">Anche se l'AI genera contenuti di alta qualita, e sempre consigliabile rivedere ogni testo prima della pubblicazione. Controlla che le informazioni siano accurate, il tono sia coerente con il brand e la struttura HTML sia corretta.</p>
+                </div>
+            </div>
+
+            <!-- Tip 5 -->
+            <div class="flex items-start gap-4 p-5 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50">
+                <div class="shrink-0 w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Approva e rifiuta senza limiti</h3>
+                    <p class="mt-1 text-sm text-blue-800 dark:text-blue-300/80">Lo stato di approvazione e bidirezionale: puoi rifiutare un contenuto approvato o riapprovare uno rifiutato in qualsiasi momento, sia dalla pagina risultati che dall'anteprima. Usa il tab "Rifiutate" nella dashboard per trovare rapidamente i contenuti scartati e rivalutarli.</p>
                 </div>
             </div>
         </div>
