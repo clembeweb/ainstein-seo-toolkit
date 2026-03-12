@@ -257,7 +257,7 @@ CONTESTO LANDING PAGES:
 {$landingText}
 
 ISTRUZIONI DI VALUTAZIONE:
-LINGUA: rispondi nella STESSA LINGUA usata negli annunci, nelle keyword e nelle landing page. Se le copy sono in italiano rispondi in italiano, se in inglese rispondi in inglese. Tutti i campi testuali (summary, strengths, issues, suggestions) devono essere nella lingua rilevata.
+LINGUA: Analisi, valutazioni e spiegazioni SEMPRE in ITALIANO (summary, strengths, issues description, type_specific_insights, expected_impact). I suggerimenti operativi (recommendation, suggestion) devono essere in italiano MA quando proponi copy specifici per annunci, keyword o testi da usare in Google Ads, mantieni la lingua originale degli annunci/keyword.
 
 Valuta a 3 livelli: Account > Campagna > Gruppo Annunci.
 

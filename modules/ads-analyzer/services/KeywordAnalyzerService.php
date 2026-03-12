@@ -166,7 +166,7 @@ Rispondi SOLO con un JSON valido (senza markdown, senza backtick, senza testo pr
 }
 
 REGOLE PER LE CATEGORIE:
-- LINGUA: usa la STESSA LINGUA dei termini di ricerca, delle copy degli annunci e delle landing page. Se i termini sono in italiano, i nomi delle categorie, le descrizioni e il summary DEVONO essere in italiano. Se sono in inglese, usa l'inglese. MAI mischiare lingue.
+- LINGUA: Nomi categorie, descrizioni e summary SEMPRE in ITALIANO. Le keyword estratte (suggested_negatives) devono restare nella lingua originale dei termini di ricerca.
 - Crea 5-12 categorie pertinenti al business
 - Adatta i nomi delle categorie al contesto specifico
 - Estrai SOLO keyword singole o frasi brevi (max 3 parole)
