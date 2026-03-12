@@ -56,6 +56,9 @@ $config = [
 
     // --- Notifications ---
     'notifications_days'        => 90,   // Notifiche: 90 giorni (tutte)
+
+    // --- Keyword Planner ---
+    'kp_usage_days'             => 30,   // Rate limiting counters: 30 giorni
 ];
 
 $logFile = BASE_PATH . '/storage/logs/data-cleanup.log';
@@ -879,6 +882,25 @@ function cleanupOrphanedUnsubscribeTokens(): int
 }
 
 // ============================================
+// 26. kp_usage → DELETE > 30 giorni
+// ============================================
+
+function cleanupKpUsage(array $config): int
+{
+    if (!tableExists('kp_usage')) {
+        logMsg("  Tabella kp_usage non trovata, skip");
+        return 0;
+    }
+
+    $days = $config['kp_usage_days'];
+
+    return Database::execute(
+        "DELETE FROM kp_usage WHERE date < DATE_SUB(CURDATE(), INTERVAL ? DAY)",
+        [$days]
+    );
+}
+
+// ============================================
 // ESECUZIONE PRINCIPALE
 // ============================================
 
@@ -923,6 +945,9 @@ $sections = [
 
     // --- 25: email unsubscribe tokens ---
     ['email_unsubscribe_tokens (orfani)', 'cleanupOrphanedUnsubscribeTokens', []],
+
+    // --- 26: keyword planner ---
+    ['kp_usage (> 30gg)',             'cleanupKpUsage',          [$config]],
 ];
 
 foreach ($sections as [$label, $func, $args]) {
