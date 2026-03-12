@@ -278,7 +278,9 @@ class KeywordPlannerService
                 continue;
             }
 
-            $results[strtolower($text)] = $this->normalizeMetrics($metrics);
+            $normalized = $this->normalizeMetrics($metrics);
+            $normalized['keyword_intent'] = self::classifyIntent($text);
+            $results[strtolower($text)] = $normalized;
         }
 
         return $results;
@@ -303,6 +305,7 @@ class KeywordPlannerService
 
             $normalized = $this->normalizeMetrics($metrics);
             $normalized['keyword'] = $text;
+            $normalized['keyword_intent'] = self::classifyIntent($text);
             $ideas[] = $normalized;
         }
 
@@ -348,6 +351,58 @@ class KeywordPlannerService
             'monthly_searches' => $monthlySearches,
             'keyword_intent' => null,
         ];
+    }
+
+    /**
+     * Classifica l'intent di una keyword con pattern matching euristico.
+     * Usato quando il provider non fornisce intent (es. Google Keyword Planner).
+     */
+    public static function classifyIntent(string $keyword): string
+    {
+        $kw = strtolower(trim($keyword));
+
+        // Transactional
+        $transactional = [
+            'compra', 'comprare', 'acquista', 'acquistare', 'prezzo', 'prezzi',
+            'costo', 'costi', 'offerta', 'offerte', 'sconto', 'sconti',
+            'economico', 'economici', 'economica', 'economiche',
+            'buy', 'price', 'cheap', 'discount', 'deal', 'coupon',
+            'ordina', 'ordinare', 'preventivo', 'abbonamento',
+        ];
+        foreach ($transactional as $t) {
+            if (str_contains($kw, $t)) return 'transactional';
+        }
+
+        // Commercial investigation
+        $commercial = [
+            'migliore', 'migliori', 'best', 'top', 'confronto', 'vs',
+            'recensione', 'recensioni', 'review', 'reviews', 'opinioni',
+            'classifica', 'alternativa', 'alternative', 'quale scegliere',
+            'consiglio', 'consigli', 'consigliato', 'consigliati',
+            'pro e contro', 'vantaggi', 'svantaggi',
+        ];
+        foreach ($commercial as $c) {
+            if (str_contains($kw, $c)) return 'commercial';
+        }
+
+        // Informational
+        $informational = [
+            'come', 'cosa', 'quando', 'perche', 'perché', 'dove', 'chi',
+            'what', 'how', 'why', 'when', 'where', 'who',
+            'guida', 'tutorial', 'significato', 'definizione', 'cos\'è',
+            'spiegazione', 'differenza', 'esempio', 'esempi',
+        ];
+        foreach ($informational as $i) {
+            if (str_contains($kw, $i)) return 'informational';
+        }
+
+        // Navigational (brand-like, short)
+        if (str_word_count($kw) <= 2 && !str_contains($kw, ' ')) {
+            return 'navigational';
+        }
+
+        // Default: commercial (most keyword research queries have commercial intent)
+        return 'commercial';
     }
 
     // =========================================================================
