@@ -161,6 +161,19 @@
                 <p class="text-sm text-slate-600 dark:text-slate-400">Sync completa con fino a 16 mesi di storico: click, impression, CTR e posizione media.</p>
             </div>
 
+            <!-- Volumi e CPC da Keyword Planner -->
+            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Volumi da Google Keyword Planner</h3>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Se configurato dall'admin, i volumi di ricerca e il CPC (min-max) vengono recuperati direttamente da Google Keyword Planner come fonte prioritaria, con fallback automatico su provider alternativi (RapidAPI, DataForSEO, KeywordsEverywhere).</p>
+            </div>
+
             <!-- Visibility e traffico stimato -->
             <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="flex items-center gap-3 mb-2">
@@ -318,7 +331,7 @@
             <svg class="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            Il rank checking (1 cr/kw) e il recupero volumi (0.3-0.5 cr/kw) vengono eseguiti automaticamente dai cron. Le sync GSC e i report AI richiedono crediti aggiuntivi.
+            Il rank checking (1 cr/kw) e il recupero volumi (0.3-0.5 cr/kw) vengono eseguiti automaticamente dai cron. Se Google Keyword Planner e configurato, i volumi vengono recuperati da KP senza costi aggiuntivi in crediti. Le sync GSC e i report AI richiedono crediti aggiuntivi.
         </p>
     </section>
 

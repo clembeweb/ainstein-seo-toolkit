@@ -62,7 +62,7 @@
             <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">3</div>
             <div>
                 <h3 class="font-medium text-slate-900 dark:text-white">Raccolta keyword correlate</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">L'API raccoglie automaticamente le keyword correlate con dati su volumi di ricerca e CPC.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Le keyword correlate vengono raccolte automaticamente da Google Keyword Planner (se configurato) o da RapidAPI, con dati su volumi di ricerca e CPC.</p>
             </div>
         </div>
         <!-- Step 4 -->
@@ -165,7 +165,7 @@
             </div>
             <p class="text-sm text-slate-600 dark:text-slate-400">Keyword correlate con ordinamento, paginazione e export CSV completo di tutti i dati.</p>
         </div>
-        <!-- Dati Google Keyword Insight -->
+        <!-- Dati keyword e suggerimenti -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 md:col-span-2">
             <div class="flex items-center gap-3 mb-2">
                 <div class="shrink-0 w-8 h-8 rounded-lg bg-cyan-50 dark:bg-cyan-900/30 flex items-center justify-center">
@@ -173,9 +173,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                 </div>
-                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Dati da Google Keyword Insight API</h3>
+                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Keyword Planner + RapidAPI</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Volumi di ricerca, CPC, competition e keyword correlate forniti da Google Keyword Insight tramite RapidAPI.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Se configurato dall'admin, le keyword correlate e i volumi vengono recuperati da Google Keyword Planner come fonte prioritaria, con fallback automatico su Google Keyword Insight (RapidAPI). Tutte e tre le modalita (Research, Architettura, Piano Editoriale) beneficiano di suggerimenti piu accurati quando Keyword Planner e attivo.</p>
         </div>
     </div>
 </section>
@@ -269,6 +269,18 @@
             <div>
                 <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Architettura Sito per nuovi progetti</h3>
                 <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">L'Architettura Sito e perfetta per nuovi progetti web: ti indica esattamente quali pagine creare, con URL suggeriti, H1 ottimizzati e keyword principali per ciascuna.</p>
+            </div>
+        </div>
+        <!-- Tip 4 -->
+        <div class="flex items-start gap-4 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+            <div class="shrink-0 mt-0.5">
+                <svg class="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div>
+                <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Keyword Planner per dati piu precisi</h3>
+                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Se l'admin ha configurato Google Keyword Planner, i suggerimenti e i volumi saranno piu accurati perche provengono direttamente da Google Ads. La configurazione avviene in Admin > Impostazioni > sezione "Keyword Planner (Google Ads)".</p>
             </div>
         </div>
     </div>
