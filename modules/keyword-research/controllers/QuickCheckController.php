@@ -12,25 +12,6 @@ use Services\KeywordPlannerService;
 class QuickCheckController
 {
     /**
-     * Calcola trend % dai monthly_searches (ultimi 3 mesi vs 3 mesi precedenti).
-     */
-    private static function calcTrendFromMonthly(array $monthly): float
-    {
-        if (count($monthly) < 6) return 0;
-
-        // monthly è ordinato cronologicamente dal KP
-        $recent = array_slice($monthly, -3);
-        $previous = array_slice($monthly, -6, 3);
-
-        $recentAvg = array_sum(array_column($recent, 'search_volume')) / 3;
-        $previousAvg = array_sum(array_column($previous, 'search_volume')) / 3;
-
-        if ($previousAvg <= 0) return 0;
-
-        return round(($recentAvg - $previousAvg) / $previousAvg * 100, 1);
-    }
-
-    /**
      * Carica la lista progetti SEO Tracking dell'utente (per "Invia a SEO Tracking")
      */
     private function getStProjects(int $userId): array
@@ -112,7 +93,7 @@ class QuickCheckController
                         'competition_index' => (int) (($item['competition'] ?? 0) * 100),
                         'low_bid' => (float) ($item['cpc_low'] ?? 0),
                         'high_bid' => (float) ($item['cpc'] ?? 0),
-                        'trend' => self::calcTrendFromMonthly($item['monthly_searches'] ?? []),
+                        'trend' => KeywordPlannerService::calcTrend($item['monthly_searches'] ?? []),
                         'intent' => $item['keyword_intent'] ?? '',
                     ];
                 }

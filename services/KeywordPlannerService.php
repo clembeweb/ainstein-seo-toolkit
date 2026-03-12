@@ -357,6 +357,24 @@ class KeywordPlannerService
      * Classifica l'intent di una keyword con pattern matching euristico.
      * Usato quando il provider non fornisce intent (es. Google Keyword Planner).
      */
+    /**
+     * Calcola trend % dai monthly_searches (ultimi 3 mesi vs 3 mesi precedenti).
+     */
+    public static function calcTrend(array $monthly): float
+    {
+        if (count($monthly) < 6) return 0;
+
+        $recent = array_slice($monthly, -3);
+        $previous = array_slice($monthly, -6, 3);
+
+        $recentAvg = array_sum(array_column($recent, 'search_volume')) / 3;
+        $previousAvg = array_sum(array_column($previous, 'search_volume')) / 3;
+
+        if ($previousAvg <= 0) return 0;
+
+        return round(($recentAvg - $previousAvg) / $previousAvg * 100, 1);
+    }
+
     public static function classifyIntent(string $keyword): string
     {
         $kw = strtolower(trim($keyword));
