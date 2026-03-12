@@ -634,6 +634,10 @@ class CampaignSyncService
      */
     public function syncSearchTerms(string $dateFrom, string $dateTo): int
     {
+        // Aumenta memory per account con tanti search terms
+        $prevMemory = ini_get('memory_limit');
+        ini_set('memory_limit', '1G');
+
         $gaql = "SELECT search_term_view.search_term, search_term_view.status, " .
                 "campaign.id, campaign.name, campaign.status, ad_group.id, ad_group.name, " .
                 "metrics.clicks, metrics.impressions, metrics.ctr, " .
@@ -642,7 +646,9 @@ class CampaignSyncService
                 "WHERE segments.date BETWEEN '{$dateFrom}' AND '{$dateTo}' " .
                 "AND campaign.status = 'ENABLED' " .
                 "AND ad_group.status != 'REMOVED' " .
-                "AND metrics.impressions > 0";
+                "AND metrics.impressions > 0 " .
+                "ORDER BY metrics.impressions DESC " .
+                "LIMIT 50000";
 
         $response = $this->gadsService->searchStream($gaql);
         $rows = $this->extractRows($response);
@@ -719,6 +725,9 @@ class CampaignSyncService
             ]);
             $count++;
         }
+
+        // Ripristina memory limit
+        ini_set('memory_limit', $prevMemory);
 
         return $count;
     }
