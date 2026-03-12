@@ -133,12 +133,19 @@ $artPaginationFilters = array_filter([
         <?php endif; ?>
     </div>
     <?php else: ?>
+    <!-- Bulk Actions Bar -->
+    <?= \Core\View::partial('components/table-bulk-bar', [
+        'actions' => [
+            ['label' => 'Elimina selezionati', 'action' => 'bulkDeleteSelected()', 'color' => 'red'],
+        ],
+    ]) ?>
     <!-- Articles Table -->
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead class="bg-slate-50 dark:bg-slate-700/50">
                     <tr>
+                        <?= table_checkbox_header() ?>
                         <?= table_sort_header('Titolo', 'title', $currentSort, $currentDir, $artBaseUrl, $artSortFilters) ?>
                         <?= table_sort_header('Keyword', 'keyword', $currentSort, $currentDir, $artBaseUrl, $artSortFilters) ?>
                         <?= table_sort_header('Parole', 'word_count', $currentSort, $currentDir, $artBaseUrl, $artSortFilters) ?>
@@ -150,6 +157,7 @@ $artPaginationFilters = array_filter([
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <?php foreach ($articles as $article): ?>
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <?= table_checkbox_cell($article['id']) ?>
                         <td class="px-4 py-3">
                             <div class="flex items-center gap-3">
                                 <div class="h-9 w-9 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center flex-shrink-0">
@@ -387,6 +395,11 @@ function articlesManager() {
     const articlesUrl = '<?= url('/ai-content/articles') ?>';
 
     return {
+        // Bulk selection
+        selectedIds: [],
+        allIds: <?= json_encode(array_map('strval', array_column($articles, 'id'))) ?>,
+        toggleAll($event) { this.selectedIds = $event.target.checked ? [...this.allIds] : []; },
+
         // Delete modal
         showDeleteModal: false,
         deleteId: null,
@@ -505,6 +518,20 @@ function articlesManager() {
             } finally {
                 this.regenerating = null;
             }
+        },
+
+        async bulkDeleteSelected() {
+            if (this.selectedIds.length === 0) return;
+            try {
+                await window.ainstein.confirm(`Eliminare ${this.selectedIds.length} articoli? Questa azione non può essere annullata.`, {destructive: true});
+            } catch(e) { return; }
+
+            for (const id of this.selectedIds) {
+                const formData = new FormData();
+                formData.append('_csrf_token', '<?= csrf_token() ?>');
+                await fetch(articlesUrl + '/' + id + '/delete', { method: 'POST', body: formData });
+            }
+            window.location.reload();
         }
     }
 }

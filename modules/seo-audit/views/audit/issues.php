@@ -1,5 +1,6 @@
 <?php
 use Modules\SeoAudit\Models\Issue;
+include __DIR__ . '/../../../../shared/views/components/table-helpers.php';
 
 $severityColors = [
     'critical' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
@@ -135,11 +136,18 @@ $severityLabels = [
         </p>
     </div>
     <?php else: ?>
+    <div x-data="issuesBulk()" class="space-y-4">
+    <?= \Core\View::partial('components/table-bulk-bar', [
+        'actions' => [
+            ['label' => 'Esporta selezionati', 'action' => 'exportSelected()', 'color' => 'blue'],
+        ],
+    ]) ?>
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead>
                     <tr class="bg-slate-50 dark:bg-slate-700/50">
+                        <?= table_checkbox_header() ?>
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Gravità</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Categoria</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Problema</th>
@@ -151,6 +159,7 @@ $severityLabels = [
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <?php foreach ($issues as $issue): ?>
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <?= table_checkbox_cell($issue['id']) ?>
                         <td class="px-4 py-3 whitespace-nowrap">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $severityColors[$issue['severity']] ?? $severityColors['info'] ?>">
                                 <?= $severityLabels[$issue['severity']] ?? $issue['severity'] ?>
@@ -204,5 +213,41 @@ $severityLabels = [
             'filters' => $filters,
         ]) ?>
     </div>
+    </div>
     <?php endif; ?>
 </div>
+
+<script>
+function issuesBulk() {
+    const allIds = <?= json_encode(array_map('strval', array_column($issues, 'id'))) ?>;
+    return {
+        selectedIds: [],
+        allIds: allIds,
+        toggleAll($event) {
+            this.selectedIds = $event.target.checked ? [...this.allIds] : [];
+        },
+        exportSelected() {
+            if (this.selectedIds.length === 0) return;
+            const rows = this.$el.querySelectorAll('table tbody tr');
+            const csvRows = ['Gravità,Categoria,Problema,Pagina,Elemento'];
+            rows.forEach(row => {
+                const checkbox = row.querySelector('input[type="checkbox"]');
+                if (!checkbox || !this.selectedIds.includes(checkbox.value)) return;
+                const cells = row.querySelectorAll('td');
+                const severity = (cells[1]?.textContent || '').trim();
+                const category = (cells[2]?.textContent || '').trim();
+                const problem = (cells[3]?.querySelector('.font-medium')?.textContent || '').trim();
+                const page = (cells[4]?.textContent || '').trim();
+                const element = (cells[5]?.textContent || '').trim();
+                csvRows.push([severity, category, problem, page, element].map(v => '"' + v.replace(/"/g, '""') + '"').join(','));
+            });
+            const blob = new Blob(['\uFEFF' + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'issues-selezionati.csv';
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+    };
+}
+</script>
