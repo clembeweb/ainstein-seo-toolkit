@@ -168,12 +168,14 @@ modules/content-creator/
 
 ```
 modules/content-creator/
-├── routes.php                           # Nuove route /images/*
+├── routes.php                           # Nuove route /images/* + route serve immagini
 ├── module.json                          # Gruppo image_config + costo
 ├── views/
 │   └── projects/
-│       ├── show.php                     # Tab Contenuti/Immagini
-│       └── settings.php                 # Tab preset immagini
+│       ├── show.php                     # Rimosso contenuto inline → redirect a results/images
+│       └── settings.php                 # Ristrutturato con Alpine tab system [Generale|AI|Connettore|Immagini]
+│   └── partials/
+│       └── project-nav.php             # Aggiunto segmento toggle Contenuti/Immagini + tab contestuali
 ├── services/
 │   └── connectors/
 │       ├── ImageCapableConnectorInterface.php  # NUOVO - estende ConnectorInterface (invariato)
@@ -475,11 +477,207 @@ GET    /content-creator/projects/{id}/images/export/zip         # Download ZIP
 POST   /content-creator/projects/{id}/images/start-push-job
 GET    /content-creator/projects/{id}/images/push-stream
 GET    /content-creator/projects/{id}/images/push-job-status
+
+# Serve immagini (thumbnails e fullsize)
+GET    /content-creator/images/serve/{type}/{filename}          # type: source|generated
 ```
 
 ---
 
-## 8. Storage
+## 8. UI/UX Specifications
+
+### 8.1 Navigazione progetto (project-nav.php)
+
+Il toggle Contenuti/Immagini va integrato in `project-nav.php` come segmento URL-based SOPRA i tab secondari. I tab si adattano alla modalità selezionata:
+
+```
+[● Contenuti] [○ Immagini]                    ← segmento toggle
+──────────────────────────────────────────────
+Dashboard | Import URL | Risultati | Impostazioni     ← modo Contenuti
+Dashboard | Import Prodotti | Risultati | Impostazioni ← modo Immagini
+```
+
+Stile segmento: `bg-slate-100 dark:bg-slate-700 rounded-lg p-1` con pill attiva `bg-white dark:bg-slate-600 rounded-md shadow-sm`. URL-based: `/content-creator/projects/{id}` (contenuti) vs `/content-creator/projects/{id}/images` (immagini).
+
+NON usare doppia navigazione (tab sopra + tab sotto). Il segmento toggle sostituisce il concetto di "due tab principali in show.php".
+
+### 8.2 Thumbnail serving
+
+Le immagini in `storage/images/` non sono accessibili via web. Route dedicata:
+
+```php
+// ImageController::serve($type, $filename)
+// Valida $type in ['source', 'generated'], sanitizza $filename
+// Legge file da storage/images/{$type}/... e invia con header Content-Type
+// Cache header: Cache-Control: public, max-age=86400
+```
+
+Nelle view, le thumbnail usano: `<img src="<?= url("/content-creator/images/serve/source/{$filename}") ?>" loading="lazy">`.
+
+### 8.3 Empty state (images/index.php)
+
+Quando non ci sono immagini nel progetto, mostrare empty state arancione (coerente con content-creator):
+
+```html
+<!-- Pattern identico a projects/index.php empty state -->
+<div class="text-center py-12">
+    <svg class="w-16 h-16 mx-auto text-orange-300"><!-- photo icon --></svg>
+    <h3>Nessun prodotto importato</h3>
+    <p>Importa i tuoi prodotti per iniziare a generare immagini</p>
+    <a href="...images/import">Importa Prodotti</a>
+</div>
+```
+
+### 8.4 Import immagini (images/import.php)
+
+**NON riusa** `shared/views/components/import-tabs.php` — le colonne CSV e il tab CMS sono troppo diversi. Implementazione indipendente con lo **stesso pattern Alpine** (`activeTab`, stesse classi CSS tab):
+
+```javascript
+x-data="importImageWizard()" // Nome distinto da importWizard()
+```
+
+**Tab CMS** — tabella con thumbnail prodotto:
+```
+☐ | [thumb 48x48] | Nome prodotto | SKU | Prezzo | Categoria CMS | Categoria AI [Fashion ▼]
+```
+
+**Selezione categoria globale** in cima alla tabella:
+```html
+<div class="flex items-center gap-3 mb-4">
+    <span>Categoria per tutti:</span>
+    <select @change="setAllCategories($event.target.value)">
+        <option value="fashion">Fashion</option>
+        <option value="home">Home/Lifestyle</option>
+        <option value="custom">Custom</option>
+    </select>
+</div>
+```
+
+Override singolo via dropdown nella colonna "Categoria AI" — default dal valore globale, modificabile per eccezione.
+
+**Tab CSV** — colonne diverse dal testo:
+- Colonna URL immagine (0 = prima colonna)
+- Colonna Nome prodotto
+- Colonna SKU (-1 per ignorare)
+- Colonna Categoria (-1 per ignorare)
+
+**Tab Manuale** — form con `enctype="multipart/form-data"`:
+- File upload (`<input type="file" accept="image/png,image/jpeg,image/webp">`)
+- Campi: nome prodotto, SKU, categoria
+- Validazione client-side: max 10MB, formati accettati
+
+### 8.5 Preview varianti (images/preview.php)
+
+Layout **fondamentalmente diverso** da `urls/preview.php`. NON segue quel pattern.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ ← Torna alla lista                                             │
+│                                                                 │
+│ HEADER: Nome prodotto | SKU | Status badge | Categoria badge   │
+│                                                                 │
+│ ┌─────────────────┐  ┌──────────────────────────────────────┐  │
+│ │                 │  │  Varianti generate (griglia 2-3 col) │  │
+│ │  FOTO SORGENTE  │  │  ┌────────┐ ┌────────┐ ┌────────┐   │  │
+│ │  (max 300px)    │  │  │ Var. 1 │ │ Var. 2 │ │ Var. 3 │   │  │
+│ │  fixed sidebar  │  │  │ [✓][✗] │ │ [✓][✗] │ │ [✓][✗] │   │  │
+│ │                 │  │  └────────┘ └────────┘ └────────┘   │  │
+│ └─────────────────┘  └──────────────────────────────────────┘  │
+│                                                                 │
+│ PRESET OVERRIDE: [Categoria ▼] [Genere ▼] [Sfondo ▼] [Stile ▼]│
+│ Prompt personalizzato: [_____________________________________] │
+│                                                                 │
+│ [Rigenera tutte]  [Rigenera singola]  [Scarica approvate]       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Alpine.js component:**
+```javascript
+x-data="{
+    lightboxOpen: false,
+    lightboxSrc: '',
+    regenerating: false,
+
+    openLightbox(src) { this.lightboxSrc = src; this.lightboxOpen = true; },
+    closeLightbox() { this.lightboxOpen = false; },
+
+    async approveVariant(variantId) { ... },
+    async rejectVariant(variantId) { ... },
+    async regenerate(variantId = null) { ... }
+}"
+```
+
+**Lightbox:** Alpine.js modal (NO librerie esterne). Overlay `bg-black/80`, immagine centrata `max-w-5xl max-h-[90vh] object-contain`, chiudi con click overlay o ESC (`@keydown.escape.window`).
+
+Click su variante → lightbox fullscreen per ispezionare i dettagli del prodotto.
+
+### 8.6 Settings tab "Immagini"
+
+Il `settings.php` attuale è un form singolo senza tab. Va ristrutturato con Alpine tab system:
+
+```javascript
+x-data="{ settingsTab: 'general' }"
+```
+
+Tab: `[Generale] [AI] [Connettore] [Immagini]`
+
+Il tab "Immagini" contiene i preset di generazione (scena, genere, sfondo, ambiente, stile, numero varianti, prompt, push mode). Stesse classi CSS del tab system di import (`border-b-2`, active/inactive colors).
+
+### 8.7 SSE progress bar colori
+
+| Job type | Colore barra | Motivazione |
+|----------|-------------|-------------|
+| `image_generate` | **violet** | Distingue da text generate (purple) |
+| `image_push` | **teal** | Coerente con push CMS testo |
+
+### 8.8 Lista immagini (images/index.php) — dettagli tabella
+
+**Colonne tabella:**
+```
+☐ | Foto sorgente (48x48 rounded) | Prodotto | SKU | Categoria | Varianti | Stato | Azioni
+```
+
+Colonna "Varianti": `{approvate}/{generate}` con colore (es. `2/3 ✓` in emerald se ≥1 approvata, `0/3` in slate se nessuna).
+
+**Row state dinamico** (pattern `results/index.php`):
+```javascript
+:class="{
+    'bg-violet-50/50 dark:bg-violet-900/10': rowStates[id] === 'generating',
+    'bg-emerald-50/50 dark:bg-emerald-900/10': rowStates[id] === 'done',
+    'bg-red-50/50 dark:bg-red-900/10': rowStates[id] === 'error'
+}"
+```
+
+**Toolbar bottoni:**
+```
+[Importa Prodotti]  [Genera Immagini (N)]  [Esporta ZIP]  [Push CMS]
+```
+- "Genera Immagini" mostra count items con status `source_acquired`
+- "Push CMS" visibile solo se connettore implementa `ImageCapableConnectorInterface`
+- "Esporta ZIP" visibile solo se ≥1 variante approvata
+
+**Bulk select bar** (pattern `results/index.php`):
+```html
+<div x-show="selectedIds.length > 0" x-cloak
+     class="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl p-3">
+    <span x-text="selectedIds.length"></span> selezionati
+    [Approva] [Elimina]
+</div>
+```
+
+### 8.9 AJAX pattern obbligatorio (GR #24)
+
+TUTTI i fetch nelle view immagini DEVONO includere:
+
+```javascript
+const resp = await fetch(url, options);
+if (!resp.ok) throw new Error(`Errore server (${resp.status})`);
+const data = await resp.json();
+```
+
+---
+
+## 9. Storage
 
 ```
 storage/images/
