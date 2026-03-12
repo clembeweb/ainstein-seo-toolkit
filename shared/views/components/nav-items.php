@@ -551,10 +551,11 @@ if ($_navGlobalProjectId && isset($user['id'])) {
                         <?= navSubLink("/ai-content/projects/{$aiContentProjectId}/internal-links", 'Internal Links', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>', $currentPath) ?>
 
                         <?php elseif (($aiContentProject['type'] ?? 'manual') === 'meta-tag'): ?>
-                        <!-- Meta-Tag Mode Navigation -->
-                        <?= navSubLink("/ai-content/projects/{$aiContentProjectId}/meta-tags/import", 'Importa URL', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>', $currentPath) ?>
-
-                        <?= navSubLink("/ai-content/projects/{$aiContentProjectId}/meta-tags/list", 'Lista URL', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>', $currentPath) ?>
+                        <!-- Meta-Tag: rimosso dalla navigazione (UX audit 2026-03-11, task A1) -->
+                        <!-- TODO: migrazione a seo-onpage -->
+                        <div class="px-3 py-2 text-xs text-slate-400 dark:text-slate-500 italic">
+                            Funzionalità in fase di migrazione
+                        </div>
 
                         <?php endif; ?>
 
