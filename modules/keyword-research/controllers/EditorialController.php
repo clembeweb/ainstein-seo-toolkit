@@ -14,6 +14,7 @@ use Modules\KeywordResearch\Models\Project;
 use Modules\KeywordResearch\Models\Research;
 use Modules\KeywordResearch\Models\EditorialItem;
 use Modules\KeywordResearch\Services\KeywordInsightService;
+use Services\KeywordPlannerService;
 use Core\Logger;
 
 class EditorialController
@@ -174,8 +175,11 @@ class EditorialController
 
         // Servizio keyword
         $kwService = new KeywordInsightService();
-        if (!$kwService->isConfigured()) {
-            $sendEvent('error', ['message' => 'API RapidAPI non configurata.']);
+        $kpService = new KeywordPlannerService();
+        $kpConfigured = $kpService->isConfigured();
+
+        if (!$kpConfigured && !$kwService->isConfigured()) {
+            $sendEvent('error', ['message' => 'Nessun servizio keyword configurato.']);
             return;
         }
 
@@ -214,37 +218,78 @@ class EditorialController
                 'paa' => [],
             ];
 
-            // 1. Raccolta keyword per questa categoria
+            // 1. Raccolta keyword per questa categoria — try Keyword Planner first
             $startTime = microtime(true);
-            $result = $kwService->keySuggest($category, $location, $lang);
-            $elapsed = (int) round((microtime(true) - $startTime) * 1000);
-            $totalApiTime += $elapsed;
-
-            Database::reconnect();
-
             $categoryKwCount = 0;
-            if ($result['success']) {
-                foreach ($result['data'] as $item) {
-                    $text = $item['text'] ?? '';
-                    $vol = (int) ($item['volume'] ?? 0);
-                    if ($text && $vol >= $minVolume && !isset($allKeywords[$text])) {
-                        $kw = [
-                            'text' => $text,
-                            'volume' => $vol,
-                            'competition_level' => $item['competition_level'] ?? '',
-                            'competition_index' => (int) ($item['competition_index'] ?? 0),
-                            'low_bid' => (float) ($item['low_bid'] ?? 0),
-                            'high_bid' => (float) ($item['high_bid'] ?? 0),
-                            'trend' => (float) ($item['trend'] ?? 0),
-                            'intent' => $item['intent'] ?? '',
-                            'category' => $category,
-                        ];
-                        $allKeywords[$text] = $kw;
-                        $categoryData['keywords'][] = $kw;
-                        $categoryKwCount++;
+            $kpUsedForCategory = false;
+
+            if ($kpConfigured) {
+                $kpResults = $kpService->generateKeywordIdeasForCountry(
+                    seedKeywords: [$category],
+                    url: null,
+                    countryCode: $location,
+                    limit: 200
+                );
+
+                Database::reconnect();
+
+                if ($kpResults && $kpResults['success'] && !empty($kpResults['data'])) {
+                    $kpUsedForCategory = true;
+                    foreach ($kpResults['data'] as $item) {
+                        $text = $item['keyword'] ?? '';
+                        $vol = (int) ($item['search_volume'] ?? 0);
+                        if ($text && $vol >= $minVolume && !isset($allKeywords[$text])) {
+                            $kw = [
+                                'text' => $text,
+                                'volume' => $vol,
+                                'competition_level' => $item['competition_level'] ?? '',
+                                'competition_index' => (int) (($item['competition'] ?? 0) * 100),
+                                'low_bid' => (float) ($item['cpc_low'] ?? 0),
+                                'high_bid' => (float) ($item['cpc'] ?? 0),
+                                'trend' => 0,
+                                'intent' => $item['keyword_intent'] ?? '',
+                                'category' => $category,
+                            ];
+                            $allKeywords[$text] = $kw;
+                            $categoryData['keywords'][] = $kw;
+                            $categoryKwCount++;
+                        }
                     }
                 }
             }
+
+            // Fallback: KeywordInsightService
+            if (!$kpUsedForCategory) {
+                $result = $kwService->keySuggest($category, $location, $lang);
+
+                Database::reconnect();
+
+                if ($result['success']) {
+                    foreach ($result['data'] as $item) {
+                        $text = $item['text'] ?? '';
+                        $vol = (int) ($item['volume'] ?? 0);
+                        if ($text && $vol >= $minVolume && !isset($allKeywords[$text])) {
+                            $kw = [
+                                'text' => $text,
+                                'volume' => $vol,
+                                'competition_level' => $item['competition_level'] ?? '',
+                                'competition_index' => (int) ($item['competition_index'] ?? 0),
+                                'low_bid' => (float) ($item['low_bid'] ?? 0),
+                                'high_bid' => (float) ($item['high_bid'] ?? 0),
+                                'trend' => (float) ($item['trend'] ?? 0),
+                                'intent' => $item['intent'] ?? '',
+                                'category' => $category,
+                            ];
+                            $allKeywords[$text] = $kw;
+                            $categoryData['keywords'][] = $kw;
+                            $categoryKwCount++;
+                        }
+                    }
+                }
+            }
+
+            $elapsed = (int) round((microtime(true) - $startTime) * 1000);
+            $totalApiTime += $elapsed;
 
             $sendEvent('category_keywords', [
                 'category' => $category,

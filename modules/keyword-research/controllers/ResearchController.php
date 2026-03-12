@@ -13,6 +13,7 @@ use Modules\KeywordResearch\Models\Project;
 use Modules\KeywordResearch\Models\Research;
 use Modules\KeywordResearch\Models\Cluster;
 use Modules\KeywordResearch\Services\KeywordInsightService;
+use Services\KeywordPlannerService;
 
 class ResearchController
 {
@@ -146,11 +147,6 @@ class ResearchController
 
         $service = new KeywordInsightService();
 
-        if (!$service->isConfigured()) {
-            $sendEvent('error', ['message' => 'API RapidAPI non configurata.']);
-            return;
-        }
-
         $sendEvent('started', [
             'total_seeds' => count($seeds),
             'research_id' => $researchId,
@@ -158,57 +154,116 @@ class ResearchController
 
         $allKeywords = [];
         $totalApiTime = 0;
+        $usedKeywordPlanner = false;
 
-        foreach ($seeds as $i => $seed) {
+        // Try Keyword Planner first (all seeds at once)
+        $kpService = new KeywordPlannerService();
+        if ($kpService->isConfigured()) {
             $sendEvent('seed_started', [
-                'seed' => $seed,
-                'index' => $i,
-                'total' => count($seeds),
+                'seed' => implode(', ', $seeds),
+                'index' => 0,
+                'total' => 1,
             ]);
 
             $startTime = microtime(true);
-            $result = $service->keySuggest($seed, $location, $lang);
+            $kpResults = $kpService->generateKeywordIdeasForCountry(
+                seedKeywords: $seeds,
+                url: null,
+                countryCode: $location,
+                limit: 200
+            );
             $elapsed = (int) round((microtime(true) - $startTime) * 1000);
             $totalApiTime += $elapsed;
 
             Database::reconnect();
 
-            if (!$result['success']) {
-                $sendEvent('seed_error', [
-                    'seed' => $seed,
-                    'error' => $result['error'],
-                ]);
-                continue;
-            }
-
-            $seedCount = 0;
-            foreach ($result['data'] as $item) {
-                $text = $item['text'] ?? '';
-                if ($text && !isset($allKeywords[$text])) {
-                    $allKeywords[$text] = [
-                        'text' => $text,
-                        'volume' => (int) ($item['volume'] ?? 0),
-                        'competition_level' => $item['competition_level'] ?? '',
-                        'competition_index' => (int) ($item['competition_index'] ?? 0),
-                        'low_bid' => (float) ($item['low_bid'] ?? 0),
-                        'high_bid' => (float) ($item['high_bid'] ?? 0),
-                        'trend' => (float) ($item['trend'] ?? 0),
-                        'intent' => $item['intent'] ?? '',
-                    ];
-                    $seedCount++;
+            if ($kpResults && $kpResults['success'] && !empty($kpResults['data'])) {
+                $usedKeywordPlanner = true;
+                $seedCount = 0;
+                foreach ($kpResults['data'] as $item) {
+                    $text = $item['keyword'] ?? '';
+                    if ($text && !isset($allKeywords[$text])) {
+                        $allKeywords[$text] = [
+                            'text' => $text,
+                            'volume' => (int) ($item['search_volume'] ?? 0),
+                            'competition_level' => $item['competition_level'] ?? '',
+                            'competition_index' => (int) (($item['competition'] ?? 0) * 100),
+                            'low_bid' => (float) ($item['cpc_low'] ?? 0),
+                            'high_bid' => (float) ($item['cpc'] ?? 0),
+                            'trend' => 0,
+                            'intent' => $item['keyword_intent'] ?? '',
+                        ];
+                        $seedCount++;
+                    }
                 }
+
+                $sendEvent('seed_completed', [
+                    'seed' => implode(', ', $seeds),
+                    'new_keywords' => $seedCount,
+                    'total_keywords' => count($allKeywords),
+                    'elapsed_ms' => $elapsed,
+                ]);
+            }
+        }
+
+        // Fallback: KeywordInsightService (per-seed loop)
+        if (!$usedKeywordPlanner) {
+            if (!$service->isConfigured()) {
+                $sendEvent('error', ['message' => 'API RapidAPI non configurata.']);
+                return;
             }
 
-            $sendEvent('seed_completed', [
-                'seed' => $seed,
-                'new_keywords' => $seedCount,
-                'total_keywords' => count($allKeywords),
-                'elapsed_ms' => $elapsed,
-            ]);
+            foreach ($seeds as $i => $seed) {
+                $sendEvent('seed_started', [
+                    'seed' => $seed,
+                    'index' => $i,
+                    'total' => count($seeds),
+                ]);
 
-            // Pausa tra chiamate API
-            if ($i < count($seeds) - 1) {
-                usleep(300000); // 300ms
+                $startTime = microtime(true);
+                $result = $service->keySuggest($seed, $location, $lang);
+                $elapsed = (int) round((microtime(true) - $startTime) * 1000);
+                $totalApiTime += $elapsed;
+
+                Database::reconnect();
+
+                if (!$result['success']) {
+                    $sendEvent('seed_error', [
+                        'seed' => $seed,
+                        'error' => $result['error'],
+                    ]);
+                    continue;
+                }
+
+                $seedCount = 0;
+                foreach ($result['data'] as $item) {
+                    $text = $item['text'] ?? '';
+                    if ($text && !isset($allKeywords[$text])) {
+                        $allKeywords[$text] = [
+                            'text' => $text,
+                            'volume' => (int) ($item['volume'] ?? 0),
+                            'competition_level' => $item['competition_level'] ?? '',
+                            'competition_index' => (int) ($item['competition_index'] ?? 0),
+                            'low_bid' => (float) ($item['low_bid'] ?? 0),
+                            'high_bid' => (float) ($item['high_bid'] ?? 0),
+                            'trend' => (float) ($item['trend'] ?? 0),
+                            'intent' => $item['intent'] ?? '',
+                        ];
+                        $seedCount++;
+                    }
+                }
+
+                $sendEvent('seed_completed', [
+                    'seed' => $seed,
+                    'new_keywords' => $seedCount,
+                    'total_keywords' => count($allKeywords),
+                    'elapsed_ms' => $elapsed,
+                ]);
+
+                // Pausa tra chiamate API
+                if ($i < count($seeds) - 1) {
+                    usleep(300000); // 300ms
+                }
             }
         }
 
