@@ -568,6 +568,7 @@ class Keyword
                     $sql = "UPDATE {$this->table} SET
                             search_volume = ?,
                             cpc = ?,
+                            cpc_low = ?,
                             competition = ?,
                             competition_level = ?,
                             keyword_intent = ?,
@@ -577,6 +578,7 @@ class Keyword
                     Database::execute($sql, [
                         $volumeData['search_volume'] ?? null,
                         $volumeData['cpc'] ?? null,
+                        $volumeData['cpc_low'] ?? null,
                         $competition,
                         $volumeData['competition_level'] ?? null,
                         $intent,
@@ -657,6 +659,9 @@ class Keyword
     private function getSpecificVolumeService(string $provider)
     {
         switch ($provider) {
+            case 'keyword_planner':
+                $service = new \Services\KeywordPlannerService();
+                return $service->isConfigured() ? $service : null;
             case 'rapidapi':
                 $service = new \Services\RapidApiKeywordService();
                 return $service->isConfigured() ? $service : null;
@@ -806,6 +811,7 @@ class Keyword
                     $sql = "UPDATE {$this->table} SET
                             search_volume = ?,
                             cpc = ?,
+                            cpc_low = ?,
                             competition = ?,
                             competition_level = ?,
                             keyword_intent = ?,
@@ -815,6 +821,7 @@ class Keyword
                     Database::execute($sql, [
                         $volumeData['search_volume'] ?? null,
                         $volumeData['cpc'] ?? null,
+                        $volumeData['cpc_low'] ?? null,
                         $competition,
                         $volumeData['competition_level'] ?? null,
                         $intent,
@@ -855,6 +862,7 @@ class Keyword
         // Se provider specifico, ritorna solo quello (nessun fallback)
         if ($configured !== 'auto') {
             $providerNames = [
+                'keyword_planner' => 'KeywordPlanner',
                 'rapidapi' => 'RapidAPI',
                 'dataforseo' => 'DataForSEO',
                 'keywordseverywhere' => 'KeywordsEverywhere',
@@ -868,6 +876,12 @@ class Keyword
 
         // Auto: cascata tutti i provider configurati
         $providers = [];
+
+        // Keyword Planner primo (se configurato)
+        $kpService = new \Services\KeywordPlannerService();
+        if ($kpService->isConfigured()) {
+            $providers['KeywordPlanner'] = $kpService;
+        }
 
         $rapidApi = new \Services\RapidApiKeywordService();
         if ($rapidApi->isConfigured()) {
