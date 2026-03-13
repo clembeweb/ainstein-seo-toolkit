@@ -151,4 +151,24 @@ class Connector
         $config = json_decode($row['config'] ?? '{}', true);
         return is_array($config) ? $config : [];
     }
+
+    /**
+     * Factory: crea l'istanza del connettore appropriato.
+     * Centralizzato qui per evitare duplicazione in ConnectorController, UrlController, ImageController.
+     *
+     * @param array $connData Row from cc_connectors table
+     * @return \Modules\ContentCreator\Services\Connectors\ConnectorInterface
+     */
+    public function createInstance(array $connData): \Modules\ContentCreator\Services\Connectors\ConnectorInterface
+    {
+        $config = json_decode($connData['config'] ?? '{}', true) ?: [];
+
+        return match ($connData['type']) {
+            'wordpress' => new \Modules\ContentCreator\Services\Connectors\WordPressConnector($config),
+            'shopify' => new \Modules\ContentCreator\Services\Connectors\ShopifyConnector($config),
+            'prestashop' => new \Modules\ContentCreator\Services\Connectors\PrestaShopConnector($config),
+            'magento' => new \Modules\ContentCreator\Services\Connectors\MagentoConnector($config),
+            default => throw new \RuntimeException("Tipo connettore non supportato: {$connData['type']}"),
+        };
+    }
 }

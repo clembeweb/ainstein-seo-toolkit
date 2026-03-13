@@ -9,11 +9,6 @@ use Core\ModuleLoader;
 use Modules\ContentCreator\Models\Project;
 use Modules\ContentCreator\Models\Url;
 use Modules\ContentCreator\Models\Connector;
-use Modules\ContentCreator\Services\Connectors\ConnectorInterface;
-use Modules\ContentCreator\Services\Connectors\WordPressConnector;
-use Modules\ContentCreator\Services\Connectors\ShopifyConnector;
-use Modules\ContentCreator\Services\Connectors\PrestaShopConnector;
-use Modules\ContentCreator\Services\Connectors\MagentoConnector;
 use Services\SitemapService;
 
 /**
@@ -258,12 +253,8 @@ class UrlController
         }
 
         try {
-            $config = json_decode($connector['config'] ?? '{}', true);
-            if (!is_array($config)) {
-                $config = [];
-            }
-
-            $service = $this->createConnectorService($connector['type'], $config);
+            $connectorModel = new Connector();
+            $service = $connectorModel->createInstance($connector);
             $result = $service->fetchItems($entityType, 100);
 
             if (!$result['success']) {
@@ -803,20 +794,6 @@ class UrlController
             'url' => $urlRecord,
             'currentPage' => 'results',
         ]);
-    }
-
-    /**
-     * Factory per istanziare il servizio connettore corretto
-     */
-    private function createConnectorService(string $type, array $config): ConnectorInterface
-    {
-        return match ($type) {
-            'wordpress' => new WordPressConnector($config),
-            'shopify' => new ShopifyConnector($config),
-            'prestashop' => new PrestaShopConnector($config),
-            'magento' => new MagentoConnector($config),
-            default => throw new \Exception("Tipo connettore non supportato: {$type}"),
-        };
     }
 
     /**

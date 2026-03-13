@@ -8,11 +8,6 @@ use Core\Router;
 use Core\Middleware;
 use Core\ModuleLoader;
 use Modules\ContentCreator\Models\Connector;
-use Modules\ContentCreator\Services\Connectors\ConnectorInterface;
-use Modules\ContentCreator\Services\Connectors\WordPressConnector;
-use Modules\ContentCreator\Services\Connectors\ShopifyConnector;
-use Modules\ContentCreator\Services\Connectors\PrestaShopConnector;
-use Modules\ContentCreator\Services\Connectors\MagentoConnector;
 
 class ConnectorController
 {
@@ -183,13 +178,9 @@ class ConnectorController
             return;
         }
 
-        $config = json_decode($connector['config'] ?? '{}', true);
-        if (!is_array($config)) {
-            $config = [];
-        }
-
         try {
-            $service = $this->createConnectorService($connector['type'], $config);
+            $connectorModel = new Connector();
+            $service = $connectorModel->createInstance($connector);
             $result = $service->test();
 
             $this->connector->updateTestStatus($id, $result['success'] ? 'success' : 'error');
@@ -348,13 +339,9 @@ class ConnectorController
             return;
         }
 
-        $config = json_decode($connector['config'] ?? '{}', true);
-        if (!is_array($config)) {
-            $config = [];
-        }
-
         try {
-            $service = $this->createConnectorService($connector['type'], $config);
+            $connectorModel = new Connector();
+            $service = $connectorModel->createInstance($connector);
             $result = $service->fetchCategories();
 
             if ($result['success']) {
@@ -390,16 +377,12 @@ class ConnectorController
             return;
         }
 
-        $config = json_decode($connector['config'] ?? '{}', true);
-        if (!is_array($config)) {
-            $config = [];
-        }
-
         $entityType = $_GET['type'] ?? 'products';
         $limit = min((int) ($_GET['limit'] ?? 100), 500);
 
         try {
-            $service = $this->createConnectorService($connector['type'], $config);
+            $connectorModel = new Connector();
+            $service = $connectorModel->createInstance($connector);
             $result = $service->fetchItems($entityType, $limit);
 
             echo json_encode($result);
@@ -410,20 +393,6 @@ class ConnectorController
                 'error' => 'Errore: ' . $e->getMessage(),
             ]);
         }
-    }
-
-    /**
-     * Factory: crea il servizio connettore appropriato
-     */
-    private function createConnectorService(string $type, array $config): ConnectorInterface
-    {
-        return match ($type) {
-            'wordpress' => new WordPressConnector($config),
-            'shopify' => new ShopifyConnector($config),
-            'prestashop' => new PrestaShopConnector($config),
-            'magento' => new MagentoConnector($config),
-            default => throw new \Exception("Tipo connettore non supportato: {$type}"),
-        };
     }
 
     /**
