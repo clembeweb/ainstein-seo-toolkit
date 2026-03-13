@@ -36,6 +36,13 @@
             "order": 2,
             "collapsed": false
         },
+        "image_config": {
+            "label": "Generazione Immagini",
+            "icon": "photo",
+            "description": "Impostazioni per la generazione immagini AI (virtual try-on / staging)",
+            "order": 3,
+            "collapsed": false
+        },
         "costs": {
             "label": "Costi Operazioni",
             "icon": "currency-euro",
@@ -149,6 +156,102 @@
             "max": 2000,
             "group": "content_length"
         },
+        "image_provider": {
+            "type": "select",
+            "label": "Provider Immagini",
+            "description": "Provider AI per la generazione immagini",
+            "default": "gemini",
+            "group": "image_config",
+            "options": {"gemini": "Google Gemini"}
+        },
+        "image_model": {
+            "type": "text",
+            "label": "Modello Immagini",
+            "description": "Modello Gemini per image-to-image",
+            "default": "gemini-2.0-flash-exp",
+            "group": "image_config"
+        },
+        "default_variants_count": {
+            "type": "number",
+            "label": "Varianti per generazione",
+            "description": "Numero di varianti generate per ogni richiesta",
+            "default": 3,
+            "min": 1,
+            "max": 4,
+            "group": "image_config"
+        },
+        "default_scene_type": {
+            "type": "select",
+            "label": "Tipo scena default",
+            "description": "Tipo di scena predefinito per la generazione",
+            "default": "fashion",
+            "group": "image_config",
+            "options": {"fashion": "Fashion (try-on)", "home": "Home/Lifestyle (staging)"}
+        },
+        "default_gender": {
+            "type": "select",
+            "label": "Genere modello default",
+            "description": "Genere predefinito per virtual try-on",
+            "default": "woman",
+            "group": "image_config",
+            "options": {"woman": "Donna", "man": "Uomo", "neutral": "Neutro"}
+        },
+        "default_background": {
+            "type": "select",
+            "label": "Sfondo default",
+            "description": "Sfondo predefinito per le immagini generate",
+            "default": "studio_white",
+            "group": "image_config",
+            "options": {"studio_white": "Studio bianco", "urban": "Urbano", "lifestyle": "Lifestyle", "nature": "Natura"}
+        },
+        "default_environment": {
+            "type": "select",
+            "label": "Ambiente default",
+            "description": "Ambiente predefinito per home staging",
+            "default": "living_room",
+            "group": "image_config",
+            "options": {"living_room": "Soggiorno", "kitchen": "Cucina", "bedroom": "Camera", "office": "Ufficio", "outdoor": "Esterno"}
+        },
+        "default_photo_style": {
+            "type": "select",
+            "label": "Stile foto default",
+            "description": "Stile fotografico predefinito",
+            "default": "professional",
+            "group": "image_config",
+            "options": {"professional": "Professional catalog", "editorial": "Editorial magazine", "minimal": "Minimal clean"}
+        },
+        "image_push_mode": {
+            "type": "select",
+            "label": "Modalità push immagine",
+            "description": "Come inserire le immagini generate nel CMS",
+            "default": "add_as_gallery",
+            "group": "image_config",
+            "options": {"add_as_gallery": "Aggiungi in galleria", "replace_main": "Sostituisci principale", "add": "Aggiungi"}
+        },
+        "image_output_format": {
+            "type": "select",
+            "label": "Formato output",
+            "description": "Formato delle immagini generate",
+            "default": "webp",
+            "group": "image_config",
+            "options": {"webp": "WebP", "jpeg": "JPEG", "png": "PNG"}
+        },
+        "image_output_quality": {
+            "type": "number",
+            "label": "Qualità output",
+            "description": "Qualità di compressione delle immagini (60-100)",
+            "default": 85,
+            "min": 60,
+            "max": 100,
+            "group": "image_config"
+        },
+        "image_cleanup_days": {
+            "type": "number",
+            "label": "Retention varianti rifiutate (giorni)",
+            "description": "Giorni di conservazione delle varianti rifiutate prima della pulizia automatica",
+            "default": 30,
+            "group": "image_config"
+        },
         "cost_scrape_url": {
             "type": "number",
             "label": "Costo Scraping per URL",
@@ -164,6 +267,16 @@
             "label": "Costo Generazione AI per URL",
             "description": "Crediti per generazione contenuto HTML completo",
             "default": 3,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_image_generate": {
+            "type": "number",
+            "label": "Costo Generazione Immagine (per variante)",
+            "description": "Crediti consumati per ogni variante immagine generata",
+            "default": 2,
             "min": 0,
             "step": 0.1,
             "admin_only": true,
