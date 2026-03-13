@@ -965,12 +965,12 @@ HTML;
                                                                     recommendation: agaIss.recommendation,
                                                                     scope: 'asset_group'
                                                                 }, agaIss.genKey)"
-                                                                :disabled="generators[agaIss.genKey]?.loading"
+                                                                :disabled="generators[agaIss.genKey] && generators[agaIss.genKey].loading"
                                                                 class="shrink-0 inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/30 transition-colors disabled:opacity-50">
-                                                            <template x-if="!generators[agaIss.genKey]?.loading">
+                                                            <template x-if="!(generators[agaIss.genKey] && generators[agaIss.genKey].loading)">
                                                                 <svg class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                                                             </template>
-                                                            <template x-if="generators[agaIss.genKey]?.loading">
+                                                            <template x-if="generators[agaIss.genKey] && generators[agaIss.genKey].loading">
                                                                 <svg class="w-3.5 h-3.5 mr-1 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                                             </template>
                                                             Genera con AI
@@ -983,12 +983,32 @@ HTML;
                                     </template>
                                     <!-- Generated fix result -->
                                     <template x-for="(agaIss, issIdx) in aga.issues.filter(i => i.genType)" :key="'gen_'+issIdx">
-                                        <template x-if="generators[agaIss.genKey]?.html">
-                                            <div class="px-4 pb-4">
-                                                <div class="rounded-lg bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 p-4"
-                                                     x-html="generators[agaIss.genKey].html"></div>
+                                        <div>
+                                            <div x-show="generators[agaIss.genKey]?.loading" class="px-4 pb-4">
+                                                <div class="flex items-center gap-2 text-xs text-primary-600 dark:text-primary-400">
+                                                    <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                    Generazione in corso...
+                                                </div>
                                             </div>
-                                        </template>
+                                            <div x-show="generators[agaIss.genKey]?.result" x-cloak class="px-4 pb-4">
+                                                <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                                                    <div class="flex items-center justify-between mb-2">
+                                                        <span class="text-xs font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-1">
+                                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                                                            Contenuto generato
+                                                        </span>
+                                                        <button @click="copyResult(agaIss.genKey)" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-emerald-700 bg-emerald-100 hover:bg-emerald-200 dark:text-emerald-300 dark:bg-emerald-900/40 dark:hover:bg-emerald-900/60 transition-colors">
+                                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                                                            <span x-text="generators[agaIss.genKey]?.copied ? 'Copiato!' : 'Copia'"></span>
+                                                        </button>
+                                                    </div>
+                                                    <pre x-text="generators[agaIss.genKey]?.result" class="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-sans leading-relaxed max-h-96 overflow-y-auto"></pre>
+                                                </div>
+                                            </div>
+                                            <div x-show="generators[agaIss.genKey]?.error" x-cloak class="px-4 pb-4">
+                                                <div class="text-xs text-red-600 dark:text-red-400" x-text="generators[agaIss.genKey]?.error"></div>
+                                            </div>
+                                        </div>
                                     </template>
                                     <!-- Strengths -->
                                     <template x-if="aga.strengths && aga.strengths.length">
