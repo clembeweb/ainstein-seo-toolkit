@@ -669,7 +669,7 @@ PROMPT;
     /**
      * Save source image to disk (during import)
      *
-     * @return string|null Absolute path, or null on failure
+     * @return string|null Relative path from storage/images root (consistent with saveImage), or null on failure
      */
     public function saveSourceImage(string $imageData, int $imageId, string $extension = 'jpg'): ?string
     {
@@ -689,7 +689,8 @@ PROMPT;
             return null;
         }
 
-        return $fullPath;
+        // Return RELATIVE path (consistent with saveImage for generated images)
+        return "sources/{$year}/{$month}/{$filename}";
     }
 
     /**

@@ -94,19 +94,21 @@ git commit -m "feat(content-creator): add ImageCapableConnectorInterface extendi
 **Files:**
 - Modify: `modules/content-creator/services/connectors/WordPressConnector.php`
 
-**API endpoints used:**
-- `GET /wp-json/wc/v3/products` — fetch products with images (WooCommerce)
-- `POST /wp-json/wp/v2/media` — upload image to media library
-- `PUT /wp-json/wc/v3/products/{id}` — assign image to product
+**IMPORTANT:** The existing WP connector uses a custom plugin API (`/wp-json/seo-toolkit/v1/`) with `X-SEO-Toolkit-Key` auth header — NOT the WooCommerce REST API. The `makeRequest()` method returns `{success, data, error, http_code}` — NO headers.
 
-**Note:** Read the existing file first to identify where to add the `implements` clause and new methods.
+**Strategy:**
+- `fetchProductImages` → uses the same plugin endpoint (`/seo-toolkit/v1/all-content?type=product`) which returns products. The plugin MUST be extended to include `featured_image` in the response. If it doesn't, we add a field mapping.
+- `uploadImage` → uses the plugin endpoint `/seo-toolkit/v1/upload-image` (new endpoint to add in the WP plugin). Fallback: direct WP REST API `/wp-json/wp/v2/media` with the same `X-SEO-Toolkit-Key` auth.
+
+**Note:** Read the existing file first to verify field names and existing patterns.
 
 - [ ] **Step 1: Read the existing file**
 
-Read `modules/content-creator/services/connectors/WordPressConnector.php` to identify:
-- Line with `class WordPressConnector implements ConnectorInterface`
-- Existing `makeRequest()` method signature
-- Constants (PROVIDER, MODULE, TIMEOUT)
+Read `modules/content-creator/services/connectors/WordPressConnector.php` completely to understand:
+- Properties: `$this->url`, `$this->apiKey`
+- `makeRequest()` signature and return format
+- How `fetchItems()` already works for products
+- Auth pattern (`X-SEO-Toolkit-Key` header)
 
 - [ ] **Step 2: Update class declaration**
 
@@ -125,72 +127,68 @@ class WordPressConnector implements ConnectorInterface, ImageCapableConnectorInt
     // ========== ImageCapableConnectorInterface ==========
 
     /**
-     * Fetch products with their images from WooCommerce
+     * Fetch products with their images via SEO Toolkit plugin API.
+     *
+     * Uses the same /seo-toolkit/v1/all-content endpoint as fetchItems(),
+     * but maps response to include image_url field.
+     * The plugin response includes 'featured_image' for WooCommerce products.
      */
     public function fetchProductImages(string $entityType = 'products', int $limit = 100, int $page = 1): array
     {
         $startTime = microtime(true);
+        $offset = ($page - 1) * $limit;
 
-        // Use WooCommerce REST API
-        $endpoint = '/wp-json/wc/v3/products';
-        $params = [
-            'per_page' => min($limit, 100),
-            'page' => $page,
-            'status' => 'publish',
-        ];
-
-        $response = $this->makeRequest('GET', $endpoint, $params);
+        // Use the same custom plugin endpoint already used by fetchItems()
+        $endpoint = '/wp-json/seo-toolkit/v1/all-content?type=product&per_page=' . $limit . '&offset=' . $offset;
+        $response = $this->makeRequest('GET', $endpoint);
 
         if (!$response['success']) {
-            return ['success' => false, 'items' => [], 'total' => 0, 'has_more' => false, 'error' => $response['message'] ?? 'Errore API WordPress'];
+            return ['success' => false, 'items' => [], 'total' => 0, 'has_more' => false, 'error' => $response['error'] ?? 'Errore API WordPress'];
         }
 
         $products = $response['data'] ?? [];
         $items = [];
 
         foreach ($products as $product) {
-            // Get primary image URL
-            $imageUrl = '';
-            if (!empty($product['images']) && is_array($product['images'])) {
-                $imageUrl = $product['images'][0]['src'] ?? '';
-            }
+            // The plugin response may include 'featured_image' or 'image' field
+            $imageUrl = $product['featured_image'] ?? $product['image'] ?? $product['thumbnail'] ?? '';
 
             // Skip products without images
             if (empty($imageUrl)) continue;
 
             $items[] = [
                 'id' => (string) ($product['id'] ?? ''),
-                'name' => $product['name'] ?? '',
+                'name' => $product['title'] ?? '',
                 'sku' => $product['sku'] ?? '',
-                'url' => $product['permalink'] ?? '',
+                'url' => $product['url'] ?? '',
                 'image_url' => $imageUrl,
-                'category' => !empty($product['categories']) ? ($product['categories'][0]['name'] ?? '') : '',
+                'category' => $product['category'] ?? '',
                 'price' => $product['price'] ?? '',
             ];
         }
 
-        // Check if there are more pages
-        $total = (int) ($response['headers']['X-WP-Total'] ?? count($items));
-        $totalPages = (int) ($response['headers']['X-WP-TotalPages'] ?? 1);
-        $hasMore = $page < $totalPages;
+        $hasMore = count($products) >= $limit;
 
-        ApiLoggerService::log(self::PROVIDER, $endpoint, $params, ['count' => count($items)], 200, $startTime, [
+        ApiLoggerService::log(self::PROVIDER, $endpoint, ['page' => $page, 'limit' => $limit], ['count' => count($items)], 200, $startTime, [
             'module' => self::MODULE,
             'cost' => 0,
-            'context' => "fetchProductImages page={$page} limit={$limit}",
+            'context' => "fetchProductImages page={$page}",
         ]);
 
         return [
             'success' => true,
             'items' => $items,
-            'total' => $total,
+            'total' => count($items),
             'has_more' => $hasMore,
             'error' => null,
         ];
     }
 
     /**
-     * Upload image to WordPress Media Library and assign to product
+     * Upload image via SEO Toolkit plugin API.
+     *
+     * Uses /seo-toolkit/v1/upload-image endpoint (requires plugin v1.3+).
+     * The plugin handles media library upload + product assignment internally.
      */
     public function uploadImage(string $entityId, string $entityType, string $imagePath, array $meta = []): array
     {
@@ -203,97 +201,62 @@ class WordPressConnector implements ConnectorInterface, ImageCapableConnectorInt
         $filename = $meta['filename'] ?? basename($imagePath);
         $alt = $meta['alt'] ?? '';
 
-        // Step 1: Upload to media library
-        $imageData = file_get_contents($imagePath);
-        $mimeType = mime_content_type($imagePath) ?: 'image/jpeg';
-
-        $uploadResponse = $this->makeMediaUpload('/wp-json/wp/v2/media', $imageData, $filename, $mimeType);
-
-        if (!$uploadResponse['success']) {
-            return ['success' => false, 'cms_image_id' => null, 'error' => 'Upload media fallito: ' . ($uploadResponse['message'] ?? '')];
-        }
-
-        $mediaId = (string) ($uploadResponse['data']['id'] ?? '');
-
-        if (empty($mediaId)) {
-            return ['success' => false, 'cms_image_id' => null, 'error' => 'Media ID non ricevuto'];
-        }
-
-        // Step 2: Update alt text if provided
-        if (!empty($alt)) {
-            $this->makeRequest('POST', "/wp-json/wp/v2/media/{$mediaId}", [
-                'alt_text' => $alt,
-            ]);
-        }
-
-        // Step 3: Assign image to product via WooCommerce API
-        $position = $meta['position'] ?? null;
-        $imagePayload = [
-            'id' => (int) $mediaId,
-            'src' => $uploadResponse['data']['source_url'] ?? '',
-            'alt' => $alt,
-        ];
-        if ($position !== null) {
-            $imagePayload['position'] = $position;
-        }
-
-        $assignResponse = $this->makeRequest('PUT', "/wp-json/wc/v3/products/{$entityId}", [
-            'images' => [$imagePayload],
-        ]);
-
-        ApiLoggerService::log(self::PROVIDER, '/media+assign', ['entity' => $entityId], ['media_id' => $mediaId], 200, $startTime, [
-            'module' => self::MODULE,
-            'cost' => 0,
-            'context' => "uploadImage product={$entityId}",
-        ]);
-
-        return [
-            'success' => true,
-            'cms_image_id' => $mediaId,
-            'error' => null,
-        ];
-    }
-
-    /**
-     * WordPress supports image upload
-     */
-    public function supportsImageUpload(): bool
-    {
-        return true;
-    }
-
-    /**
-     * Upload binary file to WP Media Library
-     */
-    private function makeMediaUpload(string $endpoint, string $imageData, string $filename, string $mimeType): array
-    {
+        // Use plugin endpoint for image upload
+        $endpoint = '/wp-json/seo-toolkit/v1/upload-image';
         $url = $this->url . $endpoint;
 
         $ch = curl_init();
         curl_setopt_array($ch, [
             CURLOPT_URL => $url,
             CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $imageData,
+            CURLOPT_POSTFIELDS => [
+                'image' => new \CURLFile($imagePath, mime_content_type($imagePath) ?: 'image/jpeg', $filename),
+                'entity_id' => $entityId,
+                'entity_type' => $entityType,
+                'alt' => $alt,
+                'position' => $meta['position'] ?? '',
+            ],
             CURLOPT_HTTPHEADER => [
-                'Content-Type: ' . $mimeType,
-                'Content-Disposition: attachment; filename="' . $filename . '"',
-                'Authorization: Basic ' . base64_encode($this->apiKey),
+                'X-SEO-Toolkit-Key: ' . $this->apiKey,
             ],
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => self::TIMEOUT,
+            CURLOPT_TIMEOUT => 60, // Longer timeout for upload
         ]);
 
         $responseBody = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
 
         $data = json_decode($responseBody, true);
 
-        if ($httpCode >= 200 && $httpCode < 300 && $data) {
-            return ['success' => true, 'data' => $data, 'message' => 'OK'];
+        ApiLoggerService::log(self::PROVIDER, $endpoint, ['entity' => $entityId, 'filename' => $filename], $data ?? [], $httpCode, $startTime, [
+            'module' => self::MODULE,
+            'cost' => 0,
+            'context' => "uploadImage entity={$entityId}",
+        ]);
+
+        if ($curlError) {
+            return ['success' => false, 'cms_image_id' => null, 'error' => "Errore connessione: {$curlError}"];
         }
 
-        return ['success' => false, 'data' => null, 'message' => $data['message'] ?? "HTTP {$httpCode}"];
+        if ($httpCode >= 200 && $httpCode < 300 && !empty($data['success'])) {
+            return [
+                'success' => true,
+                'cms_image_id' => (string) ($data['media_id'] ?? ''),
+                'error' => null,
+            ];
+        }
+
+        return ['success' => false, 'cms_image_id' => null, 'error' => $data['message'] ?? "HTTP {$httpCode}"];
+    }
+
+    /**
+     * WordPress supports image upload (requires seo-toolkit plugin v1.3+)
+     */
+    public function supportsImageUpload(): bool
+    {
+        return true;
     }
 ```
 

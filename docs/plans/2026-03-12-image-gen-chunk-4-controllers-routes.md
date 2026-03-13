@@ -812,7 +812,7 @@ class ImageController
             exit;
         }
 
-        // Determine file path
+        // Determine file path (all paths are relative to storage/images/)
         $storagePath = dirname(__DIR__, 2) . '/storage/images';
         if ($type === 'source') {
             $filePath = $image['source_image_path'];
@@ -820,12 +820,7 @@ class ImageController
             $filePath = $variant['image_path'];
         }
 
-        // Source paths can be absolute or relative
-        if (!str_starts_with($filePath, '/') && !str_starts_with($filePath, 'C:')) {
-            $fullPath = $storagePath . '/' . $filePath;
-        } else {
-            $fullPath = $filePath;
-        }
+        $fullPath = $storagePath . '/' . $filePath;
 
         if (!file_exists($fullPath)) {
             header('HTTP/1.1 404 Not Found');
@@ -1629,26 +1624,33 @@ git commit -m "feat(content-creator): add image routes — CRUD, SSE generate/pu
 
 ---
 
-## Task 16: Verify Connector Model has createInstance()
+## Task 16: Add Connector Factory to Model + Fix Existing Duplication
 
 **Files:**
-- Read: `modules/content-creator/models/Connector.php`
+- Modify: `modules/content-creator/models/Connector.php`
+- Modify: `modules/content-creator/controllers/ConnectorController.php` (remove private factory)
+- Modify: `modules/content-creator/controllers/UrlController.php` (remove private factory)
 
-The `ImageController` and `ImageGeneratorController` both call `$connectorModel->createInstance($connData)`. Verify this method exists.
+**Context:** The connector factory is currently duplicated as `private createConnectorService()` in both `ConnectorController.php:418` and `UrlController.php:812`. The plan needs it in `ImageController` too. Instead of triplicating, centralize in the `Connector` model.
 
-- [ ] **Step 1: Read Connector.php and check for createInstance method**
+- [ ] **Step 1: Read Connector.php to find insertion point**
 
-If the method doesn't exist, add it:
+- [ ] **Step 2: Add factory method to Connector model**
 
 ```php
 /**
- * Create connector instance from config data
+ * Factory: crea l'istanza del connettore appropriato.
+ * Centralizzato qui per evitare duplicazione in ConnectorController, UrlController, ImageController.
+ *
+ * @param array $connData Row from cc_connectors table
+ * @return ConnectorInterface
  */
 public function createInstance(array $connData): \Modules\ContentCreator\Services\Connectors\ConnectorInterface
 {
-    $config = json_decode($connData['config'] ?? '{}', true);
-    $config['url'] = $config['url'] ?? '';
-    $config['api_key'] = $connData['api_key'] ?? $config['api_key'] ?? '';
+    $config = json_decode($connData['config'] ?? '{}', true) ?: [];
+    if (!empty($connData['api_key'])) {
+        $config['api_key'] = $connData['api_key'];
+    }
 
     return match ($connData['type']) {
         'wordpress' => new \Modules\ContentCreator\Services\Connectors\WordPressConnector($config),
@@ -1660,10 +1662,23 @@ public function createInstance(array $connData): \Modules\ContentCreator\Service
 }
 ```
 
-- [ ] **Step 2: Verify syntax + commit if modified**
+- [ ] **Step 3: Update ConnectorController to use Connector::createInstance()**
+
+In `ConnectorController.php`, replace the `private function createConnectorService()` calls with:
+```php
+$connector = (new Connector())->createInstance($connData);
+```
+
+- [ ] **Step 4: Update UrlController similarly**
+
+- [ ] **Step 5: Verify syntax + commit**
 
 ```bash
 php -l modules/content-creator/models/Connector.php
+php -l modules/content-creator/controllers/ConnectorController.php
+php -l modules/content-creator/controllers/UrlController.php
+git add modules/content-creator/models/Connector.php modules/content-creator/controllers/ConnectorController.php modules/content-creator/controllers/UrlController.php
+git commit -m "refactor(content-creator): centralize connector factory in Connector model, remove duplication"
 ```
 
 ---
