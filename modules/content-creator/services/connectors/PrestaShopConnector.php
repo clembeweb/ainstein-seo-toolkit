@@ -11,7 +11,7 @@ use Services\ApiLoggerService;
  * Formato: JSON (output_format=JSON) con fallback XML per update (PUT richiede XML)
  * Supporta: Products, Categories, CMS Pages
  */
-class PrestaShopConnector implements ConnectorInterface
+class PrestaShopConnector implements ImageCapableConnectorInterface
 {
     private string $url;
     private string $apiKey;
@@ -501,6 +501,110 @@ class PrestaShopConnector implements ConnectorInterface
 
         return $xml;
     }
+
+    // ========== ImageCapableConnectorInterface ==========
+
+    public function fetchProductImages(string $entityType = 'products', int $limit = 100, int $page = 1): array
+    {
+        $startTime = microtime(true);
+        $offset = ($page - 1) * $limit;
+
+        $params = 'display=[id,name,reference,link_rewrite,id_default_image,id_category_default,price]'
+            . '&filter[active]=[1]'
+            . "&limit={$offset},{$limit}"
+            . '&output_format=JSON';
+
+        $response = $this->makeRequest('GET', '/api/products?' . $params);
+
+        if (!$response['success']) {
+            return ['success' => false, 'items' => [], 'total' => 0, 'has_more' => false, 'error' => $response['error'] ?? 'Errore API PrestaShop'];
+        }
+
+        $products = $response['data']['products'] ?? [];
+        $items = [];
+
+        foreach ($products as $product) {
+            $productId = $product['id'] ?? '';
+            $imageId = $product['id_default_image'] ?? '';
+
+            if (empty($imageId)) continue;
+
+            $imageUrl = rtrim($this->url, '/') . "/api/images/products/{$productId}/{$imageId}";
+
+            $name = $this->extractLangValue($product['name'] ?? '');
+            $linkRewrite = $this->extractLangValue($product['link_rewrite'] ?? '');
+
+            $items[] = [
+                'id' => (string) $productId,
+                'name' => $name,
+                'sku' => $product['reference'] ?? '',
+                'url' => rtrim($this->url, '/') . '/' . $linkRewrite,
+                'image_url' => $imageUrl,
+                'category' => (string) ($product['id_category_default'] ?? ''),
+                'price' => $product['price'] ?? '',
+            ];
+        }
+
+        $hasMore = count($products) >= $limit;
+
+        ApiLoggerService::log(self::PROVIDER, '/api/products', ['limit' => $limit, 'page' => $page], ['count' => count($items)], 200, $startTime, [
+            'module' => self::MODULE,
+            'cost' => 0,
+            'context' => "fetchProductImages page={$page}",
+        ]);
+
+        return ['success' => true, 'items' => $items, 'total' => count($items), 'has_more' => $hasMore, 'error' => null];
+    }
+
+    public function uploadImage(string $entityId, string $entityType, string $imagePath, array $meta = []): array
+    {
+        $startTime = microtime(true);
+
+        if (!file_exists($imagePath)) {
+            return ['success' => false, 'cms_image_id' => null, 'error' => 'File non trovato'];
+        }
+
+        $endpoint = "/api/images/products/{$entityId}";
+        $url = rtrim($this->url, '/') . $endpoint;
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => [
+                'image' => new \CURLFile($imagePath, mime_content_type($imagePath) ?: 'image/jpeg', $meta['filename'] ?? basename($imagePath)),
+            ],
+            CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
+            CURLOPT_USERPWD => $this->apiKey . ':',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => self::TIMEOUT,
+        ]);
+
+        $responseBody = curl_exec($ch);
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        ApiLoggerService::log(self::PROVIDER, $endpoint, ['entity' => $entityId], ['http_code' => $httpCode], $httpCode, $startTime, [
+            'module' => self::MODULE,
+            'cost' => 0,
+            'context' => "uploadImage product={$entityId}",
+        ]);
+
+        if ($httpCode >= 200 && $httpCode < 300) {
+            return ['success' => true, 'cms_image_id' => null, 'error' => null];
+        }
+
+        return ['success' => false, 'cms_image_id' => null, 'error' => "Upload fallito: HTTP {$httpCode}"];
+    }
+
+    public function supportsImageUpload(): bool
+    {
+        return true;
+    }
+
+    // -------------------------------------------------------------------------
+    // Private helpers – HTTP
+    // -------------------------------------------------------------------------
 
     /**
      * Esegue una richiesta HTTP JSON verso l'API PrestaShop
