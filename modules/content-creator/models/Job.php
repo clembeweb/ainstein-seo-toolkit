@@ -26,6 +26,8 @@ class Job
     public const TYPE_SCRAPE = 'scrape';
     public const TYPE_GENERATE = 'generate';
     public const TYPE_CMS_PUSH = 'cms_push';
+    public const TYPE_IMAGE_GENERATE = 'image_generate';
+    public const TYPE_IMAGE_PUSH = 'image_push';
 
     /**
      * Find job by ID
