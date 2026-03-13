@@ -1394,7 +1394,7 @@ erDiagram
     <!-- Content Creator (cc_) -->
     <section id="cc" class="mb-16 print-break">
         <h2 class="text-2xl font-bold text-orange-400 mb-6">Content Creator (cc_)</h2>
-        <p class="text-slate-500 dark:text-slate-400 mb-6">5 tabelle. Generazione massiva di contenuti HTML per pagine prodotto, categorie, servizi e articoli con AI. Import da CSV, Sitemap, CMS (WordPress, Shopify, PrestaShop, Magento) e Keyword Research. Export su CMS o CSV.</p>
+        <p class="text-slate-500 dark:text-slate-400 mb-6">7 tabelle. Generazione massiva di contenuti HTML per pagine prodotto, categorie, servizi e articoli con AI. Import da CSV, Sitemap, CMS (WordPress, Shopify, PrestaShop, Magento) e Keyword Research. Export su CMS o CSV. Generazione immagini AI con virtual try-on (fashion) e staging (home/lifestyle).</p>
 
         <div class="mermaid">
 erDiagram
@@ -1404,6 +1404,8 @@ erDiagram
     cc_projects }o--o| cc_connectors : "connettore CMS"
     cc_urls }o--o| cc_connectors : "importato da"
     cc_urls ||--o{ cc_operations_log : "operazioni"
+    cc_projects ||--o{ cc_images : "immagini"
+    cc_images ||--o{ cc_image_variants : "varianti"
 
     cc_projects {
         int id PK
@@ -1464,6 +1466,26 @@ erDiagram
         enum status "success/error"
         json details
     }
+    cc_images {
+        int id PK
+        int project_id FK
+        int user_id FK
+        varchar product_name
+        varchar source_image_path
+        varchar cms_product_id
+        json generation_settings
+        enum status "pending/source_acquired/generated/approved/published/error"
+    }
+    cc_image_variants {
+        int id PK
+        int image_id FK
+        int variant_number
+        varchar image_path
+        text prompt_used
+        text revised_prompt
+        tinyint is_approved
+        varchar cms_image_id
+    }
         </div>
 
         <details class="mt-6 bg-white dark:bg-slate-800 rounded-lg border border-orange-200 dark:border-orange-900/50 shadow-sm">
@@ -1484,6 +1506,13 @@ erDiagram
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
                 <div><strong class="text-slate-900 dark:text-white">cc_jobs</strong>: id(PK), project_id(FK), user_id(FK), type(ENUM scrape/generate/cms_push), status(ENUM pending/running/completed/error/cancelled), items_requested, items_completed, items_failed, credits_used(DECIMAL 8,2), current_item, current_item_id, error_message, started_at, completed_at, created_at</div>
                 <div><strong class="text-slate-900 dark:text-white">cc_operations_log</strong>: id(PK), user_id(FK), project_id(FK), url_id(FK NULL), operation(ENUM scrape/ai_generate/cms_push/export), credits_used(DECIMAL 8,2), status(ENUM success/error), details(JSON), created_at</div>
+            </div>
+        </details>
+        <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-orange-200 dark:border-orange-900/50 shadow-sm">
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">Immagini: cc_images &middot; cc_image_variants</summary>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
+                <div><strong class="text-slate-900 dark:text-white">cc_images</strong>: id(PK), project_id(FK&rarr;cc_projects), user_id(FK&rarr;users), product_name, sku, source_image_path(relativo da storage/images/), source_image_url, cms_product_id, category, generation_settings(JSON &mdash; scene_type, gender, background, environment, photo_style, variants_count, custom_prompt), status(ENUM pending/source_acquired/generated/approved/published/error), error_message, created_at, updated_at</div>
+                <div><strong class="text-slate-900 dark:text-white">cc_image_variants</strong>: id(PK), image_id(FK&rarr;cc_images ON DELETE CASCADE), variant_number(1-4), image_path(relativo da storage/images/), prompt_used(TEXT), revised_prompt(TEXT &mdash; prompt riscritto dal provider), is_approved(TINYINT default NULL &mdash; NULL=pending, 1=approved, 0=rejected), cms_image_id, error_message, created_at</div>
             </div>
         </details>
     </section>
