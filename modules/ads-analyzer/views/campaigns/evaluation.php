@@ -68,15 +68,15 @@ $isNoChange = !$hasResults && !$isError && !$isAnalyzing
 $noChangeDeltas = $isNoChange && !empty($evaluation['metric_deltas'])
     ? json_decode($evaluation['metric_deltas'], true) : null;
 
-// Aree per cui AI può generare contenuto
-$generatableAreas = ['copy', 'extensions', 'keywords'];
+// fix_type validi per cui AI può generare contenuto
+$validFixTypes = ['rewrite_ads', 'add_negatives', 'remove_duplicates', 'add_extensions'];
 
 // Helper: render area risultato AI inline
 function renderAiGenerator(string $key, bool $showApply = false): string {
     $applyBtn = '';
     if ($showApply) {
         $applyBtn = <<<APPLY
-            <button x-show="generators['{$key}']?.data && ['copy','extensions','keywords'].includes(generators['{$key}']?.type) && !generators['{$key}']?.applied"
+            <button x-show="generators['{$key}']?.data && ['copy','extensions','keywords','rewrite_ads','add_negatives','remove_duplicates','add_extensions'].includes(generators['{$key}']?.type) && !generators['{$key}']?.applied"
                 @click="openApplyModal('{$key}')"
                 class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors">
                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -115,7 +115,7 @@ APPLY;
                 </svg>
                 <span x-text="generators['{$key}']?.copied ? 'Copiato!' : 'Copia'"></span>
             </button>
-            <button x-show="generators['{$key}']?.data && ['copy','extensions','keywords'].includes(generators['{$key}']?.type)"
+            <button x-show="generators['{$key}']?.data && ['copy','extensions','keywords','rewrite_ads','add_negatives','remove_duplicates','add_extensions'].includes(generators['{$key}']?.type)"
                 @click="exportCsv('{$key}')"
                 class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-rose-700 bg-rose-100 hover:bg-rose-200 dark:text-rose-300 dark:bg-rose-900/40 dark:hover:bg-rose-900/60 transition-colors">
                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -891,7 +891,7 @@ HTML;
                                                             <?php if ($canEdit): ?>
                                                             <template x-if="agIss.genType">
                                                                 <div>
-                                                                    <button @click="generateFix(agIss.genType, {issue: agIss.description, recommendation: agIss.recommendation || '', campaign_name: campaignsData[selectedCampaign].name, ad_group_name: ag.name}, agIss.genKey)"
+                                                                    <button @click="generateFix(agIss.genType, {issue: agIss.description, recommendation: agIss.recommendation || '', campaign_name: campaignsData[selectedCampaign].name, ad_group_name: ag.name, ad_group_id_google: ag.adGroupIdGoogle || ''}, agIss.genKey)"
                                                                         :disabled="isLoading(agIss.genKey)"
                                                                         class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg text-primary-700 bg-primary-50 hover:bg-primary-100 dark:text-primary-300 dark:bg-primary-900/30 dark:hover:bg-primary-900/50 disabled:opacity-50 transition-colors mt-2">
                                                                         <svg x-show="!isLoading(agIss.genKey)" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
@@ -1058,11 +1058,8 @@ HTML;
                 $csPriority = $cs['priority'] ?? 'medium';
                 $csPriorityClass = $priorityClasses[$csPriority] ?? $priorityClasses['medium'];
                 $csPriorityLabel = $priorityLabels[$csPriority] ?? ucfirst($csPriority);
-                $csAreaLower = strtolower($cs['area'] ?? '');
-                $csGenType = null;
-                if (str_contains($csAreaLower, 'copy') || str_contains($csAreaLower, 'annunci')) $csGenType = 'copy';
-                elseif (str_contains($csAreaLower, 'keyword')) $csGenType = 'keywords';
-                elseif (str_contains($csAreaLower, 'estension') || str_contains($csAreaLower, 'extension')) $csGenType = 'extensions';
+                $csFixType = $cs['fix_type'] ?? null;
+                $csGenType = in_array($csFixType, $validFixTypes) ? $csFixType : null;
                 $sugKey = "sug_{$sIndex}";
                 ?>
                 <div class="flex items-start gap-3 bg-slate-50 dark:bg-slate-700/30 rounded-xl p-4">
@@ -1274,16 +1271,76 @@ function evaluationDashboard() {
         applyUrl: '<?= e($applyUrl ?? '') ?>',
         csrfToken: '<?= csrf_token() ?>',
 
+        // Pre-load saved fixes from DB
+        savedFixes: <?= json_encode(array_map(function($fix) {
+            return [
+                'id' => $fix['id'],
+                'fix_type' => $fix['fix_type'],
+                'scope_level' => $fix['scope_level'],
+                'campaign_name' => $fix['campaign_name'],
+                'ad_group_name' => $fix['ad_group_name'],
+                'issue_description' => $fix['issue_description'],
+                'data' => json_decode($fix['ai_response'] ?? '{}', true),
+                'content' => $fix['display_text'],
+                'status' => $fix['status'],
+                'ad_group_id_google' => $fix['ad_group_id_google'],
+            ];
+        }, $savedFixes ?? []), JSON_UNESCAPED_UNICODE) ?>,
+
+        init() {
+            // Restore previously generated fixes into generators map
+            // Match saved fixes to issue keys by scanning campaignsData
+            this.savedFixes.forEach(fix => {
+                // Try to find matching issue key in campaignsData
+                let matchKey = null;
+                this.campaignsData.forEach((camp, cIdx) => {
+                    if (matchKey) return;
+                    // Campaign-level issues
+                    camp.issues.forEach((iss, iIdx) => {
+                        if (matchKey) return;
+                        if (iss.description && fix.issue_description && iss.description === fix.issue_description) {
+                            matchKey = 'issue_' + cIdx + '_' + iIdx;
+                        }
+                    });
+                    // Ad group issues
+                    (camp.adGroups || []).forEach((ag, agIdx) => {
+                        if (matchKey) return;
+                        (ag.issues || []).forEach((agIss, agIssIdx) => {
+                            if (matchKey) return;
+                            if (agIss.description && fix.issue_description && agIss.description === fix.issue_description) {
+                                matchKey = 'ag_' + cIdx + '_' + agIdx + '_' + agIssIdx;
+                            }
+                        });
+                    });
+                });
+                if (!matchKey) matchKey = 'saved_' + fix.id;
+                this.generators[matchKey] = {
+                    loading: false,
+                    result: fix.content,
+                    type: fix.fix_type,
+                    data: fix.data,
+                    error: null,
+                    copied: false,
+                    applied: fix.status === 'applied',
+                    fixId: fix.id,
+                    adGroupIdGoogle: fix.ad_group_id_google || null,
+                };
+            });
+        },
+
         // Campaign data for drawer (populated from PHP)
-        campaignsData: <?= json_encode(array_map(function($cIndex, $campaign) use ($campaignTypeConfig, $areaLabels, $generatableAreas, $severityClasses, $severityLabels) {
+        campaignsData: <?= json_encode(array_map(function($cIndex, $campaign) use ($campaignTypeConfig, $areaLabels, $validFixTypes, $severityClasses, $severityLabels, $agIdMap) {
             $campType = strtoupper($campaign['campaign_type'] ?? 'SEARCH');
             $typeConf = $campaignTypeConfig[$campType] ?? ['bg' => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300', 'label' => $campType];
             $score = (float)($campaign['score'] ?? 0);
 
-            $issues = array_map(function($iIndex, $issue) use ($areaLabels, $generatableAreas, $cIndex, $severityClasses, $severityLabels) {
+            $issues = array_map(function($iIndex, $issue) use ($areaLabels, $validFixTypes, $cIndex, $severityClasses, $severityLabels) {
                 $sev = $issue['severity'] ?? 'low';
                 $area = $issue['area'] ?? '';
-                $genType = in_array($area, $generatableAreas) ? $area : null;
+                $fixType = $issue['fix_type'] ?? null;
+                // Use fix_type from AI, but block rewrite_ads at campaign level (needs ad group)
+                $genType = in_array($fixType, $validFixTypes) ? $fixType : null;
+                if ($genType === 'rewrite_ads') $genType = null; // Copy only at ad group level
                 return [
                     'severity' => $sev,
                     'severityClass' => $severityClasses[$sev] ?? $severityClasses['low'],
@@ -1297,7 +1354,7 @@ function evaluationDashboard() {
                 ];
             }, array_keys($campaign['issues'] ?? []), $campaign['issues'] ?? []);
 
-            $adGroups = array_map(function($agIndex, $ag) use ($cIndex, $severityClasses, $severityLabels, $areaLabels, $generatableAreas) {
+            $adGroups = array_map(function($agIndex, $ag) use ($cIndex, $severityClasses, $severityLabels, $areaLabels, $validFixTypes, $agIdMap) {
                 $agScore = (float)($ag['score'] ?? 0);
                 $metrics = [];
                 if (isset($ag['keyword_coherence'])) $metrics[] = ['label' => 'Coerenza KW', 'value' => number_format((float)$ag['keyword_coherence'], 1), 'colorClass' => $agScore < 5 ? 'text-red-600 dark:text-red-400' : ($agScore <= 7 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400')];
@@ -1314,10 +1371,11 @@ function evaluationDashboard() {
                     $metrics[] = ['label' => 'QS Medio', 'value' => number_format($qsScore, 1), 'colorClass' => $qsScore < 5 ? 'text-red-600 dark:text-red-400' : ($qsScore <= 7 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400')];
                 }
 
-                $agIssues = array_map(function($agIssIdx, $agIss) use ($cIndex, $agIndex, $severityClasses, $severityLabels, $areaLabels, $generatableAreas) {
+                $agIssues = array_map(function($agIssIdx, $agIss) use ($cIndex, $agIndex, $severityClasses, $severityLabels, $areaLabels, $validFixTypes) {
                     $s = $agIss['severity'] ?? 'low';
                     $a = $agIss['area'] ?? '';
-                    $genType = in_array($a, $generatableAreas) ? $a : null;
+                    $fixType = $agIss['fix_type'] ?? null;
+                    $genType = in_array($fixType, $validFixTypes) ? $fixType : null;
                     return [
                         'severityClass' => $severityClasses[$s] ?? $severityClasses['low'],
                         'severityLabel' => $severityLabels[$s] ?? ucfirst($s),
@@ -1329,8 +1387,10 @@ function evaluationDashboard() {
                     ];
                 }, array_keys($ag['issues'] ?? []), $ag['issues'] ?? []);
 
+                $agName = $ag['ad_group_name'] ?? 'Gruppo';
                 return [
-                    'name' => $ag['ad_group_name'] ?? 'Gruppo',
+                    'name' => $agName,
+                    'adGroupIdGoogle' => $agIdMap[$agName] ?? '',
                     'score' => number_format($agScore, 1),
                     'scoreBadgeClass' => $agScore < 5 ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' : ($agScore <= 7 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'),
                     'metrics' => $metrics,
@@ -1380,7 +1440,7 @@ function evaluationDashboard() {
             if (gen.result) {
                 html += '<div class="mt-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4"><pre class="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-sans leading-relaxed max-h-96 overflow-y-auto">' + this.escapeHtml(gen.result) + '</pre></div>';
                 <?php if ($canEdit && !empty($project['google_ads_customer_id'])): ?>
-                if (gen.data && ['copy','extensions','keywords'].includes(gen.type) && !gen.applied) {
+                if (gen.data && ['copy','extensions','keywords','rewrite_ads','add_negatives','remove_duplicates','add_extensions'].includes(gen.type) && !gen.applied) {
                     html += '<button onclick="document.querySelector(\'[x-data]\')._x_dataStack[0].openApplyModal(\'' + key + '\')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors mt-2"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg> Applica su Google Ads</button>';
                 }
                 if (gen.applied) {
@@ -1423,7 +1483,12 @@ function evaluationDashboard() {
                 const data = await resp.json();
                 if (data.error) throw new Error(data.error);
 
-                this.generators[key] = { loading: false, result: data.content || '', type: data.type || '', data: data.data || null, error: null, copied: false };
+                this.generators[key] = {
+                    loading: false, result: data.content || '', type: data.type || '',
+                    data: data.data || null, error: null, copied: false,
+                    fixId: data.fix_id || null,
+                    adGroupIdGoogle: context.ad_group_id_google || null,
+                };
             } catch (e) {
                 this.generators[key] = { loading: false, result: null, type: '', data: null, error: e.message || 'Errore di connessione. Riprova.', copied: false };
             }
@@ -1460,13 +1525,18 @@ function evaluationDashboard() {
         openApplyModal(key) {
             const gen = this.generators[key];
             if (!gen || !gen.data) return;
-            const isDuplicateRemoval = gen.data?.action === 'remove_duplicates';
+            const isDuplicateRemoval = gen.type === 'remove_duplicates' || gen.data?.action === 'remove_duplicates';
             const typeDescriptions = {
-                'copy': 'Verra creato un nuovo annuncio RSA in stato PAUSED nel gruppo di annunci della campagna. Potrai attivarlo manualmente da Google Ads.',
-                'extensions': 'Verranno aggiunte le estensioni generate (sitelink, callout, snippet strutturati) alla campagna. Le estensioni esistenti non verranno modificate.',
+                'rewrite_ads': 'Verra creato un nuovo annuncio RSA in stato PAUSED nel gruppo di annunci selezionato. Potrai attivarlo manualmente da Google Ads.',
+                'add_negatives': 'Verranno aggiunte le keyword negative alla campagna. Le keyword negative esistenti non verranno modificate.',
+                'remove_duplicates': 'Verranno RIMOSSE le keyword duplicate dai gruppi di annunci indicati. Le keyword verranno mantenute nel gruppo piu pertinente. Questa operazione non e reversibile.',
+                'add_extensions': 'Verranno aggiunte le estensioni generate (sitelink, callout, snippet strutturati) alla campagna. Le estensioni esistenti non verranno modificate.',
+                // Backwards compat
+                'copy': 'Verra creato un nuovo annuncio RSA in stato PAUSED nel gruppo di annunci. Potrai attivarlo manualmente da Google Ads.',
+                'extensions': 'Verranno aggiunte le estensioni generate alla campagna.',
                 'keywords': isDuplicateRemoval
-                    ? 'Verranno RIMOSSE le keyword duplicate dai gruppi di annunci indicati. Le keyword verranno mantenute nel gruppo piu pertinente. Questa operazione non e reversibile.'
-                    : 'Verranno aggiunte le keyword negative alla campagna a livello di campagna. Le keyword negative esistenti non verranno modificate.',
+                    ? 'Verranno RIMOSSE le keyword duplicate dai gruppi di annunci indicati.'
+                    : 'Verranno aggiunte le keyword negative alla campagna.',
             };
             this.applyModal = {
                 open: true,
@@ -1495,6 +1565,8 @@ function evaluationDashboard() {
                 formData.append('_csrf_token', this.csrfToken);
                 formData.append('type', gen.type);
                 formData.append('data', JSON.stringify(gen.data));
+                if (gen.fixId) formData.append('fix_id', gen.fixId);
+                if (gen.adGroupIdGoogle) formData.append('ad_group_id_google', gen.adGroupIdGoogle);
 
                 const resp = await fetch(this.applyUrl, { method: 'POST', body: formData });
 
