@@ -11,7 +11,7 @@ use Services\ApiLoggerService;
  * API Version: 2024-01
  * Supporta: Products, Pages, Metafields SEO (title_tag, description_tag)
  */
-class ShopifyConnector implements ConnectorInterface
+class ShopifyConnector implements ImageCapableConnectorInterface
 {
     private string $storeUrl;
     private string $accessToken;
@@ -302,6 +302,112 @@ class ShopifyConnector implements ConnectorInterface
             'description' => $item['body_html'] ?? '',
         ];
     }
+
+    // ========== ImageCapableConnectorInterface ==========
+
+    public function fetchProductImages(string $entityType = 'products', int $limit = 100, int $page = 1): array
+    {
+        $startTime = microtime(true);
+
+        $clampedLimit = min($limit, 250);
+        $endpoint = '/admin/api/' . self::API_VERSION . '/products.json?limit=' . $clampedLimit
+            . '&fields=id,title,handle,variants,images,product_type&status=active';
+
+        $response = $this->makeRequest('GET', $endpoint);
+
+        if (!$response['success']) {
+            return ['success' => false, 'items' => [], 'total' => 0, 'has_more' => false, 'error' => $response['error'] ?? 'Errore API Shopify'];
+        }
+
+        $products = $response['data']['products'] ?? [];
+        $items = [];
+
+        foreach ($products as $product) {
+            $imageUrl = '';
+            if (!empty($product['images'])) {
+                $imageUrl = $product['images'][0]['src'] ?? '';
+            } elseif (!empty($product['image'])) {
+                $imageUrl = $product['image']['src'] ?? '';
+            }
+
+            if (empty($imageUrl)) continue;
+
+            $sku = '';
+            if (!empty($product['variants'])) {
+                $sku = $product['variants'][0]['sku'] ?? '';
+            }
+
+            $items[] = [
+                'id' => (string) ($product['id'] ?? ''),
+                'name' => $product['title'] ?? '',
+                'sku' => $sku,
+                'url' => 'https://' . $this->storeUrl . '/products/' . ($product['handle'] ?? ''),
+                'image_url' => $imageUrl,
+                'category' => $product['product_type'] ?? '',
+                'price' => !empty($product['variants']) ? ($product['variants'][0]['price'] ?? '') : '',
+            ];
+        }
+
+        $hasMore = count($products) >= $limit;
+
+        ApiLoggerService::log(self::PROVIDER, '/products.json', ['limit' => $clampedLimit, 'page' => $page], ['count' => count($items)], 200, $startTime, [
+            'module' => self::MODULE,
+            'cost' => 0,
+            'context' => "fetchProductImages page={$page}",
+        ]);
+
+        return ['success' => true, 'items' => $items, 'total' => count($items), 'has_more' => $hasMore, 'error' => null];
+    }
+
+    public function uploadImage(string $entityId, string $entityType, string $imagePath, array $meta = []): array
+    {
+        $startTime = microtime(true);
+
+        if (!file_exists($imagePath)) {
+            return ['success' => false, 'cms_image_id' => null, 'error' => 'File non trovato'];
+        }
+
+        $imageData = base64_encode(file_get_contents($imagePath));
+        $filename = $meta['filename'] ?? basename($imagePath);
+        $alt = $meta['alt'] ?? '';
+        $position = $meta['position'] ?? null;
+
+        $payload = [
+            'image' => [
+                'attachment' => $imageData,
+                'filename' => $filename,
+                'alt' => $alt,
+            ],
+        ];
+        if ($position !== null) {
+            $payload['image']['position'] = $position;
+        }
+
+        $endpoint = '/admin/api/' . self::API_VERSION . '/products/' . $entityId . '/images.json';
+        $response = $this->makeRequest('POST', $endpoint, $payload);
+
+        ApiLoggerService::log(self::PROVIDER, "/products/{$entityId}/images.json", ['filename' => $filename], $response['data'] ?? [], $response['http_code'] ?? 0, $startTime, [
+            'module' => self::MODULE,
+            'cost' => 0,
+            'context' => "uploadImage product={$entityId}",
+        ]);
+
+        if (!$response['success']) {
+            return ['success' => false, 'cms_image_id' => null, 'error' => $response['error'] ?? 'Upload fallito'];
+        }
+
+        $imageId = (string) ($response['data']['image']['id'] ?? '');
+        return ['success' => true, 'cms_image_id' => $imageId, 'error' => null];
+    }
+
+    public function supportsImageUpload(): bool
+    {
+        return true;
+    }
+
+    // -------------------------------------------------------------------------
+    // Private helpers – HTTP
+    // -------------------------------------------------------------------------
 
     /**
      * Esegue una richiesta HTTP verso l'API Shopify
