@@ -1,0 +1,45 @@
+-- PMax Asset Groups & Assets tables
+CREATE TABLE IF NOT EXISTS ga_asset_groups (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sync_id INT NOT NULL,
+    project_id INT NOT NULL,
+    campaign_id_google VARCHAR(50) NOT NULL,
+    campaign_name VARCHAR(255) DEFAULT NULL,
+    asset_group_id_google VARCHAR(50) NOT NULL,
+    asset_group_name VARCHAR(255) DEFAULT NULL,
+    status VARCHAR(50) DEFAULT NULL,
+    ad_strength ENUM('POOR','AVERAGE','GOOD','EXCELLENT','UNSPECIFIED') DEFAULT 'UNSPECIFIED',
+    primary_status VARCHAR(50) DEFAULT NULL,
+    impressions INT DEFAULT 0,
+    clicks INT DEFAULT 0,
+    cost DECIMAL(12,2) DEFAULT 0,
+    conversions DECIMAL(10,2) DEFAULT 0,
+    conversions_value DECIMAL(12,2) DEFAULT 0,
+    ctr DECIMAL(5,4) DEFAULT 0,
+    avg_cpc DECIMAL(8,2) DEFAULT 0,
+    audience_signals JSON DEFAULT NULL,
+    search_themes JSON DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_sync (sync_id),
+    INDEX idx_project (project_id),
+    INDEX idx_campaign (campaign_id_google),
+    INDEX idx_asset_group (asset_group_id_google)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS ga_asset_group_assets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sync_id INT NOT NULL,
+    project_id INT NOT NULL,
+    asset_group_id_google VARCHAR(50) NOT NULL,
+    asset_id_google VARCHAR(50) DEFAULT NULL,
+    field_type VARCHAR(50) NOT NULL,
+    performance_label ENUM('BEST','GOOD','LOW','LEARNING','UNSPECIFIED') DEFAULT 'UNSPECIFIED',
+    primary_status VARCHAR(50) DEFAULT NULL,
+    text_content TEXT DEFAULT NULL,
+    url_content VARCHAR(500) DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_sync (sync_id),
+    INDEX idx_asset_group (asset_group_id_google),
+    INDEX idx_field_type (field_type),
+    INDEX idx_performance (performance_label)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

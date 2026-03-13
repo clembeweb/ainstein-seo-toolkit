@@ -5,6 +5,10 @@ namespace Modules\AdsAnalyzer\Services;
 use Core\Database;
 
 require_once __DIR__ . '/../../../services/AiService.php';
+require_once __DIR__ . '/../models/AssetGroup.php';
+require_once __DIR__ . '/../models/AssetGroupAsset.php';
+use Modules\AdsAnalyzer\Models\AssetGroup;
+use Modules\AdsAnalyzer\Models\AssetGroupAsset;
 
 class CampaignEvaluatorService
 {
@@ -84,7 +88,8 @@ class CampaignEvaluatorService
         array $landingContexts = [],
         array $adGroups = [],
         array $keywords = [],
-        ?array $campaignFilter = null
+        ?array $campaignFilter = null,
+        int $syncId = 0
     ): array {
         // Filtra per campagne selezionate
         if ($campaignFilter !== null && !empty($campaignFilter)) {
@@ -94,7 +99,9 @@ class CampaignEvaluatorService
             $keywords = array_values(array_filter($keywords, fn($kw) => in_array($kw['campaign_id_google'], $campaignFilter)));
         }
 
-        $prompt = $this->buildPrompt($campaigns, $ads, $extensions, $landingContexts, $adGroups, $keywords);
+        $pmaxData = $syncId > 0 ? $this->loadPmaxData($syncId) : [];
+
+        $prompt = $this->buildPrompt($campaigns, $ads, $extensions, $landingContexts, $adGroups, $keywords, $pmaxData);
 
         $messages = [
             ['role' => 'user', 'content' => $prompt],
@@ -130,7 +137,8 @@ class CampaignEvaluatorService
         ?array $previousEvalSummary = null,
         ?array $metricDeltas = null,
         ?array $alerts = null,
-        ?array $campaignFilter = null
+        ?array $campaignFilter = null,
+        int $syncId = 0
     ): array {
         // Filtra per campagne selezionate
         if ($campaignFilter !== null && !empty($campaignFilter)) {
@@ -140,7 +148,9 @@ class CampaignEvaluatorService
             $keywords = array_values(array_filter($keywords, fn($kw) => in_array($kw['campaign_id_google'], $campaignFilter)));
         }
 
-        $prompt = $this->buildPrompt($campaigns, $ads, $extensions, $landingContexts, $adGroups, $keywords);
+        $pmaxData = $syncId > 0 ? $this->loadPmaxData($syncId) : [];
+
+        $prompt = $this->buildPrompt($campaigns, $ads, $extensions, $landingContexts, $adGroups, $keywords, $pmaxData);
 
         // Aggiungi contesto storico
         if ($previousEvalSummary || $metricDeltas) {
@@ -213,7 +223,8 @@ class CampaignEvaluatorService
         array $extensions,
         array $landingContexts,
         array $adGroups,
-        array $keywords
+        array $keywords,
+        array $pmaxData = []
     ): string {
         // Identifica tipi campagna presenti
         $campaignTypes = [];
@@ -221,6 +232,9 @@ class CampaignEvaluatorService
             $type = strtoupper($c['campaign_type'] ?? 'SEARCH');
             $campaignTypes[$type] = true;
         }
+
+        // Separate PMax campaigns from Search/other
+        $pmaxCampaigns = array_filter($campaigns, fn($c) => ($c['campaign_type'] ?? '') === 'PERFORMANCE_MAX');
 
         // Sezione 1: Benchmark (solo tipi presenti)
         $benchmarkText = $this->buildBenchmarkSection($campaignTypes);
@@ -231,6 +245,12 @@ class CampaignEvaluatorService
         // Sezione 3: Dettaglio per ad group
         $adGroupsText = $this->buildAdGroupDetailSection($campaigns, $adGroups, $ads, $keywords);
 
+        // Sezione 3b: PMax asset group data
+        $pmaxText = '';
+        if (!empty($pmaxCampaigns)) {
+            $pmaxText = $this->buildPmaxSection(array_values($pmaxCampaigns), $pmaxData);
+        }
+
         // Sezione 4: Estensioni
         $extText = $this->buildExtensionsSection($extensions);
 
@@ -239,6 +259,33 @@ class CampaignEvaluatorService
 
         // Sezione 6: Struttura risposta
         $hasAdGroups = !empty($adGroups);
+
+        // PMax evaluation rules (added to prompt if PMax campaigns exist)
+        $pmaxRules = '';
+        if (!empty($pmaxCampaigns)) {
+            $pmaxRules = <<<PMAX
+
+REGOLE AGGIUNTIVE PER CAMPAGNE PERFORMANCE MAX:
+
+Per campagne PERFORMANCE_MAX, usa "asset_group_analysis" al posto di "ad_groups":
+"asset_group_analysis": [{
+  "asset_group_name": "Nome",
+  "ad_strength": "POOR|AVERAGE|GOOD|EXCELLENT",
+  "issues": [{"severity": "...", "area": "assets|audience|performance|structure", "fix_type": "rewrite_ads|add_extensions|add_negatives|null", "description": "...", "recommendation": "..."}],
+  "strengths": ["..."]
+}]
+
+CRITERI VALUTAZIONE PMAX:
+1. Ad Strength: POOR = critico, AVERAGE = warning, GOOD = ok, EXCELLENT = ottimo (+6% conv)
+2. Asset sotto minimo = CRITICAL. Sotto ideale = WARNING. Video mancante = WARNING.
+3. performance_label LOW su >30% asset di un tipo = critico. Suggerisci sostituzione con fix_type="rewrite_ads"
+4. Audience signals assenti = CRITICAL. Manca customer match/first-party = WARNING.
+5. <30 conversioni/mese = WARNING (dati insufficienti per ottimizzare). Budget < 3x CPA target = WARNING.
+6. Asset group con >50% budget ma <30% conversioni = spesa inefficiente.
+7. Per PMax NON valutare: keyword coherence, match type, quality score, ad copy RSA (non esistono).
+8. fix_type per PMax: "rewrite_ads" = genera headline/description sostitutivi, "add_extensions" = genera asset mancanti, "add_negatives" = keyword negative campagna, null = non automatizzabile.
+PMAX;
+        }
 
         return <<<PROMPT
 Sei un esperto Google Ads certificato con esperienza in tutti i tipi di campagna (Search, Shopping, Performance Max, Display, Video).
@@ -249,6 +296,7 @@ DATI CAMPAGNE:
 {$campaignsText}
 
 {$adGroupsText}
+{$pmaxText}
 
 ESTENSIONI:
 {$extText}
@@ -413,7 +461,149 @@ REGOLE:
 - Se non ci sono dati ad group, ometti il campo "ad_groups" dalle campagne
 - Se non ci sono dati landing, ometti "landing_evaluation" e "landing_suggestions"
 - campaign_suggestions e sempre obbligatorio (anche senza dati landing)
+{$pmaxRules}
 PROMPT;
+    }
+
+    /**
+     * Load PMax-specific data (asset groups + assets) for given sync.
+     * Returns: ['asset_groups' => [...], 'assets_by_ag' => [...]]
+     */
+    private function loadPmaxData(int $syncId): array
+    {
+        $assetGroups = AssetGroup::getBySyncId($syncId);
+        $assetsGrouped = AssetGroupAsset::getBySyncGrouped($syncId);
+
+        return [
+            'asset_groups' => $assetGroups,
+            'assets_by_ag' => $assetsGrouped,
+        ];
+    }
+
+    /**
+     * Build PMax-specific prompt section with asset group data.
+     * Called for PERFORMANCE_MAX campaigns instead of buildAdGroupDetailSection().
+     */
+    private function buildPmaxSection(array $pmaxCampaigns, array $pmaxData): string
+    {
+        $assetGroups = $pmaxData['asset_groups'] ?? [];
+        $assetsByAg = $pmaxData['assets_by_ag'] ?? [];
+
+        if (empty($assetGroups)) return '';
+
+        // Group asset groups by campaign
+        $agByCampaign = [];
+        foreach ($assetGroups as $ag) {
+            $agByCampaign[$ag['campaign_id_google']][] = $ag;
+        }
+
+        // Asset requirements reference
+        $section = "\n\n--- DATI PERFORMANCE MAX ---\n\n";
+        $section .= "REQUISITI ASSET GOOGLE (minimi → ideali):\n";
+        $section .= "- HEADLINE: 3→15 (max 30 char) | LONG_HEADLINE: 1→5 (max 90 char)\n";
+        $section .= "- DESCRIPTION: 2→5 (max 90 char) | MARKETING_IMAGE: 3→15+ (1200x628)\n";
+        $section .= "- SQUARE_MARKETING_IMAGE: 1→5+ (1200x1200) | PORTRAIT_MARKETING_IMAGE: 0→5+\n";
+        $section .= "- LOGO: 1→5 (1200x1200) | LANDSCAPE_LOGO: 0→5\n";
+        $section .= "- YOUTUBE_VIDEO: 0→5 (FORTEMENTE raccomandato, senza Google genera video auto di bassa qualità)\n";
+        $section .= "- BUSINESS_NAME: 1 (max 25 char)\n\n";
+
+        foreach ($pmaxCampaigns as $camp) {
+            $campId = $camp['campaign_id_google'] ?? '';
+            $groups = $agByCampaign[$campId] ?? [];
+            if (empty($groups)) continue;
+
+            $section .= "CAMPAGNA PMAX: \"{$camp['campaign_name']}\"";
+            $section .= " | Budget: €" . number_format((float)($camp['budget_amount'] ?? 0), 0) . "/giorno";
+            $section .= " | Strategia: " . ($camp['bidding_strategy'] ?? '?') . "\n";
+
+            foreach ($groups as $ag) {
+                $agId = $ag['asset_group_id_google'];
+                $section .= "\n  ASSET GROUP: \"{$ag['asset_group_name']}\"";
+                $section .= " | Ad Strength: {$ag['ad_strength']}";
+                $section .= " | Status: {$ag['status']}\n";
+                $section .= "  Metriche: {$ag['clicks']} click, {$ag['impressions']} imp, ";
+                $section .= "€{$ag['cost']} costo, {$ag['conversions']} conv";
+                if ((float)$ag['cost'] > 0 && (float)$ag['conversions'] > 0) {
+                    $roas = round((float)$ag['conversions_value'] / (float)$ag['cost'], 2);
+                    $cpa = round((float)$ag['cost'] / (float)$ag['conversions'], 2);
+                    $section .= ", ROAS {$roas}x, CPA €{$cpa}";
+                }
+                $section .= "\n";
+
+                // Asset summary per type
+                $assets = $assetsByAg[$agId] ?? [];
+                $byType = [];
+                $lowAssets = [];
+                foreach ($assets as $asset) {
+                    $ft = $asset['field_type'] ?? 'OTHER';
+                    $pl = $asset['performance_label'] ?? 'UNSPECIFIED';
+                    if (!isset($byType[$ft])) $byType[$ft] = [];
+                    $byType[$ft][] = $pl;
+
+                    // Collect LOW text assets for AI to suggest replacements
+                    if ($pl === 'LOW' && !empty($asset['text_content'])) {
+                        $lowAssets[] = "{$ft}: \"{$asset['text_content']}\"";
+                    }
+                }
+
+                $section .= "  Asset: ";
+                $assetParts = [];
+                foreach ($byType as $type => $labels) {
+                    $total = count($labels);
+                    $counts = array_count_values($labels);
+                    $parts = [];
+                    foreach (['BEST', 'GOOD', 'LOW', 'LEARNING'] as $l) {
+                        if (isset($counts[$l])) $parts[] = "{$counts[$l]} {$l}";
+                    }
+                    $assetParts[] = "{$total} {$type} (" . implode(', ', $parts) . ")";
+                }
+                $section .= implode(', ', $assetParts) . "\n";
+
+                // Show LOW asset text content
+                if (!empty($lowAssets)) {
+                    $section .= "  Asset LOW da sostituire: " . implode('; ', array_slice($lowAssets, 0, 10)) . "\n";
+                }
+
+                // Missing asset types check
+                $minRequired = [
+                    'HEADLINE' => 3, 'LONG_HEADLINE' => 1, 'DESCRIPTION' => 2,
+                    'MARKETING_IMAGE' => 3, 'SQUARE_MARKETING_IMAGE' => 1,
+                    'LOGO' => 1, 'BUSINESS_NAME' => 1,
+                ];
+                $missing = [];
+                foreach ($minRequired as $type => $min) {
+                    $current = count($byType[$type] ?? []);
+                    if ($current < $min) {
+                        $missing[] = "{$type} ({$current}/{$min} min)";
+                    }
+                }
+                if (empty($byType['YOUTUBE_VIDEO'] ?? [])) {
+                    $missing[] = "YOUTUBE_VIDEO (0, raccomandato)";
+                }
+                if (!empty($missing)) {
+                    $section .= "  ⚠ MANCANO: " . implode(', ', $missing) . "\n";
+                }
+
+                // Audience signals
+                $audiences = json_decode($ag['audience_signals'] ?? 'null', true);
+                $themes = json_decode($ag['search_themes'] ?? 'null', true);
+
+                if (!empty($audiences)) {
+                    $signalTypes = array_column($audiences, 'type');
+                    $section .= "  Audience Signals: " . implode(', ', array_unique($signalTypes)) . "\n";
+                } else {
+                    $section .= "  Audience Signals: NESSUNO ⚠\n";
+                }
+
+                if (!empty($themes)) {
+                    $section .= "  Search Themes: " . implode(', ', array_slice($themes, 0, 10)) . "\n";
+                } else {
+                    $section .= "  Search Themes: NESSUNO ⚠\n";
+                }
+            }
+        }
+
+        return $section;
     }
 
     private function buildBenchmarkSection(array $campaignTypes): string

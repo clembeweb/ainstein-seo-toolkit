@@ -599,7 +599,8 @@ class CampaignController
                 $landingContexts,
                 $adGroupsData,
                 $keywordsData,
-                $campaignsFilter
+                $campaignsFilter,
+                (int)$sync['id']
             );
 
             Database::reconnect();
@@ -768,6 +769,22 @@ class CampaignController
             }
         }
 
+        // Load PMax asset group data if this evaluation has a sync
+        require_once __DIR__ . '/../models/AssetGroup.php';
+        require_once __DIR__ . '/../models/AssetGroupAsset.php';
+        $assetGroups = [];
+        $assetsByAg = [];
+        $assetGroupIdMap = [];
+        if (!empty($evaluation['sync_id'])) {
+            $assetGroups = \Modules\AdsAnalyzer\Models\AssetGroup::getBySyncId($evaluation['sync_id']);
+            $assetsByAg = \Modules\AdsAnalyzer\Models\AssetGroupAsset::getBySyncGrouped($evaluation['sync_id']);
+
+            // Map asset_group_name → asset_group_id_google (for fix generation targeting)
+            foreach ($assetGroups as $ag) {
+                $assetGroupIdMap[$ag['asset_group_name'] ?? ''] = $ag['asset_group_id_google'] ?? '';
+            }
+        }
+
         return View::render('ads-analyzer/campaigns/evaluation', [
             'title' => 'Valutazione Campagne - ' . $project['name'],
             'user' => $user,
@@ -782,6 +799,9 @@ class CampaignController
             'availableSyncs' => $availableSyncs,
             'savedFixes' => $savedFixes,
             'agIdMap' => $agIdMap,
+            'assetGroups' => $assetGroups,
+            'assetsByAg' => $assetsByAg,
+            'assetGroupIdMap' => $assetGroupIdMap,
         ]);
     }
 
@@ -1321,6 +1341,13 @@ class CampaignController
             $lines[] = "DESCRIPTIONS:";
             foreach (($data['descriptions'] ?? []) as $i => $d) {
                 $lines[] = ($i + 1) . ". " . $d . " (" . mb_strlen($d) . " car.)";
+            }
+            if (!empty($data['long_headlines'])) {
+                $lines[] = "";
+                $lines[] = "LONG HEADLINE:";
+                foreach ($data['long_headlines'] as $i => $lh) {
+                    $lines[] = ($i + 1) . ". " . $lh . " (" . mb_strlen($lh) . " car.)";
+                }
             }
             if (!empty($data['paths'])) {
                 $lines[] = "";

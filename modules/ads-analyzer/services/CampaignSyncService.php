@@ -11,6 +11,8 @@ use Modules\AdsAnalyzer\Models\Ad;
 use Modules\AdsAnalyzer\Models\Extension;
 use Modules\AdsAnalyzer\Models\SearchTerm;
 use Modules\AdsAnalyzer\Models\AdGroup;
+use Modules\AdsAnalyzer\Models\AssetGroup;
+use Modules\AdsAnalyzer\Models\AssetGroupAsset;
 use Modules\AdsAnalyzer\Models\Project;
 use Core\Database;
 use Core\Logger;
@@ -66,6 +68,8 @@ class CampaignSyncService
             'keywords_synced' => 0,
             'ads_synced' => 0,
             'extensions_synced' => 0,
+            'asset_groups_synced' => 0,
+            'assets_synced' => 0,
             'search_terms_synced' => 0,
         ];
 
@@ -92,6 +96,13 @@ class CampaignSyncService
 
             // 6. Sync estensioni
             $counts['extensions_synced'] = $this->syncExtensions();
+            Sync::updateCounts($this->syncId, $counts);
+            Database::reconnect();
+
+            // 6b. Sync PMax asset groups + assets + audience signals
+            $pmaxCounts = $this->syncPmaxData($dateFrom, $dateTo);
+            $counts['asset_groups_synced'] = $pmaxCounts['asset_groups'];
+            $counts['assets_synced'] = $pmaxCounts['assets'];
             Sync::updateCounts($this->syncId, $counts);
             Database::reconnect();
 
@@ -875,5 +886,330 @@ class CampaignSyncService
         }
 
         return $map;
+    }
+
+    // =========================================================================
+    // PMAX SYNC METHODS
+    // =========================================================================
+
+    /**
+     * Sync PMax-specific data: asset groups, assets, audience signals.
+     * Only runs for PERFORMANCE_MAX campaigns in the current sync.
+     *
+     * @return array ['asset_groups' => int, 'assets' => int]
+     */
+    private function syncPmaxData(string $dateFrom, string $dateTo): array
+    {
+        // Get PMax campaign IDs from this sync
+        $pmaxCampaigns = Database::fetchAll(
+            "SELECT campaign_id_google, campaign_name FROM ga_campaigns
+             WHERE sync_id = ? AND campaign_type = 'PERFORMANCE_MAX'",
+            [$this->syncId]
+        );
+
+        if (empty($pmaxCampaigns)) {
+            return ['asset_groups' => 0, 'assets' => 0];
+        }
+
+        $totalAg = 0;
+        $totalAssets = 0;
+
+        foreach ($pmaxCampaigns as $campaign) {
+            $campaignId = $campaign['campaign_id_google'];
+            $campaignName = $campaign['campaign_name'];
+
+            // 1. Sync asset groups
+            $agCount = $this->syncAssetGroups($campaignId, $campaignName, $dateFrom, $dateTo);
+            $totalAg += $agCount;
+
+            // 2. Sync asset group assets + fetch asset content
+            $assetCount = $this->syncAssetGroupAssets($campaignId);
+            $totalAssets += $assetCount;
+
+            // 3. Sync audience signals and search themes (updates ga_asset_groups JSON columns)
+            $this->syncAudienceSignals($campaignId);
+
+            Database::reconnect();
+        }
+
+        return ['asset_groups' => $totalAg, 'assets' => $totalAssets];
+    }
+
+    /**
+     * Sync asset groups for a PMax campaign
+     */
+    private function syncAssetGroups(string $campaignIdGoogle, string $campaignName, string $dateFrom, string $dateTo): int
+    {
+        $gaql = "SELECT asset_group.id, asset_group.name, asset_group.status, " .
+                "asset_group.ad_strength, asset_group.primary_status, " .
+                "metrics.impressions, metrics.clicks, metrics.cost_micros, " .
+                "metrics.conversions, metrics.conversions_value " .
+                "FROM asset_group " .
+                "WHERE campaign.id = {$campaignIdGoogle} " .
+                "AND segments.date BETWEEN '{$dateFrom}' AND '{$dateTo}'";
+
+        $response = $this->gadsService->searchStream($gaql);
+        $rows = $this->extractRows($response);
+
+        // Aggregate by asset_group.id (rows are per-day with segments.date)
+        $aggregated = [];
+        foreach ($rows as $row) {
+            $ag = $row['assetGroup'] ?? [];
+            $metrics = $row['metrics'] ?? [];
+            $agId = (string) ($ag['id'] ?? '');
+            if (empty($agId)) continue;
+
+            if (!isset($aggregated[$agId])) {
+                $aggregated[$agId] = [
+                    'id' => $agId,
+                    'name' => $ag['name'] ?? '',
+                    'status' => $ag['status'] ?? null,
+                    'ad_strength' => $ag['adStrength'] ?? 'UNSPECIFIED',
+                    'primary_status' => $ag['primaryStatus'] ?? null,
+                    'clicks' => 0, 'impressions' => 0, 'cost_micros' => 0,
+                    'conversions' => 0.0, 'conversions_value' => 0.0,
+                ];
+            }
+
+            $agg = &$aggregated[$agId];
+            $agg['clicks'] += (int) ($metrics['clicks'] ?? 0);
+            $agg['impressions'] += (int) ($metrics['impressions'] ?? 0);
+            $agg['cost_micros'] += (int) ($metrics['costMicros'] ?? 0);
+            $agg['conversions'] += (float) ($metrics['conversions'] ?? 0);
+            $agg['conversions_value'] += (float) ($metrics['conversionsValue'] ?? 0);
+            unset($agg);
+        }
+
+        $count = 0;
+        foreach ($aggregated as $agg) {
+            $clicks = $agg['clicks'];
+            $impressions = $agg['impressions'];
+            $cost = $agg['cost_micros'] / 1000000;
+
+            AssetGroup::create([
+                'sync_id' => $this->syncId,
+                'project_id' => $this->projectId,
+                'campaign_id_google' => $campaignIdGoogle,
+                'campaign_name' => $campaignName,
+                'asset_group_id_google' => $agg['id'],
+                'asset_group_name' => $agg['name'],
+                'status' => $agg['status'],
+                'ad_strength' => $agg['ad_strength'],
+                'primary_status' => $agg['primary_status'],
+                'impressions' => $impressions,
+                'clicks' => $clicks,
+                'cost' => round($cost, 2),
+                'conversions' => round($agg['conversions'], 2),
+                'conversions_value' => round($agg['conversions_value'], 2),
+                'ctr' => $this->calcCtr($clicks, $impressions),
+                'avg_cpc' => $clicks > 0 ? round($cost / $clicks, 2) : 0,
+            ]);
+            $count++;
+        }
+
+        return $count;
+    }
+
+    /**
+     * Sync individual assets for each asset group of a PMax campaign.
+     * Two-step: (1) get asset group -> asset links with performance labels,
+     *           (2) batch-fetch asset content (text/url).
+     */
+    private function syncAssetGroupAssets(string $campaignIdGoogle): int
+    {
+        // Step 1: Get asset links + performance labels
+        $gaql = "SELECT asset_group.id, asset_group_asset.asset, " .
+                "asset_group_asset.field_type, asset_group_asset.performance_label, " .
+                "asset_group_asset.primary_status " .
+                "FROM asset_group_asset " .
+                "WHERE campaign.id = {$campaignIdGoogle}";
+
+        $response = $this->gadsService->searchStream($gaql);
+        $rows = $this->extractRows($response);
+
+        if (empty($rows)) return 0;
+
+        // Collect asset resource names for bulk content fetch
+        $assetLinks = [];
+        $resourceNames = [];
+        foreach ($rows as $row) {
+            $ag = $row['assetGroup'] ?? [];
+            $aga = $row['assetGroupAsset'] ?? [];
+            $assetResourceName = $aga['asset'] ?? '';
+            if (empty($assetResourceName)) continue;
+
+            $assetLinks[] = [
+                'asset_group_id' => (string) ($ag['id'] ?? ''),
+                'asset_resource_name' => $assetResourceName,
+                'field_type' => $aga['fieldType'] ?? 'UNSPECIFIED',
+                'performance_label' => $aga['performanceLabel'] ?? 'UNSPECIFIED',
+                'primary_status' => $aga['primaryStatus'] ?? null,
+            ];
+            $resourceNames[$assetResourceName] = true;
+        }
+
+        // Step 2: Bulk fetch asset content
+        $assetContent = $this->fetchAssetContent(array_keys($resourceNames));
+
+        // Step 3: Save to DB
+        $count = 0;
+        foreach ($assetLinks as $link) {
+            $content = $assetContent[$link['asset_resource_name']] ?? [];
+            // Extract numeric asset ID from resource name: customers/123/assets/456 -> 456
+            $assetId = '';
+            if (preg_match('/assets\/(\d+)$/', $link['asset_resource_name'], $m)) {
+                $assetId = $m[1];
+            }
+
+            AssetGroupAsset::create([
+                'sync_id' => $this->syncId,
+                'project_id' => $this->projectId,
+                'asset_group_id_google' => $link['asset_group_id'],
+                'asset_id_google' => $assetId,
+                'field_type' => $link['field_type'],
+                'performance_label' => $link['performance_label'],
+                'primary_status' => $link['primary_status'],
+                'text_content' => $content['text'] ?? null,
+                'url_content' => $content['url'] ?? null,
+            ]);
+            $count++;
+        }
+
+        return $count;
+    }
+
+    /**
+     * Fetch content (text/image URL/video ID) for a batch of asset resource names.
+     * Returns: ['customers/X/assets/Y' => ['text' => '...', 'url' => '...'], ...]
+     */
+    private function fetchAssetContent(array $resourceNames): array
+    {
+        if (empty($resourceNames)) return [];
+
+        // Build IN clause with quoted resource names
+        $quoted = array_map(fn($rn) => "'" . addslashes($rn) . "'", $resourceNames);
+        $inClause = implode(',', $quoted);
+
+        $gaql = "SELECT asset.resource_name, asset.type, " .
+                "asset.text_asset.text, " .
+                "asset.image_asset.full_size.url, " .
+                "asset.youtube_video_asset.youtube_video_id " .
+                "FROM asset " .
+                "WHERE asset.resource_name IN ({$inClause})";
+
+        $response = $this->gadsService->searchStream($gaql);
+        $rows = $this->extractRows($response);
+
+        $content = [];
+        foreach ($rows as $row) {
+            $asset = $row['asset'] ?? [];
+            $rn = $asset['resourceName'] ?? '';
+            if (empty($rn)) continue;
+
+            $text = $asset['textAsset']['text'] ?? null;
+            $imageUrl = $asset['imageAsset']['fullSize']['url'] ?? null;
+            $videoId = $asset['youtubeVideoAsset']['youtubeVideoId'] ?? null;
+
+            $content[$rn] = [
+                'text' => $text,
+                'url' => $imageUrl ?: ($videoId ? "https://youtube.com/watch?v={$videoId}" : null),
+            ];
+        }
+
+        return $content;
+    }
+
+    /**
+     * Sync audience signals and search themes for PMax asset groups.
+     * Updates the JSON columns in ga_asset_groups.
+     */
+    private function syncAudienceSignals(string $campaignIdGoogle): void
+    {
+        $gaql = "SELECT asset_group.id, " .
+                "asset_group_signal.audience, " .
+                "asset_group_signal.search_theme " .
+                "FROM asset_group_signal " .
+                "WHERE campaign.id = {$campaignIdGoogle}";
+
+        try {
+            $response = $this->gadsService->searchStream($gaql);
+            $rows = $this->extractRows($response);
+        } catch (\Exception $e) {
+            // asset_group_signal may not be available for all accounts/API versions
+            Logger::channel('ads')->warning('PMax audience signals fetch failed', [
+                'campaign_id' => $campaignIdGoogle,
+                'error' => $e->getMessage(),
+            ]);
+            return;
+        }
+
+        if (empty($rows)) return;
+
+        // Group signals by asset_group.id
+        $signalsByAg = [];
+        foreach ($rows as $row) {
+            $agId = (string) ($row['assetGroup']['id'] ?? '');
+            if (empty($agId)) continue;
+
+            $audience = $row['assetGroupSignal']['audience'] ?? null;
+            $searchTheme = $row['assetGroupSignal']['searchTheme'] ?? null;
+
+            if (!isset($signalsByAg[$agId])) {
+                $signalsByAg[$agId] = ['audiences' => [], 'search_themes' => []];
+            }
+
+            if ($audience) {
+                $signalsByAg[$agId]['audiences'][] = $this->parseAudienceSignal($audience);
+            }
+            if ($searchTheme) {
+                $themeText = $searchTheme['text'] ?? '';
+                if ($themeText) {
+                    $signalsByAg[$agId]['search_themes'][] = $themeText;
+                }
+            }
+        }
+
+        // Update ga_asset_groups with audience signals JSON
+        foreach ($signalsByAg as $agId => $signals) {
+            $audienceJson = !empty($signals['audiences']) ? json_encode($signals['audiences'], JSON_UNESCAPED_UNICODE) : null;
+            $themesJson = !empty($signals['search_themes']) ? json_encode($signals['search_themes'], JSON_UNESCAPED_UNICODE) : null;
+
+            Database::query(
+                "UPDATE ga_asset_groups SET audience_signals = ?, search_themes = ?
+                 WHERE sync_id = ? AND asset_group_id_google = ?",
+                [$audienceJson, $themesJson, $this->syncId, $agId]
+            );
+        }
+    }
+
+    /**
+     * Parse audience signal proto into simplified structure
+     */
+    private function parseAudienceSignal(array $audience): array
+    {
+        $result = ['type' => 'unknown', 'values' => []];
+
+        // audience.userInterest
+        if (!empty($audience['userInterest'])) {
+            $result['type'] = 'interest';
+            $result['values'][] = $audience['userInterest']['userInterestCategory'] ?? 'unknown';
+        }
+        // audience.userList
+        if (!empty($audience['userList'])) {
+            $result['type'] = 'user_list';
+            $result['values'][] = $audience['userList']['userList'] ?? 'unknown';
+        }
+        // audience.customAudience
+        if (!empty($audience['customAudience'])) {
+            $result['type'] = 'custom_audience';
+            $result['values'][] = $audience['customAudience']['customAudience'] ?? 'unknown';
+        }
+        // audience.detailedDemographic
+        if (!empty($audience['detailedDemographic'])) {
+            $result['type'] = 'demographic';
+            $result['values'][] = $audience['detailedDemographic']['detailedDemographic'] ?? 'unknown';
+        }
+
+        return $result;
     }
 }

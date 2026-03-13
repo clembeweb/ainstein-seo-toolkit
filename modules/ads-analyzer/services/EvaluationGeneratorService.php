@@ -125,6 +125,12 @@ PROMPT;
      */
     private function buildCopyPrompt(array $context, array $data): string
     {
+        $scope = $context['scope'] ?? 'ad_group';
+
+        if ($scope === 'asset_group') {
+            return $this->buildPmaxCopyPrompt($context, $data);
+        }
+
         $issue = $context['issue'] ?? $context['suggestion'] ?? '';
         $recommendation = $context['recommendation'] ?? $context['expected_impact'] ?? '';
         $campaignName = $context['campaign_name'] ?? '';
@@ -206,6 +212,78 @@ Regole:
 - Esattamente 3 descriptions, ciascuna max 90 caratteri
 - Paths opzionali, max 15 caratteri ciascuno
 - Includi le keyword principali dell'ad group nelle headline
+- SOLO JSON valido, nessun commento o testo aggiuntivo
+PROMPT;
+    }
+
+    /**
+     * Prompt per generare nuovi asset per PMax asset group
+     * Genera 15 headline (30 char) + 5 description (90 char) + 1 long headline (90 char)
+     */
+    private function buildPmaxCopyPrompt(array $context, array $data): string
+    {
+        $issue = $context['issue'] ?? $context['suggestion'] ?? '';
+        $recommendation = $context['recommendation'] ?? $context['expected_impact'] ?? '';
+        $campaignName = $context['campaign_name'] ?? '';
+        $assetGroupName = $context['ad_group_name'] ?? '';
+
+        $businessCtx = mb_substr($data['business_context'] ?? '', 0, 500);
+
+        // Get existing text assets from the evaluation data
+        $existingAssets = [];
+        // Try to find assets from the sync data passed in $data
+        foreach (($data['ads'] ?? []) as $ad) {
+            // In PMax context, ads array may contain asset group assets
+            if (!empty($assetGroupName) && ($ad['ad_group_name'] ?? '') !== $assetGroupName) continue;
+            for ($i = 1; $i <= 15; $i++) {
+                $h = $ad["headline_{$i}"] ?? '';
+                if ($h) $existingAssets[] = "Headline: {$h}";
+            }
+            for ($i = 1; $i <= 4; $i++) {
+                $d = $ad["description_{$i}"] ?? '';
+                if ($d) $existingAssets[] = "Description: {$d}";
+            }
+            if (count($existingAssets) >= 20) break;
+        }
+        $existingText = !empty($existingAssets) ? implode("\n", $existingAssets) : 'Nessun asset testuale esistente';
+
+        return <<<PROMPT
+Sei un esperto Performance Max Google Ads specializzato in asset creativi ad alta conversione.
+
+CONTESTO BUSINESS:
+{$businessCtx}
+
+CAMPAGNA PERFORMANCE MAX: {$campaignName}
+ASSET GROUP: {$assetGroupName}
+
+ASSET TESTUALI ESISTENTI:
+{$existingText}
+
+PROBLEMA IDENTIFICATO:
+{$issue}
+
+RACCOMANDAZIONE:
+{$recommendation}
+
+ISTRUZIONI:
+Genera nuovi asset testuali per risolvere il problema identificato nell'asset group Performance Max.
+I testi devono essere diversificati: non ripetere lo stesso concetto con parole diverse.
+IMPORTANTE: I testi devono essere nella STESSA LINGUA degli asset esistenti e del contesto business.
+
+GENERA in formato JSON esatto (NESSUN testo fuori dal JSON):
+{
+  "headlines": ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10", "H11", "H12", "H13", "H14", "H15"],
+  "long_headlines": ["Long Headline 1"],
+  "descriptions": ["Desc 1", "Desc 2", "Desc 3", "Desc 4", "Desc 5"]
+}
+
+Regole:
+- Esattamente 15 headlines, ciascuna max 30 caratteri
+- Esattamente 1 long headline, max 90 caratteri
+- Esattamente 5 descriptions, ciascuna max 90 caratteri
+- Headlines: mix di benefit, feature, CTA, social proof, urgency
+- Diversifica: ogni headline deve comunicare un messaggio DIVERSO
+- Includi keyword rilevanti per il business
 - SOLO JSON valido, nessun commento o testo aggiuntivo
 PROMPT;
     }

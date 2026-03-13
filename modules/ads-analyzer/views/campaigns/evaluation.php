@@ -823,7 +823,8 @@ HTML;
                     </div>
                 </template>
 
-                <!-- Ad Groups -->
+                <!-- Ad Groups (hidden for PMax campaigns) -->
+                <template x-if="!campaignsData[selectedCampaign]?.isPmax">
                 <template x-if="campaignsData[selectedCampaign].adGroups.length > 0">
                     <div>
                         <h4 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-1.5">
@@ -913,6 +914,102 @@ HTML;
                         </div>
                     </div>
                 </template>
+                </template>
+
+                <!-- PMax Asset Groups (shown instead of ad groups for PMax campaigns) -->
+                <template x-if="campaignsData[selectedCampaign]?.isPmax && campaignsData[selectedCampaign]?.assetGroups?.length">
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+                            Asset Groups
+                        </h3>
+                        <template x-for="(aga, agaIdx) in campaignsData[selectedCampaign].assetGroups" :key="agaIdx">
+                            <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                                <button x-init="aga._open = false"
+                                        @click="aga._open = !aga._open"
+                                        class="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-sm font-medium text-slate-800 dark:text-slate-200" x-text="aga.name"></span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                              :class="aga.adStrengthClass"
+                                              x-text="'Ad Strength: ' + aga.adStrength"></span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <template x-if="aga.issues.filter(i => i.severity === 'critical' || i.severity === 'high').length">
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                                  x-text="aga.issues.filter(i => i.severity === 'critical' || i.severity === 'high').length"></span>
+                                        </template>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform" :class="aga._open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                    </div>
+                                </button>
+                                <div x-show="aga._open" x-collapse class="border-t border-slate-200 dark:border-slate-700">
+                                    <!-- Issues -->
+                                    <template x-if="aga.issues.length">
+                                        <div class="p-4 space-y-3">
+                                            <h4 class="text-sm font-semibold text-slate-600 dark:text-slate-400">Problemi</h4>
+                                            <template x-for="(agaIss, issIdx) in aga.issues" :key="issIdx">
+                                                <div class="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-700/30">
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium shrink-0"
+                                                          :class="agaIss.sevClass" x-text="agaIss.severity"></span>
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="text-sm text-slate-800 dark:text-slate-200" x-text="agaIss.description"></p>
+                                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1" x-text="agaIss.recommendation"></p>
+                                                    </div>
+                                                    <?php if ($canEdit): ?>
+                                                    <template x-if="agaIss.genType">
+                                                        <button @click="generateFix(agaIss.genType, {
+                                                                    campaign_name: campaignsData[selectedCampaign].name,
+                                                                    ad_group_name: aga.name,
+                                                                    ad_group_id_google: aga.assetGroupIdGoogle || '',
+                                                                    issue: agaIss.description,
+                                                                    recommendation: agaIss.recommendation,
+                                                                    scope: 'asset_group'
+                                                                }, agaIss.genKey)"
+                                                                :disabled="generators[agaIss.genKey]?.loading"
+                                                                class="shrink-0 inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/30 transition-colors disabled:opacity-50">
+                                                            <template x-if="!generators[agaIss.genKey]?.loading">
+                                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                                            </template>
+                                                            <template x-if="generators[agaIss.genKey]?.loading">
+                                                                <svg class="w-3.5 h-3.5 mr-1 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                            </template>
+                                                            Genera con AI
+                                                        </button>
+                                                    </template>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <!-- Generated fix result -->
+                                    <template x-for="(agaIss, issIdx) in aga.issues.filter(i => i.genType)" :key="'gen_'+issIdx">
+                                        <template x-if="generators[agaIss.genKey]?.html">
+                                            <div class="px-4 pb-4">
+                                                <div class="rounded-lg bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 p-4"
+                                                     x-html="generators[agaIss.genKey].html"></div>
+                                            </div>
+                                        </template>
+                                    </template>
+                                    <!-- Strengths -->
+                                    <template x-if="aga.strengths && aga.strengths.length">
+                                        <div class="p-4 border-t border-slate-100 dark:border-slate-700">
+                                            <h4 class="text-sm font-semibold text-green-600 dark:text-green-400 mb-2">Punti di forza</h4>
+                                            <ul class="space-y-1">
+                                                <template x-for="(str, sIdx) in aga.strengths" :key="sIdx">
+                                                    <li class="text-sm text-slate-600 dark:text-slate-400 flex items-start gap-2">
+                                                        <svg class="w-4 h-4 text-green-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                        <span x-text="str"></span>
+                                                    </li>
+                                                </template>
+                                            </ul>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
             </div>
         </template>
     </div>
@@ -1329,7 +1426,7 @@ function evaluationDashboard() {
         },
 
         // Campaign data for drawer (populated from PHP)
-        campaignsData: <?= json_encode(array_map(function($cIndex, $campaign) use ($campaignTypeConfig, $areaLabels, $validFixTypes, $severityClasses, $severityLabels, $agIdMap) {
+        campaignsData: <?= json_encode(array_map(function($cIndex, $campaign) use ($campaignTypeConfig, $areaLabels, $validFixTypes, $severityClasses, $severityLabels, $agIdMap, $assetGroupIdMap) {
             $campType = strtoupper($campaign['campaign_type'] ?? 'SEARCH');
             $typeConf = $campaignTypeConfig[$campType] ?? ['bg' => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300', 'label' => $campType];
             $score = (float)($campaign['score'] ?? 0);
@@ -1401,6 +1498,52 @@ function evaluationDashboard() {
                 ];
             }, array_keys($campaign['ad_groups'] ?? []), $campaign['ad_groups'] ?? []);
 
+            // For PMax campaigns, use asset_group_analysis instead of ad_groups
+            $isPmax = ($campType) === 'PERFORMANCE_MAX';
+            $assetGroupAnalysis = $campaign['asset_group_analysis'] ?? [];
+
+            $assetGroupsData = [];
+            if ($isPmax && !empty($assetGroupAnalysis)) {
+                foreach ($assetGroupAnalysis as $agi => $aga) {
+                    $agaIssues = [];
+                    foreach ($aga['issues'] ?? [] as $ii => $issue) {
+                        $fixType = $issue['fix_type'] ?? null;
+                        $genType = in_array($fixType, $validFixTypes) ? $fixType : null;
+                        $genKey = "ag_{$cIndex}_{$agi}_{$ii}";
+
+                        $agaIssues[] = [
+                            'severity' => $issue['severity'] ?? 'medium',
+                            'area' => $issue['area'] ?? '',
+                            'description' => $issue['description'] ?? '',
+                            'recommendation' => $issue['recommendation'] ?? '',
+                            'genType' => $genType,
+                            'genKey' => $genKey,
+                            'sevClass' => match($issue['severity'] ?? '') {
+                                'critical' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+                                'high' => 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+                                default => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+                            },
+                        ];
+                    }
+
+                    $agName = $aga['asset_group_name'] ?? 'Asset Group ' . ($agi + 1);
+                    $assetGroupsData[] = [
+                        'name' => $agName,
+                        'adStrength' => $aga['ad_strength'] ?? 'UNSPECIFIED',
+                        'adStrengthClass' => match($aga['ad_strength'] ?? '') {
+                            'EXCELLENT' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+                            'GOOD' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+                            'AVERAGE' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+                            'POOR' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+                            default => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400',
+                        },
+                        'issues' => $agaIssues,
+                        'strengths' => $aga['strengths'] ?? [],
+                        'assetGroupIdGoogle' => $assetGroupIdMap[$agName] ?? '',
+                    ];
+                }
+            }
+
             return [
                 'name' => $campaign['campaign_name'] ?? 'Campagna',
                 'score' => number_format($score, 1),
@@ -1411,6 +1554,8 @@ function evaluationDashboard() {
                 'strengths' => $campaign['strengths'] ?? [],
                 'issues' => $issues,
                 'adGroups' => $adGroups,
+                'isPmax' => $isPmax,
+                'assetGroups' => $assetGroupsData,
             ];
         }, array_keys($campaigns), $campaigns)) ?>,
 
