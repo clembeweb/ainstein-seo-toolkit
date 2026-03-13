@@ -428,6 +428,47 @@ function checkJobCompletion(int $jobId): void
 }
 
 /**
+ * Verifica se un errore è dovuto a crediti esauriti o rate limiting
+ * (errore temporaneo → la keyword va ritentata al prossimo run)
+ */
+function isRetryableError(string $errorMessage): bool
+{
+    $patterns = [
+        'not enough credits',
+        'insufficient credits',
+        'rate limit',
+        'too many requests',
+        'quota exceeded',
+        'run out of searches',
+        'run out of credits',
+        'nessun provider serp disponibile',
+        'http 400',
+        'http 402',
+        'http 429',
+    ];
+    $lower = strtolower($errorMessage);
+    foreach ($patterns as $pattern) {
+        if (str_contains($lower, $pattern)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Resetta a pending un item in errore per retry futuro
+ */
+function markItemRetryable(int $queueId, string $error, ?int $jobId = null): void
+{
+    Database::update('st_rank_queue', [
+        'status' => 'pending',
+        'error_message' => substr('RETRY: ' . $error, 0, 500),
+        'started_at' => null,
+        'completed_at' => null,
+    ], 'id = ?', [$queueId]);
+}
+
+/**
  * Conta items pending nella coda
  */
 function countPendingItems(): int
@@ -644,9 +685,25 @@ function runDispatcher(): void
             // Reconnect in caso di errore
             Database::reconnect();
 
-            // Marca errore
-            markItemError($queueId, $e->getMessage(), $jobId);
-            logRankDispatcher("  ERRORE: " . $e->getMessage(), 'ERROR');
+            $errorMsg = $e->getMessage();
+
+            if (isRetryableError($errorMsg)) {
+                // Errore temporaneo (crediti esauriti, rate limit) → rimetti in coda
+                markItemRetryable($queueId, $errorMsg, $jobId);
+                logRankDispatcher("  RETRY: {$errorMsg} — keyword rimessa in coda per prossimo run", 'WARN');
+
+                // Se tutti i provider sono esauriti, inutile continuare il batch
+                if (str_contains(strtolower($errorMsg), 'nessun provider serp disponibile')
+                    || str_contains(strtolower($errorMsg), 'not enough credits')
+                    || str_contains(strtolower($errorMsg), 'run out of')) {
+                    logRankDispatcher("Provider SERP esauriti, interrompo batch per evitare chiamate inutili", 'WARN');
+                    break;
+                }
+            } else {
+                // Errore permanente (keyword invalida, config errata, ecc.)
+                markItemError($queueId, $errorMsg, $jobId);
+                logRankDispatcher("  ERRORE: {$errorMsg}", 'ERROR');
+            }
         }
 
         $processedCount++;

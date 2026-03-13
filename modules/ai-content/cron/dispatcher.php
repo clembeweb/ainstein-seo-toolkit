@@ -60,6 +60,34 @@ function logDispatcher(string $message, string $level = 'INFO'): void
 }
 
 /**
+ * Verifica se un errore è temporaneo (crediti/rate limit) → retry al prossimo run
+ */
+function isRetryableSerpError(string $errorMessage): bool
+{
+    $patterns = [
+        'not enough credits',
+        'insufficient credits',
+        'rate limit',
+        'too many requests',
+        'quota exceeded',
+        'run out of searches',
+        'run out of credits',
+        'tutti i provider serp falliti',
+        'nessuna api key serp',
+        'http 400',
+        'http 402',
+        'http 429',
+    ];
+    $lower = strtolower($errorMessage);
+    foreach ($patterns as $pattern) {
+        if (str_contains($lower, $pattern)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
  * Elabora una singola keyword
  */
 function processKeyword(array $queueItem, int $userId): array
@@ -447,7 +475,15 @@ function runDispatcher(): void
                 }
             }
         } else {
-            // Errore
+            // Errore — distingui temporaneo vs permanente
+            if (isRetryableSerpError($result['error'])) {
+                // Errore SERP temporaneo (crediti esauriti) → rimetti pending per retry
+                $queue->updateStatus($queueId, 'pending');
+                logDispatcher("  RETRY: {$result['error']} — keyword rimessa in coda", 'WARN');
+                logDispatcher("Provider SERP esauriti, interrompo dispatcher", 'WARN');
+                break; // Inutile processare altre keyword se SERP è down
+            }
+
             $queue->updateStatus($queueId, 'error', $result['error']);
             $processJob->incrementFailed($jobId);
             $processJob->markError($jobId, $result['error']);
