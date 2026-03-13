@@ -198,7 +198,7 @@ $_accentShades = \Core\BrandingHelper::generateShades($_brandAccent);
                                 </div>
 
                                 <!-- Notification list -->
-                                <div class="max-h-[400px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700">
+                                <div class="max-h-[480px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700">
                                     <template x-if="loaded && notifications.length === 0">
                                         <div class="px-4 py-8 text-center">
                                             <svg class="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">

@@ -145,6 +145,7 @@ $statusTabs = [
             <?php foreach ($pipeline as $i => $step):
                 $c = $colorMap[$step['color']];
                 $pct = $step['total'] > 0 ? round($step['done'] / $step['total'] * 100) : 0;
+                if ($pct > 0 && $pct < 3) $pct = 3; // Visibilità minima segmento
                 $isComplete = $step['total'] > 0 && $step['done'] >= $step['total'];
             ?>
             <div class="relative">

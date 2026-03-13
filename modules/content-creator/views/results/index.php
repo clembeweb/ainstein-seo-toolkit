@@ -179,7 +179,7 @@ $statusTabs = [
         </div>
         <div class="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2">
             <div class="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                 :style="'width: ' + scrapePercent + '%'"></div>
+                 :style="'width: ' + (scrapePercent > 0 ? Math.max(scrapePercent, 3) : 0) + '%'"></div>
         </div>
         <p class="text-xs text-blue-500 dark:text-blue-400 mt-1 truncate" x-text="scrapeCurrentUrl"></p>
     </div>
@@ -206,7 +206,7 @@ $statusTabs = [
         </div>
         <div class="w-full bg-purple-200 dark:bg-purple-800 rounded-full h-2">
             <div class="bg-purple-600 h-2 rounded-full transition-all duration-300"
-                 :style="'width: ' + genPercent + '%'"></div>
+                 :style="'width: ' + (genPercent > 0 ? Math.max(genPercent, 3) : 0) + '%'"></div>
         </div>
         <p class="text-xs text-purple-500 dark:text-purple-400 mt-1 truncate" x-text="genCurrentUrl"></p>
     </div>
@@ -233,7 +233,7 @@ $statusTabs = [
         </div>
         <div class="w-full bg-teal-200 dark:bg-teal-800 rounded-full h-2">
             <div class="bg-teal-600 h-2 rounded-full transition-all duration-300"
-                 :style="'width: ' + pushPercent + '%'"></div>
+                 :style="'width: ' + (pushPercent > 0 ? Math.max(pushPercent, 3) : 0) + '%'"></div>
         </div>
         <p class="text-xs text-teal-500 dark:text-teal-400 mt-1 truncate" x-text="pushCurrentUrl"></p>
     </div>
