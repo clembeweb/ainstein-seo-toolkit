@@ -11,7 +11,7 @@ use Services\ApiLoggerService;
  * Supporta: Posts, Pages, Products (WooCommerce)
  * Push: contenuto HTML completo (body)
  */
-class WordPressConnector implements ConnectorInterface
+class WordPressConnector implements ConnectorInterface, ImageCapableConnectorInterface
 {
     private string $url;
     private string $apiKey;
@@ -345,5 +345,120 @@ class WordPressConnector implements ConnectorInterface
             'error' => null,
             'http_code' => $httpCode
         ];
+    }
+
+    // ========== ImageCapableConnectorInterface ==========
+
+    public function fetchProductImages(string $entityType = 'products', int $limit = 100, int $page = 1): array
+    {
+        $startTime = microtime(true);
+        $offset = ($page - 1) * $limit;
+
+        $endpoint = '/wp-json/seo-toolkit/v1/all-content?type=product&per_page=' . $limit . '&offset=' . $offset;
+        $response = $this->makeRequest('GET', $endpoint);
+
+        if (!$response['success']) {
+            return ['success' => false, 'items' => [], 'total' => 0, 'has_more' => false, 'error' => $response['error'] ?? 'Errore API WordPress'];
+        }
+
+        $products = $response['data'] ?? [];
+        $items = [];
+
+        foreach ($products as $product) {
+            $imageUrl = $product['featured_image'] ?? $product['image'] ?? $product['thumbnail'] ?? '';
+
+            if (empty($imageUrl)) continue;
+
+            $items[] = [
+                'id' => (string) ($product['id'] ?? ''),
+                'name' => $product['title'] ?? '',
+                'sku' => $product['sku'] ?? '',
+                'url' => $product['url'] ?? '',
+                'image_url' => $imageUrl,
+                'category' => $product['category'] ?? '',
+                'price' => $product['price'] ?? '',
+            ];
+        }
+
+        $hasMore = count($products) >= $limit;
+
+        ApiLoggerService::log(self::PROVIDER, $endpoint, ['page' => $page, 'limit' => $limit], ['count' => count($items)], 200, $startTime, [
+            'module' => self::MODULE,
+            'cost' => 0,
+            'context' => "fetchProductImages page={$page}",
+        ]);
+
+        return [
+            'success' => true,
+            'items' => $items,
+            'total' => count($items),
+            'has_more' => $hasMore,
+            'error' => null,
+        ];
+    }
+
+    public function uploadImage(string $entityId, string $entityType, string $imagePath, array $meta = []): array
+    {
+        $startTime = microtime(true);
+
+        if (!file_exists($imagePath)) {
+            return ['success' => false, 'cms_image_id' => null, 'error' => 'File non trovato'];
+        }
+
+        $filename = $meta['filename'] ?? basename($imagePath);
+        $alt = $meta['alt'] ?? '';
+
+        $endpoint = '/wp-json/seo-toolkit/v1/upload-image';
+        $url = $this->url . $endpoint;
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => [
+                'image' => new \CURLFile($imagePath, mime_content_type($imagePath) ?: 'image/jpeg', $filename),
+                'entity_id' => $entityId,
+                'entity_type' => $entityType,
+                'alt' => $alt,
+                'position' => $meta['position'] ?? '',
+            ],
+            CURLOPT_HTTPHEADER => [
+                'X-SEO-Toolkit-Key: ' . $this->apiKey,
+            ],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 60,
+        ]);
+
+        $responseBody = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        $data = json_decode($responseBody, true);
+
+        ApiLoggerService::log(self::PROVIDER, $endpoint, ['entity' => $entityId, 'filename' => $filename], $data ?? [], $httpCode, $startTime, [
+            'module' => self::MODULE,
+            'cost' => 0,
+            'context' => "uploadImage entity={$entityId}",
+        ]);
+
+        if ($curlError) {
+            return ['success' => false, 'cms_image_id' => null, 'error' => "Errore connessione: {$curlError}"];
+        }
+
+        if ($httpCode >= 200 && $httpCode < 300 && !empty($data['success'])) {
+            return [
+                'success' => true,
+                'cms_image_id' => (string) ($data['media_id'] ?? ''),
+                'error' => null,
+            ];
+        }
+
+        return ['success' => false, 'cms_image_id' => null, 'error' => $data['message'] ?? "HTTP {$httpCode}"];
+    }
+
+    public function supportsImageUpload(): bool
+    {
+        return true;
     }
 }
