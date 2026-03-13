@@ -341,6 +341,81 @@ Router::get('/content-creator/connectors/{id}/items', function ($id) {
 });
 
 // ============================================
+// IMAGE ROUTES
+// ============================================
+
+// Image serve (outside project context — global route)
+Router::get('/content-creator/images/serve/{type}/{filename}', function ($type, $filename) {
+    return (new \Modules\ContentCreator\Controllers\ImageController())->serve($type, $filename);
+});
+
+// Image list & import
+Router::get('/content-creator/projects/{id}/images', function ($id) {
+    return (new \Modules\ContentCreator\Controllers\ImageController())->index((int) $id);
+});
+Router::get('/content-creator/projects/{id}/images/import', function ($id) {
+    return (new \Modules\ContentCreator\Controllers\ImageController())->import((int) $id);
+});
+Router::post('/content-creator/projects/{id}/images/import', function ($id) {
+    (new \Modules\ContentCreator\Controllers\ImageController())->importStore((int) $id);
+});
+Router::post('/content-creator/projects/{id}/images/fetch-cms', function ($id) {
+    (new \Modules\ContentCreator\Controllers\ImageController())->fetchCmsProducts((int) $id);
+});
+
+// Image approve/reject/regenerate
+Router::post('/content-creator/projects/{id}/images/approve-bulk', function ($id) {
+    (new \Modules\ContentCreator\Controllers\ImageController())->approveBulk((int) $id);
+});
+Router::post('/content-creator/projects/{id}/images/delete-bulk', function ($id) {
+    (new \Modules\ContentCreator\Controllers\ImageController())->deleteBulk((int) $id);
+});
+Router::post('/content-creator/projects/{id}/images/{imgId}/approve', function ($id, $imgId) {
+    (new \Modules\ContentCreator\Controllers\ImageController())->approveVariant((int) $id, (int) $imgId);
+});
+Router::post('/content-creator/projects/{id}/images/{imgId}/reject', function ($id, $imgId) {
+    (new \Modules\ContentCreator\Controllers\ImageController())->rejectVariant((int) $id, (int) $imgId);
+});
+Router::post('/content-creator/projects/{id}/images/{imgId}/regenerate', function ($id, $imgId) {
+    (new \Modules\ContentCreator\Controllers\ImageController())->regenerate((int) $id, (int) $imgId);
+});
+
+// Image generation SSE
+Router::post('/content-creator/projects/{id}/images/start-generate-job', function ($id) {
+    (new \Modules\ContentCreator\Controllers\ImageGeneratorController())->startGenerateJob((int) $id);
+});
+Router::get('/content-creator/projects/{id}/images/generate-stream', function ($id) {
+    (new \Modules\ContentCreator\Controllers\ImageGeneratorController())->generateStream((int) $id);
+});
+Router::get('/content-creator/projects/{id}/images/generate-job-status', function ($id) {
+    (new \Modules\ContentCreator\Controllers\ImageGeneratorController())->generateJobStatus((int) $id);
+});
+
+// Image push SSE
+Router::post('/content-creator/projects/{id}/images/start-push-job', function ($id) {
+    (new \Modules\ContentCreator\Controllers\ImageGeneratorController())->startPushJob((int) $id);
+});
+Router::get('/content-creator/projects/{id}/images/push-stream', function ($id) {
+    (new \Modules\ContentCreator\Controllers\ImageGeneratorController())->pushStream((int) $id);
+});
+Router::get('/content-creator/projects/{id}/images/push-job-status', function ($id) {
+    (new \Modules\ContentCreator\Controllers\ImageGeneratorController())->pushJobStatus((int) $id);
+});
+Router::post('/content-creator/projects/{id}/images/cancel-job', function ($id) {
+    (new \Modules\ContentCreator\Controllers\ImageGeneratorController())->cancelJob((int) $id);
+});
+
+// Image export
+Router::get('/content-creator/projects/{id}/images/export/zip', function ($id) {
+    (new \Modules\ContentCreator\Controllers\ImageController())->exportZip((int) $id);
+});
+
+// Image preview (MUST be after specific /images/* routes)
+Router::get('/content-creator/projects/{id}/images/{imgId}', function ($id, $imgId) {
+    return (new \Modules\ContentCreator\Controllers\ImageController())->preview((int) $id, (int) $imgId);
+});
+
+// ============================================
 // URL PREVIEW (wildcard - DEVE stare per ultimo!)
 // ============================================
 
