@@ -903,7 +903,7 @@ class CampaignSyncService
         // Get PMax campaign IDs from this sync
         $pmaxCampaigns = Database::fetchAll(
             "SELECT campaign_id_google, campaign_name FROM ga_campaigns
-             WHERE sync_id = ? AND campaign_type = 'PERFORMANCE_MAX'",
+             WHERE sync_id = ? AND campaign_type = 'PERFORMANCE_MAX' AND status = 'ENABLED'",
             [$this->syncId]
         );
 
@@ -946,6 +946,7 @@ class CampaignSyncService
                 "metrics.conversions, metrics.conversions_value " .
                 "FROM asset_group " .
                 "WHERE campaign.id = {$campaignIdGoogle} " .
+                "AND asset_group.status = 'ENABLED' " .
                 "AND segments.date BETWEEN '{$dateFrom}' AND '{$dateTo}'";
 
         $response = $this->gadsService->searchStream($gaql);
@@ -1022,7 +1023,8 @@ class CampaignSyncService
                 "asset_group_asset.field_type, asset_group_asset.performance_label, " .
                 "asset_group_asset.primary_status " .
                 "FROM asset_group_asset " .
-                "WHERE campaign.id = {$campaignIdGoogle}";
+                "WHERE campaign.id = {$campaignIdGoogle} " .
+                "AND asset_group.status = 'ENABLED'";
 
         $response = $this->gadsService->searchStream($gaql);
         $rows = $this->extractRows($response);
@@ -1129,7 +1131,8 @@ class CampaignSyncService
                 "asset_group_signal.audience, " .
                 "asset_group_signal.search_theme " .
                 "FROM asset_group_signal " .
-                "WHERE campaign.id = {$campaignIdGoogle}";
+                "WHERE campaign.id = {$campaignIdGoogle} " .
+                "AND asset_group.status = 'ENABLED'";
 
         try {
             $response = $this->gadsService->searchStream($gaql);
