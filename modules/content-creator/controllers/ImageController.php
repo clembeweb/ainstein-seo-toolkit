@@ -793,7 +793,7 @@ class ImageController
         }
 
         // Determine file path (all paths are relative to storage/images/)
-        $storagePath = dirname(__DIR__, 2) . '/storage/images';
+        $storagePath = dirname(__DIR__, 3) . '/storage/images';
         if ($type === 'source') {
             $filePath = $image['source_image_path'];
         } else {

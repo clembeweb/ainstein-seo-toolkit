@@ -350,6 +350,7 @@ class ImageGeneratorController
     public function cancelJob(int $id): void
     {
         Middleware::auth();
+        Middleware::csrf();
         $user = Auth::user();
 
         $jobId = (int) ($_POST['job_id'] ?? $_GET['job_id'] ?? 0);
@@ -492,7 +493,7 @@ class ImageGeneratorController
             $result = $connector->uploadImage($v['cms_entity_id'], $v['cms_entity_type'] ?? 'product', $imagePath, [
                 'alt' => $alt,
                 'position' => $position,
-                'filename' => ($v['sku'] ?: 'img') . '-v' . $v['variant_number'] . '.webp',
+                'filename' => ($v['sku'] ?: 'img') . '-v' . $v['variant_number'] . '.' . pathinfo($v['image_path'], PATHINFO_EXTENSION),
             ]);
 
             Database::reconnect();

@@ -4,8 +4,8 @@
 -- 1. Images (products to generate variants for)
 CREATE TABLE IF NOT EXISTS cc_images (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    project_id INT NOT NULL,
-    user_id INT NOT NULL,
+    project_id INT UNSIGNED NOT NULL,
+    user_id INT UNSIGNED NOT NULL,
     product_url VARCHAR(2048) DEFAULT NULL COMMENT 'URL pagina prodotto sul sito e-commerce',
     sku VARCHAR(100) DEFAULT NULL,
     product_name VARCHAR(500) NOT NULL,

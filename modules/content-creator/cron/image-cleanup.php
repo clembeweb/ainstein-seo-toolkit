@@ -24,10 +24,15 @@ try {
     echo "{$logPrefix} Inizio pulizia immagini (retention: {$cleanupDays} giorni, cutoff: {$cutoffDate})\n";
 
     // 1. Find rejected variants older than cutoff
+    // Only delete variants where parent image is NOT in pending/generated state
+    // (those are still awaiting review and should not be cleaned up)
     $oldVariants = Database::fetchAll(
         "SELECT v.id, v.image_path
          FROM cc_image_variants v
+         JOIN cc_images i ON i.id = v.image_id
          WHERE v.is_approved = 0
+         AND v.is_pushed = 0
+         AND i.status NOT IN ('pending', 'source_acquired', 'generated')
          AND v.created_at < ?",
         [$cutoffDate]
     );

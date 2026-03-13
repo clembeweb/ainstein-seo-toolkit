@@ -160,7 +160,15 @@ $sc = $statusConfig[$image['status']] ?? $statusConfig['pending'];
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Variante <?= $v['variant_number'] ?></span>
                             <?php
-                            $vStatus = $v['status'] ?? 'pending';
+                            // Derive status from is_approved/is_pushed flags
+                            // is_approved: 0=pending/rejected, 1=approved; is_pushed: 0=no, 1=yes
+                            if ($v['is_pushed']) {
+                                $vStatus = 'pushed';
+                            } elseif ($v['is_approved']) {
+                                $vStatus = 'approved';
+                            } else {
+                                $vStatus = 'pending';
+                            }
                             $vStatusColors = ['pending' => 'slate', 'approved' => 'emerald', 'rejected' => 'red', 'pushed' => 'teal'];
                             $vStatusLabels = ['pending' => 'In attesa', 'approved' => 'Approvata', 'rejected' => 'Rifiutata', 'pushed' => 'Pubblicata'];
                             $vsc = $vStatusColors[$vStatus] ?? 'slate';
