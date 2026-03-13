@@ -46,7 +46,7 @@ class Sync
     public static function updateCounts(int $id, array $counts): bool
     {
         $data = [];
-        $allowed = ['campaigns_synced', 'ad_groups_synced', 'keywords_synced', 'ads_synced', 'search_terms_synced', 'extensions_synced'];
+        $allowed = ['campaigns_synced', 'ad_groups_synced', 'keywords_synced', 'ads_synced', 'search_terms_synced', 'extensions_synced', 'asset_groups_synced', 'assets_synced'];
         foreach ($allowed as $field) {
             if (isset($counts[$field])) {
                 $data[$field] = (int) $counts[$field];
