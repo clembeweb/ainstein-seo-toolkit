@@ -318,6 +318,7 @@ Rispondi SOLO con un JSON valido (senza markdown, senza backtick) con questa str
         {
           "severity": "high",
           "area": "copy",
+          "fix_type": "rewrite_ads",
           "description": "Descrizione del problema",
           "recommendation": "Azione consigliata specifica"
         }
@@ -336,6 +337,7 @@ Rispondi SOLO con un JSON valido (senza markdown, senza backtick) con questa str
             {
               "severity": "medium",
               "area": "keywords",
+              "fix_type": "rewrite_ads",
               "description": "Problema specifico",
               "recommendation": "Suggerimento"
             }
@@ -370,7 +372,8 @@ Rispondi SOLO con un JSON valido (senza markdown, senza backtick) con questa str
       "area": "Struttura Campagne",
       "priority": "high",
       "suggestion": "Suggerimento concreto e azionabile",
-      "expected_impact": "Impatto stimato quantificato"
+      "expected_impact": "Impatto stimato quantificato",
+      "fix_type": "rewrite_ads|add_negatives|remove_duplicates|add_extensions|null"
     }
   ],
   "landing_suggestions": [
@@ -388,6 +391,17 @@ REGOLE:
 - severity: "high" (critico), "medium" (importante), "low" (suggerimento)
 - area per campagne: "copy", "landing", "performance", "budget", "extensions"
 - area per ad groups: "keywords", "copy", "landing", "performance", "match_type"
+- fix_type (OBBLIGATORIO per ogni issue e campaign_suggestion): indica l'AZIONE concreta da compiere per risolvere il problema.
+  Valori possibili:
+  * "rewrite_ads" — riscrivere copy annunci (headline/description). USA PER: QS basso dovuto a scarsa pertinenza annuncio-keyword, headline generiche, copy non ottimizzato. Applicabile SOLO a livello ad group.
+  * "add_negatives" — aggiungere keyword negative. USA PER: traffico non pertinente, spreco budget su query irrilevanti. Applicabile a livello campagna o ad group.
+  * "remove_duplicates" — rimuovere keyword duplicate tra ad group. USA PER: cannibalizzazione interna, keyword presenti in piu ad group.
+  * "add_extensions" — aggiungere estensioni mancanti. USA PER: sitelink/callout/snippet mancanti. Applicabile SOLO a livello campagna.
+  * null — nessuna azione automatica possibile (problemi strutturali, budget, landing page, performance generica). L'utente deve agire manualmente.
+  REGOLA FONDAMENTALE: fix_type deve corrispondere all'AZIONE, non all'area del problema.
+  Esempio: area="keywords" (il problema e sulle keyword) ma fix_type="rewrite_ads" (la soluzione e riscrivere gli annunci per matchare meglio le keyword).
+  Esempio: area="performance" (il problema e CTR basso) ma fix_type="rewrite_ads" (la soluzione e migliorare i copy).
+  Esempio: area="keywords" (il problema e traffico non pertinente) e fix_type="add_negatives" (la soluzione e aggiungere negative).
 - FONDAMENTALE: Sii SPECIFICO e CONCRETO nelle descrizioni dei problemi. Cita sempre:
   * Per problemi "copy": le headline o description esatte dell'annuncio problematico (es. "L'headline 'Buy Now' non riflette la keyword 'wedding planner cost'")
   * Per problemi "keywords": le keyword specifiche coinvolte con il loro Quality Score
