@@ -174,7 +174,7 @@ sort($uniqueIntents);
         <!-- Card View -->
         <div x-show="viewMode === 'card'" class="space-y-4">
             <?php foreach ($clusters as $i => $cluster): ?>
-                <div x-show="matchesFilter('<?= strtolower(addslashes($cluster['intent'] ?? '')) ?>', <?= json_encode($cluster['name'] . ' ' . $cluster['main_keyword'] . ' ' . implode(' ', array_column($cluster['keywords_list'] ?? [], 'text')), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP) ?>)"
+                <div x-show="cardMatchesFilter(<?= $i ?>)"
                      x-transition>
                     <?php $index = $i; include __DIR__ . '/../partials/cluster-card.php'; ?>
                 </div>
@@ -194,6 +194,7 @@ function clusterResults() {
             'main_volume' => $c['main_volume'] ?? 0,
             'intent' => strtolower($c['intent'] ?? ''),
             'note' => $c['note'] ?? '',
+            'searchText' => strtolower(($c['name'] ?? '') . ' ' . ($c['main_keyword'] ?? '') . ' ' . implode(' ', array_column($c['keywords_list'] ?? [], 'text'))),
         ];
     }, $clusters, array_keys($clusters))), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP) ?>;
 
@@ -224,9 +225,11 @@ function clusterResults() {
             return list;
         },
 
-        matchesFilter(intent, text) {
-            if (this.intentFilter && intent !== this.intentFilter) return false;
-            if (this.searchQuery && !text.toLowerCase().includes(this.searchQuery.toLowerCase())) return false;
+        cardMatchesFilter(index) {
+            const c = allClusters[index];
+            if (!c) return false;
+            if (this.intentFilter && c.intent !== this.intentFilter) return false;
+            if (this.searchQuery && !c.searchText.includes(this.searchQuery.toLowerCase())) return false;
             return true;
         },
 
