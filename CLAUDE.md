@@ -1,6 +1,6 @@
 # AINSTEIN - Istruzioni Claude Code
 
-> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-03-10 (Audit piattaforma completo + fix 11 critical)
+> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-03-13 (Audit piattaforma completo + fix 11 critical)
 
 ---
 
@@ -59,7 +59,7 @@
 | Google Ads Analyzer | `ads-analyzer` | `ga_` | Completo (Google Ads API v18) |
 | SEO Tracking | `seo-tracking` | `st_` | Completo |
 | AI Keyword Research | `keyword-research` | `kr_` | Completo |
-| Content Creator | `content-creator` | `cc_` | Completo (4 CMS connectors) |
+| Content Creator | `content-creator` | `cc_` | Completo (4 CMS connectors + image generation) |
 | Internal Links | `internal-links` | `il_` | Standby (redesign: crawl-first) |
 | Crawl Budget Optimizer | `crawl-budget` | `cb_` | Legacy (mergiato in SEO Audit) |
 | AI Optimizer | `ai-optimizer` | `ao_` | In sviluppo |
@@ -460,6 +460,7 @@ modules/seo-tracking/cron/rank-dispatcher.php      # Every 5 Min (*/5 * * * *)
 modules/seo-tracking/cron/gsc-sync-dispatcher.php  # Hourly (0 * * * *)
 modules/seo-tracking/cron/ai-report-dispatcher.php # Hourly (0 * * * *)
 modules/crawl-budget/cron/crawl-dispatcher.php     # Every 5 Min (*/5 * * * *)
+modules/content-creator/cron/image-cleanup.php     # Daily (0 5 * * *)
 /home/ainstein/backup-db.sh                        # Daily (0 2 * * *) — backup DB
 ```
 
