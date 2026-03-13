@@ -755,6 +755,19 @@ class CampaignController
         // Available syncs for period selector
         $availableSyncs = Sync::getCompletedSyncs($projectId);
 
+        // Load saved generated fixes for this evaluation
+        require_once __DIR__ . '/../models/GeneratedFix.php';
+        $savedFixes = \Modules\AdsAnalyzer\Models\GeneratedFix::getByEvaluation($evalId);
+
+        // Build ad_group_name → ad_group_id_google map from sync data
+        $agIdMap = [];
+        if (!empty($evaluation['sync_id'])) {
+            $adGroupsFromSync = CampaignAdGroup::getByRun($evaluation['sync_id']);
+            foreach ($adGroupsFromSync as $ag) {
+                $agIdMap[$ag['ad_group_name'] ?? ''] = $ag['ad_group_id_google'] ?? '';
+            }
+        }
+
         return View::render('ads-analyzer/campaigns/evaluation', [
             'title' => 'Valutazione Campagne - ' . $project['name'],
             'user' => $user,
@@ -767,6 +780,8 @@ class CampaignController
             'access_role' => $project['access_role'] ?? 'owner',
             'currentSync' => $currentSync,
             'availableSyncs' => $availableSyncs,
+            'savedFixes' => $savedFixes,
+            'agIdMap' => $agIdMap,
         ]);
     }
 
@@ -811,7 +826,8 @@ class CampaignController
             $type = $_POST['type'] ?? '';
             $context = json_decode($_POST['context'] ?? '{}', true) ?: [];
 
-            $allowedTypes = ['extensions', 'copy', 'keywords'];
+            $allowedTypes = ['rewrite_ads', 'add_negatives', 'remove_duplicates', 'add_extensions',
+                             'copy', 'keywords', 'extensions'];
             if (!in_array($type, $allowedTypes)) {
                 ob_end_clean();
                 http_response_code(400);
@@ -850,10 +866,33 @@ class CampaignController
 
             Database::reconnect();
 
+            // Consume credits
+            Credits::consume($creditUserId, $fixCost, 'generate_fix', 'ads-analyzer');
+
+            // Save generated fix to DB for persistence
+            require_once __DIR__ . '/../models/GeneratedFix.php';
+            $fixId = \Modules\AdsAnalyzer\Models\GeneratedFix::create([
+                'evaluation_id' => $evalId,
+                'project_id' => $projectId,
+                'user_id' => $user['id'],
+                'fix_type' => $type,
+                'scope_level' => !empty($context['ad_group_name']) ? 'ad_group' : 'campaign',
+                'campaign_name' => $context['campaign_name'] ?? null,
+                'ad_group_name' => $context['ad_group_name'] ?? null,
+                'ad_group_id_google' => $context['ad_group_id_google'] ?? null,
+                'campaign_id_google' => $context['campaign_id_google'] ?? null,
+                'issue_description' => $context['issue'] ?? $context['suggestion'] ?? null,
+                'recommendation' => $context['recommendation'] ?? $context['expected_impact'] ?? null,
+                'ai_response' => $result,
+                'display_text' => self::formatFixForDisplay($type, $result),
+                'credits_used' => $fixCost,
+            ]);
+
             ob_end_clean();
             echo json_encode([
                 'success' => true,
                 'type' => $type,
+                'fix_id' => $fixId,
                 'data' => $result,
                 'content' => self::formatFixForDisplay($type, $result),
             ]);
@@ -1027,6 +1066,8 @@ class CampaignController
             $type = $_POST['type'] ?? '';
             $data = json_decode($_POST['data'] ?? '{}', true) ?: [];
             $targetCampaign = $_POST['target_campaign'] ?? '';
+            $fixId = (int)($_POST['fix_id'] ?? 0);
+            $adGroupIdGoogle = $_POST['ad_group_id_google'] ?? '';
 
             if (empty($type) || empty($data)) {
                 ob_end_clean();
@@ -1056,7 +1097,7 @@ class CampaignController
                 }
             }
 
-            if (str_contains($type, 'extensions')) {
+            if (str_contains($type, 'extensions') || $type === 'add_extensions') {
                 // === ESTENSIONI: sitelink, callout, structured snippet ===
                 $mutateOps = [];
 
@@ -1104,8 +1145,8 @@ class CampaignController
                     $details[] = count($data['callouts'] ?? []) . ' callout';
                 }
 
-            } elseif (str_contains($type, 'copy')) {
-                // === COPY: crea nuovo RSA nell'ad group della prima campagna ===
+            } elseif (str_contains($type, 'copy') || $type === 'rewrite_ads') {
+                // === COPY: crea nuovo RSA nell'ad group specifico ===
                 $headlines = array_map(fn($h) => ['text' => $h], $data['headlines'] ?? []);
                 $descriptions = array_map(fn($d) => ['text' => $d], $data['descriptions'] ?? []);
 
@@ -1115,23 +1156,26 @@ class CampaignController
                     exit;
                 }
 
-                // Trova primo ad group della campagna target
-                $adGroupResource = '';
+                // Usa ad_group_id_google esplicito dal context
+                if (empty($adGroupIdGoogle)) {
+                    ob_end_clean();
+                    echo json_encode(['error' => 'Seleziona un gruppo annunci prima di applicare i copy']);
+                    exit;
+                }
+
+                $adGroupResource = "customers/{$customerId}/adGroups/{$adGroupIdGoogle}";
+
+                // Trova URL finale dagli annunci dell'ad group
                 $finalUrl = '';
                 $latestSync = Sync::getLatestByProject($projectId);
                 if ($latestSync) {
                     $ads = Ad::getByRun($latestSync['id']);
-                    if (!empty($ads)) {
-                        $firstAd = $ads[0];
-                        $adGroupResource = "customers/{$customerId}/adGroups/{$firstAd['ad_group_id_google']}";
-                        $finalUrl = $firstAd['final_url'] ?? '';
+                    foreach ($ads as $ad) {
+                        if (($ad['ad_group_id_google'] ?? '') === $adGroupIdGoogle && !empty($ad['final_url'])) {
+                            $finalUrl = $ad['final_url'];
+                            break;
+                        }
                     }
-                }
-
-                if (empty($adGroupResource)) {
-                    ob_end_clean();
-                    echo json_encode(['error' => 'Nessun ad group trovato per creare l\'annuncio']);
-                    exit;
                 }
 
                 $gads->mutateAdGroupAds([
@@ -1153,8 +1197,8 @@ class CampaignController
                 $applied = 1;
                 $details[] = count($data['headlines'] ?? []) . ' headline, ' . count($data['descriptions'] ?? []) . ' description';
 
-            } elseif (str_contains($type, 'keyword')) {
-                if (($data['action'] ?? '') === 'remove_duplicates') {
+            } elseif (str_contains($type, 'keyword') || $type === 'add_negatives' || $type === 'remove_duplicates') {
+                if ($type === 'remove_duplicates' || ($data['action'] ?? '') === 'remove_duplicates') {
                     // === RIMOZIONE KEYWORD DUPLICATE ===
                     // Trova le keyword da rimuovere tramite GAQL query
                     foreach ($data['duplicates'] ?? [] as $dup) {
@@ -1225,6 +1269,15 @@ class CampaignController
                 exit;
             }
 
+            // Update fix status in DB
+            if ($fixId > 0) {
+                require_once __DIR__ . '/../models/GeneratedFix.php';
+                \Modules\AdsAnalyzer\Models\GeneratedFix::markApplied($fixId, [
+                    'applied' => $applied,
+                    'details' => implode(', ', $details),
+                ]);
+            }
+
             ob_end_clean();
             echo json_encode([
                 'success' => true,
@@ -1239,6 +1292,13 @@ class CampaignController
                 'project_id' => $projectId,
                 'eval_id' => $evalId
             ]);
+
+            // Mark fix as failed
+            if ($fixId > 0) {
+                require_once __DIR__ . '/../models/GeneratedFix.php';
+                \Modules\AdsAnalyzer\Models\GeneratedFix::markFailed($fixId, $e->getMessage());
+            }
+
             ob_end_clean();
             echo json_encode(['error' => 'Errore applicazione: ' . $e->getMessage()]);
         }
@@ -1252,7 +1312,7 @@ class CampaignController
     {
         $lines = [];
 
-        if (str_contains($type, 'copy')) {
+        if (str_contains($type, 'copy') || $type === 'rewrite_ads') {
             $lines[] = "HEADLINES:";
             foreach (($data['headlines'] ?? []) as $i => $h) {
                 $lines[] = ($i + 1) . ". " . $h . " (" . mb_strlen($h) . " car.)";
@@ -1266,7 +1326,7 @@ class CampaignController
                 $lines[] = "";
                 $lines[] = "PATHS: /" . ($data['paths']['path1'] ?? '') . " / " . ($data['paths']['path2'] ?? '');
             }
-        } elseif (str_contains($type, 'extensions')) {
+        } elseif (str_contains($type, 'extensions') || $type === 'add_extensions') {
             if (!empty($data['sitelinks'])) {
                 $lines[] = "SITELINKS:";
                 foreach ($data['sitelinks'] as $i => $sl) {
@@ -1291,8 +1351,8 @@ class CampaignController
                     $lines[] = "Valori: " . implode(', ', $ss['values'] ?? []);
                 }
             }
-        } elseif (str_contains($type, 'keywords')) {
-            if (($data['action'] ?? '') === 'remove_duplicates') {
+        } elseif (str_contains($type, 'keywords') || $type === 'add_negatives' || $type === 'remove_duplicates') {
+            if ($type === 'remove_duplicates' || ($data['action'] ?? '') === 'remove_duplicates') {
                 $lines[] = "KEYWORD DUPLICATE DA RIMUOVERE:";
                 $lines[] = "";
                 foreach (($data['duplicates'] ?? []) as $i => $dup) {
