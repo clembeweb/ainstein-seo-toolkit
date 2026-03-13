@@ -11,7 +11,7 @@ use Services\ApiLoggerService;
  * Supporta: Products (per SKU), Categories
  * SEO: custom_attributes (meta_title, meta_description, description)
  */
-class MagentoConnector implements ConnectorInterface
+class MagentoConnector implements ImageCapableConnectorInterface
 {
     private string $url;
     private string $accessToken;
@@ -351,6 +351,127 @@ class MagentoConnector implements ConnectorInterface
             'message' => 'Categoria aggiornata con successo'
         ];
     }
+
+    // ========== ImageCapableConnectorInterface ==========
+
+    public function fetchProductImages(string $entityType = 'products', int $limit = 100, int $page = 1): array
+    {
+        $startTime = microtime(true);
+
+        $endpoint = '/rest/V1/products?searchCriteria[pageSize]=' . $limit
+            . '&searchCriteria[currentPage]=' . $page
+            . '&searchCriteria[filter_groups][0][filters][0][field]=status'
+            . '&searchCriteria[filter_groups][0][filters][0][value]=1'
+            . '&fields=items[id,sku,name,media_gallery_entries,custom_attributes,price],total_count';
+
+        $response = $this->makeRequest('GET', $endpoint);
+
+        if (!$response['success']) {
+            return ['success' => false, 'items' => [], 'total' => 0, 'has_more' => false, 'error' => $response['error'] ?? 'Errore API Magento'];
+        }
+
+        $products = $response['data']['items'] ?? [];
+        $total = (int) ($response['data']['total_count'] ?? 0);
+        $items = [];
+
+        foreach ($products as $product) {
+            $imageUrl = '';
+            if (!empty($product['media_gallery_entries'])) {
+                foreach ($product['media_gallery_entries'] as $media) {
+                    if (in_array('image', $media['types'] ?? [])) {
+                        $imageUrl = rtrim($this->url, '/') . '/pub/media/catalog/product' . $media['file'];
+                        break;
+                    }
+                }
+                if (empty($imageUrl) && !empty($product['media_gallery_entries'][0]['file'])) {
+                    $imageUrl = rtrim($this->url, '/') . '/pub/media/catalog/product' . $product['media_gallery_entries'][0]['file'];
+                }
+            }
+
+            if (empty($imageUrl)) continue;
+
+            $urlKey = '';
+            foreach ($product['custom_attributes'] ?? [] as $attr) {
+                if ($attr['attribute_code'] === 'url_key') {
+                    $urlKey = $attr['value'];
+                    break;
+                }
+            }
+
+            $items[] = [
+                'id' => (string) ($product['id'] ?? ''),
+                'name' => $product['name'] ?? '',
+                'sku' => $product['sku'] ?? '',
+                'url' => $urlKey ? rtrim($this->url, '/') . '/' . $urlKey . '.html' : '',
+                'image_url' => $imageUrl,
+                'category' => '',
+                'price' => (string) ($product['price'] ?? ''),
+            ];
+        }
+
+        $hasMore = ($page * $limit) < $total;
+
+        ApiLoggerService::log(self::PROVIDER, '/V1/products', ['limit' => $limit, 'page' => $page], ['count' => count($items), 'total' => $total], 200, $startTime, [
+            'module' => self::MODULE,
+            'cost' => 0,
+            'context' => "fetchProductImages page={$page}",
+        ]);
+
+        return ['success' => true, 'items' => $items, 'total' => $total, 'has_more' => $hasMore, 'error' => null];
+    }
+
+    public function uploadImage(string $entityId, string $entityType, string $imagePath, array $meta = []): array
+    {
+        $startTime = microtime(true);
+
+        if (!file_exists($imagePath)) {
+            return ['success' => false, 'cms_image_id' => null, 'error' => 'File non trovato'];
+        }
+
+        $imageData = base64_encode(file_get_contents($imagePath));
+        $mimeType = mime_content_type($imagePath) ?: 'image/jpeg';
+        $filename = $meta['filename'] ?? basename($imagePath);
+
+        $payload = [
+            'entry' => [
+                'media_type' => 'image',
+                'label' => $meta['alt'] ?? '',
+                'position' => $meta['position'] ?? 0,
+                'disabled' => false,
+                'types' => [],
+                'content' => [
+                    'base64_encoded_data' => $imageData,
+                    'type' => $mimeType,
+                    'name' => $filename,
+                ],
+            ],
+        ];
+
+        $encodedId = rawurlencode($entityId);
+        $response = $this->makeRequest('POST', "/rest/V1/products/{$encodedId}/media", $payload);
+
+        ApiLoggerService::log(self::PROVIDER, "/V1/products/{$entityId}/media", ['filename' => $filename], $response['data'] ?? [], $response['http_code'] ?? 0, $startTime, [
+            'module' => self::MODULE,
+            'cost' => 0,
+            'context' => "uploadImage product={$entityId}",
+        ]);
+
+        if (!$response['success']) {
+            return ['success' => false, 'cms_image_id' => null, 'error' => $response['error'] ?? 'Upload fallito'];
+        }
+
+        $mediaId = (string) ($response['data'] ?? '');
+        return ['success' => true, 'cms_image_id' => $mediaId, 'error' => null];
+    }
+
+    public function supportsImageUpload(): bool
+    {
+        return true;
+    }
+
+    // -------------------------------------------------------------------------
+    // Private helpers – HTTP
+    // -------------------------------------------------------------------------
 
     /**
      * Esegue una richiesta HTTP verso l'API Magento 2
