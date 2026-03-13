@@ -241,11 +241,31 @@ class ProjectController
             return;
         }
 
-        // AI settings from form
+        // AI settings from form — merge with existing to preserve image_defaults
+        $existingAiSettings = !empty($project['ai_settings']) ? json_decode($project['ai_settings'], true) : [];
         $aiSettings = [
-            'min_words' => (int) ($_POST['min_words'] ?? 300),
-            'custom_prompt' => trim($_POST['custom_prompt'] ?? ''),
+            'min_words' => (int) ($_POST['min_words'] ?? ($existingAiSettings['min_words'] ?? 300)),
+            'custom_prompt' => trim($_POST['custom_prompt'] ?? ($existingAiSettings['custom_prompt'] ?? '')),
         ];
+
+        // Image generation defaults (from Immagini tab)
+        if (isset($_POST['image_scene_type'])) {
+            $aiSettings['image_defaults'] = [
+                'scene_type' => $_POST['image_scene_type'] ?? 'fashion',
+                'gender' => $_POST['image_gender'] ?? 'woman',
+                'background' => $_POST['image_background'] ?? 'studio_white',
+                'environment' => $_POST['image_environment'] ?? 'living_room',
+                'photo_style' => $_POST['image_photo_style'] ?? 'professional',
+                'variants_count' => max(1, min(4, (int) ($_POST['image_variants_count'] ?? 3))),
+                'custom_prompt' => trim($_POST['image_custom_prompt'] ?? ''),
+                'push_mode' => $_POST['image_push_mode'] ?? 'add_as_gallery',
+            ];
+        } else {
+            // Preserve existing image_defaults if not submitted
+            if (!empty($existingAiSettings['image_defaults'])) {
+                $aiSettings['image_defaults'] = $existingAiSettings['image_defaults'];
+            }
+        }
 
         // Validate connector
         if ($connectorId) {

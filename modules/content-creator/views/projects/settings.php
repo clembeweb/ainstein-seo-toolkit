@@ -4,9 +4,22 @@
 $moduleSettings = \Core\ModuleLoader::getModuleSettings('content-creator');
 $minWords = $aiSettings['min_words'] ?? null;
 $customPrompt = $aiSettings['custom_prompt'] ?? '';
+$imageDefaults = $aiSettings['image_defaults'] ?? [];
 ?>
 
-<div class="space-y-6">
+<div class="space-y-6" x-data="{ settingsTab: 'general' }">
+
+    <!-- Tab Navigation -->
+    <div class="border-b border-slate-200 dark:border-slate-700">
+        <nav class="flex gap-4">
+            <button @click="settingsTab = 'general'" :class="settingsTab === 'general' ? 'border-orange-500 text-orange-600 dark:text-orange-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'"
+                    class="pb-3 px-1 border-b-2 text-sm font-medium transition-colors">Generale</button>
+            <button @click="settingsTab = 'images'" :class="settingsTab === 'images' ? 'border-orange-500 text-orange-600 dark:text-orange-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'"
+                    class="pb-3 px-1 border-b-2 text-sm font-medium transition-colors">Immagini</button>
+        </nav>
+    </div>
+
+    <div x-show="settingsTab === 'general'">
     <form action="<?= url('/content-creator/projects/' . $project['id'] . '/update') ?>" method="POST" class="space-y-6">
         <?= csrf_field() ?>
 
@@ -138,6 +151,106 @@ $customPrompt = $aiSettings['custom_prompt'] ?? '';
             </button>
         </div>
     </form>
+    </div>
+
+    <!-- Immagini Tab -->
+    <div x-show="settingsTab === 'images'" x-cloak>
+        <form action="<?= url('/content-creator/projects/' . $project['id'] . '/update') ?>" method="POST" class="space-y-6">
+            <?= csrf_field() ?>
+            <!-- Pass through existing fields so they don't get wiped -->
+            <input type="hidden" name="name" value="<?= e($project['name']) ?>">
+            <input type="hidden" name="content_type" value="<?= e($project['content_type'] ?? 'product') ?>">
+            <input type="hidden" name="language" value="<?= e($project['language'] ?? 'it') ?>">
+            <input type="hidden" name="tone" value="<?= e($project['tone'] ?? 'professionale') ?>">
+            <input type="hidden" name="connector_id" value="<?= e($project['connector_id'] ?? '') ?>">
+            <input type="hidden" name="custom_prompt" value="<?= e($aiSettings['custom_prompt'] ?? '') ?>">
+
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+                    <h3 class="text-lg font-medium text-slate-900 dark:text-white">Impostazioni Generazione Immagini</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Configura i parametri default per la generazione AI delle immagini</p>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo scena</label>
+                            <select name="image_scene_type" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                                <option value="fashion" <?= ($imageDefaults['scene_type'] ?? 'fashion') === 'fashion' ? 'selected' : '' ?>>Fashion (Modella/o)</option>
+                                <option value="home" <?= ($imageDefaults['scene_type'] ?? '') === 'home' ? 'selected' : '' ?>>Home (Ambientazione)</option>
+                                <option value="custom" <?= ($imageDefaults['scene_type'] ?? '') === 'custom' ? 'selected' : '' ?>>Custom</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Genere modella/o</label>
+                            <select name="image_gender" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                                <option value="woman" <?= ($imageDefaults['gender'] ?? 'woman') === 'woman' ? 'selected' : '' ?>>Donna</option>
+                                <option value="man" <?= ($imageDefaults['gender'] ?? '') === 'man' ? 'selected' : '' ?>>Uomo</option>
+                                <option value="neutral" <?= ($imageDefaults['gender'] ?? '') === 'neutral' ? 'selected' : '' ?>>Neutro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Sfondo</label>
+                            <select name="image_background" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                                <option value="studio_white" <?= ($imageDefaults['background'] ?? 'studio_white') === 'studio_white' ? 'selected' : '' ?>>Studio bianco</option>
+                                <option value="urban" <?= ($imageDefaults['background'] ?? '') === 'urban' ? 'selected' : '' ?>>Urbano</option>
+                                <option value="lifestyle" <?= ($imageDefaults['background'] ?? '') === 'lifestyle' ? 'selected' : '' ?>>Lifestyle</option>
+                                <option value="nature" <?= ($imageDefaults['background'] ?? '') === 'nature' ? 'selected' : '' ?>>Natura</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Ambiente (per Home)</label>
+                            <select name="image_environment" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                                <option value="living_room" <?= ($imageDefaults['environment'] ?? 'living_room') === 'living_room' ? 'selected' : '' ?>>Soggiorno</option>
+                                <option value="kitchen" <?= ($imageDefaults['environment'] ?? '') === 'kitchen' ? 'selected' : '' ?>>Cucina</option>
+                                <option value="bedroom" <?= ($imageDefaults['environment'] ?? '') === 'bedroom' ? 'selected' : '' ?>>Camera da letto</option>
+                                <option value="office" <?= ($imageDefaults['environment'] ?? '') === 'office' ? 'selected' : '' ?>>Ufficio</option>
+                                <option value="outdoor" <?= ($imageDefaults['environment'] ?? '') === 'outdoor' ? 'selected' : '' ?>>Esterno</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Stile foto</label>
+                            <select name="image_photo_style" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                                <option value="professional" <?= ($imageDefaults['photo_style'] ?? 'professional') === 'professional' ? 'selected' : '' ?>>Professionale</option>
+                                <option value="editorial" <?= ($imageDefaults['photo_style'] ?? '') === 'editorial' ? 'selected' : '' ?>>Editoriale</option>
+                                <option value="minimal" <?= ($imageDefaults['photo_style'] ?? '') === 'minimal' ? 'selected' : '' ?>>Minimale</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Numero varianti</label>
+                            <select name="image_variants_count" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                                <?php for ($i = 1; $i <= 4; $i++): ?>
+                                <option value="<?= $i ?>" <?= (int)($imageDefaults['variants_count'] ?? 3) === $i ? 'selected' : '' ?>><?= $i ?></option>
+                                <?php endfor; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Prompt personalizzato immagini</label>
+                        <textarea name="image_custom_prompt" rows="3"
+                                  class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                                  placeholder="Es. Lo sfondo deve essere sempre con illuminazione calda e morbida"><?= e($imageDefaults['custom_prompt'] ?? '') ?></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Modalità push CMS</label>
+                        <select name="image_push_mode" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                            <option value="add_as_gallery" <?= ($imageDefaults['push_mode'] ?? 'add_as_gallery') === 'add_as_gallery' ? 'selected' : '' ?>>Aggiungi alla galleria</option>
+                            <option value="replace_main" <?= ($imageDefaults['push_mode'] ?? '') === 'replace_main' ? 'selected' : '' ?>>Sostituisci immagine principale</option>
+                            <option value="add" <?= ($imageDefaults['push_mode'] ?? '') === 'add' ? 'selected' : '' ?>>Aggiungi come nuova</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="submit"
+                        class="px-6 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
+                    Salva Impostazioni Immagini
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- Delete Modal -->
