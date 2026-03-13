@@ -23,17 +23,22 @@ class EvaluationGeneratorService
      * Genera contenuto per un tipo specifico di fix
      *
      * @param int    $userId
-     * @param string $type    extensions|copy|keywords
-     * @param array  $context Dati specifici del problema (issue, recommendation, missing, campaign_name)
+     * @param string $type    fix_type: rewrite_ads|add_negatives|remove_duplicates|add_extensions (legacy: copy|keywords|extensions)
+     * @param array  $context Dati specifici del problema (issue, recommendation, missing, campaign_name, ad_group_name)
      * @param array  $data    Dati campagna (campaigns, ads, extensions, keywords, business_context)
      * @return array Dati strutturati JSON
      */
     public function generate(int $userId, string $type, array $context, array $data): array
     {
-        $prompt = match (true) {
-            str_contains($type, 'extensions') => $this->buildExtensionsPrompt($context, $data),
-            str_contains($type, 'copy')       => $this->buildCopyPrompt($context, $data),
-            str_contains($type, 'keywords')   => $this->buildKeywordsPrompt($context, $data),
+        $prompt = match ($type) {
+            'rewrite_ads'       => $this->buildCopyPrompt($context, $data),
+            'add_negatives'     => $this->buildNegativesPrompt($context, $data),
+            'remove_duplicates' => $this->buildDuplicatesPrompt($context, $data),
+            'add_extensions'    => $this->buildExtensionsPrompt($context, $data),
+            // Backwards compatibility
+            'copy'              => $this->buildCopyPrompt($context, $data),
+            'keywords'          => $this->buildNegativesPrompt($context, $data),
+            'extensions'        => $this->buildExtensionsPrompt($context, $data),
             default => throw new \Exception('Tipo generazione non supportato: ' . $type),
         };
 
@@ -208,7 +213,7 @@ PROMPT;
     /**
      * Prompt per generare keyword negative
      */
-    private function buildKeywordsPrompt(array $context, array $data): string
+    private function buildNegativesPrompt(array $context, array $data): string
     {
         $issue = $context['issue'] ?? $context['suggestion'] ?? '';
         $recommendation = $context['recommendation'] ?? $context['expected_impact'] ?? '';
@@ -217,14 +222,73 @@ PROMPT;
 
         $businessCtx = mb_substr($data['business_context'] ?? '', 0, 500);
 
-        // Determina se il problema riguarda keyword duplicate
-        $isDuplicate = str_contains(mb_strtolower($issue), 'duplicat') ||
-                       str_contains(mb_strtolower($issue), 'competizione interna') ||
-                       str_contains(mb_strtolower($issue), 'cannibaliz');
-
-        // Keyword esistenti — raggruppa per ad group per trovare duplicati
         $allKeywords = [];
-        $keywordMap = []; // text => [ad_groups]
+        foreach (($data['keywords'] ?? []) as $kw) {
+            if (!empty($campaignName) && ($kw['campaign_name'] ?? '') !== $campaignName) {
+                continue;
+            }
+            $text = $kw['keyword_text'] ?? '';
+            $match = $kw['match_type'] ?? '';
+            $qs = $kw['quality_score'] ?? '';
+            $ag = $kw['ad_group_name'] ?? '?';
+
+            if ($text) {
+                $allKeywords[] = "{$text} [{$match}]" . ($qs ? " QS:{$qs}" : '') . " — {$ag}";
+            }
+        }
+        $kwText = !empty($allKeywords) ? implode("\n", array_slice($allKeywords, 0, 30)) : 'Nessuna keyword disponibile';
+        $adGroupBlock = !empty($adGroupName) ? "\nAD GROUP IN ANALISI: {$adGroupName}" : '';
+
+        return <<<PROMPT
+Sei un esperto Google Ads di keyword strategy e gestione keyword negative.
+
+CONTESTO BUSINESS:
+{$businessCtx}
+
+CAMPAGNA: {$campaignName}{$adGroupBlock}
+
+KEYWORD ESISTENTI:
+{$kwText}
+
+PROBLEMA IDENTIFICATO:
+{$issue}
+
+RACCOMANDAZIONE:
+{$recommendation}
+
+ISTRUZIONI:
+Genera una lista di keyword negative per risolvere il problema identificato.
+Raggruppa per tema/categoria.
+
+GENERA in formato JSON esatto (NESSUN testo fuori dal JSON):
+{
+  "keywords": [
+    {"keyword": "keyword text", "match_type": "phrase", "is_negative": true, "reason": "Motivazione breve"}
+  ]
+}
+
+Regole:
+- 15-20 keyword negative
+- match_type: "exact" o "phrase"
+- is_negative: sempre true
+- SOLO JSON valido, nessun commento o testo aggiuntivo
+PROMPT;
+    }
+
+    /**
+     * Prompt per rimuovere keyword duplicate tra ad group
+     */
+    private function buildDuplicatesPrompt(array $context, array $data): string
+    {
+        $issue = $context['issue'] ?? $context['suggestion'] ?? '';
+        $recommendation = $context['recommendation'] ?? $context['expected_impact'] ?? '';
+        $campaignName = $context['campaign_name'] ?? '';
+        $adGroupName = $context['ad_group_name'] ?? '';
+
+        $businessCtx = mb_substr($data['business_context'] ?? '', 0, 500);
+
+        $allKeywords = [];
+        $keywordMap = [];
         foreach (($data['keywords'] ?? []) as $kw) {
             if (!empty($campaignName) && ($kw['campaign_name'] ?? '') !== $campaignName) {
                 continue;
@@ -245,22 +309,21 @@ PROMPT;
         $kwText = !empty($allKeywords) ? implode("\n", array_slice($allKeywords, 0, 30)) : 'Nessuna keyword disponibile';
         $adGroupBlock = !empty($adGroupName) ? "\nAD GROUP IN ANALISI: {$adGroupName}" : '';
 
-        if ($isDuplicate) {
-            // Elenca i duplicati trovati
-            $duplicates = [];
-            foreach ($keywordMap as $kwKey => $occurrences) {
-                if (count($occurrences) > 1) {
-                    $duplicates[$kwKey] = $occurrences;
-                }
+        // Elenca i duplicati trovati
+        $duplicates = [];
+        foreach ($keywordMap as $kwKey => $occurrences) {
+            if (count($occurrences) > 1) {
+                $duplicates[$kwKey] = $occurrences;
             }
-            $dupText = '';
-            foreach ($duplicates as $kwKey => $occs) {
-                $dupText .= "\n- \"{$occs[0]['keyword_text']}\" appare in " . count($occs) . " ad group: " .
-                    implode(', ', array_map(fn($o) => $o['ad_group'] . ' [' . $o['match_type'] . '] QS:' . ($o['quality_score'] ?: '?'), $occs));
-            }
-            if (empty($dupText)) $dupText = "\nNessun duplicato trovato nei dati.";
+        }
+        $dupText = '';
+        foreach ($duplicates as $kwKey => $occs) {
+            $dupText .= "\n- \"{$occs[0]['keyword_text']}\" appare in " . count($occs) . " ad group: " .
+                implode(', ', array_map(fn($o) => $o['ad_group'] . ' [' . $o['match_type'] . '] QS:' . ($o['quality_score'] ?: '?'), $occs));
+        }
+        if (empty($dupText)) $dupText = "\nNessun duplicato trovato nei dati.";
 
-            return <<<PROMPT
+        return <<<PROMPT
 Sei un esperto Google Ads di keyword strategy e struttura account.
 
 CONTESTO BUSINESS:
@@ -302,42 +365,6 @@ Regole:
 - Per ogni duplicata, indica ESATTAMENTE dove mantenerla (l'ad group piu pertinente)
 - remove_from: lista ad group da cui rimuovere
 - Motivazione chiara e specifica
-- SOLO JSON valido, nessun commento o testo aggiuntivo
-PROMPT;
-        }
-
-        return <<<PROMPT
-Sei un esperto Google Ads di keyword strategy e gestione keyword negative.
-
-CONTESTO BUSINESS:
-{$businessCtx}
-
-CAMPAGNA: {$campaignName}{$adGroupBlock}
-
-KEYWORD ESISTENTI:
-{$kwText}
-
-PROBLEMA IDENTIFICATO:
-{$issue}
-
-RACCOMANDAZIONE:
-{$recommendation}
-
-ISTRUZIONI:
-Genera una lista di keyword negative per risolvere il problema identificato.
-Raggruppa per tema/categoria.
-
-GENERA in formato JSON esatto (NESSUN testo fuori dal JSON):
-{
-  "keywords": [
-    {"keyword": "keyword text", "match_type": "phrase", "is_negative": true, "reason": "Motivazione breve"}
-  ]
-}
-
-Regole:
-- 15-20 keyword negative
-- match_type: "exact" o "phrase"
-- is_negative: sempre true
 - SOLO JSON valido, nessun commento o testo aggiuntivo
 PROMPT;
     }
