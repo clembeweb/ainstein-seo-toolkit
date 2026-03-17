@@ -685,14 +685,51 @@ Prima di cliccare "Valuta con AI", l'utente vede la lista campagne sincronizzate
 
 ## 12. Costi Crediti
 
-| Operazione | Costo | Note |
+Da `module.json` attuale:
+
+| Operazione | Costo (module.json key) | Note |
 |---|---|---|
-| Evaluation (analisi AI) | 7 crediti (fisso) | Indipendente dal numero campagne selezionate |
-| Genera singola ottimizzazione | 1 credito | On-demand, solo quando l'utente clicca |
+| Evaluation (analisi AI) | 10 crediti (`cost_campaign_evaluation`) | Già configurato |
+| Genera singola ottimizzazione | 1 credito (`cost_generate_fix` — **da aggiungere**) | On-demand |
 | "Genera Tutte" | 1 × N ottimizzazioni | Conferma modale: "Generare 8 ottimizzazioni? Costo: 8 crediti" |
-| Applica su Google Ads | 0 crediti | L'apply è gratuita, il costo è nella generazione |
+| Applica su Google Ads | 0 crediti | Gratuita |
+
+**Settings da aggiungere a module.json** (gruppo `costs`):
+- `cost_generate_fix`: 1 credito, "Costo generazione singola ottimizzazione"
+
+**Settings da aggiungere a module.json** (gruppo `general`):
+- `max_landing_pages_per_eval`: 25, min 5, max 50, "Max landing pages da scrapare per evaluation"
+
+**Settings esistenti già allineati**:
+- `max_campaigns_per_evaluation`: 15 (default), già funzionante nel controller
+- `auto_eval_significance_threshold`: 10%, già usato nel cron
+- `auto_eval_delay_minutes`: 2, già usato nel cron
+- `gads_auto_sync_enabled` + `gads_sync_frequency_hours`: sync automatico già configurabile
 
 **Cap "Genera Tutte"**: il bottone mostra il costo totale prima dell'esecuzione. L'utente conferma esplicitamente.
+
+---
+
+## 12b. Feature Esistenti da Riusare (non ricostruire)
+
+Il backend è quasi tutto pronto. Il lavoro principale è sulla **view** e su wiring mancanti.
+
+| Feature | Stato | Azione |
+|---|---|---|
+| AI prompt con ad group + ads + keywords | ESISTE | Estendere per annunci con CTR individuale e landing per ad group |
+| Scraping landing (ScraperService) | ESISTE | Alzare limite da 5 a `max_landing_pages_per_eval`, troncare content a 1500 char |
+| Genera con AI (4 fix types) | ESISTE | Aggiungere `replace_asset` e `add_asset` per PMax |
+| Applica su Google Ads (API) | ESISTE | Nessuna modifica — già supporta copy/extensions/negatives |
+| CSV Ads Editor export | ESISTE | Solo aggiungere bottone nella view (service già pronto) |
+| PMax analysis separata | ESISTE | Nessuna modifica backend |
+| Campaign filter (backend) | ESISTE | Solo aggiungere UI checkbox pre-evaluation |
+| KPI cards + delta % (view) | PARZIALE | Wiring controller → view (popolare `$metricDeltas`) |
+| Period selector (view) | PARZIALE | Wiring controller → view (popolare `$periods`) |
+| Tabella annunci (H1-H3, CTR) | ESISTE | Riusare da show.php nel nuovo template |
+| **Before→After preview** | **NUOVO** | Componente UI da creare |
+| **Batch operations** | **NUOVO** | Checkbox + selezione multipla + applica batch |
+| **Ad group espandibili** | **NUOVO** | Livello intermedio nella tabella |
+| **SSE progress** | **NUOVO** | Convertire da AJAX lungo a SSE stream |
 
 ---
 
