@@ -12,6 +12,7 @@ use Modules\AdsAnalyzer\Models\Sync;
 use Modules\AdsAnalyzer\Models\Campaign;
 use Modules\AdsAnalyzer\Models\Ad;
 use Modules\AdsAnalyzer\Models\Extension;
+use Modules\AdsAnalyzer\Models\SearchTerm;
 use Modules\AdsAnalyzer\Models\CampaignAdGroup;
 use Modules\AdsAnalyzer\Models\AdGroupKeyword;
 use Modules\AdsAnalyzer\Models\CampaignEvaluation;
@@ -53,7 +54,7 @@ class CampaignController
         ));
 
         $latestSync = Sync::getLatestByProject($projectId);
-        $latestStats = $latestSync ? Campaign::getStatsByRun($latestSync['id']) : [];
+        $latestStats = $latestSync ? Campaign::getStatsByRun($latestSync['id'], $projectId) : [];
 
         // Valutazioni recenti
         $evaluations = CampaignEvaluation::getByProject($projectId, 10);
@@ -62,7 +63,7 @@ class CampaignController
         $totalCampaigns = 0;
         $totalAds = 0;
         if ($latestSync) {
-            $totalCampaigns = count(Campaign::getByRun($latestSync['id']));
+            $totalCampaigns = count(Campaign::getByRun($latestSync['id'], $projectId));
             $totalAds = count(Ad::getByRun($latestSync['id']));
         }
 
@@ -78,9 +79,111 @@ class CampaignController
         if ($latestSync && count($campaignSyncs) >= 2) {
             $previousSync = $campaignSyncs[1] ?? null;
             if ($previousSync) {
-                $previousStats = Campaign::getStatsByRun($previousSync['id']);
+                $previousStats = Campaign::getStatsByRun($previousSync['id'], $projectId);
                 $kpiDeltas = MetricComparisonService::computeDeltas($latestStats, $previousStats);
             }
+        }
+
+        // Campaigns performance con gerarchia: Campaign → Ad Group → Ads
+        $campaignsPerformance = [];
+        if ($latestSync) {
+            $syncId = $latestSync['id'];
+            $allCampaigns = Campaign::getByRun($syncId, $projectId);
+            $allAds = Ad::getByRun($syncId);
+
+            // Raggruppa ads per campagna > ad group
+            $adsByCampaignAdGroup = [];
+            foreach ($allAds as $ad) {
+                $key = ($ad['campaign_name'] ?? '') . '||' . ($ad['ad_group_name'] ?? '');
+                $adsByCampaignAdGroup[$key][] = $ad;
+            }
+
+            // Aggrega keyword per ad group (metriche ad-group level)
+            $adGroupMetrics = Database::fetchAll(
+                "SELECT campaign_name, ad_group_name, ad_group_id_google,
+                        COUNT(*) as kw_count,
+                        SUM(clicks) as clicks, SUM(impressions) as impressions,
+                        SUM(cost) as cost, SUM(conversions) as conversions
+                 FROM ga_ad_group_keywords
+                 WHERE sync_id = ? AND project_id = ?
+                 GROUP BY campaign_name, ad_group_name, ad_group_id_google
+                 ORDER BY cost DESC",
+                [$syncId, $projectId]
+            );
+
+            // Raggruppa ad group per campagna
+            $adGroupsByCampaign = [];
+            foreach ($adGroupMetrics as $ag) {
+                $campName = $ag['campaign_name'] ?? '';
+                $agClicks = (int)$ag['clicks'];
+                $agImpr = (int)$ag['impressions'];
+                $agCost = round((float)$ag['cost'], 2);
+                $agConv = round((float)$ag['conversions'], 1);
+                $agCtr = $agImpr > 0 ? round($agClicks / $agImpr * 100, 2) : 0;
+
+                // Ads dentro questo ad group
+                $key = $campName . '||' . ($ag['ad_group_name'] ?? '');
+                $adsInGroup = $adsByCampaignAdGroup[$key] ?? [];
+                $formattedAds = array_map(fn($a) => [
+                    'headline1' => $a['headline1'] ?? '',
+                    'headline2' => $a['headline2'] ?? '',
+                    'headline3' => $a['headline3'] ?? '',
+                    'description1' => $a['description1'] ?? '',
+                    'final_url' => $a['final_url'] ?? '',
+                    'clicks' => (int)$a['clicks'],
+                    'impressions' => (int)$a['impressions'],
+                    'ctr' => round((float)($a['ctr'] ?? 0), 2),
+                    'cost' => round((float)($a['cost'] ?? 0), 2),
+                ], $adsInGroup);
+
+                $adGroupsByCampaign[$campName][] = [
+                    'name' => $ag['ad_group_name'] ?? '',
+                    'kw_count' => (int)$ag['kw_count'],
+                    'clicks' => $agClicks,
+                    'impressions' => $agImpr,
+                    'ctr' => $agCtr,
+                    'cost' => $agCost,
+                    'conversions' => $agConv,
+                    'cpa' => $agConv > 0 ? round($agCost / $agConv, 2) : 0,
+                    'ads' => $formattedAds,
+                ];
+            }
+
+            foreach ($allCampaigns as $c) {
+                $campCost = round((float)$c['cost'], 2);
+                $campConv = round((float)$c['conversions'], 1);
+                $campConvValue = round((float)($c['conversion_value'] ?? 0), 2);
+                $campaignsPerformance[] = [
+                    'name' => $c['campaign_name'],
+                    'type' => $c['campaign_type'] ?? 'SEARCH',
+                    'status' => $c['campaign_status'] ?? 'UNKNOWN',
+                    'clicks' => (int)$c['clicks'],
+                    'impressions' => (int)$c['impressions'],
+                    'ctr' => round((float)($c['ctr'] ?? 0), 2),
+                    'cost' => $campCost,
+                    'conversions' => $campConv,
+                    'conversion_value' => $campConvValue,
+                    'roas' => ($campCost > 0 && $campConvValue > 0) ? round($campConvValue / $campCost, 2) : 0,
+                    'cpa' => $campConv > 0 ? round($campCost / $campConv, 2) : 0,
+                    'ad_groups' => $adGroupsByCampaign[$c['campaign_name']] ?? [],
+                ];
+            }
+        }
+
+        // Top waste search terms + stats per widget KW negative
+        $topWasteTerms = [];
+        $negativeStats = ['total_waste' => 0, 'waste_terms' => 0, 'total_terms' => 0];
+        if ($latestSync) {
+            $topWasteTerms = SearchTerm::getTopWaste($latestSync['id'], 5);
+            $negativeStats = SearchTerm::getWasteStats($latestSync['id']);
+        }
+
+        // Ad groups count
+        $totalAdGroups = 0;
+        $totalKeywords = 0;
+        if ($latestSync) {
+            $totalAdGroups = (int)($latestSync['ad_groups_synced'] ?? 0);
+            $totalKeywords = (int)($latestSync['keywords_synced'] ?? 0);
         }
 
         // Auto-eval status
@@ -89,7 +192,7 @@ class CampaignController
         // Trend storico KPI (tutti i sync completati, ordine cronologico)
         $kpiTrend = [];
         foreach (array_reverse($campaignSyncs) as $sync) {
-            $syncStats = ($sync['id'] == ($latestSync['id'] ?? 0)) ? $latestStats : Campaign::getStatsByRun($sync['id']);
+            $syncStats = ($sync['id'] == ($latestSync['id'] ?? 0)) ? $latestStats : Campaign::getStatsByRun($sync['id'], $projectId);
             $kpiTrend[] = [
                 'date' => $sync['date_range_end'] ?? date('Y-m-d', strtotime($sync['started_at'] ?? $sync['created_at'] ?? 'now')),
                 'label' => date('d/m', strtotime($sync['date_range_end'] ?? $sync['started_at'] ?? $sync['created_at'] ?? 'now')),
@@ -116,6 +219,11 @@ class CampaignController
             'latestAiResponse' => $latestAiResponse,
             'kpiDeltas' => $kpiDeltas,
             'kpiTrend' => $kpiTrend,
+            'campaignsPerformance' => $campaignsPerformance,
+            'topWasteTerms' => $topWasteTerms,
+            'negativeStats' => $negativeStats,
+            'totalAdGroups' => $totalAdGroups,
+            'totalKeywords' => $totalKeywords,
             'autoEvalEnabled' => $autoEvalEnabled,
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
@@ -152,7 +260,7 @@ class CampaignController
 
         // Stats per l'ultimo sync
         $latestSync = !empty($campaignSyncs) ? reset($campaignSyncs) : null;
-        $latestStats = $latestSync ? Campaign::getStatsByRun($latestSync['id']) : [];
+        $latestStats = $latestSync ? Campaign::getStatsByRun($latestSync['id'], $projectId) : [];
         $latestAdStats = $latestSync ? Ad::getStatsByRun($latestSync['id']) : [];
 
         // Valutazioni recenti
@@ -162,7 +270,7 @@ class CampaignController
         $campaignsList = [];
         $campaignsPerformance = [];
         if ($latestSync) {
-            $allCampaigns = Campaign::getByRun($latestSync['id']);
+            $allCampaigns = Campaign::getByRun($latestSync['id'], $projectId);
             $campaignsList = array_map(fn($c) => [
                 'id_google' => $c['campaign_id_google'],
                 'name' => $c['campaign_name'],
@@ -467,10 +575,10 @@ class CampaignController
             exit;
         }
 
-        $campaigns = Campaign::getByRun($syncId);
+        $campaigns = Campaign::getByRun($syncId, $projectId);
         $ads = Ad::getByRun($syncId);
         $extensions = Extension::getByRunGrouped($syncId);
-        $campaignStats = Campaign::getStatsByRun($syncId);
+        $campaignStats = Campaign::getStatsByRun($syncId, $projectId);
         $adStats = Ad::getStatsByRun($syncId);
 
         // Raggruppa annunci per campagna
@@ -569,7 +677,7 @@ class CampaignController
 
             // Carica dati — solo campagne e ad group attivi
             $campaigns = array_values(array_filter(
-                Campaign::getByRun($sync['id']),
+                Campaign::getByRun($sync['id'], $projectId),
                 fn($c) => ($c['campaign_status'] ?? '') === 'ENABLED'
             ));
             $ads = Ad::getByRun($sync['id']);
@@ -1203,7 +1311,7 @@ class CampaignController
             // Carica dati campagna (stessi model usati in evaluate())
             $syncId = $evaluation['sync_id'];
             $campaignData = [
-                'campaigns' => Campaign::getByRun($syncId),
+                'campaigns' => Campaign::getByRun($syncId, $projectId),
                 'ads' => Ad::getByRun($syncId),
                 'extensions' => Extension::getByRun($syncId),
                 'keywords' => AdGroupKeyword::getByRun($syncId),
@@ -1447,7 +1555,7 @@ class CampaignController
             if (empty($targetCampaign)) {
                 $latestSync = Sync::getLatestByProject($projectId);
                 if ($latestSync) {
-                    $campaigns = Campaign::getByRun($latestSync['id']);
+                    $campaigns = Campaign::getByRun($latestSync['id'], $projectId);
                     foreach ($campaigns as $c) {
                         if (($c['campaign_status'] ?? '') === 'ENABLED' && !empty($c['campaign_id_google'])) {
                             $targetCampaign = "customers/{$customerId}/campaigns/{$c['campaign_id_google']}";

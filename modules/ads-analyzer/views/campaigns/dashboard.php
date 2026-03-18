@@ -33,22 +33,22 @@ function scoreBorderClass(float $score): string {
     return 'border-emerald-500';
 }
 
-$trendLabels = [
-    'improving' => ['label' => 'In miglioramento', 'class' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'],
-    'stable' => ['label' => 'Stabile', 'class' => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'],
-    'declining' => ['label' => 'In calo', 'class' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'],
-    'mixed' => ['label' => 'Misto', 'class' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'],
-];
-
 $hasGoogleAds = !empty($project['google_ads_customer_id']);
 $googleAdsAccountName = $project['google_ads_account_name'] ?? '';
+
+// ROAS/CPA helper per la tabella
+$totalCost = (float)($latestStats['total_cost'] ?? 0);
+$totalConversions = (float)($latestStats['total_conversions'] ?? 0);
+$totalValue = (float)($latestStats['total_value'] ?? 0);
+$roas = ($totalCost > 0 && $totalValue > 0) ? round($totalValue / $totalCost, 2) : 0;
+$cpa = ($totalConversions > 0) ? round($totalCost / $totalConversions, 2) : 0;
 ?>
 
 <div class="space-y-6" x-data="dashboardManager()">
 
-    <!-- Google Ads Connection Badge + Date Picker + Sync -->
+    <!-- SEZIONE 1: Header — Account badge + Date Picker + Sync + Eval -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <!-- Google Ads Connection Badge -->
+        <!-- Google Ads Connection Badge + Health Score Badge -->
         <div class="flex items-center gap-2">
             <?php if ($hasGoogleAds): ?>
             <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
@@ -62,6 +62,15 @@ $googleAdsAccountName = $project['google_ads_account_name'] ?? '';
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
                 </svg>
                 Connetti Google Ads
+            </a>
+            <?php endif; ?>
+
+            <?php if ($latestAiResponse && isset($latestAiResponse['overall_score'])): ?>
+            <?php $healthScore = (float)$latestAiResponse['overall_score']; ?>
+            <a href="<?= $latestEvalWithAi ? url('/ads-analyzer/projects/' . $project['id'] . '/campaigns/evaluations/' . $latestEvalWithAi['id']) : '#' ?>"
+               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border-2 <?= scoreBorderClass($healthScore) ?> bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                <span class="font-bold <?= scoreTextClass($healthScore) ?>"><?= number_format($healthScore, 1) ?></span>
+                <span class="text-slate-600 dark:text-slate-300">Health</span>
             </a>
             <?php endif; ?>
         </div>
@@ -206,8 +215,8 @@ $googleAdsAccountName = $project['google_ads_account_name'] ?? '';
     }
     ?>
 
+    <!-- SEZIONE 3: Alert Banner AI -->
     <?php if (!empty($highIssues) || !empty($metricAlerts)): ?>
-    <!-- Alert Banner -->
     <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
         <div class="flex items-start gap-3">
             <svg class="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -216,6 +225,9 @@ $googleAdsAccountName = $project['google_ads_account_name'] ?? '';
             <div>
                 <p class="text-sm font-medium text-red-800 dark:text-red-300">
                     <?= count($highIssues) + count($metricAlerts) ?> problema/i rilevato/i
+                    <?php if ($latestEvalWithAi): ?>
+                    <span class="font-normal text-red-600 dark:text-red-400">&mdash; eval <?= date('d/m/Y', strtotime($latestEvalWithAi['created_at'])) ?></span>
+                    <?php endif; ?>
                 </p>
                 <ul class="mt-1 text-sm text-red-700 dark:text-red-400 space-y-0.5">
                     <?php foreach ($metricAlerts as $alert): ?>
@@ -235,68 +247,44 @@ $googleAdsAccountName = $project['google_ads_account_name'] ?? '';
     </div>
     <?php endif; ?>
 
-    <!-- Health Score + KPI Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-
-        <!-- Health Score Widget -->
-        <?php if ($latestAiResponse && isset($latestAiResponse['overall_score'])): ?>
-        <?php
-        $healthScore = (float)$latestAiResponse['overall_score'];
-        $trend = $latestAiResponse['trend'] ?? null;
-        $changesSummary = $latestAiResponse['changes_summary'] ?? null;
-        $evalType = ($latestEvalWithAi ?? $latestEval)['eval_type'] ?? 'manual';
-        ?>
-        <div class="md:col-span-1 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
-            <div class="flex flex-col items-center text-center">
-                <div class="w-20 h-20 rounded-full flex items-center justify-center border-4 <?= scoreBorderClass($healthScore) ?> bg-white dark:bg-slate-900 mb-3">
-                    <span class="text-2xl font-bold <?= scoreTextClass($healthScore) ?>"><?= number_format($healthScore, 1) ?></span>
-                </div>
-                <p class="text-sm font-medium text-slate-900 dark:text-white">Health Score</p>
-                <div class="flex items-center gap-1.5 mt-1.5">
-                    <?php if ($evalType === 'auto'): ?>
-                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">Auto</span>
-                    <?php endif; ?>
-                    <?php if ($trend && isset($trendLabels[$trend])): ?>
-                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium <?= $trendLabels[$trend]['class'] ?>">
-                        <?= $trendLabels[$trend]['label'] ?>
-                    </span>
-                    <?php endif; ?>
-                </div>
-                <?php if ($latestEvalWithAi ?? null): ?>
-                <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns/evaluations/' . $latestEvalWithAi['id']) ?>" class="mt-2 text-xs text-amber-600 dark:text-amber-400 hover:underline">
-                    Dettagli
-                </a>
-                <?php endif; ?>
-            </div>
+    <!-- Changes Summary (se presente) -->
+    <?php if (!empty($latestAiResponse['changes_summary'])): ?>
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div class="flex items-start gap-3">
+            <svg class="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <p class="text-sm text-blue-800 dark:text-blue-300"><?= e($latestAiResponse['changes_summary']) ?></p>
         </div>
-        <?php else: ?>
-        <div class="md:col-span-1 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
-            <div class="flex flex-col items-center text-center">
-                <div class="w-20 h-20 rounded-full flex items-center justify-center border-4 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 mb-3">
-                    <span class="text-2xl font-bold text-slate-300 dark:text-slate-600">-</span>
-                </div>
-                <p class="text-sm font-medium text-slate-900 dark:text-white">Health Score</p>
-                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Nessuna valutazione</p>
-            </div>
-        </div>
-        <?php endif; ?>
+    </div>
+    <?php endif; ?>
 
-        <!-- KPI Cards (4) — valori dinamici Alpine.js -->
-        <?php
-        $kpiCards = [
-            ['key' => 'total_clicks', 'alpine' => 'kpiClicks', 'label' => 'Click', 'value' => $latestStats['total_clicks'] ?? 0, 'format' => 'number', 'icon' => 'M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122', 'color' => 'blue'],
-            ['key' => 'total_cost', 'alpine' => 'kpiCost', 'label' => 'Costo', 'value' => $latestStats['total_cost'] ?? 0, 'format' => 'euro', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'color' => 'red', 'invert' => true],
-            ['key' => 'total_conversions', 'alpine' => 'kpiConversions', 'label' => 'Conversioni', 'value' => $latestStats['total_conversions'] ?? 0, 'format' => 'decimal', 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', 'color' => 'emerald'],
-            ['key' => 'avg_ctr', 'alpine' => 'kpiCtr', 'label' => 'CTR', 'value' => $latestStats['avg_ctr'] ?? 0, 'format' => 'percent', 'icon' => 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6', 'color' => 'amber'],
-        ];
-        ?>
+    <!-- SEZIONE 2: KPI Bar — 6 cards -->
+    <?php
+    $kpiCards = [
+        ['key' => 'total_clicks', 'alpine' => 'kpiClicks', 'label' => 'Click', 'value' => $latestStats['total_clicks'] ?? 0, 'format' => 'number', 'icon' => 'M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122', 'color' => 'blue'],
+        ['key' => 'total_cost', 'alpine' => 'kpiCost', 'label' => 'Costo', 'value' => $latestStats['total_cost'] ?? 0, 'format' => 'euro', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'color' => 'red', 'invert' => true],
+        ['key' => 'total_conversions', 'alpine' => 'kpiConversions', 'label' => 'Conversioni', 'value' => $latestStats['total_conversions'] ?? 0, 'format' => 'decimal', 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', 'color' => 'emerald'],
+        ['key' => 'avg_ctr', 'alpine' => 'kpiCtr', 'label' => 'CTR', 'value' => $latestStats['avg_ctr'] ?? 0, 'format' => 'percent', 'icon' => 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6', 'color' => 'amber'],
+        ['key' => 'roas', 'alpine' => 'kpiRoas', 'label' => 'ROAS', 'value' => $roas, 'format' => 'roas', 'icon' => 'M12 8v13m0-13V6a4 4 0 00-4-4H6.914a2 2 0 00-1.96 1.608l-.544 2.72A2 2 0 006.37 8H12zm0 0V6a4 4 0 014-4h1.086a2 2 0 011.96 1.608l.544 2.72A2 2 0 0117.63 8H12z', 'color' => 'purple'],
+        ['key' => 'cpa', 'alpine' => 'kpiCpa', 'label' => 'CPA', 'value' => $cpa, 'format' => 'euro', 'icon' => 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z', 'color' => 'rose', 'invert' => true],
+    ];
+    ?>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <?php foreach ($kpiCards as $kpi): ?>
         <?php
         $delta = $kpiDeltas[$kpi['key']] ?? null;
         $invertColor = $kpi['invert'] ?? false;
-        $colorMap = ['blue' => 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400', 'red' => 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400', 'emerald' => 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400', 'amber' => 'bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400'];
+        $colorMap = [
+            'blue' => 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400',
+            'red' => 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400',
+            'emerald' => 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400',
+            'amber' => 'bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400',
+            'purple' => 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400',
+            'rose' => 'bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400',
+        ];
         ?>
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <div class="flex items-center justify-between mb-2">
                 <div class="h-8 w-8 rounded-lg <?= $colorMap[$kpi['color']] ?> flex items-center justify-center">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -310,9 +298,9 @@ $googleAdsAccountName = $project['google_ads_account_name'] ?? '';
                 </span>
                 <?php endif; ?>
             </div>
-            <p class="text-2xl font-bold text-slate-900 dark:text-white">
+            <p class="text-xl font-bold text-slate-900 dark:text-white">
                 <template x-if="loadingKpis">
-                    <span class="inline-block h-7 w-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></span>
+                    <span class="inline-block h-6 w-14 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></span>
                 </template>
                 <template x-if="!loadingKpis">
                     <?php if ($kpi['format'] === 'euro'): ?>
@@ -321,215 +309,362 @@ $googleAdsAccountName = $project['google_ads_account_name'] ?? '';
                         <span x-text="formatPercent(<?= $kpi['alpine'] ?>)"></span>
                     <?php elseif ($kpi['format'] === 'decimal'): ?>
                         <span x-text="formatDecimal(<?= $kpi['alpine'] ?>)"></span>
+                    <?php elseif ($kpi['format'] === 'roas'): ?>
+                        <span x-text="formatRoas(<?= $kpi['alpine'] ?>)"></span>
                     <?php else: ?>
                         <span x-text="formatNumber(<?= $kpi['alpine'] ?>)"></span>
                     <?php endif; ?>
                 </template>
             </p>
-            <p class="text-sm text-slate-500 dark:text-slate-400"><?= $kpi['label'] ?></p>
-            <?php if ($delta): ?>
-            <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5" x-show="kpiSource !== 'api'">vs <span x-text="dateRange + 'gg fa'"></span></p>
-            <?php endif; ?>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1"><?= $kpi['label'] ?></p>
         </div>
         <?php endforeach; ?>
     </div>
 
-    <!-- Changes Summary (se presente) -->
-    <?php if (!empty($latestAiResponse['changes_summary'])): ?>
-    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-        <div class="flex items-start gap-3">
-            <svg class="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <p class="text-sm text-blue-800 dark:text-blue-300"><?= e($latestAiResponse['changes_summary']) ?></p>
-        </div>
-    </div>
-    <?php endif; ?>
-
-    <!-- Ultima Sincronizzazione -->
-    <?php if ($latestSync): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Ultima sincronizzazione</h2>
-            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns/' . $latestSync['id']) ?>" class="text-sm font-medium text-rose-600 dark:text-rose-400 hover:text-rose-700">
-                Dettagli
+    <!-- SEZIONE 4: Campagne Performance — Tabella espandibile 3 livelli -->
+    <?php if (!empty($campaignsPerformance)): ?>
+    <?php
+    $typeLabels = [
+        'SEARCH' => ['label' => 'Search', 'class' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'],
+        'PERFORMANCE_MAX' => ['label' => 'PMax', 'class' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300'],
+        'DISPLAY' => ['label' => 'Display', 'class' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'],
+        'SHOPPING' => ['label' => 'Shopping', 'class' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'],
+        'VIDEO' => ['label' => 'Video', 'class' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'],
+    ];
+    ?>
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden" x-data="{ expandedCampaign: null, expandedAdGroup: null }">
+        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Performance Campagne</h2>
+            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns') ?>" class="text-sm font-medium text-rose-600 dark:text-rose-400 hover:text-rose-700">
+                Vedi tutto
                 <svg class="w-4 h-4 ml-0.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
             </a>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
-            <div>
-                <p class="text-slate-500 dark:text-slate-400">Data</p>
-                <p class="font-medium text-slate-900 dark:text-white"><?= date('d/m/Y H:i', strtotime($latestSync['started_at'])) ?></p>
-            </div>
-            <div>
-                <p class="text-slate-500 dark:text-slate-400">Tipo</p>
-                <p class="font-medium text-slate-900 dark:text-white"><?= e($latestSync['sync_type'] ?? '-') ?></p>
-            </div>
-            <div>
-                <p class="text-slate-500 dark:text-slate-400">Items</p>
-                <p class="font-medium text-slate-900 dark:text-white"><?= number_format(($latestSync['campaigns_synced'] ?? 0) + ($latestSync['ad_groups_synced'] ?? 0) + ($latestSync['keywords_synced'] ?? 0) + ($latestSync['ads_synced'] ?? 0) + ($latestSync['search_terms_synced'] ?? 0)) ?></p>
-            </div>
-            <div>
-                <p class="text-slate-500 dark:text-slate-400">Campagne</p>
-                <p class="font-medium text-slate-900 dark:text-white"><?= number_format($totalCampaigns) ?></p>
-            </div>
-            <div>
-                <p class="text-slate-500 dark:text-slate-400">Periodo</p>
-                <p class="font-medium text-slate-900 dark:text-white">
-                    <?php if (($latestSync['date_range_start'] ?? null) && ($latestSync['date_range_end'] ?? null)): ?>
-                    <?= date('d/m', strtotime($latestSync['date_range_start'])) ?> - <?= date('d/m/Y', strtotime($latestSync['date_range_end'])) ?>
-                    <?php else: ?>
-                    -
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="dark:bg-slate-700/50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Campagna / Ad Group / Annuncio</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Click</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">CTR</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Spesa</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Conv.</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">ROAS</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">CPA</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                    <?php foreach ($campaignsPerformance as $ci => $camp): ?>
+                    <?php
+                    $typeInfo = $typeLabels[$camp['type']] ?? ['label' => $camp['type'], 'class' => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'];
+                    $hasAdGroups = !empty($camp['ad_groups']);
+                    ?>
+                    <!-- Livello 1: Campagna -->
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors <?= $hasAdGroups ? 'cursor-pointer' : '' ?>"
+                        <?php if ($hasAdGroups): ?>
+                        @click="expandedCampaign = expandedCampaign === <?= $ci ?> ? null : <?= $ci ?>; expandedAdGroup = null"
+                        <?php endif; ?>>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-2">
+                                <?php if ($hasAdGroups): ?>
+                                <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0" :class="expandedCampaign === <?= $ci ?> ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                                <?php else: ?>
+                                <span class="w-4"></span>
+                                <?php endif; ?>
+                                <?php if (($camp['status'] ?? '') === 'PAUSED'): ?>
+                                <span class="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" title="In pausa"></span>
+                                <?php elseif (($camp['status'] ?? '') === 'ENABLED'): ?>
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" title="Attiva"></span>
+                                <?php else: ?>
+                                <span class="w-2 h-2 rounded-full bg-slate-400 flex-shrink-0"></span>
+                                <?php endif; ?>
+                                <span class="text-sm font-medium text-slate-900 dark:text-white truncate max-w-[200px]"><?= e($camp['name']) ?></span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $typeInfo['class'] ?>"><?= $typeInfo['label'] ?></span>
+                                <?php if ($hasAdGroups): ?>
+                                <span class="text-xs text-slate-400 dark:text-slate-500"><?= count($camp['ad_groups']) ?> ad group</span>
+                                <?php endif; ?>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-right text-sm font-medium text-slate-900 dark:text-white"><?= number_format($camp['clicks']) ?></td>
+                        <td class="px-4 py-3 text-right text-sm font-medium <?= $camp['ctr'] < 1 ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white' ?>"><?= number_format($camp['ctr'], 2) ?>%</td>
+                        <td class="px-4 py-3 text-right text-sm font-medium text-slate-900 dark:text-white"><?= number_format($camp['cost'], 2) ?>&euro;</td>
+                        <td class="px-4 py-3 text-right text-sm font-medium text-slate-900 dark:text-white"><?= number_format($camp['conversions'], 1) ?></td>
+                        <td class="px-4 py-3 text-right text-sm font-medium <?= $camp['roas'] >= 3 ? 'text-emerald-600 dark:text-emerald-400' : ($camp['roas'] > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400') ?>">
+                            <?= $camp['roas'] > 0 ? number_format($camp['roas'], 2) . 'x' : '-' ?>
+                        </td>
+                        <td class="px-4 py-3 text-right text-sm font-medium <?= ($camp['cpa'] > 0 && $totalConversions > 0 && $camp['cpa'] > ($totalCost / $totalConversions) * 1.5) ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white' ?>">
+                            <?= $camp['cpa'] > 0 ? number_format($camp['cpa'], 2) . '&euro;' : '-' ?>
+                        </td>
+                    </tr>
+
+                    <!-- Livello 2: Ad Groups -->
+                    <?php if ($hasAdGroups): ?>
+                    <?php foreach ($camp['ad_groups'] as $agi => $ag): ?>
+                    <?php
+                    $hasAds = !empty($ag['ads']);
+                    $agKey = $ci . '_' . $agi;
+                    ?>
+                    <tr x-show="expandedCampaign === <?= $ci ?>" x-cloak
+                        class="bg-slate-50/50 dark:bg-slate-700/20 hover:bg-slate-100/50 dark:hover:bg-slate-700/30 transition-colors <?= $hasAds ? 'cursor-pointer' : '' ?>"
+                        <?php if ($hasAds): ?>
+                        @click.stop="expandedAdGroup = expandedAdGroup === '<?= $agKey ?>' ? null : '<?= $agKey ?>'"
+                        <?php endif; ?>>
+                        <td class="px-4 py-2.5">
+                            <div class="flex items-center gap-2 pl-6">
+                                <?php if ($hasAds): ?>
+                                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform flex-shrink-0" :class="expandedAdGroup === '<?= $agKey ?>' ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                                <?php else: ?>
+                                <span class="w-3.5"></span>
+                                <?php endif; ?>
+                                <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                </svg>
+                                <span class="text-sm text-slate-700 dark:text-slate-300"><?= e($ag['name']) ?></span>
+                                <span class="text-xs text-slate-400 dark:text-slate-500"><?= $ag['kw_count'] ?> kw</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-2.5 text-right text-sm text-slate-600 dark:text-slate-400"><?= number_format($ag['clicks']) ?></td>
+                        <td class="px-4 py-2.5 text-right text-sm <?= $ag['ctr'] < 1 && $ag['clicks'] > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-400' ?>"><?= number_format($ag['ctr'], 2) ?>%</td>
+                        <td class="px-4 py-2.5 text-right text-sm text-slate-600 dark:text-slate-400"><?= number_format($ag['cost'], 2) ?>&euro;</td>
+                        <td class="px-4 py-2.5 text-right text-sm text-slate-600 dark:text-slate-400"><?= number_format($ag['conversions'], 1) ?></td>
+                        <td class="px-4 py-2.5 text-right text-sm text-slate-400">-</td>
+                        <td class="px-4 py-2.5 text-right text-sm <?= ($ag['cpa'] > 0 && $totalConversions > 0 && $ag['cpa'] > ($totalCost / $totalConversions) * 1.5) ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-400' ?>">
+                            <?= $ag['cpa'] > 0 ? number_format($ag['cpa'], 2) . '&euro;' : '-' ?>
+                        </td>
+                    </tr>
+
+                    <!-- Livello 3: Annunci -->
+                    <?php if ($hasAds): ?>
+                    <?php foreach ($ag['ads'] as $ad): ?>
+                    <tr x-show="expandedCampaign === <?= $ci ?> && expandedAdGroup === '<?= $agKey ?>'" x-cloak
+                        class="bg-slate-100/50 dark:bg-slate-700/10 transition-colors">
+                        <td class="px-4 py-2" colspan="1">
+                            <div class="pl-14">
+                                <div class="flex items-center gap-1.5">
+                                    <svg class="w-3 h-3 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    <span class="text-xs font-medium text-rose-700 dark:text-rose-400"><?= e($ad['headline1']) ?></span>
+                                    <?php if ($ad['headline2']): ?>
+                                    <span class="text-xs text-slate-400">|</span>
+                                    <span class="text-xs text-slate-600 dark:text-slate-400"><?= e($ad['headline2']) ?></span>
+                                    <?php endif; ?>
+                                </div>
+                                <?php if ($ad['description1']): ?>
+                                <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate max-w-md"><?= e($ad['description1']) ?></p>
+                                <?php endif; ?>
+                                <?php if ($ad['final_url']): ?>
+                                <p class="text-xs text-emerald-600 dark:text-emerald-400 truncate max-w-xs"><?= e(parse_url($ad['final_url'], PHP_URL_HOST) . parse_url($ad['final_url'], PHP_URL_PATH)) ?></p>
+                                <?php endif; ?>
+                            </div>
+                        </td>
+                        <td class="px-4 py-2 text-right text-xs text-slate-500 dark:text-slate-500"><?= number_format($ad['clicks']) ?></td>
+                        <td class="px-4 py-2 text-right text-xs <?= $ad['ctr'] < 1 && $ad['clicks'] > 0 ? 'text-red-500' : 'text-slate-500 dark:text-slate-500' ?>"><?= number_format($ad['ctr'], 2) ?>%</td>
+                        <td class="px-4 py-2 text-right text-xs text-slate-500 dark:text-slate-500"><?= number_format($ad['cost'], 2) ?>&euro;</td>
+                        <td class="px-4 py-2 text-right text-xs text-slate-500 dark:text-slate-500">-</td>
+                        <td class="px-4 py-2 text-right text-xs text-slate-400">-</td>
+                        <td class="px-4 py-2 text-right text-xs text-slate-400">-</td>
+                    </tr>
+                    <?php endforeach; ?>
                     <?php endif; ?>
-                </p>
-            </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
     </div>
     <?php endif; ?>
 
-    <!-- KPI Trend Chart -->
-    <?php if (count($kpiTrend ?? []) >= 2): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Andamento KPI</h2>
-            <select id="kpiMetricSelector" class="text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500">
-                <option value="clicks">Click</option>
-                <option value="cost">Costo</option>
-                <option value="conversions">Conversioni</option>
-                <option value="ctr">CTR %</option>
-            </select>
-        </div>
-        <div class="h-64">
-            <canvas id="kpiTrendChart"></canvas>
-        </div>
-    </div>
-    <?php endif; ?>
+    <!-- SEZIONE 5: Grid 2 colonne — KW Negative Widget + Trend Chart -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-    <!-- Evaluations Timeline + Actions -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Valutazioni Timeline -->
+        <!-- Colonna A — Keyword Negative Widget -->
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-                <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Valutazioni AI</h2>
+            <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="h-7 w-7 rounded-lg bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center">
+                        <svg class="h-4 w-4 text-rose-600 dark:text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-base font-semibold text-slate-900 dark:text-white">Spreco Budget</h2>
+                </div>
+                <?php if (!empty($topWasteTerms)): ?>
+                <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/negative-keywords') ?>" class="text-sm font-medium text-rose-600 dark:text-rose-400 hover:text-rose-700">
+                    Analisi completa
+                </a>
+                <?php endif; ?>
             </div>
-            <?php if (empty($evaluations)): ?>
-            <div class="p-6 text-center text-sm text-slate-500 dark:text-slate-400">
-                Nessuna valutazione ancora
+
+            <?php if (!empty($topWasteTerms)): ?>
+            <div class="p-4">
+                <!-- Waste summary -->
+                <div class="flex items-center gap-4 mb-4 p-3 rounded-lg bg-rose-50 dark:bg-rose-900/20">
+                    <div>
+                        <p class="text-2xl font-bold text-rose-600 dark:text-rose-400"><?= number_format((float)($negativeStats['total_waste'] ?? 0), 2) ?>&euro;</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Spesa senza conversioni</p>
+                    </div>
+                    <div class="border-l border-rose-200 dark:border-rose-800 pl-4">
+                        <p class="text-lg font-bold text-slate-900 dark:text-white"><?= number_format((int)($negativeStats['waste_terms'] ?? 0)) ?></p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Termini a spreco</p>
+                    </div>
+                </div>
+
+                <!-- Top 5 waste terms -->
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Top termini spreco</p>
+                <div class="space-y-2">
+                    <?php foreach ($topWasteTerms as $term): ?>
+                    <div class="flex items-center justify-between py-1.5">
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm text-slate-900 dark:text-white truncate"><?= e($term['search_term']) ?></p>
+                            <p class="text-xs text-slate-400 dark:text-slate-500"><?= e($term['campaign_name'] ?? '') ?> &bull; <?= (int)$term['clicks'] ?> click</p>
+                        </div>
+                        <span class="text-sm font-medium text-red-600 dark:text-red-400 ml-3 flex-shrink-0"><?= number_format((float)$term['cost'], 2) ?>&euro;</span>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
             </div>
             <?php else: ?>
-            <div class="divide-y divide-slate-200 dark:divide-slate-700">
-                <?php foreach (array_slice($evaluations, 0, 8) as $eval): ?>
-                <?php
-                $evalAi = json_decode($eval['ai_response'] ?? '{}', true);
-                $evalScore = $evalAi['overall_score'] ?? null;
-                $evalTrend = $evalAi['trend'] ?? null;
-                $evalTypeLabel = ($eval['eval_type'] ?? 'manual') === 'auto' ? 'Auto' : 'Manuale';
-                $isAutoEval = ($eval['eval_type'] ?? 'manual') === 'auto';
-                $statusColors = [
-                    'completed' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300',
-                    'analyzing' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
-                    'error' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
-                ];
-                ?>
-                <a href="<?= $eval['status'] === 'completed' ? url('/ads-analyzer/projects/' . $project['id'] . '/campaigns/evaluations/' . $eval['id']) : '#' ?>"
-                   class="block px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2 min-w-0">
-                            <?php if ($evalScore !== null): ?>
-                            <span class="text-sm font-bold <?= scoreTextClass((float)$evalScore) ?>"><?= number_format((float)$evalScore, 1) ?></span>
-                            <?php endif; ?>
-                            <span class="text-sm text-slate-700 dark:text-slate-300 truncate"><?= e($eval['name']) ?></span>
-                        </div>
-                        <div class="flex items-center gap-1.5 flex-shrink-0">
-                            <?php if ($isAutoEval): ?>
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-                                <svg class="w-3 h-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                Auto
-                            </span>
-                            <?php endif; ?>
-                            <?php if ($evalTrend && isset($trendLabels[$evalTrend])): ?>
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium <?= $trendLabels[$evalTrend]['class'] ?>">
-                                <?= $trendLabels[$evalTrend]['label'] ?>
-                            </span>
-                            <?php endif; ?>
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium <?= $statusColors[$eval['status']] ?? 'bg-slate-100 text-slate-600' ?>">
-                                <?= ucfirst($eval['status']) ?>
-                            </span>
-                        </div>
-                    </div>
-                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                        <?= date('d/m/Y H:i', strtotime($eval['created_at'])) ?>
-                        &bull; <?= $eval['campaigns_evaluated'] ?? 0 ?> campagne
-                        <?php if ($eval['credits_used'] > 0): ?>
-                        &bull; <?= number_format($eval['credits_used'], 1) ?> crediti
-                        <?php else: ?>
-                        &bull; 0 crediti
-                        <?php endif; ?>
-                    </p>
-                </a>
-                <?php endforeach; ?>
+            <div class="p-6 text-center">
+                <svg class="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Sincronizza per analizzare i termini di ricerca</p>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">I search terms saranno disponibili dopo il sync</p>
             </div>
             <?php endif; ?>
         </div>
 
-        <!-- Azioni rapide -->
+        <!-- Colonna B — KPI Trend Chart -->
+        <?php if (count($kpiTrend ?? []) >= 2): ?>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Azioni</h2>
-            <div class="space-y-3">
-                <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns') ?>" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <div class="h-10 w-10 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
-                        <svg class="h-5 w-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="font-medium text-slate-900 dark:text-white">Vedi Campagne e Valuta</p>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">Dati performance e valutazione AI manuale</p>
-                    </div>
-                </a>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-base font-semibold text-slate-900 dark:text-white">Andamento KPI</h2>
+                <select id="kpiMetricSelector" class="text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500">
+                    <option value="clicks">Click</option>
+                    <option value="cost">Costo</option>
+                    <option value="conversions">Conversioni</option>
+                    <option value="ctr">CTR %</option>
+                </select>
+            </div>
+            <div class="h-56">
+                <canvas id="kpiTrendChart"></canvas>
+            </div>
+        </div>
+        <?php else: ?>
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 flex items-center justify-center">
+            <div class="text-center">
+                <svg class="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                </svg>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Servono almeno 2 sync per il grafico trend</p>
+            </div>
+        </div>
+        <?php endif; ?>
+    </div>
 
-                <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/connect') ?>" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <div class="h-10 w-10 rounded-lg bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center">
-                        <svg class="h-5 w-5 text-rose-600 dark:text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="font-medium text-slate-900 dark:text-white">
-                            <?= $hasGoogleAds ? 'Gestisci Connessione' : 'Connetti Google Ads' ?>
-                        </p>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">
-                            <?= $hasGoogleAds ? 'Account collegato: ' . e($googleAdsAccountName ?: $project['google_ads_customer_id']) : 'Collega il tuo account Google Ads' ?>
-                        </p>
-                    </div>
-                </a>
-
+    <!-- SEZIONE 6: Ultima Valutazione AI (compatto) -->
+    <?php if ($latestEval): ?>
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="h-8 w-8 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
+                    <svg class="h-4 w-4 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-slate-900 dark:text-white">
+                        Ultima Valutazione AI
+                        <span class="text-slate-400 dark:text-slate-500 font-normal">&mdash; <?= date('d/m/Y H:i', strtotime($latestEval['created_at'])) ?></span>
+                    </p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                        <?= $latestEval['campaigns_evaluated'] ?? 0 ?> campagne analizzate
+                        <?php if (($latestEval['eval_type'] ?? 'manual') === 'auto'): ?>
+                        &bull; <span class="text-blue-600 dark:text-blue-400">Auto</span>
+                        <?php endif; ?>
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
                 <?php if ($canEdit): ?>
                 <!-- Toggle Auto-Valutazione -->
-                <div class="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-700/30">
-                    <div class="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
-                        <svg class="h-5 w-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                    </div>
-                    <div class="flex-1">
-                        <p class="font-medium text-slate-900 dark:text-white">Auto-valutazione</p>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">Valuta automaticamente ad ogni sincronizzazione</p>
-                    </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-500 dark:text-slate-400">Auto-eval</span>
                     <button @click="toggleAutoEval()"
                             :disabled="togglingAutoEval"
-                            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+                            class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
                             :class="autoEvalEnabled ? 'bg-amber-600' : 'bg-slate-300 dark:bg-slate-600'">
-                        <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
-                              :class="autoEvalEnabled ? 'translate-x-6' : 'translate-x-1'"></span>
+                        <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform"
+                              :class="autoEvalEnabled ? 'translate-x-4' : 'translate-x-0.5'"></span>
                     </button>
                 </div>
+                <?php endif; ?>
+
+                <?php if ($latestEval['status'] === 'completed'): ?>
+                <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns/evaluations/' . $latestEval['id']) ?>"
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors">
+                    Vedi report
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
                 <?php endif; ?>
             </div>
         </div>
     </div>
+    <?php else: ?>
+    <!-- No eval yet — show auto-eval toggle -->
+    <?php if ($canEdit): ?>
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="h-8 w-8 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
+                    <svg class="h-4 w-4 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-slate-900 dark:text-white">Nessuna valutazione AI</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Attiva l'auto-valutazione o vai alla tab Campagne</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-slate-500 dark:text-slate-400">Auto-eval</span>
+                <button @click="toggleAutoEval()"
+                        :disabled="togglingAutoEval"
+                        class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+                        :class="autoEvalEnabled ? 'bg-amber-600' : 'bg-slate-300 dark:bg-slate-600'">
+                    <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform"
+                          :class="autoEvalEnabled ? 'translate-x-4' : 'translate-x-0.5'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+    <?php endif; ?>
+
+    <!-- SEZIONE 7: Quick Info Footer -->
+    <?php if ($latestSync): ?>
+    <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2.5">
+        <p class="text-xs text-slate-500 dark:text-slate-400 text-center">
+            Ultimo sync: <span class="font-medium text-slate-600 dark:text-slate-300"><?= date('d/m/Y H:i', strtotime($latestSync['started_at'])) ?></span>
+            <?php if (($latestSync['date_range_start'] ?? null) && ($latestSync['date_range_end'] ?? null)): ?>
+            &middot; Periodo: <span class="font-medium text-slate-600 dark:text-slate-300"><?= date('d/m', strtotime($latestSync['date_range_start'])) ?> - <?= date('d/m', strtotime($latestSync['date_range_end'])) ?></span>
+            <?php endif; ?>
+            &middot; <span class="font-medium text-slate-600 dark:text-slate-300"><?= $totalCampaigns ?></span> campagne,
+            <span class="font-medium text-slate-600 dark:text-slate-300"><?= $totalAdGroups ?></span> ad group,
+            <span class="font-medium text-slate-600 dark:text-slate-300"><?= number_format($totalKeywords) ?></span> kw
+        </p>
+    </div>
+    <?php endif; ?>
 
     <?php endif; ?>
 
@@ -607,6 +742,8 @@ function dashboardManager() {
         kpiConversions: <?= round((float)($latestStats['total_conversions'] ?? 0), 1) ?>,
         kpiCtr: <?= round((float)($latestStats['avg_ctr'] ?? 0), 2) ?>,
         kpiAvgCpc: <?= round((float)($latestStats['avg_cpc'] ?? 0), 2) ?>,
+        kpiRoas: <?= $roas ?>,
+        kpiCpa: <?= $cpa ?>,
         kpiCampaigns: <?= $totalCampaigns ?? 0 ?>,
 
         setRange(days) {
@@ -647,10 +784,12 @@ function dashboardManager() {
                     this.kpiCtr = k.ctr;
                     this.kpiAvgCpc = k.avg_cpc;
                     this.kpiCampaigns = k.campaigns;
-                    this.kpiSource = k.source; // 'api', 'db', 'none'
+                    this.kpiSource = k.source;
+                    // Calcola ROAS e CPA live
+                    this.kpiRoas = (k.cost > 0 && (k.conversion_value || 0) > 0) ? ((k.conversion_value || 0) / k.cost) : 0;
+                    this.kpiCpa = (k.conversions > 0) ? (k.cost / k.conversions) : 0;
                 }
 
-                // Aggiorna URL senza reload (per bookmark / sync button)
                 const newUrl = new URL(window.location);
                 newUrl.searchParams.set('date_from', this.dateFrom);
                 newUrl.searchParams.set('date_to', this.dateTo);
@@ -658,7 +797,6 @@ function dashboardManager() {
 
             } catch (err) {
                 console.error('LiveKPI fetch failed:', err);
-                // Non mostrare errore bloccante — i KPI precedenti restano visibili
             } finally {
                 this.loadingKpis = false;
             }
@@ -675,6 +813,9 @@ function dashboardManager() {
         },
         formatPercent(n) {
             return Number(n).toFixed(2) + '%';
+        },
+        formatRoas(n) {
+            return n > 0 ? Number(n).toFixed(2) + 'x' : '-';
         },
 
         async toggleAutoEval() {
@@ -723,7 +864,6 @@ function dashboardManager() {
                     if (data.success) {
                         this.syncMessage = 'Sincronizzazione completata! ' + (data.campaigns_count || 0) + ' campagne importate.';
                         this.syncError = false;
-                        // Ricarica la pagina dopo 2 secondi per mostrare i nuovi dati
                         setTimeout(() => window.location.reload(), 2000);
                     } else {
                         this.syncMessage = data.error || 'Errore durante la sincronizzazione.';
@@ -746,7 +886,6 @@ function dashboardManager() {
                 this.syncError = true;
             } finally {
                 this.syncing = false;
-                // Nascondi il messaggio dopo 5 secondi
                 if (this.syncMessage) {
                     setTimeout(() => { this.syncMessage = ''; }, 5000);
                 }
@@ -835,7 +974,7 @@ function dashboardManager() {
         });
     }
 
-    document.getElementById('kpiMetricSelector').addEventListener('change', function() {
+    document.getElementById('kpiMetricSelector')?.addEventListener('change', function() {
         renderChart(this.value);
     });
 

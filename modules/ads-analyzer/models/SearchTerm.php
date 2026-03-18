@@ -132,6 +132,39 @@ class SearchTerm
         return Database::count('ga_search_terms', 'sync_id = ?', [$runId]);
     }
 
+    /**
+     * Top search terms con spesa ma zero conversioni (spreco budget)
+     */
+    public static function getTopWaste(int $syncId, int $limit = 5): array
+    {
+        return Database::fetchAll(
+            "SELECT term AS search_term, clicks, cost, conversions, campaign_name
+             FROM ga_search_terms
+             WHERE sync_id = ? AND conversions = 0 AND cost > 0
+             ORDER BY cost DESC
+             LIMIT ?",
+            [$syncId, $limit]
+        );
+    }
+
+    /**
+     * Statistiche spreco per widget dashboard
+     */
+    public static function getWasteStats(int $syncId): array
+    {
+        $result = Database::fetch(
+            "SELECT
+                SUM(CASE WHEN conversions = 0 AND cost > 0 THEN cost ELSE 0 END) as total_waste,
+                COUNT(CASE WHEN conversions = 0 AND cost > 0 THEN 1 END) as waste_terms,
+                COUNT(*) as total_terms
+             FROM ga_search_terms
+             WHERE sync_id = ?",
+            [$syncId]
+        );
+
+        return $result ?: ['total_waste' => 0, 'waste_terms' => 0, 'total_terms' => 0];
+    }
+
     public static function getStatsByProject(int $projectId): array
     {
         $sql = "

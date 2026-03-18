@@ -34,8 +34,14 @@ class Campaign
         return Database::fetch("SELECT * FROM ga_campaigns WHERE id = ?", [$id]) ?: null;
     }
 
-    public static function getByRun(int $runId): array
+    public static function getByRun(int $runId, ?int $projectId = null): array
     {
+        if ($projectId) {
+            return Database::fetchAll(
+                "SELECT * FROM ga_campaigns WHERE sync_id = ? AND project_id = ? ORDER BY cost DESC",
+                [$runId, $projectId]
+            );
+        }
         return Database::fetchAll(
             "SELECT * FROM ga_campaigns WHERE sync_id = ? ORDER BY cost DESC",
             [$runId]
@@ -61,15 +67,21 @@ class Campaign
         return self::getByRun($latestSync['id']);
     }
 
-    public static function getStatsByRun(int $runId): array
+    public static function getStatsByRun(int $runId, ?int $projectId = null): array
     {
+        $where = "sync_id = ?";
+        $params = [$runId];
+        if ($projectId) {
+            $where .= " AND project_id = ?";
+            $params[] = $projectId;
+        }
         return Database::fetch(
             "SELECT COUNT(*) as total_campaigns, SUM(clicks) as total_clicks,
                     SUM(impressions) as total_impressions, SUM(cost) as total_cost,
                     SUM(conversions) as total_conversions, SUM(conversion_value) as total_value,
                     AVG(ctr) as avg_ctr, AVG(avg_cpc) as avg_cpc
-             FROM ga_campaigns WHERE sync_id = ?",
-            [$runId]
+             FROM ga_campaigns WHERE {$where}",
+            $params
         ) ?: [];
     }
 
