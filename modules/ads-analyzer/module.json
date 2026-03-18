@@ -51,6 +51,10 @@
         "publish_campaign": {
             "cost": 5,
             "description": "Pubblicazione campagna su Google Ads"
+        },
+        "generate_fix": {
+            "cost": 1,
+            "description": "Generazione singola ottimizzazione AI"
         }
     },
     "settings_groups": {
@@ -285,6 +289,25 @@
             "step": 0.5,
             "admin_only": true,
             "group": "costs"
+        },
+        "cost_generate_fix": {
+            "type": "number",
+            "label": "Costo Generazione Ottimizzazione",
+            "description": "Crediti per generazione singola ottimizzazione (Before/After)",
+            "default": 1,
+            "min": 0,
+            "step": 0.5,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "max_landing_pages_per_eval": {
+            "type": "number",
+            "label": "Max landing pages per valutazione",
+            "description": "Numero massimo di landing page da analizzare durante la valutazione AI",
+            "default": 25,
+            "min": 5,
+            "max": 50,
+            "group": "general"
         }
     },
     "routes_prefix": "/ads-analyzer"
