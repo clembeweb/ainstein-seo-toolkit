@@ -37,6 +37,9 @@ class CampaignEvaluation
         if (isset($data['campaigns_filter'])) {
             $record['campaigns_filter'] = $data['campaigns_filter'];
         }
+        if (isset($data['schema_version'])) {
+            $record['schema_version'] = $data['schema_version'];
+        }
 
         return Database::insert('ga_campaign_evaluations', $record);
     }
