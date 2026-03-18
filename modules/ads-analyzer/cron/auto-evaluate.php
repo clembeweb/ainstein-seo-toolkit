@@ -158,6 +158,7 @@ try {
                     'user_id' => $userId,
                     'sync_id' => $syncId,
                     'eval_type' => 'auto',
+                    'schema_version' => 2,
                     'previous_eval_id' => $previousEvalId,
                     'name' => 'Auto-check ' . date('d/m/Y H:i') . ' (nessun cambiamento)',
                     'campaigns_evaluated' => count($campaigns),
@@ -190,6 +191,7 @@ try {
                 'user_id' => $userId,
                 'sync_id' => $syncId,
                 'eval_type' => 'auto',
+                'schema_version' => 2,
                 'previous_eval_id' => $previousEvalId,
                 'name' => 'Auto-valutazione ' . date('d/m/Y H:i'),
                 'campaigns_evaluated' => count($campaigns),
@@ -246,7 +248,9 @@ try {
                 $keywordsData,
                 $previousEvalSummary,
                 $metricDeltas,
-                $alerts
+                $alerts,
+                null,
+                (int)$syncId
             );
 
             Database::reconnect();
