@@ -204,6 +204,14 @@ Router::post('/ads-analyzer/projects/{id}/campaigns/evaluate', function ($id) {
     return $controller->evaluate((int) $id);
 });
 
+// Avvia valutazione AI campagne via SSE (user-facing con progress)
+Router::post('/ads-analyzer/projects/{id}/campaigns/evaluate-stream', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new CampaignController();
+    $controller->evaluateStream((int) $id);
+});
+
 // Toggle auto-valutazione (AJAX)
 Router::post('/ads-analyzer/projects/{id}/campaigns/toggle-auto-evaluate', function ($id) {
     Middleware::auth();

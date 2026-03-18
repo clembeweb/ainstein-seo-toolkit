@@ -649,6 +649,220 @@ class CampaignController
     }
 
     /**
+     * Avvia valutazione AI campagne via SSE (user-facing)
+     */
+    public function evaluateStream(int $projectId): void
+    {
+        $user = Auth::user();
+        $project = Project::findAccessible($user['id'], $projectId);
+
+        if (!$project) {
+            header('Content-Type: application/json');
+            jsonResponse(['error' => 'Progetto non trovato'], 404);
+        }
+
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            header('Content-Type: application/json');
+            jsonResponse(['error' => 'Non hai i permessi per questa operazione'], 403);
+        }
+
+        if (($project['type'] ?? 'negative-kw') !== 'campaign') {
+            header('Content-Type: application/json');
+            jsonResponse(['error' => 'Operazione non disponibile per questo tipo di progetto'], 400);
+        }
+
+        // Determina sync da valutare
+        $syncId = (int) ($_POST['sync_id'] ?? 0);
+        if ($syncId) {
+            $sync = Sync::find($syncId);
+        } else {
+            $sync = Sync::getLatestByProject($projectId);
+        }
+
+        if (!$sync) {
+            header('Content-Type: application/json');
+            jsonResponse(['error' => 'Nessun dato campagne disponibile. Esegui prima una sincronizzazione Google Ads.'], 400);
+        }
+
+        // Route credits to project owner
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
+        // Verifica crediti
+        $cost = Credits::getCost('campaign_evaluation', 'ads-analyzer', 7);
+        if (!Credits::hasEnough($creditUserId, $cost)) {
+            header('Content-Type: application/json');
+            jsonResponse(['error' => "Crediti insufficienti. Necessari: {$cost}"], 400);
+        }
+
+        // Filtro campagne (selezione utente)
+        $campaignsFilter = null;
+        if (!empty($_POST['campaigns_filter'])) {
+            $campaignsFilter = json_decode($_POST['campaigns_filter'], true);
+            if (!is_array($campaignsFilter)) {
+                $campaignsFilter = null;
+            }
+            if ($campaignsFilter && count($campaignsFilter) > 15) {
+                $campaignsFilter = array_slice($campaignsFilter, 0, 15);
+            }
+        }
+
+        // Carica dati — solo campagne e ad group attivi
+        $campaigns = array_values(array_filter(
+            Campaign::getByRun($sync['id']),
+            fn($c) => ($c['campaign_status'] ?? '') === 'ENABLED'
+        ));
+        $ads = Ad::getByRun($sync['id']);
+        $extensions = Extension::getByRun($sync['id']);
+        $adGroupsData = array_values(array_filter(
+            CampaignAdGroup::getByRun($sync['id']),
+            fn($ag) => ($ag['ad_group_status'] ?? '') === 'ENABLED'
+        ));
+        $keywordsData = AdGroupKeyword::getByRun($sync['id']);
+
+        if (empty($campaigns)) {
+            header('Content-Type: application/json');
+            jsonResponse(['error' => 'Nessuna campagna trovata nella sincronizzazione selezionata'], 400);
+        }
+
+        // --- SSE setup ---
+        ignore_user_abort(true);
+        set_time_limit(300);
+        session_write_close();
+
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache');
+        header('Connection: keep-alive');
+        header('X-Accel-Buffering: no');
+
+        $sendEvent = function (string $event, array $data) {
+            echo "event: {$event}\ndata: " . json_encode($data, JSON_UNESCAPED_UNICODE) . "\n\n";
+            if (ob_get_level()) ob_flush();
+            flush();
+        };
+
+        $evalId = null;
+
+        try {
+            $sendEvent('progress', ['step' => 'starting', 'message' => 'Avvio analisi...']);
+
+            // Crea record valutazione
+            $evalId = CampaignEvaluation::create([
+                'project_id' => $projectId,
+                'user_id' => $user['id'],
+                'sync_id' => $sync['id'],
+                'name' => 'Valutazione ' . date('d/m/Y H:i'),
+                'campaigns_evaluated' => count($campaigns),
+                'ads_evaluated' => count($ads),
+                'ad_groups_evaluated' => count($adGroupsData),
+                'keywords_evaluated' => count($keywordsData),
+                'landing_pages_analyzed' => 0,
+                'campaigns_filter' => $campaignsFilter ? json_encode($campaignsFilter) : null,
+                'status' => 'analyzing',
+                'schema_version' => 2,
+            ]);
+
+            // Scraping landing pages (URL uniche dagli annunci ENABLED)
+            $maxLanding = (int) ModuleLoader::getSetting('ads-analyzer', 'max_landing_pages_per_eval', 25);
+            $landingContexts = [];
+            $uniqueUrls = [];
+            foreach ($ads as $ad) {
+                if (($ad['ad_status'] ?? '') !== 'ENABLED') continue;
+                $url = $ad['final_url'] ?? '';
+                if (!empty($url) && !isset($uniqueUrls[$url]) && count($uniqueUrls) < $maxLanding) {
+                    $uniqueUrls[$url] = true;
+                }
+            }
+
+            if (!empty($uniqueUrls)) {
+                $urlKeys = array_keys($uniqueUrls);
+                $totalUrls = count($urlKeys);
+
+                require_once __DIR__ . '/../../../services/ScraperService.php';
+                $scraper = new \Services\ScraperService();
+
+                foreach ($urlKeys as $i => $url) {
+                    $sendEvent('progress', [
+                        'step' => 'scraping',
+                        'current' => $i + 1,
+                        'total' => $totalUrls,
+                        'message' => "Analisi landing page " . ($i + 1) . "/{$totalUrls}...",
+                    ]);
+
+                    try {
+                        $scraped = $scraper->scrape($url);
+                        Database::reconnect();
+                        if (!empty($scraped['content'])) {
+                            $content = mb_substr($scraped['content'], 0, 1500);
+                            $landingContexts[$url] = "Titolo: " . ($scraped['title'] ?? 'N/D')
+                                . "\nWord count: " . ($scraped['word_count'] ?? 0)
+                                . "\nContenuto: " . $content;
+                        }
+                    } catch (\Exception $e) {
+                        Logger::channel('ai')->warning("Landing scrape failed", ['url' => $url, 'error' => $e->getMessage()]);
+                    }
+                }
+            }
+
+            $landingPagesAnalyzed = count($landingContexts);
+
+            // AI Analysis
+            $sendEvent('progress', ['step' => 'analyzing', 'message' => 'Analisi AI in corso...']);
+
+            set_time_limit(300);
+            $evaluator = new CampaignEvaluatorService();
+            $aiResult = $evaluator->evaluate(
+                $user['id'],
+                $campaigns,
+                $ads,
+                $extensions,
+                $landingContexts,
+                $adGroupsData,
+                $keywordsData,
+                $campaignsFilter,
+                (int)$sync['id']
+            );
+
+            Database::reconnect();
+
+            // Salva risultato
+            $sendEvent('progress', ['step' => 'saving', 'message' => 'Salvataggio risultati...']);
+
+            CampaignEvaluation::update($evalId, [
+                'ai_response' => json_encode($aiResult, JSON_UNESCAPED_UNICODE),
+                'credits_used' => $cost,
+                'landing_pages_analyzed' => $landingPagesAnalyzed,
+            ]);
+            CampaignEvaluation::updateStatus($evalId, 'completed');
+
+            // Consuma crediti
+            Credits::consume($creditUserId, $cost, 'campaign_evaluation', 'ads-analyzer', [
+                'sync_id' => $sync['id'],
+                'campaigns' => count($campaigns),
+                'ad_groups' => count($adGroupsData),
+                'keywords' => count($keywordsData),
+                'landing_pages' => 0,
+            ]);
+
+            $sendEvent('completed', [
+                'evaluation_id' => $evalId,
+                'redirect' => url("/ads-analyzer/projects/{$projectId}/campaigns/evaluations/{$evalId}"),
+            ]);
+
+        } catch (\Exception $e) {
+            Logger::channel('ai')->error('Evaluate stream error', ['error' => $e->getMessage()]);
+
+            if ($evalId) {
+                Database::reconnect();
+                CampaignEvaluation::updateStatus($evalId, 'error', $e->getMessage());
+            }
+
+            $sendEvent('error', ['message' => 'Errore durante l\'analisi: ' . $e->getMessage()]);
+        }
+
+        exit;
+    }
+
+    /**
      * Toggle auto-valutazione per progetto
      */
     public function toggleAutoEvaluate(int $projectId): void
@@ -905,6 +1119,7 @@ class CampaignController
             $context = json_decode($_POST['context'] ?? '{}', true) ?: [];
 
             $allowedTypes = ['rewrite_ads', 'add_negatives', 'remove_duplicates', 'add_extensions',
+                             'replace_asset', 'add_asset',
                              'copy', 'keywords', 'extensions'];
             if (!in_array($type, $allowedTypes)) {
                 ob_end_clean();
@@ -949,15 +1164,23 @@ class CampaignController
 
             // Save generated fix to DB for persistence
             require_once __DIR__ . '/../models/GeneratedFix.php';
+            // Determine scope level: asset_group for PMax fix types
+            $scopeLevel = 'campaign';
+            if (!empty($context['ad_group_name'])) {
+                $scopeLevel = in_array($type, ['replace_asset', 'add_asset']) ? 'asset_group' : 'ad_group';
+            }
+
             $fixId = \Modules\AdsAnalyzer\Models\GeneratedFix::create([
                 'evaluation_id' => $evalId,
                 'project_id' => $projectId,
                 'user_id' => $user['id'],
                 'fix_type' => $type,
-                'scope_level' => !empty($context['ad_group_name']) ? 'ad_group' : 'campaign',
+                'scope_level' => $scopeLevel,
                 'campaign_name' => $context['campaign_name'] ?? null,
-                'ad_group_name' => $context['ad_group_name'] ?? null,
+                'ad_group_name' => $context['ad_group_name'] ?? $context['asset_group_name'] ?? null,
+                'target_ad_index' => $_POST['target_ad_index'] ?? $context['target_ad_index'] ?? null,
                 'ad_group_id_google' => $context['ad_group_id_google'] ?? null,
+                'asset_group_id_google' => $context['asset_group_id_google'] ?? null,
                 'campaign_id_google' => $context['campaign_id_google'] ?? null,
                 'issue_description' => $context['issue'] ?? $context['suggestion'] ?? null,
                 'recommendation' => $context['recommendation'] ?? $context['expected_impact'] ?? null,
