@@ -209,8 +209,19 @@ $config = json_encode([
                 </template>
             </div>
 
-            <!-- Categorie accordion -->
+            <!-- Categorie accordion raggruppate per Ad Group -->
             <template x-for="(cat, catIdx) in categories" :key="cat.id">
+                <div>
+                <!-- Ad Group separator -->
+                <template x-if="catIdx === 0 || cat._adGroupId !== categories[catIdx - 1]._adGroupId">
+                    <div class="flex items-center gap-2 mt-2 mb-1" :class="catIdx > 0 ? 'pt-3 border-t border-slate-200 dark:border-slate-700' : ''">
+                        <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                        <span class="text-sm font-semibold text-slate-700 dark:text-slate-300" x-text="cat._adGroupName || 'Ad Group'"></span>
+                        <span class="text-xs text-slate-400 dark:text-slate-500" x-text="'(' + categories.filter(c => c._adGroupId === cat._adGroupId).length + ' categorie)'"></span>
+                    </div>
+                </template>
                 <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                     <!-- Header categoria -->
                     <button @click="cat._open = !cat._open" class="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
@@ -280,6 +291,7 @@ $config = json_encode([
                             </div>
                         </template>
                     </div>
+                </div>
                 </div>
             </template>
         </div>
@@ -517,13 +529,20 @@ function searchTermAnalysis(config) {
                 this.selectedCount = data.selectedCount || 0;
                 this.totalCount = data.totalCount || 0;
 
-                // Flat categories con _open
+                // Categorie raggruppate per ad group con header separatore
                 const cats = [];
+                const adGroupNames = data.adGroupNames || {};
                 for (const [agId, agCats] of Object.entries(data.categoriesByAdGroup || {})) {
                     for (const cat of agCats) {
                         cat._open = false;
-                        cats.push(cat);
+                        cat._adGroupId = agId;
+                        cat._adGroupName = adGroupNames[agId] || '';
                     }
+                    agCats.sort((a, b) => {
+                        const prio = { high: 0, medium: 1, evaluate: 2 };
+                        return (prio[a.priority] ?? 1) - (prio[b.priority] ?? 1);
+                    });
+                    cats.push(...agCats);
                 }
                 this.categories = cats;
 
