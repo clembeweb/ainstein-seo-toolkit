@@ -89,7 +89,8 @@ class CampaignEvaluatorService
         array $adGroups = [],
         array $keywords = [],
         ?array $campaignFilter = null,
-        int $syncId = 0
+        int $syncId = 0,
+        array $productData = []
     ): array {
         // Filtra per campagne selezionate
         if ($campaignFilter !== null && !empty($campaignFilter)) {
@@ -101,7 +102,7 @@ class CampaignEvaluatorService
 
         $pmaxData = $syncId > 0 ? $this->loadPmaxData($syncId) : [];
 
-        $prompt = $this->buildPrompt($campaigns, $ads, $extensions, $landingContexts, $adGroups, $keywords, $pmaxData);
+        $prompt = $this->buildPrompt($campaigns, $ads, $extensions, $landingContexts, $adGroups, $keywords, $pmaxData, $productData);
 
         $messages = [
             ['role' => 'user', 'content' => $prompt],
@@ -138,7 +139,8 @@ class CampaignEvaluatorService
         ?array $metricDeltas = null,
         ?array $alerts = null,
         ?array $campaignFilter = null,
-        int $syncId = 0
+        int $syncId = 0,
+        array $productData = []
     ): array {
         // Filtra per campagne selezionate
         if ($campaignFilter !== null && !empty($campaignFilter)) {
@@ -150,7 +152,7 @@ class CampaignEvaluatorService
 
         $pmaxData = $syncId > 0 ? $this->loadPmaxData($syncId) : [];
 
-        $prompt = $this->buildPrompt($campaigns, $ads, $extensions, $landingContexts, $adGroups, $keywords, $pmaxData);
+        $prompt = $this->buildPrompt($campaigns, $ads, $extensions, $landingContexts, $adGroups, $keywords, $pmaxData, $productData);
 
         // Aggiungi contesto storico
         if ($previousEvalSummary || $metricDeltas) {
@@ -224,7 +226,8 @@ class CampaignEvaluatorService
         array $landingContexts,
         array $adGroups,
         array $keywords,
-        array $pmaxData = []
+        array $pmaxData = [],
+        array $productData = []
     ): string {
         // Identifica tipi campagna presenti
         $campaignTypes = [];
@@ -254,8 +257,11 @@ class CampaignEvaluatorService
         // Sezione 4: Estensioni
         $extText = $this->buildExtensionsSection($extensions);
 
-        // Sezione 5: Landing pages (con mapping URL→ad groups)
+        // Sezione 5: Landing pages (con mapping URL→ad groups+ads)
         $landingText = $this->buildLandingSection($landingContexts, $ads);
+
+        // Sezione 5b: Prodotti (Shopping/PMax)
+        $productText = $this->buildProductSection($productData);
 
         // Sezione 6: Struttura risposta
         $hasAdGroups = !empty($adGroups);
@@ -272,7 +278,8 @@ Per campagne PERFORMANCE_MAX, usa "asset_group_analysis" al posto di "ad_groups"
   "asset_group_name": "Nome",
   "ad_strength": "POOR|AVERAGE|GOOD|EXCELLENT",
   "issues": [{"severity": "...", "area": "assets|audience|performance|structure", "fix_type": "rewrite_ads|add_extensions|add_negatives|null", "description": "...", "recommendation": "..."}],
-  "strengths": ["..."]
+  "strengths": ["..."],
+  "optimizations": [{"type": "replace_asset|add_asset|exclude_product|adjust_audience", "priority": "high|medium|low", "target": "descrizione asset/prodotto target", "reason": "motivo con dati specifici", "scope": "asset_group"}]
 }]
 
 CRITERI VALUTAZIONE PMAX:
@@ -303,6 +310,7 @@ ESTENSIONI:
 
 CONTESTO LANDING PAGES:
 {$landingText}
+{$productText}
 
 ISTRUZIONI DI VALUTAZIONE:
 LINGUA: Analisi, valutazioni e spiegazioni SEMPRE in ITALIANO (summary, strengths, issues description, type_specific_insights, expected_impact). I suggerimenti operativi (recommendation, suggestion) devono essere in italiano MA quando proponi copy specifici per annunci, keyword o testi da usare in Google Ads, mantieni la lingua originale degli annunci/keyword.
@@ -313,6 +321,7 @@ PER OGNI CAMPAGNA valuta in base al TIPO SPECIFICO:
 - Confronta metriche con i benchmark del tipo (NON usare benchmark Search per Shopping!)
 - Identifica opportunita specifiche per quel tipo di campagna
 - Valuta strategia bidding e allocazione budget
+- Includi "metrics_comment" con un commento che cita dati specifici delle metriche
 
 PER OGNI GRUPPO ANNUNCI valuta:
 1. COERENZA KEYWORD: le keyword sono tematicamente coerenti? troppo generiche/specifiche?
@@ -325,6 +334,12 @@ PER OGNI GRUPPO ANNUNCI valuta:
 4. QUALITY SCORE: distribuzione (% con QS >= 7), suggerimenti per miglioramento
 5. PERFORMANCE vs BENCHMARK: metriche vs benchmark specifici del tipo campagna
 6. MATCH TYPE: uso appropriato di broad/phrase/exact
+
+PER OGNI AD GROUP CON 2+ ANNUNCI:
+- Confronta le performance per annuncio (ad_index) e identifica il piu debole
+- Nella sezione ads_analysis, indica needs_rewrite: true per annunci che necessitano riscrittura
+- Nella sezione optimizations, specifica target_ad_index per ottimizzazioni specifiche per annuncio
+- Cita SEMPRE dati specifici (importi, %, nomi campagne/ad group) a supporto di ogni affermazione
 
 ANALISI LANDING PAGES ("landing_evaluation"):
 Se sono disponibili contesti landing pages, valuta complessivamente:
@@ -354,12 +369,21 @@ Ogni suggerimento: url (pagina specifica), priority (high/medium/low), suggestio
 Rispondi SOLO con un JSON valido (senza markdown, senza backtick) con questa struttura:
 {
   "overall_score": 7.5,
-  "summary": "Valutazione complessiva in 2-3 frasi",
+  "summary": "Valutazione complessiva citando dati specifici",
+  "top_recommendations": [
+    {
+      "text": "Aggiungere keyword negative in Generic IT",
+      "type": "negative_keywords",
+      "impact": "high",
+      "estimated_saving": "€2.040/mese"
+    }
+  ],
   "campaigns": [
     {
-      "campaign_name": "Nome Campagna",
+      "campaign_name": "Nome",
       "campaign_type": "SEARCH",
-      "score": 8,
+      "score": 5.8,
+      "metrics_comment": "Commento AI che cita dati specifici delle metriche",
       "type_specific_insights": "Insight specifico per il tipo di campagna e i suoi benchmark",
       "strengths": ["Punto di forza 1"],
       "issues": [
@@ -374,11 +398,17 @@ Rispondi SOLO con un JSON valido (senza markdown, senza backtick) con questa str
       "ad_groups": [
         {
           "ad_group_name": "Nome Gruppo",
-          "score": 7,
+          "score": 6.2,
           "keyword_coherence": 8,
           "ad_relevance": 6,
           "landing_coherence": 7,
-          "landing_analysis": "Breve analisi della coerenza landing-annuncio per questo gruppo",
+          "analysis": "Commento AI specifico per questo ad group",
+          "landing_analysis": {
+            "url": "/scarpe-running",
+            "coherence_score": 6,
+            "analysis": "Analisi coerenza keyword-annuncio-landing",
+            "suggestions": ["Suggerimento 1"]
+          },
           "quality_score_avg": 6.5,
           "strengths": ["Punto di forza"],
           "issues": [
@@ -389,15 +419,36 @@ Rispondi SOLO con un JSON valido (senza markdown, senza backtick) con questa str
               "description": "Problema specifico",
               "recommendation": "Suggerimento"
             }
+          ],
+          "ads_analysis": [
+            {
+              "ad_index": 1,
+              "headlines": ["H1", "H2", "H3"],
+              "ctr": 3.4,
+              "assessment": "Buone performance",
+              "needs_rewrite": false
+            },
+            {
+              "ad_index": 2,
+              "headlines": ["H1 generica", "H2 generica", "H3"],
+              "ctr": 1.8,
+              "assessment": "CTR 47% inferiore a #1. Headline generiche.",
+              "needs_rewrite": true
+            }
+          ],
+          "optimizations": [
+            {
+              "type": "rewrite_ad",
+              "priority": "high",
+              "target_ad_index": 2,
+              "reason": "RSA #2 CTR 1,8% vs 3,4% di RSA #1",
+              "scope": "ad_group"
+            }
           ]
         }
-      ]
+      ],
+      "asset_group_analysis": null
     }
-  ],
-  "top_recommendations": [
-    "Raccomandazione prioritaria 1",
-    "Raccomandazione prioritaria 2",
-    "Raccomandazione prioritaria 3"
   ],
   "extensions_evaluation": {
     "score": 6,
@@ -431,7 +482,8 @@ Rispondi SOLO con un JSON valido (senza markdown, senza backtick) con questa str
       "suggestion": "Suggerimento specifico per questa landing",
       "expected_impact": "Impatto stimato"
     }
-  ]
+  ],
+  "product_analysis": null
 }
 
 REGOLE:
@@ -450,6 +502,13 @@ REGOLE:
   Esempio: area="keywords" (il problema e sulle keyword) ma fix_type="rewrite_ads" (la soluzione e riscrivere gli annunci per matchare meglio le keyword).
   Esempio: area="performance" (il problema e CTR basso) ma fix_type="rewrite_ads" (la soluzione e migliorare i copy).
   Esempio: area="keywords" (il problema e traffico non pertinente) e fix_type="add_negatives" (la soluzione e aggiungere negative).
+- top_recommendations: array di oggetti con text, type (negative_keywords|rewrite_ads|add_extensions|remove_duplicates|budget|structure|null), impact (high|medium|low), estimated_saving (opzionale, formato "€X/mese")
+- campaigns[].metrics_comment: commento AI che cita dati specifici delle metriche della campagna
+- campaigns[].ad_groups[].ads_analysis: array di oggetti per ogni annuncio con ad_index, headlines, ctr, assessment, needs_rewrite
+- campaigns[].ad_groups[].landing_analysis: oggetto con url, coherence_score (1-10), analysis, suggestions[]
+- campaigns[].ad_groups[].optimizations: array di azioni specifiche con type, priority, target_ad_index, reason, scope
+- campaigns[].asset_group_analysis: null per campagne non-PMax, array per PMax
+- product_analysis: null se non ci sono dati prodotti. Se ci sono, popola con: summary, top_brands[], waste_products[], opportunities[], category_insights[]
 - FONDAMENTALE: Sii SPECIFICO e CONCRETO nelle descrizioni dei problemi. Cita sempre:
   * Per problemi "copy": le headline o description esatte dell'annuncio problematico (es. "L'headline 'Buy Now' non riflette la keyword 'wedding planner cost'")
   * Per problemi "keywords": le keyword specifiche coinvolte con il loro Quality Score
@@ -517,6 +576,9 @@ PROMPT;
             $section .= " | Strategia: " . ($camp['bidding_strategy'] ?? '?') . "\n";
 
             foreach ($groups as $ag) {
+                // Solo asset group ENABLED
+                $agStatus = strtoupper($ag['status'] ?? 'ENABLED');
+                if ($agStatus !== 'ENABLED') continue;
                 $agId = $ag['asset_group_id_google'];
                 $section .= "\n  ASSET GROUP: \"{$ag['asset_group_name']}\"";
                 $section .= " | Ad Strength: {$ag['ad_strength']}";
@@ -662,20 +724,26 @@ PROMPT;
             return $this->buildLegacyAdSection($ads);
         }
 
-        // Indicizza ads e keywords per ad_group_id_google
+        // Indicizza ads e keywords per ad_group_id_google (solo ENABLED)
         $adsByGroup = [];
         foreach ($ads as $ad) {
+            $adStatus = strtoupper($ad['ad_status'] ?? 'ENABLED');
+            if ($adStatus !== 'ENABLED') continue;
             $adsByGroup[$ad['ad_group_id_google']][] = $ad;
         }
 
         $kwByGroup = [];
         foreach ($keywords as $kw) {
+            $kwStatus = strtoupper($kw['keyword_status'] ?? 'ENABLED');
+            if ($kwStatus !== 'ENABLED') continue;
             $kwByGroup[$kw['ad_group_id_google']][] = $kw;
         }
 
-        // Raggruppa ad groups per campagna
+        // Raggruppa ad groups per campagna (solo ENABLED)
         $agByCampaign = [];
         foreach ($adGroups as $ag) {
+            $agStatus = strtoupper($ag['ad_group_status'] ?? 'ENABLED');
+            if ($agStatus !== 'ENABLED') continue;
             $agByCampaign[$ag['campaign_id_google']][] = $ag;
         }
 
@@ -707,9 +775,8 @@ PROMPT;
 
                 $agId = $ag['ad_group_id_google'];
                 $lines[] = sprintf(
-                    "\n  Gruppo: \"%s\" [%s]",
-                    $ag['ad_group_name'],
-                    $ag['ad_group_status'] ?? 'N/D'
+                    "\n  Gruppo: \"%s\" [ENABLED]",
+                    $ag['ad_group_name']
                 );
                 $lines[] = sprintf(
                     "  Metriche: Click: %d | Imp: %d | CTR: %.2f%% | CPC: %.2f | Costo: %.2f | Conv: %.1f | Conv Rate: %.2f%%",
@@ -722,29 +789,32 @@ PROMPT;
                     $ag['conv_rate'] ?? 0
                 );
 
-                // Annunci di questo ad group (max N)
+                // Annunci ENABLED di questo ad group (max N), con numerazione sequenziale
                 $groupAds = $adsByGroup[$agId] ?? [];
                 usort($groupAds, fn($a, $b) => ($b['cost'] ?? 0) <=> ($a['cost'] ?? 0));
                 $groupAds = array_slice($groupAds, 0, self::MAX_ADS_PER_AD_GROUP);
 
                 if (!empty($groupAds)) {
                     $lines[] = "  Annunci:";
+                    $adIndex = 1;
                     foreach ($groupAds as $ad) {
                         $headlines = array_filter([$ad['headline1'], $ad['headline2'], $ad['headline3']]);
                         $descriptions = array_filter([$ad['description1'], $ad['description2']]);
                         $lines[] = sprintf(
-                            "    - [%s] Titoli: %s | Desc: %s | URL: %s | Click: %d | CTR: %.2f%%",
+                            "    #%d [%s] Titoli: %s | Desc: %s | URL: %s | CTR: %.2f%% | Click: %d",
+                            $adIndex,
                             $ad['ad_type'] ?? 'N/D',
                             implode(' | ', $headlines) ?: 'N/D',
                             implode(' | ', $descriptions) ?: 'N/D',
                             $ad['final_url'] ?? 'N/D',
-                            $ad['clicks'],
-                            $ad['ctr'] ?? 0
+                            $ad['ctr'] ?? 0,
+                            $ad['clicks']
                         );
+                        $adIndex++;
                     }
                 }
 
-                // Keyword di questo ad group (max N)
+                // Keyword ENABLED di questo ad group (max N)
                 $groupKw = $kwByGroup[$agId] ?? [];
                 usort($groupKw, fn($a, $b) => ($b['cost'] ?? 0) <=> ($a['cost'] ?? 0));
                 $groupKw = array_slice($groupKw, 0, self::MAX_KEYWORDS_PER_AD_GROUP);
@@ -837,28 +907,118 @@ PROMPT;
             return 'Non disponibili (landing pages non accessibili o non presenti)';
         }
 
-        // Mappa URL → ad groups che la usano
-        $urlToAdGroups = [];
+        // Mappa URL → ad groups e annunci specifici che la usano
+        // Struttura: $urlToAds[url][ad_group_name][] = ['ad_index' => N, 'headline1' => '...']
+        $urlToAds = [];
+        $adIndexByGroup = []; // Traccia indice progressivo per ad group
         foreach ($ads as $ad) {
             $url = $ad['final_url'] ?? '';
-            if (!empty($url) && isset($landingContexts[$url])) {
-                $key = $ad['ad_group_name'] ?? 'N/D';
-                $urlToAdGroups[$url][$key] = true;
+            $agName = $ad['ad_group_name'] ?? 'N/D';
+            $agId = $ad['ad_group_id_google'] ?? '';
+
+            if (empty($url) || !isset($landingContexts[$url])) continue;
+
+            // Calcola ad_index per questo ad group
+            if (!isset($adIndexByGroup[$agId])) {
+                $adIndexByGroup[$agId] = 1;
             }
+            $idx = $adIndexByGroup[$agId]++;
+
+            $urlToAds[$url][$agName][] = [
+                'ad_index' => $idx,
+                'headline1' => $ad['headline1'] ?? '',
+            ];
         }
 
         $lines = [];
         foreach ($landingContexts as $url => $context) {
-            $adGroupNames = array_keys($urlToAdGroups[$url] ?? []);
-            $lines[] = "URL: {$url}";
-            if (!empty($adGroupNames)) {
-                $lines[] = "Usata da gruppi: " . implode(', ', array_slice($adGroupNames, 0, 10));
+            $lines[] = "Landing: {$url}";
+
+            // Rich mapping: AG → Annuncio #N (H1: ...)
+            $adGroupAds = $urlToAds[$url] ?? [];
+            if (!empty($adGroupAds)) {
+                $mappings = [];
+                foreach (array_slice($adGroupAds, 0, 10, true) as $agName => $adsInfo) {
+                    $adParts = [];
+                    foreach (array_slice($adsInfo, 0, 5) as $info) {
+                        $h1 = $info['headline1'] ?: 'N/D';
+                        $adParts[] = "Annuncio #{$info['ad_index']} (H1: {$h1})";
+                    }
+                    $mappings[] = "AG \"{$agName}\" → " . implode(', ', $adParts);
+                }
+                $lines[] = "Usata da: " . implode('; ', $mappings);
             }
-            $lines[] = "Contesto: {$context}";
+
+            // Truncate contenuto a 1500 char (il context include Titolo + Word count + Contenuto)
+            // Estrai titolo separatamente se presente nel formato standard
+            $truncatedContext = $context;
+            if (preg_match('/^(Titolo: .+?\n(?:Word count: \d+\n)?)Contenuto: (.+)$/s', $context, $m)) {
+                $header = $m[1];
+                $content = mb_substr($m[2], 0, 1500);
+                $truncatedContext = $header . "Contenuto: " . $content;
+            } elseif (mb_strlen($context) > 1500) {
+                $truncatedContext = mb_substr($context, 0, 1500);
+            }
+
+            $lines[] = $truncatedContext;
             $lines[] = "";
         }
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * Build product data section for Shopping/PMax evaluation.
+     * Only included when product data is available.
+     */
+    private function buildProductSection(array $productData): string
+    {
+        if (empty($productData['top_products'])) return '';
+
+        $section = "\n\n--- ANALISI PRODOTTI (ultimi 30 giorni) ---\n\n";
+
+        // Top products by spend
+        $section .= "Top 20 prodotti per spesa:\n";
+        $section .= "| SKU | Titolo | Brand | Cat. | Click | Spesa | Conv. | ROAS |\n";
+        foreach (array_slice($productData['top_products'], 0, 20) as $p) {
+            $title = mb_substr($p['product_title'] ?? '', 0, 40);
+            $section .= "| {$p['product_item_id']} | {$title} | {$p['product_brand']} | {$p['product_category_l1']} | {$p['clicks']} | €{$p['cost']} | {$p['conversions']} | {$p['roas']}x |\n";
+        }
+
+        // Brand summary
+        if (!empty($productData['brands'])) {
+            $section .= "\nRiepilogo per Brand:\n";
+            $section .= "| Brand | Prodotti | Click | Spesa | Conv. | ROAS | CPA |\n";
+            foreach (array_slice($productData['brands'], 0, 10) as $b) {
+                $section .= "| {$b['product_brand']} | {$b['product_count']} | {$b['total_clicks']} | €{$b['total_cost']} | {$b['total_conversions']} | {$b['brand_roas']}x | €{$b['brand_cpa']} |\n";
+            }
+        }
+
+        // Waste products
+        if (!empty($productData['waste'])) {
+            $section .= "\nProdotti con zero conversioni (top per spesa):\n";
+            foreach (array_slice($productData['waste'], 0, 10) as $w) {
+                $title = mb_substr($w['product_title'] ?? '', 0, 40);
+                $section .= "- {$w['product_item_id']}: {$title} — €{$w['cost']} spesa, {$w['clicks']} click, 0 conv.\n";
+            }
+        }
+
+        // Add product analysis instructions
+        $section .= "\nISTRUZIONI ANALISI PRODOTTI:\n";
+        $section .= "- Identifica brand piu profittevoli e quelli in perdita\n";
+        $section .= "- Identifica prodotti che sprecano budget (alta spesa, 0 conv)\n";
+        $section .= "- Suggerisci prodotti da escludere o ridurre bid\n";
+        $section .= "- Cita SEMPRE dati specifici (importi, ROAS, nomi prodotti)\n";
+        $section .= "- Popola 'product_analysis' nel JSON con questa struttura:\n";
+        $section .= '  "product_analysis": {' . "\n";
+        $section .= '    "summary": "Assessment prodotti",' . "\n";
+        $section .= '    "top_brands": [{"brand": "Nike", "products": 45, "spend": 5400, "roas": 5.2, "assessment": "Brand forte"}],' . "\n";
+        $section .= '    "waste_products": [{"item_id": "GHI789", "title": "Ciabatta", "spend": 540, "conversions": 0, "recommendation": "Escludere"}],' . "\n";
+        $section .= '    "opportunities": [{"item_id": "JKL012", "title": "Scarpa Trail", "ctr": 4.2, "impressions": 800, "recommendation": "Aumentare bid"}],' . "\n";
+        $section .= '    "category_insights": [{"category": "Sandali", "roas": 1.2, "assessment": "In perdita"}]' . "\n";
+        $section .= '  }' . "\n";
+
+        return $section;
     }
 
     private function parseResponse(string $text): array
