@@ -509,10 +509,15 @@ class CampaignController
                 jsonResponse(['error' => "Crediti insufficienti. Necessari: {$cost}"], 400);
             }
 
-            // Filtro campagne (selezione utente)
+            // Filtro campagne (selezione utente) — accetta array o JSON string
             $campaignsFilter = null;
             if (!empty($_POST['campaigns_filter'])) {
-                $campaignsFilter = json_decode($_POST['campaigns_filter'], true);
+                $raw = $_POST['campaigns_filter'];
+                if (is_array($raw)) {
+                    $campaignsFilter = $raw;
+                } elseif (is_string($raw)) {
+                    $campaignsFilter = json_decode($raw, true);
+                }
                 if (!is_array($campaignsFilter)) {
                     $campaignsFilter = null;
                 }
