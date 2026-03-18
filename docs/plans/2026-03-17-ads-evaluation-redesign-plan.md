@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Redesign the ads-analyzer evaluation page into a unified report with real metrics, hierarchical AI analysis (Campaign → Ad Group → Ad → Landing), batch optimizations with Before→After preview, and one-click apply to Google Ads.
+**Goal:** Redesign the ads-analyzer evaluation page into a unified report with real metrics, hierarchical AI analysis (Campaign → Ad Group → Ad → Landing), Shopping/PMax product-level analysis, batch optimizations with Before→After preview, and one-click apply to Google Ads.
 
 **Architecture:** Create `evaluation-v2.php` with 3 partials, fed by an enhanced `evaluationShow()` controller that merges sync metrics with AI analysis. The AI prompt is restructured for hierarchical output. Batch optimizations reuse existing `EvaluationGeneratorService` + `GoogleAdsService`. SSE replaces AJAX for evaluation progress. Old evaluations (schema_version=1) continue rendering with the existing view.
 
@@ -22,14 +22,17 @@
 | `views/campaigns/partials/report-campaign-table.php` | 3-level expandable table: campaigns → ad groups → ads/keywords. Search and PMax templates. ~400-500 lines |
 | `views/campaigns/partials/report-optimizations.php` | Batch optimizations list with state machine (Suggested → Generated → Applied), Before→After preview, batch toolbar. ~400-500 lines |
 | `views/campaigns/partials/report-campaign-filter.php` | Pre-evaluation: campaign checkboxes with metrics, credit cost, "Avvia Analisi AI" button. ~100 lines |
-| `database/migration-evaluation-redesign.sql` | Schema changes for ga_generated_fixes + ga_campaign_evaluations |
+| `database/migration-evaluation-redesign.sql` | Schema changes for ga_generated_fixes + ga_campaign_evaluations + ga_product_performance |
+| `models/ProductPerformance.php` | Model for `ga_product_performance` table — CRUD, aggregation by brand/category |
+| `views/campaigns/partials/report-product-analysis.php` | Product analysis section: brand performance bars, waste products, opportunities. ~200-300 lines |
 
 ### Files to Modify
 
 | File | Changes |
 |---|---|
-| `controllers/CampaignController.php` | `evaluateStream()` SSE endpoint, `evaluationShow()` enhanced with sync metrics + delta + negatives summary + ads data for Before→After, v2 routing |
-| `services/CampaignEvaluatorService.php` | `buildPrompt()` restructured for hierarchical JSON: per-ad CTR, landing per ad group (1500 char), ENABLED filter, new response schema |
+| `controllers/CampaignController.php` | `evaluateStream()` SSE endpoint, `evaluationShow()` enhanced with sync metrics + delta + negatives summary + product data + ads data for Before→After, v2 routing |
+| `services/CampaignSyncService.php` | Add `syncProductPerformance()` method — queries `shopping_performance_view` for Shopping/PMax campaigns |
+| `services/CampaignEvaluatorService.php` | `buildPrompt()` restructured for hierarchical JSON: per-ad CTR, landing per ad group (1500 char), product analysis section, ENABLED filter, new response schema |
 | `services/EvaluationGeneratorService.php` | Add `replace_asset`, `add_asset` PMax fix types, `cost_generate_fix` setting |
 | `models/GeneratedFix.php` | Add `target_ad_index`, `asset_group_id_google` fields to create/find queries |
 | `module.json` | Add `cost_generate_fix`, `max_landing_pages_per_eval` settings |
@@ -161,6 +164,33 @@ MODIFY COLUMN scope_level VARCHAR(30) NOT NULL DEFAULT 'campaign';
 ALTER TABLE ga_generated_fixes
 ADD COLUMN target_ad_index INT NULL AFTER ad_group_name,
 ADD COLUMN asset_group_id_google VARCHAR(50) NULL AFTER ad_group_id_google;
+
+-- 4. Product performance table for Shopping/PMax product analysis
+CREATE TABLE IF NOT EXISTS ga_product_performance (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  project_id INT NOT NULL,
+  sync_id INT NOT NULL,
+  campaign_id_google VARCHAR(50),
+  campaign_name VARCHAR(255),
+  product_item_id VARCHAR(255),
+  product_title VARCHAR(500),
+  product_brand VARCHAR(255),
+  product_category_l1 VARCHAR(255),
+  product_type_l1 VARCHAR(255),
+  clicks INT DEFAULT 0,
+  impressions INT DEFAULT 0,
+  cost DECIMAL(10,2) DEFAULT 0,
+  conversions DECIMAL(10,2) DEFAULT 0,
+  conversion_value DECIMAL(12,2) DEFAULT 0,
+  ctr DECIMAL(5,2) DEFAULT 0,
+  avg_cpc DECIMAL(8,4) DEFAULT 0,
+  roas DECIMAL(8,2) DEFAULT 0,
+  cpa DECIMAL(10,2) DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_project_sync (project_id, sync_id),
+  INDEX idx_product (product_item_id),
+  INDEX idx_brand (product_brand)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 - [ ] **Step 2: Run migration locally and verify**
@@ -204,7 +234,81 @@ git commit -m "feat(ads-analyzer): foundation — migration, settings, model for
 
 ---
 
-## Task 2: Restructure AI Prompt
+## Task 2: Product Performance Sync + Model
+
+**Files:**
+- Create: `modules/ads-analyzer/models/ProductPerformance.php`
+- Modify: `modules/ads-analyzer/services/CampaignSyncService.php`
+
+- [ ] **Step 1: Create ProductPerformance model**
+
+Simple model for `ga_product_performance` table. Methods needed:
+
+```php
+class ProductPerformance {
+    // Save product data from sync
+    public static function saveBatch(int $projectId, int $syncId, array $products): void
+
+    // Get top products by spend for a sync
+    public static function getTopBySpend(int $projectId, int $syncId, int $limit = 20): array
+
+    // Get aggregated brand performance
+    public static function getBrandSummary(int $projectId, int $syncId): array
+    // Returns: [{brand, product_count, clicks, cost, conversions, conversion_value, roas, cpa}]
+
+    // Get aggregated category performance
+    public static function getCategorySummary(int $projectId, int $syncId): array
+
+    // Get waste products (high spend, zero conversions)
+    public static function getWasteProducts(int $projectId, int $syncId, int $limit = 10): array
+
+    // Clean old sync data
+    public static function deleteBySyncId(int $syncId): void
+}
+```
+
+`php -l modules/ads-analyzer/models/ProductPerformance.php`
+
+- [ ] **Step 2: Add `syncProductPerformance()` to CampaignSyncService**
+
+After syncing campaigns/ad groups/ads/keywords, check if any campaign is SHOPPING or PERFORMANCE_MAX. If yes, query `shopping_performance_view`:
+
+```php
+private function syncProductPerformance(int $projectId, int $syncId, string $customerId): void
+{
+    $gaql = "SELECT
+        segments.product_item_id, segments.product_title, segments.product_brand,
+        segments.product_bidding_category_level1, segments.product_type_l1,
+        campaign.id, campaign.name,
+        metrics.clicks, metrics.impressions, metrics.cost_micros,
+        metrics.conversions, metrics.conversions_value
+    FROM shopping_performance_view
+    WHERE segments.date DURING LAST_30_DAYS
+        AND metrics.impressions > 0
+    ORDER BY metrics.cost_micros DESC
+    LIMIT 200";
+
+    $results = $this->googleAdsService->search($gaql);
+    // Transform cost_micros to EUR, compute ROAS/CPA, save via ProductPerformance::saveBatch()
+}
+```
+
+Call this from the main `sync()` method, after syncing campaigns. Check if any synced campaign has `campaign_type` in ('SHOPPING', 'PERFORMANCE_MAX') before calling.
+
+Use existing `ApiLoggerService` for logging the API call.
+
+- [ ] **Step 3: Verify syntax and commit**
+
+```bash
+php -l modules/ads-analyzer/models/ProductPerformance.php
+php -l modules/ads-analyzer/services/CampaignSyncService.php
+git add modules/ads-analyzer/models/ProductPerformance.php modules/ads-analyzer/services/CampaignSyncService.php
+git commit -m "feat(ads-analyzer): add product performance sync from shopping_performance_view"
+```
+
+---
+
+## Task 3: Restructure AI Prompt
 
 **Files:**
 - Modify: `modules/ads-analyzer/services/CampaignEvaluatorService.php`
@@ -247,17 +351,49 @@ Keep `max_tokens: 8192`.
 
 In `buildPmaxSection()`: add ENABLED filter for asset groups. Response schema already handled in step 3.
 
-- [ ] **Step 5: Verify syntax and commit**
+- [ ] **Step 5: Add `buildProductSection()` method**
+
+New method that loads product data from `ga_product_performance` for the current sync and formats it for the AI prompt. Only called if Shopping/PMax campaigns are present.
+
+```php
+private function buildProductSection(int $projectId, int $syncId): string
+{
+    $topProducts = ProductPerformance::getTopBySpend($projectId, $syncId, 20);
+    $brandSummary = ProductPerformance::getBrandSummary($projectId, $syncId);
+    $wasteProducts = ProductPerformance::getWasteProducts($projectId, $syncId, 10);
+
+    if (empty($topProducts)) return '';
+
+    $section = "\nANALISI PRODOTTI (ultimi 30 giorni):\n\n";
+    $section .= "Top 20 prodotti per spesa:\n";
+    $section .= "| SKU | Titolo | Brand | Cat. | Click | Spesa | Conv. | ROAS |\n";
+    foreach ($topProducts as $p) {
+        $section .= "| {$p['product_item_id']} | {$p['product_title']} | {$p['product_brand']} | {$p['product_category_l1']} | {$p['clicks']} | €{$p['cost']} | {$p['conversions']} | {$p['roas']}x |\n";
+    }
+    // ... brand summary table, category summary, waste products ...
+    return $section;
+}
+```
+
+Add product analysis instructions to the JSON schema:
+- `product_analysis.summary` — AI assessment of product performance
+- `product_analysis.top_brands[]` — brand ranking with assessment
+- `product_analysis.waste_products[]` — products to exclude/reduce
+- `product_analysis.opportunities[]` — products to push
+- `product_analysis.category_insights[]` — category-level observations
+- `product_analysis.optimizations[]` — product-level suggested actions
+
+- [ ] **Step 6: Verify syntax and commit**
 
 ```bash
 php -l modules/ads-analyzer/services/CampaignEvaluatorService.php
 git add modules/ads-analyzer/services/CampaignEvaluatorService.php
-git commit -m "feat(ads-analyzer): restructure AI prompt for hierarchical evaluation"
+git commit -m "feat(ads-analyzer): restructure AI prompt with product analysis for Shopping/PMax"
 ```
 
 ---
 
-## Task 3: Enhanced Controller — evaluationShow() + evaluate()
+## Task 4: Enhanced Controller — evaluationShow() + evaluate()
 
 **Files:**
 - Modify: `modules/ads-analyzer/controllers/CampaignController.php`
@@ -340,7 +476,7 @@ git commit -m "feat(ads-analyzer): enhanced evaluationShow with sync metrics, de
 
 ---
 
-## Task 4: SSE Evaluation Endpoint
+## Task 5: SSE Evaluation Endpoint
 
 **Files:**
 - Modify: `modules/ads-analyzer/controllers/CampaignController.php` — add `evaluateStream()`
@@ -426,10 +562,20 @@ git commit -m "feat(ads-analyzer): add SSE evaluate-stream endpoint with progres
 
 ---
 
-## Task 5: PMax Generator + cost_generate_fix
+## Task 6: PMax Generator + cost_generate_fix
 
 **Files:**
 - Modify: `modules/ads-analyzer/services/EvaluationGeneratorService.php`
+
+- [ ] **Step 0: Verify PMax asset mutation API capability**
+
+Before implementing, check if `GoogleAdsService` can mutate PMax asset groups. Currently there is NO `mutateAssetGroups()` method. Check if `groupedMutate()` supports asset group operations.
+
+**If NOT supported**: PMax optimizations show only "Genera" + "Esporta CSV" buttons. NO "Applica su Google Ads" for PMax. Add a note in the UI: "L'applicazione automatica per PMax non è ancora disponibile. Usa il CSV per importare manualmente."
+
+**If supported**: implement apply flow same as Search.
+
+This check MUST happen before writing any PMax apply code.
 
 - [ ] **Step 1: Add `replace_asset` and `add_asset` fix types**
 
@@ -466,7 +612,7 @@ git commit -m "feat(ads-analyzer): add PMax fix types and cost_generate_fix to g
 
 ---
 
-## Task 6: Main View — evaluation-v2.php
+## Task 7: Main View — evaluation-v2.php
 
 **Files:**
 - Create: `modules/ads-analyzer/views/campaigns/evaluation-v2.php`
@@ -611,7 +757,7 @@ git commit -m "feat(ads-analyzer): create evaluation-v2 view with KPI bar, AI su
 
 ---
 
-## Task 7: Campaign Table Partial (3-level expandable)
+## Task 8: Campaign Table Partial (3-level expandable)
 
 **Files:**
 - Create: `modules/ads-analyzer/views/campaigns/partials/report-campaign-table.php`
@@ -675,7 +821,80 @@ git commit -m "feat(ads-analyzer): add 3-level expandable campaign table partial
 
 ---
 
-## Task 8: Optimizations Batch Partial
+## Task 9: Product Analysis Partial
+
+**Files:**
+- Create: `modules/ads-analyzer/views/campaigns/partials/report-product-analysis.php`
+
+Visibile SOLO per campagne Shopping/PMax con dati prodotto nel sync.
+
+- [ ] **Step 1: Create product analysis section**
+
+Uses `$productData` passed from controller (aggregated from `ProductPerformance` model).
+
+Structure:
+```
+📦 Analisi Prodotti (ultimi 30 giorni)
+
+Brand Performance (horizontal bars):
+██████████████ Nike     ROAS 5,2x  €5.400  89 conv.
+████████       Adidas   ROAS 3,1x  €2.800  34 conv.
+███            Geox     ROAS 1,8x  €2.100  12 conv.  ⚠️
+
+⚠️ Prodotti Spreco ({count} prodotti, €{total}/mese con 0 conversioni):
+Table: Titolo | Brand | Click | Spesa | Impressioni
+[expandable to show all]
+
+💡 Opportunità (alto CTR, basse impressioni):
+Table: Titolo | Brand | CTR | Impressioni | Suggerimento AI
+
+AI Analysis:
+"{product_analysis.summary from AI response}"
+```
+
+Brand bars use simple CSS width proportional to spend: `width: {brand_spend / max_spend * 100}%`.
+ROAS colored: emerald ≥4, amber ≥2, red <2.
+
+- [ ] **Step 2: Add product data to controller**
+
+In `evaluationShow()` (Task 4), after loading sync metrics, add:
+
+```php
+// Load product data if Shopping/PMax campaigns present
+$hasShoppingCampaigns = !empty(array_filter($syncMetrics['campaigns'],
+    fn($c) => in_array($c['type'], ['SHOPPING', 'PERFORMANCE_MAX'])));
+
+$productData = null;
+if ($hasShoppingCampaigns) {
+    $productData = [
+        'brands' => ProductPerformance::getBrandSummary($project['id'], $evaluation['sync_id']),
+        'waste' => ProductPerformance::getWasteProducts($project['id'], $evaluation['sync_id']),
+        'top' => ProductPerformance::getTopBySpend($project['id'], $evaluation['sync_id'], 20),
+    ];
+}
+// Pass $productData to view
+```
+
+- [ ] **Step 3: Include partial in evaluation-v2.php**
+
+Add between campaign table and AI summary:
+```php
+<?php if ($productData): ?>
+    <?php include __DIR__ . '/partials/report-product-analysis.php'; ?>
+<?php endif; ?>
+```
+
+- [ ] **Step 4: Verify syntax and commit**
+
+```bash
+php -l modules/ads-analyzer/views/campaigns/partials/report-product-analysis.php
+git add modules/ads-analyzer/views/campaigns/partials/report-product-analysis.php
+git commit -m "feat(ads-analyzer): add product analysis partial for Shopping/PMax campaigns"
+```
+
+---
+
+## Task 10: Optimizations Batch Partial
 
 **Files:**
 - Create: `modules/ads-analyzer/views/campaigns/partials/report-optimizations.php`
@@ -769,7 +988,7 @@ git commit -m "feat(ads-analyzer): add batch optimizations partial with Before/A
 
 ---
 
-## Task 9: Campaign Filter Partial
+## Task 11: Campaign Filter Partial
 
 **Files:**
 - Create: `modules/ads-analyzer/views/campaigns/partials/report-campaign-filter.php`
@@ -822,7 +1041,7 @@ git commit -m "feat(ads-analyzer): add campaign filter partial for pre-evaluatio
 
 ---
 
-## Task 10: Auto-Evaluate Cron Update
+## Task 12: Auto-Evaluate Cron Update
 
 **Files:**
 - Modify: `modules/ads-analyzer/cron/auto-evaluate.php`
@@ -843,7 +1062,7 @@ git commit -m "feat(ads-analyzer): auto-evaluate writes schema_version=2"
 
 ---
 
-## Task 11: Integration Testing
+## Task 13: Integration Testing
 
 - [ ] **Step 1: PHP syntax check all files**
 
@@ -914,7 +1133,7 @@ git commit -m "fix(ads-analyzer): integration fixes for evaluation v2"
 
 ---
 
-## Task 12: Documentation
+## Task 14: Documentation
 
 **Files:**
 - Modify: `shared/views/docs/ads-analyzer.php`

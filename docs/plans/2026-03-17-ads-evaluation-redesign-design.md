@@ -615,21 +615,214 @@ ISTRUZIONI:
 
 ---
 
-## 10. Token Budget AI
+## 10. Analisi Prodotti Shopping / PMax Shopping
 
-### Stima prompt (caso peggiore: 5 campagne × 5 ad group × 2 annunci)
+### Contesto
+
+Campagne Shopping e PMax con feed prodotti richiedono un'analisi prodotto-centrica oltre a quella campagna-centrica. Il professionista vuole sapere: quali prodotti vendono meglio, quali brand tirano, quali prodotti sprecano budget.
+
+### Dati disponibili via API
+
+**Resource: `shopping_performance_view`** (Google Ads API v18) — funziona per Shopping E PMax.
+
+Metriche per prodotto:
+- `segments.product_item_id` (SKU), `segments.product_title`, `segments.product_brand`
+- `segments.product_bidding_category_level1-5`, `segments.product_type_l1-5`
+- `metrics.clicks`, `metrics.impressions`, `metrics.cost_micros`
+- `metrics.conversions`, `metrics.conversions_value`, `metrics.ctr`, `metrics.average_cpc`
+
+Dati NON disponibili da Google Ads API (servono Merchant Center API, fuori scope v1): prezzo, immagine, disponibilita, descrizione.
+
+### Query GAQL per sync prodotti
+
+```sql
+SELECT
+  segments.product_item_id,
+  segments.product_title,
+  segments.product_brand,
+  segments.product_bidding_category_level1,
+  segments.product_type_l1,
+  campaign.id,
+  campaign.name,
+  metrics.clicks,
+  metrics.impressions,
+  metrics.cost_micros,
+  metrics.conversions,
+  metrics.conversions_value
+FROM shopping_performance_view
+WHERE segments.date DURING LAST_30_DAYS
+  AND metrics.impressions > 0
+ORDER BY metrics.cost_micros DESC
+```
+
+### Nuova tabella: `ga_product_performance`
+
+```sql
+CREATE TABLE ga_product_performance (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  project_id INT NOT NULL,
+  sync_id INT NOT NULL,
+  campaign_id_google VARCHAR(50),
+  campaign_name VARCHAR(255),
+  product_item_id VARCHAR(255),
+  product_title VARCHAR(500),
+  product_brand VARCHAR(255),
+  product_category_l1 VARCHAR(255),
+  product_type_l1 VARCHAR(255),
+  clicks INT DEFAULT 0,
+  impressions INT DEFAULT 0,
+  cost DECIMAL(10,2) DEFAULT 0,
+  conversions DECIMAL(10,2) DEFAULT 0,
+  conversion_value DECIMAL(12,2) DEFAULT 0,
+  ctr DECIMAL(5,2) DEFAULT 0,
+  avg_cpc DECIMAL(8,4) DEFAULT 0,
+  roas DECIMAL(8,2) DEFAULT 0,
+  cpa DECIMAL(10,2) DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_project_sync (project_id, sync_id),
+  INDEX idx_product (product_item_id),
+  INDEX idx_brand (product_brand)
+);
+```
+
+### Analisi AI sui prodotti
+
+Per campagne Shopping/PMax con feed prodotti, il prompt AI include una sezione aggiuntiva:
+
+```
+ANALISI PRODOTTI (ultimi 30 giorni):
+
+Top 20 prodotti per spesa:
+| SKU | Titolo | Brand | Cat. | Click | Spesa | Conv. | ROAS |
+| ABC123 | Scarpa Running Nike Air | Nike | Scarpe Running | 450 | €1.200 | 15 | 4.2x |
+| DEF456 | Sandalo Elegante Geox | Geox | Sandali | 320 | €980 | 2 | 0.6x |
+...
+
+Riepilogo per Brand:
+| Brand | Prodotti | Click | Spesa | Conv. | ROAS | CPA |
+| Nike | 45 | 2.300 | €5.400 | 89 | 5.2x | €6.10 |
+| Geox | 23 | 890 | €2.100 | 12 | 1.8x | €17.50 |
+...
+
+Riepilogo per Categoria:
+| Categoria | Prodotti | Click | Spesa | Conv. | ROAS |
+| Scarpe Running | 34 | 1.800 | €4.200 | 67 | 5.0x |
+| Sandali | 18 | 650 | €1.900 | 8 | 1.2x |
+...
+
+Prodotti con zero conversioni (top 10 per spesa):
+| SKU | Titolo | Click | Spesa | Impressioni |
+| GHI789 | Ciabatta Mare Uomo | 180 | €540 | 12.000 |
+...
+
+ISTRUZIONI ANALISI PRODOTTI:
+- Identifica i brand più profittevoli e quelli in perdita
+- Identifica prodotti che sprecano budget (alta spesa, zero conv.)
+- Suggerisci prodotti da escludere o a cui ridurre il budget
+- Identifica categorie/brand con opportunità (alto CTR, basso impression share)
+- Cita sempre dati specifici (importi, ROAS, nomi prodotti)
+```
+
+### Risposta AI — sezione prodotti
+
+```json
+{
+  "product_analysis": {
+    "summary": "Nike genera il 60% dei ricavi con ROAS 5.2x. Geox spreca €2.100/mese con ROAS 1.8x...",
+    "top_brands": [
+      {"brand": "Nike", "products": 45, "spend": 5400, "roas": 5.2, "assessment": "Brand punta di diamante"}
+    ],
+    "waste_products": [
+      {"item_id": "GHI789", "title": "Ciabatta Mare Uomo", "spend": 540, "conversions": 0, "recommendation": "Escludere dal feed o ridurre bid"}
+    ],
+    "opportunities": [
+      {"item_id": "JKL012", "title": "Scarpa Trail Nike", "ctr": 4.2, "impressions": 800, "recommendation": "Prodotto con alto CTR ma poche impressioni — aumentare bid"}
+    ],
+    "category_insights": [
+      {"category": "Sandali", "roas": 1.2, "assessment": "Categoria in perdita. Valutare esclusione o feed cleanup"}
+    ],
+    "optimizations": [
+      {
+        "type": "exclude_products",
+        "priority": "high",
+        "products": ["GHI789", "MNO345"],
+        "reason": "€980 spreco/mese su 2 prodotti con 0 conversioni",
+        "scope": "campaign"
+      }
+    ]
+  }
+}
+```
+
+### UI — Sezione Prodotti nel Report
+
+Visibile SOLO per campagne Shopping/PMax con feed prodotti. Inserita tra la tabella campagne e l'AI summary.
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ 📦 Analisi Prodotti                                          │
+│                                                               │
+│ Brand Performance:                                            │
+│ ██████████████ Nike     ROAS 5,2x  €5.400  89 conv.  ← top  │
+│ ████████       Adidas   ROAS 3,1x  €2.800  34 conv.         │
+│ ███            Geox     ROAS 1,8x  €2.100  12 conv.  ← ⚠️   │
+│                                                               │
+│ ⚠️ Prodotti Spreco (€980/mese, 0 conversioni):               │
+│ • Ciabatta Mare Uomo (€540) — Escludere dal feed             │
+│ • Mocassino Classico (€440) — Ridurre bid                    │
+│                                                               │
+│ 💡 Opportunità:                                               │
+│ • Scarpa Trail Nike — CTR 4,2% ma solo 800 impressioni       │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Sync prodotti
+
+Il sync dei prodotti avviene durante il sync campagne (`CampaignSyncService`). Se il sync rileva campagne SHOPPING o PERFORMANCE_MAX, esegue la query `shopping_performance_view` e salva in `ga_product_performance`.
+
+### Limiti e pragmatismo
+
+- **Top 200 prodotti per spesa** nel sync (non tutto il catalogo)
+- **Top 20 prodotti + riepilogo brand/categoria** nel prompt AI (per contenere i token)
+- **Nessuna integrazione Merchant Center** nella v1 (no prezzo, no immagini)
+- **Prodotti da escludere**: l'ottimizzazione "exclude_products" e un suggerimento testuale, non un apply API (l'esclusione prodotti in Shopping/PMax richiede modifica al feed o listing group, troppo complesso per v1)
+
+---
+
+## 10b. Limitazioni PMax Apply via API
+
+### Stato attuale
+`GoogleAdsService.php` NON ha un metodo `mutateAssetGroups()`. I metodi di mutation esistenti coprono: campaigns, ad groups, ads, criteria, budgets.
+
+### Decisione v1
+Per le ottimizzazioni PMax (replace_asset, add_asset):
+- **Genera**: funziona (AI produce nuovi asset testuali)
+- **Esporta CSV**: funziona (format per importazione manuale)
+- **Applica su Google Ads**: **NON disponibile in v1** per PMax
+
+Il bottone "Applica su Google Ads" NON appare per ottimizzazioni PMax. Al suo posto: "Esporta per applicazione manuale".
+
+### Roadmap v2 (fuori scope)
+Aggiungere `mutateAssetGroupAssets()` a `GoogleAdsService.php` per creare/rimuovere asset. Richiede test approfondito con account PMax reale.
+
+---
+
+## 11. Token Budget AI
+
+### Stima prompt (caso peggiore: 5 campagne × 5 ad group × 2 annunci + prodotti)
 
 | Sezione | Stima token |
 |---|---|
-| Metriche account + istruzioni + JSON schema | ~2.000 |
+| Metriche account + istruzioni + JSON schema | ~2.500 |
 | 5 campagne × metriche + budget | ~500 |
 | 25 ad group × metriche | ~1.500 |
 | 50 annunci × H1-H3, D1-D2, CTR | ~3.000 |
 | 25 ad group × 20 keyword top (500 keyword) | ~4.000 |
 | 15-25 landing × 1500 char contenuto | ~10.000-15.000 |
-| **Totale prompt** | **~21.000-26.000** |
+| **Prodotti: top 20 + brand riepilogo + categoria** | **~2.000-3.000** |
+| **Totale prompt** | **~24.000-30.500** |
 | **Risposta richiesta** (max_tokens) | **8.192** |
-| **Totale** | **~30.000-34.000** |
+| **Totale** | **~32.000-39.000** |
 
 Con Claude Sonnet (200K context) questo è ampiamente dentro i limiti. Con Haiku (200K) pure.
 
