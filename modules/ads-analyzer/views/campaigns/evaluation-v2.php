@@ -60,12 +60,13 @@ if ($hasResults && !empty($syncMetrics['campaigns'])) {
                 }
             }
         }
-        $viewCampaigns[] = [
-            'sync' => $syncCamp,
-            'ai' => $aiCamp,
-            'type' => strtoupper($syncCamp['campaign_type'] ?? 'SEARCH'),
-            'isPmax' => strtoupper($syncCamp['campaign_type'] ?? '') === 'PERFORMANCE_MAX',
-        ];
+        // Flatten: merge sync data at root level + ai_data + ai_score for table partial
+        $viewCamp = $syncCamp; // All sync fields at root (campaign_name, clicks, ctr, cost, etc.)
+        $viewCamp['ai_data'] = $aiCamp;
+        $viewCamp['ai_score'] = (float)($aiCamp['score'] ?? 0);
+        $viewCamp['type'] = strtoupper($syncCamp['campaign_type'] ?? 'SEARCH');
+        $viewCamp['isPmax'] = strtoupper($syncCamp['campaign_type'] ?? '') === 'PERFORMANCE_MAX';
+        $viewCampaigns[] = $viewCamp;
 
         // Extract optimizations into flat list
         if ($aiCamp) {
