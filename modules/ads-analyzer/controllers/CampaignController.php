@@ -158,8 +158,9 @@ class CampaignController
         // Valutazioni recenti
         $evaluations = CampaignEvaluation::getByProject($projectId, 5);
 
-        // Lista campagne per modale selezione
+        // Lista campagne con metriche complete per tabella performance + modale selezione
         $campaignsList = [];
+        $campaignsPerformance = [];
         if ($latestSync) {
             $allCampaigns = Campaign::getByRun($latestSync['id']);
             $campaignsList = array_map(fn($c) => [
@@ -170,6 +171,26 @@ class CampaignController
                 'cost' => (float)$c['cost'],
                 'clicks' => (int)$c['clicks'],
                 'conversions' => (float)$c['conversions'],
+            ], $allCampaigns);
+            // Performance table: tutte le metriche
+            $campaignsPerformance = array_map(fn($c) => [
+                'id_google' => $c['campaign_id_google'],
+                'name' => $c['campaign_name'],
+                'status' => $c['campaign_status'] ?? 'UNKNOWN',
+                'type' => $c['campaign_type'] ?? 'SEARCH',
+                'clicks' => (int)$c['clicks'],
+                'impressions' => (int)$c['impressions'],
+                'ctr' => round((float)($c['ctr'] ?? 0), 2),
+                'avg_cpc' => round((float)($c['avg_cpc'] ?? 0), 2),
+                'cost' => round((float)$c['cost'], 2),
+                'conversions' => round((float)$c['conversions'], 1),
+                'conv_rate' => round((float)($c['conv_rate'] ?? 0), 2),
+                'conversion_value' => round((float)($c['conversion_value'] ?? 0), 2),
+                'roas' => ((float)$c['cost'] > 0 && (float)($c['conversion_value'] ?? 0) > 0)
+                    ? round((float)$c['conversion_value'] / (float)$c['cost'], 2)
+                    : 0,
+                'budget_amount' => round((float)($c['budget_amount'] ?? 0), 2),
+                'bidding_strategy' => $c['bidding_strategy'] ?? '',
             ], $allCampaigns);
         }
 
@@ -185,6 +206,7 @@ class CampaignController
             'latestAdStats' => $latestAdStats,
             'evaluations' => $evaluations,
             'campaignsList' => $campaignsList,
+            'campaignsPerformance' => $campaignsPerformance,
             'userCredits' => Credits::getBalance($user['id']),
             'access_role' => $project['access_role'] ?? 'owner',
         ]);
