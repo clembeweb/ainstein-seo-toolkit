@@ -917,7 +917,7 @@ class CampaignSyncService
         // Get PMax campaign IDs from this sync
         $pmaxCampaigns = Database::fetchAll(
             "SELECT campaign_id_google, campaign_name FROM ga_campaigns
-             WHERE sync_id = ? AND campaign_type = 'PERFORMANCE_MAX' AND status = 'ENABLED'",
+             WHERE sync_id = ? AND campaign_type = 'PERFORMANCE_MAX' AND campaign_status = 'ENABLED'",
             [$this->syncId]
         );
 
