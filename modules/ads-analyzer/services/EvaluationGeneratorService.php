@@ -35,6 +35,8 @@ class EvaluationGeneratorService
             'add_negatives'     => $this->buildNegativesPrompt($context, $data),
             'remove_duplicates' => $this->buildDuplicatesPrompt($context, $data),
             'add_extensions'    => $this->buildExtensionsPrompt($context, $data),
+            'replace_asset'     => $this->buildReplaceAssetPrompt($context, $data),
+            'add_asset'         => $this->buildAddAssetPrompt($context, $data),
             // Backwards compatibility
             'copy'              => $this->buildCopyPrompt($context, $data),
             'keywords'          => $this->buildNegativesPrompt($context, $data),
@@ -443,6 +445,125 @@ Regole:
 - Per ogni duplicata, indica ESATTAMENTE dove mantenerla (l'ad group piu pertinente)
 - remove_from: lista ad group da cui rimuovere
 - Motivazione chiara e specifica
+- SOLO JSON valido, nessun commento o testo aggiuntivo
+PROMPT;
+    }
+
+    /**
+     * Prompt per generare un asset sostitutivo per un asset PMax con performance LOW
+     */
+    private function buildReplaceAssetPrompt(array $context, array $data): string
+    {
+        $assetType = $context['asset_type'] ?? 'HEADLINE';
+        $currentText = $context['current_text'] ?? '';
+        $assetGroupName = $context['asset_group_name'] ?? $context['ad_group_name'] ?? '';
+        $searchThemes = $context['search_themes'] ?? '';
+        $campaignName = $context['campaign_name'] ?? '';
+
+        $businessCtx = mb_substr($data['business_context'] ?? '', 0, 500);
+
+        // Limiti caratteri per tipo asset
+        $charLimits = [
+            'HEADLINE' => 30,
+            'LONG_HEADLINE' => 90,
+            'DESCRIPTION' => 90,
+        ];
+        $maxChars = $charLimits[$assetType] ?? 90;
+
+        return <<<PROMPT
+Sei un esperto Google Ads Performance Max specializzato in asset creativi.
+
+CONTESTO BUSINESS:
+{$businessCtx}
+
+CAMPAGNA PERFORMANCE MAX: {$campaignName}
+ASSET GROUP: {$assetGroupName}
+SEARCH THEMES: {$searchThemes}
+
+ASSET ATTUALE CON PERFORMANCE LOW:
+Tipo: {$assetType}
+Testo: "{$currentText}"
+
+ISTRUZIONI:
+Genera un asset {$assetType} sostitutivo per l'asset group '{$assetGroupName}'.
+L'asset attuale '{$currentText}' ha performance LOW.
+Genera un testo migliore, più specifico e pertinente rispetto ai search themes.
+IMPORTANTE: Il testo deve essere nella STESSA LINGUA dell'asset attuale e del contesto business.
+
+GENERA in formato JSON esatto (NESSUN testo fuori dal JSON):
+{
+  "asset_type": "{$assetType}",
+  "original_text": "{$currentText}",
+  "new_text": "Nuovo testo sostitutivo",
+  "explanation": "Breve spiegazione del miglioramento"
+}
+
+Regole:
+- Il nuovo testo deve essere max {$maxChars} caratteri
+- Deve essere più specifico e pertinente ai search themes
+- Non ripetere lo stesso concetto dell'originale
+- SOLO JSON valido, nessun commento o testo aggiuntivo
+PROMPT;
+    }
+
+    /**
+     * Prompt per generare nuovi asset mancanti per un asset group PMax
+     */
+    private function buildAddAssetPrompt(array $context, array $data): string
+    {
+        $missingTypes = $context['missing_types'] ?? [];
+        if (is_string($missingTypes)) {
+            $missingTypes = json_decode($missingTypes, true) ?: explode(',', $missingTypes);
+        }
+        $missingList = implode(', ', array_map('trim', $missingTypes));
+
+        $assetGroupName = $context['asset_group_name'] ?? $context['ad_group_name'] ?? '';
+        $searchThemes = $context['search_themes'] ?? '';
+        $campaignName = $context['campaign_name'] ?? '';
+
+        $businessCtx = mb_substr($data['business_context'] ?? '', 0, 500);
+
+        // Build JSON structure example based on missing types
+        $jsonFields = [];
+        foreach ($missingTypes as $mt) {
+            $mt = strtoupper(trim($mt));
+            if ($mt === 'HEADLINE') {
+                $jsonFields[] = '"headlines": ["Headline 1 (max 30 char)", "Headline 2", "Headline 3"]';
+            } elseif ($mt === 'LONG_HEADLINE') {
+                $jsonFields[] = '"long_headlines": ["Long Headline 1 (max 90 char)"]';
+            } elseif ($mt === 'DESCRIPTION') {
+                $jsonFields[] = '"descriptions": ["Description 1 (max 90 char)", "Description 2"]';
+            }
+        }
+        $jsonExample = "{\n  " . implode(",\n  ", $jsonFields) . "\n}";
+
+        return <<<PROMPT
+Sei un esperto Google Ads Performance Max specializzato in asset creativi.
+
+CONTESTO BUSINESS:
+{$businessCtx}
+
+CAMPAGNA PERFORMANCE MAX: {$campaignName}
+ASSET GROUP: {$assetGroupName}
+SEARCH THEMES: {$searchThemes}
+
+ASSET MANCANTI DA GENERARE: {$missingList}
+
+ISTRUZIONI:
+L'asset group '{$assetGroupName}' necessita di nuovi asset per raggiungere il numero ottimale.
+Genera i testi mancanti, diversificati e pertinenti ai search themes.
+IMPORTANTE: I testi devono essere nella STESSA LINGUA del contesto business.
+
+GENERA in formato JSON esatto (NESSUN testo fuori dal JSON):
+{$jsonExample}
+
+Regole:
+- Per HEADLINE: max 30 caratteri ciascuna
+- Per LONG_HEADLINE: max 90 caratteri ciascuna
+- Per DESCRIPTION: max 90 caratteri ciascuna
+- Genera SOLO i tipi elencati in ASSET MANCANTI
+- Headlines: mix di benefit, feature, CTA
+- Diversifica: ogni testo deve comunicare un messaggio DIVERSO
 - SOLO JSON valido, nessun commento o testo aggiuntivo
 PROMPT;
     }
