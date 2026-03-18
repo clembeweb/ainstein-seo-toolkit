@@ -109,7 +109,7 @@ include __DIR__ . '/../partials/project-nav.php';
                 <?php if ($canEdit): ?>
                 <!-- Valuta con AI Button -->
                 <button
-                    @click="startEvaluation()"
+                    @click="showCampaignFilter = !showCampaignFilter"
                     :disabled="loading || !canEvaluate"
                     class="inline-flex items-center px-4 py-2 rounded-lg font-medium transition-colors"
                     :class="canEvaluate && !loading
@@ -165,6 +165,26 @@ include __DIR__ . '/../partials/project-nav.php';
         <template x-if="errorMsg">
             <div class="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300" x-text="errorMsg"></div>
         </template>
+    </div>
+
+    <!-- Campaign Filter (v2) -->
+    <div x-show="showCampaignFilter" x-cloak x-transition class="space-y-0">
+        <?php
+        // Load ENABLED campaigns from latest sync for filter
+        $filterCampaigns = [];
+        if (!empty($latestSync)) {
+            $filterCampaigns = \Core\Database::fetchAll(
+                "SELECT campaign_id_google, campaign_name as name, campaign_type, clicks, cost,
+                        CASE WHEN cost > 0 AND conversion_value > 0 THEN ROUND(conversion_value / cost, 1) ELSE 0 END as roas
+                 FROM ga_campaigns
+                 WHERE sync_id = ? AND campaign_status = 'ENABLED' AND clicks > 0
+                 ORDER BY cost DESC LIMIT 20",
+                [$latestSync['id']]
+            );
+        }
+        $evaluationCost = \Core\Credits::getCost('campaign_evaluation', 'ads-analyzer', 10);
+        include __DIR__ . '/partials/report-campaign-filter.php';
+        ?>
     </div>
 
     <!-- Run List -->
@@ -475,6 +495,7 @@ function campaignPageManager() {
         loading: false,
         errorMsg: '',
         canEvaluate: <?= ($latestSync && $userCredits >= $evalCost) ? 'true' : 'false' ?>,
+        showCampaignFilter: false,
         showCampaignModal: false,
         allCampaigns: <?= json_encode($campaignsList ?? [], JSON_UNESCAPED_UNICODE) ?>,
         selectedCampaigns: [],
