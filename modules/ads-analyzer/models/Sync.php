@@ -89,4 +89,12 @@ class Sync
             [$projectId]
         ) ?: null;
     }
+
+    public static function findPreviousCompleted(int $projectId, int $currentSyncId): ?array
+    {
+        return Database::fetch(
+            "SELECT * FROM ga_syncs WHERE project_id = ? AND id < ? AND status = 'completed' ORDER BY id DESC LIMIT 1",
+            [$projectId, $currentSyncId]
+        ) ?: null;
+    }
 }

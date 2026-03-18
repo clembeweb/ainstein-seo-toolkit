@@ -555,14 +555,17 @@ class CampaignController
                 'landing_pages_analyzed' => 0,
                 'campaigns_filter' => $campaignsFilter ? json_encode($campaignsFilter) : null,
                 'status' => 'analyzing',
+                'schema_version' => 2,
             ]);
 
-            // Scraping landing pages (max 5 URL uniche dagli annunci)
+            // Scraping landing pages (URL uniche dagli annunci ENABLED)
+            $maxLanding = (int) ModuleLoader::getSetting('ads-analyzer', 'max_landing_pages_per_eval', 25);
             $landingContexts = [];
             $uniqueUrls = [];
             foreach ($ads as $ad) {
+                if (($ad['ad_status'] ?? '') !== 'ENABLED') continue;
                 $url = $ad['final_url'] ?? '';
-                if (!empty($url) && !isset($uniqueUrls[$url]) && count($uniqueUrls) < 5) {
+                if (!empty($url) && !isset($uniqueUrls[$url]) && count($uniqueUrls) < $maxLanding) {
                     $uniqueUrls[$url] = true;
                 }
             }
@@ -576,7 +579,7 @@ class CampaignController
                         Database::reconnect();
                         if (!empty($scraped['content'])) {
                             // Limita contenuto per non esplodere il prompt
-                            $content = mb_substr($scraped['content'], 0, 3000);
+                            $content = mb_substr($scraped['content'], 0, 1500);
                             $landingContexts[$url] = "Titolo: " . ($scraped['title'] ?? 'N/D')
                                 . "\nWord count: " . ($scraped['word_count'] ?? 0)
                                 . "\nContenuto: " . $content;
@@ -785,6 +788,61 @@ class CampaignController
             }
         }
 
+        // Schema version routing — v1 uses old view, v2 uses new evaluation-v2
+        $schemaVersion = (int)($evaluation['schema_version'] ?? 1);
+
+        if ($schemaVersion >= 2 && !empty($evaluation['sync_id'])) {
+            // Load sync metrics with ROAS/CPA computed
+            $campaignFilter = json_decode($evaluation['campaigns_filter'] ?? 'null', true);
+            $syncMetrics = $this->loadSyncMetrics($evaluation['sync_id'], $campaignFilter);
+
+            // Load previous sync for deltas
+            $prevSync = Sync::findPreviousCompleted($projectId, $evaluation['sync_id']);
+            $metricDeltas = null;
+            if ($prevSync) {
+                $prevMetrics = $this->loadSyncMetrics($prevSync['id']);
+                $metricDeltas = $this->calculateMetricDeltas($syncMetrics['totals'], $prevMetrics['totals']);
+            }
+
+            // Negative KW summary
+            $negativeSummary = $this->buildNegativeKeywordsSummary($projectId);
+
+            // Product data (Shopping/PMax)
+            require_once __DIR__ . '/../models/ProductPerformance.php';
+            $hasShoppingCampaigns = !empty(array_filter($syncMetrics['campaigns'],
+                fn($c) => in_array(strtoupper($c['campaign_type'] ?? ''), ['SHOPPING', 'PERFORMANCE_MAX'])));
+            $productData = null;
+            if ($hasShoppingCampaigns) {
+                $productData = [
+                    'top_products' => \Modules\AdsAnalyzer\Models\ProductPerformance::getTopBySpend($projectId, $evaluation['sync_id'], 20),
+                    'brands' => \Modules\AdsAnalyzer\Models\ProductPerformance::getBrandSummary($projectId, $evaluation['sync_id']),
+                    'categories' => \Modules\AdsAnalyzer\Models\ProductPerformance::getCategorySummary($projectId, $evaluation['sync_id']),
+                    'waste' => \Modules\AdsAnalyzer\Models\ProductPerformance::getWasteProducts($projectId, $evaluation['sync_id']),
+                ];
+            }
+
+            return View::render('ads-analyzer/campaigns/evaluation-v2', [
+                'title' => 'Report Campagne - ' . $project['name'],
+                'user' => $user,
+                'modules' => ModuleLoader::getUserModules($user['id']),
+                'project' => $project,
+                'evaluation' => $evaluation,
+                'aiResponse' => $aiResponse,
+                'syncMetrics' => $syncMetrics,
+                'metricDeltas' => $metricDeltas,
+                'negativeSummary' => $negativeSummary,
+                'productData' => $productData,
+                'generateUrl' => url("/ads-analyzer/projects/{$projectId}/campaigns/evaluations/{$evalId}/generate"),
+                'applyUrl' => url("/ads-analyzer/projects/{$projectId}/campaigns/evaluations/{$evalId}/apply"),
+                'access_role' => $project['access_role'] ?? 'owner',
+                'currentSync' => $currentSync,
+                'savedFixes' => $savedFixes,
+                'agIdMap' => $agIdMap,
+                'assetGroupIdMap' => $assetGroupIdMap,
+            ]);
+        }
+
+        // v1 fallback — old evaluation view
         return View::render('ads-analyzer/campaigns/evaluation', [
             'title' => 'Valutazione Campagne - ' . $project['name'],
             'user' => $user,
@@ -1399,5 +1457,208 @@ class CampaignController
         }
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * Load structured sync metrics for evaluation display
+     * Returns hierarchical: campaigns[] -> ad_groups[] -> ads[], keywords[]
+     * Only ENABLED entities included. Computes ROAS and CPA at each level.
+     */
+    private function loadSyncMetrics(int $syncId, ?array $campaignFilter = null): array
+    {
+        // 1. Load ENABLED campaigns
+        $campaignSql = "SELECT * FROM ga_campaigns WHERE sync_id = ? AND campaign_status = 'ENABLED'";
+        $params = [$syncId];
+        if ($campaignFilter) {
+            $placeholders = implode(',', array_fill(0, count($campaignFilter), '?'));
+            $campaignSql .= " AND campaign_id_google IN ({$placeholders})";
+            $params = array_merge($params, $campaignFilter);
+        }
+        $campaignSql .= " ORDER BY cost DESC";
+        $campaigns = Database::fetchAll($campaignSql, $params);
+
+        // 2. Load ENABLED ad groups for this sync
+        $adGroups = Database::fetchAll(
+            "SELECT * FROM ga_campaign_ad_groups WHERE sync_id = ? AND ad_group_status = 'ENABLED' ORDER BY cost DESC",
+            [$syncId]
+        );
+
+        // 3. Load ENABLED ads
+        $ads = Database::fetchAll(
+            "SELECT * FROM ga_ads WHERE sync_id = ? AND ad_status = 'ENABLED' ORDER BY clicks DESC",
+            [$syncId]
+        );
+
+        // 4. Load ENABLED keywords
+        $keywords = Database::fetchAll(
+            "SELECT * FROM ga_ad_group_keywords WHERE sync_id = ? AND keyword_status = 'ENABLED' ORDER BY clicks DESC",
+            [$syncId]
+        );
+
+        // Group ad groups by campaign
+        $agByCampaign = [];
+        foreach ($adGroups as $ag) {
+            $agByCampaign[$ag['campaign_id_google']][] = $ag;
+        }
+
+        // Group ads by ad group
+        $adsByAdGroup = [];
+        foreach ($ads as $ad) {
+            $adsByAdGroup[$ad['ad_group_id_google'] ?? $ad['ad_group_name']][] = $ad;
+        }
+
+        // Group keywords by ad group
+        $kwByAdGroup = [];
+        foreach ($keywords as $kw) {
+            $kwByAdGroup[$kw['ad_group_id_google'] ?? $kw['ad_group_name']][] = $kw;
+        }
+
+        // Compute ROAS/CPA helper
+        $computeRoasCpa = function(array &$row) {
+            $cost = (float)($row['cost'] ?? 0);
+            $conv = (float)($row['conversions'] ?? 0);
+            $convValue = (float)($row['conversion_value'] ?? 0);
+            $row['roas'] = $cost > 0 ? round($convValue / $cost, 1) : 0;
+            $row['cpa'] = $conv > 0 ? round($cost / $conv, 2) : 0;
+        };
+
+        // Build hierarchical structure
+        $totals = ['clicks' => 0, 'impressions' => 0, 'cost' => 0, 'conversions' => 0, 'conversion_value' => 0];
+        $result = [];
+
+        foreach ($campaigns as $camp) {
+            $computeRoasCpa($camp);
+            $totals['clicks'] += (int)$camp['clicks'];
+            $totals['impressions'] += (int)$camp['impressions'];
+            $totals['cost'] += (float)$camp['cost'];
+            $totals['conversions'] += (float)$camp['conversions'];
+            $totals['conversion_value'] += (float)$camp['conversion_value'];
+
+            $campId = $camp['campaign_id_google'];
+
+            $campAdGroups = $agByCampaign[$campId] ?? [];
+
+            $adGroupsResult = [];
+            foreach ($campAdGroups as $ag) {
+                $computeRoasCpa($ag);
+
+                $agKey = $ag['ad_group_id_google'] ?? $ag['ad_group_name'];
+                $agAds = $adsByAdGroup[$agKey] ?? [];
+                $agKeywords = array_slice($kwByAdGroup[$agKey] ?? [], 0, 20); // Top 20
+
+                // Number ads sequentially
+                $adsResult = [];
+                foreach (array_slice($agAds, 0, 5) as $idx => $ad) { // Max 5 per ad group
+                    $ad['ad_index'] = $idx + 1;
+                    $adsResult[] = $ad;
+                }
+
+                $adGroupsResult[] = array_merge($ag, [
+                    'ads' => $adsResult,
+                    'keywords' => $agKeywords,
+                ]);
+            }
+
+            $result[] = array_merge($camp, [
+                'ad_groups' => $adGroupsResult,
+            ]);
+        }
+
+        // Compute totals ROAS/CPA
+        $totals['ctr'] = $totals['impressions'] > 0 ? round($totals['clicks'] / $totals['impressions'] * 100, 2) : 0;
+        $totals['roas'] = $totals['cost'] > 0 ? round($totals['conversion_value'] / $totals['cost'], 1) : 0;
+        $totals['cpa'] = $totals['conversions'] > 0 ? round($totals['cost'] / $totals['conversions'], 2) : 0;
+
+        return [
+            'totals' => $totals,
+            'campaigns' => $result,
+        ];
+    }
+
+    /**
+     * Calculate delta % between current and previous sync metrics
+     */
+    private function calculateMetricDeltas(array $current, array $previous): array
+    {
+        $metrics = [
+            'clicks' => ['label' => 'Click', 'positive_is_good' => true],
+            'cost' => ['label' => 'Spesa', 'positive_is_good' => false],
+            'ctr' => ['label' => 'CTR', 'positive_is_good' => true],
+            'conversions' => ['label' => 'Conversioni', 'positive_is_good' => true],
+            'roas' => ['label' => 'ROAS', 'positive_is_good' => true],
+            'cpa' => ['label' => 'CPA', 'positive_is_good' => false],
+        ];
+
+        $deltas = [];
+        foreach ($metrics as $key => $meta) {
+            $curr = (float)($current[$key] ?? 0);
+            $prev = (float)($previous[$key] ?? 0);
+            $deltaPct = $prev > 0 ? round(($curr - $prev) / $prev * 100, 1) : 0;
+
+            $deltas[$key] = [
+                'label' => $meta['label'],
+                'current' => $curr,
+                'previous' => $prev,
+                'delta_pct' => $deltaPct,
+                'positive_is_good' => $meta['positive_is_good'],
+            ];
+        }
+
+        return $deltas;
+    }
+
+    /**
+     * Build negative keywords summary from search term analysis data
+     */
+    private function buildNegativeKeywordsSummary(int $projectId): ?array
+    {
+        // Find latest completed search term analysis
+        $analysis = Database::fetch(
+            "SELECT * FROM ga_analyses WHERE project_id = ? AND status = 'completed' ORDER BY completed_at DESC LIMIT 1",
+            [$projectId]
+        );
+
+        if (!$analysis) return null;
+
+        // Count keywords by priority
+        $counts = Database::fetchAll(
+            "SELECT nc.priority, COUNT(nk.id) as kw_count
+             FROM ga_negative_categories nc
+             JOIN ga_negative_keywords nk ON nk.category_id = nc.id
+             WHERE nc.analysis_id = ?
+             GROUP BY nc.priority",
+            [$analysis['id']]
+        );
+
+        // Count applied
+        $appliedRow = Database::fetch(
+            "SELECT COUNT(*) as cnt FROM ga_negative_keywords WHERE analysis_id = ? AND applied_at IS NOT NULL",
+            [$analysis['id']]
+        );
+        $appliedCount = (int)($appliedRow['cnt'] ?? 0);
+
+        // Estimate waste from search terms
+        $waste = Database::fetch(
+            "SELECT COALESCE(SUM(cost), 0) as total_waste
+             FROM ga_search_terms
+             WHERE project_id = ? AND is_zero_ctr = 1",
+            [$projectId]
+        );
+
+        $byPriority = [];
+        foreach ($counts as $c) {
+            $byPriority[$c['priority']] = (int)$c['kw_count'];
+        }
+
+        return [
+            'analysis_id' => $analysis['id'],
+            'total_keywords' => array_sum(array_column($counts, 'kw_count')),
+            'high_priority' => $byPriority['high'] ?? 0,
+            'medium_priority' => $byPriority['medium'] ?? 0,
+            'evaluate_priority' => $byPriority['evaluate'] ?? 0,
+            'applied_count' => $appliedCount,
+            'total_waste' => (float)($waste['total_waste'] ?? 0),
+            'last_analysis_date' => $analysis['completed_at'],
+        ];
     }
 }
