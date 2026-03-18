@@ -13,6 +13,7 @@ use Modules\AdsAnalyzer\Models\SearchTerm;
 use Modules\AdsAnalyzer\Models\AdGroup;
 use Modules\AdsAnalyzer\Models\AssetGroup;
 use Modules\AdsAnalyzer\Models\AssetGroupAsset;
+use Modules\AdsAnalyzer\Models\ProductPerformance;
 use Modules\AdsAnalyzer\Models\Project;
 use Core\Database;
 use Core\Logger;
@@ -105,6 +106,19 @@ class CampaignSyncService
             $counts['assets_synced'] = $pmaxCounts['assets'];
             Sync::updateCounts($this->syncId, $counts);
             Database::reconnect();
+
+            // 6c. Sync product performance (Shopping + PMax)
+            try {
+                $this->syncProductPerformance();
+                Database::reconnect();
+            } catch (\Exception $e) {
+                // Product sync failure should NOT fail the entire sync
+                Logger::channel('ads')->warning('Product performance sync failed (non-blocking)', [
+                    'project_id' => $this->projectId,
+                    'sync_id' => $this->syncId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
 
             // 7. Sync termini di ricerca
             $counts['search_terms_synced'] = $this->syncSearchTerms($dateFrom, $dateTo);
@@ -1183,6 +1197,119 @@ class CampaignSyncService
                 [$audienceJson, $themesJson, $this->syncId, $agId]
             );
         }
+    }
+
+    /**
+     * Sync product performance da shopping_performance_view.
+     * Eseguito solo se esistono campagne SHOPPING o PERFORMANCE_MAX nel sync corrente.
+     */
+    private function syncProductPerformance(): void
+    {
+        // Verifica se ci sono campagne Shopping o PMax in questo sync
+        $hasShoppingOrPmax = Database::fetch(
+            "SELECT COUNT(*) as cnt FROM ga_campaigns
+             WHERE sync_id = ? AND campaign_type IN ('SHOPPING', 'PERFORMANCE_MAX')",
+            [$this->syncId]
+        );
+
+        if (empty($hasShoppingOrPmax) || (int) $hasShoppingOrPmax['cnt'] === 0) {
+            return;
+        }
+
+        $gaql = "SELECT " .
+                "segments.product_item_id, segments.product_title, segments.product_brand, " .
+                "segments.product_bidding_category_level1, segments.product_type_l1, " .
+                "campaign.id, campaign.name, " .
+                "metrics.clicks, metrics.impressions, metrics.cost_micros, " .
+                "metrics.conversions, metrics.conversions_value " .
+                "FROM shopping_performance_view " .
+                "WHERE segments.date DURING LAST_30_DAYS " .
+                "AND metrics.impressions > 0 " .
+                "ORDER BY metrics.cost_micros DESC " .
+                "LIMIT 200";
+
+        $response = $this->gadsService->searchStream($gaql);
+        $rows = $this->extractRows($response);
+
+        if (empty($rows)) {
+            Logger::channel('ads')->info('Product performance sync: no data returned', [
+                'project_id' => $this->projectId,
+                'sync_id' => $this->syncId,
+            ]);
+            return;
+        }
+
+        // Aggrega per product_item_id + campaign_id (le righe possono essere per-giorno)
+        $aggregated = [];
+        foreach ($rows as $row) {
+            $segments = $row['segments'] ?? [];
+            $campaign = $row['campaign'] ?? [];
+            $metrics = $row['metrics'] ?? [];
+
+            $productItemId = $segments['productItemId'] ?? '';
+            $campaignId = (string) ($campaign['id'] ?? '');
+            $key = $campaignId . '|' . $productItemId;
+
+            if (!isset($aggregated[$key])) {
+                $aggregated[$key] = [
+                    'campaign_id_google' => $campaignId,
+                    'campaign_name' => $campaign['name'] ?? '',
+                    'product_item_id' => $productItemId,
+                    'product_title' => $segments['productTitle'] ?? null,
+                    'product_brand' => $segments['productBrand'] ?? null,
+                    'product_category_l1' => $segments['productBiddingCategoryLevel1'] ?? null,
+                    'product_type_l1' => $segments['productTypeL1'] ?? null,
+                    'clicks' => 0,
+                    'impressions' => 0,
+                    'cost_micros' => 0,
+                    'conversions' => 0,
+                    'conversion_value' => 0,
+                ];
+            }
+
+            $aggregated[$key]['clicks'] += (int) ($metrics['clicks'] ?? 0);
+            $aggregated[$key]['impressions'] += (int) ($metrics['impressions'] ?? 0);
+            $aggregated[$key]['cost_micros'] += (int) ($metrics['costMicros'] ?? 0);
+            $aggregated[$key]['conversions'] += (float) ($metrics['conversions'] ?? 0);
+            $aggregated[$key]['conversion_value'] += (float) ($metrics['conversionsValue'] ?? 0);
+        }
+
+        // Trasforma e calcola metriche derivate
+        $products = [];
+        foreach ($aggregated as $item) {
+            $cost = $item['cost_micros'] / 1000000;
+            $clicks = $item['clicks'];
+            $conversions = $item['conversions'];
+            $conversionValue = $item['conversion_value'];
+            $impressions = $item['impressions'];
+
+            $products[] = [
+                'campaign_id_google' => $item['campaign_id_google'],
+                'campaign_name' => $item['campaign_name'],
+                'product_item_id' => $item['product_item_id'],
+                'product_title' => $item['product_title'],
+                'product_brand' => $item['product_brand'],
+                'product_category_l1' => $item['product_category_l1'],
+                'product_type_l1' => $item['product_type_l1'],
+                'clicks' => $clicks,
+                'impressions' => $impressions,
+                'cost' => round($cost, 2),
+                'conversions' => round($conversions, 2),
+                'conversion_value' => round($conversionValue, 2),
+                'ctr' => $impressions > 0 ? round(($clicks / $impressions) * 100, 2) : 0,
+                'avg_cpc' => $clicks > 0 ? round($cost / $clicks, 2) : 0,
+                'roas' => $cost > 0 ? round($conversionValue / $cost, 2) : 0,
+                'cpa' => $conversions > 0 ? round($cost / $conversions, 2) : 0,
+            ];
+        }
+
+        ProductPerformance::saveBatch($this->projectId, $this->syncId, $products);
+
+        Logger::channel('ads')->info('Product performance sync completed', [
+            'project_id' => $this->projectId,
+            'sync_id' => $this->syncId,
+            'products_synced' => count($products),
+        ]);
     }
 
     /**
