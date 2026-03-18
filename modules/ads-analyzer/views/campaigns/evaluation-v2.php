@@ -537,8 +537,16 @@ function evaluationReport() {
         applyUrl: '<?= e($applyUrl ?? '') ?>',
         csrfToken: '<?= csrf_token() ?>',
 
-        // Apply modal
+        // Apply modal (single)
         applyModal: { open: false, key: '', confirmed: false, confirmText: '', applying: false, done: false, error: null, resultMessage: '', description: '' },
+
+        // Apply modal (batch)
+        applyModalBatch: { open: false, count: 0, newAds: 0, newExtensions: 0, newNegatives: 0, applying: false, done: false, error: null, resultMessage: '' },
+
+        // Batch optimization config
+        canEdit: <?= $canEdit ? 'true' : 'false' ?>,
+        manualOnlyTypes: <?= json_encode($manualOnlyTypes ?? ['landing_suggestion']) ?>,
+        pmaxTypes: <?= json_encode($pmaxTypes ?? ['replace_asset', 'add_asset']) ?>,
 
         // Preloaded campaign data for table interactions
         campaignsData: <?= json_encode($viewCampaigns, JSON_UNESCAPED_UNICODE | JSON_HEX_APOS | JSON_HEX_TAG) ?>,
@@ -794,6 +802,156 @@ function evaluationReport() {
 
         resetApplyModal() {
             this.applyModal = { open: false, key: '', confirmed: false, confirmText: '', applying: false, done: false, error: null, resultMessage: '', description: '' };
+        },
+
+        // ── Batch optimizations (used by report-optimizations partial) ──
+
+        get generatedCount() {
+            let count = 0;
+            for (const key of Object.keys(this.allOptimizations || {})) {
+                if (this.generators[key]?.result) count++;
+            }
+            return count;
+        },
+
+        get selectedCount() {
+            let count = 0;
+            for (const [key, val] of Object.entries(this.selectedOptimizations)) {
+                if (val && this.generators[key]?.result && !this.generators[key]?.applied) count++;
+            }
+            return count;
+        },
+
+        get pendingGenCount() {
+            let count = 0;
+            for (const [key, opt] of Object.entries(this.allOptimizations || {})) {
+                if (!this.generators[key]?.result && !this.manualOnlyTypes.includes(opt.type)) count++;
+            }
+            return count;
+        },
+
+        selectAll(checked) {
+            for (const key of Object.keys(this.allOptimizations || {})) {
+                if (this.generators[key]?.result && !this.generators[key]?.applied) {
+                    this.selectedOptimizations[key] = checked;
+                }
+            }
+        },
+
+        openBatchApplyModal() {
+            const selected = Object.entries(this.selectedOptimizations)
+                .filter(([key, val]) => val && this.generators[key]?.result && !this.generators[key]?.applied);
+            if (selected.length === 0) return;
+
+            let newAds = 0, newExtensions = 0, newNegatives = 0;
+            selected.forEach(([key]) => {
+                const gen = this.generators[key];
+                if (!gen) return;
+                if (['rewrite_ads', 'rewrite_ad', 'copy'].includes(gen.type)) newAds++;
+                else if (['add_extensions', 'extensions'].includes(gen.type)) newExtensions++;
+                else if (['add_negatives', 'keywords'].includes(gen.type)) newNegatives++;
+            });
+
+            this.applyModalBatch = {
+                open: true,
+                count: selected.length,
+                newAds, newExtensions, newNegatives,
+                applying: false, done: false, error: null, resultMessage: ''
+            };
+        },
+
+        async executeBatchApply() {
+            this.applyModalBatch.applying = true;
+            const selected = Object.entries(this.selectedOptimizations)
+                .filter(([key, val]) => val && this.generators[key]?.result && !this.generators[key]?.applied)
+                .map(([key]) => key);
+
+            let successCount = 0;
+            let errorMessages = [];
+
+            for (const key of selected) {
+                const gen = this.generators[key];
+                if (!gen?.data) continue;
+                if (this.pmaxTypes.includes(gen.type)) continue;
+
+                try {
+                    const formData = new FormData();
+                    formData.append('_csrf_token', this.csrfToken);
+                    formData.append('type', gen.type);
+                    formData.append('data', JSON.stringify(gen.data));
+                    if (gen.fixId) formData.append('fix_id', gen.fixId);
+                    if (gen.adGroupIdGoogle) formData.append('ad_group_id_google', gen.adGroupIdGoogle);
+
+                    const resp = await fetch(this.applyUrl, { method: 'POST', body: formData });
+                    if (!resp.ok) {
+                        const errData = await resp.json().catch(() => null);
+                        throw new Error(errData?.error || 'Errore HTTP ' + resp.status);
+                    }
+                    const data = await resp.json();
+                    if (data.error) throw new Error(data.error);
+
+                    if (this.generators[key]) {
+                        this.generators[key].applied = true;
+                    }
+                    this.selectedOptimizations[key] = false;
+                    successCount++;
+                } catch (e) {
+                    errorMessages.push(e.message);
+                }
+            }
+
+            this.applyModalBatch.applying = false;
+            this.applyModalBatch.done = true;
+            if (errorMessages.length > 0) {
+                this.applyModalBatch.error = `${successCount} applicate, ${errorMessages.length} errori: ${errorMessages[0]}`;
+            } else {
+                this.applyModalBatch.resultMessage = `${successCount} ottimizzazioni applicate con successo su Google Ads.`;
+            }
+        },
+
+        getBeforeAfterData(key, opt) {
+            const gen = this.generators[key];
+            if (!gen?.data) return null;
+
+            if (['rewrite_ads', 'rewrite_ad', 'copy'].includes(gen.type)) {
+                let beforeAd = null;
+                if (this.campaignsData) {
+                    for (const camp of this.campaignsData) {
+                        if (camp.name !== opt.campaign_name) continue;
+                        for (const ag of (camp.adGroups || [])) {
+                            if (ag.name !== opt.ad_group_name) continue;
+                            const idx = opt.target_ad_index || 0;
+                            if (ag.ads && ag.ads[idx]) {
+                                beforeAd = ag.ads[idx];
+                            }
+                        }
+                    }
+                }
+                return {
+                    type: 'rewrite',
+                    before: beforeAd ? { headlines: beforeAd.headlines || [], descriptions: beforeAd.descriptions || [] } : null,
+                    after: { headlines: gen.data.headlines || [], descriptions: gen.data.descriptions || [] }
+                };
+            }
+
+            if (['add_extensions', 'extensions'].includes(gen.type)) {
+                return { type: 'extensions', items: gen.data.sitelinks || gen.data.callouts || gen.data.snippets || [] };
+            }
+
+            if (['replace_asset', 'add_asset'].includes(gen.type)) {
+                return {
+                    type: 'asset',
+                    before: gen.data.old_text || gen.data.old_value || null,
+                    after: gen.data.new_text || gen.data.new_value || gen.data.text || null,
+                    items: gen.data.assets || gen.data.items || []
+                };
+            }
+
+            if (['add_negatives', 'keywords'].includes(gen.type)) {
+                return { type: 'negatives', keywords: gen.data.keywords || gen.data.negatives || [] };
+            }
+
+            return null;
         },
 
         // Helper: escape HTML for safe rendering

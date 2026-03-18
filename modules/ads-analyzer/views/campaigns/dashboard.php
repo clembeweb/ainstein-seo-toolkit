@@ -568,7 +568,16 @@ $googleAdsAccountName = $project['google_ads_account_name'] ?? '';
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
         </template>
-        <p class="text-sm" :class="syncError ? 'text-red-800 dark:text-red-300' : 'text-emerald-800 dark:text-emerald-300'" x-text="syncMessage"></p>
+        <div>
+            <p class="text-sm" :class="syncError ? 'text-red-800 dark:text-red-300' : 'text-emerald-800 dark:text-emerald-300'" x-text="syncMessage"></p>
+            <a x-show="tokenExpiredUrl" :href="tokenExpiredUrl"
+               class="inline-flex items-center gap-1 mt-2 text-sm font-medium text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                </svg>
+                Riconnetti Account
+            </a>
+        </div>
     </div>
     </div>
 </div>
@@ -581,6 +590,7 @@ function dashboardManager() {
         syncing: false,
         syncMessage: '',
         syncError: false,
+        tokenExpiredUrl: null,
 
         // Live KPI properties
         dateRange: '<?= (strtotime($dateTo) - strtotime($dateFrom)) / 86400 ?>',
@@ -721,8 +731,14 @@ function dashboardManager() {
                     }
                 } else {
                     const data = await resp.json().catch(() => ({}));
-                    this.syncMessage = data.error || 'Errore durante la sincronizzazione (HTTP ' + resp.status + ').';
-                    this.syncError = true;
+                    if (data.token_expired && data.connect_url) {
+                        this.syncMessage = 'Token Google Ads scaduto. Riconnetti il tuo account.';
+                        this.syncError = true;
+                        this.tokenExpiredUrl = data.connect_url;
+                    } else {
+                        this.syncMessage = data.error || 'Errore durante la sincronizzazione (HTTP ' + resp.status + ').';
+                        this.syncError = true;
+                    }
                 }
             } catch (err) {
                 console.error('Sync failed:', err);

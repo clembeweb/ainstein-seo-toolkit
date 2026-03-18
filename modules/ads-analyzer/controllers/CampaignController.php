@@ -281,6 +281,25 @@ class CampaignController
             ]);
             exit;
 
+        } catch (\RuntimeException $e) {
+            Logger::channel('ads')->error("Campaign sync error", ['error' => $e->getMessage()]);
+            ob_end_clean();
+
+            // Token scaduto/revocato → suggerisci riconnessione
+            if (str_contains($e->getMessage(), 'Impossibile rinnovare il token') || str_contains($e->getMessage(), 'expired or revoked')) {
+                http_response_code(401);
+                echo json_encode([
+                    'error' => 'Il token Google Ads è scaduto o revocato. Riconnetti il tuo account dalla pagina Connessione.',
+                    'token_expired' => true,
+                    'connect_url' => url('/ads-analyzer/projects/' . $projectId . '/connect'),
+                ]);
+                exit;
+            }
+
+            http_response_code(500);
+            echo json_encode(['error' => 'Errore durante la sincronizzazione: ' . $e->getMessage()]);
+            exit;
+
         } catch (\Exception $e) {
             Logger::channel('ads')->error("Campaign sync error", ['error' => $e->getMessage()]);
 

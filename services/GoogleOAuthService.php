@@ -411,13 +411,14 @@ class GoogleOAuthService
             return null;
         }
 
-        unset($_SESSION['google_oauth_state']);
-
+        // Decodifica PRIMA di cancellare — solo se è davvero MCC consumiamo lo state
         $decoded = json_decode(base64_decode($state), true);
 
         if (!$decoded || ($decoded['action'] ?? '') !== 'mcc_connect') {
             return null;
         }
+
+        unset($_SESSION['google_oauth_state']);
 
         return ['action' => 'mcc_connect'];
     }
