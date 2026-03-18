@@ -18,7 +18,7 @@ $campaignTypeConfig = [
 ];
 
 $evaluationCost = $evaluationCost ?? \Core\Credits::getCost('campaign_evaluation', 'ads-analyzer', 10);
-$streamUrl = url("/ads-analyzer/projects/{$project['id']}/campaigns/evaluate-stream");
+$evaluateUrl = url("/ads-analyzer/projects/{$project['id']}/campaigns/evaluate");
 ?>
 
 <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6"
@@ -45,37 +45,18 @@ $streamUrl = url("/ads-analyzer/projects/{$project['id']}/campaigns/evaluate-str
             formData.append('_csrf_token', '<?= csrf_token() ?>');
             this.selectedIds.forEach(id => formData.append('campaigns_filter[]', id));
 
-            // Navigate to SSE stream — will be handled by the SSE progress UI
-            fetch('<?= $streamUrl ?>', { method: 'POST', body: formData })
+            fetch('<?= $evaluateUrl ?>', { method: 'POST', body: formData })
                 .then(response => {
-                    if (!response.ok) throw new Error('Errore server');
-                    // Start reading SSE from response
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder();
-                    const readChunk = () => {
-                        reader.read().then(({ done, value }) => {
-                            if (done) return;
-                            const text = decoder.decode(value);
-                            // Parse SSE events
-                            const lines = text.split('\n');
-                            for (const line of lines) {
-                                if (line.startsWith('data: ')) {
-                                    try {
-                                        const data = JSON.parse(line.slice(6));
-                                        if (data.redirect) {
-                                            window.location.href = data.redirect;
-                                            return;
-                                        }
-                                        if (data.message) {
-                                            this.$refs.progressMessage && (this.$refs.progressMessage.textContent = data.message);
-                                        }
-                                    } catch(e) {}
-                                }
-                            }
-                            readChunk();
-                        });
-                    };
-                    readChunk();
+                    if (!response.ok) throw new Error('Errore server (' + response.status + ')');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) throw new Error(data.error);
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else if (data.evaluation_id) {
+                        window.location.href = '<?= url("/ads-analyzer/projects/{$project['id']}/campaigns/evaluations") ?>/' + data.evaluation_id;
+                    }
                 })
                 .catch(err => {
                     this.submitting = false;

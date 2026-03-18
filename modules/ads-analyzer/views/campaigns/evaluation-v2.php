@@ -41,11 +41,23 @@ $viewCampaigns = [];
 $allOptimizations = [];
 if ($hasResults && !empty($syncMetrics['campaigns'])) {
     foreach ($syncMetrics['campaigns'] as $cIdx => $syncCamp) {
+        // Match AI campaign con sync campaign: prima esatto, poi parziale (contiene)
         $aiCamp = null;
+        $syncName = $syncCamp['campaign_name'] ?? $syncCamp['name'] ?? '';
         foreach ($campaigns as $ac) {
-            if (($ac['campaign_name'] ?? '') === ($syncCamp['campaign_name'] ?? $syncCamp['name'] ?? '')) {
+            $aiName = $ac['campaign_name'] ?? '';
+            if ($aiName === $syncName) {
                 $aiCamp = $ac;
                 break;
+            }
+        }
+        if (!$aiCamp && $syncName) {
+            foreach ($campaigns as $ac) {
+                $aiName = $ac['campaign_name'] ?? '';
+                if ($aiName && (str_contains($syncName, $aiName) || str_contains($aiName, $syncName))) {
+                    $aiCamp = $ac;
+                    break;
+                }
             }
         }
         $viewCampaigns[] = [

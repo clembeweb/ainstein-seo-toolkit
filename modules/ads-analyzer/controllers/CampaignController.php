@@ -592,6 +592,18 @@ class CampaignController
 
             $landingPagesAnalyzed = count($landingContexts);
 
+            // Carica dati prodotto per Shopping/PMax
+            require_once __DIR__ . '/../models/ProductPerformance.php';
+            $productData = [];
+            $hasShoppingPmax = !empty(array_filter($campaigns, fn($c) => in_array(strtoupper($c['campaign_type'] ?? ''), ['SHOPPING', 'PERFORMANCE_MAX'])));
+            if ($hasShoppingPmax) {
+                $productData = [
+                    'top_products' => \Modules\AdsAnalyzer\Models\ProductPerformance::getTopBySpend($projectId, (int)$sync['id'], 20),
+                    'brands' => \Modules\AdsAnalyzer\Models\ProductPerformance::getBrandSummary($projectId, (int)$sync['id']),
+                    'waste' => \Modules\AdsAnalyzer\Models\ProductPerformance::getWasteProducts($projectId, (int)$sync['id']),
+                ];
+            }
+
             set_time_limit(300);
             $evaluator = new CampaignEvaluatorService();
             $aiResult = $evaluator->evaluate(
@@ -603,7 +615,8 @@ class CampaignController
                 $adGroupsData,
                 $keywordsData,
                 $campaignsFilter,
-                (int)$sync['id']
+                (int)$sync['id'],
+                $productData
             );
 
             Database::reconnect();
