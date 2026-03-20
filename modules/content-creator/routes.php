@@ -362,6 +362,9 @@ Router::post('/content-creator/projects/{id}/images/import', function ($id) {
 Router::post('/content-creator/projects/{id}/images/fetch-cms', function ($id) {
     (new \Modules\ContentCreator\Controllers\ImageController())->fetchCmsProducts((int) $id);
 });
+Router::post('/content-creator/projects/{id}/images/scrape-url', function ($id) {
+    (new \Modules\ContentCreator\Controllers\ImageController())->scrapeImages((int) $id);
+});
 
 // Image approve/reject/regenerate
 Router::post('/content-creator/projects/{id}/images/approve-bulk', function ($id) {

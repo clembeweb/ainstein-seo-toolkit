@@ -200,6 +200,12 @@ class ImageController
                     $errors = $result['errors'];
                     break;
 
+                case 'url':
+                    $result = $this->importFromUrl($id, $user['id'], $service);
+                    $inserted = $result['inserted'];
+                    $errors = $result['errors'];
+                    break;
+
                 default:
                     ob_end_clean();
                     echo json_encode(['error' => true, 'message' => 'Sorgente import non valida']);
@@ -422,6 +428,303 @@ class ImageController
 
         $this->image->markError($imageId, 'Errore salvataggio file');
         return ['inserted' => 0, 'errors' => ['Errore salvataggio file su disco']];
+    }
+
+    /**
+     * Scrape immagini da una URL prodotto (AJAX)
+     * POST /content-creator/projects/{id}/images/scrape-url
+     *
+     * Estrae immagini da 3 fonti in ordine di affidabilita:
+     * 1. JSON-LD Product.image (dati strutturati)
+     * 2. Open Graph og:image
+     * 3. <img> tag con supporto data-src/srcset
+     *
+     * I thumbnail vengono scaricati server-side come base64
+     * per evitare problemi di hotlink protection.
+     */
+    public function scrapeImages(int $id): void
+    {
+        Middleware::auth();
+        Middleware::csrf();
+        $user = Auth::user();
+
+        header('Content-Type: application/json');
+
+        $project = $this->getProject($id, $user['id']);
+        if (!$project) return;
+
+        $url = trim($_POST['url'] ?? '');
+        if (empty($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
+            echo json_encode(['error' => true, 'message' => 'URL non valida']);
+            return;
+        }
+
+        $scraper = new \Services\ScraperService();
+        $result = $scraper->fetchRaw($url, ['timeout' => 15]);
+
+        if (!empty($result['error'])) {
+            echo json_encode(['error' => true, 'message' => $result['message'] ?? 'Errore durante il fetch della pagina']);
+            return;
+        }
+
+        if (($result['http_code'] ?? 0) >= 400) {
+            echo json_encode(['error' => true, 'message' => 'La pagina ha restituito errore HTTP ' . $result['http_code']]);
+            return;
+        }
+
+        $html = $result['body'] ?? '';
+        $baseUrl = $result['final_url'] ?? $url;
+        $parsedBase = parse_url($baseUrl);
+        $origin = ($parsedBase['scheme'] ?? 'https') . '://' . ($parsedBase['host'] ?? '');
+
+        // Extract page title
+        $pageTitle = '';
+        if (preg_match('/<title[^>]*>(.*?)<\/title>/si', $html, $m)) {
+            $pageTitle = trim(html_entity_decode(strip_tags($m[1]), ENT_QUOTES, 'UTF-8'));
+            // Clean common suffixes: "Prodotto - NomeShop", "Prodotto | NomeShop"
+            $pageTitle = preg_replace('/\s*[\|\-–—]\s*[^|\-–—]+$/', '', $pageTitle);
+        }
+
+        $images = [];
+        $seenUrls = [];
+
+        // --- Source 1: JSON-LD Product schema ---
+        if (preg_match_all('/<script[^>]*type=["\']application\/ld\+json["\'][^>]*>(.*?)<\/script>/si', $html, $ldMatches)) {
+            foreach ($ldMatches[1] as $ldJson) {
+                $ld = json_decode(trim($ldJson), true);
+                if (!$ld) continue;
+
+                // Handle @graph wrapper
+                $items = [];
+                if (isset($ld['@graph'])) {
+                    $items = $ld['@graph'];
+                } else {
+                    $items = [$ld];
+                }
+
+                foreach ($items as $item) {
+                    if (($item['@type'] ?? '') !== 'Product') continue;
+                    $productImages = $item['image'] ?? [];
+                    if (is_string($productImages)) $productImages = [$productImages];
+                    foreach ($productImages as $imgUrl) {
+                        if (!is_string($imgUrl)) continue;
+                        $imgUrl = $this->resolveUrl($imgUrl, $origin, $baseUrl);
+                        if ($imgUrl && !isset($seenUrls[$imgUrl])) {
+                            $seenUrls[$imgUrl] = true;
+                            $images[] = ['src' => $imgUrl, 'alt' => $pageTitle, 'source' => 'json-ld', 'priority' => 'high'];
+                        }
+                    }
+                    // Also get name from JSON-LD if page title is empty
+                    if (empty($pageTitle) && !empty($item['name'])) {
+                        $pageTitle = $item['name'];
+                    }
+                }
+            }
+        }
+
+        // --- Source 2: Open Graph og:image ---
+        if (preg_match_all('/<meta[^>]+property=["\']og:image["\'][^>]*content=["\']([^"\']+)["\']/i', $html, $ogMatches)) {
+            foreach ($ogMatches[1] as $ogUrl) {
+                $ogUrl = $this->resolveUrl(html_entity_decode($ogUrl, ENT_QUOTES, 'UTF-8'), $origin, $baseUrl);
+                if ($ogUrl && !isset($seenUrls[$ogUrl])) {
+                    $seenUrls[$ogUrl] = true;
+                    $images[] = ['src' => $ogUrl, 'alt' => $pageTitle, 'source' => 'og', 'priority' => empty($images) ? 'high' : 'medium'];
+                }
+            }
+        }
+        // Reversed order: content before property
+        if (preg_match_all('/<meta[^>]+content=["\']([^"\']+)["\'][^>]*property=["\']og:image["\']/i', $html, $ogMatches2)) {
+            foreach ($ogMatches2[1] as $ogUrl) {
+                $ogUrl = $this->resolveUrl(html_entity_decode($ogUrl, ENT_QUOTES, 'UTF-8'), $origin, $baseUrl);
+                if ($ogUrl && !isset($seenUrls[$ogUrl])) {
+                    $seenUrls[$ogUrl] = true;
+                    $images[] = ['src' => $ogUrl, 'alt' => $pageTitle, 'source' => 'og', 'priority' => 'medium'];
+                }
+            }
+        }
+
+        // --- Source 3: <img> tags with data-src/srcset support ---
+        preg_match_all('/<img[^>]+>/i', $html, $imgTags);
+        $skipPatterns = '/favicon|logo|icon|pixel|track|badge|button|banner|sprite|placeholder|loading|spacer|blank\./i';
+
+        foreach ($imgTags[0] as $tag) {
+            // Try multiple src attributes in priority order
+            $src = '';
+            foreach (['data-src', 'data-lazy-src', 'data-original', 'src'] as $attr) {
+                if (preg_match('/' . $attr . '=["\']([^"\']+)["\']/i', $tag, $m)) {
+                    $candidate = trim($m[1]);
+                    // Skip data URIs and empty srcs
+                    if ($candidate && !str_starts_with($candidate, 'data:')) {
+                        $src = $candidate;
+                        break;
+                    }
+                }
+            }
+
+            // Try srcset (pick largest)
+            if (empty($src) && preg_match('/srcset=["\']([^"\']+)["\']/i', $tag, $m)) {
+                $srcsetParts = explode(',', $m[1]);
+                $bestW = 0;
+                foreach ($srcsetParts as $part) {
+                    $part = trim($part);
+                    if (preg_match('/^(\S+)\s+(\d+)w/', $part, $sw)) {
+                        if ((int)$sw[2] > $bestW) {
+                            $bestW = (int)$sw[2];
+                            $src = $sw[1];
+                        }
+                    }
+                }
+            }
+
+            if (empty($src)) continue;
+
+            // Filter out non-product images
+            if (preg_match($skipPatterns, $src)) continue;
+            if (preg_match('/\.(svg|gif)(\?|$)/i', $src)) continue;
+
+            // Skip tiny images by attribute
+            if (preg_match('/width=["\']?(\d+)/i', $tag, $wm) && (int)$wm[1] < 80) continue;
+            if (preg_match('/height=["\']?(\d+)/i', $tag, $hm) && (int)$hm[1] < 80) continue;
+
+            $src = $this->resolveUrl($src, $origin, $baseUrl);
+            if (!$src || isset($seenUrls[$src])) continue;
+            $seenUrls[$src] = true;
+
+            $alt = '';
+            if (preg_match('/alt=["\']([^"\']*?)["\']/i', $tag, $am)) {
+                $alt = html_entity_decode($am[1], ENT_QUOTES, 'UTF-8');
+            }
+
+            $images[] = ['src' => $src, 'alt' => $alt, 'source' => 'img', 'priority' => 'normal'];
+        }
+
+        // Limit to 20 images max
+        $images = array_slice($images, 0, 20);
+
+        // Download thumbnails server-side as base64 to avoid hotlink issues
+        foreach ($images as &$img) {
+            $img['thumb'] = $this->fetchThumbnailBase64($img['src']);
+        }
+        unset($img);
+
+        echo json_encode([
+            'success' => true,
+            'page_title' => $pageTitle,
+            'url' => $baseUrl,
+            'images' => $images,
+            'count' => count($images),
+        ]);
+    }
+
+    /**
+     * Resolve relative URL to absolute
+     */
+    private function resolveUrl(string $url, string $origin, string $baseUrl): string
+    {
+        $url = trim($url);
+        if (empty($url)) return '';
+
+        // Already absolute
+        if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
+            return $url;
+        }
+        // Protocol-relative
+        if (str_starts_with($url, '//')) {
+            return 'https:' . $url;
+        }
+        // Absolute path
+        if (str_starts_with($url, '/')) {
+            return $origin . $url;
+        }
+        // Relative path
+        $basePath = dirname(parse_url($baseUrl, PHP_URL_PATH) ?: '/');
+        return $origin . $basePath . '/' . $url;
+    }
+
+    /**
+     * Fetch image and return as base64 data URI for thumbnail preview.
+     * Returns empty string on failure.
+     */
+    private function fetchThumbnailBase64(string $url): string
+    {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 3,
+            CURLOPT_TIMEOUT => 5,
+            CURLOPT_HTTPHEADER => [
+                'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept: image/webp,image/apng,image/*,*/*;q=0.8',
+            ],
+        ]);
+        $data = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        curl_close($ch);
+
+        if (!$data || $httpCode !== 200 || strlen($data) < 100) return '';
+
+        // Validate it's actually an image
+        $mime = $contentType ?: 'image/jpeg';
+        if (!str_starts_with($mime, 'image/')) {
+            // Try detecting from content
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $detected = $finfo->buffer($data);
+            if (!$detected || !str_starts_with($detected, 'image/')) return '';
+            $mime = $detected;
+        }
+
+        // Cap at 500KB to avoid bloating the JSON response
+        if (strlen($data) > 500 * 1024) return '';
+
+        return 'data:' . $mime . ';base64,' . base64_encode($data);
+    }
+
+    /**
+     * Import from URL (single product)
+     */
+    private function importFromUrl(int $projectId, int $userId, ImageGenerationService $service): array
+    {
+        $imageUrl = trim($_POST['image_url'] ?? '');
+        $productUrl = trim($_POST['product_url'] ?? '');
+        $name = trim($_POST['product_name'] ?? '');
+        $sku = trim($_POST['sku'] ?? '');
+        $category = $_POST['category'] ?? 'fashion';
+
+        if (empty($imageUrl)) {
+            return ['inserted' => 0, 'errors' => ['Nessuna immagine selezionata']];
+        }
+        if (empty($name)) {
+            return ['inserted' => 0, 'errors' => ['Nome prodotto obbligatorio']];
+        }
+        if (!in_array($category, ['fashion', 'home', 'custom'])) {
+            $category = 'fashion';
+        }
+
+        $imageId = $this->image->create([
+            'project_id' => $projectId,
+            'user_id' => $userId,
+            'product_url' => $productUrl,
+            'product_name' => $name,
+            'sku' => $sku,
+            'category' => $category,
+            'source_image_url' => $imageUrl,
+            'source_type' => Image::SOURCE_URL,
+            'status' => Image::STATUS_PENDING,
+        ]);
+
+        $downloadResult = $service->downloadSourceImage($imageUrl, $imageId);
+        if ($downloadResult['success']) {
+            $this->image->update($imageId, [
+                'source_image_path' => $downloadResult['path'],
+                'status' => Image::STATUS_SOURCE_ACQUIRED,
+            ]);
+            return ['inserted' => 1, 'errors' => []];
+        }
+
+        $this->image->markError($imageId, $downloadResult['error']);
+        return ['inserted' => 0, 'errors' => [$name . ': ' . $downloadResult['error']]];
     }
 
     /**
