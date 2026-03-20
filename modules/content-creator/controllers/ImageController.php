@@ -16,6 +16,7 @@ use Modules\ContentCreator\Models\Connector;
 use Modules\ContentCreator\Services\ImageGenerationService;
 use Modules\ContentCreator\Services\Connectors\ImageCapableConnectorInterface;
 use Services\ProjectAccessService;
+use Services\SitemapService;
 
 /**
  * Controller per la gestione immagini nel Content Creator.
@@ -202,6 +203,12 @@ class ImageController
 
                 case 'url':
                     $result = $this->importFromUrl($id, $user['id'], $service);
+                    $inserted = $result['inserted'];
+                    $errors = $result['errors'];
+                    break;
+
+                case 'bulk':
+                    $result = $this->importBulk($id, $user['id'], $service);
                     $inserted = $result['inserted'];
                     $errors = $result['errors'];
                     break;
@@ -474,6 +481,38 @@ class ImageController
 
         $html = $result['body'] ?? '';
         $baseUrl = $result['final_url'] ?? $url;
+
+        $extracted = $this->extractImagesFromHtml($html, $baseUrl);
+        $images = $extracted['images'];
+        $pageTitle = $extracted['page_title'];
+
+        // Download thumbnails server-side as base64 to avoid hotlink issues
+        foreach ($images as &$img) {
+            $img['thumb'] = $this->fetchThumbnailBase64($img['src']);
+        }
+        unset($img);
+
+        echo json_encode([
+            'success' => true,
+            'page_title' => $pageTitle,
+            'url' => $baseUrl,
+            'images' => $images,
+            'count' => count($images),
+        ]);
+    }
+
+    /**
+     * Extract images from HTML page content.
+     *
+     * Parses 3 sources in priority order:
+     * 1. JSON-LD Product.image (structured data)
+     * 2. Open Graph og:image
+     * 3. <img> tags with data-src/srcset support
+     *
+     * @return array{images: array, page_title: string}
+     */
+    private function extractImagesFromHtml(string $html, string $baseUrl): array
+    {
         $parsedBase = parse_url($baseUrl);
         $origin = ($parsedBase['scheme'] ?? 'https') . '://' . ($parsedBase['host'] ?? '');
 
@@ -601,19 +640,302 @@ class ImageController
         // Limit to 20 images max
         $images = array_slice($images, 0, 20);
 
-        // Download thumbnails server-side as base64 to avoid hotlink issues
-        foreach ($images as &$img) {
-            $img['thumb'] = $this->fetchThumbnailBase64($img['src']);
-        }
-        unset($img);
+        return ['images' => $images, 'page_title' => $pageTitle];
+    }
 
+    /**
+     * Scrape immagini da piu URL prodotto in batch (AJAX lungo)
+     * POST /content-creator/projects/{id}/images/scrape-batch
+     *
+     * Riceve array di URL (max 20), per ciascuna estrae immagini.
+     * Ritorna best_image + all_images (max 5) per URL.
+     */
+    public function scrapeBatch(int $id): void
+    {
+        Middleware::auth();
+        Middleware::csrf();
+        $user = Auth::user();
+
+        $project = $this->getProject($id, $user['id']);
+        if (!$project) return;
+
+        $urlsJson = $_POST['urls'] ?? '[]';
+        $urls = json_decode($urlsJson, true);
+        if (!is_array($urls) || empty($urls)) {
+            header('Content-Type: application/json');
+            echo json_encode(['error' => true, 'message' => 'Nessuna URL fornita']);
+            return;
+        }
+
+        // Limit to 20 URLs
+        $urls = array_slice($urls, 0, 20);
+
+        ob_start();
+        header('Content-Type: application/json');
+        ignore_user_abort(true);
+        set_time_limit(300);
+        session_write_close();
+
+        $scraper = new \Services\ScraperService();
+        $results = [];
+
+        foreach ($urls as $url) {
+            $url = trim($url);
+            if (empty($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
+                $results[] = [
+                    'url' => $url,
+                    'page_title' => '',
+                    'best_image' => null,
+                    'all_images' => [],
+                    'error' => 'URL non valida',
+                ];
+                continue;
+            }
+
+            try {
+                $fetchResult = $scraper->fetchRaw($url, ['timeout' => 10]);
+
+                if (!empty($fetchResult['error']) || ($fetchResult['http_code'] ?? 0) >= 400) {
+                    $results[] = [
+                        'url' => $url,
+                        'page_title' => '',
+                        'best_image' => null,
+                        'all_images' => [],
+                        'error' => $fetchResult['message'] ?? ('HTTP ' . ($fetchResult['http_code'] ?? 'errore')),
+                    ];
+                    continue;
+                }
+
+                $html = $fetchResult['body'] ?? '';
+                $finalUrl = $fetchResult['final_url'] ?? $url;
+
+                $extracted = $this->extractImagesFromHtml($html, $finalUrl);
+                $images = $extracted['images'];
+                $pageTitle = $extracted['page_title'];
+
+                // Determine best image (first high priority, or first available)
+                $bestImage = null;
+                foreach ($images as $img) {
+                    if ($img['priority'] === 'high') {
+                        $bestImage = $img;
+                        break;
+                    }
+                }
+                if (!$bestImage && !empty($images)) {
+                    $bestImage = $images[0];
+                }
+
+                // Fetch thumbnail only for best image
+                if ($bestImage) {
+                    $bestImage['thumb'] = $this->fetchThumbnailBase64($bestImage['src']);
+                }
+
+                // Limit all_images to 5, with minimal data (no thumbs to save time)
+                $allImages = array_slice($images, 0, 5);
+                $allImages = array_map(function ($img) {
+                    return [
+                        'src' => $img['src'],
+                        'alt' => $img['alt'] ?? '',
+                        'source' => $img['source'],
+                        'priority' => $img['priority'],
+                    ];
+                }, $allImages);
+
+                $results[] = [
+                    'url' => $url,
+                    'page_title' => $pageTitle,
+                    'best_image' => $bestImage,
+                    'all_images' => $allImages,
+                    'error' => null,
+                ];
+            } catch (\Exception $e) {
+                $results[] = [
+                    'url' => $url,
+                    'page_title' => '',
+                    'best_image' => null,
+                    'all_images' => [],
+                    'error' => 'Errore: ' . $e->getMessage(),
+                ];
+            }
+        }
+
+        ob_end_clean();
         echo json_encode([
             'success' => true,
-            'page_title' => $pageTitle,
-            'url' => $baseUrl,
-            'images' => $images,
-            'count' => count($images),
+            'results' => $results,
         ]);
+        exit;
+    }
+
+    /**
+     * Scopri sitemap da un sito (AJAX)
+     * POST /content-creator/projects/{id}/images/discover-sitemap
+     *
+     * Pattern copiato da UrlController::discover()
+     */
+    public function discoverSitemap(int $id): void
+    {
+        Middleware::auth();
+        Middleware::csrf();
+        $user = Auth::user();
+
+        header('Content-Type: application/json');
+
+        $project = $this->getProject($id, $user['id']);
+        if (!$project) return;
+
+        $siteUrl = trim($_POST['site_url'] ?? '');
+
+        if (empty($siteUrl)) {
+            echo json_encode(['success' => false, 'error' => 'Inserisci URL del sito']);
+            return;
+        }
+
+        // Normalizza URL
+        if (!preg_match('#^https?://#', $siteUrl)) {
+            $siteUrl = 'https://' . $siteUrl;
+        }
+        $siteUrl = rtrim($siteUrl, '/');
+
+        if (!filter_var($siteUrl, FILTER_VALIDATE_URL)) {
+            echo json_encode(['success' => false, 'error' => 'URL non valido']);
+            return;
+        }
+
+        try {
+            $sitemapService = new SitemapService();
+            $sitemaps = $sitemapService->discoverFromRobotsTxt($siteUrl, true);
+
+            if (empty($sitemaps)) {
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Nessuna sitemap trovata. Verifica che il sito abbia una sitemap.',
+                ]);
+                return;
+            }
+
+            echo json_encode([
+                'success' => true,
+                'sitemaps' => $sitemaps,
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Errore durante la scoperta sitemap: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Estrai URL da sitemap selezionate (AJAX)
+     * POST /content-creator/projects/{id}/images/sitemap-urls
+     *
+     * Usa SitemapService::previewMultiple() per estrarre URL.
+     * Non importa nulla, ritorna solo la lista URL.
+     */
+    public function extractSitemapUrls(int $id): void
+    {
+        Middleware::auth();
+        Middleware::csrf();
+        $user = Auth::user();
+
+        header('Content-Type: application/json');
+
+        $project = $this->getProject($id, $user['id']);
+        if (!$project) return;
+
+        $sitemaps = $_POST['sitemaps'] ?? [];
+        if (is_string($sitemaps)) {
+            $sitemaps = json_decode($sitemaps, true) ?: [];
+        }
+        if (empty($sitemaps) || !is_array($sitemaps)) {
+            echo json_encode(['error' => true, 'message' => 'Nessuna sitemap selezionata']);
+            return;
+        }
+
+        $filter = trim($_POST['filter'] ?? '');
+        $maxUrls = max(1, min(500, (int) ($_POST['max_urls'] ?? 100)));
+
+        try {
+            $sitemapService = new SitemapService();
+            $result = $sitemapService->previewMultiple($sitemaps, $filter ?: null, $maxUrls);
+
+            echo json_encode([
+                'success' => true,
+                'urls' => $result['urls'] ?? [],
+                'total' => $result['total'] ?? 0,
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode([
+                'error' => true,
+                'message' => 'Errore estrazione URL: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Import bulk: crea record per N prodotti con le loro immagini
+     */
+    private function importBulk(int $projectId, int $userId, ImageGenerationService $service): array
+    {
+        $itemsJson = $_POST['items'] ?? '[]';
+        $items = json_decode($itemsJson, true);
+
+        if (!is_array($items) || empty($items)) {
+            return ['inserted' => 0, 'errors' => ['Nessun prodotto da importare']];
+        }
+
+        $inserted = 0;
+        $errors = [];
+
+        foreach ($items as $i => $item) {
+            $imageUrl = trim($item['image_url'] ?? '');
+            $productUrl = trim($item['url'] ?? '');
+            $name = trim($item['name'] ?? '');
+            $sku = trim($item['sku'] ?? '');
+            $category = $item['category'] ?? 'fashion';
+
+            if (empty($imageUrl) || empty($name)) {
+                $errors[] = "Riga " . ($i + 1) . ": URL immagine o nome mancante";
+                continue;
+            }
+
+            if (!in_array($category, ['fashion', 'home', 'custom'])) {
+                $category = 'fashion';
+            }
+
+            $imageId = $this->image->create([
+                'project_id' => $projectId,
+                'user_id' => $userId,
+                'product_url' => $productUrl,
+                'product_name' => $name,
+                'sku' => $sku,
+                'category' => $category,
+                'source_image_url' => $imageUrl,
+                'source_type' => Image::SOURCE_URL,
+                'status' => Image::STATUS_PENDING,
+            ]);
+
+            $downloadResult = $service->downloadSourceImage($imageUrl, $imageId);
+            if ($downloadResult['success']) {
+                $this->image->update($imageId, [
+                    'source_image_path' => $downloadResult['path'],
+                    'status' => Image::STATUS_SOURCE_ACQUIRED,
+                ]);
+            } else {
+                $this->image->markError($imageId, $downloadResult['error']);
+                $errors[] = "{$name}: " . $downloadResult['error'];
+            }
+
+            $inserted++;
+
+            // Reconnect every 5 downloads
+            if ($inserted % 5 === 0) {
+                Database::reconnect();
+            }
+        }
+
+        return ['inserted' => $inserted, 'errors' => $errors];
     }
 
     /**

@@ -365,6 +365,15 @@ Router::post('/content-creator/projects/{id}/images/fetch-cms', function ($id) {
 Router::post('/content-creator/projects/{id}/images/scrape-url', function ($id) {
     (new \Modules\ContentCreator\Controllers\ImageController())->scrapeImages((int) $id);
 });
+Router::post('/content-creator/projects/{id}/images/scrape-batch', function ($id) {
+    (new \Modules\ContentCreator\Controllers\ImageController())->scrapeBatch((int) $id);
+});
+Router::post('/content-creator/projects/{id}/images/discover-sitemap', function ($id) {
+    (new \Modules\ContentCreator\Controllers\ImageController())->discoverSitemap((int) $id);
+});
+Router::post('/content-creator/projects/{id}/images/sitemap-urls', function ($id) {
+    (new \Modules\ContentCreator\Controllers\ImageController())->extractSitemapUrls((int) $id);
+});
 
 // Image approve/reject/regenerate
 Router::post('/content-creator/projects/{id}/images/approve-bulk', function ($id) {
