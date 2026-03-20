@@ -198,69 +198,109 @@ $campaignTypeConfig = [
     <!-- ══════════════════════════════════════════════════════════════════ -->
     <!-- CAMPAIGNS PERFORMANCE TABLE                                       -->
     <!-- ══════════════════════════════════════════════════════════════════ -->
-    <?php if (!empty($campaignsPerformance ?? [])): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Campagne</h2>
-            <span class="text-xs text-slate-400 dark:text-slate-500"><?= count($campaignsPerformance) ?> campagne</span>
+    <?php if (!empty($campaignsPerformance ?? [])):
+        // Count campaigns per type for filter pills
+        $typeCounts = [];
+        foreach ($campaignsPerformance as $camp) {
+            $t = strtoupper($camp['type'] ?? 'SEARCH');
+            $typeCounts[$t] = ($typeCounts[$t] ?? 0) + 1;
+        }
+        $totalCampaigns = count($campaignsPerformance);
+        $initialFilter = strtoupper(trim($_GET['type'] ?? ''));
+        // Validate filter against existing types
+        if ($initialFilter && !isset($typeCounts[$initialFilter])) {
+            $initialFilter = '';
+        }
+    ?>
+    <div x-data="{ filterType: '<?= e($initialFilter) ?>' }">
+        <!-- Filter Pills -->
+        <?php if (count($typeCounts) > 1): ?>
+        <div class="flex flex-wrap items-center gap-2 mb-4">
+            <button @click="filterType = ''"
+                    class="px-3 py-1.5 text-xs font-medium rounded-full transition-colors"
+                    :class="filterType === ''
+                        ? 'bg-rose-600 text-white'
+                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50'">
+                Tutte (<?= $totalCampaigns ?>)
+            </button>
+            <?php foreach ($typeCounts as $typeKey => $typeCount):
+                $pillLabel = $campaignTypeConfig[$typeKey]['label'] ?? $typeKey;
+            ?>
+            <button @click="filterType = '<?= e($typeKey) ?>'"
+                    class="px-3 py-1.5 text-xs font-medium rounded-full transition-colors"
+                    :class="filterType === '<?= e($typeKey) ?>'
+                        ? 'bg-rose-600 text-white'
+                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50'">
+                <?= $pillLabel ?> (<?= $typeCount ?>)
+            </button>
+            <?php endforeach; ?>
         </div>
+        <?php endif; ?>
 
-        <div class="overflow-x-auto">
-            <table class="w-full divide-y divide-slate-200 dark:divide-slate-700">
-                <thead class="bg-slate-50 dark:bg-slate-700/50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Campagna</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Click</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">CTR</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Spesa</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Conv.</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Val. Conv.</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">ROAS</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">CPA</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                    <?php foreach ($campaignsPerformance as $camp):
-                        $type = strtoupper($camp['type'] ?? 'SEARCH');
-                        $typeConf = $campaignTypeConfig[$type] ?? $campaignTypeConfig['SEARCH'];
-                        $isEnabled = ($camp['status'] ?? '') === 'ENABLED';
-                        $cpa = ($camp['conversions'] > 0) ? $camp['cost'] / $camp['conversions'] : 0;
-                    ?>
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors <?= !$isEnabled ? 'opacity-50' : '' ?>">
-                        <td class="px-4 py-3">
-                            <div class="flex items-center gap-2">
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold <?= $typeConf['bg'] ?>"><?= $typeConf['label'] ?></span>
-                                <span class="text-sm font-medium text-slate-900 dark:text-white truncate max-w-[250px]" title="<?= e($camp['name']) ?>"><?= e($camp['name']) ?></span>
-                                <?php if (!$isEnabled): ?>
-                                <span class="text-[10px] text-slate-400 dark:text-slate-500">(<?= e(strtolower($camp['status'])) ?>)</span>
-                                <?php endif; ?>
-                            </div>
-                        </td>
-                        <td class="px-4 py-3 text-right text-sm font-medium text-slate-900 dark:text-white whitespace-nowrap">
-                            <?= number_format($camp['clicks']) ?>
-                        </td>
-                        <td class="px-4 py-3 text-right text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                            <?= number_format($camp['ctr'], 2) ?>%
-                        </td>
-                        <td class="px-4 py-3 text-right text-sm font-medium text-slate-900 dark:text-white whitespace-nowrap">
-                            <?= number_format($camp['cost'], 2, ',', '.') ?>&euro;
-                        </td>
-                        <td class="px-4 py-3 text-right text-sm whitespace-nowrap <?= $camp['conversions'] > 0 ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-slate-400 dark:text-slate-500' ?>">
-                            <?= $camp['conversions'] > 0 ? number_format($camp['conversions'], 1) : '-' ?>
-                        </td>
-                        <td class="px-4 py-3 text-right text-sm whitespace-nowrap <?= $camp['conversion_value'] > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500' ?>">
-                            <?= $camp['conversion_value'] > 0 ? number_format($camp['conversion_value'], 0, ',', '.') . '&euro;' : '-' ?>
-                        </td>
-                        <td class="px-4 py-3 text-right text-sm whitespace-nowrap <?= $camp['roas'] >= 3 ? 'text-emerald-600 dark:text-emerald-400 font-medium' : ($camp['roas'] > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500') ?>">
-                            <?= $camp['roas'] > 0 ? number_format($camp['roas'], 1) . 'x' : '-' ?>
-                        </td>
-                        <td class="px-4 py-3 text-right text-sm whitespace-nowrap <?= $cpa > 0 && $cpa < 20 ? 'text-emerald-600 dark:text-emerald-400' : ($cpa > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500') ?>">
-                            <?= $cpa > 0 ? number_format($cpa, 2, ',', '.') . '&euro;' : '-' ?>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Campagne</h2>
+                <span class="text-xs text-slate-400 dark:text-slate-500"><?= $totalCampaigns ?> campagne</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full divide-y divide-slate-200 dark:divide-slate-700">
+                    <thead class="bg-slate-50 dark:bg-slate-700/50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Campagna</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Click</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">CTR</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Spesa</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Conv.</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Val. Conv.</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">ROAS</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">CPA</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                        <?php foreach ($campaignsPerformance as $camp):
+                            $type = strtoupper($camp['type'] ?? 'SEARCH');
+                            $typeConf = $campaignTypeConfig[$type] ?? $campaignTypeConfig['SEARCH'];
+                            $isEnabled = ($camp['status'] ?? '') === 'ENABLED';
+                            $cpa = ($camp['conversions'] > 0) ? $camp['cost'] / $camp['conversions'] : 0;
+                        ?>
+                        <tr x-show="filterType === '' || filterType === '<?= e($type) ?>'"
+                            class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors <?= !$isEnabled ? 'opacity-50' : '' ?>">
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold <?= $typeConf['bg'] ?>"><?= $typeConf['label'] ?></span>
+                                    <span class="text-sm font-medium text-slate-900 dark:text-white truncate max-w-[250px]" title="<?= e($camp['name']) ?>"><?= e($camp['name']) ?></span>
+                                    <?php if (!$isEnabled): ?>
+                                    <span class="text-[10px] text-slate-400 dark:text-slate-500">(<?= e(strtolower($camp['status'])) ?>)</span>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-right text-sm font-medium text-slate-900 dark:text-white whitespace-nowrap">
+                                <?= number_format($camp['clicks']) ?>
+                            </td>
+                            <td class="px-4 py-3 text-right text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                                <?= number_format($camp['ctr'], 2) ?>%
+                            </td>
+                            <td class="px-4 py-3 text-right text-sm font-medium text-slate-900 dark:text-white whitespace-nowrap">
+                                <?= number_format($camp['cost'], 2, ',', '.') ?>&euro;
+                            </td>
+                            <td class="px-4 py-3 text-right text-sm whitespace-nowrap <?= $camp['conversions'] > 0 ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-slate-400 dark:text-slate-500' ?>">
+                                <?= $camp['conversions'] > 0 ? number_format($camp['conversions'], 1) : '-' ?>
+                            </td>
+                            <td class="px-4 py-3 text-right text-sm whitespace-nowrap <?= $camp['conversion_value'] > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500' ?>">
+                                <?= $camp['conversion_value'] > 0 ? number_format($camp['conversion_value'], 0, ',', '.') . '&euro;' : '-' ?>
+                            </td>
+                            <td class="px-4 py-3 text-right text-sm whitespace-nowrap <?= $camp['roas'] >= 3 ? 'text-emerald-600 dark:text-emerald-400 font-medium' : ($camp['roas'] > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500') ?>">
+                                <?= $camp['roas'] > 0 ? number_format($camp['roas'], 1) . 'x' : '-' ?>
+                            </td>
+                            <td class="px-4 py-3 text-right text-sm whitespace-nowrap <?= $cpa > 0 && $cpa < 20 ? 'text-emerald-600 dark:text-emerald-400' : ($cpa > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500') ?>">
+                                <?= $cpa > 0 ? number_format($cpa, 2, ',', '.') . '&euro;' : '-' ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
     <?php endif; ?>

@@ -180,6 +180,19 @@ class CampaignController
             unset($campPerf);
         }
 
+        // Group campaigns by type for dashboard grid
+        $campaignsByType = [];
+        foreach ($campaignsPerformance as $camp) {
+            $type = strtoupper($camp['campaign_type'] ?? $camp['type'] ?? 'SEARCH');
+            $campaignsByType[$type][] = $camp;
+        }
+        // Sort each type by cost DESC, limit to top 6
+        foreach ($campaignsByType as $type => &$camps) {
+            usort($camps, fn($a, $b) => ($b['cost'] ?? 0) <=> ($a['cost'] ?? 0));
+            $camps = array_slice($camps, 0, 6);
+        }
+        unset($camps);
+
         // Top waste search terms + stats per widget KW negative
         $topWasteTerms = [];
         $negativeStats = ['total_waste' => 0, 'waste_terms' => 0, 'total_terms' => 0];
@@ -230,6 +243,7 @@ class CampaignController
             'kpiDeltas' => $kpiDeltas,
             'kpiTrend' => $kpiTrend,
             'campaignsPerformance' => $campaignsPerformance,
+            'campaignsByType' => $campaignsByType,
             'topWasteTerms' => $topWasteTerms,
             'negativeStats' => $negativeStats,
             'totalAdGroups' => $totalAdGroups,
@@ -1267,6 +1281,12 @@ class CampaignController
                 }
             }
 
+            // Check if there are Search campaigns (for KW Negative tab in view)
+            $hasSearchCampaigns = !empty(array_filter(
+                $syncMetrics['campaigns'] ?? [],
+                fn($c) => strtoupper($c['campaign_type'] ?? '') === 'SEARCH'
+            ));
+
             // Product data per campaign (Shopping/PMax)
             $productDataByCampaign = [];
             if (!empty($productData)) {
@@ -1310,6 +1330,7 @@ class CampaignController
                 'assetPerfSummary' => $assetPerfSummary,
                 'lowAssetsByAg' => $lowAssetsByAg,
                 'productDataByCampaign' => $productDataByCampaign,
+                'hasSearchCampaigns' => $hasSearchCampaigns,
             ]);
         }
 

@@ -18,7 +18,6 @@ $tabs = [
     'dashboard'   => ['path' => '/campaign-dashboard', 'label' => 'Dashboard',      'icon' => 'chart-bar'],
     'connect'     => ['path' => '/connect',            'label' => 'Connessione',    'icon' => 'link'],
     'campaigns'   => ['path' => '/campaigns',          'label' => 'Campagne',        'icon' => 'presentation-chart-bar'],
-    'search-term-analysis' => ['path' => '/search-term-analysis', 'label' => 'Keyword Negative', 'icon' => 'funnel'],
     'settings'    => ['path' => '/edit',               'label' => 'Impostazioni',    'icon' => 'cog'],
 ];
 
@@ -29,7 +28,6 @@ function isActiveTabGa($tabKey, $currentPage) {
         'dashboard'   => ['dashboard', 'overview', 'campaign-dashboard'],
         'connect'     => ['connect'],
         'campaigns'   => ['campaigns', 'evaluation', 'evaluations'],
-        'search-term-analysis' => ['search-term-analysis'],
         'settings'    => ['settings', 'edit'],
     ];
     return in_array($currentPage, $aliases[$tabKey] ?? [$tabKey]);

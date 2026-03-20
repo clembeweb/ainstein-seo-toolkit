@@ -321,164 +321,81 @@ $cpa = ($totalConversions > 0) ? round($totalCost / $totalConversions, 2) : 0;
         <?php endforeach; ?>
     </div>
 
-    <!-- SEZIONE 4: Campagne Performance — Tabella espandibile 3 livelli -->
-    <?php if (!empty($campaignsPerformance)): ?>
-    <?php
-    $typeLabels = [
-        'SEARCH' => ['label' => 'Search', 'class' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'],
-        'PERFORMANCE_MAX' => ['label' => 'PMax', 'class' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300'],
-        'DISPLAY' => ['label' => 'Display', 'class' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'],
-        'SHOPPING' => ['label' => 'Shopping', 'class' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'],
-        'VIDEO' => ['label' => 'Video', 'class' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'],
-    ];
-    ?>
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden" x-data="{ expandedCampaign: null, expandedAdGroup: null }">
-        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Performance Campagne</h2>
-            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns') ?>" class="text-sm font-medium text-rose-600 dark:text-rose-400 hover:text-rose-700">
-                Vedi tutto
-                <svg class="w-4 h-4 ml-0.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-            </a>
+    <!-- SEZIONE 4: Performance Campagne per Tipo — Grid -->
+    <?php if (!empty($campaignsByType ?? [])): ?>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <?php
+        $typeOrder = ['SEARCH', 'PERFORMANCE_MAX', 'SHOPPING', 'DISPLAY', 'VIDEO'];
+        $typeLabelsGrid = ['SEARCH' => 'Search', 'PERFORMANCE_MAX' => 'PMax', 'SHOPPING' => 'Shopping', 'DISPLAY' => 'Display', 'VIDEO' => 'Video'];
+        $typeColors = [
+            'SEARCH' => 'blue',
+            'PERFORMANCE_MAX' => 'purple',
+            'SHOPPING' => 'amber',
+            'DISPLAY' => 'orange',
+            'VIDEO' => 'red',
+        ];
+        $singleType = count($campaignsByType) === 1;
+        ?>
+        <?php foreach ($typeOrder as $type): ?>
+        <?php if (!isset($campaignsByType[$type])) continue; ?>
+        <?php
+        $typeCamps = $campaignsByType[$type];
+        $color = $typeColors[$type] ?? 'slate';
+        $label = $typeLabelsGrid[$type] ?? $type;
+        ?>
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden <?= $singleType ? 'lg:col-span-2' : '' ?>">
+            <div class="px-5 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-<?= $color ?>-100 text-<?= $color ?>-700 dark:bg-<?= $color ?>-900/50 dark:text-<?= $color ?>-300"><?= $label ?></span>
+                    <span class="text-sm font-semibold text-slate-900 dark:text-white"><?= count($typeCamps) ?> campagn<?= count($typeCamps) === 1 ? 'a' : 'e' ?></span>
+                </div>
+                <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/campaigns?type=' . strtolower($type)) ?>"
+                   class="text-xs text-rose-600 hover:text-rose-700 dark:text-rose-400 font-medium">
+                    Vedi tutte &rarr;
+                </a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-50 dark:bg-slate-700/50">
+                            <th class="px-4 py-3 text-left">Campagna</th>
+                            <th class="px-4 py-3 text-right">Click</th>
+                            <th class="px-4 py-3 text-right">CTR</th>
+                            <th class="px-4 py-3 text-right">Spesa</th>
+                            <th class="px-4 py-3 text-right">Conv.</th>
+                            <th class="px-4 py-3 text-right">ROAS</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                        <?php foreach ($typeCamps as $camp): ?>
+                        <?php
+                        $cCost = (float)($camp['cost'] ?? 0);
+                        $cConv = (float)($camp['conversions'] ?? 0);
+                        $cConvValue = (float)($camp['conversion_value'] ?? 0);
+                        $cRoas = $cCost > 0 ? $cConvValue / $cCost : 0;
+                        $campName = $camp['campaign_name'] ?? $camp['name'] ?? '';
+                        ?>
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                            <td class="px-4 py-3">
+                                <div class="font-medium text-slate-900 dark:text-white truncate max-w-[200px]" title="<?= e($campName) ?>"><?= e(mb_strimwidth($campName, 0, 35, '...')) ?></div>
+                            </td>
+                            <td class="px-4 py-3 text-right text-slate-700 dark:text-slate-300"><?= number_format((int)($camp['clicks'] ?? 0), 0, ',', '.') ?></td>
+                            <td class="px-4 py-3 text-right text-slate-700 dark:text-slate-300"><?= number_format((float)($camp['ctr'] ?? 0), 2, ',', '.') ?>%</td>
+                            <td class="px-4 py-3 text-right text-slate-700 dark:text-slate-300"><?= number_format($cCost, 2, ',', '.') ?> &euro;</td>
+                            <td class="px-4 py-3 text-right text-slate-700 dark:text-slate-300"><?= number_format($cConv, 0, ',', '.') ?></td>
+                            <td class="px-4 py-3 text-right font-medium <?php
+                                if ($cRoas >= 4) echo 'text-emerald-600 dark:text-emerald-400';
+                                elseif ($cRoas >= 2) echo 'text-amber-600 dark:text-amber-400';
+                                elseif ($cCost > 0) echo 'text-red-600 dark:text-red-400';
+                                else echo 'text-slate-400';
+                            ?>"><?= $cCost > 0 ? number_format($cRoas, 2, ',', '.') . 'x' : '-' ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="dark:bg-slate-700/50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Campagna / Ad Group / Annuncio</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Click</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">CTR</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Spesa</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Conv.</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">ROAS</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">CPA</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                    <?php foreach ($campaignsPerformance as $ci => $camp): ?>
-                    <?php
-                    $typeInfo = $typeLabels[$camp['type']] ?? ['label' => $camp['type'], 'class' => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'];
-                    $hasAdGroups = !empty($camp['ad_groups']);
-                    ?>
-                    <!-- Livello 1: Campagna -->
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors <?= $hasAdGroups ? 'cursor-pointer' : '' ?>"
-                        <?php if ($hasAdGroups): ?>
-                        @click="expandedCampaign = expandedCampaign === <?= $ci ?> ? null : <?= $ci ?>; expandedAdGroup = null"
-                        <?php endif; ?>>
-                        <td class="px-4 py-3">
-                            <div class="flex items-center gap-2">
-                                <?php if ($hasAdGroups): ?>
-                                <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0" :class="expandedCampaign === <?= $ci ?> ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                </svg>
-                                <?php else: ?>
-                                <span class="w-4"></span>
-                                <?php endif; ?>
-                                <?php if (($camp['status'] ?? '') === 'PAUSED'): ?>
-                                <span class="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" title="In pausa"></span>
-                                <?php elseif (($camp['status'] ?? '') === 'ENABLED'): ?>
-                                <span class="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" title="Attiva"></span>
-                                <?php else: ?>
-                                <span class="w-2 h-2 rounded-full bg-slate-400 flex-shrink-0"></span>
-                                <?php endif; ?>
-                                <span class="text-sm font-medium text-slate-900 dark:text-white truncate max-w-[200px]"><?= e($camp['name']) ?></span>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $typeInfo['class'] ?>"><?= $typeInfo['label'] ?></span>
-                                <?php if ($hasAdGroups): ?>
-                                <span class="text-xs text-slate-400 dark:text-slate-500"><?= count($camp['ad_groups']) ?> ad group</span>
-                                <?php endif; ?>
-                            </div>
-                        </td>
-                        <td class="px-4 py-3 text-right text-sm font-medium text-slate-900 dark:text-white"><?= number_format($camp['clicks']) ?></td>
-                        <td class="px-4 py-3 text-right text-sm font-medium <?= $camp['ctr'] < 1 ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white' ?>"><?= number_format($camp['ctr'], 2) ?>%</td>
-                        <td class="px-4 py-3 text-right text-sm font-medium text-slate-900 dark:text-white"><?= number_format($camp['cost'], 2) ?>&euro;</td>
-                        <td class="px-4 py-3 text-right text-sm font-medium text-slate-900 dark:text-white"><?= number_format($camp['conversions'], 1) ?></td>
-                        <td class="px-4 py-3 text-right text-sm font-medium <?= $camp['roas'] >= 3 ? 'text-emerald-600 dark:text-emerald-400' : ($camp['roas'] > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400') ?>">
-                            <?= $camp['roas'] > 0 ? number_format($camp['roas'], 2) . 'x' : '-' ?>
-                        </td>
-                        <td class="px-4 py-3 text-right text-sm font-medium <?= ($camp['cpa'] > 0 && $totalConversions > 0 && $camp['cpa'] > ($totalCost / $totalConversions) * 1.5) ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white' ?>">
-                            <?= $camp['cpa'] > 0 ? number_format($camp['cpa'], 2) . '&euro;' : '-' ?>
-                        </td>
-                    </tr>
-
-                    <!-- Livello 2: Ad Groups -->
-                    <?php if ($hasAdGroups): ?>
-                    <?php foreach ($camp['ad_groups'] as $agi => $ag): ?>
-                    <?php
-                    $hasAds = !empty($ag['ads']);
-                    $agKey = $ci . '_' . $agi;
-                    ?>
-                    <tr x-show="expandedCampaign === <?= $ci ?>" x-cloak
-                        class="bg-slate-50/50 dark:bg-slate-700/20 hover:bg-slate-100/50 dark:hover:bg-slate-700/30 transition-colors <?= $hasAds ? 'cursor-pointer' : '' ?>"
-                        <?php if ($hasAds): ?>
-                        @click.stop="expandedAdGroup = expandedAdGroup === '<?= $agKey ?>' ? null : '<?= $agKey ?>'"
-                        <?php endif; ?>>
-                        <td class="px-4 py-2.5">
-                            <div class="flex items-center gap-2 pl-6">
-                                <?php if ($hasAds): ?>
-                                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform flex-shrink-0" :class="expandedAdGroup === '<?= $agKey ?>' ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                </svg>
-                                <?php else: ?>
-                                <span class="w-3.5"></span>
-                                <?php endif; ?>
-                                <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                                </svg>
-                                <span class="text-sm text-slate-700 dark:text-slate-300"><?= e($ag['name']) ?></span>
-                                <span class="text-xs text-slate-400 dark:text-slate-500"><?= $ag['kw_count'] ?> kw</span>
-                            </div>
-                        </td>
-                        <td class="px-4 py-2.5 text-right text-sm text-slate-600 dark:text-slate-400"><?= number_format($ag['clicks']) ?></td>
-                        <td class="px-4 py-2.5 text-right text-sm <?= $ag['ctr'] < 1 && $ag['clicks'] > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-400' ?>"><?= number_format($ag['ctr'], 2) ?>%</td>
-                        <td class="px-4 py-2.5 text-right text-sm text-slate-600 dark:text-slate-400"><?= number_format($ag['cost'], 2) ?>&euro;</td>
-                        <td class="px-4 py-2.5 text-right text-sm text-slate-600 dark:text-slate-400"><?= number_format($ag['conversions'], 1) ?></td>
-                        <td class="px-4 py-2.5 text-right text-sm text-slate-400">-</td>
-                        <td class="px-4 py-2.5 text-right text-sm <?= ($ag['cpa'] > 0 && $totalConversions > 0 && $ag['cpa'] > ($totalCost / $totalConversions) * 1.5) ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-400' ?>">
-                            <?= $ag['cpa'] > 0 ? number_format($ag['cpa'], 2) . '&euro;' : '-' ?>
-                        </td>
-                    </tr>
-
-                    <!-- Livello 3: Annunci -->
-                    <?php if ($hasAds): ?>
-                    <?php foreach ($ag['ads'] as $ad): ?>
-                    <tr x-show="expandedCampaign === <?= $ci ?> && expandedAdGroup === '<?= $agKey ?>'" x-cloak
-                        class="bg-slate-100/50 dark:bg-slate-700/10 transition-colors">
-                        <td class="px-4 py-2" colspan="1">
-                            <div class="pl-14">
-                                <div class="flex items-center gap-1.5">
-                                    <svg class="w-3 h-3 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                    </svg>
-                                    <span class="text-xs font-medium text-rose-700 dark:text-rose-400"><?= e($ad['headline1']) ?></span>
-                                    <?php if ($ad['headline2']): ?>
-                                    <span class="text-xs text-slate-400">|</span>
-                                    <span class="text-xs text-slate-600 dark:text-slate-400"><?= e($ad['headline2']) ?></span>
-                                    <?php endif; ?>
-                                </div>
-                                <?php if ($ad['description1']): ?>
-                                <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate max-w-md"><?= e($ad['description1']) ?></p>
-                                <?php endif; ?>
-                                <?php if ($ad['final_url']): ?>
-                                <p class="text-xs text-emerald-600 dark:text-emerald-400 truncate max-w-xs"><?= e(parse_url($ad['final_url'], PHP_URL_HOST) . parse_url($ad['final_url'], PHP_URL_PATH)) ?></p>
-                                <?php endif; ?>
-                            </div>
-                        </td>
-                        <td class="px-4 py-2 text-right text-xs text-slate-500 dark:text-slate-500"><?= number_format($ad['clicks']) ?></td>
-                        <td class="px-4 py-2 text-right text-xs <?= $ad['ctr'] < 1 && $ad['clicks'] > 0 ? 'text-red-500' : 'text-slate-500 dark:text-slate-500' ?>"><?= number_format($ad['ctr'], 2) ?>%</td>
-                        <td class="px-4 py-2 text-right text-xs text-slate-500 dark:text-slate-500"><?= number_format($ad['cost'], 2) ?>&euro;</td>
-                        <td class="px-4 py-2 text-right text-xs text-slate-500 dark:text-slate-500">-</td>
-                        <td class="px-4 py-2 text-right text-xs text-slate-400">-</td>
-                        <td class="px-4 py-2 text-right text-xs text-slate-400">-</td>
-                    </tr>
-                    <?php endforeach; ?>
-                    <?php endif; ?>
-                    <?php endforeach; ?>
-                    <?php endif; ?>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
+        <?php endforeach; ?>
     </div>
     <?php endif; ?>
 
@@ -497,7 +414,7 @@ $cpa = ($totalConversions > 0) ? round($totalCost / $totalConversions, 2) : 0;
                     <h2 class="text-base font-semibold text-slate-900 dark:text-white">Spreco Budget</h2>
                 </div>
                 <?php if (!empty($topWasteTerms)): ?>
-                <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/negative-keywords') ?>" class="text-sm font-medium text-rose-600 dark:text-rose-400 hover:text-rose-700">
+                <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/search-term-analysis') ?>" class="text-sm font-medium text-rose-600 dark:text-rose-400 hover:text-rose-700">
                     Analisi completa
                 </a>
                 <?php endif; ?>
