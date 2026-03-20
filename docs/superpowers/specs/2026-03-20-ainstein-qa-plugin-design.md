@@ -1,6 +1,6 @@
 # Design Spec: Plugin ainstein-qa — QA Tester Agents
 
-> Data: 2026-03-20 | Stato: Approvato | Rev: 2 (post code review)
+> Data: 2026-03-20 | Stato: Approvato | Rev: 3 (post analisi critica)
 
 ## Obiettivo
 
@@ -99,7 +99,10 @@ model: sonnet
 color: "{colore specifico per agente}"
 tools: ["Read", "Write", "Glob", "Grep", "Bash",
         "mcp__plugin_playwright_playwright__browser_navigate",
+        "mcp__plugin_playwright_playwright__browser_navigate_back",
         "mcp__plugin_playwright_playwright__browser_click",
+        "mcp__plugin_playwright_playwright__browser_hover",
+        "mcp__plugin_playwright_playwright__browser_type",
         "mcp__plugin_playwright_playwright__browser_fill_form",
         "mcp__plugin_playwright_playwright__browser_take_screenshot",
         "mcp__plugin_playwright_playwright__browser_snapshot",
@@ -107,7 +110,10 @@ tools: ["Read", "Write", "Glob", "Grep", "Bash",
         "mcp__plugin_playwright_playwright__browser_select_option",
         "mcp__plugin_playwright_playwright__browser_wait_for",
         "mcp__plugin_playwright_playwright__browser_evaluate",
+        "mcp__plugin_playwright_playwright__browser_handle_dialog",
+        "mcp__plugin_playwright_playwright__browser_resize",
         "mcp__plugin_playwright_playwright__browser_tabs",
+        "mcp__plugin_playwright_playwright__browser_close",
         "mcp__plugin_playwright_playwright__browser_console_messages",
         "mcp__plugin_playwright_playwright__browser_network_requests"]
 ```
@@ -166,16 +172,19 @@ description: >
 
 **Ruolo**: Lancia il pattern auditor, poi dispatcha gli 8 agenti QA in batch da 2, infine consolida `_index.md`.
 
-**Meccanismo di dispatch**: L'orchestratore usa il tool `Agent` con parametro `run_in_background: true` per lanciare 2 agenti in parallelo. Attende la notifica di completamento di entrambi prima di lanciare il batch successivo. Ogni agente e invocato con `subagent_type` corrispondente al nome dell'agente nel plugin.
+**Meccanismo di dispatch**: L'orchestratore usa il tool `Agent` in foreground per lanciare un agente alla volta. Ogni agente viene invocato con `subagent_type` corrispondente al nome dell'agente nel plugin. Esecuzione sequenziale obbligatoria perche il server Playwright MCP e un'istanza singola — agenti paralleli si pesterebbero i piedi sullo stesso browser.
 
 **Flusso**:
-1. Lancia `pattern-auditor` in foreground (Agent tool, `run_in_background: false`), attende completamento
-2. Batch 1: `luca-platform-ux` + `francesca-admin` — 2 Agent tool calls con `run_in_background: true` nello stesso messaggio
-3. Attende notifica completamento di entrambi
-4. Batch 2: `marco-seo-audit` + `giulia-ads-analyzer` — stesso pattern
-5. Batch 3: `alessia-seo-tracking` + `lorenzo-keyword-research`
-6. Batch 4: `sara-content-creator` + `davide-ai-content`
-7. Legge tutti i file `qa-reviews/*/YYYY-MM-DD.md`, gestendo:
+1. Lancia `pattern-auditor` in foreground, attende completamento
+2. Lancia `luca-platform-ux` in foreground, attende completamento
+3. Lancia `francesca-admin` in foreground, attende completamento
+4. Lancia `marco-seo-audit` in foreground, attende completamento
+5. Lancia `giulia-ads-analyzer` in foreground, attende completamento
+6. Lancia `alessia-seo-tracking` in foreground, attende completamento
+7. Lancia `lorenzo-keyword-research` in foreground, attende completamento
+8. Lancia `sara-content-creator` in foreground, attende completamento
+9. Lancia `davide-ai-content` in foreground, attende completamento
+10. Legge tutti i file `qa-reviews/*/YYYY-MM-DD.md`, gestendo:
    - File mancanti: agente crashato → segna "NON COMPLETATO" nell'indice
    - File parziali (senza sezione `## Scoring`): agente interrotto → segna "PARZIALE"
    - File di date precedenti: ignora, usa solo la data corrente
@@ -214,8 +223,12 @@ description: >
 
 Ogni agente segue lo stesso flusso in 5 step:
 
+**Step 0 — Carica Skill**
+- Fa `Read` del file `skills/platform-standards/SKILL.md` dal plugin (le skill non vengono caricate automaticamente negli agenti dispatchiati)
+- Estrae credenziali, pattern da verificare, rubrica scoring
+
 **Step 1 — Login**
-- Legge credenziali dalla skill `platform-standards` (non hardcoded nell'agente)
+- Usa credenziali lette dalla skill
 - Naviga a `https://ainstein.it/login`
 - Compila email/password
 - Verifica login riuscito (presenza sidebar)
@@ -255,7 +268,14 @@ Ogni agente segue lo stesso flusso in 5 step:
 **Step 5 — Genera Piano Fix**
 - Crea directory `qa-reviews/{area}/` se non esiste
 - Scrive `qa-reviews/{area}/YYYY-MM-DD.md` con formato standard (sotto)
-- Salva screenshot in `qa-reviews/screenshots/`
+- Salva screenshot in `qa-reviews/screenshots/` con prefisso area: `{area}-{pagina}.png` (es. `sa-dashboard.png`, `ga-campaigns.png`) per evitare collisioni
+
+#### Dati Esistenti Non Garantiti
+
+Se in produzione un modulo non ha progetti con dati, l'agente deve:
+1. Segnalare "Nessun progetto con dati trovato" nel report
+2. Valutare solo le pagine raggiungibili (dashboard vuota, landing page, form)
+3. Dare scoring parziale (solo criteri valutabili) con nota "Score basato su analisi limitata"
 
 #### Error Handling Globale
 
@@ -527,7 +547,7 @@ Data: {YYYY-MM-DD} | Agenti: {N}/8 completati
 - **Modello agenti QA**: Sonnet (necessario per analisi visiva screenshot)
 - **Modello pattern auditor**: Haiku (solo analisi codice, no visual)
 - **Modello orchestratore**: Sonnet (coordina, legge, scrive)
-- **Concorrenza**: max 2 agenti Playwright in parallelo (limiti VPS CPX22: 2 vCPU, 4GB RAM)
+- **Concorrenza**: sequenziale (1 agente alla volta) — il server Playwright MCP e un'istanza singola condivisa, agenti paralleli colliderebbero sullo stesso browser
 - **Dati produzione**: politica esplicita read-only (vedi tabella in sezione 2c)
 - **Screenshot**: salvati in `qa-reviews/screenshots/`, directory in `.gitignore`
 - **Autonomia**: nessun agente chiede mai conferma all'utente. Tutti fire-and-forget.
