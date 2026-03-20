@@ -545,7 +545,7 @@ class ImageController
 
         // --- Source 3: <img> tags with data-src/srcset support ---
         preg_match_all('/<img[^>]+>/i', $html, $imgTags);
-        $skipPatterns = '/favicon|logo|icon|pixel|track|badge|button|banner|sprite|placeholder|loading|spacer|blank\./i';
+        $skipPatterns = '/favicon|logo|icon|pixel|track|badge|button|banner|sprite|placeholder|loading|spacer|blank\.|flag|country|lang[-_]|locale|payment|visa|mastercard|paypal|social|facebook|twitter|instagram|youtube|whatsapp|telegram|pinterest|tiktok|linkedin/i';
 
         foreach ($imgTags[0] as $tag) {
             // Try multiple src attributes in priority order
@@ -626,19 +626,28 @@ class ImageController
 
         // Already absolute
         if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
-            return $url;
+            return $this->encodeUrlSpaces($url);
         }
         // Protocol-relative
         if (str_starts_with($url, '//')) {
-            return 'https:' . $url;
+            return $this->encodeUrlSpaces('https:' . $url);
         }
         // Absolute path
         if (str_starts_with($url, '/')) {
-            return $origin . $url;
+            return $this->encodeUrlSpaces($origin . $url);
         }
         // Relative path
         $basePath = dirname(parse_url($baseUrl, PHP_URL_PATH) ?: '/');
-        return $origin . $basePath . '/' . $url;
+        return $this->encodeUrlSpaces($origin . $basePath . '/' . $url);
+    }
+
+    /**
+     * Encode spaces in URL path (common in product image URLs)
+     */
+    private function encodeUrlSpaces(string $url): string
+    {
+        // Only encode spaces — don't touch already-encoded URLs
+        return str_replace(' ', '%20', $url);
     }
 
     /**
@@ -677,6 +686,10 @@ class ImageController
 
         // Cap at 500KB to avoid bloating the JSON response
         if (strlen($data) > 500 * 1024) return '';
+
+        // Check actual image dimensions — skip tiny images (icons, flags, badges)
+        $imageInfo = @getimagesizefromstring($data);
+        if ($imageInfo && ($imageInfo[0] < 80 || $imageInfo[1] < 80)) return '';
 
         return 'data:' . $mime . ';base64,' . base64_encode($data);
     }
