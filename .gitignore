@@ -71,3 +71,6 @@ file-grafici/
 /*cookies*.txt
 /headers.txt
 /3.0
+
+# QA Review screenshots (local only)
+qa-reviews/screenshots/
