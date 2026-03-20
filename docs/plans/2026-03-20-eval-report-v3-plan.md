@@ -69,7 +69,34 @@ $metrics = $row['metrics'] ?? [];
 
 **NOTA CRITICA**: Aggiungere `segments.date DURING LAST_30_DAYS` perche le metriche richiedono un segmento data. Senza, la query fallisce con errore GAQL. Le righe saranno per-giorno, serve aggregare per asset ID.
 
-La struttura cambia: le estensioni avranno righe multiple (una per giorno). Serve aggregare:
+**RISCHIO API**: `campaign_asset` potrebbe NON supportare `metrics.*`. Wrappare la nuova GAQL in try/catch: se fallisce, usare la query originale senza metrics (estensioni restano a 0 impr, non bloccante per il redesign).
+
+```php
+// Prima provare con metrics
+try {
+    $gaqlWithMetrics = $gaql; // la nuova con metrics
+    $response = $this->gadsService->searchStream($gaqlWithMetrics);
+    $rows = $this->extractRows($response);
+    $hasMetrics = true;
+} catch (\Exception $e) {
+    // Fallback: query senza metrics
+    Logger::channel('ads')->warning('Extension metrics not supported, falling back', [
+        'error' => $e->getMessage()
+    ]);
+    $gaqlFallback = "SELECT asset.id, asset.name, asset.type, asset.resource_name, " .
+                    "asset.callout_asset.callout_text, " .
+                    "asset.sitelink_asset.link_text, asset.sitelink_asset.description1, asset.sitelink_asset.description2, " .
+                    "asset.structured_snippet_asset.header, asset.structured_snippet_asset.values, " .
+                    "asset.image_asset.file_size, " .
+                    "campaign_asset.status, campaign.id, campaign.status " .
+                    "FROM campaign_asset WHERE campaign.status = 'ENABLED'";
+    $response = $this->gadsService->searchStream($gaqlFallback);
+    $rows = $this->extractRows($response);
+    $hasMetrics = false;
+}
+```
+
+Se `$hasMetrics = true`, le righe saranno per-giorno. Serve aggregare:
 
 ```php
 // Dopo extractRows, aggregare per asset_id + campaign_id
@@ -614,7 +641,48 @@ usort($viewCampaigns, function($a, $b) use ($typeOrder) {
 </div>
 ```
 
-**DECISIONE SORT**: Per v3, l'ordinamento e server-side (PHP `usort` nello step precedente). Il dropdown sort Alpine e predisposto ma il reorder DOM richiede `x-for` + template dinamico che complica il codice. Se richiesto: implementare in v3.1 con array JSON + x-for.
+**SORT CLIENT-SIDE**: L'ordinamento funziona cosi:
+1. PHP genera tutti gli accordion nascosti (con `data-idx`, `data-cost`, `data-score`, `data-roas`, `data-name`, `data-type`)
+2. Alpine mantiene un array ordinato di indici
+3. Il container usa CSS `order` per riordinare senza ricreare DOM
+
+```html
+<?php foreach ($viewCampaigns as $idx => $camp): ?>
+<div x-ref="camp_<?= $idx ?>"
+     data-idx="<?= $idx ?>"
+     data-cost="<?= (float)($camp['cost'] ?? 0) ?>"
+     data-score="<?= (float)($camp['ai_score'] ?? 0) ?>"
+     data-roas="<?= (float)($camp['roas'] ?? 0) ?>"
+     data-name="<?= e($camp['campaign_name'] ?? '') ?>"
+     data-type="<?= strtolower($camp['campaign_type'] ?? '') ?>"
+     x-show="filterType==='all' || filterType===($el.dataset.type==='performance_max'?'pmax':$el.dataset.type)"
+     :style="'order:' + (sortedOrder.indexOf(<?= $idx ?>) >= 0 ? sortedOrder.indexOf(<?= $idx ?>) : <?= $idx ?>)">
+  <!-- accordion content -->
+</div>
+<?php endforeach; ?>
+```
+
+Alpine.js sortedOrder computed:
+```javascript
+get sortedOrder() {
+    const items = Array.from(document.querySelectorAll('[data-idx]')).map(el => ({
+        idx: parseInt(el.dataset.idx),
+        cost: parseFloat(el.dataset.cost),
+        score: parseFloat(el.dataset.score),
+        roas: parseFloat(el.dataset.roas),
+        name: el.dataset.name,
+    }));
+    const sortFn = {
+        spend: (a,b) => b.cost - a.cost,
+        score: (a,b) => b.score - a.score,
+        roas: (a,b) => b.roas - a.roas,
+        name: (a,b) => a.name.localeCompare(b.name),
+    };
+    return items.sort(sortFn[this.sortBy] || sortFn.spend).map(i => i.idx);
+}
+```
+
+Il container deve avere `display: flex; flex-direction: column;` per far funzionare CSS `order`.
 
 - [ ] **Step 5: Implementare accordion campagna**
 
@@ -814,6 +882,64 @@ php -l modules/ads-analyzer/views/campaigns/partials/report-extensions-section.p
 git add modules/ads-analyzer/views/campaigns/partials/
 git commit -m "feat(ads-analyzer): rewrite campaign table partials — 3 type-specific sections + extensions"
 ```
+
+---
+
+### Task 7b: Fix campaigns_filter bug nel Controller evaluate()
+
+**Files:**
+- Modify: `modules/ads-analyzer/controllers/CampaignController.php:688-698`
+
+Bug critico: il `campaigns_filter` viene salvato nel DB ma NON usato per filtrare i dati passati all'AI evaluator. Se l'utente seleziona 2 campagne su 94, l'AI valuta tutte le 94.
+
+- [ ] **Step 1: Filtrare campagne dopo il caricamento**
+
+Dopo riga 698 (caricamento `$campaigns`), aggiungere filtro:
+
+```php
+// Filtra campagne per campaigns_filter (se selezionate dall'utente)
+if (!empty($campaignsFilter)) {
+    $campaigns = array_values(array_filter($campaigns, function($c) use ($campaignsFilter) {
+        return in_array($c['campaign_id_google'] ?? '', $campaignsFilter);
+    }));
+}
+```
+
+Fare lo stesso per `$adGroupsData` (filtrare per campaign_id delle campagne selezionate):
+```php
+if (!empty($campaignsFilter)) {
+    $selectedCampIds = array_column($campaigns, 'campaign_id_google');
+    $adGroupsData = array_values(array_filter($adGroupsData, function($ag) use ($selectedCampIds) {
+        return in_array($ag['campaign_id_google'] ?? '', $selectedCampIds);
+    }));
+}
+```
+
+- [ ] **Step 2: Verificare e commit**
+
+```bash
+php -l modules/ads-analyzer/controllers/CampaignController.php
+git add modules/ads-analyzer/controllers/CampaignController.php
+git commit -m "fix(ads-analyzer): apply campaigns_filter to data passed to AI evaluator"
+```
+
+---
+
+### Task 7c: Backward Compatibility e Note Implementative
+
+**Note per l'implementatore** (nessun file da modificare, solo checklist):
+
+- [ ] **Step 1: Verificare backward compat**
+
+Il check `$evaluation['schema_version']` esiste gia in `evaluationShow()` (circa riga 1153-1160). Le evaluation con `schema_version = 1` rendono con la vecchia view. Le evaluation `schema_version = 2` rendono con `evaluation-v2.php`. NON creare schema_version 3 — la struttura AI response e la stessa, cambia solo il layout view.
+
+- [ ] **Step 2: Verificare che "Genera Brief" per media funzioni**
+
+Il bottone "Genera Brief" per asset media (LOGO, VIDEO, IMAGE) usa `fix_type: replace_asset`. Il prompt `buildReplaceAssetPrompt()` gia gestisce asset non-testuali restituendo suggerimenti di brief creativo (non genera media). Verificare che il bottone chiami `generateFix('replace_asset', ...)` con il contesto giusto e che il risultato inline mostri il brief testuale.
+
+- [ ] **Step 3: Verificare che report-optimizations.php NON sia incluso**
+
+In v3, le ottimizzazioni sono inline negli accordion (bottoni "Genera" per campagna). Il partial `report-optimizations.php` (che ha un bug JS noto) NON deve essere incluso nella nuova view. Verificare che `evaluation-v2.php` non abbia `include 'report-optimizations.php'`.
 
 ---
 
