@@ -537,12 +537,15 @@ function evalScoreBadgeClass(float $score): string {
         </div>
     </div>
 
-    <!-- SECTION: Negative KW Summary -->
-    <?php if (!empty($negativeSummary)): ?>
+    <!-- SECTION: Keyword Negative (solo per campagne Search) -->
+    <?php if ($hasSearchCampaigns ?? false): ?>
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <?php if (!empty($negativeSummary)): ?>
+        <!-- Risultati analisi disponibili -->
         <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div class="flex-1">
                 <h2 class="text-base font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                    <!-- Heroicon: funnel -->
                     <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"/>
                     </svg>
@@ -582,6 +585,7 @@ function evalScoreBadgeClass(float $score): string {
                     <?php endif; ?>
                     <?php if ($appliedCount > 0): ?>
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+                        <!-- Heroicon: check -->
                         <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
                         </svg>
@@ -597,12 +601,38 @@ function evalScoreBadgeClass(float $score): string {
 
             <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/search-term-analysis') ?>"
                class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-rose-600 text-white hover:bg-rose-700 transition-colors flex-shrink-0">
+                <!-- Heroicon: arrow-top-right-on-square -->
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/>
                 </svg>
-                Analisi Termini
+                Analisi Completa
             </a>
         </div>
+        <?php else: ?>
+        <!-- Nessuna analisi — CTA per lanciare -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex-1">
+                <h2 class="text-base font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                    <!-- Heroicon: funnel -->
+                    <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"/>
+                    </svg>
+                    Keyword Negative
+                </h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400">
+                    Analizza i termini di ricerca delle campagne Search per trovare keyword negative da aggiungere e ridurre lo spreco budget.
+                </p>
+            </div>
+            <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/search-term-analysis') ?>"
+               class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-rose-600 text-white hover:bg-rose-700 transition-colors flex-shrink-0">
+                <!-- Heroicon: magnifying-glass -->
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+                </svg>
+                Analizza Termini
+            </a>
+        </div>
+        <?php endif; ?>
     </div>
     <?php endif; ?>
 
