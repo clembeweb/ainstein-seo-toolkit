@@ -1186,6 +1186,11 @@ class CampaignSyncService
      */
     private function syncAudienceSignals(string $campaignIdGoogle): void
     {
+        Logger::channel('ads')->info('PMax audience signals: starting fetch', [
+            'campaign_id' => $campaignIdGoogle,
+            'sync_id' => $this->syncId,
+        ]);
+
         $gaql = "SELECT asset_group.id, " .
                 "asset_group_signal.audience, " .
                 "asset_group_signal.search_theme " .
@@ -1201,9 +1206,15 @@ class CampaignSyncService
             Logger::channel('ads')->warning('PMax audience signals fetch failed', [
                 'campaign_id' => $campaignIdGoogle,
                 'error' => $e->getMessage(),
+                'error_class' => get_class($e),
             ]);
             return;
         }
+
+        Logger::channel('ads')->info('PMax audience signals: rows fetched', [
+            'campaign_id' => $campaignIdGoogle,
+            'row_count' => count($rows),
+        ]);
 
         if (empty($rows)) return;
 
@@ -1261,6 +1272,11 @@ class CampaignSyncService
             return;
         }
 
+        Logger::channel('ads')->info('Product performance: starting fetch', [
+            'sync_id' => $this->syncId,
+            'project_id' => $this->projectId,
+        ]);
+
         $gaql = "SELECT " .
                 "segments.product_item_id, segments.product_title, segments.product_brand, " .
                 "segments.product_bidding_category_level1, segments.product_type_l1, " .
@@ -1273,8 +1289,23 @@ class CampaignSyncService
                 "ORDER BY metrics.cost_micros DESC " .
                 "LIMIT 200";
 
-        $response = $this->gadsService->searchStream($gaql);
-        $rows = $this->extractRows($response);
+        try {
+            $response = $this->gadsService->searchStream($gaql);
+            $rows = $this->extractRows($response);
+        } catch (\Exception $e) {
+            Logger::channel('ads')->warning('Product performance fetch failed', [
+                'sync_id' => $this->syncId,
+                'project_id' => $this->projectId,
+                'error' => $e->getMessage(),
+                'error_class' => get_class($e),
+            ]);
+            return;
+        }
+
+        Logger::channel('ads')->info('Product performance: rows fetched', [
+            'row_count' => count($rows),
+            'sync_id' => $this->syncId,
+        ]);
 
         if (empty($rows)) {
             Logger::channel('ads')->info('Product performance sync: no data returned', [
