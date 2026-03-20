@@ -1,6 +1,6 @@
 # Design Spec: Plugin ainstein-qa — QA Tester Agents
 
-> Data: 2026-03-20 | Stato: Approvato
+> Data: 2026-03-20 | Stato: Approvato | Rev: 2 (post code review)
 
 ## Obiettivo
 
@@ -9,7 +9,7 @@ Creare un plugin Claude Code separato (`ainstein-qa`) con agenti autonomi che si
 ## Requisiti
 
 - **Autonomia totale**: nessuna conferma utente durante l'esecuzione. Fire-and-forget.
-- **Test su produzione**: `https://ainstein.it`, login con `admin@seo-toolkit.local` / `admin123`
+- **Test su produzione**: `https://ainstein.it` (credenziali centralizzate nella skill, non duplicate negli agenti)
 - **3 livelli di analisi**: review UX/UI visiva, test funzionali dei workflow, verifica conformita pattern piattaforma
 - **Output operativo**: piani fix/redesign con issue categorizzate, file coinvolti, fix proposti, checkbox per tracking esecuzione
 - **Scoring consistente**: rubrica condivisa tra tutti gli agenti
@@ -44,12 +44,14 @@ Creare un plugin Claude Code separato (`ainstein-qa`) con agenti autonomi che si
 │   └── qa-pattern-sync.md              # /qa-pattern-sync
 ├── skills/
 │   └── platform-standards/
-│       └── SKILL.md                    # pattern verificati + rubrica scoring
+│       └── SKILL.md                    # pattern verificati + rubrica scoring + credenziali
 └── hooks/
-    └── hooks.json                      # (minimo o vuoto)
+    └── hooks.json                      # (vuoto)
 ```
 
 ### Output Directory
+
+Posizione: `C:\laragon\www\seo-toolkit\qa-reviews\` (project root, non dentro il plugin).
 
 ```
 qa-reviews/
@@ -94,7 +96,8 @@ qa-reviews/
 
 ```yaml
 model: sonnet
-tools: ["Read", "Write", "Glob", "Grep", "Bash", "Agent",
+color: "{colore specifico per agente}"
+tools: ["Read", "Write", "Glob", "Grep", "Bash",
         "mcp__plugin_playwright_playwright__browser_navigate",
         "mcp__plugin_playwright_playwright__browser_click",
         "mcp__plugin_playwright_playwright__browser_fill_form",
@@ -109,10 +112,24 @@ tools: ["Read", "Write", "Glob", "Grep", "Bash", "Agent",
         "mcp__plugin_playwright_playwright__browser_network_requests"]
 ```
 
+Colori per agente:
+
+| Agente | Colore |
+|--------|--------|
+| marco-seo-audit | green |
+| giulia-ads-analyzer | red |
+| alessia-seo-tracking | blue |
+| lorenzo-keyword-research | purple |
+| sara-content-creator | cyan |
+| davide-ai-content | yellow |
+| francesca-admin | magenta |
+| luca-platform-ux | white |
+
 #### Pattern Auditor
 
 ```yaml
 model: haiku
+color: orange
 tools: ["Read", "Write", "Glob", "Grep"]
 ```
 
@@ -122,10 +139,26 @@ Non usa Playwright. Scansiona solo codice.
 
 ```yaml
 model: sonnet
+color: blue
 tools: ["Read", "Write", "Glob", "Grep", "Agent"]
 ```
 
 Non usa Playwright direttamente. Dispatcha gli altri agenti.
+
+#### Campo `description` — Obbligatorio per ogni agente
+
+Ogni agente deve avere un campo `description` con trigger conditions e almeno un `<example>` block per il routing. Formato:
+
+```yaml
+description: >
+  Use this agent when {trigger condition}.
+
+  <example>
+  Context: {scenario}
+  user: "{richiesta tipica}"
+  assistant: "I'll use the {nome} agent to {azione}."
+  </example>
+```
 
 ---
 
@@ -133,17 +166,24 @@ Non usa Playwright direttamente. Dispatcha gli altri agenti.
 
 **Ruolo**: Lancia il pattern auditor, poi dispatcha gli 8 agenti QA in batch da 2, infine consolida `_index.md`.
 
+**Meccanismo di dispatch**: L'orchestratore usa il tool `Agent` con parametro `run_in_background: true` per lanciare 2 agenti in parallelo. Attende la notifica di completamento di entrambi prima di lanciare il batch successivo. Ogni agente e invocato con `subagent_type` corrispondente al nome dell'agente nel plugin.
+
 **Flusso**:
-1. Lancia `pattern-auditor` in foreground, attende completamento
-2. Batch 1: `luca-platform-ux` + `francesca-admin` (in parallelo, background)
-3. Batch 2: `marco-seo-audit` + `giulia-ads-analyzer`
-4. Batch 3: `alessia-seo-tracking` + `lorenzo-keyword-research`
-5. Batch 4: `sara-content-creator` + `davide-ai-content`
-6. Legge tutti i file `qa-reviews/*/YYYY-MM-DD.md`
-7. Genera `qa-reviews/_index.md` con:
+1. Lancia `pattern-auditor` in foreground (Agent tool, `run_in_background: false`), attende completamento
+2. Batch 1: `luca-platform-ux` + `francesca-admin` — 2 Agent tool calls con `run_in_background: true` nello stesso messaggio
+3. Attende notifica completamento di entrambi
+4. Batch 2: `marco-seo-audit` + `giulia-ads-analyzer` — stesso pattern
+5. Batch 3: `alessia-seo-tracking` + `lorenzo-keyword-research`
+6. Batch 4: `sara-content-creator` + `davide-ai-content`
+7. Legge tutti i file `qa-reviews/*/YYYY-MM-DD.md`, gestendo:
+   - File mancanti: agente crashato → segna "NON COMPLETATO" nell'indice
+   - File parziali (senza sezione `## Scoring`): agente interrotto → segna "PARZIALE"
+   - File di date precedenti: ignora, usa solo la data corrente
+8. Genera `qa-reviews/_index.md` con:
    - Classifica per score (dal peggiore al migliore)
    - Conteggio issue per severita per area
    - Priorita esecuzione suggerita
+   - Sezione "Agenti falliti" se qualcuno non ha completato
 
 **Requisito hard**: Zero interazione utente. L'orchestratore non chiede mai conferme, approvazioni, o input. Fire-and-forget dall'inizio alla fine.
 
@@ -168,31 +208,38 @@ Non usa Playwright direttamente. Dispatcha gli altri agenti.
    - Pattern controller (return, $user, ecc.)
    - Drift trovati (moduli non conformi con file:riga)
    - Rubrica scoring aggiornata
+   - Credenziali test centralizzate (URL, email, password)
 
 #### 2c. Agenti QA Tester — Struttura Comune
 
 Ogni agente segue lo stesso flusso in 5 step:
 
 **Step 1 — Login**
+- Legge credenziali dalla skill `platform-standards` (non hardcoded nell'agente)
 - Naviga a `https://ainstein.it/login`
-- Compila email/password con credenziali test
+- Compila email/password
 - Verifica login riuscito (presenza sidebar)
+- **Se login fallisce**: scrive report con errore "Login fallito: {motivo}", score 0/10, zero issue. Non prosegue.
 
 **Step 2 — Review UX/UI**
 - Naviga ogni pagina principale dell'area assegnata
 - Per ogni pagina: screenshot + snapshot DOM
+- Analizza anche `browser_network_requests` per richieste fallite, endpoint lenti, errori console
 - Analisi critica dal punto di vista della persona:
   - Layout e gerarchia visiva
   - Leggibilita e chiarezza informazioni
   - Coerenza con il resto della piattaforma
   - Primo impatto: l'utente capisce cosa fare?
   - Valore aggiunto: questa pagina serve davvero?
+- **Se una pagina restituisce errore (500, 404, timeout)**: logga come issue CRITICO tipo "Funzionale", continua con la pagina successiva. Non interrompere il flusso.
 
 **Step 3 — Test Funzionali**
 - Esegue i workflow critici del modulo (specifici per agente)
 - Verifica che i flussi completino senza errori
 - Controlla messaggi di errore, loading states, feedback utente
-- Nota: NON crea/modifica dati di produzione se evitabile. Preferisce navigare progetti/dati esistenti.
+- Controlla `browser_console_messages` per errori JS
+- **Politica dati produzione** (vedi sezione dedicata sotto)
+- **Se un workflow fallisce a meta**: logga come issue CRITICO con screenshot dello stato al momento del fallimento, continua con il workflow successivo.
 
 **Step 4 — Verifica Pattern**
 - Legge la skill `platform-standards` per i pattern correnti
@@ -210,70 +257,123 @@ Ogni agente segue lo stesso flusso in 5 step:
 - Scrive `qa-reviews/{area}/YYYY-MM-DD.md` con formato standard (sotto)
 - Salva screenshot in `qa-reviews/screenshots/`
 
+#### Error Handling Globale
+
+Se un agente incontra un errore imprevisto a qualsiasi step:
+1. Logga l'errore con contesto (step, pagina, azione tentata)
+2. Continua con lo step/pagina/workflow successivo
+3. Nel report finale, marca le sezioni non testate come `[NON TESTATO] — {motivo}`
+4. Il report viene scritto comunque (anche se parziale) — un report parziale e meglio di nessun report
+
+#### Politica Dati Produzione
+
+| Azione | Permessa | Note |
+|--------|----------|------|
+| Navigare pagine esistenti | Si | Azione primaria |
+| Aprire progetti esistenti | Si | Usare dati gia presenti |
+| Cliccare bottoni di navigazione | Si | Tab, accordion, filtri |
+| Compilare form senza submit | Si | Per testare validazione |
+| Creare nuovi progetti | NO | Inquina dati prod |
+| Lanciare crawl/sync/analisi | NO | Consuma crediti/risorse |
+| Modificare dati esistenti | NO | Rischio corruzione |
+| Cancellare dati | NO | Ovvio |
+| Testare export (CSV/PDF) | Si | Read-only, non modifica nulla |
+
+Se un workflow critico richiede creazione dati per essere testato, l'agente deve:
+1. Documentare che il test e stato **saltato** per policy dati prod
+2. Valutare il workflow dalla UX visibile (form, layout, feedback) senza eseguirlo
+3. Segnalare come issue se il workflow non e testabile senza creare dati
+
 #### 2d. Personas e Aree Specifiche
 
 **Marco — SEO Audit** (`marco-seo-audit.md`)
 - Persona: SEO Specialist Tecnico, 5 anni exp, gestisce 15-20 siti
 - Pain point: "Gli audit mi danno 200 issue ma non mi dicono da dove partire"
 - Pagine: dashboard audit, import URLs, crawl progress, pages list, page detail, issues list, issue category, crawl budget, links/orphans, AI report, action plan, export, history
-- Workflow critici: import sitemap → crawl → issues → action plan → export
+- Workflow critici: navigazione completa progetto esistente; review issues e categorizzazione; action plan; export CSV
 
 **Giulia — Ads Analyzer** (`giulia-ads-analyzer.md`)
 - Persona: PPC Manager, gestisce 500k+/anno budget, vive in Google Ads Editor
 - Pain point: "Voglio sapere QUALI keyword, PERCHE, e cosa scrivere al posto"
 - Pagine: dashboard campagne, lista campagne, sync detail, evaluation detail, search term analysis, keyword negative results, campaign creator wizard, export
-- Workflow critici: sync → evaluate → review suggestions; search term → analyze → negative keywords; campaign creator wizard completo
+- Workflow critici: navigazione campagne e sync esistenti; review evaluation e suggerimenti; review keyword negative; navigazione campaign creator
 
 **Alessia — SEO Tracking** (`alessia-seo-tracking.md`)
 - Persona: SEO Manager in-house, e-commerce 5000 prodotti, reporta al CMO
 - Pain point: "Passo 2 giorni al mese a fare report"
 - Pagine: dashboard, keywords list, keyword detail, trend, groups, quick wins, page analyzer, reports, GSC data, export
-- Workflow critici: add keywords → rank check → trend; GSC sync → report generation; page analyzer
+- Workflow critici: navigazione keywords e trend; review report esistenti; navigazione GSC data; export
 
 **Lorenzo — Keyword Research** (`lorenzo-keyword-research.md`)
 - Persona: Content Strategist freelance, cerca alternative economiche a Semrush
 - Pain point: "Mi servono cluster con intent chiari, non 5000 keyword in un CSV"
 - Pagine: dashboard 4 modalita, research wizard (collection → analysis → results), architecture wizard, editorial wizard, quick check
-- Workflow critici: research guidata completa; architettura sito; piano editoriale; quick check; export cross-module
+- Workflow critici: navigazione risultati ricerche esistenti; review clustering; quick check (free, no crediti); navigazione piano editoriale
 
 **Sara — Content Creator** (`sara-content-creator.md`)
 - Persona: Content Manager e-commerce Shopify, 800 SKU, 20+ contenuti/mese
 - Pain point: "I contenuti AI sono tutti uguali e generici"
 - Pagine: project dashboard, import (CSV/sitemap/CMS/manual), results, URL detail editor, image library, image detail, connectors, push/publish progress, export
-- Workflow critici: import URLs → scrape → generate → edit → approve → publish; image generation; CMS connector test
+- Workflow critici: navigazione progetto e risultati esistenti; review editor contenuti; navigazione connettori; export
 
 **Davide — AI Content Generator** (`davide-ai-content.md`)
 - Persona: Digital Marketing Manager agenzia, 25 clienti, scala produzione articoli
 - Pain point: "Ho bisogno di 50 articoli/mese per 10 clienti"
-- Pagine: dashboard 3 modalita, projects list, manual keywords → wizard (brief → article → cover), auto queue → process, meta-tags import → scrape → generate → publish, internal links pool, WordPress integration, articles list/editor
-- Workflow critici: wizard completo (keyword → brief → article → cover); auto-mode batch; meta-tags flow; WordPress publish
+- Pagine: dashboard 3 modalita, projects list, manual keywords → wizard, auto queue, meta-tags, internal links pool, WordPress integration, articles list/editor
+- Workflow critici: navigazione progetti e articoli esistenti; review wizard UX; review auto-mode queue; review editor articolo
 
 **Francesca — Admin** (`francesca-admin.md`)
 - Persona: CTO web agency, gestisce il team su Ainstein
 - Pain point: "Se devo andare in SSH per capire se un job e bloccato, il pannello admin non sta facendo il suo lavoro"
 - Pagine: admin dashboard, utenti (lista, dettaglio, piani), gestione piani/pricing, crediti, moduli (attiva/disattiva, settings per modulo), AI logs, API logs, jobs monitor, email templates (lista, editor, preview, test), settings globali (branding, SMTP), finance dashboard
-- Workflow critici: navigazione completa admin; modifica settings modulo; gestione email template (edit → preview → test send); review logs; review jobs bloccati
+- Workflow critici: navigazione completa admin; review logs (AI + API); review jobs monitor; navigazione email templates; review finance dashboard
 
 **Luca — Platform UX** (`luca-platform-ux.md`)
 - Persona: Freelance SEO al primo accesso, non conosce la piattaforma
 - Pain point: "Se non capisco cosa fare nei primi 2 minuti, chiudo e vado su Semrush"
 - Pagine: homepage/landing, login/register, onboarding primo accesso, sidebar navigazione (responsive, accordion, stati attivi), hub progetti (lista, crea, dashboard progetto), attivazione moduli da progetto, condivisione progetti (inviti, ruoli, accettazione), notifiche (bell, lista, preferenze), profilo utente + preferenze email, pagina crediti/piani, documentazione utente (/docs), connettori CMS
-- Workflow critici: primo accesso → onboarding → crea progetto → attiva modulo; navigazione sidebar tutti i moduli; condivisione progetto; gestione notifiche; consultazione docs
+- Workflow critici: navigazione completa sidebar; hub progetti; navigazione notifiche; review documentazione; navigazione profilo e preferenze
 
 ### 3. Comandi
 
 #### /qa-review {area}
 
-Lancia un singolo agente QA sull'area specificata.
+```yaml
+---
+description: "Lancia un agente QA su un'area specifica della piattaforma Ainstein"
+allowed-tools: Read, Glob, Grep, Bash, Write, Agent
+---
+```
 
 Valori accettati per `{area}`: `seo-audit`, `ads-analyzer`, `seo-tracking`, `keyword-research`, `content-creator`, `ai-content`, `admin`, `platform`
 
 Il comando:
-1. Risolve l'area al nome agente corrispondente
-2. Dispatcha l'agente con Agent tool
-3. L'agente esegue autonomamente e produce il fix-plan
+1. Verifica che la skill `platform-standards` esista e non sia vuota. Se mancante o vuota, avvisa nel report: "Attenzione: pattern non sincronizzati. Eseguire /qa-pattern-sync prima per risultati migliori."
+2. Risolve l'area al nome agente corrispondente
+3. Dispatcha l'agente con Agent tool
+4. L'agente esegue autonomamente e produce il fix-plan
+
+Mapping area → agente:
+
+| Area | Agente |
+|------|--------|
+| seo-audit | marco-seo-audit |
+| ads-analyzer | giulia-ads-analyzer |
+| seo-tracking | alessia-seo-tracking |
+| keyword-research | lorenzo-keyword-research |
+| content-creator | sara-content-creator |
+| ai-content | davide-ai-content |
+| admin | francesca-admin |
+| platform | luca-platform-ux |
 
 #### /qa-review-all
+
+```yaml
+---
+description: "Lancia tutti gli agenti QA in sequenza batch e produce indice globale"
+allowed-tools: Read, Glob, Grep, Bash, Write, Agent
+---
+```
 
 Lancia l'orchestratore che esegue tutto il flusso:
 1. Pattern sync
@@ -283,6 +383,13 @@ Lancia l'orchestratore che esegue tutto il flusso:
 Zero interazione richiesta.
 
 #### /qa-pattern-sync
+
+```yaml
+---
+description: "Sincronizza la skill platform-standards con lo stato attuale del codebase"
+allowed-tools: Read, Glob, Grep, Write
+---
+```
 
 Lancia solo il pattern auditor per aggiornare la skill `platform-standards` senza fare review.
 
@@ -294,8 +401,13 @@ Contenuto gestito dal pattern-auditor. Struttura:
 ---
 name: platform-standards
 description: "Pattern UI/UX e coding standard verificati della piattaforma Ainstein.
-  Usata dagli agenti QA per verificare conformita."
+  Usata dagli agenti QA per verificare conformita. Include credenziali test e rubrica scoring."
 ---
+
+## Credenziali Test
+- URL: https://ainstein.it
+- Email: admin@seo-toolkit.local
+- Password: admin123
 
 ## Standard CSS Tabelle
 {classi verificate dal codebase con esempi}
@@ -378,6 +490,9 @@ comprerebbe il tool? perche si/no?}
 ### [ALTO] #2 — ...
 ...
 
+## Sezioni Non Testate
+{Lista di pagine/workflow non testati con motivo: errore, policy dati prod, timeout}
+
 ## Nota per l'Esecuzione
 {Eventuali dipendenze tra fix, ordine suggerito, rischi}
 ```
@@ -386,7 +501,7 @@ comprerebbe il tool? perche si/no?}
 
 ```markdown
 # QA Reviews — Indice Globale
-Data: {YYYY-MM-DD} | Agenti: 8/8 completati
+Data: {YYYY-MM-DD} | Agenti: {N}/8 completati
 
 ## Classifica per Score (dal peggiore al migliore)
 
@@ -394,6 +509,9 @@ Data: {YYYY-MM-DD} | Agenti: 8/8 completati
 |---|------|-------|---------|------|------|-------|--------|
 | 1 | seo-tracking | 5.8/10 | 4 | 6 | 10 | 3 | 23 |
 | 2 | ... | ... | ... | ... | ... | ... | ... |
+
+## Agenti Non Completati
+{Lista agenti falliti/parziali con motivo, se presenti}
 
 ## Priorita Esecuzione Suggerita
 1. **seo-tracking** — 4 critici, score piu basso
@@ -409,7 +527,8 @@ Data: {YYYY-MM-DD} | Agenti: 8/8 completati
 - **Modello agenti QA**: Sonnet (necessario per analisi visiva screenshot)
 - **Modello pattern auditor**: Haiku (solo analisi codice, no visual)
 - **Modello orchestratore**: Sonnet (coordina, legge, scrive)
-- **Concorrenza**: max 2 agenti Playwright in parallelo (limiti VPS CPX22)
-- **Dati produzione**: gli agenti navigano e leggono ma evitano di creare/modificare dati dove possibile. Preferiscono progetti/dati esistenti.
+- **Concorrenza**: max 2 agenti Playwright in parallelo (limiti VPS CPX22: 2 vCPU, 4GB RAM)
+- **Dati produzione**: politica esplicita read-only (vedi tabella in sezione 2c)
 - **Screenshot**: salvati in `qa-reviews/screenshots/`, directory in `.gitignore`
 - **Autonomia**: nessun agente chiede mai conferma all'utente. Tutti fire-and-forget.
+- **Error recovery**: ogni agente continua al prossimo step/pagina su errore, report scritto comunque
