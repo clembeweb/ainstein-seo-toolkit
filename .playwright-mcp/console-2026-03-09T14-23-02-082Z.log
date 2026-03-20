@@ -1,0 +1,7 @@
+[     561ms] Uncaught TypeError: Cannot read properties of null (reading 'setAttribute')
+    at 91387 (https://sibforms.com/forms/end-form/build/main.js:1:25476)
+    at n (https://sibforms.com/forms/end-form/build/main.js:1:426177)
+    at <anonymous> (https://sibforms.com/forms/end-form/build/main.js:1:426673)
+    at <anonymous> (https://sibforms.com/forms/end-form/build/main.js:1:426755)
+[     927ms] [WARNING] Fallback to JQueryUI Compat activated. Your store is missing a dependency for a jQueryUI widget. Identifying and addressing the dependency will drastically improve the performance of your site. @ https://www.tuttobatterie.com/static/version1772619853/frontend/Smartwave/porto_child/it_IT/jquery/compat.js:42
+[    1882ms] [WARNING] carouselWrapper is not initialized yet. @ https://integrations.etrusted.com/applications/review-carousel-service-widget/v1:1

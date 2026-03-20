@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ainstein Google Ads Analyzer - API Tool Design Document</title>
+    <style>
+        @page { margin: 2cm; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+            font-size: 11pt;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #1a73e8;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #1a73e8;
+            font-size: 22pt;
+            margin-bottom: 5px;
+        }
+        .header .subtitle {
+            color: #5f6368;
+            font-size: 13pt;
+        }
+        .header .meta {
+            color: #80868b;
+            font-size: 10pt;
+            margin-top: 10px;
+        }
+        h2 {
+            color: #1a73e8;
+            font-size: 14pt;
+            border-bottom: 1px solid #dadce0;
+            padding-bottom: 8px;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #202124;
+            font-size: 12pt;
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 10pt;
+        }
+        th, td {
+            border: 1px solid #dadce0;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f1f3f4;
+            font-weight: 600;
+            color: #202124;
+        }
+        .highlight-box {
+            background: #e8f0fe;
+            border-left: 4px solid #1a73e8;
+            padding: 12px 16px;
+            margin: 15px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        code {
+            background: #f1f3f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10pt;
+            font-family: 'Consolas', monospace;
+        }
+        .flow-diagram {
+            background: #fafafa;
+            border: 1px solid #dadce0;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            text-align: center;
+            font-family: monospace;
+            font-size: 10pt;
+            line-height: 1.8;
+        }
+        ul { margin: 8px 0; }
+        li { margin: 4px 0; }
+        .page-break { page-break-before: always; }
+        .toc { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .toc a { color: #1a73e8; text-decoration: none; }
+        .toc li { margin: 6px 0; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Ainstein - Google Ads Analyzer</h1>
+    <div class="subtitle">API Tool Design Document</div>
+    <div class="meta">
+        Beweb Agency &bull; Version 1.0 &bull; March 2026<br>
+        Website: <a href="https://ainstein.it">https://ainstein.it</a> &bull; MCC ID: 284-349-6968
+    </div>
+</div>
+
+<div class="toc">
+    <strong>Table of Contents</strong>
+    <ol>
+        <li><a href="#overview">Company & Product Overview</a></li>
+        <li><a href="#use-case">Use Case & Business Need</a></li>
+        <li><a href="#architecture">Tool Architecture</a></li>
+        <li><a href="#api-usage">Google Ads API Usage</a></li>
+        <li><a href="#user-flow">User Flow</a></li>
+        <li><a href="#data-handling">Data Handling & Security</a></li>
+        <li><a href="#rate-limiting">Rate Limiting & Compliance</a></li>
+        <li><a href="#oauth">OAuth & Authentication</a></li>
+    </ol>
+</div>
+
+<!-- SECTION 1 -->
+<h2 id="overview">1. Company & Product Overview</h2>
+
+<h3>1.1 Company Information</h3>
+<table>
+    <tr><th>Field</th><th>Detail</th></tr>
+    <tr><td>Company Name</td><td>Beweb Agency</td></tr>
+    <tr><td>Product Name</td><td>Ainstein SEO Toolkit</td></tr>
+    <tr><td>Website</td><td><a href="https://ainstein.it">https://ainstein.it</a></td></tr>
+    <tr><td>MCC Account ID</td><td>284-349-6968</td></tr>
+    <tr><td>Developer Token</td><td>oChCo-54qVQFIRwGUhudcQ</td></tr>
+    <tr><td>Contact Email</td><td>info@ainstein.it</td></tr>
+    <tr><td>Company Type</td><td>SaaS Platform / Digital Marketing Agency</td></tr>
+</table>
+
+<h3>1.2 Product Description</h3>
+<p>
+    <strong>Ainstein</strong> is an AI-powered SaaS platform that provides professional SEO and Google Ads management tools
+    to digital marketing agencies, freelance PPC specialists, and in-house marketing teams. The platform is a modular
+    toolkit where one of the key modules is the <strong>Google Ads Analyzer</strong>.
+</p>
+<p>
+    The Google Ads Analyzer module enables users to:
+</p>
+<ul>
+    <li>Analyze Google Ads campaign structures and performance metrics across all campaign types</li>
+    <li>Extract negative keywords using AI-powered analysis of search query reports</li>
+    <li>Evaluate entire ad accounts with multi-level AI insights (account &rarr; campaign &rarr; ad group)</li>
+    <li>Generate complete Google Ads campaign structures from landing page content</li>
+    <li>Monitor performance metrics (CTR, Quality Score, conversions, ROAS) over time</li>
+</ul>
+
+<!-- SECTION 2 -->
+<h2 id="use-case">2. Use Case & Business Need</h2>
+
+<h3>2.1 Current Situation</h3>
+<p>
+    We currently use <strong>Google Ads Scripts</strong> as a data collection mechanism. Users must manually install a
+    JavaScript snippet in their Google Ads account that sends performance data to our platform via HTTP webhook.
+    This approach has significant limitations:
+</p>
+<ul>
+    <li><strong>Reliability:</strong> Scripts are subject to execution time limits and may fail silently</li>
+    <li><strong>User friction:</strong> Manual script installation is error-prone and requires technical knowledge</li>
+    <li><strong>Data freshness:</strong> Data is only updated when scripts run (scheduled, not real-time)</li>
+    <li><strong>Limited capabilities:</strong> Scripts cannot programmatically create campaigns or apply changes</li>
+    <li><strong>Scalability:</strong> Each account requires individual script setup and maintenance</li>
+</ul>
+
+<h3>2.2 Why We Need Direct API Access</h3>
+<p>
+    Direct Google Ads API access will allow us to:
+</p>
+<ul>
+    <li><strong>OAuth-based connection:</strong> Users connect their Google Ads account with one click (no scripts to install)</li>
+    <li><strong>Real-time data retrieval:</strong> Fetch campaign data on-demand rather than waiting for script executions</li>
+    <li><strong>Campaign creation:</strong> Programmatically create campaigns, ad groups, keywords, and ads directly in Google Ads</li>
+    <li><strong>Negative keyword application:</strong> Apply AI-recommended negative keywords directly to campaigns</li>
+    <li><strong>Multi-account management:</strong> Agency clients can manage multiple Google Ads accounts from a single dashboard</li>
+</ul>
+
+<div class="highlight-box">
+    <strong>Summary:</strong> We need Basic Access to transition from a Google Ads Scripts workaround to proper
+    API integration, providing our agency clients with reliable, real-time campaign management capabilities.
+</div>
+
+<!-- SECTION 3 -->
+<h2 id="architecture" class="page-break">3. Tool Architecture</h2>
+
+<h3>3.1 Technology Stack</h3>
+<table>
+    <tr><th>Component</th><th>Technology</th></tr>
+    <tr><td>Backend</td><td>PHP 8+ (custom MVC framework)</td></tr>
+    <tr><td>Database</td><td>MySQL 8.0</td></tr>
+    <tr><td>Frontend</td><td>Tailwind CSS, Alpine.js, HTMX</td></tr>
+    <tr><td>AI Engine</td><td>Claude API (Anthropic) + OpenAI fallback</td></tr>
+    <tr><td>Hosting</td><td>SiteGround (dedicated server)</td></tr>
+    <tr><td>Google Ads API Client</td><td>google/google-ads-php (official library)</td></tr>
+</table>
+
+<h3>3.2 System Architecture Diagram</h3>
+<div class="flow-diagram">
+<pre>
++-------------------+     OAuth 2.0      +---------------------+
+|                   | &lt;================&gt; |                     |
+|   Ainstein SaaS   |                    |  Google Ads API     |
+|   Platform        | ---GAQL Queries--&gt; |  (v18+)             |
+|                   | &lt;--JSON Response-- |                     |
+|  +-------------+  |                    +---------------------+
+|  | Ads Analyzer |  |
+|  | Module       |  |     AI Analysis
+|  +------+------+  | &lt;================&gt; Claude API (Anthropic)
+|         |          |
+|  +------+------+   |
+|  | MySQL DB     |   |
+|  | (ga_* tables)|   |
+|  +-------------+   |
++-------------------+
+
+User Browser  &lt;---HTTPS---&gt;  Ainstein Platform  &lt;---API---&gt;  Google Ads
+</pre>
+</div>
+
+<h3>3.3 Module Components</h3>
+<table>
+    <tr><th>Component</th><th>Purpose</th></tr>
+    <tr><td>GoogleAdsService</td><td>Handles OAuth flow, API client initialization, GAQL query execution</td></tr>
+    <tr><td>CampaignAnalyzerService</td><td>Fetches and stores campaign data (structures + metrics)</td></tr>
+    <tr><td>SearchTermAnalyzerService</td><td>Retrieves search query reports, identifies negative keywords via AI</td></tr>
+    <tr><td>CampaignEvaluatorService</td><td>AI-powered multi-level campaign evaluation</td></tr>
+    <tr><td>CampaignCreatorService</td><td>Creates campaigns, ad groups, keywords, and ads via API mutations</td></tr>
+    <tr><td>ReportingService</td><td>Generates performance reports with customizable date ranges</td></tr>
+</table>
+
+<!-- SECTION 4 -->
+<h2 id="api-usage">4. Google Ads API Usage</h2>
+
+<h3>4.1 API Resources and Operations</h3>
+
+<h4>4.1.1 Read Operations (Reporting & Analysis)</h4>
+<table>
+    <tr><th>Resource</th><th>GAQL Query Purpose</th><th>Frequency</th></tr>
+    <tr>
+        <td><code>campaign</code></td>
+        <td>Fetch campaign structures, status, budget, bidding strategy, performance metrics</td>
+        <td>On-demand + daily sync</td>
+    </tr>
+    <tr>
+        <td><code>ad_group</code></td>
+        <td>Fetch ad group details, status, and performance metrics</td>
+        <td>On-demand + daily sync</td>
+    </tr>
+    <tr>
+        <td><code>ad_group_ad</code></td>
+        <td>Fetch ad copy (headlines, descriptions, URLs), ad type, performance</td>
+        <td>On-demand</td>
+    </tr>
+    <tr>
+        <td><code>ad_group_criterion</code></td>
+        <td>Fetch keywords, match types, quality scores, bid estimates</td>
+        <td>On-demand</td>
+    </tr>
+    <tr>
+        <td><code>search_term_view</code></td>
+        <td>Search query performance for negative keyword identification</td>
+        <td>On-demand (user-triggered)</td>
+    </tr>
+    <tr>
+        <td><code>campaign_criterion</code></td>
+        <td>Existing negative keywords at campaign level</td>
+        <td>On-demand</td>
+    </tr>
+    <tr>
+        <td><code>extension_feed_item</code></td>
+        <td>Sitelinks, callouts, structured snippets</td>
+        <td>On-demand</td>
+    </tr>
+</table>
+
+<h4>4.1.2 Write Operations (Campaign Creation & Management)</h4>
+<table>
+    <tr><th>Service</th><th>Operation</th><th>Use Case</th></tr>
+    <tr>
+        <td><code>CampaignService</code></td>
+        <td>mutate (CREATE)</td>
+        <td>Create new campaigns from Campaign Creator wizard</td>
+    </tr>
+    <tr>
+        <td><code>AdGroupService</code></td>
+        <td>mutate (CREATE)</td>
+        <td>Create ad groups within generated campaigns</td>
+    </tr>
+    <tr>
+        <td><code>AdGroupAdService</code></td>
+        <td>mutate (CREATE)</td>
+        <td>Create responsive search ads with AI-generated copy</td>
+    </tr>
+    <tr>
+        <td><code>AdGroupCriterionService</code></td>
+        <td>mutate (CREATE)</td>
+        <td>Add keywords (positive and negative) to ad groups</td>
+    </tr>
+    <tr>
+        <td><code>CampaignCriterionService</code></td>
+        <td>mutate (CREATE)</td>
+        <td>Apply negative keywords at campaign level</td>
+    </tr>
+</table>
+
+<h4>4.1.3 Metrics Retrieved</h4>
+<p>All read operations retrieve standard Google Ads metrics:</p>
+<ul>
+    <li><code>metrics.clicks</code>, <code>metrics.impressions</code>, <code>metrics.ctr</code></li>
+    <li><code>metrics.average_cpc</code>, <code>metrics.cost_micros</code></li>
+    <li><code>metrics.conversions</code>, <code>metrics.conversions_value</code></li>
+    <li><code>metrics.all_conversions</code>, <code>metrics.cost_per_conversion</code></li>
+    <li><code>ad_group_criterion.quality_info.quality_score</code></li>
+</ul>
+
+<h3>4.2 Supported Campaign Types</h3>
+<table>
+    <tr><th>Campaign Type</th><th>Read Support</th><th>Create Support</th></tr>
+    <tr><td>Search</td><td>Full</td><td>Full (primary)</td></tr>
+    <tr><td>Shopping</td><td>Full</td><td>Planned</td></tr>
+    <tr><td>Performance Max</td><td>Full</td><td>Planned</td></tr>
+    <tr><td>Display</td><td>Full</td><td>Not planned</td></tr>
+    <tr><td>Video</td><td>Full</td><td>Not planned</td></tr>
+</table>
+
+<!-- SECTION 5 -->
+<h2 id="user-flow" class="page-break">5. User Flow</h2>
+
+<h3>5.1 Account Connection Flow</h3>
+<div class="flow-diagram">
+<pre>
+1. User creates project      2. OAuth consent screen    3. Account selection
+   in Ainstein                   (Google login)             (choose MCC/account)
++------------------+        +------------------+       +------------------+
+| "Connect Google  |  ----&gt; | Google OAuth 2.0 | ----&gt; | Select accounts  |
+|  Ads Account"    |        | consent screen   |       | to analyze       |
++------------------+        +------------------+       +------------------+
+                                                                |
+                                                                v
+4. Data sync                 5. Dashboard                6. AI Analysis
++------------------+        +------------------+       +------------------+
+| Fetch campaigns, | &lt;----  | Campaign list    | ----&gt; | Evaluate with AI |
+| ads, keywords,   |        | with KPIs &      |       | Neg. keywords    |
+| search terms     |        | performance      |       | recommendations  |
++------------------+        +------------------+       +------------------+
+</pre>
+</div>
+
+<h3>5.2 Campaign Analysis Flow</h3>
+<ol>
+    <li>User selects a connected Google Ads account/project</li>
+    <li>System fetches campaign data via <code>GoogleAdsService.search()</code> with GAQL queries</li>
+    <li>Data is stored locally in MySQL (<code>ga_campaigns</code>, <code>ga_ad_groups</code>, <code>ga_ads</code>, <code>ga_ad_group_keywords</code>, <code>ga_search_terms</code>)</li>
+    <li>User triggers AI evaluation &rarr; Claude API analyzes campaign structure and performance</li>
+    <li>AI generates actionable insights: negative keywords, bid adjustments, ad copy improvements</li>
+    <li>User can apply negative keywords directly via API mutation</li>
+</ol>
+
+<h3>5.3 Campaign Creator Flow</h3>
+<ol>
+    <li>User provides a landing page URL</li>
+    <li>System scrapes and analyzes the landing page content</li>
+    <li>AI generates keyword suggestions grouped by ad groups</li>
+    <li>User reviews and customizes the campaign structure</li>
+    <li>AI generates responsive search ad copy (headlines, descriptions, display paths)</li>
+    <li>System creates the complete campaign via Google Ads API mutations:
+        <ul>
+            <li>Campaign with budget and bidding strategy</li>
+            <li>Ad groups with targeted keywords (exact, phrase, broad match)</li>
+            <li>Responsive search ads with multiple headlines and descriptions</li>
+            <li>Extensions (sitelinks, callouts, structured snippets)</li>
+        </ul>
+    </li>
+    <li>User can also export to Google Ads Editor CSV format as alternative</li>
+</ol>
+
+<!-- SECTION 6 -->
+<h2 id="data-handling">6. Data Handling & Security</h2>
+
+<h3>6.1 Data Storage</h3>
+<table>
+    <tr><th>Data Type</th><th>Storage</th><th>Retention</th></tr>
+    <tr><td>OAuth tokens (access + refresh)</td><td>MySQL, encrypted at rest</td><td>Until user disconnects</td></tr>
+    <tr><td>Campaign structures</td><td>MySQL (<code>ga_campaigns</code>, <code>ga_ad_groups</code>, etc.)</td><td>Active project lifetime</td></tr>
+    <tr><td>Performance metrics</td><td>MySQL (same tables with metric columns)</td><td>Rolling 12 months</td></tr>
+    <tr><td>Search term data</td><td>MySQL (<code>ga_search_terms</code>)</td><td>Rolling 12 months</td></tr>
+    <tr><td>AI evaluation results</td><td>MySQL (<code>ga_campaign_evaluations</code>)</td><td>Active project lifetime</td></tr>
+</table>
+
+<h3>6.2 Security Measures</h3>
+<ul>
+    <li><strong>HTTPS only:</strong> All communication encrypted via TLS 1.3</li>
+    <li><strong>OAuth 2.0:</strong> Standard Google OAuth flow, tokens never exposed to frontend</li>
+    <li><strong>CSRF protection:</strong> All POST requests require valid CSRF token</li>
+    <li><strong>Prepared statements:</strong> All database queries use parameterized queries (no SQL injection)</li>
+    <li><strong>Access control:</strong> Project-based isolation; users can only access their own data</li>
+    <li><strong>API keys in database:</strong> Never stored in code files or environment variables</li>
+    <li><strong>Session security:</strong> HTTP-only cookies, secure flag, session regeneration</li>
+    <li><strong>Data isolation:</strong> Multi-tenant architecture with user_id-scoped queries</li>
+</ul>
+
+<h3>6.3 Data Sharing Policy</h3>
+<p>
+    Google Ads data is <strong>never shared</strong> between different user accounts. Each user's data is isolated
+    and only accessible by the account owner and users explicitly granted access via the project sharing feature
+    (with role-based permissions: Owner, Editor, Viewer).
+</p>
+<p>
+    Google Ads data is <strong>not sold, shared with third parties, or used for advertising purposes</strong>.
+    Data is only used to provide the analysis and management features described in this document.
+</p>
+
+<!-- SECTION 7 -->
+<h2 id="rate-limiting" class="page-break">7. Rate Limiting & Compliance</h2>
+
+<h3>7.1 API Request Volume Estimates</h3>
+<table>
+    <tr><th>Operation</th><th>Estimated Daily Volume</th><th>Notes</th></tr>
+    <tr><td>Campaign data reads</td><td>500-2,000 requests</td><td>User-triggered + daily sync</td></tr>
+    <tr><td>Search term reports</td><td>100-500 requests</td><td>User-triggered only</td></tr>
+    <tr><td>Campaign mutations</td><td>50-200 requests</td><td>Campaign creator only</td></tr>
+    <tr><td>Keyword mutations</td><td>100-500 requests</td><td>Negative keyword application</td></tr>
+    <tr><td><strong>Total estimated</strong></td><td><strong>750-3,200 requests/day</strong></td><td></td></tr>
+</table>
+
+<h3>7.2 Rate Limiting Strategy</h3>
+<ul>
+    <li><strong>Request throttling:</strong> Maximum 1 request per second per user account</li>
+    <li><strong>Batch operations:</strong> Group mutations into batch requests where possible</li>
+    <li><strong>Caching:</strong> Campaign data cached locally, refreshed on-demand or via daily sync</li>
+    <li><strong>Exponential backoff:</strong> Automatic retry with exponential backoff on rate limit errors</li>
+    <li><strong>Daily quota monitoring:</strong> Track API usage per user and enforce per-user daily limits</li>
+</ul>
+
+<h3>7.3 Compliance</h3>
+<ul>
+    <li>Full compliance with <a href="https://developers.google.com/google-ads/api/terms">Google Ads API Terms and Conditions</a></li>
+    <li>Full compliance with <a href="https://developers.google.com/google-ads/api/docs/api-policy/developer-token">Developer Token policies</a></li>
+    <li>No automated bidding or budget changes without explicit user confirmation</li>
+    <li>No scraping or crawling of Google properties</li>
+    <li>GDPR compliant data handling (EU-based platform)</li>
+    <li>Users can disconnect their Google Ads account and delete all associated data at any time</li>
+</ul>
+
+<!-- SECTION 8 -->
+<h2 id="oauth">8. OAuth & Authentication</h2>
+
+<h3>8.1 OAuth 2.0 Configuration</h3>
+<table>
+    <tr><th>Parameter</th><th>Value</th></tr>
+    <tr><td>OAuth Scope</td><td><code>https://www.googleapis.com/auth/adwords</code></td></tr>
+    <tr><td>Application Type</td><td>Web Application</td></tr>
+    <tr><td>Redirect URI</td><td><code>https://ainstein.it/google-ads/oauth/callback</code></td></tr>
+    <tr><td>Token Storage</td><td>MySQL database (encrypted)</td></tr>
+    <tr><td>Token Refresh</td><td>Automatic refresh using refresh_token before expiry</td></tr>
+</table>
+
+<h3>8.2 OAuth Flow</h3>
+<ol>
+    <li>User clicks "Connect Google Ads" in their Ainstein project dashboard</li>
+    <li>System redirects to Google OAuth consent screen with <code>adwords</code> scope</li>
+    <li>User grants permission and is redirected back to Ainstein</li>
+    <li>System exchanges authorization code for access + refresh tokens</li>
+    <li>Tokens are stored encrypted in database, associated with the user's project</li>
+    <li>All subsequent API calls use the stored tokens with automatic refresh</li>
+</ol>
+
+<h3>8.3 Account Hierarchy</h3>
+<div class="flow-diagram">
+<pre>
+Beweb Agency MCC (284-349-6968)
+  |
+  +-- Client Account A (connected by User 1)
+  |     +-- Campaigns read/managed via API
+  |
+  +-- Client Account B (connected by User 2)
+  |     +-- Campaigns read/managed via API
+  |
+  +-- Client Account C (connected by User 3)
+        +-- Campaigns read/managed via API
+
+Each user connects their own Google Ads accounts.
+The MCC provides the developer token for API access.
+</pre>
+</div>
+
+<hr style="margin-top: 40px;">
+<p style="text-align: center; color: #80868b; font-size: 9pt;">
+    Ainstein SEO Toolkit &bull; Beweb Agency &bull; <a href="https://ainstein.it">ainstein.it</a><br>
+    Document prepared for Google Ads API Basic Access application &bull; March 2026
+</p>
+
+</body>
+</html>

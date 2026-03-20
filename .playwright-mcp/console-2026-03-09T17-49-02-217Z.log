@@ -1,0 +1,4 @@
+[     339ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[     874ms] [WARNING] Alpine Warning: You can't use [x-collapse] without first installing the "Collapse" plugin here: https://alpinejs.dev/plugins/collapse JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4
+[    1128ms] [ERROR] loadCampaigns error: SyntaxError: Unexpected token '<', "<br />
+<b>"... is not valid JSON @ http://localhost/seo-toolkit/ads-analyzer/projects/15/search-term-analysis:1582

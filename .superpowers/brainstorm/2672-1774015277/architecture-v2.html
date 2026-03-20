@@ -1,0 +1,165 @@
+<h2>Architettura Plugin ainstein-qa (v2)</h2>
+<p class="subtitle">Aggiunto Pattern Auditor + flusso aggiornato</p>
+
+<div class="section">
+  <h3>Struttura Directory Aggiornata</h3>
+  <div class="mockup">
+    <div class="mockup-header">Plugin: ainstein-qa</div>
+    <div class="mockup-body" style="font-family: monospace; font-size: 13px; line-height: 1.8; color: #e2e8f0;">
+<pre style="margin:0; color: inherit;">
+.claude/plugins/ainstein-qa/
+├── .claude-plugin/
+│   └── plugin.json
+├── agents/
+│   ├── qa-orchestrator.md          ← orchestra tutto (pattern sync → 6 review)
+│   ├── pattern-auditor.md          ← <span style="color: #fbbf24; font-weight: bold;">NUOVO</span> scansiona codebase, aggiorna skill
+│   ├── marco-seo-audit.md          ← SEO Specialist Tecnico
+│   ├── giulia-ads-analyzer.md      ← PPC Manager
+│   ├── alessia-seo-tracking.md     ← SEO Manager in-house
+│   ├── lorenzo-keyword-research.md ← Content Strategist
+│   ├── sara-content-creator.md     ← Content Manager E-commerce
+│   └── davide-ai-content.md        ← Digital Marketing Manager
+├── commands/
+│   ├── qa-review.md                ← /qa-review {modulo}
+│   ├── qa-review-all.md            ← /qa-review-all
+│   └── qa-pattern-sync.md          ← <span style="color: #fbbf24; font-weight: bold;">NUOVO</span> /qa-pattern-sync
+├── skills/
+│   └── platform-standards/
+│       └── SKILL.md                ← pattern verificati (aggiornata dal Pattern Auditor)
+└── hooks/
+    └── hooks.json
+</pre>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Pattern Auditor — Cosa Fa</h3>
+  <div class="mockup">
+    <div class="mockup-header">Agente: pattern-auditor.md</div>
+    <div class="mockup-body" style="padding: 1.5rem;">
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="background: #fbbf24; color: #1e293b; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">1</div>
+          <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 8px; padding: 0.8rem 1rem; flex: 1;">
+            <strong>Scansiona CLAUDE.md</strong> — Estrae Golden Rules, standard tabelle CSS, pattern landing page, icone
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="background: #fbbf24; color: #1e293b; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">2</div>
+          <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 8px; padding: 0.8rem 1rem; flex: 1;">
+            <strong>Scansiona componenti shared</strong> — Legge <code>shared/views/components/*.php</code> per catalogare componenti reali disponibili e le loro API (parametri accettati)
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="background: #fbbf24; color: #1e293b; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">3</div>
+          <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 8px; padding: 0.8rem 1rem; flex: 1;">
+            <strong>Scansiona moduli reference</strong> — Analizza <code>ai-content</code> (reference module) per estrarre pattern reali: struttura controller, view, CSS, landing page
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="background: #fbbf24; color: #1e293b; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">4</div>
+          <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 8px; padding: 0.8rem 1rem; flex: 1;">
+            <strong>Grep di conformita</strong> — Cerca deviazioni nei moduli: classi CSS non standard, icone non-Heroicons, testi non italiani, componenti non-shared
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="background: #fbbf24; color: #1e293b; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">5</div>
+          <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 8px; padding: 0.8rem 1rem; flex: 1;">
+            <strong>Aggiorna skill</strong> — Riscrive <code>platform-standards/SKILL.md</code> con i pattern reali verificati + segnala drift trovati
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Flusso Orchestratore Aggiornato</h3>
+  <div class="mockup">
+    <div class="mockup-header">/qa-review-all → Flusso completo</div>
+    <div class="mockup-body" style="padding: 1.5rem;">
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="background: #fbbf24; color: #1e293b; border-radius: 8px; padding: 0.5rem 1rem; font-weight: bold; min-width: 120px; text-align: center;">Step 0</div>
+          <div style="color: #fbbf24;">→</div>
+          <div style="color: #e2e8f0;"><strong>Pattern Sync</strong> — Lancia pattern-auditor, attende completamento, skill aggiornata</div>
+        </div>
+
+        <div style="text-align: center; color: #475569; font-size: 1.5rem;">↓</div>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="background: #6366f1; color: white; border-radius: 8px; padding: 0.5rem 1rem; font-weight: bold; min-width: 120px; text-align: center;">Step 1</div>
+          <div style="color: #818cf8;">→</div>
+          <div style="color: #e2e8f0;"><strong>Dispatch parallelo</strong> — Lancia 6 agenti QA in background</div>
+        </div>
+
+        <div style="text-align: center; color: #475569; font-size: 1.5rem;">↓</div>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="background: #6366f1; color: white; border-radius: 8px; padding: 0.5rem 1rem; font-weight: bold; min-width: 120px; text-align: center;">Step 2</div>
+          <div style="color: #818cf8;">→</div>
+          <div style="color: #e2e8f0;"><strong>Attesa</strong> — Ogni agente scrive il suo fix-plan in qa-reviews/{modulo}/</div>
+        </div>
+
+        <div style="text-align: center; color: #475569; font-size: 1.5rem;">↓</div>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="background: #6366f1; color: white; border-radius: 8px; padding: 0.5rem 1rem; font-weight: bold; min-width: 120px; text-align: center;">Step 3</div>
+          <div style="color: #818cf8;">→</div>
+          <div style="color: #e2e8f0;"><strong>Consolida</strong> — Genera _index.md con classifica score + priorita esecuzione</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Riepilogo Componenti</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+
+    <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 12px; padding: 1rem;">
+      <h3 style="color: #818cf8; margin-top: 0;">8 Agenti</h3>
+      <ul style="margin: 0; padding-left: 1.2rem; color: #cbd5e1;">
+        <li>1 orchestratore</li>
+        <li>1 pattern auditor</li>
+        <li>6 QA tester (personas)</li>
+      </ul>
+    </div>
+
+    <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 1rem;">
+      <h3 style="color: #34d399; margin-top: 0;">3 Comandi</h3>
+      <ul style="margin: 0; padding-left: 1.2rem; color: #cbd5e1;">
+        <li><code>/qa-review {modulo}</code></li>
+        <li><code>/qa-review-all</code></li>
+        <li><code>/qa-pattern-sync</code></li>
+      </ul>
+    </div>
+
+    <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 12px; padding: 1rem;">
+      <h3 style="color: #fbbf24; margin-top: 0;">1 Skill</h3>
+      <ul style="margin: 0; padding-left: 1.2rem; color: #cbd5e1;">
+        <li><code>platform-standards</code></li>
+        <li>Aggiornata dal Pattern Auditor</li>
+      </ul>
+    </div>
+
+    <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 1rem;">
+      <h3 style="color: #f87171; margin-top: 0;">Output</h3>
+      <ul style="margin: 0; padding-left: 1.2rem; color: #cbd5e1;">
+        <li><code>qa-reviews/{modulo}/{data}.md</code></li>
+        <li><code>qa-reviews/_index.md</code></li>
+        <li><code>qa-reviews/screenshots/</code></li>
+      </ul>
+    </div>
+
+  </div>
+</div>

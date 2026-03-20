@@ -1,0 +1,37 @@
+[     740ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[     740ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[     741ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[     741ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[     741ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[     741ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[     744ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[     745ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[     819ms] Uncaught (in promise) Error: Container initialization failed as it has already been initialized with a different share scope
+    at o (https://static.semrush.com/position-tracking/wizard/remote.js?v=1772650449756:0:1345)
+    at o (https://it.semrush.com/tracking/overview/20081306_2498153.html:4302:9408)
+[    2583ms] [ERROR] Access to fetch at 'https://tags.srv.stackadapt.com/sa.jpeg' from origin 'https://it.semrush.com' has been blocked by CORS policy: The 'Access-Control-Allow-Origin' header has a value 'https://www.semrush.com' that is not equal to the supplied origin. Have the server send the header with a valid value. @ https://it.semrush.com/tracking/overview/20081306_2498153.html?domain_1=amevista.com&fid=6325891&report_mode=domain_1&sort=0_pos_asc:0
+[    2583ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://tags.srv.stackadapt.com/sa.jpeg:0
+[    2738ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://it.semrush.com/tracking/overview/20081306_2498153.html?domain_1=amevista.com&fid=6325891&report_mode=domain_1&sort=0_pos_asc:0
+[   10198ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://it.semrush.com/tracking/targets_comparison/20081306_2498153.html?fid=6325891&domain_1=amevista.com&report_mode=domain_1:0
+[   10198ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://it.semrush.com/tracking/targets_comparison/20081306_2498153.html?fid=6325891&domain_1=amevista.com&report_mode=domain_1:0
+[   22008ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://it.semrush.com/tracking/targets_comparison/20081306_2498153.html?fid=6325891&domain_1=amevista.com&report_mode=domain_1:0
+[   23141ms] [WARNING] [DEV] get Hashes without id {} @ https://static.semrush.com/position-tracking/wizard/1.72.1/167.5df9f17835914539b36d.js:1
+[   67519ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://it.semrush.com/tracking/targets_comparison/20081306_2498153.html?fid=6325891&domain_1=amevista.com&report_mode=domain_1:0
+[   80333ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://it.semrush.com/tracking/targets_comparison/20081306_2498153.html?fid=6325891&domain_1=amevista.com&report_mode=domain_1:0
+[  105378ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://it.semrush.com/tracking/targets_comparison/20081306_2498153.html?fid=6325891&domain_1=amevista.com&report_mode=domain_1:0
+[  126643ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://it.semrush.com/tracking/targets_comparison/20081306_2498153.html?fid=6325891&domain_1=amevista.com&report_mode=domain_1:0
+[  139979ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://it.semrush.com/tracking/targets_comparison/20081306_2498153.html?fid=6325891&domain_1=amevista.com&report_mode=domain_1:0
+[  141127ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[  141128ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[  141129ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[  141129ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[  141129ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[  141129ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[  141136ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[  141137ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[  141267ms] Uncaught (in promise) Error: Container initialization failed as it has already been initialized with a different share scope
+    at o (https://static.semrush.com/position-tracking/wizard/remote.js?v=1772650590111:0:1345)
+    at o (https://it.semrush.com/tracking/landscape/20081306_4358968.html:4302:9408)
+[  143124ms] [ERROR] Access to fetch at 'https://tags.srv.stackadapt.com/sa.jpeg' from origin 'https://it.semrush.com' has been blocked by CORS policy: The 'Access-Control-Allow-Origin' header has a value 'https://www.semrush.com' that is not equal to the supplied origin. Have the server send the header with a valid value. @ https://it.semrush.com/tracking/landscape/20081306_4358968.html?domain_1=amevista.com&fid=6325891:0
+[  143124ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://tags.srv.stackadapt.com/sa.jpeg:0
+[  143428ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://it.semrush.com/tracking/landscape/20081306_4358968.html?domain_1=amevista.com&fid=6325891:0

@@ -1273,6 +1273,8 @@ erDiagram
     ga_syncs ||--o{ ga_extensions : "estensioni"
     ga_syncs ||--o{ ga_campaign_ad_groups : "ad groups"
     ga_syncs ||--o{ ga_ad_group_keywords : "keywords"
+    ga_syncs ||--o{ ga_product_performance : "prodotti"
+    ga_campaign_evaluations ||--o{ ga_generated_fixes : "fix generati"
     ga_projects ||--o{ ga_creator_generations : "generazioni"
     ga_projects ||--o{ ga_creator_keywords : "keywords"
     ga_projects ||--o{ ga_creator_campaigns : "campagne AI"
@@ -1367,13 +1369,15 @@ erDiagram
             </div>
         </details>
         <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-rose-200 dark:border-rose-900/50 shadow-sm">
-            <summary class="p-4 font-semibold text-slate-900 dark:text-white">Campaign Analysis: ga_syncs &middot; ga_campaigns &middot; ga_ads &middot; ga_extensions &middot; ga_campaign_evaluations &middot; ga_campaign_ad_groups &middot; ga_ad_group_keywords &middot; ga_auto_eval_queue</summary>
+            <summary class="p-4 font-semibold text-slate-900 dark:text-white">Campaign Analysis: ga_syncs &middot; ga_campaigns &middot; ga_ads &middot; ga_extensions &middot; ga_campaign_evaluations &middot; ga_generated_fixes &middot; ga_product_performance &middot; ga_campaign_ad_groups &middot; ga_ad_group_keywords &middot; ga_auto_eval_queue</summary>
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
                 <div><strong class="text-slate-900 dark:text-white">ga_syncs</strong>: id(PK), project_id(FK), user_id(FK), sync_type(ENUM manual/cron/on_demand), status(running/completed/error), date_range_start(DATE), date_range_end(DATE), campaigns_synced, ad_groups_synced, keywords_synced, ads_synced, extensions_synced, search_terms_synced, error_message, started_at, completed_at</div>
                 <div><strong class="text-slate-900 dark:text-white">ga_campaigns</strong>: id(PK), project_id(FK), sync_id(FK), campaign_id_google, campaign_name, campaign_status, campaign_type, bidding_strategy, budget, clicks, impressions, ctr, avg_cpc, cost, conversions, conversion_value, conv_rate</div>
                 <div><strong class="text-slate-900 dark:text-white">ga_ads</strong>: id(PK), project_id(FK), sync_id(FK), campaign/ad_group IDs, ad_type, headline1-3, description1-2, final_url, path1-2, status, metrics, quality_score</div>
                 <div><strong class="text-slate-900 dark:text-white">ga_extensions</strong>: id(PK), project_id(FK), sync_id(FK), extension_type, extension_text, status, clicks, impressions</div>
-                <div><strong class="text-slate-900 dark:text-white">ga_campaign_evaluations</strong>: id(PK), project_id(FK), user_id(FK), sync_id(FK), eval_type(manual/auto), previous_eval_id, name, campaigns/ads/ad_groups/keywords_evaluated, landing_pages_analyzed, ai_response(LONGTEXT), metric_deltas(JSON), campaigns_filter(JSON), status, credits_used</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_campaign_evaluations</strong>: id(PK), project_id(FK), user_id(FK), sync_id(FK), eval_type(manual/auto), <em>schema_version(INT, default 1 — v1=formato legacy, v2=report gerarchico)</em>, previous_eval_id, name, campaigns/ads/ad_groups/keywords_evaluated, landing_pages_analyzed, ai_response(LONGTEXT — JSON gerarchico con campaigns[].ad_groups[].ads_analysis[]/landing_analysis/optimizations[]), metric_deltas(JSON), campaigns_filter(JSON), status, credits_used</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_generated_fixes</strong>: id(PK), evaluation_id(FK), project_id(FK), user_id(FK), fix_type(VARCHAR 50 — rewrite_ads/add_negatives/remove_duplicates/add_extensions/replace_asset/add_asset), scope_level(VARCHAR 30 — campaign/ad_group/asset_group), campaign_name, ad_group_name, <em>target_ad_index(INT NULL)</em>, ad_group_id_google, <em>asset_group_id_google(VARCHAR 50 NULL)</em>, campaign_id_google, issue_description, recommendation, ai_response(JSON), display_text, status(pending/applied/failed), credits_used, applied_at, apply_result(JSON)</div>
+                <div><strong class="text-slate-900 dark:text-white">ga_product_performance</strong>: id(PK), project_id(FK), sync_id(FK), campaign_id_google, campaign_name, product_item_id, product_title, product_brand, product_category_l1, product_type_l1, clicks, impressions, cost, conversions, conversion_value, ctr, avg_cpc, roas, cpa — <em>Dati prodotto da shopping_performance_view per campagne Shopping/PMax</em></div>
                 <div><strong class="text-slate-900 dark:text-white">ga_campaign_ad_groups</strong>: id(PK), project_id(FK), sync_id(FK), campaign info, ad_group info, all metrics</div>
                 <div><strong class="text-slate-900 dark:text-white">ga_ad_group_keywords</strong>: id(PK), project_id(FK), sync_id(FK), campaign/ad_group info, keyword_text, match_type, status, metrics, quality_score, first_page_cpc</div>
                 <div><strong class="text-slate-900 dark:text-white">ga_auto_eval_queue</strong>: id(PK), project_id(FK), sync_id(FK UK), status(pending/processing/completed/skipped/error), skip_reason, attempts, scheduled_for, timestamps</div>

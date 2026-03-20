@@ -1,0 +1,110 @@
+<h2>Come dovrebbe essere strutturato il report?</h2>
+<p class="subtitle">Due filosofie diverse per presentare i dati al cliente</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 20px; background: #1e293b;">
+      <!-- Mockup: Dashboard-first -->
+      <div style="font-family: system-ui; color: #e2e8f0; font-size: 11px;">
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <div style="flex:1; background: #334155; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 18px; font-weight: bold; color: #22c55e;">€12.450</div>
+            <div style="color: #94a3b8; font-size: 9px;">SPESA</div>
+            <div style="color: #22c55e; font-size: 9px;">↓ -8% vs prec.</div>
+          </div>
+          <div style="flex:1; background: #334155; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 18px; font-weight: bold; color: #3b82f6;">3.2%</div>
+            <div style="color: #94a3b8; font-size: 9px;">CTR</div>
+            <div style="color: #22c55e; font-size: 9px;">↑ +0.4%</div>
+          </div>
+          <div style="flex:1; background: #334155; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 18px; font-weight: bold; color: #f59e0b;">4.2x</div>
+            <div style="color: #94a3b8; font-size: 9px;">ROAS</div>
+            <div style="color: #ef4444; font-size: 9px;">↓ -0.3x</div>
+          </div>
+          <div style="flex:1; background: #334155; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 18px; font-weight: bold; color: #a78bfa;">€8.40</div>
+            <div style="color: #94a3b8; font-size: 9px;">CPA</div>
+            <div style="color: #ef4444; font-size: 9px;">↑ +12%</div>
+          </div>
+        </div>
+        <div style="background: #334155; border-radius: 8px; padding: 10px; margin-bottom: 12px; height: 60px; display: flex; align-items: center; justify-content: center;">
+          <div style="color: #64748b;">📊 Grafico trend 30 giorni (click, costo, conversioni)</div>
+        </div>
+        <div style="background: #334155; border-radius: 8px; padding: 10px; margin-bottom: 8px;">
+          <div style="font-weight: bold; margin-bottom: 6px;">Tabella Campagne</div>
+          <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr; gap: 4px; font-size: 9px; color: #94a3b8;">
+            <div style="font-weight:600;">Campagna</div><div>Click</div><div>CTR</div><div>Costo</div><div>Conv.</div><div>ROAS</div>
+            <div style="color:#e2e8f0;">Brand IT</div><div>2.340</div><div>4.1%</div><div>€3.200</div><div>89</div><div>5.2x</div>
+            <div style="color:#e2e8f0;">Generic IT</div><div>1.890</div><div>2.1%</div><div>€5.100</div><div>45</div><div>3.1x</div>
+          </div>
+        </div>
+        <div style="background: #0f172a; border: 1px solid #7c3aed; border-radius: 8px; padding: 10px;">
+          <div style="font-weight: bold; color: #a78bfa; margin-bottom: 4px;">🤖 Analisi AI</div>
+          <div style="color: #94a3b8; font-size: 9px;">L'AI commenta i dati, non li sostituisce. Score + raccomandazioni in fondo.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Metriche prima, AI dopo</h3>
+      <p>Dashboard con KPI reali in alto, tabella campagne con tutte le metriche, grafico trend. L'analisi AI viene dopo come "commento esperto" sui dati. Il cliente vede prima i numeri, poi l'interpretazione.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 20px; background: #1e293b;">
+      <!-- Mockup: AI-first with data -->
+      <div style="font-family: system-ui; color: #e2e8f0; font-size: 11px;">
+        <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: start;">
+          <div style="flex-shrink:0; width: 60px; height: 60px; border: 3px solid #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: #22c55e;">7.5</div>
+          <div style="flex:1;">
+            <div style="font-weight: bold; margin-bottom: 4px;">Valutazione Complessiva</div>
+            <div style="color: #94a3b8; font-size: 10px;">Le campagne performano bene ma il CPA è in aumento. Il ROAS è calato del 7% rispetto al periodo precedente...</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <div style="flex:1; background: #334155; border-radius: 8px; padding: 8px; text-align: center;">
+            <div style="font-size: 14px; font-weight: bold;">€12.450</div>
+            <div style="color: #94a3b8; font-size: 9px;">Spesa</div>
+          </div>
+          <div style="flex:1; background: #334155; border-radius: 8px; padding: 8px; text-align: center;">
+            <div style="font-size: 14px; font-weight: bold;">3.2%</div>
+            <div style="color: #94a3b8; font-size: 9px;">CTR</div>
+          </div>
+          <div style="flex:1; background: #334155; border-radius: 8px; padding: 8px; text-align: center;">
+            <div style="font-size: 14px; font-weight: bold;">4.2x</div>
+            <div style="color: #94a3b8; font-size: 9px;">ROAS</div>
+          </div>
+        </div>
+        <div style="background: #334155; border-radius: 8px; padding: 10px; margin-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div style="font-weight: bold;">Brand IT</div>
+            <div style="background: #166534; color: #86efac; padding: 2px 8px; border-radius: 12px; font-size: 9px;">8.5/10</div>
+          </div>
+          <div style="display: flex; gap: 12px; font-size: 9px; color: #94a3b8; margin-bottom: 6px;">
+            <span>Click: 2.340</span><span>CTR: 4.1%</span><span>ROAS: 5.2x</span><span>CPA: €6.20</span>
+          </div>
+          <div style="background: #1e293b; border-radius: 6px; padding: 6px; font-size: 9px; color: #94a3b8;">
+            💡 Campagna solida. Suggerimento: testare nuove headline per migliorare CTR da mobile.
+          </div>
+        </div>
+        <div style="background: #334155; border-radius: 8px; padding: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div style="font-weight: bold;">Generic IT</div>
+            <div style="background: #92400e; color: #fcd34d; padding: 2px 8px; border-radius: 12px; font-size: 9px;">5.8/10</div>
+          </div>
+          <div style="display: flex; gap: 12px; font-size: 9px; color: #94a3b8; margin-bottom: 6px;">
+            <span>Click: 1.890</span><span>CTR: 2.1%</span><span>ROAS: 3.1x</span><span>CPA: €11.30</span>
+          </div>
+          <div style="background: #451a03; border: 1px solid #92400e; border-radius: 6px; padding: 6px; font-size: 9px; color: #fbbf24;">
+            ⚠️ CPA troppo alto. 3 keyword sprecano il 40% del budget senza conversioni.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — AI e metriche integrate</h3>
+      <p>Score AI + summary in alto, poi ogni campagna mostra metriche reali E commento AI insieme. Il cliente vede dati e interpretazione nello stesso blocco — come un consulente che spiega i numeri man mano.</p>
+    </div>
+  </div>
+</div>

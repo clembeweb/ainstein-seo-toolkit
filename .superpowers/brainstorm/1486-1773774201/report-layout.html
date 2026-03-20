@@ -1,0 +1,248 @@
+<h2>Design: Pagina Report Unificata</h2>
+<p class="subtitle">Struttura verticale — il cliente scrolla dall'alto verso il basso come un report</p>
+
+<div class="mockup">
+  <div class="mockup-header">Report Campagne — Progetto "E-commerce Scarpe"</div>
+  <div class="mockup-body" style="background: #0f172a; padding: 24px; font-family: system-ui; color: #e2e8f0;">
+
+    <!-- SEZIONE 1: Header con periodo e azioni -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <div>
+        <div style="font-size: 20px; font-weight: bold;">Report Campagne</div>
+        <div style="font-size: 12px; color: #94a3b8;">Periodo: 1 Mar — 17 Mar 2026 · Ultimo sync: oggi 14:30</div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 6px 12px; font-size: 11px; display: flex; gap: 4px;">
+          <span style="color: #94a3b8;">7g</span>
+          <span style="background: #f43f5e; color: white; padding: 2px 8px; border-radius: 4px;">14g</span>
+          <span style="color: #94a3b8;">30g</span>
+        </div>
+        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 6px 12px; font-size: 11px; color: #f43f5e;">📄 PDF</div>
+      </div>
+    </div>
+
+    <!-- SEZIONE 2: KPI Hero Cards -->
+    <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px;">
+      <div style="background: #1e293b; border-radius: 10px; padding: 14px; text-align: center; border: 1px solid #334155;">
+        <div style="font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Spesa</div>
+        <div style="font-size: 20px; font-weight: bold; color: #f8fafc; margin: 4px 0;">€12.450</div>
+        <div style="font-size: 10px; color: #22c55e;">↓ -8,2% <span style="color:#64748b">vs prec.</span></div>
+      </div>
+      <div style="background: #1e293b; border-radius: 10px; padding: 14px; text-align: center; border: 1px solid #334155;">
+        <div style="font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Click</div>
+        <div style="font-size: 20px; font-weight: bold; color: #f8fafc; margin: 4px 0;">4.230</div>
+        <div style="font-size: 10px; color: #22c55e;">↑ +12% <span style="color:#64748b">vs prec.</span></div>
+      </div>
+      <div style="background: #1e293b; border-radius: 10px; padding: 14px; text-align: center; border: 1px solid #334155;">
+        <div style="font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">CTR</div>
+        <div style="font-size: 20px; font-weight: bold; color: #f8fafc; margin: 4px 0;">3,2%</div>
+        <div style="font-size: 10px; color: #22c55e;">↑ +0,4% <span style="color:#64748b">vs prec.</span></div>
+      </div>
+      <div style="background: #1e293b; border-radius: 10px; padding: 14px; text-align: center; border: 1px solid #334155;">
+        <div style="font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Conversioni</div>
+        <div style="font-size: 20px; font-weight: bold; color: #f8fafc; margin: 4px 0;">134</div>
+        <div style="font-size: 10px; color: #ef4444;">↓ -3% <span style="color:#64748b">vs prec.</span></div>
+      </div>
+      <div style="background: #1e293b; border-radius: 10px; padding: 14px; text-align: center; border: 1px solid #334155;">
+        <div style="font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">ROAS</div>
+        <div style="font-size: 20px; font-weight: bold; color: #fbbf24; margin: 4px 0;">4,2x</div>
+        <div style="font-size: 10px; color: #ef4444;">↓ -0,3x <span style="color:#64748b">vs prec.</span></div>
+      </div>
+      <div style="background: #1e293b; border-radius: 10px; padding: 14px; text-align: center; border: 1px solid #334155;">
+        <div style="font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">CPA</div>
+        <div style="font-size: 20px; font-weight: bold; color: #f8fafc; margin: 4px 0;">€8,40</div>
+        <div style="font-size: 10px; color: #ef4444;">↑ +12% <span style="color:#64748b">vs prec.</span></div>
+      </div>
+    </div>
+
+    <!-- SEZIONE 3: Grafico Trend -->
+    <div style="background: #1e293b; border-radius: 10px; padding: 16px; margin-bottom: 20px; border: 1px solid #334155;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div style="font-size: 13px; font-weight: 600;">Andamento nel Periodo</div>
+        <div style="display: flex; gap: 12px; font-size: 10px;">
+          <span style="color: #3b82f6;">● Click</span>
+          <span style="color: #f43f5e;">● Spesa</span>
+          <span style="color: #22c55e;">● Conversioni</span>
+        </div>
+      </div>
+      <div style="height: 100px; background: linear-gradient(180deg, rgba(59,130,246,0.1) 0%, transparent 100%); border-radius: 8px; display: flex; align-items: end; padding: 0 8px; gap: 3px;">
+        <!-- Simulated bar chart -->
+        <div style="flex:1; background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%); border-radius: 3px 3px 0 0; height: 60%;"></div>
+        <div style="flex:1; background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%); border-radius: 3px 3px 0 0; height: 45%;"></div>
+        <div style="flex:1; background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%); border-radius: 3px 3px 0 0; height: 70%;"></div>
+        <div style="flex:1; background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%); border-radius: 3px 3px 0 0; height: 55%;"></div>
+        <div style="flex:1; background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%); border-radius: 3px 3px 0 0; height: 80%;"></div>
+        <div style="flex:1; background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%); border-radius: 3px 3px 0 0; height: 65%;"></div>
+        <div style="flex:1; background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%); border-radius: 3px 3px 0 0; height: 90%;"></div>
+        <div style="flex:1; background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%); border-radius: 3px 3px 0 0; height: 75%;"></div>
+        <div style="flex:1; background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%); border-radius: 3px 3px 0 0; height: 85%;"></div>
+        <div style="flex:1; background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%); border-radius: 3px 3px 0 0; height: 70%;"></div>
+        <div style="flex:1; background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%); border-radius: 3px 3px 0 0; height: 95%;"></div>
+        <div style="flex:1; background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%); border-radius: 3px 3px 0 0; height: 82%;"></div>
+        <div style="flex:1; background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%); border-radius: 3px 3px 0 0; height: 88%;"></div>
+        <div style="flex:1; background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%); border-radius: 3px 3px 0 0; height: 92%;"></div>
+      </div>
+    </div>
+
+    <!-- SEZIONE 4: Tabella Campagne -->
+    <div style="background: #1e293b; border-radius: 10px; padding: 16px; margin-bottom: 20px; border: 1px solid #334155;">
+      <div style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Campagne</div>
+      <div style="display: grid; grid-template-columns: 2.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr; gap: 0; font-size: 10px;">
+        <!-- Header -->
+        <div style="padding: 8px; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 9px; border-bottom: 1px solid #334155;">Campagna</div>
+        <div style="padding: 8px; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 9px; border-bottom: 1px solid #334155; text-align: right;">Click</div>
+        <div style="padding: 8px; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 9px; border-bottom: 1px solid #334155; text-align: right;">CTR</div>
+        <div style="padding: 8px; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 9px; border-bottom: 1px solid #334155; text-align: right;">Spesa</div>
+        <div style="padding: 8px; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 9px; border-bottom: 1px solid #334155; text-align: right;">Conv.</div>
+        <div style="padding: 8px; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 9px; border-bottom: 1px solid #334155; text-align: right;">Val. Conv.</div>
+        <div style="padding: 8px; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 9px; border-bottom: 1px solid #334155; text-align: right;">ROAS</div>
+        <div style="padding: 8px; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 9px; border-bottom: 1px solid #334155; text-align: right;">CPA</div>
+        <!-- Row 1 -->
+        <div style="padding: 8px; border-bottom: 1px solid #1e293b;">
+          <span style="background: #1e3a5f; color: #93c5fd; padding: 1px 6px; border-radius: 4px; font-size: 9px; margin-right: 4px;">Search</span>
+          Brand IT
+        </div>
+        <div style="padding: 8px; text-align: right; border-bottom: 1px solid #1e293b;">2.340</div>
+        <div style="padding: 8px; text-align: right; border-bottom: 1px solid #1e293b;">4,1%</div>
+        <div style="padding: 8px; text-align: right; border-bottom: 1px solid #1e293b;">€3.200</div>
+        <div style="padding: 8px; text-align: right; border-bottom: 1px solid #1e293b;">89</div>
+        <div style="padding: 8px; text-align: right; border-bottom: 1px solid #1e293b;">€16.690</div>
+        <div style="padding: 8px; text-align: right; border-bottom: 1px solid #1e293b; color: #22c55e; font-weight: 600;">5,2x</div>
+        <div style="padding: 8px; text-align: right; border-bottom: 1px solid #1e293b;">€6,20</div>
+        <!-- Row 2 -->
+        <div style="padding: 8px; border-bottom: 1px solid #1e293b;">
+          <span style="background: #1e3a5f; color: #93c5fd; padding: 1px 6px; border-radius: 4px; font-size: 9px; margin-right: 4px;">Search</span>
+          Generic IT
+        </div>
+        <div style="padding: 8px; text-align: right; border-bottom: 1px solid #1e293b;">1.890</div>
+        <div style="padding: 8px; text-align: right; border-bottom: 1px solid #1e293b;">2,1%</div>
+        <div style="padding: 8px; text-align: right; border-bottom: 1px solid #1e293b;">€5.100</div>
+        <div style="padding: 8px; text-align: right; border-bottom: 1px solid #1e293b;">45</div>
+        <div style="padding: 8px; text-align: right; border-bottom: 1px solid #1e293b;">€15.750</div>
+        <div style="padding: 8px; text-align: right; border-bottom: 1px solid #1e293b; color: #fbbf24; font-weight: 600;">3,1x</div>
+        <div style="padding: 8px; text-align: right; border-bottom: 1px solid #1e293b; color: #ef4444;">€11,30</div>
+        <!-- Row 3 -->
+        <div style="padding: 8px;">
+          <span style="background: #3b1f5e; color: #c4b5fd; padding: 1px 6px; border-radius: 4px; font-size: 9px; margin-right: 4px;">PMax</span>
+          Shopping IT
+        </div>
+        <div style="padding: 8px; text-align: right;">890</div>
+        <div style="padding: 8px; text-align: right;">1,8%</div>
+        <div style="padding: 8px; text-align: right;">€4.150</div>
+        <div style="padding: 8px; text-align: right;">28</div>
+        <div style="padding: 8px; text-align: right;">€19.600</div>
+        <div style="padding: 8px; text-align: right; color: #22c55e; font-weight: 600;">4,7x</div>
+        <div style="padding: 8px; text-align: right;">€14,80</div>
+      </div>
+    </div>
+
+    <!-- SEZIONE 5: AI Analysis Summary -->
+    <div style="background: #1e293b; border: 1px solid #7c3aed; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+        <div style="font-size: 13px; font-weight: 600;">🤖 Analisi AI</div>
+        <div style="background: #166534; color: #86efac; padding: 2px 10px; border-radius: 12px; font-size: 10px; font-weight: 600;">7.5/10</div>
+      </div>
+      <div style="font-size: 11px; color: #cbd5e1; line-height: 1.6;">
+        Le campagne nel complesso funzionano bene con un ROAS medio di 4.2x. La campagna Brand è il punto di forza (ROAS 5.2x). La campagna Generic ha un CPA troppo alto (€11.30) — 3 keyword assorbono il 40% del budget senza generare conversioni. Consigliamo di aggiungere keyword negative e riscrivere gli annunci del gruppo "scarpe generiche".
+      </div>
+    </div>
+
+    <!-- SEZIONE 6: Ottimizzazioni Batch -->
+    <div style="background: #1e293b; border-radius: 10px; padding: 16px; border: 1px solid #334155;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <div style="font-size: 13px; font-weight: 600;">⚡ Ottimizzazioni Pronte (4)</div>
+        <div style="display: flex; gap: 8px;">
+          <span style="font-size: 10px; color: #94a3b8;">2 selezionate</span>
+          <div style="background: #22c55e; color: white; padding: 4px 14px; border-radius: 6px; font-size: 11px; font-weight: 600;">✓ Applica Selezionate</div>
+        </div>
+      </div>
+
+      <!-- Optimization 1 -->
+      <div style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; margin-bottom: 8px;">
+        <div style="display: flex; align-items: start; gap: 10px;">
+          <div style="width: 18px; height: 18px; border: 2px solid #22c55e; background: #22c55e; border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 2px;">
+            <span style="color: white; font-size: 11px;">✓</span>
+          </div>
+          <div style="flex: 1;">
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+              <span style="background: #7f1d1d; color: #fca5a5; padding: 1px 8px; border-radius: 10px; font-size: 9px;">Alta priorità</span>
+              <span style="background: #1e3a5f; color: #93c5fd; padding: 1px 8px; border-radius: 10px; font-size: 9px;">Keyword Negative</span>
+              <span style="font-size: 10px; color: #94a3b8;">Generic IT</span>
+            </div>
+            <div style="font-size: 11px; color: #e2e8f0; margin-bottom: 6px;">Aggiungere 5 keyword negative che sprecano €2.040/mese senza conversioni</div>
+            <div style="background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 8px; font-size: 10px;">
+              <div style="color: #64748b; margin-bottom: 4px;">Preview:</div>
+              <div style="color: #fca5a5;">+ [scarpe eleganti uomo] (broad) — €890, 0 conv.</div>
+              <div style="color: #fca5a5;">+ [scarpe da cerimonia] (broad) — €650, 0 conv.</div>
+              <div style="color: #fca5a5;">+ [scarpe classiche] (phrase) — €500, 0 conv.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Optimization 2 -->
+      <div style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; margin-bottom: 8px;">
+        <div style="display: flex; align-items: start; gap: 10px;">
+          <div style="width: 18px; height: 18px; border: 2px solid #22c55e; background: #22c55e; border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 2px;">
+            <span style="color: white; font-size: 11px;">✓</span>
+          </div>
+          <div style="flex: 1;">
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+              <span style="background: #92400e; color: #fcd34d; padding: 1px 8px; border-radius: 10px; font-size: 9px;">Media priorità</span>
+              <span style="background: #1e3a5f; color: #93c5fd; padding: 1px 8px; border-radius: 10px; font-size: 9px;">Annunci</span>
+              <span style="font-size: 10px; color: #94a3b8;">Generic IT → Scarpe Generiche</span>
+            </div>
+            <div style="font-size: 11px; color: #e2e8f0; margin-bottom: 6px;">Riscrivere annunci con headline più specifiche per migliorare CTR</div>
+            <div style="background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 8px; font-size: 10px;">
+              <div style="color: #64748b; margin-bottom: 4px;">Before → After:</div>
+              <div><span style="color: #ef4444; text-decoration: line-through;">H1: Scarpe Online</span> → <span style="color: #22c55e;">H1: Scarpe Running Uomo | Spedizione Gratis</span></div>
+              <div><span style="color: #ef4444; text-decoration: line-through;">H2: Acquista Ora</span> → <span style="color: #22c55e;">H2: -30% Saldi Primavera | Reso Gratuito</span></div>
+              <div><span style="color: #ef4444; text-decoration: line-through;">D1: Le migliori scarpe online</span> → <span style="color: #22c55e;">D1: Oltre 200 modelli running da uomo. Spedizione gratuita e reso facile.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Optimization 3 (unchecked) -->
+      <div style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; margin-bottom: 8px; opacity: 0.7;">
+        <div style="display: flex; align-items: start; gap: 10px;">
+          <div style="width: 18px; height: 18px; border: 2px solid #475569; border-radius: 4px; flex-shrink: 0; margin-top: 2px;"></div>
+          <div style="flex: 1;">
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+              <span style="background: #1e3a5f; color: #93c5fd; padding: 1px 8px; border-radius: 10px; font-size: 9px;">Bassa priorità</span>
+              <span style="background: #1e3a5f; color: #93c5fd; padding: 1px 8px; border-radius: 10px; font-size: 9px;">Estensioni</span>
+            </div>
+            <div style="font-size: 11px; color: #e2e8f0;">Aggiungere estensioni callout e sitelink mancanti</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Optimization 4 (unchecked) -->
+      <div style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; opacity: 0.7;">
+        <div style="display: flex; align-items: start; gap: 10px;">
+          <div style="width: 18px; height: 18px; border: 2px solid #475569; border-radius: 4px; flex-shrink: 0; margin-top: 2px;"></div>
+          <div style="flex: 1;">
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+              <span style="background: #1e3a5f; color: #93c5fd; padding: 1px 8px; border-radius: 10px; font-size: 9px;">Bassa priorità</span>
+              <span style="background: #1e3a5f; color: #93c5fd; padding: 1px 8px; border-radius: 10px; font-size: 9px;">Landing Page</span>
+            </div>
+            <div style="font-size: 11px; color: #e2e8f0;">Landing page "scarpe generiche" non coerente con keyword — suggerimenti miglioramento</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Struttura della pagina (dall'alto al basso):</h3>
+  <ol style="font-size: 14px; line-height: 2;">
+    <li><strong>Header</strong> — periodo, selettore 7g/14g/30g, export PDF</li>
+    <li><strong>KPI Hero Cards (6)</strong> — Spesa, Click, CTR, Conversioni, ROAS, CPA — ognuna con delta %</li>
+    <li><strong>Grafico Trend</strong> — andamento Click/Spesa/Conversioni nel periodo (Chart.js)</li>
+    <li><strong>Tabella Campagne</strong> — tutte le metriche, tipo campagna, sortable, espandibile per ad group</li>
+    <li><strong>Analisi AI</strong> — summary + score, commenta i dati sopra</li>
+    <li><strong>Ottimizzazioni Batch</strong> — lista azioni con preview before/after, checkbox, "Applica Selezionate"</li>
+  </ol>
+</div>

@@ -1,0 +1,20 @@
+[     297ms] [ERROR] [WebVitalsReporter] Error sending metrics: TypeError: Failed to fetch
+    at https://it.semrush.com/static/index.cbaf481febb1577a9772.js:2:60656
+    at https://sdk.voyantis.io/d8x0anTvV24UqmERWFnln59AQOsoIyNVo9jf2JY0/vy-cs-sdk.min.js:10:260536
+    at https://sdk.voyantis.io/d8x0anTvV24UqmERWFnln59AQOsoIyNVo9jf2JY0/vy-cs-sdk.min.js:1:1918
+    at Object.next (https://sdk.voyantis.io/d8x0anTvV24UqmERWFnln59AQOsoIyNVo9jf2JY0/vy-cs-sdk.min.js:1:2023)
+    at https://sdk.voyantis.io/d8x0anTvV24UqmERWFnln59AQOsoIyNVo9jf2JY0/vy-cs-sdk.min.js:1:866
+    at new Promise (<anonymous>)
+    at n (https://sdk.voyantis.io/d8x0anTvV24UqmERWFnln59AQOsoIyNVo9jf2JY0/vy-cs-sdk.min.js:1:611)
+    at https://sdk.voyantis.io/d8x0anTvV24UqmERWFnln59AQOsoIyNVo9jf2JY0/vy-cs-sdk.min.js:10:259821
+    at O.sendMetrics (https://it.semrush.com/__static__/webpack/smrwv.1104de8eadf0948a.js:2:12571)
+    at HTMLDocument.<anonymous> (https://it.semrush.com/__static__/webpack/smrwv.1104de8eadf0948a.js:2:9489) @ https://it.semrush.com/static/index.cbaf481febb1577a9772.js:1
+[     868ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/__static__/webpack/sentry.02cfbd64d5e1cf6c.js:1
+[     869ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/__static__/webpack/sentry.02cfbd64d5e1cf6c.js:1
+[     871ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/__static__/webpack/sentry.02cfbd64d5e1cf6c.js:1
+[     871ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/__static__/webpack/sentry.02cfbd64d5e1cf6c.js:1
+[     872ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/__static__/webpack/sentry.02cfbd64d5e1cf6c.js:1
+[     873ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/__static__/webpack/sentry.02cfbd64d5e1cf6c.js:1
+[    2696ms] [ERROR] Access to fetch at 'https://tags.srv.stackadapt.com/sa.jpeg' from origin 'https://it.semrush.com' has been blocked by CORS policy: The 'Access-Control-Allow-Origin' header has a value 'https://www.semrush.com' that is not equal to the supplied origin. Have the server send the header with a valid value. @ https://it.semrush.com/pricing/:0
+[    2696ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://tags.srv.stackadapt.com/sa.jpeg:0
+[    2923ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://it.semrush.com/pricing/:0

@@ -1,0 +1,12 @@
+[     575ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://www.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[     576ms] [WARNING] dataLayerProxy:  method call is not supported @ https://www.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[     576ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://www.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[     576ms] [WARNING] dataLayerProxy:  method call is not supported @ https://www.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[     577ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://www.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[     577ms] [WARNING] dataLayerProxy:  method call is not supported @ https://www.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[     584ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://www.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[     584ms] [WARNING] dataLayerProxy:  method call is not supported @ https://www.semrush.com/__static__/webpack/data_layer_proxy.f5edd417255928d0.js:1
+[     880ms] Uncaught (in promise) Error: Container initialization failed as it has already been initialized with a different share scope
+    at o (https://static.semrush.com/position-tracking/wizard/remote.js?v=1772534929032:0:1345)
+    at o (https://www.semrush.com/tracking/overview/28383622_4196831.html?date_begin=20260224&fid=10474819&domain_1=www.amevista.com&report_mode=domain_1:4283:9384)
+[    4326ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://www.semrush.com/tracking/overview/28383622_4196831.html?date_begin=20260224&fid=10474819&domain_1=www.amevista.com&report_mode=domain_1&sort=0_pos_asc:0

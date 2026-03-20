@@ -1,0 +1,13 @@
+[     224ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[   25640ms] [ERROR] Evaluation start failed: TypeError: Failed to fetch
+    at Proxy.doEvaluate (http://localhost/seo-toolkit/ads-analyzer/projects/15/campaigns:1063:36)
+    at Proxy.startEvaluation (http://localhost/seo-toolkit/ads-analyzer/projects/15/campaigns:1040:22)
+    at [Alpine] startEvaluation() (eval at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:5:738), <anonymous>:3:32)
+    at https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:5:1153
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:1:5138)
+    at https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:5:40728
+    at o (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:5:28973)
+    at https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:5:30090
+    at HTMLButtonElement.<anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:5:28995) @ http://localhost/seo-toolkit/ads-analyzer/projects/15/campaigns:1086
+[   25682ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[   28620ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65

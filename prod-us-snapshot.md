@@ -1,0 +1,1244 @@
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - link "Ainstein - SEO Toolkit" [ref=e6] [cursor=pointer]:
+      - /url: /dashboard
+      - img "Ainstein - SEO Toolkit" [ref=e7]
+    - navigation [ref=e8]:
+      - generic [ref=e9]:
+        - link "Dashboard" [ref=e10] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e11]
+          - generic [ref=e13]: Dashboard
+        - link "Progetti" [ref=e14] [cursor=pointer]:
+          - /url: /projects
+          - img [ref=e15]
+          - generic [ref=e17]: Progetti
+      - generic [ref=e18]:
+        - paragraph [ref=e19]: Moduli
+        - generic [ref=e20]:
+          - generic [ref=e22]:
+            - link "AI Google Ads Tools" [ref=e23] [cursor=pointer]:
+              - /url: /ads-analyzer
+              - img [ref=e24]
+              - generic [ref=e27]: AI Google Ads Tools
+            - button "Tour guidato" [ref=e28] [cursor=pointer]:
+              - img [ref=e29]
+          - generic [ref=e32]:
+            - link "AI Keyword Research" [ref=e33] [cursor=pointer]:
+              - /url: /keyword-research
+              - img [ref=e34]
+              - generic [ref=e36]: AI Keyword Research
+            - button "Tour guidato" [ref=e37] [cursor=pointer]:
+              - img [ref=e38]
+            - button [ref=e40] [cursor=pointer]:
+              - img [ref=e41]
+          - generic [ref=e44]:
+            - link "AI SEO Audit" [ref=e45] [cursor=pointer]:
+              - /url: /seo-audit
+              - img [ref=e46]
+              - generic [ref=e48]: AI SEO Audit
+            - button "Tour guidato" [ref=e49] [cursor=pointer]:
+              - img [ref=e50]
+          - generic [ref=e53]:
+            - link "AI SEO Content Generator" [ref=e54] [cursor=pointer]:
+              - /url: /ai-content
+              - img [ref=e55]
+              - generic [ref=e57]: AI SEO Content Generator
+            - button "Tour guidato" [ref=e58] [cursor=pointer]:
+              - img [ref=e59]
+            - button [ref=e61] [cursor=pointer]:
+              - img [ref=e62]
+          - generic [ref=e64]:
+            - generic [ref=e65]:
+              - link "AI SEO Position Tracking" [ref=e66] [cursor=pointer]:
+                - /url: /seo-tracking
+                - img [ref=e67]
+                - generic [ref=e69]: AI SEO Position Tracking
+              - button "Tour guidato" [ref=e70] [cursor=pointer]:
+                - img [ref=e71]
+              - button [ref=e73] [cursor=pointer]:
+                - img [ref=e74]
+            - generic [ref=e76]:
+              - generic "Amevista" [ref=e77]
+              - link "Overview" [ref=e78] [cursor=pointer]:
+                - /url: /seo-tracking/project/5
+                - img [ref=e79]
+                - generic [ref=e81]: Overview
+              - link "Keywords" [ref=e82] [cursor=pointer]:
+                - /url: /seo-tracking/project/5/keywords
+                - img [ref=e83]
+                - generic [ref=e85]: Keywords
+              - link "Trend" [ref=e86] [cursor=pointer]:
+                - /url: /seo-tracking/project/5/trend
+                - img [ref=e87]
+                - generic [ref=e89]: Trend
+              - link "Gruppi" [ref=e90] [cursor=pointer]:
+                - /url: /seo-tracking/project/5/groups
+                - img [ref=e91]
+                - generic [ref=e93]: Gruppi
+              - link "Quick Wins" [ref=e94] [cursor=pointer]:
+                - /url: /seo-tracking/project/5/quick-wins
+                - img [ref=e95]
+                - generic [ref=e97]: Quick Wins
+              - link "Page Analyzer" [ref=e98] [cursor=pointer]:
+                - /url: /seo-tracking/project/5/page-analyzer
+                - img [ref=e99]
+                - generic [ref=e101]: Page Analyzer
+              - link "Search Console" [ref=e102] [cursor=pointer]:
+                - /url: /seo-tracking/project/5/gsc
+                - img [ref=e103]
+                - generic [ref=e106]: Search Console
+              - link "Impostazioni" [ref=e108] [cursor=pointer]:
+                - /url: /seo-tracking/project/5/settings
+                - img [ref=e109]
+                - generic [ref=e112]: Impostazioni
+      - generic [ref=e113]:
+        - paragraph [ref=e114]: Amministrazione
+        - generic [ref=e115]:
+          - link "Overview" [ref=e116] [cursor=pointer]:
+            - /url: /admin
+            - img [ref=e117]
+            - generic [ref=e119]: Overview
+          - link "Utenti" [ref=e120] [cursor=pointer]:
+            - /url: /admin/users
+            - img [ref=e121]
+            - generic [ref=e123]: Utenti
+          - link "Piani" [ref=e124] [cursor=pointer]:
+            - /url: /admin/plans
+            - img [ref=e125]
+            - generic [ref=e127]: Piani
+          - link "Finance" [ref=e128] [cursor=pointer]:
+            - /url: /admin/finance
+            - img [ref=e129]
+            - generic [ref=e131]: Finance
+          - link "Moduli" [ref=e132] [cursor=pointer]:
+            - /url: /admin/modules
+            - img [ref=e133]
+            - generic [ref=e135]: Moduli
+          - link "Impostazioni" [ref=e136] [cursor=pointer]:
+            - /url: /admin/settings
+            - img [ref=e137]
+            - generic [ref=e140]: Impostazioni
+          - link "Template Email" [ref=e141] [cursor=pointer]:
+            - /url: /admin/email-templates
+            - img [ref=e142]
+            - generic [ref=e144]: Template Email
+          - link "AI Logs" [ref=e145] [cursor=pointer]:
+            - /url: /admin/ai-logs
+            - img [ref=e146]
+            - generic [ref=e148]: AI Logs
+          - link "API Logs" [ref=e149] [cursor=pointer]:
+            - /url: /admin/api-logs
+            - img [ref=e150]
+            - generic [ref=e152]: API Logs
+          - link "Jobs Monitor" [ref=e153] [cursor=pointer]:
+            - /url: /admin/jobs
+            - img [ref=e154]
+            - generic [ref=e156]: Jobs Monitor
+          - link "Cache & Log" [ref=e157] [cursor=pointer]:
+            - /url: /admin/cache
+            - img [ref=e158]
+            - generic [ref=e160]: Cache & Log
+    - generic [ref=e162]:
+      - generic [ref=e163]: A
+      - generic [ref=e164]:
+        - paragraph [ref=e165]: Amministratore
+        - paragraph [ref=e166]: admin@seo-toolkit.local
+  - generic [ref=e167]:
+    - banner [ref=e168]:
+      - generic [ref=e171]:
+        - generic [ref=e172]:
+          - img [ref=e173]
+          - generic [ref=e175]: 8,124.9
+        - button [ref=e176] [cursor=pointer]:
+          - img [ref=e177]
+        - button "4" [ref=e180] [cursor=pointer]:
+          - img [ref=e181]
+          - generic [ref=e183]: "4"
+        - button "A Amministratore" [ref=e185] [cursor=pointer]:
+          - generic [ref=e186]: A
+          - generic [ref=e187]: Amministratore
+          - img [ref=e188]
+    - main [ref=e190]:
+      - generic [ref=e192]:
+        - generic [ref=e193]:
+          - generic [ref=e194]:
+            - generic [ref=e195]:
+              - link [ref=e196] [cursor=pointer]:
+                - /url: /seo-tracking
+                - img [ref=e197]
+              - heading "Amevista" [level=1] [ref=e199]
+            - paragraph [ref=e200]: amevista.com
+          - link "Impostazioni" [ref=e202] [cursor=pointer]:
+            - /url: /seo-tracking/project/5/settings
+            - img [ref=e203]
+            - text: Impostazioni
+        - navigation "Tabs" [ref=e207]:
+          - link "Landscape" [ref=e208] [cursor=pointer]:
+            - /url: /seo-tracking/project/5
+            - img [ref=e209]
+            - text: Landscape
+          - link "Overview" [ref=e211] [cursor=pointer]:
+            - /url: /seo-tracking/project/5/keywords
+            - img [ref=e212]
+            - text: Overview
+          - link "Pages" [ref=e214] [cursor=pointer]:
+            - /url: /seo-tracking/project/5/urls
+            - img [ref=e215]
+            - text: Pages
+          - link "Tags" [ref=e217] [cursor=pointer]:
+            - /url: /seo-tracking/project/5/groups
+            - img [ref=e218]
+            - text: Tags
+          - link "Storico" [ref=e220] [cursor=pointer]:
+            - /url: /seo-tracking/project/5/rank-check/history
+            - img [ref=e221]
+            - text: Storico
+          - link "Quick Wins" [ref=e223] [cursor=pointer]:
+            - /url: /seo-tracking/project/5/quick-wins
+            - img [ref=e224]
+            - text: Quick Wins
+          - link "Page Analyzer" [ref=e226] [cursor=pointer]:
+            - /url: /seo-tracking/project/5/page-analyzer
+            - img [ref=e227]
+            - text: Page Analyzer
+        - generic [ref=e229]:
+          - link "IT IT 0.0% 28 kw" [ref=e230] [cursor=pointer]:
+            - /url: /seo-tracking/project/5/keywords?country=IT
+            - img "IT" [ref=e231]
+            - generic [ref=e232]: IT
+            - generic [ref=e233]: 0.0%
+            - generic [ref=e234]: 28 kw
+          - link "US US 0.0% 25 kw" [ref=e235] [cursor=pointer]:
+            - /url: /seo-tracking/project/5/keywords?country=US
+            - img "US" [ref=e236]
+            - generic [ref=e237]: US
+            - generic [ref=e238]: 0.0%
+            - generic [ref=e239]: 25 kw
+          - link "DE DE 0.0% 25 kw" [ref=e240] [cursor=pointer]:
+            - /url: /seo-tracking/project/5/keywords?country=DE
+            - img "DE" [ref=e241]
+            - generic [ref=e242]: DE
+            - generic [ref=e243]: 0.0%
+            - generic [ref=e244]: 25 kw
+        - generic [ref=e245]:
+          - link "Tutti" [ref=e246] [cursor=pointer]:
+            - /url: /seo-tracking/project/5/keywords
+          - link "IT IT" [ref=e247] [cursor=pointer]:
+            - /url: /seo-tracking/project/5/keywords?country=IT
+            - img "IT" [ref=e248]
+            - text: IT
+          - link "US US" [ref=e249] [cursor=pointer]:
+            - /url: /seo-tracking/project/5/keywords?country=US
+            - img "US" [ref=e250]
+            - text: US
+          - link "DE DE" [ref=e251] [cursor=pointer]:
+            - /url: /seo-tracking/project/5/keywords?country=DE
+            - img "DE" [ref=e252]
+            - text: DE
+        - generic [ref=e253]:
+          - generic [ref=e254]:
+            - paragraph [ref=e255]: 78 keyword totali, 78 tracciate
+            - generic [ref=e256]:
+              - button "Volumi" [ref=e257] [cursor=pointer]:
+                - img [ref=e258]
+                - text: Volumi
+              - button "Posizioni" [ref=e260] [cursor=pointer]:
+                - img [ref=e261]
+                - text: Posizioni
+              - button "Tutto" [ref=e263] [cursor=pointer]:
+                - img [ref=e264]
+                - text: Tutto
+              - link "Aggiungi Keyword" [ref=e267] [cursor=pointer]:
+                - /url: /seo-tracking/project/5/keywords/add?country=US
+                - img [ref=e268]
+                - text: Aggiungi Keyword
+          - generic [ref=e270]:
+            - generic [ref=e271]:
+              - img [ref=e272]
+              - text: "Costi stimati:"
+            - generic [ref=e274]: "Volumi: ~23.4 crediti"
+            - generic [ref=e275]: "Posizioni: ~78 crediti"
+            - generic [ref=e276]: "Tutto: ~101.4 crediti"
+        - generic [ref=e278]:
+          - textbox "Cerca keyword..." [ref=e280]
+          - combobox [ref=e281]:
+            - option "Tutte" [selected]
+            - option "Solo tracciate"
+            - option "Non tracciate"
+          - combobox [ref=e282]:
+            - option "Tutte le posizioni" [selected]
+            - option "Top 3"
+            - option "Top 10"
+            - option "Top 20"
+            - option "Top 50"
+          - combobox [ref=e283]:
+            - option "Tutti i gruppi" [selected]
+            - option "Caratteristiche (60)"
+            - option "Company (1)"
+            - option "Generiche (15)"
+          - combobox [ref=e284]:
+            - option "Tutti gli intenti" [selected]
+            - option "Informational"
+            - option "Navigational"
+            - option "Commercial"
+            - option "Transactional"
+          - combobox [ref=e285]:
+            - option "Tutte le posizioni" [selected]
+            - option "Top 3"
+            - option "Top 10"
+            - option "Top 20"
+            - option "Top 50"
+            - option "51-100"
+            - option "100+"
+          - combobox [ref=e286]:
+            - option "Tutti i volumi" [selected]
+            - option "0-100"
+            - option "100-1K"
+            - option "1K-10K"
+            - option "10K+"
+          - button "Filtra" [ref=e287] [cursor=pointer]
+        - button "Confronta periodo" [ref=e290] [cursor=pointer]:
+          - img [ref=e291]
+          - text: Confronta periodo
+          - img [ref=e293]
+        - generic [ref=e296]: Mostrando 1 - 25 di 78 keyword
+        - generic [ref=e298]:
+          - generic [ref=e299]:
+            - generic [ref=e300]: 0 selezionate
+            - combobox [ref=e301]:
+              - option "Azione..." [selected]
+              - option "Aggiungi al tracking"
+              - option "Rimuovi dal tracking"
+              - option "Sposta in gruppo"
+              - option "Elimina"
+            - button "Applica" [ref=e302] [cursor=pointer]
+          - table [ref=e304]:
+            - rowgroup [ref=e305]:
+              - row "Keyword Loc Posizione Volume CPC Comp. Intento Visibility % Est. Traffic Stagion. Aggiornato Azioni" [ref=e306]:
+                - columnheader [ref=e307]:
+                  - checkbox [ref=e308]
+                - columnheader "Keyword" [ref=e309]
+                - columnheader "Loc" [ref=e310]
+                - columnheader "Posizione" [ref=e311]
+                - columnheader "Volume" [ref=e312]
+                - columnheader "CPC" [ref=e313]
+                - columnheader "Comp." [ref=e314]
+                - columnheader "Intento" [ref=e315]
+                - columnheader "Visibility %" [ref=e316]
+                - columnheader "Est. Traffic" [ref=e317]
+                - columnheader "Stagion." [ref=e318]
+                - columnheader "Aggiornato" [ref=e319]
+                - columnheader "Azioni" [ref=e320]
+            - rowgroup [ref=e321]:
+              - row "square sunglasses Caratteristiche US US - - - - - - - Mai" [ref=e322]:
+                - cell [ref=e323]:
+                  - checkbox [ref=e324]
+                - cell "square sunglasses Caratteristiche" [ref=e325]:
+                  - link "square sunglasses Caratteristiche" [ref=e326] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/219
+                    - paragraph [ref=e327]: square sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e328]:
+                  - generic "US" [ref=e329]:
+                    - img "US" [ref=e330]
+                    - text: US
+                - cell "-" [ref=e331]:
+                  - generic [ref=e332]: "-"
+                - cell "-" [ref=e333]
+                - cell "-" [ref=e334]
+                - cell "-" [ref=e335]
+                - cell "-" [ref=e336]
+                - cell "-" [ref=e337]
+                - cell "-" [ref=e338]
+                - cell [ref=e339]:
+                  - button "Visualizza stagionalità" [ref=e340] [cursor=pointer]:
+                    - img [ref=e341]
+                - cell "Mai" [ref=e343]
+                - cell [ref=e344]:
+                  - generic [ref=e345]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e346] [cursor=pointer]:
+                      - img [ref=e347]
+                    - link "Dettaglio" [ref=e349] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/219
+                      - img [ref=e350]
+                    - link "Modifica" [ref=e353] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/219/edit
+                      - img [ref=e354]
+                    - button "Elimina" [ref=e356] [cursor=pointer]:
+                      - img [ref=e357]
+              - row "men glasses Generiche US US - - - - - - - Mai" [ref=e359]:
+                - cell [ref=e360]:
+                  - checkbox [ref=e361]
+                - cell "men glasses Generiche" [ref=e362]:
+                  - link "men glasses Generiche" [ref=e363] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/231
+                    - paragraph [ref=e364]: men glasses
+                    - text: Generiche
+                - cell "US US" [ref=e365]:
+                  - generic "US" [ref=e366]:
+                    - img "US" [ref=e367]
+                    - text: US
+                - cell "-" [ref=e368]:
+                  - generic [ref=e369]: "-"
+                - cell "-" [ref=e370]
+                - cell "-" [ref=e371]
+                - cell "-" [ref=e372]
+                - cell "-" [ref=e373]
+                - cell "-" [ref=e374]
+                - cell "-" [ref=e375]
+                - cell [ref=e376]:
+                  - button "Visualizza stagionalità" [ref=e377] [cursor=pointer]:
+                    - img [ref=e378]
+                - cell "Mai" [ref=e380]
+                - cell [ref=e381]:
+                  - generic [ref=e382]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e383] [cursor=pointer]:
+                      - img [ref=e384]
+                    - link "Dettaglio" [ref=e386] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/231
+                      - img [ref=e387]
+                    - link "Modifica" [ref=e390] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/231/edit
+                      - img [ref=e391]
+                    - button "Elimina" [ref=e393] [cursor=pointer]:
+                      - img [ref=e394]
+              - row "women glasses Generiche US US - - - - - - - Mai" [ref=e396]:
+                - cell [ref=e397]:
+                  - checkbox [ref=e398]
+                - cell "women glasses Generiche" [ref=e399]:
+                  - link "women glasses Generiche" [ref=e400] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/230
+                    - paragraph [ref=e401]: women glasses
+                    - text: Generiche
+                - cell "US US" [ref=e402]:
+                  - generic "US" [ref=e403]:
+                    - img "US" [ref=e404]
+                    - text: US
+                - cell "-" [ref=e405]:
+                  - generic [ref=e406]: "-"
+                - cell "-" [ref=e407]
+                - cell "-" [ref=e408]
+                - cell "-" [ref=e409]
+                - cell "-" [ref=e410]
+                - cell "-" [ref=e411]
+                - cell "-" [ref=e412]
+                - cell [ref=e413]:
+                  - button "Visualizza stagionalità" [ref=e414] [cursor=pointer]:
+                    - img [ref=e415]
+                - cell "Mai" [ref=e417]
+                - cell [ref=e418]:
+                  - generic [ref=e419]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e420] [cursor=pointer]:
+                      - img [ref=e421]
+                    - link "Dettaglio" [ref=e423] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/230
+                      - img [ref=e424]
+                    - link "Modifica" [ref=e427] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/230/edit
+                      - img [ref=e428]
+                    - button "Elimina" [ref=e430] [cursor=pointer]:
+                      - img [ref=e431]
+              - row "eyeglasses Generiche US US - - - - - - - Mai" [ref=e433]:
+                - cell [ref=e434]:
+                  - checkbox [ref=e435]
+                - cell "eyeglasses Generiche" [ref=e436]:
+                  - link "eyeglasses Generiche" [ref=e437] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/229
+                    - paragraph [ref=e438]: eyeglasses
+                    - text: Generiche
+                - cell "US US" [ref=e439]:
+                  - generic "US" [ref=e440]:
+                    - img "US" [ref=e441]
+                    - text: US
+                - cell "-" [ref=e442]:
+                  - generic [ref=e443]: "-"
+                - cell "-" [ref=e444]
+                - cell "-" [ref=e445]
+                - cell "-" [ref=e446]
+                - cell "-" [ref=e447]
+                - cell "-" [ref=e448]
+                - cell "-" [ref=e449]
+                - cell [ref=e450]:
+                  - button "Visualizza stagionalità" [ref=e451] [cursor=pointer]:
+                    - img [ref=e452]
+                - cell "Mai" [ref=e454]
+                - cell [ref=e455]:
+                  - generic [ref=e456]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e457] [cursor=pointer]:
+                      - img [ref=e458]
+                    - link "Dettaglio" [ref=e460] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/229
+                      - img [ref=e461]
+                    - link "Modifica" [ref=e464] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/229/edit
+                      - img [ref=e465]
+                    - button "Elimina" [ref=e467] [cursor=pointer]:
+                      - img [ref=e468]
+              - row "sunglasses Generiche US US - - - - - - - Mai" [ref=e470]:
+                - cell [ref=e471]:
+                  - checkbox [ref=e472]
+                - cell "sunglasses Generiche" [ref=e473]:
+                  - link "sunglasses Generiche" [ref=e474] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/228
+                    - paragraph [ref=e475]: sunglasses
+                    - text: Generiche
+                - cell "US US" [ref=e476]:
+                  - generic "US" [ref=e477]:
+                    - img "US" [ref=e478]
+                    - text: US
+                - cell "-" [ref=e479]:
+                  - generic [ref=e480]: "-"
+                - cell "-" [ref=e481]
+                - cell "-" [ref=e482]
+                - cell "-" [ref=e483]
+                - cell "-" [ref=e484]
+                - cell "-" [ref=e485]
+                - cell "-" [ref=e486]
+                - cell [ref=e487]:
+                  - button "Visualizza stagionalità" [ref=e488] [cursor=pointer]:
+                    - img [ref=e489]
+                - cell "Mai" [ref=e491]
+                - cell [ref=e492]:
+                  - generic [ref=e493]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e494] [cursor=pointer]:
+                      - img [ref=e495]
+                    - link "Dettaglio" [ref=e497] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/228
+                      - img [ref=e498]
+                    - link "Modifica" [ref=e501] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/228/edit
+                      - img [ref=e502]
+                    - button "Elimina" [ref=e504] [cursor=pointer]:
+                      - img [ref=e505]
+              - row "kids glasses Generiche US US - - - - - - - Mai" [ref=e507]:
+                - cell [ref=e508]:
+                  - checkbox [ref=e509]
+                - cell "kids glasses Generiche" [ref=e510]:
+                  - link "kids glasses Generiche" [ref=e511] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/227
+                    - paragraph [ref=e512]: kids glasses
+                    - text: Generiche
+                - cell "US US" [ref=e513]:
+                  - generic "US" [ref=e514]:
+                    - img "US" [ref=e515]
+                    - text: US
+                - cell "-" [ref=e516]:
+                  - generic [ref=e517]: "-"
+                - cell "-" [ref=e518]
+                - cell "-" [ref=e519]
+                - cell "-" [ref=e520]
+                - cell "-" [ref=e521]
+                - cell "-" [ref=e522]
+                - cell "-" [ref=e523]
+                - cell [ref=e524]:
+                  - button "Visualizza stagionalità" [ref=e525] [cursor=pointer]:
+                    - img [ref=e526]
+                - cell "Mai" [ref=e528]
+                - cell [ref=e529]:
+                  - generic [ref=e530]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e531] [cursor=pointer]:
+                      - img [ref=e532]
+                    - link "Dettaglio" [ref=e534] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/227
+                      - img [ref=e535]
+                    - link "Modifica" [ref=e538] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/227/edit
+                      - img [ref=e539]
+                    - button "Elimina" [ref=e541] [cursor=pointer]:
+                      - img [ref=e542]
+              - row "men sunglasses Caratteristiche US US - - - - - - - Mai" [ref=e544]:
+                - cell [ref=e545]:
+                  - checkbox [ref=e546]
+                - cell "men sunglasses Caratteristiche" [ref=e547]:
+                  - link "men sunglasses Caratteristiche" [ref=e548] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/226
+                    - paragraph [ref=e549]: men sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e550]:
+                  - generic "US" [ref=e551]:
+                    - img "US" [ref=e552]
+                    - text: US
+                - cell "-" [ref=e553]:
+                  - generic [ref=e554]: "-"
+                - cell "-" [ref=e555]
+                - cell "-" [ref=e556]
+                - cell "-" [ref=e557]
+                - cell "-" [ref=e558]
+                - cell "-" [ref=e559]
+                - cell "-" [ref=e560]
+                - cell [ref=e561]:
+                  - button "Visualizza stagionalità" [ref=e562] [cursor=pointer]:
+                    - img [ref=e563]
+                - cell "Mai" [ref=e565]
+                - cell [ref=e566]:
+                  - generic [ref=e567]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e568] [cursor=pointer]:
+                      - img [ref=e569]
+                    - link "Dettaglio" [ref=e571] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/226
+                      - img [ref=e572]
+                    - link "Modifica" [ref=e575] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/226/edit
+                      - img [ref=e576]
+                    - button "Elimina" [ref=e578] [cursor=pointer]:
+                      - img [ref=e579]
+              - row "extravagant sunglasses Caratteristiche US US - - - - - - - Mai" [ref=e581]:
+                - cell [ref=e582]:
+                  - checkbox [ref=e583]
+                - cell "extravagant sunglasses Caratteristiche" [ref=e584]:
+                  - link "extravagant sunglasses Caratteristiche" [ref=e585] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/225
+                    - paragraph [ref=e586]: extravagant sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e587]:
+                  - generic "US" [ref=e588]:
+                    - img "US" [ref=e589]
+                    - text: US
+                - cell "-" [ref=e590]:
+                  - generic [ref=e591]: "-"
+                - cell "-" [ref=e592]
+                - cell "-" [ref=e593]
+                - cell "-" [ref=e594]
+                - cell "-" [ref=e595]
+                - cell "-" [ref=e596]
+                - cell "-" [ref=e597]
+                - cell [ref=e598]:
+                  - button "Visualizza stagionalità" [ref=e599] [cursor=pointer]:
+                    - img [ref=e600]
+                - cell "Mai" [ref=e602]
+                - cell [ref=e603]:
+                  - generic [ref=e604]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e605] [cursor=pointer]:
+                      - img [ref=e606]
+                    - link "Dettaglio" [ref=e608] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/225
+                      - img [ref=e609]
+                    - link "Modifica" [ref=e612] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/225/edit
+                      - img [ref=e613]
+                    - button "Elimina" [ref=e615] [cursor=pointer]:
+                      - img [ref=e616]
+              - row "sport sunglasses Caratteristiche US US - - - - - - - Mai" [ref=e618]:
+                - cell [ref=e619]:
+                  - checkbox [ref=e620]
+                - cell "sport sunglasses Caratteristiche" [ref=e621]:
+                  - link "sport sunglasses Caratteristiche" [ref=e622] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/224
+                    - paragraph [ref=e623]: sport sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e624]:
+                  - generic "US" [ref=e625]:
+                    - img "US" [ref=e626]
+                    - text: US
+                - cell "-" [ref=e627]:
+                  - generic [ref=e628]: "-"
+                - cell "-" [ref=e629]
+                - cell "-" [ref=e630]
+                - cell "-" [ref=e631]
+                - cell "-" [ref=e632]
+                - cell "-" [ref=e633]
+                - cell "-" [ref=e634]
+                - cell [ref=e635]:
+                  - button "Visualizza stagionalità" [ref=e636] [cursor=pointer]:
+                    - img [ref=e637]
+                - cell "Mai" [ref=e639]
+                - cell [ref=e640]:
+                  - generic [ref=e641]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e642] [cursor=pointer]:
+                      - img [ref=e643]
+                    - link "Dettaglio" [ref=e645] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/224
+                      - img [ref=e646]
+                    - link "Modifica" [ref=e649] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/224/edit
+                      - img [ref=e650]
+                    - button "Elimina" [ref=e652] [cursor=pointer]:
+                      - img [ref=e653]
+              - row "mirrored sunglasses Caratteristiche US US - - - - - - - Mai" [ref=e655]:
+                - cell [ref=e656]:
+                  - checkbox [ref=e657]
+                - cell "mirrored sunglasses Caratteristiche" [ref=e658]:
+                  - link "mirrored sunglasses Caratteristiche" [ref=e659] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/223
+                    - paragraph [ref=e660]: mirrored sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e661]:
+                  - generic "US" [ref=e662]:
+                    - img "US" [ref=e663]
+                    - text: US
+                - cell "-" [ref=e664]:
+                  - generic [ref=e665]: "-"
+                - cell "-" [ref=e666]
+                - cell "-" [ref=e667]
+                - cell "-" [ref=e668]
+                - cell "-" [ref=e669]
+                - cell "-" [ref=e670]
+                - cell "-" [ref=e671]
+                - cell [ref=e672]:
+                  - button "Visualizza stagionalità" [ref=e673] [cursor=pointer]:
+                    - img [ref=e674]
+                - cell "Mai" [ref=e676]
+                - cell [ref=e677]:
+                  - generic [ref=e678]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e679] [cursor=pointer]:
+                      - img [ref=e680]
+                    - link "Dettaglio" [ref=e682] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/223
+                      - img [ref=e683]
+                    - link "Modifica" [ref=e686] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/223/edit
+                      - img [ref=e687]
+                    - button "Elimina" [ref=e689] [cursor=pointer]:
+                      - img [ref=e690]
+              - row "gradient sunglasses Caratteristiche US US - - - - - - - Mai" [ref=e692]:
+                - cell [ref=e693]:
+                  - checkbox [ref=e694]
+                - cell "gradient sunglasses Caratteristiche" [ref=e695]:
+                  - link "gradient sunglasses Caratteristiche" [ref=e696] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/222
+                    - paragraph [ref=e697]: gradient sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e698]:
+                  - generic "US" [ref=e699]:
+                    - img "US" [ref=e700]
+                    - text: US
+                - cell "-" [ref=e701]:
+                  - generic [ref=e702]: "-"
+                - cell "-" [ref=e703]
+                - cell "-" [ref=e704]
+                - cell "-" [ref=e705]
+                - cell "-" [ref=e706]
+                - cell "-" [ref=e707]
+                - cell "-" [ref=e708]
+                - cell [ref=e709]:
+                  - button "Visualizza stagionalità" [ref=e710] [cursor=pointer]:
+                    - img [ref=e711]
+                - cell "Mai" [ref=e713]
+                - cell [ref=e714]:
+                  - generic [ref=e715]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e716] [cursor=pointer]:
+                      - img [ref=e717]
+                    - link "Dettaglio" [ref=e719] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/222
+                      - img [ref=e720]
+                    - link "Modifica" [ref=e723] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/222/edit
+                      - img [ref=e724]
+                    - button "Elimina" [ref=e726] [cursor=pointer]:
+                      - img [ref=e727]
+              - row "round sunglasses Caratteristiche US US - - - - - - - Mai" [ref=e729]:
+                - cell [ref=e730]:
+                  - checkbox [ref=e731]
+                - cell "round sunglasses Caratteristiche" [ref=e732]:
+                  - link "round sunglasses Caratteristiche" [ref=e733] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/221
+                    - paragraph [ref=e734]: round sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e735]:
+                  - generic "US" [ref=e736]:
+                    - img "US" [ref=e737]
+                    - text: US
+                - cell "-" [ref=e738]:
+                  - generic [ref=e739]: "-"
+                - cell "-" [ref=e740]
+                - cell "-" [ref=e741]
+                - cell "-" [ref=e742]
+                - cell "-" [ref=e743]
+                - cell "-" [ref=e744]
+                - cell "-" [ref=e745]
+                - cell [ref=e746]:
+                  - button "Visualizza stagionalità" [ref=e747] [cursor=pointer]:
+                    - img [ref=e748]
+                - cell "Mai" [ref=e750]
+                - cell [ref=e751]:
+                  - generic [ref=e752]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e753] [cursor=pointer]:
+                      - img [ref=e754]
+                    - link "Dettaglio" [ref=e756] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/221
+                      - img [ref=e757]
+                    - link "Modifica" [ref=e760] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/221/edit
+                      - img [ref=e761]
+                    - button "Elimina" [ref=e763] [cursor=pointer]:
+                      - img [ref=e764]
+              - row "rectangular sunglasses Caratteristiche US US - - - - - - - Mai" [ref=e766]:
+                - cell [ref=e767]:
+                  - checkbox [ref=e768]
+                - cell "rectangular sunglasses Caratteristiche" [ref=e769]:
+                  - link "rectangular sunglasses Caratteristiche" [ref=e770] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/220
+                    - paragraph [ref=e771]: rectangular sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e772]:
+                  - generic "US" [ref=e773]:
+                    - img "US" [ref=e774]
+                    - text: US
+                - cell "-" [ref=e775]:
+                  - generic [ref=e776]: "-"
+                - cell "-" [ref=e777]
+                - cell "-" [ref=e778]
+                - cell "-" [ref=e779]
+                - cell "-" [ref=e780]
+                - cell "-" [ref=e781]
+                - cell "-" [ref=e782]
+                - cell [ref=e783]:
+                  - button "Visualizza stagionalità" [ref=e784] [cursor=pointer]:
+                    - img [ref=e785]
+                - cell "Mai" [ref=e787]
+                - cell [ref=e788]:
+                  - generic [ref=e789]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e790] [cursor=pointer]:
+                      - img [ref=e791]
+                    - link "Dettaglio" [ref=e793] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/220
+                      - img [ref=e794]
+                    - link "Modifica" [ref=e797] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/220/edit
+                      - img [ref=e798]
+                    - button "Elimina" [ref=e800] [cursor=pointer]:
+                      - img [ref=e801]
+              - row "aviator sunglasses Caratteristiche US US - - - - C - - Mai" [ref=e803]:
+                - cell [ref=e804]:
+                  - checkbox [ref=e805]
+                - cell "aviator sunglasses Caratteristiche" [ref=e806]:
+                  - link "aviator sunglasses Caratteristiche" [ref=e807] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/207
+                    - paragraph [ref=e808]: aviator sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e809]:
+                  - generic "US" [ref=e810]:
+                    - img "US" [ref=e811]
+                    - text: US
+                - cell "-" [ref=e812]:
+                  - generic [ref=e813]: "-"
+                - cell "-" [ref=e814]
+                - cell "-" [ref=e815]
+                - cell "-" [ref=e816]
+                - cell "C" [ref=e817]:
+                  - generic "Commercial" [ref=e818]: C
+                - cell "-" [ref=e819]
+                - cell "-" [ref=e820]
+                - cell [ref=e821]:
+                  - button "Visualizza stagionalità" [ref=e822] [cursor=pointer]:
+                    - img [ref=e823]
+                - cell "Mai" [ref=e825]
+                - cell [ref=e826]:
+                  - generic [ref=e827]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e828] [cursor=pointer]:
+                      - img [ref=e829]
+                    - link "Dettaglio" [ref=e831] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/207
+                      - img [ref=e832]
+                    - link "Modifica" [ref=e835] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/207/edit
+                      - img [ref=e836]
+                    - button "Elimina" [ref=e838] [cursor=pointer]:
+                      - img [ref=e839]
+              - row "polarized sunglasses Caratteristiche US US - - - - - - - Mai" [ref=e841]:
+                - cell [ref=e842]:
+                  - checkbox [ref=e843]
+                - cell "polarized sunglasses Caratteristiche" [ref=e844]:
+                  - link "polarized sunglasses Caratteristiche" [ref=e845] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/218
+                    - paragraph [ref=e846]: polarized sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e847]:
+                  - generic "US" [ref=e848]:
+                    - img "US" [ref=e849]
+                    - text: US
+                - cell "-" [ref=e850]:
+                  - generic [ref=e851]: "-"
+                - cell "-" [ref=e852]
+                - cell "-" [ref=e853]
+                - cell "-" [ref=e854]
+                - cell "-" [ref=e855]
+                - cell "-" [ref=e856]
+                - cell "-" [ref=e857]
+                - cell [ref=e858]:
+                  - button "Visualizza stagionalità" [ref=e859] [cursor=pointer]:
+                    - img [ref=e860]
+                - cell "Mai" [ref=e862]
+                - cell [ref=e863]:
+                  - generic [ref=e864]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e865] [cursor=pointer]:
+                      - img [ref=e866]
+                    - link "Dettaglio" [ref=e868] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/218
+                      - img [ref=e869]
+                    - link "Modifica" [ref=e872] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/218/edit
+                      - img [ref=e873]
+                    - button "Elimina" [ref=e875] [cursor=pointer]:
+                      - img [ref=e876]
+              - row "oval sunglasses Caratteristiche US US - - - - - - - Mai" [ref=e878]:
+                - cell [ref=e879]:
+                  - checkbox [ref=e880]
+                - cell "oval sunglasses Caratteristiche" [ref=e881]:
+                  - link "oval sunglasses Caratteristiche" [ref=e882] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/217
+                    - paragraph [ref=e883]: oval sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e884]:
+                  - generic "US" [ref=e885]:
+                    - img "US" [ref=e886]
+                    - text: US
+                - cell "-" [ref=e887]:
+                  - generic [ref=e888]: "-"
+                - cell "-" [ref=e889]
+                - cell "-" [ref=e890]
+                - cell "-" [ref=e891]
+                - cell "-" [ref=e892]
+                - cell "-" [ref=e893]
+                - cell "-" [ref=e894]
+                - cell [ref=e895]:
+                  - button "Visualizza stagionalità" [ref=e896] [cursor=pointer]:
+                    - img [ref=e897]
+                - cell "Mai" [ref=e899]
+                - cell [ref=e900]:
+                  - generic [ref=e901]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e902] [cursor=pointer]:
+                      - img [ref=e903]
+                    - link "Dettaglio" [ref=e905] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/217
+                      - img [ref=e906]
+                    - link "Modifica" [ref=e909] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/217/edit
+                      - img [ref=e910]
+                    - button "Elimina" [ref=e912] [cursor=pointer]:
+                      - img [ref=e913]
+              - row "shield sunglasses Caratteristiche US US - - - - - - - Mai" [ref=e915]:
+                - cell [ref=e916]:
+                  - checkbox [ref=e917]
+                - cell "shield sunglasses Caratteristiche" [ref=e918]:
+                  - link "shield sunglasses Caratteristiche" [ref=e919] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/216
+                    - paragraph [ref=e920]: shield sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e921]:
+                  - generic "US" [ref=e922]:
+                    - img "US" [ref=e923]
+                    - text: US
+                - cell "-" [ref=e924]:
+                  - generic [ref=e925]: "-"
+                - cell "-" [ref=e926]
+                - cell "-" [ref=e927]
+                - cell "-" [ref=e928]
+                - cell "-" [ref=e929]
+                - cell "-" [ref=e930]
+                - cell "-" [ref=e931]
+                - cell [ref=e932]:
+                  - button "Visualizza stagionalità" [ref=e933] [cursor=pointer]:
+                    - img [ref=e934]
+                - cell "Mai" [ref=e936]
+                - cell [ref=e937]:
+                  - generic [ref=e938]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e939] [cursor=pointer]:
+                      - img [ref=e940]
+                    - link "Dettaglio" [ref=e942] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/216
+                      - img [ref=e943]
+                    - link "Modifica" [ref=e946] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/216/edit
+                      - img [ref=e947]
+                    - button "Elimina" [ref=e949] [cursor=pointer]:
+                      - img [ref=e950]
+              - row "teardrop sunglasses Caratteristiche US US - - - - C - - Mai" [ref=e952]:
+                - cell [ref=e953]:
+                  - checkbox [ref=e954]
+                - cell "teardrop sunglasses Caratteristiche" [ref=e955]:
+                  - link "teardrop sunglasses Caratteristiche" [ref=e956] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/215
+                    - paragraph [ref=e957]: teardrop sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e958]:
+                  - generic "US" [ref=e959]:
+                    - img "US" [ref=e960]
+                    - text: US
+                - cell "-" [ref=e961]:
+                  - generic [ref=e962]: "-"
+                - cell "-" [ref=e963]
+                - cell "-" [ref=e964]
+                - cell "-" [ref=e965]
+                - cell "C" [ref=e966]:
+                  - generic "Commercial" [ref=e967]: C
+                - cell "-" [ref=e968]
+                - cell "-" [ref=e969]
+                - cell [ref=e970]:
+                  - button "Visualizza stagionalità" [ref=e971] [cursor=pointer]:
+                    - img [ref=e972]
+                - cell "Mai" [ref=e974]
+                - cell [ref=e975]:
+                  - generic [ref=e976]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e977] [cursor=pointer]:
+                      - img [ref=e978]
+                    - link "Dettaglio" [ref=e980] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/215
+                      - img [ref=e981]
+                    - link "Modifica" [ref=e984] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/215/edit
+                      - img [ref=e985]
+                    - button "Elimina" [ref=e987] [cursor=pointer]:
+                      - img [ref=e988]
+              - row "photochromic sunglasses Caratteristiche US US - - - - C - - Mai" [ref=e990]:
+                - cell [ref=e991]:
+                  - checkbox [ref=e992]
+                - cell "photochromic sunglasses Caratteristiche" [ref=e993]:
+                  - link "photochromic sunglasses Caratteristiche" [ref=e994] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/214
+                    - paragraph [ref=e995]: photochromic sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e996]:
+                  - generic "US" [ref=e997]:
+                    - img "US" [ref=e998]
+                    - text: US
+                - cell "-" [ref=e999]:
+                  - generic [ref=e1000]: "-"
+                - cell "-" [ref=e1001]
+                - cell "-" [ref=e1002]
+                - cell "-" [ref=e1003]
+                - cell "C" [ref=e1004]:
+                  - generic "Commercial" [ref=e1005]: C
+                - cell "-" [ref=e1006]
+                - cell "-" [ref=e1007]
+                - cell [ref=e1008]:
+                  - button "Visualizza stagionalità" [ref=e1009] [cursor=pointer]:
+                    - img [ref=e1010]
+                - cell "Mai" [ref=e1012]
+                - cell [ref=e1013]:
+                  - generic [ref=e1014]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e1015] [cursor=pointer]:
+                      - img [ref=e1016]
+                    - link "Dettaglio" [ref=e1018] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/214
+                      - img [ref=e1019]
+                    - link "Modifica" [ref=e1022] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/214/edit
+                      - img [ref=e1023]
+                    - button "Elimina" [ref=e1025] [cursor=pointer]:
+                      - img [ref=e1026]
+              - row "butterfly sunglasses Caratteristiche US US - - - - C I - - Mai" [ref=e1028]:
+                - cell [ref=e1029]:
+                  - checkbox [ref=e1030]
+                - cell "butterfly sunglasses Caratteristiche" [ref=e1031]:
+                  - link "butterfly sunglasses Caratteristiche" [ref=e1032] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/213
+                    - paragraph [ref=e1033]: butterfly sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e1034]:
+                  - generic "US" [ref=e1035]:
+                    - img "US" [ref=e1036]
+                    - text: US
+                - cell "-" [ref=e1037]:
+                  - generic [ref=e1038]: "-"
+                - cell "-" [ref=e1039]
+                - cell "-" [ref=e1040]
+                - cell "-" [ref=e1041]
+                - cell "C I" [ref=e1042]:
+                  - generic "Commercial" [ref=e1043]: C
+                  - generic "Informational" [ref=e1044]: I
+                - cell "-" [ref=e1045]
+                - cell "-" [ref=e1046]
+                - cell [ref=e1047]:
+                  - button "Visualizza stagionalità" [ref=e1048] [cursor=pointer]:
+                    - img [ref=e1049]
+                - cell "Mai" [ref=e1051]
+                - cell [ref=e1052]:
+                  - generic [ref=e1053]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e1054] [cursor=pointer]:
+                      - img [ref=e1055]
+                    - link "Dettaglio" [ref=e1057] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/213
+                      - img [ref=e1058]
+                    - link "Modifica" [ref=e1061] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/213/edit
+                      - img [ref=e1062]
+                    - button "Elimina" [ref=e1064] [cursor=pointer]:
+                      - img [ref=e1065]
+              - row "hexagonal sunglasses Caratteristiche US US - - - - C - - Mai" [ref=e1067]:
+                - cell [ref=e1068]:
+                  - checkbox [ref=e1069]
+                - cell "hexagonal sunglasses Caratteristiche" [ref=e1070]:
+                  - link "hexagonal sunglasses Caratteristiche" [ref=e1071] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/212
+                    - paragraph [ref=e1072]: hexagonal sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e1073]:
+                  - generic "US" [ref=e1074]:
+                    - img "US" [ref=e1075]
+                    - text: US
+                - cell "-" [ref=e1076]:
+                  - generic [ref=e1077]: "-"
+                - cell "-" [ref=e1078]
+                - cell "-" [ref=e1079]
+                - cell "-" [ref=e1080]
+                - cell "C" [ref=e1081]:
+                  - generic "Commercial" [ref=e1082]: C
+                - cell "-" [ref=e1083]
+                - cell "-" [ref=e1084]
+                - cell [ref=e1085]:
+                  - button "Visualizza stagionalità" [ref=e1086] [cursor=pointer]:
+                    - img [ref=e1087]
+                - cell "Mai" [ref=e1089]
+                - cell [ref=e1090]:
+                  - generic [ref=e1091]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e1092] [cursor=pointer]:
+                      - img [ref=e1093]
+                    - link "Dettaglio" [ref=e1095] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/212
+                      - img [ref=e1096]
+                    - link "Modifica" [ref=e1099] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/212/edit
+                      - img [ref=e1100]
+                    - button "Elimina" [ref=e1102] [cursor=pointer]:
+                      - img [ref=e1103]
+              - row "women sunglasses Caratteristiche US US - - - - C I - - Mai" [ref=e1105]:
+                - cell [ref=e1106]:
+                  - checkbox [ref=e1107]
+                - cell "women sunglasses Caratteristiche" [ref=e1108]:
+                  - link "women sunglasses Caratteristiche" [ref=e1109] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/211
+                    - paragraph [ref=e1110]: women sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e1111]:
+                  - generic "US" [ref=e1112]:
+                    - img "US" [ref=e1113]
+                    - text: US
+                - cell "-" [ref=e1114]:
+                  - generic [ref=e1115]: "-"
+                - cell "-" [ref=e1116]
+                - cell "-" [ref=e1117]
+                - cell "-" [ref=e1118]
+                - cell "C I" [ref=e1119]:
+                  - generic "Commercial" [ref=e1120]: C
+                  - generic "Informational" [ref=e1121]: I
+                - cell "-" [ref=e1122]
+                - cell "-" [ref=e1123]
+                - cell [ref=e1124]:
+                  - button "Visualizza stagionalità" [ref=e1125] [cursor=pointer]:
+                    - img [ref=e1126]
+                - cell "Mai" [ref=e1128]
+                - cell [ref=e1129]:
+                  - generic [ref=e1130]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e1131] [cursor=pointer]:
+                      - img [ref=e1132]
+                    - link "Dettaglio" [ref=e1134] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/211
+                      - img [ref=e1135]
+                    - link "Modifica" [ref=e1138] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/211/edit
+                      - img [ref=e1139]
+                    - button "Elimina" [ref=e1141] [cursor=pointer]:
+                      - img [ref=e1142]
+              - row "classic sunglasses Caratteristiche US US - - - - C - - Mai" [ref=e1144]:
+                - cell [ref=e1145]:
+                  - checkbox [ref=e1146]
+                - cell "classic sunglasses Caratteristiche" [ref=e1147]:
+                  - link "classic sunglasses Caratteristiche" [ref=e1148] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/210
+                    - paragraph [ref=e1149]: classic sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e1150]:
+                  - generic "US" [ref=e1151]:
+                    - img "US" [ref=e1152]
+                    - text: US
+                - cell "-" [ref=e1153]:
+                  - generic [ref=e1154]: "-"
+                - cell "-" [ref=e1155]
+                - cell "-" [ref=e1156]
+                - cell "-" [ref=e1157]
+                - cell "C" [ref=e1158]:
+                  - generic "Commercial" [ref=e1159]: C
+                - cell "-" [ref=e1160]
+                - cell "-" [ref=e1161]
+                - cell [ref=e1162]:
+                  - button "Visualizza stagionalità" [ref=e1163] [cursor=pointer]:
+                    - img [ref=e1164]
+                - cell "Mai" [ref=e1166]
+                - cell [ref=e1167]:
+                  - generic [ref=e1168]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e1169] [cursor=pointer]:
+                      - img [ref=e1170]
+                    - link "Dettaglio" [ref=e1172] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/210
+                      - img [ref=e1173]
+                    - link "Modifica" [ref=e1176] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/210/edit
+                      - img [ref=e1177]
+                    - button "Elimina" [ref=e1179] [cursor=pointer]:
+                      - img [ref=e1180]
+              - row "cat eye sunglasses Caratteristiche US US - - - - I - - Mai" [ref=e1182]:
+                - cell [ref=e1183]:
+                  - checkbox [ref=e1184]
+                - cell "cat eye sunglasses Caratteristiche" [ref=e1185]:
+                  - link "cat eye sunglasses Caratteristiche" [ref=e1186] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/209
+                    - paragraph [ref=e1187]: cat eye sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e1188]:
+                  - generic "US" [ref=e1189]:
+                    - img "US" [ref=e1190]
+                    - text: US
+                - cell "-" [ref=e1191]:
+                  - generic [ref=e1192]: "-"
+                - cell "-" [ref=e1193]
+                - cell "-" [ref=e1194]
+                - cell "-" [ref=e1195]
+                - cell "I" [ref=e1196]:
+                  - generic "Informational" [ref=e1197]: I
+                - cell "-" [ref=e1198]
+                - cell "-" [ref=e1199]
+                - cell [ref=e1200]:
+                  - button "Visualizza stagionalità" [ref=e1201] [cursor=pointer]:
+                    - img [ref=e1202]
+                - cell "Mai" [ref=e1204]
+                - cell [ref=e1205]:
+                  - generic [ref=e1206]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e1207] [cursor=pointer]:
+                      - img [ref=e1208]
+                    - link "Dettaglio" [ref=e1210] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/209
+                      - img [ref=e1211]
+                    - link "Modifica" [ref=e1214] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/209/edit
+                      - img [ref=e1215]
+                    - button "Elimina" [ref=e1217] [cursor=pointer]:
+                      - img [ref=e1218]
+              - row "kids sunglasses Caratteristiche US US - - - - C - - Mai" [ref=e1220]:
+                - cell [ref=e1221]:
+                  - checkbox [ref=e1222]
+                - cell "kids sunglasses Caratteristiche" [ref=e1223]:
+                  - link "kids sunglasses Caratteristiche" [ref=e1224] [cursor=pointer]:
+                    - /url: /seo-tracking/project/5/keywords/208
+                    - paragraph [ref=e1225]: kids sunglasses
+                    - text: Caratteristiche
+                - cell "US US" [ref=e1226]:
+                  - generic "US" [ref=e1227]:
+                    - img "US" [ref=e1228]
+                    - text: US
+                - cell "-" [ref=e1229]:
+                  - generic [ref=e1230]: "-"
+                - cell "-" [ref=e1231]
+                - cell "-" [ref=e1232]
+                - cell "-" [ref=e1233]
+                - cell "C" [ref=e1234]:
+                  - generic "Commercial" [ref=e1235]: C
+                - cell "-" [ref=e1236]
+                - cell "-" [ref=e1237]
+                - cell [ref=e1238]:
+                  - button "Visualizza stagionalità" [ref=e1239] [cursor=pointer]:
+                    - img [ref=e1240]
+                - cell "Mai" [ref=e1242]
+                - cell [ref=e1243]:
+                  - generic [ref=e1244]:
+                    - button "Verifica posizione SERP (1 credito)" [ref=e1245] [cursor=pointer]:
+                      - img [ref=e1246]
+                    - link "Dettaglio" [ref=e1248] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/208
+                      - img [ref=e1249]
+                    - link "Modifica" [ref=e1252] [cursor=pointer]:
+                      - /url: /seo-tracking/project/5/keywords/208/edit
+                      - img [ref=e1253]
+                    - button "Elimina" [ref=e1255] [cursor=pointer]:
+                      - img [ref=e1256]

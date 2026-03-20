@@ -1,0 +1,254 @@
+[     255ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[   95261ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[   98921ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[   99156ms] [WARNING] Alpine Expression Error: Cannot read properties of undefined (reading 'name')
+
+Expression: "editData[1].name"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[   99159ms] [WARNING] Alpine Expression Error: Cannot read properties of undefined (reading 'api_key')
+
+Expression: "editData[1].api_key"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[   99190ms] Uncaught TypeError: Cannot read properties of undefined (reading 'name')
+    at [Alpine] editData[1].name (:2:43)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at c (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:31900)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:33364)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19535)
+    at mn (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19323)
+    at D (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:463)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:576)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:33351)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3069)
+    at n (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3099)
+    at Er (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3109)
+    at S (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5957)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5321)
+    at Tr (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5309)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:41206)
+[   99191ms] Uncaught TypeError: Cannot read properties of undefined (reading 'api_key')
+    at [Alpine] editData[1].api_key (:2:43)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at c (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:31900)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:33364)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19535)
+    at mn (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19323)
+    at D (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:463)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:576)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:33351)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3069)
+    at n (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3099)
+    at Er (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3109)
+    at S (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5957)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5321)
+    at Tr (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5309)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:41206)
+[   99712ms] [WARNING] Alpine Expression Error: Cannot read properties of undefined (reading 'name')
+
+Expression: "editData[1].name"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[   99713ms] [WARNING] Alpine Expression Error: Cannot read properties of undefined (reading 'name')
+
+Expression: "editData[1].name"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[   99713ms] [WARNING] Alpine Expression Error: Cannot set properties of undefined (setting 'name')
+
+Expression: "editData[1].name = __placeholder"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[   99715ms] [WARNING] Alpine Expression Error: Cannot read properties of undefined (reading 'api_key')
+
+Expression: "editData[1].api_key"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[   99716ms] [WARNING] Alpine Expression Error: Cannot read properties of undefined (reading 'api_key')
+
+Expression: "editData[1].api_key"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[   99716ms] [WARNING] Alpine Expression Error: Cannot set properties of undefined (setting 'api_key')
+
+Expression: "editData[1].api_key = __placeholder"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[   99739ms] Uncaught TypeError: Cannot read properties of undefined (reading 'name')
+    at [Alpine] editData[1].name (:2:43)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at c (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:31900)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:32746)
+    at o (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:28972)
+[   99744ms] Uncaught TypeError: Cannot read properties of undefined (reading 'name')
+    at [Alpine] editData[1].name (:2:43)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at l (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:31939)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:32735)
+    at o (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:28972)
+[   99747ms] Uncaught TypeError: Cannot set properties of undefined (setting 'name')
+    at [Alpine] editData[1].name = __placeholder (:2:48)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at l (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:31964)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:32735)
+    at o (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:28972)
+[   99751ms] Uncaught TypeError: Cannot read properties of undefined (reading 'api_key')
+    at [Alpine] editData[1].api_key (:2:43)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at c (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:31900)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:32746)
+    at o (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:28972)
+[   99753ms] Uncaught TypeError: Cannot read properties of undefined (reading 'api_key')
+    at [Alpine] editData[1].api_key (:2:43)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at l (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:31939)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:32735)
+    at o (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:28972)
+[   99754ms] Uncaught TypeError: Cannot set properties of undefined (setting 'api_key')
+    at [Alpine] editData[1].api_key = __placeholder (:2:51)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at l (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:31964)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:32735)
+    at o (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:28972)
+[  103272ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[  105931ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[  107618ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[  110038ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[  111702ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[  113318ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[  113527ms] [WARNING] Alpine Expression Error: Cannot read properties of undefined (reading 'name')
+
+Expression: "editData[1].name"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[  113528ms] [WARNING] Alpine Expression Error: Cannot read properties of undefined (reading 'api_key')
+
+Expression: "editData[1].api_key"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[  113562ms] Uncaught TypeError: Cannot read properties of undefined (reading 'name')
+    at [Alpine] editData[1].name (:2:43)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at c (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:31900)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:33364)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19535)
+    at mn (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19323)
+    at D (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:463)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:576)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:33351)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3069)
+    at n (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3099)
+    at Er (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3109)
+    at S (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5957)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5321)
+    at Tr (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5309)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:41206)
+[  113563ms] Uncaught TypeError: Cannot read properties of undefined (reading 'api_key')
+    at [Alpine] editData[1].api_key (:2:43)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at c (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:31900)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:33364)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19535)
+    at mn (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19323)
+    at D (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:463)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:576)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:33351)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3069)
+    at n (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3099)
+    at Er (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3109)
+    at S (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5957)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5321)
+    at Tr (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5309)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:41206)
+[  113577ms] [WARNING] Alpine Expression Error: Cannot read properties of undefined (reading 'name')
+
+Expression: "editData[1].name"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[  113577ms] [WARNING] Alpine Expression Error: Cannot read properties of undefined (reading 'name')
+
+Expression: "editData[1].name"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[  113577ms] [WARNING] Alpine Expression Error: Cannot set properties of undefined (setting 'name')
+
+Expression: "editData[1].name = __placeholder"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[  113578ms] [WARNING] Alpine Expression Error: Cannot read properties of undefined (reading 'api_key')
+
+Expression: "editData[1].api_key"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[  113578ms] [WARNING] Alpine Expression Error: Cannot read properties of undefined (reading 'api_key')
+
+Expression: "editData[1].api_key"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[  113578ms] [WARNING] Alpine Expression Error: Cannot set properties of undefined (setting 'api_key')
+
+Expression: "editData[1].api_key = __placeholder"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[  113586ms] Uncaught TypeError: Cannot read properties of undefined (reading 'name')
+    at [Alpine] editData[1].name (:2:43)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at c (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:31900)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:32746)
+    at o (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:28972)
+[  113586ms] Uncaught TypeError: Cannot read properties of undefined (reading 'name')
+    at [Alpine] editData[1].name (:2:43)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at l (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:31939)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:32735)
+    at o (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:28972)
+[  113586ms] Uncaught TypeError: Cannot set properties of undefined (setting 'name')
+    at [Alpine] editData[1].name = __placeholder (:2:48)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at l (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:31964)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:32735)
+    at o (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:28972)
+[  113587ms] Uncaught TypeError: Cannot read properties of undefined (reading 'api_key')
+    at [Alpine] editData[1].api_key (:2:43)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at c (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:31900)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:32746)
+    at o (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:28972)
+[  113587ms] Uncaught TypeError: Cannot read properties of undefined (reading 'api_key')
+    at [Alpine] editData[1].api_key (:2:43)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at l (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:31939)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:32735)
+    at o (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:28972)
+[  113588ms] Uncaught TypeError: Cannot set properties of undefined (setting 'api_key')
+    at [Alpine] editData[1].api_key = __placeholder (:2:51)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at l (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:31964)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:32735)
+    at o (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:28972)
+[  117377ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[  119921ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[  123873ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[  125152ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[  126131ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ https://ainstein.it/ai-content/keywords/44/serp:0
+[  126132ms] [ERROR] JSON Parse Error: SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at Proxy.extractSerp (https://ainstein.it/ai-content/projects/14/keywords/44/wizard:1611:33) @ https://ainstein.it/ai-content/projects/14/keywords/44/wizard:1612
+[  126135ms] [ERROR] Response was not JSON:  @ https://ainstein.it/ai-content/projects/14/keywords/44/wizard:1613

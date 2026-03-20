@@ -1,0 +1,266 @@
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - link "Ainstein - SEO Toolkit" [ref=e6] [cursor=pointer]:
+      - /url: /dashboard
+      - img "Ainstein - SEO Toolkit" [ref=e7]
+    - navigation [ref=e8]:
+      - generic [ref=e9]:
+        - link "Dashboard" [ref=e10] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e11]
+          - generic [ref=e13]: Dashboard
+        - link "Progetti" [ref=e14] [cursor=pointer]:
+          - /url: /projects
+          - img [ref=e15]
+          - generic [ref=e17]: Progetti
+      - generic [ref=e18]:
+        - paragraph [ref=e19]: Moduli
+        - generic [ref=e20]:
+          - generic [ref=e21]:
+            - generic [ref=e22]:
+              - link "AI Google Ads Tools" [ref=e23] [cursor=pointer]:
+                - /url: /ads-analyzer
+                - img [ref=e24]
+                - generic [ref=e27]: AI Google Ads Tools
+              - button "Tour guidato" [ref=e28] [cursor=pointer]:
+                - img [ref=e29]
+              - button [ref=e31] [cursor=pointer]:
+                - img [ref=e32]
+            - generic [ref=e34]:
+              - generic "Amevista" [ref=e35]
+              - link "Dashboard" [ref=e36] [cursor=pointer]:
+                - /url: /ads-analyzer/projects/18/campaign-dashboard
+                - img [ref=e37]
+                - generic [ref=e39]: Dashboard
+              - link "Campagne" [ref=e40] [cursor=pointer]:
+                - /url: /ads-analyzer/projects/18/campaigns
+                - img [ref=e41]
+                - generic [ref=e43]: Campagne
+              - link "Connessione" [ref=e44] [cursor=pointer]:
+                - /url: /ads-analyzer/projects/18/connect
+                - img [ref=e45]
+                - generic [ref=e47]: Connessione
+              - link "Keyword Negative" [ref=e48] [cursor=pointer]:
+                - /url: /ads-analyzer/projects/18/search-term-analysis
+                - img [ref=e49]
+                - generic [ref=e51]: Keyword Negative
+              - link "Impostazioni" [ref=e53] [cursor=pointer]:
+                - /url: /ads-analyzer/projects/18/edit
+                - img [ref=e54]
+                - generic [ref=e57]: Impostazioni
+          - generic [ref=e59]:
+            - link "AI Keyword Research" [ref=e60] [cursor=pointer]:
+              - /url: /keyword-research
+              - img [ref=e61]
+              - generic [ref=e63]: AI Keyword Research
+            - button "Tour guidato" [ref=e64] [cursor=pointer]:
+              - img [ref=e65]
+            - button [ref=e67] [cursor=pointer]:
+              - img [ref=e68]
+          - generic [ref=e71]:
+            - link "AI SEO Audit" [ref=e72] [cursor=pointer]:
+              - /url: /seo-audit
+              - img [ref=e73]
+              - generic [ref=e75]: AI SEO Audit
+            - button "Tour guidato" [ref=e76] [cursor=pointer]:
+              - img [ref=e77]
+          - generic [ref=e80]:
+            - link "AI SEO Content Generator" [ref=e81] [cursor=pointer]:
+              - /url: /ai-content
+              - img [ref=e82]
+              - generic [ref=e84]: AI SEO Content Generator
+            - button "Tour guidato" [ref=e85] [cursor=pointer]:
+              - img [ref=e86]
+            - button [ref=e88] [cursor=pointer]:
+              - img [ref=e89]
+          - generic [ref=e92]:
+            - link "AI SEO Position Tracking" [ref=e93] [cursor=pointer]:
+              - /url: /seo-tracking
+              - img [ref=e94]
+              - generic [ref=e96]: AI SEO Position Tracking
+            - button "Tour guidato" [ref=e97] [cursor=pointer]:
+              - img [ref=e98]
+      - generic [ref=e100]:
+        - paragraph [ref=e101]: Amministrazione
+        - generic [ref=e102]:
+          - link "Overview" [ref=e103] [cursor=pointer]:
+            - /url: /admin
+            - img [ref=e104]
+            - generic [ref=e106]: Overview
+          - link "Utenti" [ref=e107] [cursor=pointer]:
+            - /url: /admin/users
+            - img [ref=e108]
+            - generic [ref=e110]: Utenti
+          - link "Piani" [ref=e111] [cursor=pointer]:
+            - /url: /admin/plans
+            - img [ref=e112]
+            - generic [ref=e114]: Piani
+          - link "Finance" [ref=e115] [cursor=pointer]:
+            - /url: /admin/finance
+            - img [ref=e116]
+            - generic [ref=e118]: Finance
+          - link "Moduli" [ref=e119] [cursor=pointer]:
+            - /url: /admin/modules
+            - img [ref=e120]
+            - generic [ref=e122]: Moduli
+          - link "Impostazioni" [ref=e123] [cursor=pointer]:
+            - /url: /admin/settings
+            - img [ref=e124]
+            - generic [ref=e127]: Impostazioni
+          - link "Template Email" [ref=e128] [cursor=pointer]:
+            - /url: /admin/email-templates
+            - img [ref=e129]
+            - generic [ref=e131]: Template Email
+          - link "AI Logs" [ref=e132] [cursor=pointer]:
+            - /url: /admin/ai-logs
+            - img [ref=e133]
+            - generic [ref=e135]: AI Logs
+          - link "API Logs" [ref=e136] [cursor=pointer]:
+            - /url: /admin/api-logs
+            - img [ref=e137]
+            - generic [ref=e139]: API Logs
+          - link "Jobs Monitor" [ref=e140] [cursor=pointer]:
+            - /url: /admin/jobs
+            - img [ref=e141]
+            - generic [ref=e143]: Jobs Monitor
+          - link "Cache & Log" [ref=e144] [cursor=pointer]:
+            - /url: /admin/cache
+            - img [ref=e145]
+            - generic [ref=e147]: Cache & Log
+    - generic [ref=e149]:
+      - generic [ref=e150]: A
+      - generic [ref=e151]:
+        - paragraph [ref=e152]: Amministratore
+        - paragraph [ref=e153]: admin@seo-toolkit.local
+  - generic [ref=e154]:
+    - banner [ref=e155]:
+      - generic [ref=e158]:
+        - generic [ref=e159]:
+          - img [ref=e160]
+          - generic [ref=e162]: 7,669.9
+        - button [ref=e163] [cursor=pointer]:
+          - img [ref=e164]
+        - button "9+" [ref=e167] [cursor=pointer]:
+          - img [ref=e168]
+          - generic [ref=e170]: 9+
+        - button "A Amministratore" [ref=e172] [cursor=pointer]:
+          - generic [ref=e173]: A
+          - generic [ref=e174]: Amministratore
+          - img [ref=e175]
+    - main [ref=e177]:
+      - generic [ref=e178]:
+        - generic [ref=e179]:
+          - generic [ref=e181]:
+            - link "Torna ai progetti" [ref=e182] [cursor=pointer]:
+              - /url: /ads-analyzer/projects?type=campaign
+              - img [ref=e183]
+            - heading "Amevista" [level=1] [ref=e185]
+            - generic [ref=e186]: CAMPAGNE
+          - link "Valutazione AI" [ref=e188] [cursor=pointer]:
+            - /url: /ads-analyzer/projects/18/campaigns
+            - img [ref=e189]
+            - generic [ref=e191]: Valutazione AI
+        - navigation "Tabs" [ref=e193]:
+          - link "Dashboard" [ref=e194] [cursor=pointer]:
+            - /url: /ads-analyzer/projects/18/campaign-dashboard
+            - img [ref=e195]
+            - text: Dashboard
+          - link "Connessione" [ref=e197] [cursor=pointer]:
+            - /url: /ads-analyzer/projects/18/connect
+            - img [ref=e198]
+            - text: Connessione
+          - link "Campagne" [ref=e201] [cursor=pointer]:
+            - /url: /ads-analyzer/projects/18/campaigns
+            - img [ref=e202]
+            - text: Campagne
+          - link "Keyword Negative" [ref=e204] [cursor=pointer]:
+            - /url: /ads-analyzer/projects/18/search-term-analysis
+            - img [ref=e205]
+            - text: Keyword Negative
+          - link "Impostazioni" [ref=e207] [cursor=pointer]:
+            - /url: /ads-analyzer/projects/18/edit
+            - img [ref=e208]
+            - text: Impostazioni
+        - generic [ref=e211]:
+          - generic [ref=e213]:
+            - generic [ref=e217]: "4.5"
+            - generic [ref=e218]:
+              - generic [ref=e219]:
+                - heading "Punteggio Complessivo" [level=2] [ref=e220]
+                - generic [ref=e221]: 3 critici
+              - paragraph [ref=e222]: L'account presenta campagne Performance Max con performance mediocri e problemi strutturali gravi. Le metriche sono sottoperformanti rispetto ai benchmark, con conversion rate particolarmente bassi. Mancano completamente annunci testuali e le estensioni non generano traffic nonostante siano presenti.
+              - generic [ref=e223]:
+                - generic [ref=e224]: 13/03/2026 18:26
+                - generic [ref=e225]: 94 campagne
+                - generic [ref=e226]: 57 gruppi
+                - generic [ref=e227]: 5 landing
+                - generic [ref=e228]: 7.0 crediti
+            - generic [ref=e230]:
+              - link "PDF" [ref=e231] [cursor=pointer]:
+                - /url: /ads-analyzer/projects/18/campaigns/evaluations/33/export-pdf
+                - img [ref=e232]
+                - text: PDF
+              - link "Indietro" [ref=e234] [cursor=pointer]:
+                - /url: /ads-analyzer/projects/18/campaigns
+                - img [ref=e235]
+                - text: Indietro
+          - navigation "Tabs" [ref=e238]:
+            - button "Panoramica" [ref=e239] [cursor=pointer]
+            - button "Campagne (3)" [ref=e240] [cursor=pointer]
+            - button "Estensioni" [ref=e241] [cursor=pointer]
+            - button "Landing Pages" [ref=e242] [cursor=pointer]
+            - button "Azioni" [ref=e243] [cursor=pointer]
+          - generic [ref=e244]:
+            - generic [ref=e245]:
+              - heading "Raccomandazioni Principali" [level=2] [ref=e246]:
+                - img [ref=e247]
+                - text: Raccomandazioni Principali
+              - list [ref=e249]:
+                - listitem [ref=e250]:
+                  - generic [ref=e251]: "1"
+                  - paragraph [ref=e252]: Rivedere completamente gli asset creativi delle campagne Performance Max, in particolare per UK e ES, con focus su immagini e copy più engaging
+                - listitem [ref=e253]:
+                  - generic [ref=e254]: "2"
+                  - paragraph [ref=e255]: Implementare annunci Search dedicati per catturare query ad alto intent e complementare le Performance Max
+                - listitem [ref=e256]:
+                  - generic [ref=e257]: "3"
+                  - paragraph [ref=e258]: Ottimizzare i segnali audience nelle Performance Max utilizzando dati first-party e lookalike basati sui migliori clienti
+            - generic [ref=e259]:
+              - heading "Score per Campagna" [level=2] [ref=e260]:
+                - img [ref=e261]
+                - text: Score per Campagna
+              - generic [ref=e263]:
+                - button "6.5/10 PMax NL | OCCHIALI DA SOLE > Sales-Performance Max-1 1" [ref=e264] [cursor=pointer]:
+                  - generic [ref=e265]:
+                    - generic [ref=e266]: 6.5/10
+                    - generic [ref=e268]:
+                      - generic [ref=e269]: PMax
+                      - generic [ref=e270]: NL | OCCHIALI DA SOLE > Sales-Performance Max-1
+                    - generic [ref=e273]:
+                      - generic [ref=e274]: "1"
+                      - img [ref=e275]
+                - button "5.5/10 PMax UK | OCCHIALI DA SOLE > Sales-Performance Max-1 1 1" [ref=e277] [cursor=pointer]:
+                  - generic [ref=e278]:
+                    - generic [ref=e279]: 5.5/10
+                    - generic [ref=e281]:
+                      - generic [ref=e282]: PMax
+                      - generic [ref=e283]: UK | OCCHIALI DA SOLE > Sales-Performance Max-1
+                    - generic [ref=e286]:
+                      - generic [ref=e287]: "1"
+                      - generic [ref=e288]: "1"
+                      - img [ref=e289]
+                - button "4.0/10 PMax ES | OCCHIALI DA SOLE | Sales-Performance Max-1 2" [ref=e291] [cursor=pointer]:
+                  - generic [ref=e292]:
+                    - generic [ref=e293]: 4.0/10
+                    - generic [ref=e295]:
+                      - generic [ref=e296]: PMax
+                      - generic [ref=e297]: ES | OCCHIALI DA SOLE | Sales-Performance Max-1
+                    - generic [ref=e300]:
+                      - generic [ref=e301]: "2"
+                      - img [ref=e302]
+          - generic [ref=e304]:
+            - link "Torna alle campagne" [ref=e305] [cursor=pointer]:
+              - /url: /ads-analyzer/projects/18/campaigns
+              - img [ref=e306]
+              - text: Torna alle campagne
+            - generic [ref=e308]: Completata il 13/03/2026 18:27

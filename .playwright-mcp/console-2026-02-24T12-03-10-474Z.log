@@ -1,0 +1,40 @@
+[     107ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[     289ms] [WARNING] Alpine Expression Error: showCampaignModal is not defined
+
+Expression: "showCampaignModal"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[     310ms] Uncaught ReferenceError: showCampaignModal is not defined
+    at [Alpine] showCampaignModal (:2:31)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:40292)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19535)
+    at mn (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19323)
+    at D (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:463)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:576)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:40286)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3069)
+    at n (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3099)
+    at Er (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3109)
+    at S (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5957)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5321)
+    at Tr (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5309)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:41206)
+[   19721ms] [ERROR] Evaluation start failed: TypeError: Failed to fetch
+    at Proxy.doEvaluate (https://ainstein.it/ads-analyzer/projects/9/campaigns:1257:36)
+    at Proxy.startEvaluation (https://ainstein.it/ads-analyzer/projects/9/campaigns:1234:22)
+    at [Alpine] startEvaluation() (eval at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:5:738), <anonymous>:3:32)
+    at https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:5:1153
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:1:5138)
+    at https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:5:40728
+    at o (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:5:28973)
+    at https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:5:30090
+    at V.a (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:5:28995) @ https://ainstein.it/ads-analyzer/projects/9/campaigns:1280
+[   19761ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[   19974ms] [WARNING] Alpine Warning: You can't use [x-collapse] without first installing the "Collapse" plugin here: https://alpinejs.dev/plugins/collapse JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4
+[   19976ms] [WARNING] Alpine Warning: You can't use [x-collapse] without first installing the "Collapse" plugin here: https://alpinejs.dev/plugins/collapse JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4
+[   19977ms] [WARNING] Alpine Warning: You can't use [x-collapse] without first installing the "Collapse" plugin here: https://alpinejs.dev/plugins/collapse JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4
+[   19977ms] [WARNING] Alpine Warning: You can't use [x-collapse] without first installing the "Collapse" plugin here: https://alpinejs.dev/plugins/collapse JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4
+[   19977ms] [WARNING] Alpine Warning: You can't use [x-collapse] without first installing the "Collapse" plugin here: https://alpinejs.dev/plugins/collapse JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4
+[   19977ms] [WARNING] Alpine Warning: You can't use [x-collapse] without first installing the "Collapse" plugin here: https://alpinejs.dev/plugins/collapse JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4

@@ -1,0 +1,19 @@
+[     271ms] [ERROR] [WebVitalsReporter] Error sending metrics: TypeError: Failed to fetch
+    at https://sdk.voyantis.io/d8x0anTvV24UqmERWFnln59AQOsoIyNVo9jf2JY0/vy-cs-sdk.min.js:10:260536
+    at https://sdk.voyantis.io/d8x0anTvV24UqmERWFnln59AQOsoIyNVo9jf2JY0/vy-cs-sdk.min.js:1:1918
+    at Object.next (https://sdk.voyantis.io/d8x0anTvV24UqmERWFnln59AQOsoIyNVo9jf2JY0/vy-cs-sdk.min.js:1:2023)
+    at https://sdk.voyantis.io/d8x0anTvV24UqmERWFnln59AQOsoIyNVo9jf2JY0/vy-cs-sdk.min.js:1:866
+    at new Promise (<anonymous>)
+    at n (https://sdk.voyantis.io/d8x0anTvV24UqmERWFnln59AQOsoIyNVo9jf2JY0/vy-cs-sdk.min.js:1:611)
+    at https://sdk.voyantis.io/d8x0anTvV24UqmERWFnln59AQOsoIyNVo9jf2JY0/vy-cs-sdk.min.js:10:259821
+    at O.sendMetrics (https://it.semrush.com/__static__/webpack/smrwv.1104de8eadf0948a.js:2:12571)
+    at HTMLDocument.<anonymous> (https://it.semrush.com/__static__/webpack/smrwv.1104de8eadf0948a.js:2:9489) @ https://it.semrush.com/__static__/webpack/smrwv.1104de8eadf0948a.js:1
+[     527ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.222079d5242894b0.js:1
+[     528ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.222079d5242894b0.js:1
+[     530ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.222079d5242894b0.js:1
+[     530ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.222079d5242894b0.js:1
+[     531ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.222079d5242894b0.js:1
+[     532ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.222079d5242894b0.js:1
+[    1246ms] [ERROR] Access to fetch at 'https://tags.srv.stackadapt.com/sa.jpeg' from origin 'https://it.semrush.com' has been blocked by CORS policy: The 'Access-Control-Allow-Origin' header has a value 'https://www.semrush.com' that is not equal to the supplied origin. Have the server send the header with a valid value. @ https://it.semrush.com/features/keyword-research-toolkit/:0
+[    1246ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://tags.srv.stackadapt.com/sa.jpeg:0
+[    1627ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://it.semrush.com/features/keyword-research-toolkit/:0

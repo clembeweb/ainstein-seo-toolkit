@@ -1,0 +1,49 @@
+[   17703ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[   17928ms] [WARNING] Alpine Expression Error: Cannot read properties of undefined (reading 'name')
+
+Expression: "editData[1].name"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[   17928ms] [WARNING] Alpine Expression Error: Cannot read properties of undefined (reading 'api_key')
+
+Expression: "editData[1].api_key"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[   17955ms] Uncaught TypeError: Cannot read properties of undefined (reading 'name')
+    at [Alpine] editData[1].name (:2:43)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at c (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:31900)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:33364)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19535)
+    at mn (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19323)
+    at D (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:463)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:576)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:33351)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3069)
+    at n (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3099)
+    at Er (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3109)
+    at S (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5957)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5321)
+    at Tr (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5309)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:41206)
+[   17956ms] Uncaught TypeError: Cannot read properties of undefined (reading 'api_key')
+    at [Alpine] editData[1].api_key (:2:43)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at c (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:31900)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:33364)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19535)
+    at mn (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19323)
+    at D (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:463)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:576)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:33351)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3069)
+    at n (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3099)
+    at Er (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3109)
+    at S (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5957)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5321)
+    at Tr (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5309)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:41206)
+[   23969ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[   40861ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65

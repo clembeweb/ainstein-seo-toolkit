@@ -1,0 +1,413 @@
+<?php
+
+namespace Modules\AdsAnalyzer\Services;
+
+class ScriptGeneratorService
+{
+    /**
+     * Genera lo script Google Ads completo con token e configurazione embedded
+     */
+    public static function generate(string $token, string $endpointUrl, array $config): string
+    {
+        $enableSearchTerms = ($config['enable_search_terms'] ?? true) ? 'true' : 'false';
+        $enableCampaignPerf = ($config['enable_campaign_performance'] ?? true) ? 'true' : 'false';
+        $campaignFilter = addslashes($config['campaign_filter'] ?? '');
+
+        return <<<SCRIPT
+/**
+ * Ainstein SEO Toolkit - Google Ads Script
+ * Invia automaticamente dati search terms e campagne al tuo progetto Ainstein.
+ * Raccolta multi-periodo: 7, 14 e 30 giorni per ogni esecuzione.
+ *
+ * ISTRUZIONI:
+ * 1. Copia questo script in Google Ads > Strumenti > Script
+ * 2. Autorizza l'accesso all'account
+ * 3. Esegui un test per verificare
+ * 4. Imposta la frequenza desiderata (giornaliero, settimanale)
+ *
+ * NON modificare il token o l'endpoint.
+ * Versione: 2.0
+ */
+
+// === CONFIGURAZIONE ===
+var CONFIG = {
+  TOKEN: '{$token}',
+  ENDPOINT: '{$endpointUrl}',
+  ENABLE_SEARCH_TERMS: {$enableSearchTerms},
+  ENABLE_CAMPAIGN_PERFORMANCE: {$enableCampaignPerf},
+  PERIODS: [7, 14, 30],
+  CAMPAIGN_FILTER: '{$campaignFilter}',
+  SCRIPT_VERSION: '2.0',
+  MAX_ITEMS: 5000
+};
+
+function main() {
+  Logger.log('Ainstein Script v' + CONFIG.SCRIPT_VERSION + ' - Avvio raccolta multi-periodo...');
+  var results = [];
+
+  for (var i = 0; i < CONFIG.PERIODS.length; i++) {
+    var days = CONFIG.PERIODS[i];
+    var dateRangeString = getGadsDateRangeString(days);
+    Logger.log('');
+    Logger.log('--- Periodo: ultimi ' + days + ' giorni (' + dateRangeString + ') ---');
+
+    var payload = {
+      token: CONFIG.TOKEN,
+      type: getRunType(),
+      script_version: CONFIG.SCRIPT_VERSION,
+      date_range: getDateRangeForDays(days)
+    };
+
+    // Raccogli search terms
+    if (CONFIG.ENABLE_SEARCH_TERMS) {
+      Logger.log('Raccolta termini di ricerca...');
+      payload.search_terms = collectSearchTerms(dateRangeString);
+      Logger.log('Termini raccolti: ' + payload.search_terms.length);
+    }
+
+    // Raccogli dati campagne
+    if (CONFIG.ENABLE_CAMPAIGN_PERFORMANCE) {
+      Logger.log('Raccolta dati campagne...');
+      var campaignData = collectCampaignData(dateRangeString);
+      payload.campaigns = campaignData.campaigns;
+      payload.ads = campaignData.ads;
+      payload.ad_groups = campaignData.adGroups;
+      payload.keywords = campaignData.keywords;
+      payload.extensions = campaignData.extensions;
+      Logger.log('Campagne: ' + payload.campaigns.length +
+                 ', Ad Groups: ' + payload.ad_groups.length +
+                 ', Annunci: ' + payload.ads.length +
+                 ', Keyword: ' + payload.keywords.length +
+                 ', Estensioni: ' + payload.extensions.length);
+    }
+
+    // Invia dati
+    Logger.log('Invio dati ad Ainstein...');
+    var result = sendData(payload);
+
+    if (result.success) {
+      Logger.log('Periodo ' + days + 'g: OK (Run #' + result.run_id + ', ' + result.items_processed + ' items)');
+      results.push({days: days, success: true, run_id: result.run_id});
+    } else {
+      Logger.log('Periodo ' + days + 'g: ERRORE - ' + result.error);
+      results.push({days: days, success: false, error: result.error});
+    }
+
+    // Pausa tra invii per evitare sovraccarico
+    if (i < CONFIG.PERIODS.length - 1) {
+      Utilities.sleep(2000);
+    }
+  }
+
+  // Riepilogo
+  Logger.log('');
+  Logger.log('=== Riepilogo ===');
+  for (var j = 0; j < results.length; j++) {
+    var r = results[j];
+    Logger.log(r.days + 'g: ' + (r.success ? 'OK (Run #' + r.run_id + ')' : 'ERRORE: ' + r.error));
+  }
+  Logger.log('Script completato.');
+}
+
+function getRunType() {
+  if (CONFIG.ENABLE_SEARCH_TERMS && CONFIG.ENABLE_CAMPAIGN_PERFORMANCE) return 'both';
+  if (CONFIG.ENABLE_SEARCH_TERMS) return 'search_terms';
+  return 'campaign_performance';
+}
+
+function getDateRangeForDays(days) {
+  var today = new Date();
+  var start = new Date();
+  start.setDate(today.getDate() - days);
+  return {
+    start: formatDate(start),
+    end: formatDate(today)
+  };
+}
+
+function getGadsDateRangeString(days) {
+  switch (days) {
+    case 7: return 'LAST_7_DAYS';
+    case 14: return 'LAST_14_DAYS';
+    case 30: return 'LAST_30_DAYS';
+    case 90: return 'LAST_90_DAYS';
+    default: return 'LAST_30_DAYS';
+  }
+}
+
+function formatDate(d) {
+  return d.getFullYear() + '-' +
+         pad(d.getMonth() + 1) + '-' +
+         pad(d.getDate());
+}
+
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+// === SEARCH TERMS ===
+function collectSearchTerms(dateRangeString) {
+  var terms = [];
+  var campaignIterator = getCampaigns();
+
+  while (campaignIterator.hasNext() && terms.length < CONFIG.MAX_ITEMS) {
+    var campaign = campaignIterator.next();
+    var report = AdsApp.report(
+      'SELECT Query, AdGroupName, Clicks, Impressions, Ctr, Cost, Conversions, ConversionValue ' +
+      'FROM SEARCH_QUERY_PERFORMANCE_REPORT ' +
+      'WHERE CampaignId = ' + campaign.getId() + ' ' +
+      'DURING ' + dateRangeString
+    );
+
+    var rows = report.rows();
+    while (rows.hasNext() && terms.length < CONFIG.MAX_ITEMS) {
+      var row = rows.next();
+      terms.push({
+        ad_group: row['AdGroupName'],
+        term: row['Query'],
+        clicks: parseInt(row['Clicks']) || 0,
+        impressions: parseInt(row['Impressions']) || 0,
+        ctr: parseFloat(String(row['Ctr']).replace('%', '')) / 100 || 0,
+        cost: parseFloat(String(row['Cost']).replace(/[^0-9.]/g, '')) || 0,
+        conversions: parseInt(row['Conversions']) || 0,
+        conversion_value: parseFloat(String(row['ConversionValue']).replace(/[^0-9.]/g, '')) || 0
+      });
+    }
+  }
+
+  return terms;
+}
+
+// === CAMPAIGN PERFORMANCE ===
+function collectCampaignData(dateRangeString) {
+  var campaigns = [];
+  var ads = [];
+  var adGroupsData = [];
+  var keywords = [];
+  var extensions = [];
+
+  var campaignIterator = getCampaigns();
+
+  while (campaignIterator.hasNext()) {
+    var campaign = campaignIterator.next();
+    var stats = campaign.getStatsFor(dateRangeString);
+    var campaignType = campaign.getAdvertisingChannelType ? campaign.getAdvertisingChannelType() : 'SEARCH';
+
+    campaigns.push({
+      campaign_id: String(campaign.getId()),
+      campaign_name: campaign.getName(),
+      status: campaign.isEnabled() ? 'ENABLED' : 'PAUSED',
+      type: campaignType,
+      bidding_strategy: campaign.getBiddingStrategyType(),
+      budget: campaign.getBudget().getAmount(),
+      budget_type: 'DAILY',
+      clicks: stats.getClicks(),
+      impressions: stats.getImpressions(),
+      ctr: stats.getCtr(),
+      avg_cpc: stats.getAverageCpc(),
+      cost: stats.getCost(),
+      conversions: stats.getConversions(),
+      conversion_value: stats.getConversionValue ? stats.getConversionValue() : 0,
+      conv_rate: stats.getConversionRate ? stats.getConversionRate() : 0
+    });
+
+    // Annunci, metriche ad group e keyword per ogni Ad Group
+    try {
+      var adGroupIterator = campaign.adGroups().get();
+      while (adGroupIterator.hasNext() && ads.length < CONFIG.MAX_ITEMS) {
+        var adGroup = adGroupIterator.next();
+
+        // Metriche aggregate ad group
+        try {
+          var agStats = adGroup.getStatsFor(dateRangeString);
+          adGroupsData.push({
+            campaign_id: String(campaign.getId()),
+            campaign_name: campaign.getName(),
+            campaign_type: campaignType,
+            ad_group_id: String(adGroup.getId()),
+            ad_group_name: adGroup.getName(),
+            status: adGroup.isEnabled() ? 'ENABLED' : 'PAUSED',
+            clicks: agStats.getClicks(),
+            impressions: agStats.getImpressions(),
+            ctr: agStats.getCtr(),
+            avg_cpc: agStats.getAverageCpc(),
+            cost: agStats.getCost(),
+            conversions: agStats.getConversions(),
+            conversion_value: agStats.getConversionValue ? agStats.getConversionValue() : 0,
+            conv_rate: agStats.getConversionRate ? agStats.getConversionRate() : 0
+          });
+        } catch (e) {
+          Logger.log('Nota: metriche ad group non disponibili per ' + adGroup.getName() + ' - ' + e.message);
+        }
+
+        // Annunci
+        var adIterator = adGroup.ads().get();
+        while (adIterator.hasNext() && ads.length < CONFIG.MAX_ITEMS) {
+          var ad = adIterator.next();
+          var adStats = ad.getStatsFor(dateRangeString);
+          var adData = {
+            campaign_id: String(campaign.getId()),
+            campaign_name: campaign.getName(),
+            ad_group_id: String(adGroup.getId()),
+            ad_group_name: adGroup.getName(),
+            type: ad.getType(),
+            headlines: [],
+            descriptions: [],
+            final_url: '',
+            path1: '',
+            path2: '',
+            status: ad.isEnabled() ? 'ENABLED' : 'PAUSED',
+            clicks: adStats.getClicks(),
+            impressions: adStats.getImpressions(),
+            ctr: adStats.getCtr(),
+            avg_cpc: adStats.getAverageCpc(),
+            cost: adStats.getCost(),
+            conversions: adStats.getConversions(),
+            quality_score: null
+          };
+
+          // Estrai copy in base al tipo
+          if (ad.isType().responsiveSearchAd()) {
+            var rsa = ad.asType().responsiveSearchAd();
+            adData.headlines = rsa.getHeadlines().map(function(h) { return h.text; }).slice(0, 3);
+            adData.descriptions = rsa.getDescriptions().map(function(d) { return d.text; }).slice(0, 2);
+          } else if (ad.isType().expandedTextAd()) {
+            var eta = ad.asType().expandedTextAd();
+            adData.headlines = [eta.getHeadlinePart1(), eta.getHeadlinePart2()];
+            if (eta.getHeadlinePart3) adData.headlines.push(eta.getHeadlinePart3());
+            adData.descriptions = [eta.getDescription1(), eta.getDescription2()];
+          }
+
+          adData.final_url = ad.urls().getFinalUrl() || '';
+          adData.path1 = ad.isType().responsiveSearchAd() ? (ad.asType().responsiveSearchAd().getPath1() || '') : '';
+          adData.path2 = ad.isType().responsiveSearchAd() ? (ad.asType().responsiveSearchAd().getPath2() || '') : '';
+
+          ads.push(adData);
+        }
+
+        // Keyword per ad group (non disponibili per Shopping/PMax)
+        try {
+          var kwIterator = adGroup.keywords().get();
+          while (kwIterator.hasNext() && keywords.length < CONFIG.MAX_ITEMS) {
+            var kw = kwIterator.next();
+            var kwStats = kw.getStatsFor(dateRangeString);
+            keywords.push({
+              campaign_id: String(campaign.getId()),
+              campaign_name: campaign.getName(),
+              ad_group_id: String(adGroup.getId()),
+              ad_group_name: adGroup.getName(),
+              keyword_text: kw.getText(),
+              match_type: kw.getMatchType(),
+              status: kw.isEnabled() ? 'ENABLED' : 'PAUSED',
+              clicks: kwStats.getClicks(),
+              impressions: kwStats.getImpressions(),
+              ctr: kwStats.getCtr(),
+              avg_cpc: kwStats.getAverageCpc(),
+              cost: kwStats.getCost(),
+              conversions: kwStats.getConversions(),
+              quality_score: kw.getQualityScore(),
+              first_page_cpc: kw.getFirstPageCpc()
+            });
+          }
+        } catch (e) {
+          // Shopping/PMax non hanno keyword tradizionali - normale
+        }
+      }
+    } catch (e) {
+      Logger.log('Nota: ad groups non disponibili per ' + campaign.getName() + ' - ' + e.message);
+    }
+  }
+
+  // Estensioni sitelink
+  try {
+    var sitelinkIterator = AdsApp.extensions().sitelinks().get();
+    while (sitelinkIterator.hasNext() && extensions.length < 500) {
+      var sitelink = sitelinkIterator.next();
+      var slStats = sitelink.getStatsFor(dateRangeString);
+      extensions.push({
+        campaign_id: null,
+        type: 'SITELINK',
+        text: sitelink.getLinkText() + ' - ' + (sitelink.getDescription1() || ''),
+        status: sitelink.isEnabled ? (sitelink.isEnabled() ? 'ENABLED' : 'PAUSED') : 'UNKNOWN',
+        clicks: slStats.getClicks(),
+        impressions: slStats.getImpressions()
+      });
+    }
+  } catch (e) {
+    Logger.log('Nota: estensioni sitelink non disponibili - ' + e.message);
+  }
+
+  // Estensioni callout
+  try {
+    var calloutIterator = AdsApp.extensions().callouts().get();
+    while (calloutIterator.hasNext() && extensions.length < 500) {
+      var callout = calloutIterator.next();
+      extensions.push({
+        campaign_id: null,
+        type: 'CALLOUT',
+        text: callout.getText(),
+        status: 'ENABLED',
+        clicks: 0,
+        impressions: 0
+      });
+    }
+  } catch (e) {
+    Logger.log('Nota: estensioni callout non disponibili - ' + e.message);
+  }
+
+  // Estensioni snippet strutturati
+  try {
+    var snippetIterator = AdsApp.extensions().snippets().get();
+    while (snippetIterator.hasNext() && extensions.length < 500) {
+      var snippet = snippetIterator.next();
+      extensions.push({
+        campaign_id: null,
+        type: 'STRUCTURED_SNIPPET',
+        text: snippet.getHeader() + ': ' + snippet.getValues().join(', '),
+        status: 'ENABLED',
+        clicks: 0,
+        impressions: 0
+      });
+    }
+  } catch (e) {
+    Logger.log('Nota: snippet strutturati non disponibili - ' + e.message);
+  }
+
+  return { campaigns: campaigns, ads: ads, adGroups: adGroupsData, keywords: keywords, extensions: extensions };
+}
+
+// === UTILITY ===
+function getCampaigns() {
+  var selector = AdsApp.campaigns()
+    .withCondition('Status = ENABLED');
+
+  if (CONFIG.CAMPAIGN_FILTER) {
+    selector = selector.withCondition("Name REGEXP_MATCH '" + CONFIG.CAMPAIGN_FILTER + "'");
+  }
+
+  return selector.get();
+}
+
+function sendData(payload) {
+  var options = {
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  };
+
+  try {
+    var response = UrlFetchApp.fetch(CONFIG.ENDPOINT, options);
+    var code = response.getResponseCode();
+    var body = JSON.parse(response.getContentText());
+
+    if (code !== 200) {
+      return { success: false, error: body.error || ('HTTP ' + code) };
+    }
+
+    return body;
+  } catch (e) {
+    return { success: false, error: 'Errore connessione: ' + e.message };
+  }
+}
+SCRIPT;
+    }
+}

@@ -1,0 +1,216 @@
+<h2>Architettura Plugin ainstein-qa (v3)</h2>
+<p class="subtitle">Post analisi critica: fix concorrenza, scoring, modello + 2 nuovi agenti</p>
+
+<div class="section">
+  <h3>Issue risolte dall'analisi critica</h3>
+  <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+
+    <div style="display: flex; align-items: start; gap: 0.8rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 0.8rem 1rem;">
+      <span style="color: #34d399; font-size: 1.2rem; flex-shrink: 0;">&#10003;</span>
+      <div>
+        <strong style="color: #34d399;">Concorrenza limitata</strong>
+        <p style="margin: 0.3rem 0 0; color: #94a3b8;">Orchestratore lancia max 2 agenti alla volta (batch da 2) per non sovraccaricare il VPS. Ogni batch attende completamento prima del successivo.</p>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: start; gap: 0.8rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 0.8rem 1rem;">
+      <span style="color: #34d399; font-size: 1.2rem; flex-shrink: 0;">&#10003;</span>
+      <div>
+        <strong style="color: #34d399;">Screenshot in .gitignore</strong>
+        <p style="margin: 0.3rem 0 0; color: #94a3b8;"><code>qa-reviews/screenshots/</code> aggiunto a <code>.gitignore</code>. Sono riferimenti temporanei locali, non vanno nel repo.</p>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: start; gap: 0.8rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 0.8rem 1rem;">
+      <span style="color: #34d399; font-size: 1.2rem; flex-shrink: 0;">&#10003;</span>
+      <div>
+        <strong style="color: #34d399;">Rubrica scoring nella skill</strong>
+        <p style="margin: 0.3rem 0 0; color: #94a3b8;">La skill <code>platform-standards</code> include griglia di valutazione: 5 criteri (UX flow, UI polish, pattern compliance, funzionalita, valore aggiunto) con scala 1-10 e pesi. Score finale = media pesata.</p>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: start; gap: 0.8rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 0.8rem 1rem;">
+      <span style="color: #34d399; font-size: 1.2rem; flex-shrink: 0;">&#10003;</span>
+      <div>
+        <strong style="color: #34d399;">Modello Sonnet per tutti gli agenti QA</strong>
+        <p style="margin: 0.3rem 0 0; color: #94a3b8;">Analisi visiva di screenshot richiede capacita multimodale forte. Tutti gli agenti QA usano <code>model: sonnet</code>. Pattern auditor puo usare <code>haiku</code> (solo codice, no visual).</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section">
+  <h3>2 Nuovi Agenti</h3>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-top: 1rem;">
+
+    <div style="background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.3); border-radius: 12px; padding: 1.2rem;">
+      <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.8rem;">
+        <div style="background: #f43f5e; color: white; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">F</div>
+        <h3 style="margin: 0; color: #fb7185;">Francesca — Platform Admin</h3>
+      </div>
+      <p style="color: #94a3b8; margin: 0 0 0.8rem;"><strong>Profilo:</strong> CTO di una web agency che ha scelto Ainstein per il team. Gestisce utenti, piani, crediti, monitoring. Vuole un admin panel chiaro che le permetta di controllare tutto senza dover guardare i log SSH.</p>
+      <p style="color: #f87171; margin: 0 0 0.8rem;"><strong>Pain point:</strong> "Se devo andare in SSH per capire se un job e bloccato, il pannello admin non sta facendo il suo lavoro."</p>
+      <p style="color: #cbd5e1; margin: 0;"><strong>Pagine da testare:</strong></p>
+      <ul style="color: #94a3b8; margin: 0.3rem 0 0; padding-left: 1.2rem; font-size: 0.9rem;">
+        <li>Dashboard admin (KPI piattaforma)</li>
+        <li>Gestione utenti (lista, dettaglio, piani)</li>
+        <li>Gestione piani e pricing</li>
+        <li>Gestione crediti</li>
+        <li>Gestione moduli (attiva/disattiva, settings)</li>
+        <li>AI Logs + API Logs</li>
+        <li>Jobs monitor</li>
+        <li>Email templates (lista, editor, preview, test)</li>
+        <li>Settings globali (branding, SMTP, etc.)</li>
+        <li>Finance dashboard</li>
+      </ul>
+    </div>
+
+    <div style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.3); border-radius: 12px; padding: 1.2rem;">
+      <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.8rem;">
+        <div style="background: #0ea5e9; color: white; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">L</div>
+        <h3 style="margin: 0; color: #38bdf8;">Luca — Nuovo Utente / Platform UX</h3>
+      </div>
+      <p style="color: #94a3b8; margin: 0 0 0.8rem;"><strong>Profilo:</strong> Freelance SEO al primo accesso. Non conosce la piattaforma. Valuta se e intuitiva, se capisce dove andare, se la navigazione ha senso. Testa tutto cio che non e dentro un modulo specifico.</p>
+      <p style="color: #38bdf8; margin: 0 0 0.8rem;"><strong>Pain point:</strong> "Mi sono registrato, e adesso? Se non capisco cosa fare nei primi 2 minuti, chiudo e vado su Semrush."</p>
+      <p style="color: #cbd5e1; margin: 0;"><strong>Pagine da testare:</strong></p>
+      <ul style="color: #94a3b8; margin: 0.3rem 0 0; padding-left: 1.2rem; font-size: 0.9rem;">
+        <li>Homepage / Landing page</li>
+        <li>Registrazione + Login</li>
+        <li>Onboarding (primo accesso)</li>
+        <li>Sidebar navigazione (responsive, accordion, stati)</li>
+        <li>Hub Progetti (lista, crea, dashboard progetto)</li>
+        <li>Attivazione moduli da progetto</li>
+        <li>Condivisione progetti (inviti, ruoli, accettazione)</li>
+        <li>Notifiche (bell, lista, preferenze)</li>
+        <li>Profilo utente + preferenze email</li>
+        <li>Pagina crediti + piani</li>
+        <li>Documentazione utente (/docs)</li>
+        <li>Connettori CMS (lista, crea, test)</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<div class="section">
+  <h3>Struttura Finale Completa</h3>
+  <div class="mockup">
+    <div class="mockup-header">Plugin: ainstein-qa — 10 agenti, 3 comandi, 1 skill</div>
+    <div class="mockup-body" style="font-family: monospace; font-size: 13px; line-height: 1.8; color: #e2e8f0;">
+<pre style="margin:0; color: inherit;">
+.claude/plugins/ainstein-qa/
+├── .claude-plugin/
+│   └── plugin.json
+├── agents/
+│   ├── qa-orchestrator.md              ← orchestra: pattern sync → batch 2 agenti alla volta
+│   ├── pattern-auditor.md              ← scansiona codebase, aggiorna skill (model: haiku)
+│   │
+│   │  <span style="color: #94a3b8;">── Moduli (6 personas) ──</span>
+│   ├── marco-seo-audit.md              ← SEO Specialist Tecnico
+│   ├── giulia-ads-analyzer.md          ← PPC Manager
+│   ├── alessia-seo-tracking.md         ← SEO Manager in-house
+│   ├── lorenzo-keyword-research.md     ← Content Strategist
+│   ├── sara-content-creator.md         ← Content Manager E-commerce
+│   ├── davide-ai-content.md            ← Digital Marketing Manager
+│   │
+│   │  <span style="color: #94a3b8;">── Piattaforma (2 personas) ──</span>
+│   ├── <span style="color: #fb7185; font-weight: bold;">francesca-admin.md</span>               ← Platform Admin / CTO Agency
+│   └── <span style="color: #38bdf8; font-weight: bold;">luca-platform-ux.md</span>              ← Nuovo Utente / Platform UX
+│
+├── commands/
+│   ├── qa-review.md                    ← /qa-review {modulo|admin|platform}
+│   ├── qa-review-all.md                ← /qa-review-all
+│   └── qa-pattern-sync.md              ← /qa-pattern-sync
+├── skills/
+│   └── platform-standards/
+│       └── SKILL.md                    ← pattern + rubrica scoring
+└── hooks/
+    └── hooks.json
+</pre>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Flusso Orchestratore (batch da 2)</h3>
+  <div class="mockup">
+    <div class="mockup-header">/qa-review-all — esecuzione sequenziale a batch</div>
+    <div class="mockup-body" style="padding: 1.5rem; font-size: 0.95rem;">
+      <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+          <div style="background: #fbbf24; color: #1e293b; border-radius: 6px; padding: 0.3rem 0.8rem; font-weight: bold; font-size: 0.85rem; min-width: 80px; text-align: center;">Step 0</div>
+          <div style="color: #e2e8f0;">Pattern Auditor (sync skill) — attende completamento</div>
+        </div>
+
+        <div style="text-align: center; color: #475569;">↓</div>
+
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+          <div style="background: #6366f1; color: white; border-radius: 6px; padding: 0.3rem 0.8rem; font-weight: bold; font-size: 0.85rem; min-width: 80px; text-align: center;">Batch 1</div>
+          <div style="color: #e2e8f0;">Luca (platform) + Francesca (admin) — in parallelo</div>
+        </div>
+
+        <div style="text-align: center; color: #475569;">↓</div>
+
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+          <div style="background: #6366f1; color: white; border-radius: 6px; padding: 0.3rem 0.8rem; font-weight: bold; font-size: 0.85rem; min-width: 80px; text-align: center;">Batch 2</div>
+          <div style="color: #e2e8f0;">Marco (seo-audit) + Giulia (ads-analyzer) — in parallelo</div>
+        </div>
+
+        <div style="text-align: center; color: #475569;">↓</div>
+
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+          <div style="background: #6366f1; color: white; border-radius: 6px; padding: 0.3rem 0.8rem; font-weight: bold; font-size: 0.85rem; min-width: 80px; text-align: center;">Batch 3</div>
+          <div style="color: #e2e8f0;">Alessia (seo-tracking) + Lorenzo (keyword-research) — in parallelo</div>
+        </div>
+
+        <div style="text-align: center; color: #475569;">↓</div>
+
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+          <div style="background: #6366f1; color: white; border-radius: 6px; padding: 0.3rem 0.8rem; font-weight: bold; font-size: 0.85rem; min-width: 80px; text-align: center;">Batch 4</div>
+          <div style="color: #e2e8f0;">Sara (content-creator) + Davide (ai-content) — in parallelo</div>
+        </div>
+
+        <div style="text-align: center; color: #475569;">↓</div>
+
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+          <div style="background: #10b981; color: white; border-radius: 6px; padding: 0.3rem 0.8rem; font-weight: bold; font-size: 0.85rem; min-width: 80px; text-align: center;">Finale</div>
+          <div style="color: #e2e8f0;">Consolida _index.md con classifica score + priorita</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Output Directory Finale</h3>
+  <div class="mockup">
+    <div class="mockup-header">qa-reviews/ — struttura completa</div>
+    <div class="mockup-body" style="font-family: monospace; font-size: 13px; line-height: 1.8; color: #e2e8f0;">
+<pre style="margin:0; color: inherit;">
+qa-reviews/
+├── _index.md                    ← classifica globale + priorita
+├── screenshots/                 ← .gitignore'd, solo locale
+├── <span style="color: #38bdf8;">platform/</span>
+│   └── 2026-03-20.md            ← Luca: sidebar, progetti, notifiche, onboarding...
+├── <span style="color: #fb7185;">admin/</span>
+│   └── 2026-03-20.md            ← Francesca: utenti, piani, crediti, logs, jobs...
+├── <span style="color: #34d399;">seo-audit/</span>
+│   └── 2026-03-20.md
+├── <span style="color: #f472b6;">ads-analyzer/</span>
+│   └── 2026-03-20.md
+├── <span style="color: #60a5fa;">seo-tracking/</span>
+│   └── 2026-03-20.md
+├── <span style="color: #a78bfa;">keyword-research/</span>
+│   └── 2026-03-20.md
+├── <span style="color: #2dd4bf;">content-creator/</span>
+│   └── 2026-03-20.md
+└── <span style="color: #fbbf24;">ai-content/</span>
+    └── 2026-03-20.md
+</pre>
+    </div>
+  </div>
+</div>

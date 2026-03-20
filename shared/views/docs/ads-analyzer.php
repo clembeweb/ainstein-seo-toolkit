@@ -120,7 +120,7 @@
                 </div>
                 <h3 class="font-medium text-slate-900 dark:text-white text-sm">Valutazione campagne AI</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Dashboard a tab con panoramica KPI, dettaglio campagne, estensioni e azioni. Selettore sync per confrontare periodi diversi. Genera fix AI pronti all'uso per copy annunci, estensioni e keyword. Report esportabile in PDF. Suggerimenti applicabili direttamente su Google Ads.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Report unificato con KPI compatti (spesa, click, CTR, conversioni, ROAS, CPA) con delta % rispetto al sync precedente. Tabella espandibile a 3 livelli: Campagna &rarr; Ad Group &rarr; Annunci + Keyword. L'AI analizza la coerenza keyword-annuncio-landing, confronta le performance per annuncio e identifica i punti deboli. Per campagne PMax: analisi asset group con Ad Strength, asset LOW e suggerimenti di sostituzione. Seleziona le campagne da analizzare prima di avviare la valutazione. Analisi prodotti per campagne Shopping/PMax con performance per brand e prodotti spreco.</p>
         </div>
         <!-- Genera con AI -->
         <div class="p-4 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20">
@@ -130,9 +130,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                     </svg>
                 </div>
-                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Genera con AI</h3>
+                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Ottimizzazioni Batch con Before/After</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Dalla pagina valutazione, genera contenuti actionable per risolvere i problemi identificati: copy annunci (headline + description), estensioni mancanti (sitelink, callout, snippet) e keyword negative raggruppate per categoria. Ogni generazione puo essere copiata o esportata in CSV compatibile Google Ads Editor per importazione diretta.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Dalla valutazione, genera ottimizzazioni singole o batch: riscrittura annunci (Before &rarr; After per H1-H3, D1-D2), estensioni mancanti, sostituzione asset PMax LOW e keyword negative. Preview inline con vecchi/nuovi valori. Applica direttamente su Google Ads (annunci creati IN PAUSA) o esporta CSV per Google Ads Editor. Costo: 1 credito per generazione, applicazione gratuita.</p>
         </div>
         <!-- Keyword negative -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">

@@ -1,0 +1,9 @@
+[      34ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/static/index.cbaf481febb1577a9772.js:1
+[      35ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/static/index.cbaf481febb1577a9772.js:1
+[      37ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/static/index.cbaf481febb1577a9772.js:1
+[      38ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/static/index.cbaf481febb1577a9772.js:1
+[      39ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/static/index.cbaf481febb1577a9772.js:1
+[      39ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/static/index.cbaf481febb1577a9772.js:1
+[    2396ms] ReferenceError: zE is not defined
+    at HTMLDocument.<anonymous> (https://www.seozoom.it/chi-siamo/:1359:2)
+    at https://www.seozoom.it/chi-siamo/:3:8388

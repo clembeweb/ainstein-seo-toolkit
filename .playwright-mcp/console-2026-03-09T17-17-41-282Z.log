@@ -1,0 +1,201 @@
+[     156ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[   10239ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=typography:65
+[   10555ms] Unexpected token '<'
+[   10628ms] [WARNING] Alpine Expression Error: campaignPageManager is not defined
+
+Expression: "campaignPageManager()"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[   10629ms] [WARNING] Alpine Expression Error: loading is not defined
+
+Expression: "loading || !canEvaluate"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[   10630ms] [WARNING] Alpine Expression Error: canEvaluate is not defined
+
+Expression: "canEvaluate && !loading
+                        ? 'bg-amber-600 text-white hover:bg-amber-700'
+                        : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[   10630ms] [WARNING] Alpine Expression Error: loading is not defined
+
+Expression: "!loading"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[   10630ms] [WARNING] Alpine Expression Error: loading is not defined
+
+Expression: "loading"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[   10630ms] [WARNING] Alpine Expression Error: loading is not defined
+
+Expression: "loading ? 'Analisi AI in corso...' : 'Valuta con AI'"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[   10630ms] [WARNING] Alpine Expression Error: loading is not defined
+
+Expression: "loading"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[   10630ms] [WARNING] Alpine Expression Error: errorMsg is not defined
+
+Expression: "errorMsg"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[   10630ms] [WARNING] Alpine Expression Error: showCampaignModal is not defined
+
+Expression: "showCampaignModal"
+
+ JSHandle@node @ https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0
+[   10676ms] Uncaught ReferenceError: campaignPageManager is not defined
+    at [Alpine] campaignPageManager() (:2:15)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at N (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:142)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:35884)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3069)
+    at n (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3099)
+    at Er (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3109)
+    at S (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5957)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5321)
+    at Tr (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5309)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:41206)
+[   10676ms] Uncaught ReferenceError: loading is not defined
+    at [Alpine] loading || !canEvaluate (:2:31)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:35359)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19535)
+    at mn (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19323)
+    at D (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:463)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:576)
+    at Pn (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:35353)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3069)
+    at n (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3099)
+    at Er (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3109)
+    at S (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5957)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5321)
+    at Tr (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5309)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:41206)
+[   10677ms] Uncaught ReferenceError: canEvaluate is not defined
+    at [Alpine] canEvaluate && !loading
+                        ? 'bg-amber-600 text-white hover:bg-amber-700'
+                        : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed' (:2:31)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:35359)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19535)
+    at mn (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19323)
+    at D (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:463)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:576)
+    at Pn (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:35353)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3069)
+    at n (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3099)
+    at Er (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3109)
+    at S (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5957)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5321)
+    at Tr (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5309)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:41206)
+[   10678ms] Uncaught ReferenceError: loading is not defined
+    at [Alpine] !loading (:2:32)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:40292)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19535)
+    at mn (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19323)
+    at D (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:463)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:576)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:40286)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3069)
+    at n (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3099)
+    at Er (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3109)
+    at S (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5957)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5321)
+    at Tr (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5309)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:41206)
+[   10678ms] Uncaught ReferenceError: loading is not defined
+    at [Alpine] loading (:2:31)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:40292)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19535)
+    at mn (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19323)
+    at D (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:463)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:576)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:40286)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3069)
+    at n (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3099)
+    at Er (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3109)
+    at S (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5957)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5321)
+    at Tr (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5309)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:41206)
+[   10678ms] Uncaught ReferenceError: loading is not defined
+    at [Alpine] loading ? 'Analisi AI in corso...' : 'Valuta con AI' (:2:31)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:34863)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19535)
+    at mn (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19323)
+    at D (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:463)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:576)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:34856)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3069)
+    at n (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3099)
+    at Er (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3109)
+    at S (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5957)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5321)
+    at Tr (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5309)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:41206)
+[   10679ms] Uncaught ReferenceError: loading is not defined
+    at [Alpine] loading (:2:31)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:40292)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19535)
+    at mn (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19323)
+    at D (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:463)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:576)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:40286)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3069)
+    at n (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3099)
+    at Er (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3109)
+    at S (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5957)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5321)
+    at Tr (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5309)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:41206)
+[   10680ms] Uncaught ReferenceError: errorMsg is not defined
+    at [Alpine] errorMsg (:2:31)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:40292)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19535)
+    at mn (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19323)
+    at D (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:463)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:576)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:40286)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3069)
+    at n (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3099)
+    at Er (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3109)
+    at S (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5957)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5321)
+    at Tr (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5309)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:41206)
+[   10680ms] Uncaught ReferenceError: showCampaignModal is not defined
+    at [Alpine] showCampaignModal (:2:31)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:1152)
+    at ur (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:5137)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:40292)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19535)
+    at mn (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:19323)
+    at D (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:463)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:0:576)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:40286)
+    at r (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3069)
+    at n (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3099)
+    at Er (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:3109)
+    at S (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5957)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5321)
+    at Tr (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:5309)
+    at <anonymous> (https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js:4:41206)

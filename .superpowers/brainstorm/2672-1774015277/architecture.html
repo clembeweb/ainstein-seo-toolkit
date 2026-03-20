@@ -1,0 +1,153 @@
+<h2>Architettura Plugin ainstein-qa</h2>
+<p class="subtitle">Struttura completa del plugin con agenti, comandi, skill e output</p>
+
+<div class="section">
+  <h3>Struttura Directory</h3>
+  <div class="mockup">
+    <div class="mockup-header">Plugin: ainstein-qa</div>
+    <div class="mockup-body" style="font-family: monospace; font-size: 13px; line-height: 1.8; color: #e2e8f0;">
+<pre style="margin:0; color: inherit;">
+.claude/plugins/ainstein-qa/
+├── .claude-plugin/
+│   └── plugin.json
+├── agents/
+│   ├── qa-orchestrator.md          ← lancia tutti, consolida _index.md
+│   ├── marco-seo-audit.md          ← SEO Specialist Tecnico
+│   ├── giulia-ads-analyzer.md      ← PPC Manager
+│   ├── alessia-seo-tracking.md     ← SEO Manager in-house
+│   ├── lorenzo-keyword-research.md ← Content Strategist
+│   ├── sara-content-creator.md     ← Content Manager E-commerce
+│   └── davide-ai-content.md        ← Digital Marketing Manager
+├── commands/
+│   ├── qa-review.md                ← /qa-review {modulo}
+│   └── qa-review-all.md            ← /qa-review-all
+├── skills/
+│   └── platform-standards/
+│       └── SKILL.md                ← pattern da verificare (CSS, componenti, GR)
+└── hooks/
+    └── hooks.json                  ← (vuoto o minimo)
+</pre>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Flusso Esecuzione Agente Singolo</h3>
+  <div class="mockup">
+    <div class="mockup-header">Esempio: /qa-review seo-audit → Marco</div>
+    <div class="mockup-body" style="padding: 1.5rem;">
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="background: #3b82f6; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">1</div>
+          <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 0.8rem 1rem; flex: 1;">
+            <strong>Login</strong> — Playwright naviga a ainstein.it, fa login con credenziali test
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="background: #8b5cf6; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">2</div>
+          <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; padding: 0.8rem 1rem; flex: 1;">
+            <strong>Review UX/UI</strong> — Naviga ogni pagina del modulo, screenshot, analisi visiva (layout, gerarchia, leggibilita, mobile-readiness)
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="background: #f59e0b; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">3</div>
+          <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 0.8rem 1rem; flex: 1;">
+            <strong>Test Funzionali</strong> — Esegue i workflow critici (es. crea progetto → importa URL → lancia crawl → legge risultati)
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="background: #10b981; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">4</div>
+          <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 0.8rem 1rem; flex: 1;">
+            <strong>Verifica Pattern</strong> — Controlla conformita: tabelle CSS, componenti shared, icone Heroicons, lingua IT, landing page pattern
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="background: #ef4444; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">5</div>
+          <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 0.8rem 1rem; flex: 1;">
+            <strong>Genera Piano Fix</strong> — Scrive <code>qa-reviews/{modulo}/{data}.md</code> con issue ordinate per severita + checkbox esecuzione
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Flusso Orchestratore</h3>
+  <div class="mockup">
+    <div class="mockup-header">/qa-review-all → Orchestratore</div>
+    <div class="mockup-body" style="padding: 1.5rem;">
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="background: #6366f1; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">1</div>
+          <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px; padding: 0.8rem 1rem; flex: 1;">
+            <strong>Dispatch</strong> — Lancia i 6 agenti in parallelo (Agent tool con run_in_background)
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="background: #6366f1; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">2</div>
+          <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px; padding: 0.8rem 1rem; flex: 1;">
+            <strong>Attende completamento</strong> — Ogni agente scrive il suo file in qa-reviews/
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="background: #6366f1; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">3</div>
+          <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px; padding: 0.8rem 1rem; flex: 1;">
+            <strong>Consolida</strong> — Legge tutti i piani, genera <code>qa-reviews/_index.md</code> con classifica per score e priorita
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Output: Formato Fix Plan</h3>
+  <div class="mockup">
+    <div class="mockup-header">qa-reviews/seo-audit/2026-03-20.md</div>
+    <div class="mockup-body" style="font-family: monospace; font-size: 12px; line-height: 1.7; color: #cbd5e1; white-space: pre-wrap;">
+# QA Review — SEO Audit
+Persona: Marco, SEO Specialist | Data: 2026-03-20
+Ambiente: https://ainstein.it
+
+## Sommario
+Score: 6.5/10 | Critici: 3 | Alti: 5 | Medi: 8
+
+## Issues
+
+### [CRITICO] #1 — Dashboard KPI non mostra dati ultimo crawl
+- **Tipo**: Funzionale
+- **Pagina**: /seo-audit/project/1/dashboard
+- **Screenshot**: screenshots/sa-dashboard-empty-kpi.png
+- **Problema**: I KPI card mostrano tutti "0" anche dopo un crawl completato.
+  Come utente mi aspetto di vedere subito il riepilogo.
+- **File coinvolti**: `modules/seo-audit/views/dashboard.php:45-80`
+- **Fix proposto**: La query non filtra per ultima sessione.
+  Aggiungere `ORDER BY created_at DESC LIMIT 1` nella
+  query KPI del controller.
+- **Pattern violato**: Nessuno
+- [ ] Da eseguire
+
+### [ALTO] #2 — Tabella issues usa px-6 invece di px-4
+- **Tipo**: Pattern
+- **Pagina**: /seo-audit/project/1/issues
+- **Screenshot**: screenshots/sa-issues-table-spacing.png
+- **Problema**: Le celle della tabella usano px-6, non
+  conforme allo standard tabelle (GR #20: px-4 py-3)
+- **File coinvolti**: `modules/seo-audit/views/issues/index.php:120`
+- **Fix proposto**: Sostituire px-6 con px-4 py-3
+- **Pattern violato**: Golden Rule #20 (Standard tabelle CSS)
+- [ ] Da eseguire
+    </div>
+  </div>
+</div>

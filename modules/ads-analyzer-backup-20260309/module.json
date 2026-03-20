@@ -1,0 +1,239 @@
+{
+    "name": "Google Ads Analyzer",
+    "slug": "ads-analyzer",
+    "version": "1.0.0",
+    "description": "Analisi keyword negative e valutazione campagne Google Ads con AI",
+    "icon": "chart-bar-square",
+    "color": "amber",
+    "menu_order": 25,
+    "requires": {
+        "php": ">=8.0",
+        "credits": true,
+        "services": ["ai"]
+    },
+    "credits": {
+        "analyze_ad_group": {
+            "cost": 3,
+            "description": "Analisi singolo Ad Group (Standard)"
+        },
+        "bulk_analyze": {
+            "cost": 3,
+            "description": "Analisi Ad Group in bulk (Standard)"
+        },
+        "extract_context": {
+            "cost": 3,
+            "description": "Estrazione contesto da landing page (Standard)"
+        },
+        "campaign_evaluation": {
+            "cost": 10,
+            "description": "Valutazione AI completa campagne (Premium)"
+        },
+        "creator_scrape": {
+            "cost": 1,
+            "description": "Scraping landing page Campaign Creator (Base)"
+        },
+        "creator_keywords": {
+            "cost": 3,
+            "description": "Keyword research AI Campaign Creator (Standard)"
+        },
+        "creator_campaign": {
+            "cost": 10,
+            "description": "Generazione campagna completa AI (Premium)"
+        }
+    },
+    "settings_groups": {
+        "ai_config": {
+            "label": "Configurazione AI",
+            "icon": "sparkles",
+            "description": "Provider e modello AI per questo modulo",
+            "order": 0
+        },
+        "general": {
+            "label": "Impostazioni Generali",
+            "icon": "cog",
+            "description": "Configurazione predefinita per le analisi Google Ads",
+            "order": 1,
+            "collapsed": false
+        },
+        "costs": {
+            "label": "Costi Operazioni",
+            "icon": "currency-euro",
+            "description": "Crediti consumati per ogni operazione",
+            "order": 99,
+            "collapsed": true
+        }
+    },
+    "settings": {
+        "ai_provider": {
+            "type": "select",
+            "label": "Provider AI",
+            "description": "Provider AI per questo modulo",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"},
+                {"value": "anthropic", "label": "Anthropic (Claude)"},
+                {"value": "openai", "label": "OpenAI (GPT)"}
+            ]
+        },
+        "ai_model": {
+            "type": "select",
+            "label": "Modello AI",
+            "description": "Modello AI per questo modulo",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"}
+            ]
+        },
+        "ai_fallback_enabled": {
+            "type": "select",
+            "label": "Fallback AI",
+            "description": "Fallback automatico su altro provider se il primario fallisce",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"},
+                {"value": "1", "label": "Abilitato"},
+                {"value": "0", "label": "Disabilitato"}
+            ]
+        },
+        "max_terms_per_analysis": {
+            "type": "number",
+            "label": "Termini max per analisi AI",
+            "default": 300,
+            "min": 50,
+            "max": 500,
+            "description": "Limite termini inviati all'AI per singola analisi",
+            "group": "general"
+        },
+        "auto_select_high_priority": {
+            "type": "checkbox",
+            "label": "Auto-seleziona keyword priorita Alta",
+            "default": true,
+            "description": "Seleziona automaticamente le keyword con priorita 'high' per l'export",
+            "group": "general"
+        },
+        "auto_select_medium_priority": {
+            "type": "checkbox",
+            "label": "Auto-seleziona keyword priorita Media",
+            "default": true,
+            "description": "Seleziona automaticamente le keyword con priorita 'medium' per l'export",
+            "group": "general"
+        },
+        "auto_eval_delay_minutes": {
+            "type": "number",
+            "label": "Ritardo auto-valutazione (minuti)",
+            "default": 2,
+            "min": 1,
+            "max": 60,
+            "description": "Minuti di attesa dopo ricezione dati prima della valutazione automatica",
+            "group": "general"
+        },
+        "auto_eval_significance_threshold": {
+            "type": "number",
+            "label": "Soglia significativita cambiamenti (%)",
+            "default": 10,
+            "min": 5,
+            "max": 50,
+            "step": 5,
+            "description": "Variazione % minima per attivare valutazione AI (sotto questa soglia = skip, 0 crediti)",
+            "group": "general"
+        },
+        "max_campaigns_per_evaluation": {
+            "type": "number",
+            "label": "Max campagne per valutazione",
+            "default": 15,
+            "min": 5,
+            "max": 30,
+            "description": "Numero massimo di campagne in una singola valutazione AI",
+            "group": "general"
+        },
+        "default_match_type": {
+            "type": "select",
+            "label": "Match type predefinito export",
+            "default": "phrase",
+            "options": {
+                "exact": "Corrispondenza esatta [keyword]",
+                "phrase": "Corrispondenza a frase \"keyword\"",
+                "broad": "Corrispondenza generica"
+            },
+            "description": "Match type usato nell'export per Google Ads Editor",
+            "group": "general"
+        },
+        "cost_context_extraction": {
+            "type": "number",
+            "label": "Costo Estrazione Contesto",
+            "description": "Crediti per estrazione contesto annunci",
+            "default": 3,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_ad_group_analysis": {
+            "type": "number",
+            "label": "Costo Analisi Ad Group",
+            "description": "Crediti per analisi singolo ad group (Standard)",
+            "default": 3,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_bulk_analysis": {
+            "type": "number",
+            "label": "Costo Analisi Bulk",
+            "description": "Crediti per analisi bulk (Standard)",
+            "default": 3,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_campaign_evaluation": {
+            "type": "number",
+            "label": "Costo Valutazione Campagne",
+            "description": "Crediti per valutazione AI completa campagne (Premium)",
+            "default": 10,
+            "min": 1,
+            "step": 0.5,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_creator_scrape": {
+            "type": "number",
+            "label": "Costo Creator: Scraping",
+            "description": "Crediti per scraping landing page (Campaign Creator)",
+            "default": 1,
+            "min": 0,
+            "step": 0.5,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_creator_keywords": {
+            "type": "number",
+            "label": "Costo Creator: Keyword Research",
+            "description": "Crediti per keyword research AI (Campaign Creator)",
+            "default": 3,
+            "min": 0,
+            "step": 0.5,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_creator_campaign": {
+            "type": "number",
+            "label": "Costo Creator: Generazione Campagna",
+            "description": "Crediti per generazione campagna completa AI (Premium)",
+            "default": 10,
+            "min": 0,
+            "step": 0.5,
+            "admin_only": true,
+            "group": "costs"
+        }
+    },
+    "routes_prefix": "/ads-analyzer"
+}
