@@ -155,6 +155,7 @@ class CampaignController
                 $campConvValue = round((float)($c['conversion_value'] ?? 0), 2);
                 $campaignsPerformance[] = [
                     'name' => $c['campaign_name'],
+                    'campaign_id_google' => $c['campaign_id_google'] ?? '',
                     'type' => $c['campaign_type'] ?? 'SEARCH',
                     'status' => $c['campaign_status'] ?? 'UNKNOWN',
                     'clicks' => (int)$c['clicks'],
@@ -168,6 +169,15 @@ class CampaignController
                     'ad_groups' => $adGroupsByCampaign[$c['campaign_name']] ?? [],
                 ];
             }
+
+            // Carica asset groups per campagne PMax
+            require_once __DIR__ . '/../models/AssetGroup.php';
+            foreach ($campaignsPerformance as &$campPerf) {
+                if (strtoupper($campPerf['type'] ?? '') === 'PERFORMANCE_MAX') {
+                    $campPerf['asset_groups'] = \Modules\AdsAnalyzer\Models\AssetGroup::getBySyncId($syncId);
+                }
+            }
+            unset($campPerf);
         }
 
         // Top waste search terms + stats per widget KW negative
@@ -861,10 +871,15 @@ class CampaignController
             jsonResponse(['error' => "Crediti insufficienti. Necessari: {$cost}"], 400);
         }
 
-        // Filtro campagne (selezione utente)
+        // Filtro campagne (selezione utente) — accetta array o JSON string
         $campaignsFilter = null;
         if (!empty($_POST['campaigns_filter'])) {
-            $campaignsFilter = json_decode($_POST['campaigns_filter'], true);
+            $raw = $_POST['campaigns_filter'];
+            if (is_array($raw)) {
+                $campaignsFilter = $raw;
+            } elseif (is_string($raw)) {
+                $campaignsFilter = json_decode($raw, true);
+            }
             if (!is_array($campaignsFilter)) {
                 $campaignsFilter = null;
             }
@@ -875,7 +890,7 @@ class CampaignController
 
         // Carica dati — solo campagne e ad group attivi
         $campaigns = array_values(array_filter(
-            Campaign::getByRun($sync['id']),
+            Campaign::getByRun($sync['id'], $projectId),
             fn($c) => ($c['campaign_status'] ?? '') === 'ENABLED'
         ));
         $ads = Ad::getByRun($sync['id']);
@@ -972,6 +987,18 @@ class CampaignController
 
             $landingPagesAnalyzed = count($landingContexts);
 
+            // Carica dati prodotto per Shopping/PMax
+            require_once __DIR__ . '/../models/ProductPerformance.php';
+            $productData = [];
+            $hasShoppingPmax = !empty(array_filter($campaigns, fn($c) => in_array(strtoupper($c['campaign_type'] ?? ''), ['SHOPPING', 'PERFORMANCE_MAX'])));
+            if ($hasShoppingPmax) {
+                $productData = [
+                    'top_products' => \Modules\AdsAnalyzer\Models\ProductPerformance::getTopBySpend($projectId, (int)$sync['id'], 20),
+                    'brands' => \Modules\AdsAnalyzer\Models\ProductPerformance::getBrandSummary($projectId, (int)$sync['id']),
+                    'waste' => \Modules\AdsAnalyzer\Models\ProductPerformance::getWasteProducts($projectId, (int)$sync['id']),
+                ];
+            }
+
             // AI Analysis
             $sendEvent('progress', ['step' => 'analyzing', 'message' => 'Analisi AI in corso...']);
 
@@ -986,7 +1013,8 @@ class CampaignController
                 $adGroupsData,
                 $keywordsData,
                 $campaignsFilter,
-                (int)$sync['id']
+                (int)$sync['id'],
+                $productData
             );
 
             Database::reconnect();
@@ -1202,6 +1230,9 @@ class CampaignController
                 ];
             }
 
+            // Load synced extensions for display
+            $syncedExtensions = Extension::getByRun($evaluation['sync_id']);
+
             return View::render('ads-analyzer/campaigns/evaluation-v2', [
                 'title' => 'Report Campagne - ' . $project['name'],
                 'user' => $user,
@@ -1209,6 +1240,7 @@ class CampaignController
                 'project' => $project,
                 'evaluation' => $evaluation,
                 'aiResponse' => $aiResponse,
+                'syncedExtensions' => $syncedExtensions,
                 'syncMetrics' => $syncMetrics,
                 'metricDeltas' => $metricDeltas,
                 'negativeSummary' => $negativeSummary,
@@ -1219,6 +1251,8 @@ class CampaignController
                 'currentSync' => $currentSync,
                 'savedFixes' => $savedFixes,
                 'agIdMap' => $agIdMap,
+                'assetGroups' => $assetGroups,
+                'assetsByAg' => $assetsByAg,
                 'assetGroupIdMap' => $assetGroupIdMap,
             ]);
         }
@@ -1285,7 +1319,7 @@ class CampaignController
             $type = $_POST['type'] ?? '';
             $context = json_decode($_POST['context'] ?? '{}', true) ?: [];
 
-            $allowedTypes = ['rewrite_ads', 'add_negatives', 'remove_duplicates', 'add_extensions',
+            $allowedTypes = ['rewrite_ads', 'rewrite_ad', 'add_negatives', 'remove_duplicates', 'add_extensions',
                              'replace_asset', 'add_asset',
                              'copy', 'keywords', 'extensions'];
             if (!in_array($type, $allowedTypes)) {
@@ -1319,6 +1353,26 @@ class CampaignController
             ];
 
             set_time_limit(300);
+
+            // Load extra PMax asset group context for replace/add asset prompts
+            if (in_array($type, ['replace_asset', 'add_asset'])) {
+                $agIdGoogle = $context['asset_group_id_google'] ?? '';
+                if ($agIdGoogle && !empty($evaluation['sync_id'])) {
+                    // Load other assets for context
+                    $campaignData['other_assets'] = \Modules\AdsAnalyzer\Models\AssetGroupAsset::getByAssetGroup(
+                        (int)$evaluation['sync_id'], $agIdGoogle
+                    );
+                    // Load search themes and audience signals
+                    $agRow = Database::fetch(
+                        "SELECT search_themes, audience_signals FROM ga_asset_groups WHERE sync_id = ? AND asset_group_id_google = ?",
+                        [(int)$evaluation['sync_id'], $agIdGoogle]
+                    );
+                    if ($agRow) {
+                        $campaignData['search_themes_list'] = json_decode($agRow['search_themes'] ?? 'null', true) ?? [];
+                        $campaignData['audience_signals'] = json_decode($agRow['audience_signals'] ?? 'null', true) ?? [];
+                    }
+                }
+            }
 
             require_once __DIR__ . '/../services/EvaluationGeneratorService.php';
             $service = new \Modules\AdsAnalyzer\Services\EvaluationGeneratorService();
@@ -1780,7 +1834,7 @@ class CampaignController
     {
         $lines = [];
 
-        if (str_contains($type, 'copy') || $type === 'rewrite_ads') {
+        if (str_contains($type, 'copy') || $type === 'rewrite_ads' || $type === 'rewrite_ad') {
             $lines[] = "HEADLINES:";
             foreach (($data['headlines'] ?? []) as $i => $h) {
                 $lines[] = ($i + 1) . ". " . $h . " (" . mb_strlen($h) . " car.)";
@@ -1842,6 +1896,45 @@ class CampaignController
                 foreach (($data['keywords'] ?? []) as $i => $kw) {
                     $match = $kw['match_type'] ?? 'phrase';
                     $lines[] = ($i + 1) . ". " . ($kw['keyword'] ?? '') . " [{$match}]" . (!empty($kw['reason']) ? " - " . $kw['reason'] : '');
+                }
+            }
+        } elseif ($type === 'replace_asset') {
+            $lines[] = "ASSET SOSTITUTIVI:";
+            foreach (($data['assets'] ?? $data['headlines'] ?? []) as $i => $a) {
+                if (is_string($a)) {
+                    $lines[] = ($i + 1) . ". " . $a . " (" . mb_strlen($a) . " car.)";
+                } else {
+                    $lines[] = ($i + 1) . ". [" . ($a['type'] ?? 'HEADLINE') . "] " . ($a['text'] ?? '') . " (" . mb_strlen($a['text'] ?? '') . " car.)";
+                }
+            }
+            if (!empty($data['descriptions'])) {
+                $lines[] = "";
+                $lines[] = "DESCRIPTIONS:";
+                foreach ($data['descriptions'] as $i => $d) {
+                    $lines[] = ($i + 1) . ". " . $d . " (" . mb_strlen($d) . " car.)";
+                }
+            }
+        } elseif ($type === 'add_asset') {
+            $lines[] = "NUOVI ASSET:";
+            foreach (($data['assets'] ?? []) as $i => $a) {
+                if (is_string($a)) {
+                    $lines[] = ($i + 1) . ". " . $a;
+                } else {
+                    $lines[] = ($i + 1) . ". [" . ($a['type'] ?? '') . "] " . ($a['text'] ?? '');
+                }
+            }
+            if (!empty($data['headlines'])) {
+                $lines[] = "";
+                $lines[] = "HEADLINES:";
+                foreach ($data['headlines'] as $i => $h) {
+                    $lines[] = ($i + 1) . ". " . $h . " (" . mb_strlen($h) . " car.)";
+                }
+            }
+            if (!empty($data['descriptions'])) {
+                $lines[] = "";
+                $lines[] = "DESCRIPTIONS:";
+                foreach ($data['descriptions'] as $i => $d) {
+                    $lines[] = ($i + 1) . ". " . $d . " (" . mb_strlen($d) . " car.)";
                 }
             }
         }
@@ -1949,9 +2042,49 @@ class CampaignController
                 ]);
             }
 
-            $result[] = array_merge($camp, [
+            $campEntry = array_merge($camp, [
                 'ad_groups' => $adGroupsResult,
             ]);
+
+            // Per campagne PMax: carica asset groups + assets
+            if (strtoupper($camp['campaign_type'] ?? '') === 'PERFORMANCE_MAX') {
+                $campId = $camp['campaign_id_google'];
+                $campAssetGroups = Database::fetchAll(
+                    "SELECT * FROM ga_asset_groups WHERE sync_id = ? AND campaign_id_google = ? ORDER BY cost DESC",
+                    [$syncId, $campId]
+                );
+                $agIds = array_column($campAssetGroups, 'asset_group_id_google');
+                $allAssets = [];
+                if (!empty($agIds)) {
+                    $placeholders = implode(',', array_fill(0, count($agIds), '?'));
+                    $allAssets = Database::fetchAll(
+                        "SELECT * FROM ga_asset_group_assets WHERE sync_id = ? AND asset_group_id_google IN ({$placeholders}) ORDER BY field_type, performance_label",
+                        array_merge([$syncId], $agIds)
+                    );
+                }
+                $assetsByAgId = [];
+                foreach ($allAssets as $asset) {
+                    $assetsByAgId[$asset['asset_group_id_google']][] = $asset;
+                }
+                $assetGroupsResult = [];
+                foreach ($campAssetGroups as $ag) {
+                    // ROAS/CPA per asset groups (colonna conversions_value)
+                    $agCost = (float)($ag['cost'] ?? 0);
+                    $agConv = (float)($ag['conversions'] ?? 0);
+                    $agConvValue = (float)($ag['conversions_value'] ?? 0);
+                    $ag['roas'] = $agCost > 0 ? round($agConvValue / $agCost, 1) : 0;
+                    $ag['cpa'] = $agConv > 0 ? round($agCost / $agConv, 2) : 0;
+                    $ag['conversion_value'] = $agConvValue;
+                    $agId = $ag['asset_group_id_google'];
+                    $ag['assets'] = $assetsByAgId[$agId] ?? [];
+                    $ag['search_themes'] = json_decode($ag['search_themes'] ?? '[]', true) ?: [];
+                    $ag['audience_signals'] = json_decode($ag['audience_signals'] ?? '[]', true) ?: [];
+                    $assetGroupsResult[] = $ag;
+                }
+                $campEntry['asset_groups'] = $assetGroupsResult;
+            }
+
+            $result[] = $campEntry;
         }
 
         // Compute totals ROAS/CPA

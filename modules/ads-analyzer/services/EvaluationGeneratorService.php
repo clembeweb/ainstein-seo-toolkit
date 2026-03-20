@@ -31,7 +31,7 @@ class EvaluationGeneratorService
     public function generate(int $userId, string $type, array $context, array $data): array
     {
         $prompt = match ($type) {
-            'rewrite_ads'       => $this->buildCopyPrompt($context, $data),
+            'rewrite_ads', 'rewrite_ad' => $this->buildCopyPrompt($context, $data),
             'add_negatives'     => $this->buildNegativesPrompt($context, $data),
             'remove_duplicates' => $this->buildDuplicatesPrompt($context, $data),
             'add_extensions'    => $this->buildExtensionsPrompt($context, $data),
@@ -470,6 +470,9 @@ PROMPT;
         ];
         $maxChars = $charLimits[$assetType] ?? 90;
 
+        // Add asset group context for better AI suggestions
+        $assetGroupContext = $this->buildAssetGroupContext($data);
+
         return <<<PROMPT
 Sei un esperto Google Ads Performance Max specializzato in asset creativi.
 
@@ -479,7 +482,7 @@ CONTESTO BUSINESS:
 CAMPAGNA PERFORMANCE MAX: {$campaignName}
 ASSET GROUP: {$assetGroupName}
 SEARCH THEMES: {$searchThemes}
-
+{$assetGroupContext}
 ASSET ATTUALE CON PERFORMANCE LOW:
 Tipo: {$assetType}
 Testo: "{$currentText}"
@@ -537,6 +540,9 @@ PROMPT;
         }
         $jsonExample = "{\n  " . implode(",\n  ", $jsonFields) . "\n}";
 
+        // Add asset group context for better AI suggestions
+        $assetGroupContext = $this->buildAssetGroupContext($data);
+
         return <<<PROMPT
 Sei un esperto Google Ads Performance Max specializzato in asset creativi.
 
@@ -546,7 +552,7 @@ CONTESTO BUSINESS:
 CAMPAGNA PERFORMANCE MAX: {$campaignName}
 ASSET GROUP: {$assetGroupName}
 SEARCH THEMES: {$searchThemes}
-
+{$assetGroupContext}
 ASSET MANCANTI DA GENERARE: {$missingList}
 
 ISTRUZIONI:
@@ -566,6 +572,42 @@ Regole:
 - Diversifica: ogni testo deve comunicare un messaggio DIVERSO
 - SOLO JSON valido, nessun commento o testo aggiuntivo
 PROMPT;
+    }
+
+    /**
+     * Build additional context from asset group data (other assets, search themes, audience signals)
+     */
+    private function buildAssetGroupContext(array $data): string
+    {
+        $context = '';
+
+        $otherAssets = $data['other_assets'] ?? [];
+        if (!empty($otherAssets)) {
+            $context .= "\nALTRI ASSET NELLO STESSO GRUPPO (mantieni coerenza):\n";
+            foreach (array_slice($otherAssets, 0, 20) as $a) {
+                $type = $a['field_type'] ?? '';
+                $text = $a['text_content'] ?? $a['url_content'] ?? '(media)';
+                $context .= "- [{$type}] {$text}\n";
+            }
+        }
+
+        $searchThemes = $data['search_themes_list'] ?? [];
+        if (!empty($searchThemes)) {
+            $context .= "\nSEARCH THEMES CONFIGURATI:\n";
+            $context .= implode(', ', $searchThemes) . "\n";
+        }
+
+        $audienceSignals = $data['audience_signals'] ?? [];
+        if (!empty($audienceSignals)) {
+            $context .= "\nAUDIENCE SIGNALS CONFIGURATI:\n";
+            foreach ($audienceSignals as $signal) {
+                $type = $signal['type'] ?? 'unknown';
+                $values = implode(', ', $signal['values'] ?? []);
+                $context .= "- Tipo: {$type}, Valori: {$values}\n";
+            }
+        }
+
+        return $context;
     }
 
     /**
