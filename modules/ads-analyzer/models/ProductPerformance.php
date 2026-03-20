@@ -58,8 +58,15 @@ class ProductPerformance
     /**
      * Riepilogo performance per brand (aggregato)
      */
-    public static function getBrandSummary(int $projectId, int $syncId): array
+    public static function getBrandSummary(int $projectId, int $syncId, ?string $campaignIdGoogle = null): array
     {
+        $where = "project_id = ? AND sync_id = ? AND product_brand IS NOT NULL AND product_brand != ''";
+        $params = [$projectId, $syncId];
+        if ($campaignIdGoogle !== null) {
+            $where .= " AND campaign_id_google = ?";
+            $params[] = $campaignIdGoogle;
+        }
+
         return Database::fetchAll(
             "SELECT product_brand,
                     COUNT(*) as product_count,
@@ -70,10 +77,10 @@ class ProductPerformance
                     CASE WHEN SUM(cost) > 0 THEN ROUND(SUM(conversion_value) / SUM(cost), 1) ELSE 0 END as brand_roas,
                     CASE WHEN SUM(conversions) > 0 THEN ROUND(SUM(cost) / SUM(conversions), 2) ELSE 0 END as brand_cpa
              FROM ga_product_performance
-             WHERE project_id = ? AND sync_id = ? AND product_brand IS NOT NULL AND product_brand != ''
+             WHERE {$where}
              GROUP BY product_brand
              ORDER BY total_cost DESC",
-            [$projectId, $syncId]
+            $params
         );
     }
 
@@ -102,13 +109,21 @@ class ProductPerformance
     /**
      * Prodotti con spreco: alta spesa, zero conversioni
      */
-    public static function getWasteProducts(int $projectId, int $syncId, int $limit = 10): array
+    public static function getWasteProducts(int $projectId, int $syncId, ?string $campaignIdGoogle = null, int $limit = 10): array
     {
+        $where = "project_id = ? AND sync_id = ? AND conversions = 0 AND cost > 0";
+        $params = [$projectId, $syncId];
+        if ($campaignIdGoogle !== null) {
+            $where .= " AND campaign_id_google = ?";
+            $params[] = $campaignIdGoogle;
+        }
+        $params[] = $limit;
+
         return Database::fetchAll(
             "SELECT * FROM ga_product_performance
-             WHERE project_id = ? AND sync_id = ? AND conversions = 0 AND cost > 0
+             WHERE {$where}
              ORDER BY cost DESC LIMIT ?",
-            [$projectId, $syncId, $limit]
+            $params
         );
     }
 
