@@ -433,7 +433,7 @@ git commit -m "feat(ads-analyzer): improve PMax AI prompts with asset group cont
 
 Il controller deve passare dati extra alla view v3: low assets per asset group, performance summary, product data per campagna.
 
-**NOTA**: Rimuovere il vecchio blocco `$productData` globale (righe 1221-1231) e sostituirlo con `$productDataByCampaign` per-campagna per evitare confusione.
+**NOTA**: MANTENERE il vecchio blocco `$productData` globale (righe 1221-1231) nel View::render() — e usato dal partial `report-product-analysis.php`. Aggiungere `$productDataByCampaign` come variabile AGGIUNTIVA.
 
 - [ ] **Step 1: Aggiungere caricamento dati per v3**
 
@@ -511,9 +511,17 @@ git commit -m "feat(ads-analyzer): pass extra data to evaluation v3 view (perf s
 
 Riscrittura completa della sezione RESULTS. Mantenere invariati gli stati ERROR, ANALYZING, NO_CHANGE (righe 1-50 circa).
 
-- [ ] **Step 1: Mantenere header e stati invariati**
+**CHECKLIST PRESERVAZIONE CRITICA** (verificata da analisi rischi):
+- ✅ PDF export usa template separato (`evaluation-pdf.php`) — nessun impatto
+- ✅ Dashboard, cron, altri view — nessuna dipendenza dalla view
+- ⚠ **PRESERVARE** la funzione Alpine `evaluationReport()` (riga 560+) con TUTTI i metodi: `generateFix()`, `copyResult()`, `exportCsv()`, `openApplyModal()`, `executeApply()`, `regenerateFix()`
+- ⚠ **PRESERVARE** le variabili JS: `generateUrl`, `applyUrl`, `csrfToken`, `canEdit`, `manualOnlyTypes`, `pmaxTypes`, `campaignsData` (JSON di `$viewCampaigns`), `savedFixes`, `allOptimizations`
+- ⚠ **PRESERVARE** il merge logic `$viewCampaigns` (righe 39-135) — matching campagne sync+AI + estrazione ottimizzazioni. NON riscrivere, solo spostare.
+- ⚠ **PRESERVARE** la modale "Applica su Google Ads" (riga 474-556 circa)
 
-Le prime ~100 righe (variabili setup, stati error/analyzing/nochange) restano uguali. La riscrittura parte dalla sezione `<?php if ($hasResults): ?>`.
+- [ ] **Step 1: Mantenere header, stati e merge logic invariati**
+
+Le prime ~135 righe (variabili setup, stati error/analyzing/nochange, merge `$viewCampaigns`) restano uguali. La riscrittura parte dalla sezione `<?php if ($hasResults): ?>` DOPO il merge.
 
 - [ ] **Step 2: Struttura nuova sezione RESULTS**
 
