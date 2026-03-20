@@ -573,30 +573,74 @@ class CampaignSyncService
      */
     public function syncExtensions(): int
     {
-        $gaql = "SELECT asset.id, asset.name, asset.type, asset.resource_name, " .
-                "asset.callout_asset.callout_text, " .
-                "asset.sitelink_asset.link_text, asset.sitelink_asset.description1, asset.sitelink_asset.description2, " .
-                "asset.structured_snippet_asset.header, asset.structured_snippet_asset.values, " .
-                "asset.image_asset.file_size, " .
-                "campaign_asset.status, campaign.id, campaign.status " .
-                "FROM campaign_asset " .
-                "WHERE campaign.status = 'ENABLED'";
+        // Try with metrics first (date segment produces per-day rows, we aggregate below)
+        $hasMetrics = false;
+        try {
+            $gaql = "SELECT asset.id, asset.name, asset.type, asset.resource_name, " .
+                    "asset.callout_asset.callout_text, " .
+                    "asset.sitelink_asset.link_text, asset.sitelink_asset.description1, asset.sitelink_asset.description2, " .
+                    "asset.structured_snippet_asset.header, asset.structured_snippet_asset.values, " .
+                    "asset.image_asset.file_size, " .
+                    "campaign_asset.status, campaign.id, campaign.status, " .
+                    "metrics.impressions, metrics.clicks " .
+                    "FROM campaign_asset " .
+                    "WHERE campaign.status = 'ENABLED' " .
+                    "AND segments.date DURING LAST_30_DAYS";
+            $response = $this->gadsService->searchStream($gaql);
+            $rows = $this->extractRows($response);
+            $hasMetrics = true;
+        } catch (\Exception $e) {
+            Logger::channel('ads')->warning('Extension metrics not supported, falling back', [
+                'error' => $e->getMessage()
+            ]);
+            // Fallback: query originale senza metriche
+            $gaql = "SELECT asset.id, asset.name, asset.type, asset.resource_name, " .
+                    "asset.callout_asset.callout_text, " .
+                    "asset.sitelink_asset.link_text, asset.sitelink_asset.description1, asset.sitelink_asset.description2, " .
+                    "asset.structured_snippet_asset.header, asset.structured_snippet_asset.values, " .
+                    "asset.image_asset.file_size, " .
+                    "campaign_asset.status, campaign.id, campaign.status " .
+                    "FROM campaign_asset " .
+                    "WHERE campaign.status = 'ENABLED'";
+            $response = $this->gadsService->searchStream($gaql);
+            $rows = $this->extractRows($response);
+        }
 
-        $response = $this->gadsService->searchStream($gaql);
-        $rows = $this->extractRows($response);
-
-        $count = 0;
+        // Aggrega per asset_id + campaign_id (la query con metriche ritorna righe per giorno)
+        $aggregated = [];
         foreach ($rows as $row) {
             $asset = $row['asset'] ?? [];
             $campaignAsset = $row['campaignAsset'] ?? [];
             $campaign = $row['campaign'] ?? [];
+            $metrics = $row['metrics'] ?? [];
 
             $assetId = (string) ($asset['id'] ?? '');
+            $campaignId = (string) ($campaign['id'] ?? '');
             if (empty($assetId)) {
                 continue;
             }
 
-            // Estrai testo in base al tipo di asset
+            $key = $campaignId . '|' . $assetId;
+            if (!isset($aggregated[$key])) {
+                $aggregated[$key] = [
+                    'asset' => $asset,
+                    'campaignAsset' => $campaignAsset,
+                    'campaign' => $campaign,
+                    'clicks' => 0,
+                    'impressions' => 0,
+                ];
+            }
+            if ($hasMetrics) {
+                $aggregated[$key]['clicks'] += (int) ($metrics['clicks'] ?? 0);
+                $aggregated[$key]['impressions'] += (int) ($metrics['impressions'] ?? 0);
+            }
+        }
+
+        $count = 0;
+        foreach ($aggregated as $entry) {
+            $asset = $entry['asset'];
+            $campaignAsset = $entry['campaignAsset'];
+            $campaign = $entry['campaign'];
             $text = $this->extractAssetText($asset);
 
             Extension::create([
@@ -606,8 +650,8 @@ class CampaignSyncService
                 'extension_type' => $asset['type'] ?? 'UNKNOWN',
                 'extension_text' => $text,
                 'status' => $campaignAsset['status'] ?? null,
-                'clicks' => 0,
-                'impressions' => 0,
+                'clicks' => $entry['clicks'],
+                'impressions' => $entry['impressions'],
             ]);
             $count++;
         }
@@ -1058,7 +1102,8 @@ class CampaignSyncService
                 'asset_group_id' => (string) ($ag['id'] ?? ''),
                 'asset_resource_name' => $assetResourceName,
                 'field_type' => $aga['fieldType'] ?? 'UNSPECIFIED',
-                'performance_label' => $aga['performanceLabel'] ?? 'UNSPECIFIED',
+                'performance_label' => in_array($aga['performanceLabel'] ?? '', ['BEST', 'GOOD', 'LOW', 'LEARNING', 'UNSPECIFIED'])
+                    ? $aga['performanceLabel'] : 'UNSPECIFIED',
                 'primary_status' => $aga['primaryStatus'] ?? null,
             ];
             $resourceNames[$assetResourceName] = true;
