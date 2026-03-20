@@ -1233,6 +1233,46 @@ class CampaignController
             // Load synced extensions for display
             $syncedExtensions = Extension::getByRun($evaluation['sync_id']);
 
+            // Asset performance summary per asset group
+            $assetPerfSummary = [];
+            foreach ($assetGroups as $ag) {
+                $agIdGoogle = $ag['asset_group_id_google'];
+                $assetPerfSummary[$agIdGoogle] = \Modules\AdsAnalyzer\Models\AssetGroupAsset::getPerformanceSummary(
+                    (int)$evaluation['sync_id'], $agIdGoogle
+                );
+            }
+
+            // LOW performance assets per asset group
+            $lowAssetsByAg = [];
+            foreach ($assetGroups as $ag) {
+                $agIdGoogle = $ag['asset_group_id_google'];
+                $low = \Modules\AdsAnalyzer\Models\AssetGroupAsset::getLowAssets(
+                    (int)$evaluation['sync_id'], $agIdGoogle
+                );
+                if (!empty($low)) {
+                    $lowAssetsByAg[$agIdGoogle] = $low;
+                }
+            }
+
+            // Product data per campaign (Shopping/PMax)
+            $productDataByCampaign = [];
+            if (!empty($productData)) {
+                foreach ($syncMetrics['campaigns'] ?? [] as $campMetric) {
+                    $campType = strtoupper($campMetric['campaign_type'] ?? '');
+                    $campIdGoogle = $campMetric['campaign_id_google'] ?? '';
+                    if (in_array($campType, ['SHOPPING', 'PERFORMANCE_MAX']) && $campIdGoogle) {
+                        $productDataByCampaign[$campIdGoogle] = [
+                            'brands' => \Modules\AdsAnalyzer\Models\ProductPerformance::getBrandSummary(
+                                $projectId, (int)$evaluation['sync_id'], $campIdGoogle
+                            ),
+                            'waste' => \Modules\AdsAnalyzer\Models\ProductPerformance::getWasteProducts(
+                                $projectId, (int)$evaluation['sync_id'], $campIdGoogle
+                            ),
+                        ];
+                    }
+                }
+            }
+
             return View::render('ads-analyzer/campaigns/evaluation-v2', [
                 'title' => 'Report Campagne - ' . $project['name'],
                 'user' => $user,
@@ -1254,6 +1294,9 @@ class CampaignController
                 'assetGroups' => $assetGroups,
                 'assetsByAg' => $assetsByAg,
                 'assetGroupIdMap' => $assetGroupIdMap,
+                'assetPerfSummary' => $assetPerfSummary,
+                'lowAssetsByAg' => $lowAssetsByAg,
+                'productDataByCampaign' => $productDataByCampaign,
             ]);
         }
 
