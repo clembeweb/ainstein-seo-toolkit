@@ -12,33 +12,32 @@ class ImageGenerationService
     private string $storagePath;
 
     private const TEMPLATE_FASHION = <<<'PROMPT'
-Using the product shown in the attached image, generate a professional
-e-commerce photo of a {gender} model wearing/using this exact product.
-The product must be faithfully reproduced with accurate colors, textures,
-patterns and details — it must be clearly recognizable as the same item.
-Setting: {background}. Photography style: {photo_style}.
+Edit this product photo. Keep the product exactly as shown — do not modify
+its shape, color, texture, pattern or any detail. The product is the focus.
+Generate a professional e-commerce photo of a {gender} model wearing/using
+this exact product. Setting: {background}. Photography style: {photo_style}.
 The model should have a natural, confident pose suitable for e-commerce catalog.
+Add realistic shadows beneath the product for depth.
 No text, no watermarks, no logos, no overlays.
 High resolution, commercial quality, clean composition.
 PROMPT;
 
     private const TEMPLATE_HOME = <<<'PROMPT'
-Using the product shown in the attached image, generate a professional
-interior design / lifestyle photo showing this exact product placed naturally
-in a {environment} setting. The product must be faithfully reproduced with
-accurate colors, proportions, materials and details — it must be clearly
-recognizable as the same item. Photography style: {photo_style}.
-Natural lighting, realistic perspective and shadows.
+Edit this product photo. Keep the product exactly as shown — do not modify
+its shape, color, material, proportion or any detail. The product is the focus.
+Place this product naturally in a {environment} setting.
+Photography style: {photo_style}. Use soft natural lighting from the left.
+Add realistic shadows beneath the product for depth.
 No text, no watermarks, no logos.
 High resolution, commercial quality, inviting atmosphere.
 PROMPT;
 
     private const TEMPLATE_CUSTOM = <<<'PROMPT'
-Using the product shown in the attached image, generate a professional
-commercial photo showcasing this exact product in an appealing context.
-The product must be faithfully reproduced with accurate colors, proportions
-and details — it must be clearly recognizable as the same item.
-Photography style: {photo_style}.
+Edit this product photo. Keep the product exactly as shown — do not modify
+its shape, color, proportion or any detail. The product is the focus.
+Place this product in an appealing commercial context.
+Photography style: {photo_style}. Use professional studio lighting.
+Add realistic shadows beneath the product for depth.
 No text, no watermarks, no logos.
 High resolution, commercial quality.
 PROMPT;

@@ -15,7 +15,7 @@ class GeminiImageProvider implements ImageProviderInterface
     private const API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
     private const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
     private const SUPPORTED_FORMATS = ['png', 'jpg', 'jpeg', 'webp'];
-    private const DEFAULT_MODEL = 'gemini-2.0-flash';
+    private const DEFAULT_MODEL = 'gemini-2.5-flash-image';
     private const DEFAULT_TIMEOUT = 120;
 
     public function __construct()
