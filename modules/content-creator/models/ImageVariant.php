@@ -16,7 +16,7 @@ class ImageVariant
 
     public function find(int $id): ?array
     {
-        return Database::fetchOne(
+        return Database::fetch(
             "SELECT * FROM {$this->table} WHERE id = ?",
             [$id]
         ) ?: null;
@@ -24,7 +24,7 @@ class ImageVariant
 
     public function findByImage(int $id, int $imageId): ?array
     {
-        return Database::fetchOne(
+        return Database::fetch(
             "SELECT * FROM {$this->table} WHERE id = ? AND image_id = ?",
             [$id, $imageId]
         ) ?: null;
@@ -61,7 +61,7 @@ class ImageVariant
 
     public function countApprovedByProject(int $projectId): int
     {
-        return (int) Database::fetchOne(
+        return (int) Database::fetch(
             "SELECT COUNT(*) as cnt
              FROM {$this->table} v
              JOIN cc_images i ON i.id = v.image_id
@@ -141,7 +141,7 @@ class ImageVariant
 
     public function getNextVariantNumber(int $imageId): int
     {
-        $result = Database::fetchOne(
+        $result = Database::fetch(
             "SELECT COALESCE(MAX(variant_number), 0) + 1 as next_num FROM {$this->table} WHERE image_id = ?",
             [$imageId]
         );
@@ -150,7 +150,7 @@ class ImageVariant
 
     public function countApproved(int $imageId): int
     {
-        return (int) Database::fetchOne(
+        return (int) Database::fetch(
             "SELECT COUNT(*) as cnt FROM {$this->table} WHERE image_id = ? AND is_approved = 1",
             [$imageId]
         )['cnt'];
@@ -159,7 +159,7 @@ class ImageVariant
     public function findByFilename(string $filename): ?array
     {
         if (preg_match('/^(\d+)_v(\d+)_/', $filename, $matches)) {
-            return Database::fetchOne(
+            return Database::fetch(
                 "SELECT * FROM {$this->table} WHERE image_id = ? AND variant_number = ?",
                 [(int) $matches[1], (int) $matches[2]]
             ) ?: null;

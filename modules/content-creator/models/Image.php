@@ -34,7 +34,7 @@ class Image
 
     public function find(int $id): ?array
     {
-        return Database::fetchOne(
+        return Database::fetch(
             "SELECT * FROM {$this->table} WHERE id = ?",
             [$id]
         ) ?: null;
@@ -42,7 +42,7 @@ class Image
 
     public function findByProject(int $id, int $projectId): ?array
     {
-        return Database::fetchOne(
+        return Database::fetch(
             "SELECT * FROM {$this->table} WHERE id = ? AND project_id = ?",
             [$id, $projectId]
         ) ?: null;
@@ -70,7 +70,7 @@ class Image
             $params[] = $filters['category'];
         }
 
-        $total = (int) Database::fetchOne(
+        $total = (int) Database::fetch(
             "SELECT COUNT(*) as cnt FROM {$this->table} i {$where}",
             $params
         )['cnt'];
@@ -147,7 +147,7 @@ class Image
 
     public function countReadyForGeneration(int $projectId): int
     {
-        return (int) Database::fetchOne(
+        return (int) Database::fetch(
             "SELECT COUNT(*) as cnt FROM {$this->table}
              WHERE project_id = ? AND status = ?",
             [$projectId, self::STATUS_SOURCE_ACQUIRED]
@@ -315,7 +315,7 @@ class Image
 
     public function hasApprovedVariants(int $id): bool
     {
-        $result = Database::fetchOne(
+        $result = Database::fetch(
             "SELECT COUNT(*) as cnt FROM cc_image_variants WHERE image_id = ? AND is_approved = 1",
             [$id]
         );

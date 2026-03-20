@@ -30,7 +30,7 @@ class GeneratedFix
 
     public static function find(int $id): ?array
     {
-        return Database::fetchOne(
+        return Database::fetch(
             "SELECT * FROM ga_generated_fixes WHERE id = ?",
             [$id]
         );
