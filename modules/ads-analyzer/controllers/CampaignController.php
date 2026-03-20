@@ -698,6 +698,19 @@ class CampaignController
             ));
             $keywordsData = AdGroupKeyword::getByRun($sync['id']);
 
+            // Filter campaigns by user selection (if campaigns_filter was provided)
+            if (!empty($campaignsFilter)) {
+                $campaigns = array_values(array_filter($campaigns, function($c) use ($campaignsFilter) {
+                    return in_array($c['campaign_id_google'] ?? '', $campaignsFilter);
+                }));
+
+                // Also filter ad groups to only include those from selected campaigns
+                $selectedCampIds = array_column($campaigns, 'campaign_id_google');
+                $adGroupsData = array_values(array_filter($adGroupsData, function($ag) use ($selectedCampIds) {
+                    return in_array($ag['campaign_id_google'] ?? '', $selectedCampIds);
+                }));
+            }
+
             if (empty($campaigns)) {
                 ob_end_clean();
                 jsonResponse(['error' => 'Nessuna campagna trovata nella sincronizzazione selezionata'], 400);
