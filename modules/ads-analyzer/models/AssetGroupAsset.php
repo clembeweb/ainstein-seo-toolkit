@@ -72,6 +72,19 @@ class AssetGroupAsset
         return $summary;
     }
 
+    /**
+     * Get assets with performance_label = LOW for a specific asset group
+     */
+    public static function getLowAssets(int $syncId, string $assetGroupIdGoogle): array
+    {
+        return Database::fetchAll(
+            "SELECT * FROM ga_asset_group_assets
+             WHERE sync_id = ? AND asset_group_id_google = ? AND performance_label = 'LOW'
+             ORDER BY field_type",
+            [$syncId, $assetGroupIdGoogle]
+        );
+    }
+
     public static function deleteBySyncId(int $syncId): bool
     {
         return Database::delete('ga_asset_group_assets', 'sync_id = ?', [$syncId]) >= 0;
