@@ -336,7 +336,7 @@ class CampaignController
     public function sync(int $projectId): void
     {
         ignore_user_abort(true);
-        set_time_limit(300);
+        set_time_limit(600);
 
         ob_start();
         header('Content-Type: application/json');

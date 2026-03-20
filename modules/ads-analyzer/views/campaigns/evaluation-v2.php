@@ -27,14 +27,14 @@ $topRecommendations = $aiResponse['top_recommendations'] ?? [];
 // Campaign type badge config
 $campaignTypeConfig = [
     'SEARCH' => ['bg' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300', 'label' => 'Search'],
-    'SHOPPING' => ['bg' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300', 'label' => 'Shopping'],
+    'SHOPPING' => ['bg' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300', 'label' => 'Shopping'],
     'PERFORMANCE_MAX' => ['bg' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300', 'label' => 'PMax'],
     'DISPLAY' => ['bg' => 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300', 'label' => 'Display'],
     'VIDEO' => ['bg' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300', 'label' => 'Video'],
 ];
 
 // fix_type validi per cui AI puo generare contenuto
-$validFixTypes = ['rewrite_ads', 'add_negatives', 'remove_duplicates', 'add_extensions'];
+$validFixTypes = ['rewrite_ads', 'rewrite_ad', 'add_negatives', 'remove_duplicates', 'add_extensions', 'replace_asset', 'add_asset'];
 
 // Merge sync + AI data per campaign for the table partial
 $viewCampaigns = [];
@@ -68,17 +68,25 @@ if ($hasResults && !empty($syncMetrics['campaigns'])) {
         $viewCamp['isPmax'] = strtoupper($syncCamp['campaign_type'] ?? '') === 'PERFORMANCE_MAX';
         $viewCampaigns[] = $viewCamp;
 
-        // Extract optimizations into flat list
+        // Extract optimizations into flat list (deduplicated by fix_type)
+        // Track which fix_types are already covered at ad group level
+        $coveredTypes = [];
         if ($aiCamp) {
+            // 1. Ad group level optimizations (most specific — has target_ad_index)
             foreach ($aiCamp['ad_groups'] ?? [] as $agIdx => $ag) {
                 foreach ($ag['optimizations'] ?? [] as $oIdx => $opt) {
                     $key = "opt_{$cIdx}_{$agIdx}_{$oIdx}";
+                    $optType = $opt['type'] ?? '';
                     $allOptimizations[$key] = array_merge($opt, [
                         'campaign_name' => $aiCamp['campaign_name'] ?? '',
                         'ad_group_name' => $ag['ad_group_name'] ?? '',
                     ]);
+                    // Normalize type for dedup: rewrite_ad → rewrite_ads
+                    $normalizedType = ($optType === 'rewrite_ad') ? 'rewrite_ads' : $optType;
+                    $coveredTypes[$normalizedType] = true;
                 }
             }
+            // 2. PMax asset group optimizations
             foreach ($aiCamp['asset_group_analysis'] ?? [] as $agIdx => $ag) {
                 foreach ($ag['optimizations'] ?? [] as $oIdx => $opt) {
                     $key = "popt_{$cIdx}_{$agIdx}_{$oIdx}";
@@ -86,8 +94,42 @@ if ($hasResults && !empty($syncMetrics['campaigns'])) {
                         'campaign_name' => $aiCamp['campaign_name'] ?? '',
                         'ad_group_name' => $ag['asset_group_name'] ?? '',
                     ]);
+                    $coveredTypes[$opt['type'] ?? ''] = true;
                 }
             }
+            // 3. Campaign-level issues — ONLY types NOT already covered by ad group optimizations
+            foreach ($aiCamp['issues'] ?? [] as $iIdx => $issue) {
+                $issueType = $issue['fix_type'] ?? '';
+                if (!empty($issueType) && !isset($coveredTypes[$issueType])) {
+                    $key = "cissue_{$cIdx}_{$iIdx}";
+                    $allOptimizations[$key] = [
+                        'type' => $issueType,
+                        'priority' => $issue['severity'] ?? 'medium',
+                        'reason' => ($issue['description'] ?? '') . (!empty($issue['recommendation']) ? ' — ' . $issue['recommendation'] : ''),
+                        'scope' => 'campaign',
+                        'campaign_name' => $aiCamp['campaign_name'] ?? '',
+                        'ad_group_name' => '',
+                    ];
+                    $coveredTypes[$issueType] = true;
+                }
+            }
+        }
+    }
+
+    // 4. Campaign suggestions — ONLY types NOT already covered
+    foreach ($aiResponse['campaign_suggestions'] ?? [] as $sIdx => $sug) {
+        $sugType = $sug['fix_type'] ?? '';
+        if (!empty($sugType) && !isset($coveredTypes[$sugType])) {
+            $key = "csug_{$sIdx}";
+            $allOptimizations[$key] = [
+                'type' => $sugType,
+                'priority' => $sug['priority'] ?? 'medium',
+                'reason' => ($sug['suggestion'] ?? '') . (!empty($sug['expected_impact']) ? ' — Impatto: ' . $sug['expected_impact'] : ''),
+                'scope' => 'campaign',
+                'campaign_name' => $sug['area'] ?? '',
+                'ad_group_name' => '',
+            ];
+            $coveredTypes[$sugType] = true;
         }
     }
 }
@@ -270,21 +312,11 @@ function evalScoreBadgeClass(float $score): string {
         <?php endforeach; ?>
     </div>
 
-    <!-- SECTION: Campaign Table -->
-    <?php include __DIR__ . '/partials/report-campaign-table.php'; ?>
-
-    <!-- SECTION: Product Analysis (only if Shopping/PMax) -->
-    <?php if (!empty($productData)): ?>
-    <?php include __DIR__ . '/partials/report-product-analysis.php'; ?>
-    <?php endif; ?>
-
     <!-- SECTION: AI Summary + Score -->
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <div class="flex flex-col sm:flex-row items-start gap-6">
-            <!-- Score Circle -->
             <div class="flex-shrink-0 flex flex-col items-center">
                 <div class="relative w-24 h-24">
-                    <!-- Background circle -->
                     <svg class="w-24 h-24 -rotate-90" viewBox="0 0 96 96">
                         <circle cx="48" cy="48" r="40" fill="none" stroke="currentColor" stroke-width="6"
                                 class="text-slate-200 dark:text-slate-700"/>
@@ -301,10 +333,8 @@ function evalScoreBadgeClass(float $score): string {
                 <span class="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Score</span>
             </div>
 
-            <!-- Summary + Recommendations -->
             <div class="flex-1 min-w-0">
                 <h2 class="text-base font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                    <!-- Heroicon: sparkles -->
                     <svg class="w-5 h-5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"/>
                     </svg>
@@ -318,32 +348,194 @@ function evalScoreBadgeClass(float $score): string {
                 <?php if (!empty($topRecommendations)): ?>
                 <div class="mt-4">
                     <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1.5">
-                        <!-- Heroicon: light-bulb -->
                         <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18"/>
                         </svg>
                         Raccomandazioni Principali
                     </h3>
-                    <ol class="space-y-2">
-                        <?php foreach (array_slice($topRecommendations, 0, 5) as $rIdx => $rec): ?>
-                        <li class="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-400">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <?php foreach (array_slice($topRecommendations, 0, 6) as $rIdx => $rec): ?>
+                        <div class="flex items-start gap-2.5 p-3 rounded-lg bg-slate-50 dark:bg-slate-700/30">
                             <span class="flex-shrink-0 w-6 h-6 rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center justify-center mt-0.5">
                                 <?= $rIdx + 1 ?>
                             </span>
-                            <span class="leading-relaxed"><?= e(is_string($rec) ? $rec : ($rec['recommendation'] ?? $rec['text'] ?? '')) ?></span>
-                        </li>
+                            <span class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed"><?= e(is_string($rec) ? $rec : ($rec['recommendation'] ?? $rec['text'] ?? '')) ?></span>
+                        </div>
                         <?php endforeach; ?>
-                    </ol>
+                    </div>
                 </div>
                 <?php endif; ?>
             </div>
         </div>
     </div>
 
-    <!-- SECTION: Optimizations Batch -->
-    <?php if (!empty($allOptimizations)): ?>
-    <?php include __DIR__ . '/partials/report-optimizations.php'; ?>
-    <?php endif; ?>
+    <!-- SECTION: Type Filters + Sort + Accordion Campaigns -->
+    <?php
+    $campaignTypes = [];
+    foreach ($viewCampaigns as $camp) {
+        $type = strtoupper($camp['campaign_type'] ?? 'UNKNOWN');
+        $campaignTypes[$type] = ($campaignTypes[$type] ?? 0) + 1;
+    }
+    $typeLabels = [
+        'PERFORMANCE_MAX' => 'PMax',
+        'SEARCH' => 'Search',
+        'SHOPPING' => 'Shopping',
+        'DISPLAY' => 'Display',
+        'VIDEO' => 'Video',
+    ];
+    $typeFilterKeys = [
+        'PERFORMANCE_MAX' => 'pmax',
+        'SEARCH' => 'search',
+        'SHOPPING' => 'shopping',
+        'DISPLAY' => 'display',
+        'VIDEO' => 'video',
+    ];
+    $typeOrder = ['PERFORMANCE_MAX' => 0, 'SEARCH' => 1, 'SHOPPING' => 2, 'DISPLAY' => 3, 'VIDEO' => 4];
+    usort($viewCampaigns, function($a, $b) use ($typeOrder) {
+        $ta = $typeOrder[strtoupper($a['campaign_type'] ?? '')] ?? 9;
+        $tb = $typeOrder[strtoupper($b['campaign_type'] ?? '')] ?? 9;
+        if ($ta !== $tb) return $ta - $tb;
+        return ($b['cost'] ?? 0) <=> ($a['cost'] ?? 0);
+    });
+    ?>
+
+    <div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <div class="flex flex-wrap items-center gap-2">
+                <button @click="filterType = 'all'"
+                        :class="filterType === 'all' ? 'bg-rose-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50'"
+                        class="px-3 py-1.5 text-xs font-medium rounded-full transition-colors">
+                    Tutte (<?= count($viewCampaigns) ?>)
+                </button>
+                <?php foreach ($campaignTypes as $ct => $ctCount): ?>
+                <?php $filterKey = $typeFilterKeys[$ct] ?? strtolower($ct); ?>
+                <button @click="filterType = '<?= $filterKey ?>'"
+                        :class="filterType === '<?= $filterKey ?>' ? 'bg-rose-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50'"
+                        class="px-3 py-1.5 text-xs font-medium rounded-full transition-colors">
+                    <?= $typeLabels[$ct] ?? $ct ?> (<?= $ctCount ?>)
+                </button>
+                <?php endforeach; ?>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <label class="text-xs text-slate-500 dark:text-slate-400">Ordina:</label>
+                <select x-model="sortBy"
+                        class="text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2.5 py-1.5 focus:ring-2 focus:ring-rose-500 focus:border-rose-500">
+                    <option value="default">Tipo + Spesa &darr;</option>
+                    <option value="score">Score AI &darr;</option>
+                    <option value="cost">Spesa &darr;</option>
+                    <option value="roas">ROAS &darr;</option>
+                    <option value="name">Nome A-Z</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-3"
+             x-ref="campList"
+             x-effect="
+                if (!$refs.campList) return;
+                const items = [...$refs.campList.querySelectorAll('[data-camp-item]')];
+                items.forEach(el => {
+                    const d = el.dataset;
+                    let ord = parseInt(d.idx);
+                    if (sortBy === 'score') ord = 10000 - Math.round(parseFloat(d.score || 0) * 100);
+                    else if (sortBy === 'cost') ord = 10000000 - Math.round(parseFloat(d.cost || 0) * 100);
+                    else if (sortBy === 'roas') ord = 10000 - Math.round(parseFloat(d.roas || 0) * 100);
+                    else if (sortBy === 'name') ord = 0;
+                    el.style.order = ord;
+                });
+                if (sortBy === 'name') {
+                    const sorted = items.slice().sort((a,b) => (a.dataset.name||'').localeCompare(b.dataset.name||''));
+                    sorted.forEach((el,i) => el.style.order = i);
+                }
+             ">
+
+            <?php foreach ($viewCampaigns as $idx => $campaign): ?>
+            <?php
+                $cType = strtoupper($campaign['campaign_type'] ?? 'SEARCH');
+                $filterKey = $typeFilterKeys[$cType] ?? strtolower($cType);
+                $cTypeConf = $campaignTypeConfig[$cType] ?? ['bg' => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300', 'label' => $cType];
+                $cCost = (float)($campaign['cost'] ?? 0);
+                $cConv = (float)($campaign['conversions'] ?? 0);
+                $cConvValue = (float)($campaign['conversion_value'] ?? 0);
+                $cRoas = $cCost > 0 ? $cConvValue / $cCost : 0;
+                $cScore = (float)($campaign['ai_score'] ?? 0);
+            ?>
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col"
+                 x-show="filterType === 'all' || filterType === '<?= $filterKey ?>'"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 data-camp-item
+                 data-idx="<?= $idx ?>"
+                 data-score="<?= $cScore ?>"
+                 data-cost="<?= $cCost ?>"
+                 data-roas="<?= number_format($cRoas, 4, '.', '') ?>"
+                 data-name="<?= e($campaign['campaign_name'] ?? '') ?>">
+
+                <div @click="openCamp = openCamp === <?= $idx ?> ? null : <?= $idx ?>"
+                     class="px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors select-none">
+
+                    <?php if ($cScore > 0): ?>
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white <?= evalScoreBgClass($cScore) ?>">
+                        <?= number_format($cScore, 1) ?>
+                    </div>
+                    <?php else: ?>
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-slate-200 dark:bg-slate-600">
+                        <span class="text-xs text-slate-400 dark:text-slate-500">&ndash;</span>
+                    </div>
+                    <?php endif; ?>
+
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $cTypeConf['bg'] ?>"><?= $cTypeConf['label'] ?></span>
+
+                    <span class="flex-1 min-w-0 text-sm font-medium text-slate-900 dark:text-white truncate"><?= e($campaign['campaign_name'] ?? '') ?></span>
+
+                    <div class="hidden sm:flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 flex-shrink-0">
+                        <span><?= number_format((int)($campaign['clicks'] ?? 0), 0, ',', '.') ?> click</span>
+                        <span><?= number_format((float)($campaign['ctr'] ?? 0), 2, ',', '.') ?>% CTR</span>
+                        <span class="font-medium text-slate-700 dark:text-slate-300"><?= number_format($cCost, 2, ',', '.') ?> &euro;</span>
+                        <?php if ($cConv > 0): ?>
+                        <span><?= number_format($cConv, 0, ',', '.') ?> conv.</span>
+                        <?php endif; ?>
+                        <?php if ($cCost > 0): ?>
+                        <span class="font-medium <?php
+                            if ($cRoas >= 4) echo 'text-emerald-600 dark:text-emerald-400';
+                            elseif ($cRoas >= 2) echo 'text-amber-600 dark:text-amber-400';
+                            else echo 'text-red-600 dark:text-red-400';
+                        ?>"><?= number_format($cRoas, 2, ',', '.') ?>x ROAS</span>
+                        <?php endif; ?>
+                    </div>
+
+                    <svg class="w-5 h-5 text-slate-400 dark:text-slate-500 flex-shrink-0 transition-transform duration-200"
+                         :class="openCamp === <?= $idx ?> ? 'rotate-180' : ''"
+                         fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
+                    </svg>
+                </div>
+
+                <div x-show="openCamp === <?= $idx ?>"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-cloak
+                     class="border-t border-slate-200 dark:border-slate-700">
+                    <?php
+                    $camp = $campaign;
+                    $cIdx = $idx;
+                    $syncCamp = $campaign;
+                    $aiCamp = $campaign['ai_data'] ?? [];
+                    $isPmax = $cType === 'PERFORMANCE_MAX';
+                    $isSearch = $cType === 'SEARCH';
+                    $isShopping = $cType === 'SHOPPING';
+                    include __DIR__ . '/partials/report-campaign-table.php';
+                    ?>
+                </div>
+            </div>
+            <?php endforeach; ?>
+
+        </div>
+    </div>
 
     <!-- SECTION: Negative KW Summary -->
     <?php if (!empty($negativeSummary)): ?>
@@ -351,7 +543,6 @@ function evalScoreBadgeClass(float $score): string {
         <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div class="flex-1">
                 <h2 class="text-base font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                    <!-- Heroicon: funnel -->
                     <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"/>
                     </svg>
@@ -391,7 +582,6 @@ function evalScoreBadgeClass(float $score): string {
                     <?php endif; ?>
                     <?php if ($appliedCount > 0): ?>
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
-                        <!-- Heroicon: check -->
                         <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
                         </svg>
@@ -407,7 +597,6 @@ function evalScoreBadgeClass(float $score): string {
 
             <a href="<?= url('/ads-analyzer/projects/' . $project['id'] . '/search-term-analysis') ?>"
                class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-rose-600 text-white hover:bg-rose-700 transition-colors flex-shrink-0">
-                <!-- Heroicon: arrow-top-right-on-square -->
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/>
                 </svg>
@@ -524,6 +713,9 @@ function evalScoreBadgeClass(float $score): string {
 function evaluationReport() {
     return {
         // UI state
+        filterType: 'all',
+        sortBy: 'default',
+        openCamp: null,
         expandedCampaigns: {},
         expandedAdGroups: {},
         selectedOptimizations: {},
