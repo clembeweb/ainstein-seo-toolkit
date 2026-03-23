@@ -295,9 +295,10 @@ class ImageGeneratorController
                     'percent' => $total > 0 ? round(($completed + $failed) / $total * 100) : 0,
                 ]);
             } else {
-                // All variants failed
+                // All variants failed — include last error for debugging
                 if ($item['status'] !== Image::STATUS_ERROR) {
-                    $this->image->markError((int) $item['id'], 'Tutte le varianti fallite');
+                    $lastError = $result['error'] ?? 'Errore sconosciuto';
+                    $this->image->markError((int) $item['id'], "Tutte le varianti fallite: {$lastError}");
                 }
                 $failed++;
                 $jobModel->incrementFailed($jobId);
