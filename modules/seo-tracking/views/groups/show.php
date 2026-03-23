@@ -269,22 +269,22 @@
             <table class="w-full">
                 <thead class="bg-slate-50 dark:bg-slate-800/50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Keyword</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Posizione</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Variazione</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">URL Posizionata</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Ultimo Check</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Keyword</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Posizione</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Variazione</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">URL Posizionata</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Ultimo Check</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <?php foreach ($keywords as $kw): ?>
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                        <td class="px-6 py-4">
+                        <td class="px-4 py-4">
                             <span class="text-sm font-medium text-slate-900 dark:text-white">
                                 <?= e($kw['keyword']) ?>
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-4 py-4 text-center">
                             <?php
                             $pos = $kw['current_position'] ?? null;
                             if ($pos):
@@ -299,7 +299,7 @@
                             <span class="text-slate-400">-</span>
                             <?php endif; ?>
                         </td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-4 py-4 text-center">
                             <?php
                             $change = $kw['position_change'] ?? null;
                             if ($change !== null && $change != 0):
@@ -314,7 +314,7 @@
                             <span class="text-slate-400">-</span>
                             <?php endif; ?>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-4 py-4">
                             <?php if ($kw['ranking_url']): ?>
                             <a href="<?= e($kw['ranking_url']) ?>" target="_blank" class="text-sm text-primary-600 dark:text-primary-400 hover:underline truncate block max-w-xs">
                                 <?= e(parse_url($kw['ranking_url'], PHP_URL_PATH) ?: '/') ?>
@@ -323,7 +323,7 @@
                             <span class="text-slate-400">-</span>
                             <?php endif; ?>
                         </td>
-                        <td class="px-6 py-4 text-right text-sm text-slate-500 dark:text-slate-400">
+                        <td class="px-4 py-4 text-right text-sm text-slate-500 dark:text-slate-400">
                             <?php if ($kw['last_check']): ?>
                             <?= date('d/m H:i', strtotime($kw['last_check'])) ?>
                             <?php else: ?>

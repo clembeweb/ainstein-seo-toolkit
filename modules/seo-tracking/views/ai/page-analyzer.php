@@ -121,7 +121,7 @@
         </div>
 
         <!-- Filtri -->
-        <div class="p-4 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
+        <div class="p-4 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
             <form method="get" class="flex flex-wrap gap-4 items-end">
                 <!-- Ricerca testuale -->
                 <div class="flex-1 min-w-[200px]">

@@ -241,13 +241,13 @@ $wordCount = (int) ($url['ai_word_count'] ?? 0);
 
                 <!-- Preview mode -->
                 <template x-if="showPreview && !editing">
-                    <div class="prose prose-sm dark:prose-invert max-w-none border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-900/50"
+                    <div class="prose prose-sm dark:prose-invert max-w-none border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-700/50"
                          x-html="aiContent"></div>
                 </template>
 
                 <!-- Source mode (read-only) -->
                 <template x-if="!showPreview && !editing">
-                    <pre class="text-xs text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg p-4 overflow-x-auto max-h-96" x-text="aiContent"></pre>
+                    <pre class="text-xs text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 rounded-lg p-4 overflow-x-auto max-h-96" x-text="aiContent"></pre>
                 </template>
 
                 <!-- Edit mode -->

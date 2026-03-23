@@ -1038,7 +1038,7 @@ function showRefreshModal(type) {
                 ${backgroundNote}
             </div>
 
-            <div class="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 mb-6 space-y-3">
+            <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4 mb-6 space-y-3">
                 <div class="flex justify-between text-sm">
                     <span class="text-slate-500 dark:text-slate-400">Keyword da elaborare:</span>
                     <span class="font-medium text-slate-900 dark:text-white">${keywordCount.toLocaleString()}</span>

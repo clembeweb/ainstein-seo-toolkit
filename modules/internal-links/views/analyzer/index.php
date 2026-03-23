@@ -123,7 +123,7 @@
         </div>
 
         <!-- Last Batch Results -->
-        <div x-show="lastBatch.analyzed > 0" x-cloak class="mt-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
+        <div x-show="lastBatch.analyzed > 0" x-cloak class="mt-4 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
             <p class="text-sm text-slate-600 dark:text-slate-400">
                 Ultimo batch: <span class="font-medium text-slate-900 dark:text-white" x-text="lastBatch.analyzed"></span> link analizzati
                 <span x-show="lastBatch.errors > 0" class="text-red-500">
@@ -154,7 +154,7 @@
                     <p class="font-bold text-green-600"><?= $scoreDistribution['high'] ?? 0 ?></p>
                     <p class="text-xs text-slate-500">Alto (7-10)</p>
                 </div>
-                <div class="p-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg">
+                <div class="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
                     <p class="font-bold text-slate-600"><?= $scoreDistribution['unanalyzed'] ?? 0 ?></p>
                     <p class="text-xs text-slate-500">In Attesa</p>
                 </div>

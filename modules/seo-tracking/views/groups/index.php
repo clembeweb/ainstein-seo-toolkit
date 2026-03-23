@@ -153,25 +153,25 @@
             <table class="w-full">
                 <thead class="bg-slate-50 dark:bg-slate-800/50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Gruppo</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Keyword</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Pos. Media</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Click</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Impressioni</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Top 10 %</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Gruppo</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Keyword</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Pos. Media</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Click</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Impressioni</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Top 10 %</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     <?php foreach ($comparison as $item): ?>
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                        <td class="px-6 py-4">
+                        <td class="px-4 py-4">
                             <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/groups/' . $item['id']) ?>" class="flex items-center gap-2">
                                 <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: <?= e($item['color']) ?>"></span>
                                 <span class="font-medium text-slate-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400"><?= e($item['name']) ?></span>
                             </a>
                         </td>
-                        <td class="px-6 py-4 text-right text-sm text-slate-900 dark:text-white"><?= number_format($item['keyword_count']) ?></td>
-                        <td class="px-6 py-4 text-right">
+                        <td class="px-4 py-4 text-right text-sm text-slate-900 dark:text-white"><?= number_format($item['keyword_count']) ?></td>
+                        <td class="px-4 py-4 text-right">
                             <?php
                             $posClass = $item['avg_position'] <= 3 ? 'text-emerald-600 dark:text-emerald-400' :
                                        ($item['avg_position'] <= 10 ? 'text-blue-600 dark:text-blue-400' :
@@ -179,9 +179,9 @@
                             ?>
                             <span class="text-sm font-medium <?= $posClass ?>"><?= $item['avg_position'] > 0 ? number_format($item['avg_position'], 1) : '-' ?></span>
                         </td>
-                        <td class="px-6 py-4 text-right text-sm text-slate-900 dark:text-white"><?= number_format($item['total_clicks']) ?></td>
-                        <td class="px-6 py-4 text-right text-sm text-slate-500 dark:text-slate-400"><?= number_format($item['total_impressions']) ?></td>
-                        <td class="px-6 py-4 text-right">
+                        <td class="px-4 py-4 text-right text-sm text-slate-900 dark:text-white"><?= number_format($item['total_clicks']) ?></td>
+                        <td class="px-4 py-4 text-right text-sm text-slate-500 dark:text-slate-400"><?= number_format($item['total_impressions']) ?></td>
+                        <td class="px-4 py-4 text-right">
                             <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium <?= $item['top10_percent'] >= 50 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300' ?>">
                                 <?= number_format($item['top10_percent'], 1) ?>%
                             </span>

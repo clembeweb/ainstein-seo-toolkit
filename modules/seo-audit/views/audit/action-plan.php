@@ -197,7 +197,7 @@ if ($estimatedMinutes >= 60) {
                 </button>
 
                 <!-- Fixes List (Expanded) -->
-                <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+                <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50">
                     <?php foreach ($fixes as $fix): ?>
                     <div class="p-5 border-b border-slate-200 dark:border-slate-700 last:border-b-0" x-data="{ completed: <?= $fix['is_completed'] ? 'true' : 'false' ?> }">
                         <div class="flex items-start gap-4">

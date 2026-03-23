@@ -73,25 +73,25 @@
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Storico transazioni</h3>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                    <table class="w-full divide-y divide-slate-200 dark:divide-slate-700">
                         <thead class="bg-slate-50 dark:bg-slate-700/50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Data</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Tipo</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Importo</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Descrizione</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Data</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Tipo</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Importo</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Descrizione</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                             <?php if (empty($transactions)): ?>
                             <tr>
-                                <td colspan="4" class="px-6 py-8 text-center text-sm text-slate-500 dark:text-slate-400">Nessuna transazione</td>
+                                <td colspan="4" class="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">Nessuna transazione</td>
                             </tr>
                             <?php else: ?>
                             <?php foreach ($transactions as $t): ?>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                                <td class="px-6 py-3 text-sm text-slate-500 dark:text-slate-400"><?= date('d/m/Y H:i', strtotime($t['created_at'])) ?></td>
-                                <td class="px-6 py-3">
+                                <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400"><?= date('d/m/Y H:i', strtotime($t['created_at'])) ?></td>
+                                <td class="px-4 py-3">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
                                         <?php
                                         echo match($t['type']) {
@@ -104,10 +104,10 @@
                                         <?= $t['type'] ?>
                                     </span>
                                 </td>
-                                <td class="px-6 py-3 text-sm font-semibold <?= $t['amount'] >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' ?>">
+                                <td class="px-4 py-3 text-sm font-semibold <?= $t['amount'] >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' ?>">
                                     <?= $t['amount'] >= 0 ? '+' : '' ?><?= number_format($t['amount'], 2) ?>
                                 </td>
-                                <td class="px-6 py-3 text-sm text-slate-500 dark:text-slate-400"><?= e($t['description'] ?? '-') ?></td>
+                                <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400"><?= e($t['description'] ?? '-') ?></td>
                             </tr>
                             <?php endforeach; ?>
                             <?php endif; ?>

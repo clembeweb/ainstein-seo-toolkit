@@ -150,7 +150,7 @@ $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
                     </div>
 
                     <!-- API Key principale (in base al provider selezionato) -->
-                    <div class="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700">
+                    <div class="p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <!-- Anthropic API Key -->
                             <div>
@@ -1124,7 +1124,7 @@ $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="mt-4 p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700">
+                <div class="mt-4 p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700">
                     <p class="text-xs text-slate-500 dark:text-slate-400 mb-2">Anteprima:</p>
                     <p class="text-lg text-slate-900 dark:text-white" :style="'font-family: ' + selectedFont + ', sans-serif'">
                         La SEO e l'arte di posizionarsi in cima ai risultati di ricerca.

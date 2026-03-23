@@ -84,24 +84,24 @@
                 <table class="w-full">
                     <thead class="bg-slate-50 dark:bg-slate-800/50 sticky top-0">
                         <tr>
-                            <th class="px-6 py-2 text-left">
+                            <th class="px-4 py-2 text-left">
                                 <input type="checkbox" id="selectAllKeywords" class="rounded border-slate-300 dark:border-slate-600">
                             </th>
-                            <th class="px-6 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Keyword</th>
-                            <th class="px-6 py-2 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Posizione</th>
-                            <th class="px-6 py-2 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Click</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Keyword</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Posizione</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Click</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 dark:divide-slate-700" id="keywordsTableBody">
                         <?php foreach ($keywords as $kw): ?>
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 keyword-row" data-keyword="<?= e(strtolower($kw['keyword'])) ?>">
-                            <td class="px-6 py-2">
+                            <td class="px-4 py-2">
                                 <input type="checkbox" name="keyword_ids[]" value="<?= $kw['id'] ?>" class="rounded border-slate-300 dark:border-slate-600 keyword-checkbox">
                             </td>
-                            <td class="px-6 py-2">
+                            <td class="px-4 py-2">
                                 <span class="text-sm text-slate-900 dark:text-white"><?= e($kw['keyword']) ?></span>
                             </td>
-                            <td class="px-6 py-2 text-right">
+                            <td class="px-4 py-2 text-right">
                                 <?php
                                 $pos = $kw['last_position'] ?? 0;
                                 $posClass = $pos <= 3 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' :
@@ -112,7 +112,7 @@
                                     <?= $pos > 0 ? number_format($pos, 1) : '-' ?>
                                 </span>
                             </td>
-                            <td class="px-6 py-2 text-right text-sm text-slate-500 dark:text-slate-400">
+                            <td class="px-4 py-2 text-right text-sm text-slate-500 dark:text-slate-400">
                                 <?= number_format($kw['last_clicks'] ?? 0) ?>
                             </td>
                         </tr>
