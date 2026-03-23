@@ -176,7 +176,11 @@ class GeminiImageProvider implements ImageProviderInterface
         $textResponse = null;
 
         foreach ($parts as $part) {
-            if (isset($part['inline_data'])) {
+            // Gemini API returns camelCase keys (inlineData, mimeType)
+            if (isset($part['inlineData'])) {
+                $imageData = base64_decode($part['inlineData']['data']);
+                $imageMime = $part['inlineData']['mimeType'] ?? 'image/png';
+            } elseif (isset($part['inline_data'])) {
                 $imageData = base64_decode($part['inline_data']['data']);
                 $imageMime = $part['inline_data']['mime_type'] ?? 'image/png';
             }
