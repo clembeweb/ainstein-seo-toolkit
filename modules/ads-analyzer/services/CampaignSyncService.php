@@ -32,6 +32,8 @@ class CampaignSyncService
     private GoogleAdsService $gadsService;
     private int $projectId;
     private int $syncId = 0;
+    /** @var string[] Google campaign IDs sincronizzati (popolato da syncCampaigns) */
+    private array $syncedCampaignIds = [];
 
     public function __construct(GoogleAdsService $gadsService, int $projectId)
     {
@@ -261,6 +263,9 @@ class CampaignSyncService
             ]);
             $count++;
         }
+
+        // Salva IDs per batch search terms
+        $this->syncedCampaignIds = array_keys($aggregated);
 
         return $count;
     }
@@ -707,6 +712,28 @@ class CampaignSyncService
         $prevMemory = ini_get('memory_limit');
         ini_set('memory_limit', '1G');
 
+        $campaignIds = $this->syncedCampaignIds;
+        $totalCampaigns = count($campaignIds);
+
+        // Account piccoli (<=10 campagne): query singola come prima
+        // Account grandi (>10 campagne): batch per campagna con time budget
+        if ($totalCampaigns <= 10) {
+            $count = $this->syncSearchTermsSingle($dateFrom, $dateTo);
+        } else {
+            $count = $this->syncSearchTermsBatched($dateFrom, $dateTo, $campaignIds);
+        }
+
+        // Ripristina memory limit
+        ini_set('memory_limit', $prevMemory);
+
+        return $count;
+    }
+
+    /**
+     * Sync search terms con query singola (account piccoli, <=10 campagne)
+     */
+    private function syncSearchTermsSingle(string $dateFrom, string $dateTo): int
+    {
         $gaql = "SELECT search_term_view.search_term, search_term_view.status, " .
                 "campaign.id, campaign.name, campaign.status, ad_group.id, ad_group.name, " .
                 "metrics.clicks, metrics.impressions, metrics.ctr, " .
@@ -719,10 +746,103 @@ class CampaignSyncService
                 "ORDER BY metrics.impressions DESC " .
                 "LIMIT 50000";
 
-        $response = $this->gadsService->searchStream($gaql);
+        $response = $this->gadsService->searchStream($gaql, 300);
         $rows = $this->extractRows($response);
 
-        // Aggrega per search_term + ad_group.id (righe giornaliere)
+        return $this->aggregateAndSaveSearchTerms($rows);
+    }
+
+    /**
+     * Sync search terms in batch per campagna (account grandi, >10 campagne)
+     *
+     * Ogni campagna viene queryata separatamente con un time budget.
+     * Se il tempo residuo scende sotto 30s, le campagne rimanenti vengono skippate.
+     */
+    private function syncSearchTermsBatched(string $dateFrom, string $dateTo, array $campaignIds): int
+    {
+        $startTime = time();
+        $maxTime = 480; // 8 minuti max (lascia margine sul set_time_limit 600)
+        $minTimePerCampaign = 30; // secondi minimi per tentare una campagna
+        $totalCampaigns = count($campaignIds);
+        $skipped = [];
+        $allRows = [];
+
+        Logger::channel('ads')->info('Search terms batch sync started', [
+            'project_id' => $this->projectId,
+            'sync_id' => $this->syncId,
+            'total_campaigns' => $totalCampaigns,
+        ]);
+
+        foreach ($campaignIds as $i => $campaignId) {
+            $elapsed = time() - $startTime;
+            $remaining = $maxTime - $elapsed;
+
+            // Time budget esaurito: salta le campagne rimanenti
+            if ($remaining < $minTimePerCampaign) {
+                $skipped = array_slice($campaignIds, $i);
+                Logger::channel('ads')->warning('Search terms batch: time budget esaurito, campagne skippate', [
+                    'project_id' => $this->projectId,
+                    'sync_id' => $this->syncId,
+                    'completed' => $i,
+                    'skipped' => count($skipped),
+                    'elapsed_seconds' => $elapsed,
+                ]);
+                break;
+            }
+
+            try {
+                $gaql = "SELECT search_term_view.search_term, search_term_view.status, " .
+                        "campaign.id, campaign.name, campaign.status, ad_group.id, ad_group.name, " .
+                        "metrics.clicks, metrics.impressions, metrics.ctr, " .
+                        "metrics.cost_micros, metrics.conversions, metrics.conversions_value " .
+                        "FROM search_term_view " .
+                        "WHERE segments.date BETWEEN '{$dateFrom}' AND '{$dateTo}' " .
+                        "AND campaign.id = {$campaignId} " .
+                        "AND ad_group.status != 'REMOVED' " .
+                        "AND metrics.impressions > 0 " .
+                        "ORDER BY metrics.impressions DESC " .
+                        "LIMIT 5000";
+
+                $response = $this->gadsService->searchStream($gaql, 180);
+                $rows = $this->extractRows($response);
+                $allRows = array_merge($allRows, $rows);
+
+                Database::reconnect();
+
+            } catch (\Exception $e) {
+                // Errore su singola campagna non blocca le altre
+                Logger::channel('ads')->warning('Search terms batch: errore campagna (continuo)', [
+                    'project_id' => $this->projectId,
+                    'campaign_id' => $campaignId,
+                    'campaign_index' => $i + 1,
+                    'total' => $totalCampaigns,
+                    'error' => $e->getMessage(),
+                ]);
+                Database::reconnect();
+                continue;
+            }
+        }
+
+        $count = $this->aggregateAndSaveSearchTerms($allRows);
+
+        if (!empty($skipped)) {
+            Logger::channel('ads')->info('Search terms batch completed (parziale)', [
+                'project_id' => $this->projectId,
+                'sync_id' => $this->syncId,
+                'terms_synced' => $count,
+                'campaigns_synced' => $totalCampaigns - count($skipped),
+                'campaigns_skipped' => count($skipped),
+            ]);
+        }
+
+        return $count;
+    }
+
+    /**
+     * Aggrega righe search term per search_term+ad_group e salva nel DB
+     */
+    private function aggregateAndSaveSearchTerms(array $rows): int
+    {
         $aggregated = [];
         foreach ($rows as $row) {
             $stView = $row['searchTermView'] ?? [];
@@ -762,8 +882,6 @@ class CampaignSyncService
             unset($agg);
         }
 
-        // Per i search term serve un ad_group_id (intero) dalla tabella ga_ad_groups.
-        // Se non esiste, creiamolo al volo per compatibilità con il modello SearchTerm.
         $adGroupLocalIds = $this->getOrCreateAdGroupLocalIds($aggregated);
 
         $count = 0;
@@ -794,9 +912,6 @@ class CampaignSyncService
             ]);
             $count++;
         }
-
-        // Ripristina memory limit
-        ini_set('memory_limit', $prevMemory);
 
         return $count;
     }

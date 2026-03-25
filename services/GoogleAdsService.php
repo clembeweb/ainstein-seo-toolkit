@@ -99,12 +99,12 @@ class GoogleAdsService
      * @return array Risposta API parsata
      * @throws \RuntimeException
      */
-    public function searchStream(string $gaql): array
+    public function searchStream(string $gaql, int $timeout = 0): array
     {
         $url = self::BASE_URL . '/customers/' . $this->customerId . '/googleAds:searchStream';
         $body = ['query' => $gaql];
 
-        return $this->request('POST', $url, $body, 'GAQL stream query');
+        return $this->request('POST', $url, $body, 'GAQL stream query', $timeout);
     }
 
     /**
@@ -288,7 +288,7 @@ class GoogleAdsService
      * @return array Risposta API parsata
      * @throws \RuntimeException
      */
-    private function request(string $method, string $url, ?array $body = null, string $context = ''): array
+    private function request(string $method, string $url, ?array $body = null, string $context = '', int $timeout = 0): array
     {
         if (!$this->isMccMode) {
             $this->checkRateLimit();
@@ -330,7 +330,7 @@ class GoogleAdsService
                 CURLOPT_URL => $url,
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_HTTPHEADER => $headers,
-                CURLOPT_TIMEOUT => 120,
+                CURLOPT_TIMEOUT => $timeout > 0 ? $timeout : 120,
                 CURLOPT_SSL_VERIFYPEER => true,
             ]);
 
