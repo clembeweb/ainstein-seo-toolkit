@@ -22,7 +22,7 @@ description: >
   </example>
 
 model: haiku
-color: orange
+color: yellow
 tools: ["Read", "Write", "Glob", "Grep"]
 ---
 

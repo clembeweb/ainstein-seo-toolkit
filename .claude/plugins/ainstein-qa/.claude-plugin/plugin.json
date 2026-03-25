@@ -1,6 +1,9 @@
 {
   "name": "ainstein-qa",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Agenti QA autonomi che simulano professionisti digitali per testare UX, funzionalita e conformita della piattaforma Ainstein",
-  "author": { "name": "Ainstein Team" }
+  "author": { "name": "Ainstein Team" },
+  "dependencies": {
+    "mcp": ["playwright"]
+  }
 }
