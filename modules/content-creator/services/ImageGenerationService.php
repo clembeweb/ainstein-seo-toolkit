@@ -295,18 +295,38 @@ PROMPT;
                 : $project['ai_settings'];
         }
 
-        $defaults = $aiSettings['image_defaults'] ?? [];
+        $projectDefaults = $aiSettings['image_defaults'] ?? [];
 
-        return array_merge([
-            'scene_type' => 'fashion',
-            'gender' => 'woman',
-            'background' => 'studio_white',
-            'environment' => 'living_room',
-            'photo_style' => 'professional',
-            'variants_count' => 3,
+        // Admin defaults from module settings (fallback for unset project values)
+        $adminDefaults = [
+            'scene_type' => \Core\ModuleLoader::getSetting('content-creator', 'default_scene_type', 'fashion'),
+            'gender' => \Core\ModuleLoader::getSetting('content-creator', 'default_gender', 'woman'),
+            'background' => \Core\ModuleLoader::getSetting('content-creator', 'default_background', 'studio_white'),
+            'environment' => \Core\ModuleLoader::getSetting('content-creator', 'default_environment', 'living_room'),
+            'photo_style' => \Core\ModuleLoader::getSetting('content-creator', 'default_photo_style', 'professional'),
+            'variants_count' => (int) \Core\ModuleLoader::getSetting('content-creator', 'default_variants_count', 3),
             'custom_prompt' => '',
-            'push_mode' => 'add_as_gallery',
-        ], $defaults);
+            'push_mode' => \Core\ModuleLoader::getSetting('content-creator', 'image_push_mode', 'add_as_gallery'),
+        ];
+
+        return array_merge($adminDefaults, $projectDefaults);
+    }
+
+    /**
+     * Get admin-level defaults (from module.json settings)
+     */
+    public static function getAdminDefaults(): array
+    {
+        return [
+            'scene_type' => \Core\ModuleLoader::getSetting('content-creator', 'default_scene_type', 'fashion'),
+            'gender' => \Core\ModuleLoader::getSetting('content-creator', 'default_gender', 'woman'),
+            'background' => \Core\ModuleLoader::getSetting('content-creator', 'default_background', 'studio_white'),
+            'environment' => \Core\ModuleLoader::getSetting('content-creator', 'default_environment', 'living_room'),
+            'photo_style' => \Core\ModuleLoader::getSetting('content-creator', 'default_photo_style', 'professional'),
+            'variants_count' => (int) \Core\ModuleLoader::getSetting('content-creator', 'default_variants_count', 3),
+            'custom_prompt' => '',
+            'push_mode' => \Core\ModuleLoader::getSetting('content-creator', 'image_push_mode', 'add_as_gallery'),
+        ];
     }
 
     private function detectExtension(?string $contentType, string $url): string

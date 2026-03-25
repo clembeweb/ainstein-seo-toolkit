@@ -1,13 +1,24 @@
 <?php include __DIR__ . '/../partials/project-nav.php'; ?>
 
 <?php
+use Modules\ContentCreator\Services\ImageGenerationService;
+
 $moduleSettings = \Core\ModuleLoader::getModuleSettings('content-creator');
 $minWords = $aiSettings['min_words'] ?? null;
 $customPrompt = $aiSettings['custom_prompt'] ?? '';
 $imageDefaults = $aiSettings['image_defaults'] ?? [];
+$ad = $adminDefaults ?? ImageGenerationService::getAdminDefaults();
+
+// Labels per i valori admin (per mostrare hint "Default piattaforma: X")
+$sceneLabels = ImageGenerationService::CATEGORY_OPTIONS;
+$genderLabels = ImageGenerationService::GENDER_OPTIONS;
+$backgroundLabels = ImageGenerationService::BACKGROUND_OPTIONS;
+$environmentLabels = ImageGenerationService::ENVIRONMENT_OPTIONS;
+$photoStyleLabels = ImageGenerationService::PHOTO_STYLE_OPTIONS;
+$pushModeLabels = ['add_as_gallery' => 'Aggiungi alla galleria', 'replace_main' => 'Sostituisci principale', 'add' => 'Aggiungi come nuova'];
 ?>
 
-<div class="space-y-6" x-data="{ settingsTab: 'general' }">
+<div class="space-y-6" x-data="{ settingsTab: window.location.hash === '#images' ? 'images' : 'general' }">
 
     <!-- Tab Navigation -->
     <div class="border-b border-slate-200 dark:border-slate-700">
@@ -155,73 +166,81 @@ $imageDefaults = $aiSettings['image_defaults'] ?? [];
 
     <!-- Immagini Tab -->
     <div x-show="settingsTab === 'images'" x-cloak>
-        <form action="<?= url('/content-creator/projects/' . $project['id'] . '/update') ?>" method="POST" class="space-y-6">
+        <form action="<?= url('/content-creator/projects/' . $project['id'] . '/update-images') ?>" method="POST" class="space-y-6">
             <?= csrf_field() ?>
-            <!-- Pass through existing fields so they don't get wiped -->
-            <input type="hidden" name="name" value="<?= e($project['name']) ?>">
-            <input type="hidden" name="content_type" value="<?= e($project['content_type'] ?? 'product') ?>">
-            <input type="hidden" name="language" value="<?= e($project['language'] ?? 'it') ?>">
-            <input type="hidden" name="tone" value="<?= e($project['tone'] ?? 'professionale') ?>">
-            <input type="hidden" name="connector_id" value="<?= e($project['connector_id'] ?? '') ?>">
-            <input type="hidden" name="custom_prompt" value="<?= e($aiSettings['custom_prompt'] ?? '') ?>">
 
             <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
                 <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                     <h3 class="text-lg font-medium text-slate-900 dark:text-white">Impostazioni Generazione Immagini</h3>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Configura i parametri default per la generazione AI delle immagini</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Configura i parametri default per la generazione AI delle immagini di questo progetto</p>
                 </div>
                 <div class="p-6 space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo scena</label>
                             <select name="image_scene_type" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                                <option value="fashion" <?= ($imageDefaults['scene_type'] ?? 'fashion') === 'fashion' ? 'selected' : '' ?>>Fashion (Modella/o)</option>
-                                <option value="home" <?= ($imageDefaults['scene_type'] ?? '') === 'home' ? 'selected' : '' ?>>Home (Ambientazione)</option>
-                                <option value="custom" <?= ($imageDefaults['scene_type'] ?? '') === 'custom' ? 'selected' : '' ?>>Custom</option>
+                                <?php foreach ($sceneLabels as $val => $label): ?>
+                                <option value="<?= $val ?>" <?= ($imageDefaults['scene_type'] ?? $ad['scene_type']) === $val ? 'selected' : '' ?>><?= $label ?></option>
+                                <?php endforeach; ?>
                             </select>
+                            <?php if (empty($imageDefaults['scene_type'])): ?>
+                            <p class="mt-1 text-xs text-slate-400">Default piattaforma: <?= $sceneLabels[$ad['scene_type']] ?? $ad['scene_type'] ?></p>
+                            <?php endif; ?>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Genere modella/o</label>
                             <select name="image_gender" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                                <option value="woman" <?= ($imageDefaults['gender'] ?? 'woman') === 'woman' ? 'selected' : '' ?>>Donna</option>
-                                <option value="man" <?= ($imageDefaults['gender'] ?? '') === 'man' ? 'selected' : '' ?>>Uomo</option>
-                                <option value="neutral" <?= ($imageDefaults['gender'] ?? '') === 'neutral' ? 'selected' : '' ?>>Neutro</option>
+                                <?php foreach ($genderLabels as $val => $label): ?>
+                                <option value="<?= $val ?>" <?= ($imageDefaults['gender'] ?? $ad['gender']) === $val ? 'selected' : '' ?>><?= $label ?></option>
+                                <?php endforeach; ?>
                             </select>
+                            <?php if (empty($imageDefaults['gender'])): ?>
+                            <p class="mt-1 text-xs text-slate-400">Default piattaforma: <?= $genderLabels[$ad['gender']] ?? $ad['gender'] ?></p>
+                            <?php endif; ?>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Sfondo</label>
                             <select name="image_background" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                                <option value="studio_white" <?= ($imageDefaults['background'] ?? 'studio_white') === 'studio_white' ? 'selected' : '' ?>>Studio bianco</option>
-                                <option value="urban" <?= ($imageDefaults['background'] ?? '') === 'urban' ? 'selected' : '' ?>>Urbano</option>
-                                <option value="lifestyle" <?= ($imageDefaults['background'] ?? '') === 'lifestyle' ? 'selected' : '' ?>>Lifestyle</option>
-                                <option value="nature" <?= ($imageDefaults['background'] ?? '') === 'nature' ? 'selected' : '' ?>>Natura</option>
+                                <?php foreach ($backgroundLabels as $val => $label): ?>
+                                <option value="<?= $val ?>" <?= ($imageDefaults['background'] ?? $ad['background']) === $val ? 'selected' : '' ?>><?= $label ?></option>
+                                <?php endforeach; ?>
                             </select>
+                            <?php if (empty($imageDefaults['background'])): ?>
+                            <p class="mt-1 text-xs text-slate-400">Default piattaforma: <?= $backgroundLabels[$ad['background']] ?? $ad['background'] ?></p>
+                            <?php endif; ?>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Ambiente (per Home)</label>
                             <select name="image_environment" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                                <option value="living_room" <?= ($imageDefaults['environment'] ?? 'living_room') === 'living_room' ? 'selected' : '' ?>>Soggiorno</option>
-                                <option value="kitchen" <?= ($imageDefaults['environment'] ?? '') === 'kitchen' ? 'selected' : '' ?>>Cucina</option>
-                                <option value="bedroom" <?= ($imageDefaults['environment'] ?? '') === 'bedroom' ? 'selected' : '' ?>>Camera da letto</option>
-                                <option value="office" <?= ($imageDefaults['environment'] ?? '') === 'office' ? 'selected' : '' ?>>Ufficio</option>
-                                <option value="outdoor" <?= ($imageDefaults['environment'] ?? '') === 'outdoor' ? 'selected' : '' ?>>Esterno</option>
+                                <?php foreach ($environmentLabels as $val => $label): ?>
+                                <option value="<?= $val ?>" <?= ($imageDefaults['environment'] ?? $ad['environment']) === $val ? 'selected' : '' ?>><?= $label ?></option>
+                                <?php endforeach; ?>
                             </select>
+                            <?php if (empty($imageDefaults['environment'])): ?>
+                            <p class="mt-1 text-xs text-slate-400">Default piattaforma: <?= $environmentLabels[$ad['environment']] ?? $ad['environment'] ?></p>
+                            <?php endif; ?>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Stile foto</label>
                             <select name="image_photo_style" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                                <option value="professional" <?= ($imageDefaults['photo_style'] ?? 'professional') === 'professional' ? 'selected' : '' ?>>Professionale</option>
-                                <option value="editorial" <?= ($imageDefaults['photo_style'] ?? '') === 'editorial' ? 'selected' : '' ?>>Editoriale</option>
-                                <option value="minimal" <?= ($imageDefaults['photo_style'] ?? '') === 'minimal' ? 'selected' : '' ?>>Minimale</option>
+                                <?php foreach ($photoStyleLabels as $val => $label): ?>
+                                <option value="<?= $val ?>" <?= ($imageDefaults['photo_style'] ?? $ad['photo_style']) === $val ? 'selected' : '' ?>><?= $label ?></option>
+                                <?php endforeach; ?>
                             </select>
+                            <?php if (empty($imageDefaults['photo_style'])): ?>
+                            <p class="mt-1 text-xs text-slate-400">Default piattaforma: <?= $photoStyleLabels[$ad['photo_style']] ?? $ad['photo_style'] ?></p>
+                            <?php endif; ?>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Numero varianti</label>
                             <select name="image_variants_count" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
                                 <?php for ($i = 1; $i <= 4; $i++): ?>
-                                <option value="<?= $i ?>" <?= (int)($imageDefaults['variants_count'] ?? 3) === $i ? 'selected' : '' ?>><?= $i ?></option>
+                                <option value="<?= $i ?>" <?= (int)($imageDefaults['variants_count'] ?? $ad['variants_count']) === $i ? 'selected' : '' ?>><?= $i ?></option>
                                 <?php endfor; ?>
                             </select>
+                            <?php if (!isset($imageDefaults['variants_count'])): ?>
+                            <p class="mt-1 text-xs text-slate-400">Default piattaforma: <?= $ad['variants_count'] ?></p>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -235,10 +254,13 @@ $imageDefaults = $aiSettings['image_defaults'] ?? [];
                     <div>
                         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Modalità push CMS</label>
                         <select name="image_push_mode" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                            <option value="add_as_gallery" <?= ($imageDefaults['push_mode'] ?? 'add_as_gallery') === 'add_as_gallery' ? 'selected' : '' ?>>Aggiungi alla galleria</option>
-                            <option value="replace_main" <?= ($imageDefaults['push_mode'] ?? '') === 'replace_main' ? 'selected' : '' ?>>Sostituisci immagine principale</option>
-                            <option value="add" <?= ($imageDefaults['push_mode'] ?? '') === 'add' ? 'selected' : '' ?>>Aggiungi come nuova</option>
+                            <?php foreach ($pushModeLabels as $val => $label): ?>
+                            <option value="<?= $val ?>" <?= ($imageDefaults['push_mode'] ?? $ad['push_mode']) === $val ? 'selected' : '' ?>><?= $label ?></option>
+                            <?php endforeach; ?>
                         </select>
+                        <?php if (empty($imageDefaults['push_mode'])): ?>
+                        <p class="mt-1 text-xs text-slate-400">Default piattaforma: <?= $pushModeLabels[$ad['push_mode']] ?? $ad['push_mode'] ?></p>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

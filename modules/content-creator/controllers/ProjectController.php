@@ -9,6 +9,7 @@ use Core\ModuleLoader;
 use Modules\ContentCreator\Models\Project;
 use Modules\ContentCreator\Models\Url;
 use Modules\ContentCreator\Models\Connector;
+use Modules\ContentCreator\Services\ImageGenerationService;
 
 class ProjectController
 {
@@ -197,6 +198,7 @@ class ProjectController
             'project' => $project,
             'connectors' => $connectors,
             'aiSettings' => $aiSettings,
+            'adminDefaults' => ImageGenerationService::getAdminDefaults(),
             'currentPage' => 'settings',
         ]);
     }
@@ -241,30 +243,16 @@ class ProjectController
             return;
         }
 
-        // AI settings from form — merge with existing to preserve image_defaults
+        // AI settings — preserve image_defaults (now managed by updateImages())
         $existingAiSettings = !empty($project['ai_settings']) ? json_decode($project['ai_settings'], true) : [];
         $aiSettings = [
             'min_words' => (int) ($_POST['min_words'] ?? ($existingAiSettings['min_words'] ?? 300)),
             'custom_prompt' => trim($_POST['custom_prompt'] ?? ($existingAiSettings['custom_prompt'] ?? '')),
         ];
 
-        // Image generation defaults (from Immagini tab)
-        if (isset($_POST['image_scene_type'])) {
-            $aiSettings['image_defaults'] = [
-                'scene_type' => $_POST['image_scene_type'] ?? 'fashion',
-                'gender' => $_POST['image_gender'] ?? 'woman',
-                'background' => $_POST['image_background'] ?? 'studio_white',
-                'environment' => $_POST['image_environment'] ?? 'living_room',
-                'photo_style' => $_POST['image_photo_style'] ?? 'professional',
-                'variants_count' => max(1, min(4, (int) ($_POST['image_variants_count'] ?? 3))),
-                'custom_prompt' => trim($_POST['image_custom_prompt'] ?? ''),
-                'push_mode' => $_POST['image_push_mode'] ?? 'add_as_gallery',
-            ];
-        } else {
-            // Preserve existing image_defaults if not submitted
-            if (!empty($existingAiSettings['image_defaults'])) {
-                $aiSettings['image_defaults'] = $existingAiSettings['image_defaults'];
-            }
+        // Preserve existing image_defaults
+        if (!empty($existingAiSettings['image_defaults'])) {
+            $aiSettings['image_defaults'] = $existingAiSettings['image_defaults'];
         }
 
         // Validate connector
@@ -294,6 +282,53 @@ class ProjectController
             $_SESSION['_flash']['error'] = 'Errore nel salvataggio: ' . $e->getMessage();
             Router::redirect('/content-creator/projects/' . $id . '/settings');
         }
+    }
+
+    /**
+     * Aggiorna solo le impostazioni immagini (tab Immagini separato)
+     */
+    public function updateImages(int $id): void
+    {
+        $user = Auth::user();
+        $project = $this->project->findAccessible($id, $user['id']);
+
+        if (!$project) {
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
+            Router::redirect('/content-creator');
+            return;
+        }
+
+        if (($project['access_role'] ?? 'owner') !== 'owner') {
+            $_SESSION['_flash']['error'] = 'Non hai i permessi per questa operazione';
+            Router::redirect('/content-creator/projects/' . $id . '/settings');
+            return;
+        }
+
+        // Preserve existing ai_settings, only update image_defaults
+        $existingAiSettings = !empty($project['ai_settings']) ? json_decode($project['ai_settings'], true) : [];
+
+        $existingAiSettings['image_defaults'] = [
+            'scene_type' => $_POST['image_scene_type'] ?? 'fashion',
+            'gender' => $_POST['image_gender'] ?? 'woman',
+            'background' => $_POST['image_background'] ?? 'studio_white',
+            'environment' => $_POST['image_environment'] ?? 'living_room',
+            'photo_style' => $_POST['image_photo_style'] ?? 'professional',
+            'variants_count' => max(1, min(4, (int) ($_POST['image_variants_count'] ?? 3))),
+            'custom_prompt' => trim($_POST['image_custom_prompt'] ?? ''),
+            'push_mode' => $_POST['image_push_mode'] ?? 'add_as_gallery',
+        ];
+
+        try {
+            $this->project->update($id, [
+                'ai_settings' => json_encode($existingAiSettings),
+            ]);
+
+            $_SESSION['_flash']['success'] = 'Impostazioni immagini salvate con successo';
+        } catch (\Exception $e) {
+            $_SESSION['_flash']['error'] = 'Errore nel salvataggio: ' . $e->getMessage();
+        }
+
+        Router::redirect('/content-creator/projects/' . $id . '/settings#images');
     }
 
     /**

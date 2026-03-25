@@ -55,6 +55,13 @@ Router::post('/content-creator/projects/{id}/update', function ($id) {
     return $controller->update((int) $id);
 });
 
+Router::post('/content-creator/projects/{id}/update-images', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    $controller = new ProjectController();
+    return $controller->updateImages((int) $id);
+});
+
 Router::post('/content-creator/projects/{id}/delete', function ($id) {
     Middleware::auth();
     Middleware::csrf();
