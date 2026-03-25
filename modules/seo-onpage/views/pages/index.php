@@ -41,7 +41,7 @@ include __DIR__ . '/../partials/project-nav.php';
     </div>
     <?php else: ?>
     <!-- Pages Table -->
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full divide-y divide-slate-200 dark:divide-slate-700">
                 <thead class="bg-slate-50 dark:bg-slate-700/50">

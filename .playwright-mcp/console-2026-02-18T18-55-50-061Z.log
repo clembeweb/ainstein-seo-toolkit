@@ -1,7 +1,0 @@
-[    1562ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/static/index.cbaf481febb1577a9772.js:1
-[    1563ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/static/index.cbaf481febb1577a9772.js:1
-[    1565ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/static/index.cbaf481febb1577a9772.js:1
-[    1565ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/static/index.cbaf481febb1577a9772.js:1
-[    1566ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/static/index.cbaf481febb1577a9772.js:1
-[    1567ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/static/index.cbaf481febb1577a9772.js:1
-[    9836ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://it.semrush.com/:0

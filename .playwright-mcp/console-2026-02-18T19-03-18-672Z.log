@@ -1,9 +1,0 @@
-[     806ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.222079d5242894b0.js:1
-[     807ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.222079d5242894b0.js:1
-[     808ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.222079d5242894b0.js:1
-[     809ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.222079d5242894b0.js:1
-[     810ms] [WARNING] dataLayerProxy:  prop [[getByName]] is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.222079d5242894b0.js:1
-[     810ms] [WARNING] dataLayerProxy:  method call is not supported @ https://it.semrush.com/__static__/webpack/data_layer_proxy.222079d5242894b0.js:1
-[    1432ms] [ERROR] Access to fetch at 'https://tags.srv.stackadapt.com/sa.jpeg' from origin 'https://it.semrush.com' has been blocked by CORS policy: The 'Access-Control-Allow-Origin' header has a value 'https://www.semrush.com' that is not equal to the supplied origin. Have the server send the header with a valid value. @ https://it.semrush.com/features/:0
-[    1432ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://tags.srv.stackadapt.com/sa.jpeg:0
-[    1743ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://it.semrush.com/features/:0

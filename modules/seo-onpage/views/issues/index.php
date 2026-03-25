@@ -143,7 +143,7 @@ include __DIR__ . '/../partials/project-nav.php';
                 default => 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
             };
         ?>
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 border-l-4 <?= $severityColor ?> overflow-hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 border-l-4 <?= $severityColor ?> overflow-hidden">
             <div class="p-4">
                 <div class="flex items-start justify-between gap-4">
                     <div class="flex-1">

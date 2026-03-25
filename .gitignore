@@ -74,3 +74,9 @@ file-grafici/
 
 # QA Review screenshots (local only)
 qa-reviews/screenshots/
+
+# Playwright MCP logs
+.playwright-mcp/
+
+# QA test screenshots
+qa-test-*.png

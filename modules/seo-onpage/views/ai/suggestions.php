@@ -209,7 +209,7 @@ include __DIR__ . '/../partials/project-nav.php';
                     $priority = $s['priority'] ?? 'medium';
                     $isPending = ($s['status'] ?? 'pending') === 'pending';
                 ?>
-                <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                     <div class="p-4">
                         <div class="flex items-start justify-between gap-4">
                             <div class="flex items-start gap-3">
