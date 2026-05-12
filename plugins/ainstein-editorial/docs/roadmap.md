@@ -46,10 +46,25 @@ Fase 5: Post-launch optimization               ⏳ Continuo
 
 **Obiettivo**: validare willingness-to-pay del target prima di investire 14 settimane di sviluppo.
 
+### 📦 Validation Kit pronto
+
+Tutti i deliverable per eseguire la Fase 1 sono già scritti in `docs/validation/`:
+- ✅ `01-naming-research.md` — 12 nomi analizzati + top 3 raccomandati
+- ✅ `02-landing-page-copy.md` — Copy completo per Carrd/Framer
+- ✅ `03-survey-questions.md` — 5 domande + 5 email automation
+- ✅ `04-ads-copy.md` — 6 FB ads + 4 Google ads + targeting
+- ✅ `05-outreach-templates.md` — LinkedIn + FB + DM templates
+- ✅ `06-interview-script.md` — Canovaccio interviste 15-20 min
+- ✅ `07-validation-tracker.md` — Google Sheets template + decision gate
+- ✅ `validation/README.md` — Indice navigabile + sequenza esecuzione
+
+**Budget out-of-pocket Fase 1**: ~€450 (domini + Carrd Pro + €200 ads).
+**Effort founder**: ~40 ore distribuite su 14 giorni.
+
 ### Settimana 1 — Setup validation
 
-- [ ] **Scelta nome brand finale** (decide proprietario + ricerca disponibilità dominio + trademark check)
-  - Candidati attuali: "Ainstein Editorial", "Ainstein Magazine", "Ainstein Autopilot", o nome originale
+- [ ] **Scelta nome brand finale** — vedi `docs/validation/01-naming-research.md`
+  - Top 3 raccomandati: **Scribo** (87/100), **Penna** (83/100), **Inkly** (83/100)
   - Output: nome finale + dominio acquistato (es. `.com`)
 - [ ] **Landing page** (Carrd / Framer / Webflow — no dev)
   - Hero: tagline + value prop + screenshot mockup (anche fittizio)
