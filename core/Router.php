@@ -22,6 +22,16 @@ class Router
         self::addRoute('POST', $path, $handler);
     }
 
+    public static function put(string $path, callable|array $handler): void
+    {
+        self::addRoute('PUT', $path, $handler);
+    }
+
+    public static function delete(string $path, callable|array $handler): void
+    {
+        self::addRoute('DELETE', $path, $handler);
+    }
+
     public static function any(string $path, callable|array $handler): void
     {
         self::addRoute('GET', $path, $handler);

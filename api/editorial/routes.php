@@ -70,7 +70,7 @@ Router::post($base . '/webhooks/lemonsqueezy',   $editorialPublic(\Editorial\Con
 Router::get ($base . '/content-brain',                       $editorialAuth(\Editorial\Controllers\ContentBrainController::class, 'show'));
 Router::post($base . '/content-brain/scan',                  $editorialAuth(\Editorial\Controllers\ContentBrainController::class, 'scan'));
 Router::get ($base . '/content-brain/scan/{job_id}/stream',  $editorialAuth(\Editorial\Controllers\ContentBrainController::class, 'scanStream'));
-Router::post($base . '/content-brain',                       $editorialAuth(\Editorial\Controllers\ContentBrainController::class, 'update')); // PUT mappato come POST (Router non ha put())
+Router::put ($base . '/content-brain',                       $editorialAuth(\Editorial\Controllers\ContentBrainController::class, 'update'));
 
 // --- Keyword Research (M4) ---
 Router::post($base . '/keywords/research',                   $editorialAuth(\Editorial\Controllers\KeywordResearchController::class, 'research'));
@@ -79,7 +79,7 @@ Router::get ($base . '/keywords/research/{job_id}/stream',   $editorialAuth(\Edi
 // --- Editorial Plans (M4) ---
 Router::get ($base . '/editorial-plans',                     $editorialAuth(\Editorial\Controllers\EditorialPlanController::class, 'index'));
 Router::post($base . '/editorial-plans',                     $editorialAuth(\Editorial\Controllers\EditorialPlanController::class, 'store'));
-Router::post($base . '/editorial-plans/{id}',                $editorialAuth(\Editorial\Controllers\EditorialPlanController::class, 'update')); // PUT mappato come POST
+Router::put ($base . '/editorial-plans/{id}',                $editorialAuth(\Editorial\Controllers\EditorialPlanController::class, 'update'));
 Router::post($base . '/editorial-plans/{id}/activate',       $editorialAuth(\Editorial\Controllers\EditorialPlanController::class, 'activate'));
 
 // --- Articles (M3) ---
@@ -97,12 +97,5 @@ Router::post($base . '/links/apply',                         $editorialAuth(\Edi
 // --- Subscription (M1.4 partial, M6 full) ---
 Router::get ($base . '/subscription/status',                 $editorialAuth(\Editorial\Controllers\SubscriptionController::class, 'status'));
 Router::post($base . '/subscription/portal-url',             $editorialAuth(\Editorial\Controllers\SubscriptionController::class, 'portalUrl'));
-
-// =========================================
-// NOTA: il Router corrente non supporta PUT/DELETE nativamente.
-// Endpoint REST "PUT" sopra sono mappati come POST (idempotenza garantita
-// dal payload, non dal verbo). Quando Router::put() sara aggiunto in
-// Core\Router, aggiornare le route corrispondenti (commento "PUT mappato come POST").
-// =========================================
 
 unset($editorialAuth, $editorialPublic, $base);
