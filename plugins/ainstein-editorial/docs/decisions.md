@@ -449,6 +449,48 @@ Top-up packs: +20 articoli €15 · +50 €30 · +100 €50. Articoli inclusi az
 
 ---
 
+## ADR-023: Pivot build-first — scope completo MVP, no validation pre-dev, naming postponed
+
+**Date**: 2026-05-13 · **Status**: Accepted · **Supersedes**: ADR-018 (validation pre-dev obbligatoria), parti di ADR-022
+
+**Context**: Dopo aver creato un validation kit corposo (8 file, 2.737 righe) e proposto in seguito di ridurre lo scope MVP per accelerare time-to-market, riconsiderazione completa con il proprietario ha portato a riconoscere due errori:
+
+1. **Validation kit over-engineered per profilo founder**: assume skill marketing (Carrd, Meta Ads, Google Ads, ConvertKit, Tally, Zapier setup) e 40+ ore di esecuzione. Per maker-personality (chi costruisce da solo, motivazione "build first"), questo crea attrito letale al progetto.
+
+2. **Riduzione scope MVP era falsa economia**: tagliare Content Brain, auto-pilot, internal linking bidirezionale, KW research integrato e UX "WOW" significa eliminare esattamente il quid che differenzia da RankMath AI / AIOSEO AI. Senza differenziazione, race-to-bottom su prezzo (€5/mo). Con differenziazione, sustained €69-149/mo.
+
+**Decision**:
+
+1. **MVP scope COMPLETO mantenuto** come da `design.md` originale e ADR-009/010/011/016. Tutto: Content Brain, auto-pilot, internal linking bidirezionale, AI Keyword Research integrato, UX WOW (streaming AI, gauge animati, onboarding wizard animato, illustrations custom), email automation. Niente compromessi sulla differenziazione.
+
+2. **Validation pre-dev (Fase 1)**: **POSTPONED**. Il validation kit (`docs/validation/`) resta nel repo come reference per il futuro. Non è blocker. Il prodotto si valida costruendolo + testandolo su 5 siti reali (proprio + amici/contatti) a fine MVP, poi launch.
+
+3. **Naming + dominio**: POSTPONED a fine MVP. Codename interno "Ainstein Editorial" usato durante development. Decisione naming presa quando prodotto funziona, basata su preferenza founder + (eventualmente) feedback dei primi 5 utenti test reali.
+
+4. **Workflow di lavoro**: per ogni milestone (M1-M6), Claude scrive **spec tecnica dettagliata + piano di lavoro task-by-task + Definition of Done** in file dedicato (`docs/milestones/M{N}-{nome}.md`). Il proprietario approva la spec prima dell'esecuzione. Claude esegue come architetto + dev, il proprietario è il cliente che approva e dà direzione strategica.
+
+**Alternatives considered**:
+- Validation classica pre-dev (ADR-018 originale): bocciata per profilo founder + spreco momentum
+- Lean MVP scope ridotto: bocciata per perdita differenziazione
+- Build-first SENZA spec dettagliata: bocciata, no traceability + risk creep scope
+
+**Consequences**:
+- ✅ Time-to-first-paying-customer: ~5 mesi (4 sviluppo + 1 test/launch) — invariato vs piano originale
+- ✅ Differenziazione preservata → pricing power €69-149/mo sustainable
+- ✅ Momentum founder mantenuto (build → test → launch lineare)
+- ✅ Spec milestone-by-milestone garantisce traceability + qualità
+- ✅ Validation kit non sprecato (riusato a launch time per acquisizione)
+- ⚠️ Rischio "costruire prodotto che non vende" mitigato da test su 5 utenti reali fine MVP (validation tardiva ma vera)
+- ⚠️ Decisione naming senza dati survey → scelta intuitiva founder + verifica disponibilità domini
+
+**Implications operative**:
+- `roadmap.md`: Fase 1 Validation rimossa dalla sequenza primaria. Spostata in "Optional / Post-MVP" come "Pre-launch validation accelerata se serve".
+- `validation/`: cartella mantiene contenuti, README.md aggiornato per riflettere "use this when ready to launch, not before".
+- Workflow: ogni milestone ha file `docs/milestones/M{N}-{nome}.md` con spec + plan completi.
+- Comando `/editorial-next`: ora cerca in `docs/milestones/` la prossima milestone aperta + esegue task list.
+
+---
+
 ## ADR-022: Sottodominio Ainstein per validation, dominio dedicato solo post-gate
 
 **Date**: 2026-05-13 · **Status**: Accepted · **Supersedes**: parte di ADR-018 (validation budget)

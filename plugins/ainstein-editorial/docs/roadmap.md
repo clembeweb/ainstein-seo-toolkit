@@ -9,23 +9,26 @@
 
 ## Visione complessiva
 
+> ⚡ **Update ADR-023 (2026-05-13)**: Pivot a build-first. Validation pre-dev rimossa dalla sequenza primaria, validation kit `docs/validation/` resta come reference per launch. Per ogni milestone creiamo spec dettagliata + piano di lavoro in `docs/milestones/M{N}-{nome}.md`.
+
 ```
 Fase 0: Design & Documentazione                ✅ COMPLETATA (2026-05-12)
-Fase 1: Validation pre-development             ⏳ 2 settimane
-─── DECISION GATE ───
-Fase 2: MVP Development                        ⏳ 14 settimane
-   M1: Foundation backend + plugin shell       ⏳ 3 settimane
+~~Fase 1: Validation pre-development~~         🔵 POSTPONED a launch time
+Fase 2: MVP Development (build-first)          ⏳ 14 settimane
+   M1: Foundation backend + plugin shell       ⏳ 3 settimane (spec + plan in M1-foundation.md)
    M2: Content Brain + onboarding              ⏳ 2 settimane
    M3: Article generation flow + UX            ⏳ 3 settimane
-   M4: Editorial Plan + Auto-pilot             ⏳ 3 settimane
+   M4: KW Research + Editorial Plan + Auto-pilot ⏳ 3 settimane
    M5: Internal linking + meta + image         ⏳ 2 settimane
    M6: Polish + email + billing integration    ⏳ 1 settimana
-Fase 3: Closed beta                            ⏳ 2 settimane
-Fase 4: Public launch                          ⏳ 1 settimana
+Fase 3: Test su 5 siti reali (founder + amici/contatti)  ⏳ 2 settimane
+Fase 4: Naming + dominio + landing + launch    ⏳ 1-2 settimane
 Fase 5: Post-launch optimization               ⏳ Continuo
 ```
 
-**Timeline totale stimata**: 20 settimane (5 mesi) dal kickoff effettivo al public launch.
+**Timeline totale stimata**: 20 settimane (5 mesi) dal kickoff M1 al public launch.
+
+**Workflow milestone**: per ogni M{N}, Claude scrive spec + plan dettagliato → cliente approva → Claude esegue → `/editorial-save` aggiorna progresso.
 
 ---
 
