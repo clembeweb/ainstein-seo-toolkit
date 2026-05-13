@@ -31,6 +31,12 @@ class RateLimitMiddleware
             @mkdir($cacheDir, 0775, true);
         }
 
+        // Cleanup opportunistico (1% delle richieste): rimuove file piu' vecchi
+        // di 2x la finestra → mantiene la cartella in dimensioni gestibili.
+        if (random_int(1, 100) === 1) {
+            self::pruneStaleFiles($cacheDir);
+        }
+
         $file = $cacheDir . '/' . hash('sha256', $bucket) . '.json';
         $now  = time();
         $data = ['window_start' => $now, 'count' => 0];
@@ -39,11 +45,19 @@ class RateLimitMiddleware
         $fp = @fopen($file, 'c+');
         if ($fp === false) {
             // Se il file non e accessibile, fail-open (meglio servire la richiesta che bloccare).
+            error_log("[editorial.ratelimit] fopen failed for {$file}");
             self::setHeaders(self::LIMIT, self::LIMIT, self::WINDOW_SECONDS);
             return;
         }
 
-        @flock($fp, LOCK_EX);
+        if (!flock($fp, LOCK_EX)) {
+            // Lock fallito → fail-open ma logghiamo
+            error_log("[editorial.ratelimit] flock failed for bucket " . substr(hash('sha256', $bucket), 0, 8));
+            fclose($fp);
+            self::setHeaders(self::LIMIT, self::LIMIT, self::WINDOW_SECONDS);
+            return;
+        }
+
         $contents = stream_get_contents($fp);
         if ($contents) {
             $decoded = json_decode($contents, true);
@@ -65,13 +79,33 @@ class RateLimitMiddleware
         ftruncate($fp, 0);
         rewind($fp);
         fwrite($fp, json_encode($data));
-        @flock($fp, LOCK_UN);
+        flock($fp, LOCK_UN);
         fclose($fp);
 
         self::setHeaders(self::LIMIT, $remaining, $resetIn);
 
         if ((int) $data['count'] > self::LIMIT) {
             self::respondTooMany($resetIn);
+        }
+    }
+
+    /**
+     * Rimuove file di rate-limit piu' vecchi di 2x la finestra.
+     * Chiamato in modo opportunistico (1% delle richieste) per non aggiungere overhead.
+     */
+    private static function pruneStaleFiles(string $dir): void
+    {
+        $cutoff = time() - (self::WINDOW_SECONDS * 2);
+        $iter = @scandir($dir);
+        if (!is_array($iter)) return;
+        foreach ($iter as $name) {
+            if ($name === '.' || $name === '..') continue;
+            if (!str_ends_with($name, '.json')) continue;
+            $path = $dir . '/' . $name;
+            $mtime = @filemtime($path);
+            if ($mtime !== false && $mtime < $cutoff) {
+                @unlink($path);
+            }
         }
     }
 

@@ -4,6 +4,7 @@
         "monolog/monolog": "^3.9",
         "symfony/cache": "^6.4",
         "phpmailer/phpmailer": "^7.0",
-        "mpdf/mpdf": "^8.2"
+        "mpdf/mpdf": "^8.2",
+        "firebase/php-jwt": "^6.10"
     }
 }

@@ -64,6 +64,7 @@ function env(string $key, $default = null)
     return $value;
 }
 
-// Auto-load .env
-$envPath = dirname(__DIR__) . '/.env';
-loadEnv($envPath);
+// Auto-load .env then .env.local (overrides)
+$rootPath = dirname(__DIR__);
+loadEnv($rootPath . '/.env');
+loadEnv($rootPath . '/.env.local');

@@ -13,6 +13,10 @@
 !/storage/logs/.gitkeep
 !/storage/cache/.gitkeep
 
+# Editorial mock LemonSqueezy state (M1.4)
+/storage/editorial_mock_ls/
+/storage/editorial_ratelimit/
+
 # IDE
 .idea/
 .vscode/
