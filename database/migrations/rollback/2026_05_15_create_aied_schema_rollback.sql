@@ -8,7 +8,7 @@
 --
 -- Ordine drop (reverse FK):
 --   1) aied_api_logs           (no FK)
---   2) aied_internal_links     (FK -> aied_sites)
+--   2) aied_internal_links     (FK -> aied_sites, aied_articles x2)
 --   3) aied_articles           (FK -> aied_sites, aied_editorial_items)
 --      [prima rimuovere FK circolare su aied_editorial_items.article_id]
 --   4) aied_editorial_items    (FK -> aied_editorial_plans, aied_articles)

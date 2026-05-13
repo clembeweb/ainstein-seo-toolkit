@@ -13,7 +13,7 @@
 --   5) aied_editorial_plans    FK -> aied_sites
 --   6) aied_editorial_items    FK -> aied_editorial_plans
 --   7) aied_articles           FK -> aied_sites, aied_editorial_items
---   8) aied_internal_links     FK -> aied_sites
+--   8) aied_internal_links     FK -> aied_sites, aied_articles (from_article_id, to_article_id)
 --   9) aied_api_logs           (no FK constraints, soft references)
 
 -- ---------------------------------------------------------------------------
@@ -27,10 +27,10 @@ CREATE TABLE IF NOT EXISTS aied_users (
     lemon_squeezy_customer_id VARCHAR(255) NULL,
     lemon_squeezy_subscription_id VARCHAR(255) NULL,
     tier ENUM('starter', 'pro', 'business', 'agency') NOT NULL DEFAULT 'starter',
-    subscription_status ENUM('active', 'past_due', 'cancelled', 'expired') DEFAULT 'active',
+    subscription_status ENUM('active', 'past_due', 'cancelled', 'expired') NOT NULL DEFAULT 'active',
     subscription_renews_at TIMESTAMP NULL,
     locale VARCHAR(10) DEFAULT 'it',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_seen_at TIMESTAMP NULL,
     UNIQUE KEY idx_license (license_key),
     INDEX idx_lemon_subscription (lemon_squeezy_subscription_id),
@@ -49,8 +49,8 @@ CREATE TABLE IF NOT EXISTS aied_sites (
     plugin_version VARCHAR(20) NULL,
     api_token VARCHAR(255) NOT NULL,
     api_token_expires_at TIMESTAMP NULL,
-    status ENUM('active', 'paused', 'deactivated') DEFAULT 'active',
-    activated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('active', 'paused', 'deactivated') NOT NULL DEFAULT 'active',
+    activated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deactivated_at TIMESTAMP NULL,
     settings JSON NULL,
     UNIQUE KEY uniq_api_token (api_token),
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS aied_actions_log (
     cost_in_units INT NOT NULL DEFAULT 1,
     billing_period_start DATE NOT NULL,
     metadata JSON NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_user_period (user_id, billing_period_start),
     INDEX idx_action_type (action_type),
     INDEX idx_site_created (site_id, created_at),
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS aied_content_brain (
     site_id BIGINT UNSIGNED NOT NULL,
     brand_voice_summary TEXT NULL,
     brand_voice_examples JSON NULL,
-    tone ENUM('professional', 'friendly', 'fun', 'authoritative', 'casual') DEFAULT 'friendly',
+    tone ENUM('professional', 'friendly', 'fun', 'authoritative', 'casual') NOT NULL DEFAULT 'friendly',
     target_audience TEXT NULL,
     site_topic TEXT NULL,
     glossary JSON NULL,
@@ -109,12 +109,12 @@ CREATE TABLE IF NOT EXISTS aied_editorial_plans (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     site_id BIGINT UNSIGNED NOT NULL,
     name VARCHAR(255) NOT NULL,
-    status ENUM('draft', 'active', 'paused', 'completed') DEFAULT 'draft',
+    status ENUM('draft', 'active', 'paused', 'completed') NOT NULL DEFAULT 'draft',
     posts_per_month INT NOT NULL DEFAULT 4,
     auto_publish BOOLEAN DEFAULT FALSE,
     starts_at DATE NOT NULL,
     ends_at DATE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_site_status (site_id, status),
     CONSTRAINT fk_aied_plans_site FOREIGN KEY (site_id) REFERENCES aied_sites(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -128,13 +128,13 @@ CREATE TABLE IF NOT EXISTS aied_editorial_items (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     plan_id BIGINT UNSIGNED NOT NULL,
     keyword VARCHAR(500) NOT NULL,
-    keyword_difficulty ENUM('easy', 'medium', 'hard') DEFAULT 'medium',
+    keyword_difficulty ENUM('easy', 'medium', 'hard') NOT NULL DEFAULT 'medium',
     monthly_volume INT DEFAULT 0,
-    intent ENUM('informational', 'commercial', 'navigational', 'transactional') DEFAULT 'informational',
+    intent ENUM('informational', 'commercial', 'navigational', 'transactional') NOT NULL DEFAULT 'informational',
     proposed_title VARCHAR(500) NULL,
     proposed_outline JSON NULL,
     scheduled_for DATE NOT NULL,
-    status ENUM('pending', 'in_progress', 'generated', 'published', 'failed', 'skipped') DEFAULT 'pending',
+    status ENUM('pending', 'in_progress', 'generated', 'published', 'failed', 'skipped') NOT NULL DEFAULT 'pending',
     article_id BIGINT UNSIGNED NULL,
     failure_reason TEXT NULL,
     INDEX idx_plan_scheduled (plan_id, scheduled_for),
@@ -158,8 +158,8 @@ CREATE TABLE IF NOT EXISTS aied_articles (
     meta_title VARCHAR(255) NULL,
     meta_description TEXT NULL,
     cover_image_url VARCHAR(1000) NULL,
-    cover_image_attachment_id BIGINT NULL,
-    wp_post_id BIGINT NULL,
+    cover_image_attachment_id BIGINT UNSIGNED NULL,
+    wp_post_id BIGINT UNSIGNED NULL,
     wp_post_status VARCHAR(20) NULL,
     serp_data JSON NULL,
     sources JSON NULL,
@@ -167,7 +167,7 @@ CREATE TABLE IF NOT EXISTS aied_articles (
     quality_score INT NULL,
     generation_time_seconds INT NULL,
     ai_cost_eur DECIMAL(10,4) NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     published_at TIMESTAMP NULL,
     INDEX idx_site_created (site_id, created_at),
     INDEX idx_wp_post (wp_post_id),
@@ -197,6 +197,7 @@ DEALLOCATE PREPARE stmt;
 -- ---------------------------------------------------------------------------
 -- 8. aied_internal_links
 -- Tracking link interni inseriti automaticamente. Permette undo + audit.
+-- FK: aied_sites (cascade) + aied_articles x2 (from/to, cascade) per evitare orfani.
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS aied_internal_links (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -206,11 +207,13 @@ CREATE TABLE IF NOT EXISTS aied_internal_links (
     anchor_text VARCHAR(500) NULL,
     context_snippet TEXT NULL,
     direction ENUM('forward', 'backward') NOT NULL,
-    inserted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    inserted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     removed_at TIMESTAMP NULL,
     INDEX idx_site_articles (site_id, from_article_id, to_article_id),
     INDEX idx_removed (removed_at),
-    CONSTRAINT fk_aied_links_site FOREIGN KEY (site_id) REFERENCES aied_sites(id) ON DELETE CASCADE
+    CONSTRAINT fk_aied_links_site FOREIGN KEY (site_id) REFERENCES aied_sites(id) ON DELETE CASCADE,
+    CONSTRAINT fk_aied_links_from_article FOREIGN KEY (from_article_id) REFERENCES aied_articles(id) ON DELETE CASCADE,
+    CONSTRAINT fk_aied_links_to_article FOREIGN KEY (to_article_id) REFERENCES aied_articles(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------------
@@ -230,7 +233,7 @@ CREATE TABLE IF NOT EXISTS aied_api_logs (
     duration_ms INT NULL,
     cost_eur DECIMAL(10,6) NULL,
     error TEXT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_user_created (user_id, created_at),
     INDEX idx_provider (provider),
     INDEX idx_site_created (site_id, created_at)
