@@ -41,6 +41,7 @@ spl_autoload_register(function ($class) {
         'Services\\' => BASE_PATH . '/services/',
         'Controllers\\' => BASE_PATH . '/controllers/',
         'Admin\\Controllers\\' => BASE_PATH . '/admin/controllers/',
+        'Editorial\\' => BASE_PATH . '/api/editorial/',
     ];
 
     foreach ($paths as $prefix => $basePath) {
@@ -827,6 +828,9 @@ require_once BASE_PATH . '/admin/routes.php';
 
 // --- Module Routes ---
 ModuleLoader::loadAll();
+
+// --- Editorial API Routes (plugin WordPress backend) ---
+require_once BASE_PATH . '/api/editorial/routes.php';
 
 // =========================================
 // DISPATCH
