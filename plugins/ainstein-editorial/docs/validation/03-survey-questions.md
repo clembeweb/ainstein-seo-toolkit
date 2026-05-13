@@ -110,6 +110,27 @@ Una cosa qualunque che vorresti dirci?
 
 ---
 
+### Domanda 6: Brand name preference (multiple choice singola) ⭐ AGGIUNTA ADR-022
+
+```
+Bonus question: stiamo scegliendo il nome del prodotto. 
+Quale preferisci?
+
+○ Scribo — "il blog si scrive da solo" (latino, evocativo)
+○ Penna — "scrive per te, mentre tu vivi" (italiano diretto)
+○ Inkly — "AI che scrive come scrivi TU" (modern tech feel)
+○ Non ho preferenze, scegliete voi
+```
+
+**Why**: trasforma la validation in **decisione naming data-driven**. Permette di:
+- Vincere risparmio €300 di domini pre-validation (compriamo solo il vincente)
+- Coinvolgere gli iscritti nel processo (commitment psicologico → meno churn al lancio)
+- Estrarre insight su quale brand "comunica meglio" il valore al target reale
+
+**Decision rule**: il nome con > 40% preferenze diventa il finale. Se distribuzione frammentata (< 40% leader), valuteremo qualitativo + disponibilità domini.
+
+---
+
 ## Email automation flow
 
 ### Email 1: Welcome (immediate, post-signup)

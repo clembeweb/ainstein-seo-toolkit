@@ -63,9 +63,12 @@ Tutti i deliverable per eseguire la Fase 1 sono già scritti in `docs/validation
 
 ### Settimana 1 — Setup validation
 
-- [ ] **Scelta nome brand finale** — vedi `docs/validation/01-naming-research.md`
-  - Top 3 raccomandati: **Scribo** (87/100), **Penna** (83/100), **Inkly** (83/100)
-  - Output: nome finale + dominio acquistato (es. `.com`)
+> ⚡ **Update 2026-05-13** (ADR-022): scelta nome + acquisto domini SPOSTATI a post-validation gate. Per Fase 1 si usa **sottodominio `editorial.ainstein.it`** (zero costo, setup 5 min). Naming finale verrà scelto data-driven a giorno 14 dalle risposte survey.
+
+- [ ] **Setup sottodominio Ainstein** (es. `editorial.ainstein.it`)
+  - DNS CNAME su Cloudflare/Hetzner verso Carrd
+  - Setup time: 5 minuti + propagazione max 1h
+  - Output: URL funzionante per landing
 - [ ] **Landing page** (Carrd / Framer / Webflow — no dev)
   - Hero: tagline + value prop + screenshot mockup (anche fittizio)
   - 3 sezioni: "Come funziona", "Per chi è", "Pricing"
@@ -107,7 +110,15 @@ Tutti i deliverable per eseguire la Fase 1 sono già scritti in `docs/validation
   - Cambiare prodotto (es. tool standalone web, non plugin)
   - Cambiare market (es. EN-first)
 
-**Definition of Done Fase 1**: report 2 pagine con numeri raccolti + raccomandazione GO/STOP + eventuali modifiche scope.
+**Decisioni da prendere al gate (se GO)**:
+- [ ] **Scelta nome brand finale** — data-driven dalle risposte survey
+  - Top 3 raccomandati: **Scribo** (87/100), **Penna** (83/100), **Inkly** (83/100)
+  - Verifica disponibilità domini come da `docs/validation/01-naming-research.md`
+- [ ] **Acquisto dominio dedicato** (€200-300, 5 anni rinnovo upfront)
+- [ ] **Setup 301 redirect** da sottodominio Ainstein → nuovo dominio
+- [ ] **Migrazione branding**: landing, email, ads copy aggiornati con nuovo dominio
+
+**Definition of Done Fase 1**: report 2 pagine con numeri raccolti + raccomandazione GO/STOP + eventuali modifiche scope + nome brand scelto (se GO).
 
 ---
 

@@ -449,6 +449,38 @@ Top-up packs: +20 articoli €15 · +50 €30 · +100 €50. Articoli inclusi az
 
 ---
 
+## ADR-022: Sottodominio Ainstein per validation, dominio dedicato solo post-gate
+
+**Date**: 2026-05-13 · **Status**: Accepted · **Supersedes**: parte di ADR-018 (validation budget)
+
+**Context**: Roadmap originale prevedeva acquisto domini (~€200-300) PRIMA della validation come step 1. Riconsiderazione costi: durante validation l'utente visita landing 2 min, lascia email, niente checkout, niente trust deep — brand confusion ha basso impatto. Spendere €300 prima di sapere se l'idea sta in piedi è prematuro.
+
+**Decision**:
+- **Durante Fase 1 (validation, 14gg)**: usare sottodominio di `ainstein.it` come `editorial.ainstein.it` (placeholder) o `<nome>.ainstein.it` (se nome scelto subito). DNS setup in 5 minuti su Cloudflare/Hetzner con CNAME verso Carrd.
+- **Decision gate giorno 14**: se validation passa (≥100 signup), allora acquistare dominio dedicato + setup 301 redirect dal sottodominio.
+- **Naming finale**: scegliere a giorno 14 con dati REALI di survey (D5 può includere domanda "preferisci Scribo, Penna o Inkly?") invece di scelta a-priori.
+
+**Alternatives considered**:
+- Comprare domini upfront: €200-300 prematuri, scelta nome senza dati
+- Sottodominio per sempre: blocca branding consumer per public launch, ostacola Lemon Squeezy custom domain, mix B2B/consumer email reputation Ainstein
+
+**Consequences**:
+- ✅ Risparmio €300 immediato
+- ✅ Naming finale data-driven (survey insight)
+- ✅ Setup landing in 5 min invece di attendere DNS propagation 24h
+- ✅ Reversibile a costo zero (301 redirect)
+- ⚠️ Brand confusion lieve durante validation (mitigato: utente non interagisce in profondità, è solo waitlist signup)
+- ⚠️ Quando passa gate: lavoro extra setup dominio nuovo + 301 redirect (~1h)
+
+**Implications su altri docs**:
+- `validation/01-naming-research.md`: scelta nome NON è pre-validation step, ma post-gate
+- `validation/02-landing-page-copy.md`: URL placeholder = sottodominio Ainstein
+- `validation/04-ads-copy.md`: URL ads → sottodominio
+- `validation/03-survey-questions.md`: aggiungere D6 opzionale "preferisci nome A/B/C?"
+- `roadmap.md`: rimuovere "Scelta nome brand finale" dalla settimana 1 Fase 1, spostarla a decision gate
+
+---
+
 ## ADR-021: Comandi utente per continuità sessioni Claude
 
 **Date**: 2026-05-12 · **Status**: Accepted

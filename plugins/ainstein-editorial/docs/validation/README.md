@@ -22,15 +22,19 @@
 
 ## Sequenza di esecuzione (giorno per giorno)
 
-### Pre-launch (giorno -2 / -1)
+> ⚡ **Update ADR-022 (2026-05-13)**: il naming finale e l'acquisto domini sono spostati a **post-validation gate**. Durante Fase 1 si usa sottodominio Ainstein (es. `editorial.ainstein.it`) → setup 5 min, costo €0. Naming verrà scelto a giorno 14 con dati reali survey.
 
-- [ ] **Giorno -2**: Naming research → scegli nome + acquista domini (€100-300) — `01-naming-research.md`
-- [ ] **Giorno -1**: 
-  - Setup landing page Carrd con copy pronto — `02-landing-page-copy.md`
-  - Setup Tally survey con 5 domande — `03-survey-questions.md`
+### Pre-launch (giorno -1)
+
+- [ ] **Giorno -1** (mezza giornata):
+  - Setup sottodominio Ainstein: DNS CNAME `editorial.ainstein.it` → Carrd (5 min)
+  - Setup landing page Carrd con copy pronto — `02-landing-page-copy.md` (2-3 ore, sostituisci `[BRAND]` con "Editorial by Ainstein" temporary placeholder)
+  - Setup Tally survey con 5+1 domande (aggiungi D6: "Quale nome preferisci tra Scribo / Penna / Inkly?") — `03-survey-questions.md`
   - Setup ConvertKit con 5 email automation
   - Setup Google Sheets tracker — `07-validation-tracker.md`
   - Setup Zapier (Carrd + Tally → Sheets + ConvertKit)
+
+**Costo Pre-launch**: €19 Carrd Pro (tutto il resto free tier). Niente domini.
 
 ### Settimana 1
 
@@ -82,7 +86,7 @@
 
 | Voce | Costo |
 |------|-------|
-| Domini (1 .com + 1 .ai + 1 .it + 1 .io, 5 anni) | €200-300 |
+| ~~Domini~~ → sottodominio Ainstein (ADR-022) | **€0** |
 | Carrd Pro | €19/anno |
 | ConvertKit free tier | €0 |
 | Tally free tier | €0 |
@@ -91,9 +95,15 @@
 | Meta Ads | €100 |
 | Google Ads | €100 |
 | Founder time (40 ore distribuite) | — |
-| **TOTALE OUT-OF-POCKET** | **~€450** |
+| **TOTALE OUT-OF-POCKET FASE 1** | **~€220** |
 
-ROI atteso: se validation è positiva, ROI risparmiato = 4 mesi sviluppo + server + tool = €5000+. Se negativa, costo evitato = 16 settimane di sviluppo errato = priceless.
+**Post-gate (solo se GO)**:
+| Voce | Costo |
+|------|-------|
+| Dominio dedicato (.com + .ai + .it + .io × 5 anni) | €200-300 |
+| **TOTALE OUT-OF-POCKET POST-GATE** | **€200-300** |
+
+ROI atteso: se validation è positiva, ROI risparmiato = 4 mesi sviluppo + server + tool = €5000+. Se negativa, costo evitato = 16 settimane di sviluppo errato + €300 domini non spesi = priceless + €300.
 
 ---
 
