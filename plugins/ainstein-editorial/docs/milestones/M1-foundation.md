@@ -330,36 +330,28 @@ Tutto questo arriva in M2-M6.
 **Dipendenze**: M1.4 (endpoint activate per test integration)  
 **Deliverable**: plugin WP installabile da zip, attivabile, license activation funzionante via UI
 
-- [ ] M1.6.a Creare `plugins/ainstein-editorial/src/plugin.php` con header WP completo (Plugin Name, Version, Author, etc.)
-- [ ] M1.6.b Inizializzare `composer.json` con autoload PSR-4 `Ainstein\Editorial\` → `src/Includes/`, `src/Admin/`, `src/Utils/`
-- [ ] M1.6.c Eseguire `composer install` (per ora 0 dipendenze esterne, solo autoload)
-- [ ] M1.6.d Implementare `Includes/Plugin.php` (singleton, hook init)
-- [ ] M1.6.e Implementare `Includes/Activator.php`:
-  - Crea options vuote (`aied_*`)
-  - Salva `aied_first_activated_at = time()`
-  - Set transient redirect a License page al primo load admin
-- [ ] M1.6.f Implementare `Includes/Deactivator.php`:
-  - Se opt-in (M6 setting): mantieni dati. Default M1: mantieni dati.
-  - Cancella WP cron events (anche se M1 non li registra ancora)
-- [ ] M1.6.g Implementare `Includes/ApiClient.php`:
-  - `post($endpoint, $payload)` → `wp_remote_post(AIED_API_BASE.$endpoint, ...)` con headers standard
-  - `get($endpoint)` analogamente
-  - Auto-include `X-License-Key`, `X-Site-Domain`, `X-Api-Token` se presenti in options
-  - Handle response: 200 OK return data, 401 trigger refresh-token + retry, 4xx/5xx return WP_Error con message italiano
-- [ ] M1.6.h Implementare `Includes/LicenseManager.php` (lato plugin):
-  - `activate($key)` → chiama ApiClient::post('/activate'), salva token in options, return success/error
-  - `isActive()` → bool basato su options + token expiry
-  - `getApiToken()` → token corrente, auto-refresh se < 1h to expire
-  - `deactivate()` → chiama ApiClient::post('/deactivate'), pulisce options
-- [ ] M1.6.i Implementare `Admin/AdminPages.php`: registra menu admin top-level "Ainstein Editorial" + sottomenu "License"
-- [ ] M1.6.j Implementare `Admin/Pages/License.php`:
-  - Se non attivato: form con textarea license key + bottone "Attiva"
-  - Se attivato: card "✓ Attivato. Tier: {tier}. Email: {email}." + bottone "Disattiva su questo sito"
-  - Submit form: nonce check, sanitize input, call `LicenseManager::activate()`, mostra success/error message
-- [ ] M1.6.k CSS minimale per License page (Tailwind base, anche solo via CDN per M1)
-- [ ] M1.6.l Test su WP locale: installa plugin (anche solo via symlink Laragon), attiva, vai a License page, incolla test key, verifica activation success
+- [x] M1.6.a `plugins/ainstein-editorial/src/plugin.php` — Plugin Header WP 0.1.0, costanti AIED_*, autoload fallback PSR-4
+- [x] M1.6.b `composer.json` con autoload PSR-4 `Ainstein\Editorial\Includes\|Admin\|Utils\`
+- [x] M1.6.c `composer install` eseguito, vendor/ generato (0 dipendenze require, solo autoload)
+- [x] M1.6.d `Includes/Plugin.php` — singleton, hook admin_menu/admin_enqueue/admin_init/admin_post_aied_*
+- [x] M1.6.e `Includes/Activator.php` — flag `aied_first_activated_at`, transient redirect a License page
+- [x] M1.6.f `Includes/Deactivator.php` — cleanup WP cron events `aied_*`, mantiene wp_options
+- [x] M1.6.g `Includes/ApiClient.php` — wrapper `wp_remote_request`, auto-headers (X-License-Key, X-Site-Domain, Bearer), auto-refresh 401 + retry una volta, traduzione errori IT
+- [x] M1.6.h `Includes/LicenseManager.php` (plugin-side) — activate/deactivate/isActive/getApiToken con refresh proattivo <1h, status(), traduzione errori backend in italiano
+- [x] M1.6.i `Admin/AdminPages.php` — menu top-level "Ainstein Editorial" + sottomenu License, handler admin-post.php
+- [x] M1.6.j `Admin/Pages/License.php` — UI 2 stati (form attivazione / card attivato), nonce + capability check, redirect post-action con notice
+- [x] M1.6.k `assets/css/admin.css` — stili minimal Ainstein-like (card, badge, tabella status)
+- [x] M1.6.l Test E2E browser **spostato a M1.8**: per ora coperti da 17/17 smoke test unit (`tests/plugin_license_smoke.php` con mock WP) — copertura happy path + 5 error path
 
-**DoD M1.6**: Plugin installa correttamente. License activation via UI funziona end-to-end. Errori user-friendly in italiano.
+**DoD M1.6** ✅ (parziale): Plugin compila, lint pulito, unit smoke 17/17. Test browser end-to-end (form submission via WP admin) confluisce in M1.8.
+
+**Note implementative**:
+- ApiClient ritorna sempre array `['ok', 'status', 'data', 'error']` invece di throw: error path testabile, UI può decidere come mostrare.
+- LicenseManager pulisce le wp_options anche se la deactivate remote fallisce (best-effort) — l'utente vuole disattivare HW, lo stato locale deve essere coerente.
+- `clearLocalState()` NON cancella `aied_license_key` e `aied_user_email`: ripopolano il form quando l'utente fa riattivazione successiva (UX).
+- Auto-refresh JWT: ApiClient retry una volta su 401, LicenseManager fa refresh proattivo se TTL <1h.
+- Capability `manage_options` su tutti i form. Nonce obbligatorio (`check_admin_referer`).
+- AIED_API_BASE definibile via constant in `wp-config.php` (per staging/dev). Default produzione `https://ainstein.it/api/editorial/v1`.
 
 ---
 

@@ -1,0 +1,104 @@
+/* =============================================================================
+ * Ainstein Editorial — Admin styles (M1 minimal)
+ * Replicheremo i pattern visivi della piattaforma Ainstein (Tailwind-ish)
+ * in modo nativo per non caricare un framework completo dentro WP admin.
+ * Le classi WP standard (button-primary, notice-success) sono lasciate al CSS WP.
+ * ========================================================================== */
+
+.aied-wrap {
+    max-width: 760px;
+}
+
+.aied-wrap h1 {
+    margin-bottom: 20px;
+}
+
+.aied-muted {
+    color: #6c7781;
+    font-size: 13px;
+}
+
+.aied-card {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-top: 16px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.aied-card--success {
+    border-color: #c6e7c6;
+    background: #f7fcf7;
+}
+
+.aied-card h2 {
+    margin-top: 0;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.aied-form p {
+    margin: 14px 0;
+}
+
+.aied-form label {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.aied-form input[type="text"],
+.aied-form input[type="email"] {
+    width: 100%;
+    max-width: 480px;
+}
+
+.aied-form .description {
+    display: block;
+    color: #6c7781;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.aied-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.aied-badge--success {
+    background: #22c55e;
+    color: #fff;
+}
+
+.aied-status-table {
+    width: 100%;
+    margin-top: 14px;
+    border-collapse: collapse;
+}
+
+.aied-status-table th,
+.aied-status-table td {
+    text-align: left;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+}
+
+.aied-status-table th {
+    width: 180px;
+    color: #6c7781;
+    font-weight: 500;
+}
+
+.aied-footer {
+    margin-top: 24px;
+    color: #8c8f94;
+    text-align: center;
+}

@@ -1,0 +1,24 @@
+{
+    "name": "ainstein/editorial",
+    "description": "Ainstein Editorial — WordPress plugin: SEO Pro autonomo per WordPress",
+    "type": "wordpress-plugin",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ainstein\\Editorial\\Includes\\": "src/Includes/",
+            "Ainstein\\Editorial\\Admin\\": "src/Admin/",
+            "Ainstein\\Editorial\\Utils\\": "src/Utils/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "scripts": {
+        "post-install-cmd": [],
+        "post-update-cmd": []
+    }
+}
