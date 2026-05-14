@@ -76,12 +76,13 @@ class License
         <div class="aied-card">
             <h2><?php esc_html_e('Attiva la tua licenza', 'ainstein-editorial'); ?></h2>
             <p class="aied-muted">
-                <?php esc_html_e(
-                    'Inserisci la license key ricevuta via email dopo l\'acquisto del plugin. ' .
-                    'Verra\' attivata su questo sito (' . '',
-                    'ainstein-editorial'
-                ); ?>
-                <code><?php echo esc_html(parse_url(home_url('/'), PHP_URL_HOST) ?: ''); ?></code>).
+                <?php
+                printf(
+                    /* translators: %s = dominio del sito (es. example.com) */
+                    esc_html__('Inserisci la license key ricevuta via email dopo l’acquisto del plugin. Verrà attivata su questo sito (%s).', 'ainstein-editorial'),
+                    '<code>' . esc_html(parse_url(home_url('/'), PHP_URL_HOST) ?: '') . '</code>'
+                );
+                ?>
             </p>
 
             <form method="post" action="<?php echo esc_url($actionUrl); ?>" class="aied-form">
@@ -118,7 +119,7 @@ class License
                         required
                     >
                     <span class="description">
-                        <?php esc_html_e('Email associata all\'account Ainstein Editorial (riceverai notifiche e report qui).', 'ainstein-editorial'); ?>
+                        <?php esc_html_e('Email associata all’account Ainstein Editorial (riceverai notifiche e report qui).', 'ainstein-editorial'); ?>
                     </span>
                 </p>
 
@@ -150,7 +151,7 @@ class License
         <div class="aied-card aied-card--success">
             <h2>
                 <span class="aied-badge aied-badge--success"><?php esc_html_e('Attivato', 'ainstein-editorial'); ?></span>
-                <?php esc_html_e('La tua licenza e\' attiva su questo sito', 'ainstein-editorial'); ?>
+                <?php esc_html_e('La tua licenza è attiva su questo sito', 'ainstein-editorial'); ?>
             </h2>
 
             <table class="aied-status-table">
@@ -178,7 +179,7 @@ class License
 
             <hr>
 
-            <form method="post" action="<?php echo esc_url($actionUrl); ?>" class="aied-form" onsubmit="return confirm('<?php echo esc_js(__('Vuoi davvero disattivare la licenza su questo sito? Liberera\' uno slot, e potrai riattivarla in seguito.', 'ainstein-editorial')); ?>');">
+            <form method="post" action="<?php echo esc_url($actionUrl); ?>" class="aied-form" onsubmit="return confirm('<?php echo esc_js(__('Vuoi davvero disattivare la licenza su questo sito? Libererà uno slot, e potrai riattivarla in seguito.', 'ainstein-editorial')); ?>');">
                 <?php wp_nonce_field('aied_deactivate_license'); ?>
                 <input type="hidden" name="action" value="aied_deactivate_license">
                 <button type="submit" class="button button-secondary">

@@ -11,6 +11,11 @@
  * License:           Proprietary
  * Text Domain:       ainstein-editorial
  * Domain Path:       /languages
+ * Update URI:        false
+ *
+ * Update URI: false — blocca check update da wordpress.org (proteggiamo contro
+ * collisioni nome con plugin omonimi pubblicati su WP.org). Verra' impostato
+ * sul nostro update server quando avremo il dominio prodotto e M7 (auto-update).
  *
  * @package Ainstein\Editorial
  */

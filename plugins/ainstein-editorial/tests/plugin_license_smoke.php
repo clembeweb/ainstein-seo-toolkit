@@ -83,6 +83,12 @@ function wp_remote_get(string $url, array $args = []) {
     $args['method'] = 'GET';
     return wp_remote_request($url, $args);
 }
+function apply_filters(string $hook, $value, ...$args) {
+    // Mock: ritorna il valore default senza filter callbacks
+    return $value;
+}
+function __(string $text, string $domain = ''): string { return $text; }
+function esc_html__(string $text, string $domain = ''): string { return $text; }
 
 class WP_Error {
     public function __construct(public string $code = '', public string $message = '') {}

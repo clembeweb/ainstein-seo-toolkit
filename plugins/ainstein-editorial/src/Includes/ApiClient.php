@@ -60,12 +60,18 @@ class ApiClient
         $timeout = (int) ($opts['timeout'] ?? self::DEFAULT_TIMEOUT);
 
         $headers = $this->buildHeaders($authMode);
+        // sslverify default true (sicuro). Override via filter `aied_api_sslverify` per
+        // ambienti staging con cert self-signed:
+        //   add_filter('aied_api_sslverify', '__return_false');
+        $sslVerify = function_exists('apply_filters')
+            ? (bool) apply_filters('aied_api_sslverify', true)
+            : true;
         $args = [
             'method'  => $method,
             'headers' => $headers,
             'timeout' => $timeout,
             'redirection' => 2,
-            'sslverify' => true,
+            'sslverify' => $sslVerify,
         ];
         if ($body !== null) {
             $args['body'] = wp_json_encode($body);

@@ -224,13 +224,13 @@ class LicenseManager
     {
         $lower = strtolower($err);
         if (str_contains($lower, 'license key not valid') || str_contains($lower, 'invalid')) {
-            return 'License key non valida. Controlla di averla copiata correttamente dall\'email di acquisto.';
+            return 'License key non valida. Controlla di averla copiata correttamente dall’email di acquisto.';
         }
         if (str_contains($lower, 'site limit')) {
             return 'Hai raggiunto il limite di siti per il tuo piano. Disattiva la license su un altro sito prima di attivarla qui, oppure passa a un piano superiore.';
         }
         if (str_contains($lower, 'license is not active') || str_contains($lower, 'expired')) {
-            return 'La license non e\' attiva (potrebbe essere scaduta o annullata). Verifica il tuo abbonamento nella pagina account.';
+            return 'La license non è attiva (potrebbe essere scaduta o annullata). Verifica il tuo abbonamento nella pagina account.';
         }
         if (str_contains($lower, 'missing required')) {
             return 'Campi obbligatori mancanti. Riprova compilando tutto.';

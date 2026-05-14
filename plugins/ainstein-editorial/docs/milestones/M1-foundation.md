@@ -330,7 +330,7 @@ Tutto questo arriva in M2-M6.
 **Dipendenze**: M1.4 (endpoint activate per test integration)  
 **Deliverable**: plugin WP installabile da zip, attivabile, license activation funzionante via UI
 
-- [x] M1.6.a `plugins/ainstein-editorial/src/plugin.php` — Plugin Header WP 0.1.0, costanti AIED_*, autoload fallback PSR-4
+- [x] M1.6.a `plugins/ainstein-editorial/ainstein-editorial.php` — Plugin Header WP 0.1.0, costanti AIED_*, autoload fallback PSR-4 (post-fix: file in root, non `src/`, per essere visibile a WordPress)
 - [x] M1.6.b `composer.json` con autoload PSR-4 `Ainstein\Editorial\Includes\|Admin\|Utils\`
 - [x] M1.6.c `composer install` eseguito, vendor/ generato (0 dipendenze require, solo autoload)
 - [x] M1.6.d `Includes/Plugin.php` — singleton, hook admin_menu/admin_enqueue/admin_init/admin_post_aied_*
