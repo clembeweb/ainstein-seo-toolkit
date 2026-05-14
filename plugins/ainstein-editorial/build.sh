@@ -26,6 +26,22 @@
 
 set -euo pipefail
 
+# Flags
+CLEAN_DIST=0
+for arg in "$@"; do
+    case "$arg" in
+        --clean) CLEAN_DIST=1 ;;
+        -h|--help)
+            cat <<EOF
+Uso: $0 [--clean]
+
+  --clean   Rimuove tutti i .zip esistenti in dist/ prima del build
+EOF
+            exit 0
+            ;;
+    esac
+done
+
 PLUGIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_SLUG="ainstein-editorial"
 MAIN_FILE="$PLUGIN_DIR/$PLUGIN_SLUG.php"
@@ -75,6 +91,10 @@ TARGET_DIR="$BUILD_DIR/$PLUGIN_SLUG"
 ZIP_PATH="$DIST_DIR/${PLUGIN_SLUG}-v${VERSION}.zip"
 
 mkdir -p "$DIST_DIR"
+if [[ "$CLEAN_DIST" == "1" ]]; then
+    echo "[clean] Rimozione zip esistenti in dist/"
+    find "$DIST_DIR" -maxdepth 1 -name "*.zip" -type f -delete 2>/dev/null || true
+fi
 rm -rf "$BUILD_DIR" "$ZIP_PATH"
 mkdir -p "$TARGET_DIR"
 
@@ -112,6 +132,20 @@ if [[ -d "$TARGET_DIR/vendor" ]]; then
     find "$TARGET_DIR/vendor" -type d \( -name 'tests' -o -name 'test' -o -name 'docs' -o -name '.github' \) -prune -exec rm -rf {} +
     find "$TARGET_DIR/vendor" -type f \( -name '.gitignore' -o -name '.gitattributes' -o -name 'phpunit.xml*' -o -name '*.md' \) -delete 2>/dev/null || true
 fi
+
+# --- BUILD_INFO.txt (debug / support) ---
+BUILD_TS=$(date -Iseconds 2>/dev/null || date -u +"%Y-%m-%dT%H:%M:%SZ")
+GIT_SHA=""
+if command -v git >/dev/null 2>&1; then
+    GIT_SHA=$(git -C "$PLUGIN_DIR" rev-parse --short HEAD 2>/dev/null || echo "unknown")
+fi
+cat > "$TARGET_DIR/BUILD_INFO.txt" <<EOF
+plugin:    $PLUGIN_SLUG
+version:   $VERSION
+built_at:  $BUILD_TS
+git_sha:   ${GIT_SHA:-unknown}
+host:      $(hostname 2>/dev/null || echo "unknown")
+EOF
 
 # --- Creazione zip ---
 echo "[4/4] Creating zip..."

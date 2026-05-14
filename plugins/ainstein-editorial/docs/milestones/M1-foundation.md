@@ -375,6 +375,19 @@ Tutto questo arriva in M2-M6.
 - Composer fallback automatico a `/c/laragon/bin/composer/composer.phar` se non in `PATH`.
 - Approccio whitelist invece di blacklist su esclusioni: più sicuro contro nuovi file dimenticati.
 
+**Fix post-review (2026-05-14)**:
+- **`bump-version.sh`** — singolo punto di update per i 4 luoghi dove vive la version (header `Version:`, define `AIED_VERSION`, readme `Stable tag:`, prepend changelog stub). Validazione semver. Previene drift tra header e define.
+- **`BUILD_INFO.txt`** dentro zip — timestamp ISO + git short hash + version + host. Debug/support futuro: quando un utente segnala "v0.1.0 non funziona" sappiamo esattamente quale build ha.
+- **Flag `--clean`** su `build.sh` — rimuove tutti i `dist/*.zip` esistenti prima del build (no accumulo).
+- **`git update-index --chmod=+x`** su `build.sh` e `bump-version.sh` — bit eseguibile persistito nel tree git (su Windows il filesystem non lo ha, ma git lo registra come `100755`). Evita "Permission denied" al primo clone fresh.
+
+**TODO non-critici (rimandati)**:
+- `composer.lock` da committare appena aggiungeremo la prima dipendenza lato plugin.
+- mtime reproducibility (M7 con signed builds).
+- SHA256 checksum del zip output (M7 con auto-update server).
+- `mktemp -d` invece di tempdir hardcoded (rilevante solo se buildiamo in parallelo).
+- PHP version preflight check (`>= 8.0`).
+
 ---
 
 ### M1.8 — End-to-end QA + smoke test
