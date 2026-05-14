@@ -31,8 +31,18 @@ class WebhookController extends BaseController
         $verifier = new WebhookVerifier();
 
         if (!$verifier->hasSecret()) {
-            Logger::channel('editorial')->error('LS webhook secret not configured (LEMONSQUEEZY_WEBHOOK_SECRET)');
-            return $this->jsonError('Webhook secret not configured', 500, ['code' => 'WEBHOOK_SECRET_MISSING']);
+            // Bug operativo: il secret non e' configurato sul server.
+            // Ritorniamo 200 OK (no LS retry loop esponenziale) ma logghiamo
+            // l'errore per monitoring + traccia in aied_api_logs.
+            Logger::channel('editorial')->critical('LS webhook secret not configured (LEMONSQUEEZY_WEBHOOK_SECRET)', [
+                'body_len' => strlen($rawBody),
+            ]);
+            $this->logSecretMissing($rawBody);
+            return $this->jsonOk([
+                'received' => true,
+                'status' => 'config_error',
+                'message' => 'Webhook secret not configured on server (logged for admin review)',
+            ], 200);
         }
 
         if (!$verifier->verify($rawBody, $signature)) {
@@ -63,6 +73,25 @@ class WebhookController extends BaseController
             'user_id' => $result['user_id'],
             'message' => $result['message'] ?? null,
         ], $httpStatus);
+    }
+
+    /**
+     * Logga in aied_api_logs il fatto che il webhook è arrivato ma il secret non era configurato.
+     * NB: non possiamo usare external_event_id dal payload perche' non abbiamo verificato la firma:
+     * un attaccante potrebbe inviare event_id collidenti per inquinare il log. Usiamo NULL.
+     */
+    private function logSecretMissing(string $rawBody): void
+    {
+        try {
+            $pdo = \Core\Database::getConnection();
+            $pdo->prepare(
+                "INSERT INTO aied_api_logs
+                    (provider, external_event_id, endpoint, request_payload, response_status, response_summary, created_at)
+                 VALUES ('lemonsqueezy_webhook', NULL, 'config_error', ?, 0, 'WEBHOOK_SECRET_MISSING', NOW())"
+            )->execute([mb_substr($rawBody, 0, 2000)]);
+        } catch (\Throwable $e) {
+            // best-effort: il log e' importante ma non blocchiamo la risposta
+        }
     }
 
     /**

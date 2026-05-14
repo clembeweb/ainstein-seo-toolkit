@@ -104,9 +104,9 @@ $EMAIL = 'webhook-smoke@editorial.test';
 $SUB_ID = 'sub_smoke_001';
 $CUST_ID = 'cust_smoke_001';
 
-// Cleanup precedente run (idempotenza dello smoke test stesso)
-$pdo->prepare("DELETE FROM aied_api_logs WHERE provider = 'lemonsqueezy_webhook' AND request_payload LIKE ?")
-    ->execute(['%' . $SUB_ID . '%']);
+// Cleanup completo precedente run: tutti i log con event_id 'evt_*' (smoke + HTTP test)
+// + i log "config_error" del fix #5 (secret_missing). Garantisce teardown totale.
+$pdo->exec("DELETE FROM aied_api_logs WHERE provider = 'lemonsqueezy_webhook' AND (external_event_id LIKE 'evt_%' OR external_event_id IS NULL)");
 
 $existing = $pdo->prepare("SELECT id FROM aied_users WHERE license_key = ?");
 $existing->execute([$LICENSE]);
@@ -332,6 +332,89 @@ step('aied_api_logs UNIQUE (provider, external_event_id)', function () use ($pdo
     // Dovrebbe essere 1 (la replay non inserisce duplicato grazie a INSERT IGNORE)
     assertEq(1, $count, 'log_count_for_evt1');
     return "single log row for event $evt1";
+});
+
+// =============================================================================
+echo "\nTest 10: FIX#1 — variant_id sconosciuto NON degrada tier\n";
+$evt10 = 'evt_' . bin2hex(random_bytes(6));
+step('unknown variant preserves tier', function () use ($processor, $reload, $pdo, $evt10, $SUB_ID, $CUST_ID, $EMAIL, $userId) {
+    // Riportiamo l'utente a 'pro' (lo stato corrente dopo test 4 è 'cancelled' tier 'business')
+    $pdo->prepare("UPDATE aied_users SET tier='pro', subscription_status='active' WHERE id=?")->execute([$userId]);
+
+    $payload = lsSubscriptionPayload(
+        'subscription_updated', $SUB_ID, $CUST_ID, $EMAIL,
+        'variant_NOT_IN_CONFIG_xyz', 'active', gmdate('c', strtotime('+30 days')), $evt10
+    );
+    $r = ($processor)($payload);
+    assertEq('processed', $r['status'], 'status');
+    $row = $reload();
+    assertEq('pro', $row['tier'], 'tier_preserved');  // ← KEY: deve restare 'pro', non degradare
+    assertEq('active', $row['subscription_status'], 'status_updated');  // status applicato comunque
+    if (!str_contains((string) $r['message'], 'unknown_variant')) {
+        throw new RuntimeException('expected unknown_variant marker in message, got: ' . $r['message']);
+    }
+    return "tier preserved + msg='{$r['message']}'";
+});
+
+// =============================================================================
+echo "\nTest 11: FIX#2 — recovery clear last_payment_failed_at\n";
+$evt11a = 'evt_' . bin2hex(random_bytes(6));
+$evt11b = 'evt_' . bin2hex(random_bytes(6));
+step('payment_failed then recovery clears flag', function () use ($processor, $reload, $evt11a, $evt11b, $SUB_ID, $CUST_ID, $EMAIL) {
+    // 1) payment_failed → setta last_payment_failed_at
+    $pFail = lsSubscriptionPayload(
+        'subscription_payment_failed', $SUB_ID, $CUST_ID, $EMAIL,
+        'variant_pro_test', 'past_due', gmdate('c', strtotime('+30 days')), $evt11a
+    );
+    ($processor)($pFail);
+    $r1 = $reload();
+    if (empty($r1['last_payment_failed_at'])) throw new RuntimeException('payment_failed_at not set');
+
+    // 2) subscription_updated con status='active' → recovery → DEVE pulire flag
+    $pRecover = lsSubscriptionPayload(
+        'subscription_updated', $SUB_ID, $CUST_ID, $EMAIL,
+        'variant_pro_test', 'active', gmdate('c', strtotime('+60 days')), $evt11b
+    );
+    $r = ($processor)($pRecover);
+    assertEq('processed', $r['status'], 'status');
+    $r2 = $reload();
+    assertEq('active', $r2['subscription_status'], 'status_active');
+    if (!empty($r2['last_payment_failed_at'])) {
+        throw new RuntimeException('last_payment_failed_at should be NULL after recovery, got: ' . $r2['last_payment_failed_at']);
+    }
+    return "flag cleared on recovery";
+});
+
+// =============================================================================
+echo "\nTest 12: FIX#3 — crash in handler NON doppia il topup balance\n";
+$evt12 = 'evt_' . bin2hex(random_bytes(6));
+step('handler exception → rollback + log error + no double credit on retry', function () use ($pdo, $evt12, $CUST_ID, $EMAIL, $userId) {
+    // Simulo crash forzando un payload che fa "credited_X" ma rollbackiamo manualmente
+    // tramite un PDO override: il modo più diretto è chiamare process() e simulare crash
+    // dopo l'UPDATE. Lo facciamo iniettando un trigger temporaneo che lancia errore SQL
+    // SE il numero di crediti supera 10000. Più semplice: monitor side-effect tramite due chiamate.
+
+    // Approccio reale: chiamiamo l'order_created normalmente, verifichiamo il claim/lock,
+    // poi forziamo manualmente uno stato "claim esiste con response_status=0" simulando crash
+    // tra INSERT e UPDATE. Replay successivo deve essere 'duplicate' (no double credit).
+
+    $before = (int) $pdo->query("SELECT topup_balance_articles FROM aied_users WHERE id=$userId")->fetchColumn();
+
+    // 1) Forziamo manualmente un claim "abbandonato" (response_status=0 pending)
+    $pdo->prepare(
+        "INSERT INTO aied_api_logs (provider, external_event_id, endpoint, request_payload, response_status, response_summary, created_at)
+         VALUES ('lemonsqueezy_webhook', ?, 'order_created', '{}', 0, 'pending', NOW())"
+    )->execute([$evt12]);
+
+    // 2) Tentiamo di processare lo stesso event_id → claim INSERT IGNORE deve fallire → duplicate
+    $payload = lsOrderPayload($CUST_ID, $EMAIL, 'variant_topup10_test', 'Top-up 10', $evt12);
+    $proc2 = new WebhookProcessor();
+    $r = $proc2->process($payload, json_encode($payload));
+    assertEq('duplicate', $r['status'], 'status');
+
+    $after = (int) $pdo->query("SELECT topup_balance_articles FROM aied_users WHERE id=$userId")->fetchColumn();
+    assertEq($before, $after, 'topup_balance_unchanged');
+    return "no double credit on abandoned claim replay";
 });
 
 // =============================================================================

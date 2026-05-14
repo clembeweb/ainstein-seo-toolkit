@@ -543,3 +543,68 @@ Riconoscimento fuzzy (variazioni in italiano accettate).
 - ✅ Continuità garantita tra sessioni
 - ✅ Documentazione sempre allineata al codice
 - ✅ Proprietario può lavorare in modalità "solo obiettivi, non micro-management"
+
+---
+
+## ADR-024: Schema additions M1.5 (topup_balance_articles, last_payment_failed_at, external_event_id)
+
+**Date**: 2026-05-14 · **Status**: Accepted · **Migration**: `database/migrations/2026_05_14_aied_webhook_columns.sql`
+
+**Context**: durante l'implementazione M1.5 (webhook handler LemonSqueezy) emersi 3 campi mancanti rispetto allo schema definito in `design.md` §4:
+1. `aied_users.topup_balance_articles` — **menzionato nel testo del design** (sezione 7 "Quota model" e sezione 11 "Webhook events": *"order_created (top-up) — credita azioni in `aied_users.topup_balance_articles`"*) ma **assente dalla CREATE TABLE** alle righe 165-180.
+2. `aied_users.last_payment_failed_at` — NON menzionato nel design. Mia decisione: serve per implementare warning email in M6 dopo un `subscription_payment_failed` LS.
+3. `aied_api_logs.external_event_id` + UNIQUE INDEX `(provider, external_event_id)` — NON menzionato nel design. Mia decisione: necessario per idempotency atomica dei webhook (LS retries possono duplicare lo stesso evento).
+
+**Decision**:
+- Aggiunte tutte e 3 le colonne via migration **separata** dalla M1.1 (non riapro la migration originale): `2026_05_14_aied_webhook_columns.sql` + rollback dedicato.
+- Per gap design (#1): considerato un fix del design, non un'aggiunta. Il design diceva di averlo, lo schema no — bug del design.
+- Per #2 e #3 (mie aggiunte): vincolate al solo modulo webhook M1.5/M6, non hanno effetti su altre milestone.
+
+**Alternatives considered**:
+- **Estendere la migration M1.1** invece che crearne una nuova: scartato perché M1.1 è già committata e applicata su DB locale; conviene mantenere ogni migration immutabile.
+- **Tabella `aied_webhook_events` dedicata** per idempotency invece di riusare `aied_api_logs.external_event_id`: scartato perché aggiunge una tabella per scopo strettamente correlato al log API esistente. UNIQUE INDEX su `(provider, external_event_id)` ottiene lo stesso risultato con meno entropia.
+- **NO `last_payment_failed_at`** (dedurlo da `subscription_status='past_due'`): scartato perché serve il *timestamp* per email warning (es. "ti ricordiamo che 3 giorni fa..." ).
+
+**Consequences**:
+- ✅ Migration pulita, rollback chiaro, nessuna corruzione di M1.1.
+- ✅ Idempotency webhook robusta (UNIQUE + INSERT IGNORE = claim atomico).
+- ⚠️ Nuovi cliente devono eseguire **due** migration in ordine (M1.1 poi M1.5). Da automatizzare in M1.7 (build script) o successivamente con un migration runner.
+- ⚠️ `design.md` §4 va aggiornato per riflettere il vero schema (ovvero: includere le 3 colonne nella CREATE TABLE di riferimento).
+
+---
+
+## ADR-025: Idempotency webhook claim-then-process + handling variant_id sconosciuto
+
+**Date**: 2026-05-14 · **Status**: Accepted · **Riferimento**: M1.5 fix critici post-review
+
+**Context**: prima review critica del codice M1.5 ha evidenziato 5 bug seri:
+1. `tierFromVariant()` con default `'starter'` → **degrade silenzioso** di utenti Business/Pro a Starter se variant_id arriva con id non in `config/editorial.php` (es. nuovo prodotto LS dimenticato in config).
+2. `last_payment_failed_at` non viene resettato al recovery → email warning M6 a utenti già recuperati.
+3. Idempotency originale: log row scritto **dopo** l'UPDATE → se crash tra UPDATE e log, replay LS riprocessa e **doppia il top-up balance**.
+4. Test runner inquinava DB con dati orfani da test HTTP.
+5. `WEBHOOK_SECRET_MISSING` → HTTP 500 → LS retry esponenziale infinito su bug operativo.
+
+**Decision**:
+1. **Tier preservation su variant sconosciuto**: `tierFromVariant()` ritorna `?string` (null = sconosciuto). Handler `subscription_created/updated` con variant null applicano comunque `status`, `renews_at`, `customer_id` ma **lasciano `tier` invariato**. Messaggio `"unknown_variant_id=...tier_preserved_check_config"` finisce in `aied_api_logs.response_summary` per audit. HTTP 200 (no retry LS necessario, è errore di config).
+2. **Recovery clear**: `subscription_updated` con LS status `active|on_trial` esegue `last_payment_failed_at = NULL`.
+3. **Claim-then-process pattern**:
+   - INSERT IGNORE log row in `aied_api_logs` con `response_status=0` PRIMA del processing (claim atomico via UNIQUE).
+   - Se `rowCount=0` → row già esistente → `duplicate` skip (200 OK).
+   - Altrimenti `BEGIN TRANSACTION` → handler → `COMMIT` → UPDATE log con `response_status=200`.
+   - Su exception: `ROLLBACK` (annulla side-effect su `aied_users`) → UPDATE log con `response_status=500`.
+   - **Limite noto**: se il process viene killed tra claim INSERT e UPDATE finale, il log resta `response_status=0`. LS retry vedrà `rowCount=0` e ritornerà duplicate. **Evento perso** — l'admin deve riprocessarlo manualmente o un retry-job in M6 lo recupera.
+4. **secret missing → 200 OK** + log critical su `aied_api_logs` (provider=`lemonsqueezy_webhook`, endpoint=`config_error`, summary=`WEBHOOK_SECRET_MISSING`). LS smette di retry, l'admin trova traccia in tabella + Logger.
+
+**Alternatives considered**:
+- **Throw + 500 su variant sconosciuto** invece di preserve+200: scartato perché farebbe retry esponenziale su tutti i webhook fino al fix config → 503 per ore. Preserve è "fail soft, alert loud" (response_summary visibile).
+- **Tabella `aied_webhook_events` con status enum (pending|processed|failed)** + retry-job: design migliore ma fuori scope M1.5. Va aggiunto in M6 quando si fanno gli email warning.
+- **Secret missing → 503 Service Unavailable** (transient): LS comunque retry, anche se più rado. Skipped: vogliamo zero retry su bug di config.
+
+**Consequences**:
+- ✅ Zero degrade silenzioso utenti.
+- ✅ Zero double credit su top-up dopo crash.
+- ✅ Zero retry loop LS su misconfigurazione server.
+- ✅ Tutti i side-effect su `aied_users` sono transazionali.
+- ⚠️ Eventi orfani (crash post-claim, pre-finalize) sono persi finché non c'è un retry-job (TODO M6).
+- ⚠️ "Tier preservato" può essere invisibile all'utente: serve un alert admin (TODO M6: cron che cerca log con `response_summary LIKE 'unknown_variant%'`).
+
