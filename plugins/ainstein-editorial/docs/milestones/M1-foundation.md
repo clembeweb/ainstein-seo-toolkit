@@ -304,18 +304,24 @@ Tutto questo arriva in M2-M6.
 **Dipendenze**: M1.4 (`LicenseManager`)  
 **Deliverable**: endpoint `/webhooks/lemonsqueezy` che gestisce 5 eventi critici
 
-- [ ] M1.5.a Implementare signature verification con LS webhook secret (HMAC SHA256)
-- [ ] M1.5.b Implementare `Controllers/WebhookController::lemonsqueezy(Request)`:
+- [x] M1.5.a Implementare signature verification con LS webhook secret (HMAC SHA256) — `Editorial\Services\WebhookVerifier` con `hash_equals` timing-safe
+- [x] M1.5.b Implementare `Controllers/WebhookController::lemonsqueezy(Request)`:
   - `subscription_created`: log event (account creation reale via /activate plugin, qui solo trace)
   - `subscription_updated`: update `aied_users.tier` + `subscription_status` + `subscription_renews_at`
   - `subscription_cancelled`: set `aied_users.subscription_status='cancelled'` (ma mantieni active fino a end_period)
-  - `subscription_payment_failed`: log + flag per email warning (email in M6)
-  - `order_created`: se è top-up pack (dal product variant id mapping), credita `aied_users.topup_balance_articles` (in M3 useremo questo)
+  - `subscription_payment_failed`: set `subscription_status='past_due'` + `last_payment_failed_at` (warning email in M6)
+  - `order_created`: se è top-up pack (variant_id mapping in `config/editorial.php`), credita `aied_users.topup_balance_articles`
   - `license_key_created`: trace log per debugging
-- [ ] M1.5.c Implementare retry/idempotency: log `aied_api_logs` ogni webhook ricevuto con event_id LS per evitare double-processing
-- [ ] M1.5.d Test con LS test webhook builder (panel LS): inviare ognuno dei 5 eventi → verificare DB updated correttamente
+- [x] M1.5.c Implementare retry/idempotency: log `aied_api_logs` ogni webhook ricevuto con `external_event_id` LS + UNIQUE INDEX `(provider, external_event_id)` → INSERT IGNORE garantisce no double-processing
+- [x] M1.5.d Test runner `api/editorial/tests/webhook_smoke.php` → 9/9 in-process + 5/5 HTTP via curl (firma valida, replay, bad sig, missing sig, malformed JSON)
 
-**DoD M1.5**: 5 eventi gestiti, signature validata, idempotency garantita, log completo in `aied_api_logs`.
+**DoD M1.5** ✅: 6 eventi gestiti, signature validata, idempotency garantita, log completo in `aied_api_logs`.
+
+**Note implementative**:
+- Migration aggiuntiva `2026_05_14_aied_webhook_columns.sql` — aggiunge `aied_users.topup_balance_articles`, `aied_users.last_payment_failed_at`, `aied_api_logs.external_event_id` + UNIQUE INDEX.
+- Mapping variant_id → tier/topup centralizzato in `config/editorial.php` (overridabile via env `LEMONSQUEEZY_VARIANT_*_ID` quando il cliente configurerà l'account LS in M1.2).
+- Tutti i servizi (`WebhookVerifier`, `WebhookProcessor`) usano lazy-load di `config/environment.php` (pattern come `JwtService`) per evitare bug "secret missing" quando l'env non è ancora stato caricato dalla request.
+- Provider log in `aied_api_logs` = `lemonsqueezy_webhook` (separato da futuro `lemonsqueezy_api` per chiamate outbound).
 
 ---
 
