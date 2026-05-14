@@ -360,14 +360,20 @@ Tutto questo arriva in M2-M6.
 **Dipendenze**: M1.6 (codice plugin completo)  
 **Deliverable**: `build.sh` produce zip installabile
 
-- [ ] M1.7.a Creare `plugins/ainstein-editorial/build.sh` (bash script)
-- [ ] M1.7.b Logic: leggi version da plugin.php header, composer install no-dev, copia file in tempdir, zip
-- [ ] M1.7.c Esclusioni: tests/, docs/, node_modules/, .env*, build.sh, *.log
-- [ ] M1.7.d Output: `dist/ainstein-editorial-v0.1.0.zip` (~50-100 KB in M1, sarà più grande in M3+)
-- [ ] M1.7.e Test: scarica zip, installa su WP fresh diverso da quello di sviluppo, attiva, License page, attivazione → tutto funziona
-- [ ] M1.7.f Documentare uso build.sh in `plugins/ainstein-editorial/README.md`
+- [x] M1.7.a `plugins/ainstein-editorial/build.sh` — bash POSIX-friendly cross-platform (Linux/Mac/Win Git Bash)
+- [x] M1.7.b Logic: estrae version da header con grep+sed, whitelist directory copy, `composer install --no-dev --optimize-autoloader`, zip
+- [x] M1.7.c Esclusioni implementate via whitelist (più sicuro): solo `ainstein-editorial.php`, `composer.json`, `readme.txt`, `src/`, `assets/`, `languages/`. Pulizia ulteriore in `vendor/` (tests, docs, .github, *.md).
+- [x] M1.7.d Output: `dist/ainstein-editorial-v0.1.0.zip` — **32 KB** (sotto le stime 50-100 KB perché 0 dipendenze require)
+- [x] M1.7.f Documentato in `README.md` plugin (sezione "Build & distribuzione (M1.7)") con prerequisiti, override env, struttura zip attesa
+- [ ] M1.7.e Test su WP fresh **differito a M1.8** (smoke E2E già pianificato → evita doppio setup WP locale)
 
-**DoD M1.7**: Zip prodotto installabile su WP pulito. Plugin attiva + license activation funziona.
+**DoD M1.7** ✅ (parziale): Build produce zip, integrità verificata (7/7 classi caricate via autoload PSR-4 + lint PHP pulito su file estratti). Test browser activation E2E in M1.8.
+
+**Note implementative**:
+- `composer.lock` resta nel pacchetto: utile per debug / lock di versione, non rompe nulla.
+- Su Windows Git Bash: zip CLI mancante → fallback automatico a PowerShell `Compress-Archive` via `cygpath`.
+- Composer fallback automatico a `/c/laragon/bin/composer/composer.phar` se non in `PATH`.
+- Approccio whitelist invece di blacklist su esclusioni: più sicuro contro nuovi file dimenticati.
 
 ---
 

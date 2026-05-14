@@ -74,3 +74,56 @@ Leggi nell'ordine:
 Il plugin vive come **sub-progetto monorepo** dentro `seo-toolkit/` (codebase Ainstein). Backend condiviso con Ainstein (tabelle namespacate `aied_*`, API endpoint dedicati `/api/editorial/*`). Plugin distribuibile via `build.sh` che zippa solo `plugins/ainstein-editorial/` con dipendenze.
 
 Quando il prodotto sarà maturo e/o si vorrà venderlo come asset separato, l'estrazione in repo standalone è una operazione di mezza giornata (cartella già self-contained).
+
+---
+
+## Build & distribuzione (M1.7)
+
+Lo script `build.sh` produce uno zip installabile su qualunque WordPress 6.0+ (`Plugins → Aggiungi nuovo → Carica plugin`).
+
+```bash
+cd plugins/ainstein-editorial
+./build.sh
+```
+
+**Output**: `dist/ainstein-editorial-v<VERSION>.zip` (~32 KB in v0.1.0).
+
+**Cosa fa lo script**:
+1. Estrae `VERSION` dall'header di `ainstein-editorial.php`.
+2. Copia in tempdir solo i file di runtime (`ainstein-editorial.php`, `src/`, `assets/`, `languages/`, `composer.json`, `readme.txt`).
+3. Esegue `composer install --no-dev --optimize-autoloader` nel tempdir.
+4. Pulisce `vendor/` da `tests/`, `docs/`, `.github/`, `phpunit.xml`, `*.md`.
+5. Zippa il tutto in `dist/`.
+
+**Esclusioni automatiche dal pacchetto**:
+- `tests/`, `docs/`, `node_modules/`
+- `.env*`, `dist/`, `.git*`
+- `build.sh`, `*.log`
+- `CLAUDE.md`, `README.md` (resta solo `readme.txt` formato WordPress)
+
+**Requisiti**:
+- PHP ≥ 8.0 nel `PATH` (o env var `PHP=/path/to/php`).
+- Composer (`composer` nel `PATH` o `composer.phar` accessibile; su Windows lo script usa `/c/laragon/bin/composer/composer.phar` come fallback automatico).
+- `zip` CLI (Linux/Mac) oppure PowerShell `Compress-Archive` (Windows Git Bash) — uno dei due deve essere disponibile.
+
+**Override env**:
+```bash
+PHP=/usr/bin/php8.1 COMPOSER=/usr/local/bin/composer ./build.sh
+```
+
+**Struttura del zip prodotto**:
+```
+ainstein-editorial/
+├── ainstein-editorial.php   ← file principale (Plugin Header + bootstrap)
+├── readme.txt               ← metadata WordPress
+├── composer.json
+├── assets/css/admin.css
+├── languages/
+├── src/
+│   ├── Admin/AdminPages.php
+│   ├── Admin/Pages/License.php
+│   └── Includes/{Plugin,Activator,Deactivator,ApiClient,LicenseManager}.php
+└── vendor/                  ← composer autoload (no dev dependencies)
+```
+
+> Test browser end-to-end (install + activation su WP fresh) è coperto da **M1.8**.
