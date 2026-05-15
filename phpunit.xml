@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="api/editorial/tests/bootstrap.php"
+         colors="true"
+         cacheDirectory=".phpunit.cache"
+         executionOrder="depends,defects"
+         beStrictAboutOutputDuringTests="true"
+         failOnRisky="true"
+         failOnWarning="true">
+    <testsuites>
+        <testsuite name="editorial-unit">
+            <directory>api/editorial/tests/Unit</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>api/editorial/Services</directory>
+            <directory>api/editorial/Middleware</directory>
+            <directory>api/editorial/Lib</directory>
+        </include>
+    </source>
+    <php>
+        <env name="EDITORIAL_JWT_SECRET" value="test-secret-at-least-sixteen-chars-long-xxxx"/>
+        <env name="LEMONSQUEEZY_WEBHOOK_SECRET" value="test-webhook-secret-for-phpunit-only"/>
+    </php>
+</phpunit>

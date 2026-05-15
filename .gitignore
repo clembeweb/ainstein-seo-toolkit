@@ -84,3 +84,7 @@ qa-reviews/screenshots/
 
 # QA test screenshots
 qa-test-*.png
+
+# PHPUnit cache
+/.phpunit.cache/
+.phpunit.result.cache

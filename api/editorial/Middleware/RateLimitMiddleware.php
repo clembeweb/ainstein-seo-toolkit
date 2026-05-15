@@ -9,15 +9,24 @@ namespace Editorial\Middleware;
  * (o per IP se la license_key non e ancora disponibile).
  *
  * Storage: storage/editorial_ratelimit/{hash}.json
- * Contenuto: { "window_start": <unix_ts>, "count": N }
+ * Contenuto: { "window_start": <unix_ts>, "count": N, "fs_errors": N }
  *
  * Risposta 429 quando il limite e superato, con header Retry-After
  * indicante i secondi restanti nella finestra.
+ *
+ * Fail-closed behavior (M1.9.5): se le scritture filesystem falliscono
+ * piu' di FS_ERROR_THRESHOLD volte di seguito sullo stesso bucket, ritorna 503
+ * invece di passare la richiesta. Questo previene saturazione AI cost sotto
+ * abuso di un attaccante che causa errori FS deliberati.
+ *
+ * Errori FS globali (cartella non writable) → 503 dopo il primo errore
+ * (no bucket file → no contatore consultabile → fail-closed defensive).
  */
 class RateLimitMiddleware
 {
     private const LIMIT = 60;
     private const WINDOW_SECONDS = 60;
+    private const FS_ERROR_THRESHOLD = 5;
 
     /**
      * @param string|null $key Identificatore per il bucket (es. license_key).
@@ -27,8 +36,10 @@ class RateLimitMiddleware
     {
         $bucket = $key !== null && $key !== '' ? $key : self::clientIp();
         $cacheDir = self::cacheDir();
-        if (!is_dir($cacheDir)) {
-            @mkdir($cacheDir, 0775, true);
+        if (!is_dir($cacheDir) && !@mkdir($cacheDir, 0775, true) && !is_dir($cacheDir)) {
+            // Cartella non writable: defensive 503. Niente file = niente contatore = niente protezione.
+            error_log("[editorial.ratelimit] cache dir not writable: {$cacheDir}");
+            self::respondUnavailable('rate_limiter_storage_unavailable');
         }
 
         // Cleanup opportunistico (1% delle richieste): rimuove file piu' vecchi
@@ -39,22 +50,18 @@ class RateLimitMiddleware
 
         $file = $cacheDir . '/' . hash('sha256', $bucket) . '.json';
         $now  = time();
-        $data = ['window_start' => $now, 'count' => 0];
+        $data = ['window_start' => $now, 'count' => 0, 'fs_errors' => 0];
 
         // Lock + read-modify-write
         $fp = @fopen($file, 'c+');
         if ($fp === false) {
-            // Se il file non e accessibile, fail-open (meglio servire la richiesta che bloccare).
-            error_log("[editorial.ratelimit] fopen failed for {$file}");
-            self::setHeaders(self::LIMIT, self::LIMIT, self::WINDOW_SECONDS);
-            return;
+            self::handleFsError($file, $bucket, 'fopen_failed');
+            return; // unreachable: handleFsError fa exit dopo soglia, altrimenti throws
         }
 
         if (!flock($fp, LOCK_EX)) {
-            // Lock fallito → fail-open ma logghiamo
-            error_log("[editorial.ratelimit] flock failed for bucket " . substr(hash('sha256', $bucket), 0, 8));
             fclose($fp);
-            self::setHeaders(self::LIMIT, self::LIMIT, self::WINDOW_SECONDS);
+            self::handleFsError($file, $bucket, 'flock_failed');
             return;
         }
 
@@ -62,16 +69,19 @@ class RateLimitMiddleware
         if ($contents) {
             $decoded = json_decode($contents, true);
             if (is_array($decoded) && isset($decoded['window_start'], $decoded['count'])) {
-                $data = $decoded;
+                $data = array_merge(['fs_errors' => 0], $decoded);
             }
         }
 
-        // Reset finestra se scaduta
+        // Reset finestra se scaduta (preserva fs_errors counter — survive window reset)
         if (($now - (int) $data['window_start']) >= self::WINDOW_SECONDS) {
-            $data = ['window_start' => $now, 'count' => 0];
+            $data = ['window_start' => $now, 'count' => 0, 'fs_errors' => (int) ($data['fs_errors'] ?? 0)];
         }
 
         $data['count']++;
+        // Success path → reset fs_errors (decay esponenziale: ogni successo halva il counter)
+        $data['fs_errors'] = (int) floor((int) ($data['fs_errors'] ?? 0) / 2);
+
         $remaining = max(0, self::LIMIT - (int) $data['count']);
         $resetIn   = self::WINDOW_SECONDS - ($now - (int) $data['window_start']);
 
@@ -87,6 +97,51 @@ class RateLimitMiddleware
         if ((int) $data['count'] > self::LIMIT) {
             self::respondTooMany($resetIn);
         }
+    }
+
+    /**
+     * Handle filesystem error con counter persistito per bucket.
+     * Sotto soglia: fail-open (best-effort, situazione transiente).
+     * Sopra soglia: 503 (fail-closed, possibile attacco DoS che provoca errori FS).
+     */
+    private static function handleFsError(string $bucketFile, string $bucket, string $reason): void
+    {
+        $bucketHash = substr(hash('sha256', $bucket), 0, 8);
+        error_log("[editorial.ratelimit] {$reason} for bucket {$bucketHash}");
+
+        // Salva counter errori in file separato (best-effort, indipendente dal file principale)
+        $errorFile = $bucketFile . '.errors';
+        $errorCount = 0;
+        $existing = @file_get_contents($errorFile);
+        if ($existing !== false && is_numeric($existing)) {
+            $errorCount = (int) $existing;
+        }
+        $errorCount++;
+        @file_put_contents($errorFile, (string) $errorCount, LOCK_EX);
+
+        if ($errorCount >= self::FS_ERROR_THRESHOLD) {
+            error_log("[editorial.ratelimit] FAIL-CLOSED bucket {$bucketHash} errors={$errorCount} (>= " . self::FS_ERROR_THRESHOLD . ")");
+            self::respondUnavailable("rate_limiter_degraded_bucket");
+        }
+
+        // Sotto soglia: fail-open, headers conservativi
+        self::setHeaders(self::LIMIT, self::LIMIT, self::WINDOW_SECONDS);
+    }
+
+    private static function respondUnavailable(string $reason): void
+    {
+        if (function_exists('ob_get_level') && ob_get_level() > 0) {
+            @ob_end_clean();
+        }
+        http_response_code(503);
+        header('Content-Type: application/json; charset=utf-8');
+        header('Retry-After: 60');
+        echo json_encode([
+            'error' => 'Service temporarily unavailable',
+            'reason' => $reason,
+            'retry_after' => 60,
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
     /**
