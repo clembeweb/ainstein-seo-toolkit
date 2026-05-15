@@ -608,3 +608,141 @@ Riconoscimento fuzzy (variazioni in italiano accettate).
 - ⚠️ Eventi orfani (crash post-claim, pre-finalize) sono persi finché non c'è un retry-job (TODO M6).
 - ⚠️ "Tier preservato" può essere invisibile all'utente: serve un alert admin (TODO M6: cron che cerca log con `response_summary LIKE 'unknown_variant%'`).
 
+---
+
+## ADR-026: Internal linking — pivot da "auto-modify" a "suggest + approve"
+
+**Date**: 2026-05-15 · **Status**: Superseded (vedi pivot sotto, 2026-05-15 pomeriggio) · **Riferimento**: M1.9 hardening, applicato in M5
+
+### Pivot (2026-05-15, post competitor matrix)
+
+Risultato competitor analysis: **nessuno** dei 13 competitor analizzati implementa auto-modifica di articoli vecchi senza approval. KoalaWriter, GetGenie, AI Engine, NeuronWriter — tutti fanno solo forward links (nuovo → vecchio) o suggerimenti manuali. Il segnale di mercato è: "nessuno lo fa = nessuno lo vuole davvero", più che "killer feature inesplorata".
+
+**Decisione aggiornata**:
+1. **M3 (Article generation)**: include forward links automatici (nuovo articolo → articoli vecchi rilevanti). Low risk, pattern standard di mercato. Default ON.
+2. **M5 (Internal linking polish)**: aggiunge backward links MA con UI **suggest + approve**:
+   - AI analizza articoli vecchi, propone N link da inserire (max 5 per articolo)
+   - UI plugin "Suggerimenti link interni" mostra ogni suggerimento con context snippet (frase prima/dopo)
+   - Utente approva uno per uno, può modificare ancor text, può rifiutare
+   - Solo dopo approve esplicito → modifica articolo vecchio
+   - Audit log + undo + `data-aied-link` + `_aied_no_modify` come da piano originale
+3. **Marketing**: il differenziatore comunicato è "AI suggerisce internal linking strategici, tu approvi" — value prop più forte di "AI modifica i tuoi articoli" (che spaventa target non-tech).
+
+**Consequences vs versione superseded**:
+- ✅ Zero rischio "AI ha rotto il mio sito" → eliminato il primo motivo di churn/reputation hit
+- ✅ Differenziatore comunicato meglio (suggest+approve è feature attiva, non opt-in nascosto)
+- ✅ Onboarding più semplice (no disclaimer pesante in v1.0)
+- ✅ Audit log + undo restano in piano ma sono safety net, non meccanismo primario di recovery
+- ⚠️ Minore "automation feel" rispetto auto-modify: ma target non-tech preferisce controllo a magia rischiosa
+- ⚠️ Aggiunge UI in M5 (modal approve + lista suggerimenti) — incrementa effort M5 di ~1 giorno
+
+### Storica decisione (superseded, mantenuta per audit trail)
+
+**Context**: Il differenziatore #3 dichiarato ("internal linking bidirezionale" — quando AI scrive articolo nuovo, modifica anche articoli vecchi per inserire link verso il nuovo) è anche il pezzo di codice più rischioso del prodotto. Modificare articoli WP esistenti è un'operazione *distruttiva*:
+
+**Context**: Il differenziatore #3 dichiarato ("internal linking bidirezionale" — quando AI scrive articolo nuovo, modifica anche articoli vecchi per inserire link verso il nuovo) è anche il pezzo di codice più rischioso del prodotto. Modificare articoli WP esistenti è un'operazione *distruttiva*:
+- Algoritmo buggato → inserisce link tossici in siti reali (impatto SEO immediato, recovery via undo richiede che l'utente se ne accorga in tempo)
+- Snapshot per undo è stale se l'utente edita manualmente l'articolo DOPO il nostro insert → conflict resolution non triviale
+- WordPress ha hook `the_content` filter cache, plugin di caching (W3TC, WP Rocket), CDN: il "link inserito" può non apparire o apparire stale
+- Causa legale potenziale: cliente con sito DR40+ ha bug AI → traffic crash → cita per danno commerciale
+
+**Decision**: 
+1. Internal linking è feature-flagged via WP option `aied_internal_links_enabled`, default **OFF** al rilascio v1.0.
+2. UI plugin in v1.0 mostra "Internal linking bidirezionale" come **beta opt-in** con disclaimer esplicito ("modifica articoli esistenti, leggi i rischi") + checkbox conferma utente.
+3. Default ON solo dopo che **almeno 100 articoli reali** sono stati linkati senza issue (audit via `aied_internal_links` + zero ticket support su link errati).
+4. Internal links sempre con `data-aied-link="<inserted_at_iso>"` per identificare + undo bulk facile.
+5. WP postmeta `_aied_no_modify` (già pianificato) accetta opt-out per singolo articolo.
+6. Edge case "utente ha editato dopo nostro insert": snapshot scaduto → undo non rimuove il nostro link, mostra warning admin ("L'articolo è stato modificato dopo l'inserimento del link. Rimuovi manualmente."). NON tentiamo merge automatico.
+
+**Alternatives considered**:
+- **Default ON sin da v1.0** (con disclaimer): più feature value percepita ma rischio reputazionale altissimo al primo bug viral su Twitter/Reddit. Scartato.
+- **Rimuovere internal linking del tutto da v1.0** (lasciarlo a v1.1): perdiamo il differenziatore principale vs KoalaWriter. Scartato.
+- **Solo forward links (nuovo → vecchio), no backward**: meno rischio ma anche meno differenziazione, è quello che fa già metà del mercato.
+
+**Consequences**:
+- ✅ Rischio reputazionale contenuto al lancio (zero "il plugin mi ha rotto il sito" possibile come default behavior)
+- ✅ Beta tester possono attivare e validare per noi prima della massa
+- ✅ Audit log + undo + flag = recovery path completo
+- ⚠️ Conversion marketing inferiore al lancio (differenziatore "nascosto" dietro opt-in)
+- ⚠️ Decisione "default ON dopo 100 articoli puliti" va monitorata attivamente, serve dashboard interna (TODO M6)
+
+---
+
+## ADR-027: Backend Editorial in monorepo Ainstein — accoppiamento accettato per MVP
+
+**Date**: 2026-05-15 · **Status**: Accepted · **Riferimento**: M1.9 risk register
+
+**Context**: il backend del plugin Editorial vive in `seo-toolkit/api/editorial/` e usa direttamente le classi `Core\Database`, `Core\Logger`, `Core\Router` di Ainstein. Patterns condivisi tipo `AiService`, `ScraperService`, `SerpApiService` sono riusati senza version-pinning. Tre rischi documentati:
+1. Modifica a `Core\*` in Ainstein può rompere Editorial senza che il team se ne accorga
+2. Deploy Ainstein con bug → Editorial backend down → clienti paying impattati
+3. Test plugin Editorial in CI dovrebbe testare l'intera codebase Ainstein → tempi lunghi
+
+**Decision**: per MVP (fino a ~100 paying users), accettiamo l'accoppiamento. Mitigations parziali:
+1. Tutti i deploy Ainstein che toccano `Core\*` o servizi condivisi (`AiService`, `ScraperService`, ecc.) richiedono smoke test manuale Editorial post-deploy (~5 min).
+2. `composer.lock` committato (M1.9 task) per Editorial-specific deps (Firebase\JWT) — almeno quelle non sono volatili.
+3. Logging di tutti gli error 5xx Editorial in tabella separata `aied_api_logs` con alert se rate > 1% (TODO M6).
+4. **Decisione di re-evaluation**: a 100 paying users o se Editorial revenue > €5K MRR, fare hard-isolation in repo separato (1-2 settimane di lavoro). Threshold scritta esplicitamente per non dimenticare.
+
+**Alternatives considered**:
+- **Soft-isolation immediata** (4-6 ore: subdir specifico con bootstrap proprio + lista classi Core whitelistate version-pinned): più sicuro ma overhead in M1.9 mentre il prodotto deve ancora dimostrare di vendere.
+- **Repo separato immediato** (1 settimana): pulito ma sospende M2 per una settimana → impatto roadmap inaccettabile pre-validation.
+- **Nessuna mitigation** (status quo M1.7 e precedenti): rischio non documentato → futuro deploy Ainstein rompe Editorial senza nessuno saperlo → cliente paying down.
+
+**Consequences**:
+- ✅ Velocità M2-M6 mantenuta
+- ✅ Riuso 100% servizi Ainstein (zero duplicazione)
+- ✅ Smoke test post-deploy mitiga il rischio principale
+- ⚠️ Accoppiamento aumenta blast-radius dei bug Ainstein
+- ⚠️ Threshold di re-evaluation (100 paying users, €5K MRR) va verificata mensilmente — TODO M6 (cron dashboard interna)
+- ⚠️ Se Editorial cresce molto più veloce di Ainstein, l'isolamento diventa urgente prima dei 100 utenti
+
+---
+
+## ADR-028: Pricing data-driven post-competitor matrix
+
+**Date**: 2026-05-15 · **Status**: Accepted · **Riferimento**: M1.9.1 competitor matrix
+
+**Context**: Pricing iniziale era placeholder ("Starter €19/mo?"). Competitor matrix (13 competitor analizzati) ha fornito dati di mercato per fissarlo data-driven.
+
+Mercato 2026 rilevante per target italiano blogger/PMI non-tech:
+- **KoalaWriter**: $9-49/mo (entry low, ma BYOK su tier alti)
+- **GetGenie** (WP-native, supporta italiano): $0-99/mo
+- **Cuppa**: $25-150/mo + BYOK
+- **NeuronWriter** (LTD $109-327): $23-117/mo
+- **AISEO**: $19-34/mo (26 lingue)
+- **ZimmWriter** (lifetime concorrenza): $497 lifetime BYOK
+- **Surfer SEO** (declino, prezzo aumentato 2-4x): $99-219/mo
+- **Jasper**: $39-69/mo (positioning premium)
+
+**Decision**: 4 tier subscription + top-up packs. Pricing italiano in EUR (no conversion):
+
+| Tier | Prezzo/mese | Articoli inclusi | Siti | Differenziatore |
+|------|-------------|-------------------|------|-----------------|
+| **Starter** | **€19** | 10 articoli + meta + image | 1 | Entry blogger singolo |
+| **Pro** | **€49** | 50 articoli + meta + image | 3 | Sweet spot PMI singola |
+| **Business** | **€99** | 150 articoli + meta + image | 10 | Multi-sito + GSC integration (M+) |
+| **Agency** | **€149** | 500 articoli + meta + image | 50 | Agency con clienti multipli |
+
+Top-up packs (acquistabili in qualsiasi momento, no scadenza):
+- **+10 articoli**: €15
+- **+50 articoli**: €60 (sconto 20%)
+- **+100 articoli**: €100 (sconto 33%)
+
+**Alternatives considered**:
+- **Pricing aggressivo entry €9**: rischio race-to-bottom italiano + margine Starter < soglia AI cost coverage. Scartato.
+- **Pricing premium entry €29**: positioning "qualità italiana" interessante ma friction conversione su Starter alta. Possibile per fascia Pro+ in M6 dopo dati validation.
+- **Lifetime opzione anti-ZimmWriter**: tabled per ora. Da considerare con offerta limitata "Founder Lifetime" per primi 50 customer ai limiti del costo CAC. Decisione separata in ADR futuro se conversione bassa.
+
+**Pricing differenziatori sul mercato italiano**:
+1. **Fatturazione IVA + P.IVA italiana** (vs SaaS US senza fattura italiana → friction per PMI)
+2. **Pricing in EUR** (no fluttuazioni USD)
+3. **No BYOK** (target non-tech non sa cosa siano API keys)
+4. **Top-up flessibile** (heavy user mese punta non deve fare upgrade tier)
+
+**Consequences**:
+- ✅ Allineato a competitor diretti (KoalaWriter, GetGenie) → pricing non è friction di conversione
+- ✅ Margini sostenibili su Starter (€19 - €0.15×10 articoli AI cost = €17.5 lordo, viable)
+- ✅ Multi-sito tier (Pro 3, Business 10, Agency 50) cattura segmento agency naturalmente
+- ⚠️ Pricing va RIVALIDATO dopo 30 giorni post-launch con dati reali conversion + churn
+- ⚠️ "Articoli inclusi" potrebbe essere troppo o troppo poco — heavy user può saturare Pro in 1 settimana, churn senza top-up. Monitoring fondamentale
+
