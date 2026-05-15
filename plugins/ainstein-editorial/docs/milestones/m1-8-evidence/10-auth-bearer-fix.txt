@@ -1,0 +1,56 @@
+# M1.8 Issue #2 Fix: Authorization Bearer header support
+
+Date: 2026-05-15
+Fix: LicenseAuthMiddleware ora accetta sia 'Authorization: Bearer <jwt>' (standard JWT, preferito) sia 'X-Api-Token: <jwt>' (legacy).
+Bonus fix: public/.htaccess aggiornato per propagare HTTP_AUTHORIZATION a PHP (Apache+fcgid lo strippa di default).
+
+## File modificati
+- api/editorial/Middleware/LicenseAuthMiddleware.php (riga 55-64): logica dual-header
+- public/.htaccess (righe 4-6): rewrite rule per HTTP_AUTHORIZATION
+
+## Validazione
+
+### Test 1: Authorization: Bearer <jwt>  (nuovo standard)
+
+Request:
+  POST /api/editorial/v1/deactivate
+  X-License-Key: TEST-STARTER-XXXX-1111
+  X-Site-Domain: localhost
+  Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ...
+  Content-Type: application/json
+  Body: {"site_id":12}
+
+Response:
+  HTTP/1.1 200 OK
+  {"success":true,"sites_freed":1}
+
+Esito: PASS — il middleware estrae correttamente il JWT dal prefisso "Bearer " e procede con la validazione.
+
+### Test 2: X-Api-Token <jwt>  (legacy, backward compatible)
+
+Request (dopo re-activate per rigenerare token):
+  POST /api/editorial/v1/deactivate
+  X-License-Key: TEST-STARTER-XXXX-1111
+  X-Site-Domain: localhost
+  X-Api-Token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ...
+  Content-Type: application/json
+  Body: {"site_id":12}
+
+Response:
+  HTTP/1.1 200 OK
+  {"success":true,"sites_freed":1}
+
+Esito: PASS — il path legacy continua a funzionare (nessuna regressione).
+
+## Impatto su Issue #2
+
+Discrepanza header plugin↔backend RISOLTA server-side senza modifiche al plugin:
+- Plugin (ApiClient.php) continua a inviare 'Authorization: Bearer <jwt>' (standard).
+- Backend ora supporta entrambi gli header, con precedenza al Bearer header.
+- Nessuna ricompilazione zip plugin necessaria.
+
+## Note operative
+
+- Su Apache (Laragon locale e Hetzner produzione) la direttiva RewriteRule HTTP_AUTHORIZATION
+  e' indispensabile: senza, Apache+fcgid stripa l'header Authorization prima di passarlo a PHP
+  e ['HTTP_AUTHORIZATION'] resta vuoto. Verificare che il .htaccess sia attivo anche in prod.

@@ -1,0 +1,19 @@
+HTTP/1.1 422 Unprocessable Entity
+Date: Thu, 14 May 2026 17:54:02 GMT
+Server: Apache/2.4.54 (Win64) OpenSSL/1.1.1q mod_fcgid/2.3.10-dev
+X-Powered-By: PHP/8.3.22
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate
+Pragma: no-cache
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 58
+X-RateLimit-Reset: 22
+X-Content-Type-Options: nosniff
+Set-Cookie: PHPSESSID=hsv1ua7dcus5u5cn7fh6l7rifu; path=/; HttpOnly; SameSite=Lax
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+X-XSS-Protection: 1; mode=block
+Transfer-Encoding: chunked
+Content-Type: application/json; charset=utf-8
+
+{"error":"Site limit reached. Your tier 'starter' allows 1 site."}

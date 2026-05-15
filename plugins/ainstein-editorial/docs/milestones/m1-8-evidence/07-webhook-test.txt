@@ -1,0 +1,53 @@
+=== M1.8.j — Webhook test ===
+
+Endpoint: POST http://localhost/seo-toolkit/api/editorial/v1/webhooks/lemonsqueezy
+Secret (from .env): dev-webhook-secret-Ainstein-Editorial-M15-2026
+Signature algorithm: HMAC-SHA256 (raw body)
+Signature header: X-Signature
+
+=== Payload sent ===
+{"meta":{"event_name":"subscription_updated","custom_data":null,"webhook_id":"wh_test_smoke_001","event_id":"evt_smoke_m18_subupdate_1778781689"},"data":{"type":"subscriptions","id":"sub_starter_001","attributes":{"store_id":1,"customer_id":"cust_starter_001","order_id":"ord_1","order_item_id":"oitem_1","product_id":"prod_1","variant_id":"variant_pro","product_name":"Editorial Pro","variant_name":"Pro Monthly","user_name":"Test User","user_email":"test-starter@example.com","status":"active","status_formatted":"Active","renews_at":"2027-06-01T00:00:00Z","pause":null,"cancelled":false,"trial_ends_at":null,"billing_anchor":1,"urls":[],"created_at":"2026-01-01T00:00:00Z","updated_at":"2026-05-14T17:00:00Z","test_mode":true}}}
+
+=== Response ===
+HTTP 200 OK
+{"received":true,"event":"subscription_updated","event_id":"wh_test_smoke_001","status":"processed","user_id":1,"message":"unknown_variant_id=variant_pro_tier_preserved_check_config"}
+
+=== DB state ===
+BEFORE: tier=starter
+AFTER:  tier=starter, subscription_status=active, subscription_renews_at=2027-06-01 00:00:00
+
+Note: tier did NOT change because 'variant_pro' is not mapped in tier resolver config.
+subscription_renews_at WAS updated → confirms handler executed.
+
+=== aied_api_logs entry ===
+*************************** 1. row ***************************
+               id: 48
+         provider: lemonsqueezy_webhook
+external_event_id: wh_test_smoke_001
+         endpoint: subscription_updated
+  response_status: 200
+ response_summary: unknown_variant_id=variant_pro_tier_preserved_check_config
+       created_at: 2026-05-14 20:40:47
+*************************** 2. row ***************************
+               id: 46
+         provider: lemonsqueezy_webhook
+external_event_id: evt_72dbb24ebafe
+         endpoint: order_created
+  response_status: 0
+ response_summary: pending
+       created_at: 2026-05-14 18:09:47
+*************************** 3. row ***************************
+               id: 45
+         provider: lemonsqueezy_webhook
+external_event_id: evt_8b715b686c30
+         endpoint: subscription_updated
+  response_status: 200
+ response_summary: recovery_cleared_payment_failed
+       created_at: 2026-05-14 18:09:47
+
+=== Bonus: invalid signature test ===
+X-XSS-Protection: 1; mode=block
+Transfer-Encoding: chunked
+Content-Type: application/json; charset=utf-8
+
+{"error":"Invalid signature","code":"INVALID_SIGNATURE"}

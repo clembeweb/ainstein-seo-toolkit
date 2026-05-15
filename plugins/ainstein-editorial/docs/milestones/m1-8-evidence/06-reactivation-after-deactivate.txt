@@ -1,0 +1,32 @@
+=== M1.8.i Test (deactivate via plugin UI) ===
+
+Plugin UI deactivate: FAILED on backend (bug: plugin sends Authorization: Bearer, backend expects X-Api-Token)
+Plugin local state cleared (wp_options aied_api_token, aied_tier, etc removed)
+Backend slot NOT freed: aied_sites id=12 domain=localhost still status='active'
+Mock LS state NOT freed: TEST-STARTER-XXXX-1111 still has 1 instance 'localhost'
+
+=== Workaround: manual cleanup to simulate proper deactivation ===
+DB: UPDATE aied_sites SET status='deactivated' WHERE id=12 → OK
+Mock LS: cleared TEST-STARTER-XXXX-1111 instances → OK
+
+=== Now retry activate with new domain (simulating M1.8.i scenario) ===
+
+HTTP/1.1 200 OK
+Date: Thu, 14 May 2026 17:56:06 GMT
+Server: Apache/2.4.54 (Win64) OpenSSL/1.1.1q mod_fcgid/2.3.10-dev
+X-Powered-By: PHP/8.3.22
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate
+Pragma: no-cache
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 59
+X-RateLimit-Reset: 60
+X-Content-Type-Options: nosniff
+Set-Cookie: PHPSESSID=28lt2tgdr7lb1m3d0oi59gj9fv; path=/; HttpOnly; SameSite=Lax
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+X-XSS-Protection: 1; mode=block
+Transfer-Encoding: chunked
+Content-Type: application/json; charset=utf-8
+
+{"api_token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhaW5zdGVpbi1lZGl0b3JpYWwiLCJzdWIiOiJ1c2VyOjE6c2l0ZToxMyIsInVpZCI6MSwic2lkIjoxMywiaWF0IjoxNzc4NzgxMzY2LCJleHAiOjE3Nzg4Njc3NjZ9.HLbdyArRJt2C0Zz4qOruVQlhD_XaB9pAW6k6GnKl0VA","expires_in":86400,"tier":"starter","sites_used":1,"sites_limit":1,"site_id":13,"user":{"email":"admin@seo-toolkit.local"}}Cleanup: removed aied_sites id=13

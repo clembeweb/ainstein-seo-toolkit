@@ -11,8 +11,9 @@ use Firebase\JWT\SignatureInvalidException;
  * LicenseAuthMiddleware
  *
  * Verifica:
- *   - Header X-License-Key, X-Site-Domain, X-Api-Token presenti
- *   - X-Api-Token e' un JWT valido (firma + exp)
+ *   - Header X-License-Key, X-Site-Domain presenti
+ *   - Token JWT presente in Authorization: Bearer <jwt> (preferito) o X-Api-Token (legacy)
+ *   - Il token JWT e' valido (firma + exp)
  *   - DB: aied_users + aied_sites esistono e sono attivi
  *   - X-Site-Domain coincide con il domain registrato per il site_id nel JWT
  *     (impedisce che un token attivo su test1.com venga usato su evil.com)
@@ -50,12 +51,22 @@ class LicenseAuthMiddleware
     {
         $licenseKey = self::header('X-License-Key');
         $siteDomain = self::header('X-Site-Domain');
-        $apiToken   = self::header('X-Api-Token');
+
+        // Accetta token sia da Authorization: Bearer <jwt> (standard JWT) sia da X-Api-Token (legacy).
+        // Precedenza: Authorization Bearer se presente con prefisso, altrimenti X-Api-Token.
+        $apiToken = '';
+        $authHeader = self::header('Authorization');
+        if ($authHeader !== '' && stripos($authHeader, 'Bearer ') === 0) {
+            $apiToken = trim(substr($authHeader, 7));
+        }
+        if ($apiToken === '') {
+            $apiToken = self::header('X-Api-Token');
+        }
 
         $missing = [];
         if ($licenseKey === '') $missing[] = 'X-License-Key';
         if ($siteDomain === '') $missing[] = 'X-Site-Domain';
-        if ($apiToken === '')   $missing[] = 'X-Api-Token';
+        if ($apiToken === '')   $missing[] = 'X-Api-Token or Authorization: Bearer';
 
         if (!empty($missing)) {
             self::respond(401, [

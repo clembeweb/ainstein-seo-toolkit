@@ -372,20 +372,25 @@ class LicenseManager
     /**
      * Normalizza il dominio per garantire match consistente.
      * "https://Test1.com/path/" → "test1.com"
+     * "http://localhost:8080/wp-admin" → "localhost:8080"
+     *
+     * Preserva port (necessario per dev locali e installazioni WP multi-tenant su porte diverse).
      */
     private function normalizeDomain(string $domain): string
     {
         $domain = trim($domain);
         if ($domain === '') return '';
 
-        // Se non c'e' schema, usa parse_url comunque assumendo http
-        $parsed = parse_url($domain);
-        if (isset($parsed['host'])) {
-            $host = (string) $parsed['host'];
+        // Se c'e' uno schema (http://, https://), estrai host+port via parse_url
+        if (preg_match('#^https?://#i', $domain)) {
+            $parsed = parse_url($domain);
+            $host = (string) ($parsed['host'] ?? '');
+            if ($host !== '' && isset($parsed['port'])) {
+                $host .= ':' . (int) $parsed['port'];
+            }
         } else {
-            // Probabilmente solo "example.com" o "example.com/path"
-            $host = preg_replace('#^[^/]*([^/]*).*$#', '$1', $domain);
-            $host = explode('/', $host)[0];
+            // Stringa "host[:port]" o "host[:port]/path" — prendi tutto fino al primo '/'
+            $host = explode('/', $domain)[0];
         }
 
         return strtolower(trim($host));

@@ -1,0 +1,98 @@
+*************************** 1. row ***************************
+                           id: 1
+                        email: admin@seo-toolkit.local
+                  license_key: TEST-STARTER-XXXX-1111
+    lemon_squeezy_customer_id: cust_starter_001
+lemon_squeezy_subscription_id: sub_starter_001
+                         tier: starter
+          subscription_status: active
+       subscription_renews_at: 2026-12-31 23:00:00
+       topup_balance_articles: 0
+       last_payment_failed_at: NULL
+                       locale: it
+                   created_at: 2026-05-13 11:37:58
+                 last_seen_at: 2026-05-14 19:48:23
+
+=== aied_sites (after activation) ===
+*************************** 1. row ***************************
+            id: 7
+       user_id: 1
+        domain: test1.com
+    wp_version: 6.4
+plugin_version: 0.1.0
+        status: deactivated
+  activated_at: 2026-05-13 17:58:56
+deactivated_at: 2026-05-13 17:58:57
+  token_prefix: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUz
+*************************** 2. row ***************************
+            id: 8
+       user_id: 2
+        domain: test2.com
+    wp_version: 6.4
+plugin_version: 0.1.0
+        status: active
+  activated_at: 2026-05-13 17:58:58
+deactivated_at: NULL
+  token_prefix: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUz
+*************************** 3. row ***************************
+            id: 9
+       user_id: 2
+        domain: test3.com
+    wp_version: 6.4
+plugin_version: 0.1.0
+        status: active
+  activated_at: 2026-05-13 17:58:58
+deactivated_at: NULL
+  token_prefix: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUz
+*************************** 4. row ***************************
+            id: 10
+       user_id: 2
+        domain: test4.com
+    wp_version: 6.4
+plugin_version: 0.1.0
+        status: active
+  activated_at: 2026-05-13 17:58:58
+deactivated_at: NULL
+  token_prefix: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUz
+*************************** 5. row ***************************
+            id: 11
+       user_id: 1
+        domain: review-test1.com
+    wp_version: 6.4
+plugin_version: 0.1.0
+        status: deactivated
+  activated_at: 2026-05-14 06:32:34
+deactivated_at: 2026-05-14 19:47:25
+  token_prefix: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUz
+*************************** 6. row ***************************
+            id: 12
+       user_id: 1
+        domain: localhost
+    wp_version: 6.9.4
+plugin_version: 0.1.0
+        status: active
+  activated_at: 2026-05-14 19:48:23
+deactivated_at: NULL
+  token_prefix: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUz
+
+=== wp_options aied_* (after activation) ===
+option_id	option_name	val
+659	aied_activated_at	1778780903
+652	aied_api_token	eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhaW5zdGVpbi1lZGl0b3JpYWwiLCJzdWI
+653	aied_api_token_expires_at	1778867303
+643	aied_first_activated_at	1778780629
+651	aied_license_key	TEST-STARTER-XXXX-1111
+644	aied_plugin_version	0.1.0
+657	aied_site_id	12
+656	aied_sites_limit	1
+655	aied_sites_used	1
+654	aied_tier	starter
+658	aied_user_email	admin@seo-toolkit.local
+
+=== Refresh token test (M1.8.g) ===
+Forced expires_at = UNIX_TIMESTAMP()-100
+After getApiToken() call:
+option_name	option_value	as_datetime
+aied_api_token	eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhaW5zdGVpbi1lZGl0b3JpYWwiLCJzdWIiOiJ1c2VyOjE6c2l0ZToxMiIsInVpZCI6MSwic2lkIjoxMiwiaWF0IjoxNzc4NzgxMjA0LCJleHAiOjE3Nzg4Njc2MDR9.8VbcI0xp7EyyO1PnseWaEbarn-e2EeXXuPVBwhGglQ4	1970-01-01 01:00:00.000000
+aied_api_token_expires_at	1778867604	2026-05-15 19:53:24.000000
+Current time: 1778781221 = Thu May 14 19:53:41     2026
