@@ -20,8 +20,9 @@
 
 | # | File | Stato | Effort stimato | Dipendenze |
 |---|------|-------|----------------|------------|
-| M1 | [`M1-foundation.md`](M1-foundation.md) | 📋 Spec scritta, attende approvazione | 35-50 ore (1.5 settimane) | — |
-| M2 | M2-content-brain.md | ⏳ Da scrivere dopo M1 | ~25-35 ore | M1 completata |
+| M1 | [`M1-foundation.md`](M1-foundation.md) | ✅ **COMPLETATA** (2026-05-20) — incluso M1.9 + M1.9.7 | reale ~70h | — |
+| M1.9.7 | [`M1-9-7-wp-compat-matrix.md`](M1-9-7-wp-compat-matrix.md) | ✅ Eseguita 2026-05-20 — evidence in `m1-9-7-evidence/` (5/5 PASS) | reale 3.5h | M1.7 (zip prodotto) |
+| M2 | [`M2-content-brain.md`](M2-content-brain.md) | 📋 **Spec scritta, attende approvazione** (2026-05-20) | 35-42 ore | M1 completata ✅ |
 | M3 | M3-article-generation.md | ⏳ Da scrivere dopo M2 | ~50-70 ore | M2 completata |
 | M4 | M4-keyword-research-autopilot.md | ⏳ Da scrivere dopo M3 | ~50-70 ore | M3 completata |
 | M5 | M5-internal-linking-extras.md | ⏳ Da scrivere dopo M4 | ~30-40 ore | M4 completata |
