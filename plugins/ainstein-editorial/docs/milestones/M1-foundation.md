@@ -1,9 +1,14 @@
 # M1 — Foundation
 
-> **Status**: 📋 Spec scritta, attende approvazione cliente
-> **Effort stimato**: 35-50 ore (~1-1.5 settimane full-time)
+> **Status**: ✅ **COMPLETATA** (2026-05-20) — incluso M1.9 hardening + M1.9.7 compat matrix
+> **Effort stimato**: 35-50 ore (~1-1.5 settimane full-time) · **Effort reale**: ~55h (M1.1-M1.8) + ~12h (M1.9 hardening + competitor matrix) + ~3.5h (M1.9.7)
 > **Dipendenze**: Nessuna (è la prima milestone)
-> **Sblocca**: Tutte le milestone successive (M2-M6)
+> **Sblocca**: Tutte le milestone successive (M2-M6) — ✅ ora sbloccate
+> **Stato reale**: checkbox individuali sotto possono ritardare rispetto ai commit. Vedi:
+> - `git log --oneline | grep editorial` per progresso reale
+> - `M1-foundation-test-report.md` per evidence M1.8 (12/12 PASS)
+> - `m1-9-7-evidence/_summary.md` per evidence M1.9.7 (5/5 PASS, gate ⚠️ GO M2)
+> - `decisions.md` ADR-024 → ADR-029 per decisioni prese durante M1
 
 ---
 
@@ -224,13 +229,13 @@ Tutto questo arriva in M2-M6.
 **Dipendenze**: Nessuna  
 **Deliverable**: file SQL eseguibile + rollback script + verifica DB locale
 
-- [ ] M1.1.a Creare `seo-toolkit/database/migrations/2026-05-15-aied-schema.sql` con 9 CREATE TABLE statements (vedi `design.md` §4 per schema completo)
-- [ ] M1.1.b Aggiungere FK + indici critici (sezione 2.1 sopra)
-- [ ] M1.1.c Creare `seo-toolkit/database/migrations/rollback/2026-05-15-aied-schema-rollback.sql` con DROP TABLE in ordine inverso (rispetto FK)
-- [ ] M1.1.d Eseguire migration su DB locale Laragon: `mysql seo_toolkit < migration.sql`
-- [ ] M1.1.e Verifica: `mysql seo_toolkit -e "SHOW TABLES LIKE 'aied_%'"` → 9 tabelle
-- [ ] M1.1.f Verifica indici: `mysql seo_toolkit -e "SHOW INDEX FROM aied_users"` → idx_license presente
-- [ ] M1.1.g Inserire **3 record di test** in `aied_users` (uno per tier Starter/Pro/Business) per testare query downstream
+- [x] M1.1.a Creare `seo-toolkit/database/migrations/2026-05-15-aied-schema.sql` con 9 CREATE TABLE statements (vedi `design.md` §4 per schema completo)
+- [x] M1.1.b Aggiungere FK + indici critici (sezione 2.1 sopra)
+- [x] M1.1.c Creare `seo-toolkit/database/migrations/rollback/2026-05-15-aied-schema-rollback.sql` con DROP TABLE in ordine inverso (rispetto FK)
+- [x] M1.1.d Eseguire migration su DB locale Laragon: `mysql seo_toolkit < migration.sql`
+- [x] M1.1.e Verifica: `mysql seo_toolkit -e "SHOW TABLES LIKE 'aied_%'"` → 9 tabelle
+- [x] M1.1.f Verifica indici: `mysql seo_toolkit -e "SHOW INDEX FROM aied_users"` → idx_license presente
+- [x] M1.1.g Inserire **3 record di test** in `aied_users` (uno per tier Starter/Pro/Business) per testare query downstream
 
 **DoD M1.1**: 9 tabelle esistono, FK rispettate, 3 user di test inseriti, rollback testato.
 
@@ -260,14 +265,14 @@ Tutto questo arriva in M2-M6.
 **Dipendenze**: M1.1 (tabelle esistenti per query)  
 **Deliverable**: cartella `api/editorial/` con routing funzionante + middleware base + tutti gli endpoint stub
 
-- [ ] M1.3.a Creare struttura cartelle `seo-toolkit/api/editorial/` (Controllers, Middleware, Services, Lib)
-- [ ] M1.3.b Creare `routes.php` con definizione di tutti ~25 endpoint (vedi `design.md` §5). Endpoint M1-impl: real handler. Altri: stub return `[501, {error: 'Coming in M{N}'}]`.
-- [ ] M1.3.c Integrare routing in `seo-toolkit/public/index.php`: route group prefix `/api/editorial/v1/*` → carica `api/editorial/routes.php`
-- [ ] M1.3.d Implementare `BaseController` con metodi `jsonOk($data, $status=200)`, `jsonError($message, $status=400)`, `sseStream($callback)`
-- [ ] M1.3.e Implementare `LicenseAuthMiddleware` (skip per `/activate` + `/webhooks/*`): legge `X-License-Key` + `X-Site-Domain` + `X-Api-Token`, valida JWT, carica `aied_users` + `aied_sites` in request context
-- [ ] M1.3.f Implementare `RateLimitMiddleware` con cache file/Redis: 60 req/min per license_key
-- [ ] M1.3.g Stub `QuotaMiddleware` (in M1 lascia passare tutto, full impl in M3)
-- [ ] M1.3.h Test endpoint stub: `curl http://localhost/seo-toolkit/api/editorial/v1/articles/generate` → 501 con JSON `{error: "Coming in M3"}`
+- [x] M1.3.a Creare struttura cartelle `seo-toolkit/api/editorial/` (Controllers, Middleware, Services, Lib)
+- [x] M1.3.b Creare `routes.php` con definizione di tutti ~25 endpoint (vedi `design.md` §5). Endpoint M1-impl: real handler. Altri: stub return `[501, {error: 'Coming in M{N}'}]`.
+- [x] M1.3.c Integrare routing in `seo-toolkit/public/index.php`: route group prefix `/api/editorial/v1/*` → carica `api/editorial/routes.php`
+- [x] M1.3.d Implementare `BaseController` con metodi `jsonOk($data, $status=200)`, `jsonError($message, $status=400)`, `sseStream($callback)`
+- [x] M1.3.e Implementare `LicenseAuthMiddleware` (skip per `/activate` + `/webhooks/*`): legge `X-License-Key` + `X-Site-Domain` + `X-Api-Token`, valida JWT, carica `aied_users` + `aied_sites` in request context
+- [x] M1.3.f Implementare `RateLimitMiddleware` con cache file/Redis: 60 req/min per license_key
+- [x] M1.3.g Stub `QuotaMiddleware` (in M1 lascia passare tutto, full impl in M3)
+- [x] M1.3.h Test endpoint stub: `curl http://localhost/seo-toolkit/api/editorial/v1/articles/generate` → 501 con JSON `{error: "Coming in M3"}`
 
 **DoD M1.3**: Tutti gli endpoint registrati e raggiungibili. Middleware funzionano. Stub ritornano 501 con messaggio.
 
@@ -278,15 +283,15 @@ Tutto questo arriva in M2-M6.
 **Dipendenze**: M1.2 (LS test license), M1.3 (middleware + base)  
 **Deliverable**: endpoint `/activate` `/deactivate` `/refresh-token` end-to-end funzionanti
 
-- [ ] M1.4.a Implementare `Lib/LemonSqueezyClient.php`: HTTP wrapper per Lemon Squeezy API v1 (validate license, activate instance, deactivate instance, get license info)
-- [ ] M1.4.b Implementare `Services/JwtService.php`: issue token (payload: user_id, site_id, exp 24h), verify token, refresh logic
-- [ ] M1.4.c Implementare `Services/LicenseManager.php`:
+- [x] M1.4.a Implementare `Lib/LemonSqueezyClient.php`: HTTP wrapper per Lemon Squeezy API v1 (validate license, activate instance, deactivate instance, get license info)
+- [x] M1.4.b Implementare `Services/JwtService.php`: issue token (payload: user_id, site_id, exp 24h), verify token, refresh logic
+- [x] M1.4.c Implementare `Services/LicenseManager.php`:
   - `activate(license_key, domain, wp_version, plugin_version, admin_email)` → valida con LS, crea/finds `aied_users`, crea `aied_sites`, attiva instance LS, return token
   - `deactivate(api_token, site_id)` → mark `aied_sites.status='deactivated'`, deactivate instance LS, free slot
   - `refreshToken(license_key, domain)` → riconfere LS license, emette nuovo JWT
-- [ ] M1.4.d Implementare `Controllers/ActivationController.php` con 3 metodi
-- [ ] M1.4.e Implementare `Controllers/SubscriptionController::status` (versione base: ritorna tier + subscription_status da `aied_users`, quota count da `aied_actions_log` mese corrente)
-- [ ] M1.4.f Test end-to-end con curl + license key di test:
+- [x] M1.4.d Implementare `Controllers/ActivationController.php` con 3 metodi
+- [x] M1.4.e Implementare `Controllers/SubscriptionController::status` (versione base: ritorna tier + subscription_status da `aied_users`, quota count da `aied_actions_log` mese corrente)
+- [x] M1.4.f Test end-to-end con curl + license key di test:
   - Activate: `curl -X POST .../activate -d '{license_key, domain, wp_version, plugin_version, admin_email}'` → 200 + api_token
   - Verify DB: `aied_users` + `aied_sites` records creati, `api_token` salvato
   - Status: `curl -H "X-Api-Token: ..." .../subscription/status` → 200 + JSON con tier
@@ -365,7 +370,7 @@ Tutto questo arriva in M2-M6.
 - [x] M1.7.c Esclusioni implementate via whitelist (più sicuro): solo `ainstein-editorial.php`, `composer.json`, `readme.txt`, `src/`, `assets/`, `languages/`. Pulizia ulteriore in `vendor/` (tests, docs, .github, *.md).
 - [x] M1.7.d Output: `dist/ainstein-editorial-v0.1.0.zip` — **32 KB** (sotto le stime 50-100 KB perché 0 dipendenze require)
 - [x] M1.7.f Documentato in `README.md` plugin (sezione "Build & distribuzione (M1.7)") con prerequisiti, override env, struttura zip attesa
-- [ ] M1.7.e Test su WP fresh **differito a M1.8** (smoke E2E già pianificato → evita doppio setup WP locale)
+- [x] M1.7.e Test su WP fresh **differito a M1.8** (smoke E2E già pianificato → evita doppio setup WP locale)
 
 **DoD M1.7** ✅ (parziale): Build produce zip, integrità verificata (7/7 classi caricate via autoload PSR-4 + lint PHP pulito su file estratti). Test browser activation E2E in M1.8.
 
@@ -395,18 +400,18 @@ Tutto questo arriva in M2-M6.
 **Dipendenze**: Tutti i task M1 precedenti  
 **Deliverable**: report smoke test scritto, screenshot del flow funzionante
 
-- [ ] M1.8.a Setup WP locale Laragon nuovo (cartella `wp-test-clean/`)
-- [ ] M1.8.b Installa plugin via zip (M1.7 output)
-- [ ] M1.8.c Attiva plugin → verifica redirect a License page
-- [ ] M1.8.d Inserisci test license Starter → verifica success
-- [ ] M1.8.e Verifica DB: `aied_users` + `aied_sites` record creati con dati corretti
-- [ ] M1.8.f Verifica `wp_options`: `aied_api_token`, `aied_tier`, etc. salvati
-- [ ] M1.8.g Test refresh token: aspetta 23h fittizie (modifica `aied_api_token_expires_at` a `time()-100`), refresh page → background refresh dovrebbe rinnovare
-- [ ] M1.8.h Test multi-site limit: prova ad attivare stesso license su seconda installazione WP → errore "Site limit reached"
-- [ ] M1.8.i Test deactivate: bottone disattiva → slot liberato + activation possibile su altro sito
-- [ ] M1.8.j Test webhook: forza trigger LS test webhook → verifica DB aggiornato
-- [ ] M1.8.k Screenshot: License page (states attivato + non attivato), DB query risultati
-- [ ] M1.8.l Compila report `docs/milestones/M1-foundation-test-report.md` con risultati + screenshot + eventuali issue scoperte (in tal caso aprire come task per M2 o fix subito)
+- [x] M1.8.a Setup WP locale Laragon nuovo (cartella `wp-test-clean/`)
+- [x] M1.8.b Installa plugin via zip (M1.7 output)
+- [x] M1.8.c Attiva plugin → verifica redirect a License page
+- [x] M1.8.d Inserisci test license Starter → verifica success
+- [x] M1.8.e Verifica DB: `aied_users` + `aied_sites` record creati con dati corretti
+- [x] M1.8.f Verifica `wp_options`: `aied_api_token`, `aied_tier`, etc. salvati
+- [x] M1.8.g Test refresh token: aspetta 23h fittizie (modifica `aied_api_token_expires_at` a `time()-100`), refresh page → background refresh dovrebbe rinnovare
+- [x] M1.8.h Test multi-site limit: prova ad attivare stesso license su seconda installazione WP → errore "Site limit reached"
+- [x] M1.8.i Test deactivate: bottone disattiva → slot liberato + activation possibile su altro sito
+- [x] M1.8.j Test webhook: forza trigger LS test webhook → verifica DB aggiornato
+- [x] M1.8.k Screenshot: License page (states attivato + non attivato), DB query risultati
+- [x] M1.8.l Compila report `docs/milestones/M1-foundation-test-report.md` con risultati + screenshot + eventuali issue scoperte (in tal caso aprire come task per M2 o fix subito)
 
 **DoD M1.8**: Tutti gli step E2E passano. Report compilato e committato.
 

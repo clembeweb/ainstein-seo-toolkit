@@ -746,3 +746,44 @@ Top-up packs (acquistabili in qualsiasi momento, no scadenza):
 - ⚠️ Pricing va RIVALIDATO dopo 30 giorni post-launch con dati reali conversion + churn
 - ⚠️ "Articoli inclusi" potrebbe essere troppo o troppo poco — heavy user può saturare Pro in 1 settimana, churn senza top-up. Monitoring fondamentale
 
+
+---
+
+## ADR-029: M1.9.7 — WP Compatibility Matrix eseguita, deviazioni e harness fix
+
+**Date**: 2026-05-20 · **Status**: Accepted · **Riferimento**: M1.9.7 plan in `docs/milestones/M1-9-7-wp-compat-matrix.md`
+
+**Context**: M1.9.7 prevedeva 5 install WP locali per validare che Ainstein Editorial v0.1.0 non vada in fatal/collisione con Yoast, RankMath, Elementor, WP 6.0+PHP 8.0, e WPML. Eseguendolo su Laragon Windows abbiamo incontrato 3 deviazioni e 2 bug del harness da documentare.
+
+**Decision**:
+
+1. **Eseguito M1.9.7 il 2026-05-19/20** con suite headless wp-cli in `tests/wp-compat/` (setup.sh + smoke.sh + teardown.sh, ~530 righe bash). Evidence in `docs/milestones/m1-9-7-evidence/` (5 report per-install + `_summary.md`).
+
+2. **Esito**: ⚠️ **GO M2** — 5/5 PASS (4 strict + 1 con note WP/core su install #4). **Nessuna issue attribuibile al plugin**. Decision gate del piano soddisfatto ("4-5/5 PASS con minor issue → procedi M2").
+
+3. **Deviazioni dal piano accettate**:
+   - **Install #4: PHP 8.0 → PHP 8.1** — PHP 8.0 (EOL nov 2023) non installato su Laragon locale; floor disponibile 8.1.10. Testato WP 6.0 + PHP 8.1.10. Caveat: una regressione PHP-8.0-only non sarebbe catturata. Rischio basso (8.0 EOL, share residuale; il vero rischio backward-compat è 8.1+ che è il floor reale del mercato installato).
+   - **Install #5: WPML → Polylang** — WPML richiede licenza commerciale assente. Polylang (free, ~700k installazioni attive, dominante nel mercato WP italiano) usato come proxy per il test di collisione multilingua. Polylang è il competitor diretto free di WPML e replica gli stessi pattern di hook (post translation, language switching) → copertura adeguata.
+
+4. **Bug ambiente scoperti & risolti durante esecuzione**:
+   - **Auto-updater core attivo**: prima run di install #4 (WP 6.0) si è auto-aggiornata silenziosamente a 6.9.4 → test backward-compat nullificato. Fix: aggiunto `define('AUTOMATIC_UPDATER_DISABLED', true)` e `define('WP_AUTO_UPDATE_CORE', false)` in `wp config create --extra-php` (setup.sh). Verificato: dopo fix `version.php` resta a 6.0 attraverso tutto il ciclo (setup → install → smoke).
+   - **Probe headless intercettato da activation transient**: `Plugin::handleActivationRedirect` chiama `wp_safe_redirect()` durante `admin_init` se il transient `aied_show_activation_redirect` è settato (TTL 30s post-activation). wp-cli intercetta il redirect con `WP_CLI::error()` → exit 255 → probe output vuoto. Fix harness: `delete_transient('aied_show_activation_redirect')` come prima istruzione del probe per testare steady-state (smoke.sh `_probe.php`).
+
+5. **Plugin enhancement identificato (deferito a M2.0)**: `Plugin::handleActivationRedirect` non controlla `defined('WP_CLI') && WP_CLI`. Aggiungere questo guard rende il plugin sicuro per qualsiasi workflow CLI (test, deploy script, automazione futura). Non-bloccante per v0.1.0 (in produzione l'attivazione avviene via browser admin); aperto come task M2.0.
+
+**Alternatives considered**:
+
+- **Installare PHP 8.0 standalone**: ~30 min setup, ma 8.0 è EOL → low value per cattura regression. Scartato in favore di 8.1.
+- **Acquistare licenza WPML trial**: $39 per testare 1 cosa. Polylang è proxy adeguato (stesso hook surface area) → no spesa.
+- **Saltare M1.9.7 e procedere a M2**: rischio reputazionale (review "rompe Yoast" al lancio). Mantenuto in piano. Esecuzione costata ~3.5h totali (1h script + 2.5h debug+rerun) — molto meno del costo di una review 1★.
+- **Non fixare auto-updater (accettare WP 6.9.4 per #4)**: avrebbe lasciato il floor non testato. Inaccettabile per il valore primario di M1.9.7.
+
+**Consequences**:
+
+- ✅ Confermato: AE 0.1.0 non collide con Yoast/RankMath/Elementor/Polylang su latest WP+PHP, né su floor WP 6.0/PHP 8.1
+- ✅ Suite wp-compat riusabile (`bash setup.sh && bash smoke.sh`) per regression test pre-release di ogni futura versione
+- ✅ Setup.sh pina deterministicamente la versione WP (`AUTOMATIC_UPDATER_DISABLED`) → riproducibilità garantita
+- ✅ Probe steady-state → smoke deterministico indipendente da timing transient
+- ⚠️ Coverage gap: PHP 8.0 strict non testato (acceptable, rischio basso)
+- ⚠️ Coverage gap: WPML non testato (Polylang è proxy, ma WPML ha edge case proprietari su hook `wpml_*`); da rivalutare se beta riceve segnali utenti WPML
+- 📝 Task M2.0: aggiungere `defined('WP_CLI')` guard a `Plugin::handleActivationRedirect`

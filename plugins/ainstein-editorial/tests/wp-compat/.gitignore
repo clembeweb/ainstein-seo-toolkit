@@ -1,0 +1,5 @@
+# Binari scaricati a runtime (wp-cli.phar) — non versionati
+bin/
+# Log di esecuzione
+*.log
+logs/

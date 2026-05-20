@@ -3,7 +3,7 @@
 > Piano di esecuzione fase per fase. Da seguire in ordine. Ogni milestone ha task espliciti + Definition of Done.
 > Per il contesto strategico vedi `README.md`. Per dettagli tecnici vedi `design.md`. Per decisioni storiche vedi `decisions.md`.
 >
-> **Stato corrente**: 2026-05-12 → fine fase 0 (design completato), pronto per fase 1 (validation).
+> **Stato corrente**: 2026-05-20 → **M1 Foundation chiusa** (incluso M1.9 hardening + M1.9.7 compat matrix, 5/5 PASS). **Prossimo**: scrivere spec M2 Content Brain + Onboarding (`milestones/M2-content-brain.md`). Vedi `decisions.md` ADR-024 → ADR-029 per le decisioni prese.
 
 ---
 
@@ -14,9 +14,9 @@
 ```
 Fase 0: Design & Documentazione                ✅ COMPLETATA (2026-05-12)
 ~~Fase 1: Validation pre-development~~         🔵 POSTPONED a launch time
-Fase 2: MVP Development (build-first)          ⏳ 14 settimane
-   M1: Foundation backend + plugin shell       ⏳ 3 settimane (spec + plan in M1-foundation.md)
-   M2: Content Brain + onboarding              ⏳ 2 settimane
+Fase 2: MVP Development (build-first)          🔵 IN CORSO
+   M1: Foundation backend + plugin shell       ✅ COMPLETATA 2026-05-20 (M1.1→M1.9.7)
+   M2: Content Brain + onboarding              ⏳ prossima (spec da scrivere in M2-content-brain.md)
    M3: Article generation flow + UX            ⏳ 3 settimane
    M4: KW Research + Editorial Plan + Auto-pilot ⏳ 3 settimane
    M5: Internal linking + meta + image         ⏳ 2 settimane
@@ -134,43 +134,43 @@ Tutti i deliverable per eseguire la Fase 1 sono già scritti in `docs/validation
 **Obiettivo**: scheletro backend + plugin attivabile + sistema licenze funzionante.
 
 #### Backend setup
-- [ ] **Database migration** `aied_*` tables (vedi `design.md` §4)
+- [x] **Database migration** `aied_*` tables (vedi `design.md` §4)
   - Crea tutte le 9 tabelle
   - Indexes + foreign keys
   - Migration eseguibile + rollback script
-- [ ] **API skeleton** `seo-toolkit/api/editorial/`
+- [x] **API skeleton** `seo-toolkit/api/editorial/`
   - `routes.php` con tutti gli endpoint definiti (anche placeholder)
   - Middleware `LicenseAuthMiddleware`, `QuotaMiddleware`, `RateLimitMiddleware`
   - Base controller con response helpers
-- [ ] **Lemon Squeezy integration** setup
+- [x] **Lemon Squeezy integration** setup
   - Account creato su Lemon Squeezy
   - Store configurato con 4 tier (Starter, Pro, Business, Agency) + 3 top-up packs
   - License Keys variants attivate
   - Webhook endpoint configurato + signature secret
   - Test mode validato
-- [ ] **Activation endpoint** `/activate` funzionante
+- [x] **Activation endpoint** `/activate` funzionante
   - Validazione license key via LS API
   - Creazione `aied_users` + `aied_sites`
   - Generazione JWT api_token
 
 #### Plugin shell
-- [ ] **Plugin skeleton** `plugins/ainstein-editorial/src/`
+- [x] **Plugin skeleton** `plugins/ainstein-editorial/src/`
   - Plugin header WP compliant
   - Autoloader composer + namespace `Ainstein\Editorial`
   - Activation/Deactivation hooks
   - Settings page minimale: "License key" + bottone "Attiva"
   - ApiClient class (wp_remote_* wrapper)
   - LicenseManager class
-- [ ] **Build script** `build.sh` funzionante
+- [x] **Build script** `build.sh` funzionante
   - Compila Tailwind (anche minimal per ora)
   - Esclude `tests/`, `docs/`, `node_modules/`
   - Output zip versionato
 
 #### Testing M1
-- [ ] Test attivazione plugin su sito WP locale (Laragon)
-- [ ] Test activation con license key Lemon Squeezy test mode
-- [ ] Verifica creazione record DB `aied_users` + `aied_sites`
-- [ ] Test renew api_token automatico
+- [x] Test attivazione plugin su sito WP locale (Laragon)
+- [x] Test activation con license key Lemon Squeezy test mode
+- [x] Verifica creazione record DB `aied_users` + `aied_sites`
+- [x] Test renew api_token automatico
 
 **Definition of Done M1**:
 - ✅ Plugin installa correttamente su WP 6.0+
