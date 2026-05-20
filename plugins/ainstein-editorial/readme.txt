@@ -4,7 +4,7 @@ Tags: seo, ai, content, autoblog
 Requires at least: 6.0
 Tested up to: 6.4
 Requires PHP: 8.0
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 License: Proprietary
 
 Il tuo SEO Pro autonomo per WordPress: pianifica, scrive, ottimizza e linka articoli SEO in autopilota.
@@ -26,6 +26,9 @@ Niente da configurare, niente API key di terze parti: la licenza copre tutto.
 3. Vai su "Ainstein Editorial" nel menu sinistro, incolla la license key e clicca "Attiva"
 
 == Changelog ==
+
+= 0.1.1 =
+* Fix M2.0: Plugin::handleActivationRedirect ora skippa in contesto WP-CLI (no side effects su deploy script + test harness post-activation). Vedi ADR-029.
 
 = 0.1.0 =
 * Versione iniziale: shell plugin + activation flow (M1 Foundation).

@@ -24,7 +24,7 @@
 aied_version=0.1.0
 aied_activated=yes
 class_plugin=yes
-const_version=0.1.0
+const_version=0.1.1
 admin_hooks=ok
 admin_hook_errors=[1024] Function wp_add_privacy_policy_content was called <strong>incorrectly</strong>. The suggested privacy policy content should be added only in wp-admin by using the <code>admin_init</code> (or later) action. Please see <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">Debugging in WordPress</a> for more information. (This message was added in version 4.9.7.)
 ```

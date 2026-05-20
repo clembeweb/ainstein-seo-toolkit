@@ -88,9 +88,19 @@ class Plugin
     /**
      * Se il transient 'aied_show_activation_redirect' e' presente (settato
      * dall'Activator), redireziona alla License page al primo load admin.
+     *
+     * Skip in contesto CLI (WP-CLI, deploy script, test harness): wp-cli
+     * intercetta wp_redirect con WP_CLI::error() → exit 255, rompendo qualsiasi
+     * `wp eval`/`wp eval-file` eseguito nei primi 30s post-attivazione. Vedi
+     * ADR-029 + tests/wp-compat/smoke.sh per il bug originale scoperto in M1.9.7.
      */
     public function handleActivationRedirect(): void
     {
+        // M2.0: short-circuit in CLI prima di leggere il transient (no side effects).
+        if (defined('WP_CLI') && WP_CLI) {
+            return;
+        }
+
         if (!get_transient('aied_show_activation_redirect')) {
             return;
         }

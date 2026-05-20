@@ -3,7 +3,7 @@
  * Plugin Name:       Ainstein Editorial
  * Plugin URI:        https://ainstein.it/editorial
  * Description:       Il tuo SEO Pro autonomo per WordPress. Pianifica, scrive, ottimizza e linka articoli SEO in autopilota.
- * Version:           0.1.0
+ * Version:           0.1.1
  * Requires at least: 6.0
  * Requires PHP:      8.0
  * Author:            Ainstein
@@ -28,7 +28,7 @@ if (!defined('ABSPATH')) {
 // Constants
 // =============================================================================
 
-define('AIED_VERSION', '0.1.0');
+define('AIED_VERSION', '0.1.1');
 define('AIED_PLUGIN_FILE', __FILE__);
 define('AIED_PATH', plugin_dir_path(__FILE__));
 define('AIED_URL', plugin_dir_url(__FILE__));

@@ -445,14 +445,27 @@ Tailwind: per M2 va bene **CSS statico hand-written** (~600 righe). Build pipeli
 
 > Task ID format `M2.{T}.{a-z}`. Stima effort in ore (1 dev full-time, Claude assistito).
 
-### M2.0 — Fix backlog M1.9.7 (CLI guard) — 1h
+### M2.0 — Fix backlog M1.9.7 (CLI guard) — 1h ✅ COMPLETATO 2026-05-20
 
-- [ ] M2.0.a Aggiungere `if (defined('WP_CLI') && WP_CLI) return;` come prima riga di `Plugin::handleActivationRedirect()` (`src/Includes/Plugin.php`)
-- [ ] M2.0.b Aggiornare `tests/wp-compat/smoke.sh` probe rimuovendo il `delete_transient` workaround (non più necessario) e ri-testare
-- [ ] M2.0.c Rebuild zip → `dist/ainstein-editorial-v0.1.1.zip`
-- [ ] M2.0.d Re-run `bash setup.sh && bash smoke.sh` per regression (atteso: identico esito M1.9.7)
+- [x] M2.0.a Aggiungere `if (defined('WP_CLI') && WP_CLI) return;` come prima riga di `Plugin::handleActivationRedirect()` (`src/Includes/Plugin.php`)
+- [x] M2.0.b Aggiornare `tests/wp-compat/smoke.sh` probe rimuovendo il `delete_transient` workaround (non più necessario) e ri-testare
+- [x] M2.0.c Rebuild zip → `dist/ainstein-editorial-v0.1.1.zip` (29.5KB)
+- [x] M2.0.d Re-run smoke su 5 install upgradate a v0.1.1 + transient settato: **5/5 PASS** (4 strict + 1 con note WP/core, identico a M1.9.7)
 
-**DoD**: smoke wp-compat 5/5 PASS senza workaround.
+**DoD**: ✅ smoke wp-compat 5/5 PASS senza workaround.
+
+### M2.0.1 — Fix plugin upgrade option non si aggiorna — 2h (scoperto durante M2.0)
+
+**Context**: durante regression M2.0 lo smoke ha rivelato che dopo `wp plugin install --force --activate` (upgrade) `aied_plugin_version` **option** resta al valore vecchio (0.1.0) mentre `AIED_VERSION` **constant** è 0.1.1. Causa: `Activator::activate()` (che fa `update_option('aied_plugin_version', ...)`) NON rifire su upgrade — l'activation hook scatta solo alla prima attivazione, non quando il plugin viene aggiornato con plugin già attivo.
+
+**Implicazione**: qualsiasi futura migration version-based (es. "se aied_plugin_version < 0.2.0, esegui ALTER TABLE x") non scatterà mai → migration silenziosamente skippate → data drift.
+
+- [ ] M2.0.1.a Aggiungere `Plugin::maybeRunUpgrade()` chiamato su `plugins_loaded`: confronta `get_option('aied_plugin_version')` con `AIED_VERSION`; se diverso → esegue eventuali migration + aggiorna option
+- [ ] M2.0.1.b Per ora migration vuota (nessun schema change da v0.1.0 a v0.1.1); aggiunge solo update_option per sincronizzare
+- [ ] M2.0.1.c Aggiungere smoke check in `tests/wp-compat/smoke.sh` probe: verifica `aied_version === const_version` (warn se diverge)
+- [ ] M2.0.1.d Test: dopo `wp plugin install --force --activate` v0.1.2 (next bump) → `aied_plugin_version` deve essere 0.1.2
+
+**DoD**: smoke ha check option/constant sync; upgrade scenario funziona.
 
 ---
 

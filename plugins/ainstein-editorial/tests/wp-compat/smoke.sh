@@ -21,10 +21,9 @@ TODAY="$(date +%Y-%m-%d)"
 EVAL_PHP="$LOG_DIR/_probe.php"
 cat > "$EVAL_PHP" <<'PHP'
 <?php
-// Steady-state probe: consuma l'activation transient prima di firing admin_init,
-// altrimenti il plugin scatta handleActivationRedirect → wp_safe_redirect →
-// wp-cli intercetta e fa WP_CLI::error() → probe termina output vuoto.
-delete_transient('aied_show_activation_redirect');
+// Plugin v0.1.1+ ha guard `defined('WP_CLI')` in handleActivationRedirect
+// (M2.0, ADR-029). Il workaround `delete_transient` precedente NON va aggiunto:
+// se qualcuno lo ri-introducesse maschererebbe la rimozione del guard plugin-side.
 
 $out = [];
 $out['aied_version']   = (string) get_option('aied_plugin_version', '');
