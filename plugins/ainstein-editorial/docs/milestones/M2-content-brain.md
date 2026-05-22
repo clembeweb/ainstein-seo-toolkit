@@ -469,20 +469,23 @@ Tailwind: per M2 va bene **CSS statico hand-written** (~600 righe). Build pipeli
 
 ---
 
-### M2.1 — `ContentBrainService` core — 6h
+### M2.1 — `ContentBrainService` core — 6h ✅ COMPLETATO 2026-05-22
 
-Posizione: `seo-toolkit/api/editorial/Services/ContentBrainService.php`.
+Posizione: `seo-toolkit/api/editorial/Services/ContentBrainService.php` (~565 righe).
 
-- [ ] M2.1.a Class skeleton con metodi pubblici `scan()`, `get()`, `update()`, `discoverArticleUrls()` come da spec §2.1
-- [ ] M2.1.b Implementare `discoverArticleUrls()`: WP REST API → sitemap fallback → spider fallback. Riusa `ScraperService` per fetch.
-- [ ] M2.1.c Implementare `scan()` flow completo: scrape loop + bulk prompt + AiService->analyze + parsing JSON + INSERT/UPDATE `aied_content_brain`
-- [ ] M2.1.d Helper `parseAiJson($content)` che gestisce ` ```json ... ``` ` wrapper (pattern da keyword-research)
-- [ ] M2.1.e Implementare `get()` con join `aied_sites` per site validation
-- [ ] M2.1.f Implementare `update()` con validazione: tone enum, glossary shape, guidelines shape. Partial update via JSON merge.
-- [ ] M2.1.g `ApiLoggerService::log()` per ogni chiamata AI + scrape (provider: `claude_anthropic`, `editorial_scraper`)
-- [ ] M2.1.h `Database::reconnect()` dopo AiService call
+- [x] M2.1.a Class skeleton con metodi pubblici `scan()`, `get()`, `update()`, `discoverArticleUrls()` come da spec §2.1
+- [x] M2.1.b Implementare `discoverArticleUrls()`: WP REST API → sitemap fallback → spider fallback. Riusa `ScraperService` per fetch.
+- [x] M2.1.c Implementare `scan()` flow completo: scrape loop + bulk prompt + AiService->analyze + parsing JSON + INSERT/UPDATE `aied_content_brain`
+- [x] M2.1.d Helper `parseAiJson($content)` che gestisce ` ```json ... ``` ` wrapper (pattern da keyword-research)
+- [x] M2.1.e Implementare `get()` con join `aied_sites` per site validation
+- [x] M2.1.f Implementare `update()` con validazione: tone enum, glossary shape, guidelines shape. Partial update via JSON merge. **+ `validatePatch()` esposto pubblico** per pre-flight Controller M2.3
+- [x] M2.1.g `ApiLoggerService::log()` per ogni chiamata AI + scrape (provider: `claude_anthropic`, `editorial_scraper`)
+- [x] M2.1.h `Database::reconnect()` dopo AiService call
 
-**DoD**: chiamata isolata da PHPUnit `(new ContentBrainService())->scan(siteId, [3 URL hardcoded], $mockEmit)` produce un record valido in `aied_content_brain` su DB locale.
+**DoD**: ✅ verificata.
+- Unit tests PHPUnit: `api/editorial/tests/Unit/Services/ContentBrainServiceTest.php` — **18/18 verdi** (30 assertions) coprendo parseAiJson (7 casi: clean, markdown wrapper, generic fence, prefacing text, malformed, empty, plain text) + validatePatch (tone enum, glossary shape, guidelines shape).
+- Smoke DB locale reale: `api/editorial/tests/content_brain_smoke.php` — **13/13 check PASS**. Esegue `(new ContentBrainService($mockAi, $mockScraper))->scan(siteId, [3 URL], $emit)` su `seo_toolkit` locale, verifica persistenza record `aied_content_brain` (tone, glossary, examples, summary, count, last_scan_at) + update() con tone change.
+- Decisione architetturale: **ADR-030** (service user Ainstein per AiService Credits). Setting `editorial_service_user_id` (default 1=admin locale).
 
 ---
 

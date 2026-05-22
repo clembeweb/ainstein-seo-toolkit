@@ -41,5 +41,15 @@ spl_autoload_register(function (string $class): void {
         if (is_file($path)) {
             require_once $path;
         }
+        return;
+    }
+
+    // Services namespace → services/
+    if (str_starts_with($class, 'Services\\')) {
+        $relative = substr($class, strlen('Services\\'));
+        $path = $root . '/services/' . str_replace('\\', '/', $relative) . '.php';
+        if (is_file($path)) {
+            require_once $path;
+        }
     }
 });

@@ -787,3 +787,38 @@ Top-up packs (acquistabili in qualsiasi momento, no scadenza):
 - ⚠️ Coverage gap: PHP 8.0 strict non testato (acceptable, rischio basso)
 - ⚠️ Coverage gap: WPML non testato (Polylang è proxy, ma WPML ha edge case proprietari su hook `wpml_*`); da rivalutare se beta riceve segnali utenti WPML
 - 📝 Task M2.0: aggiungere `defined('WP_CLI')` guard a `Plugin::handleActivationRedirect`
+
+---
+
+## ADR-030: Editorial usa "service user" Ainstein per AiService.Credits
+
+**Date**: 2026-05-22 · **Status**: Accepted · **Riferimento**: M2.1 ContentBrainService
+
+**Context**: `AiService::analyze()` (singleton Ainstein) consuma crediti dalla tabella `users` di Ainstein via `Credits::hasEnough()` + `Credits::consume()`. Editorial vive in namespace separato `aied_*` con `aied_users` distinte da `users` Ainstein (CLAUDE.md Editorial GR #2: "Namespace separato in DB"). Quando Editorial chiama `AiService` deve passare un `$userId` valido nella tabella `users` di Ainstein, altrimenti il check Credits fallisce o consuma su user sbagliato.
+
+Tre pattern possibili:
+1. **Service user dedicato**: 1 utente Ainstein "editorial-service" con crediti illimitati. `AiService::analyze($serviceUserId, ...)` traccia consumo qui.
+2. **Modificare AiService con bypass flag**: aggiungere `skipCredits=true` ad analyze. Pulito ma mutua AiService → rischio rotture cross-modulo.
+3. **Chiamare API Claude direttamente bypassando AiService**: viola GR Editorial #1 (no duplicazione).
+
+**Decision**: Pattern 1 (service user). Implementato in M2.1 con setting `editorial_service_user_id` (chiave in tabella `settings` Ainstein, default `1` = admin locale per dev). In produzione l'admin può creare un utente sistema dedicato (`editorial-system@ainstein.it`, tier illimitato) e popolare il setting.
+
+```php
+$this->serviceUserId = (int) Settings::get('editorial_service_user_id', 1);
+$ai->analyze($this->serviceUserId, $prompt, $payload, 'editorial-content-brain');
+```
+
+**Alternatives considered**:
+- **Pattern 2 (bypass flag in AiService)**: scartato per non mutare la API di un servizio condiviso usato da 9 moduli — rischio di side-effect non intuitivi. Editorial dovrebbe adattarsi al contratto esistente, non viceversa.
+- **Pattern 3 (curl diretto)**: scartato per GR Editorial #1. Avrebbe duplicato la logica di provider fallback (Claude→OpenAI) e logging.
+- **Linkare `aied_users.id` a `users.id` con shared schema**: violerebbe GR #2 (separazione namespace). Inoltre `aied_users` non hanno controparte 1:1 in `users` Ainstein (utenti Editorial creati silenziosamente all'attivazione license, vedi ADR-012).
+
+**Consequences**:
+
+- ✅ AiService inalterato — zero rischio cross-modulo
+- ✅ Editorial conforme a GR #1 (riuso) e GR #2 (namespace separato)
+- ✅ Traceability: tutte le chiamate AI Editorial finiscono in `api_logs` Ainstein sotto `module=editorial-content-brain`, attribuite al service user → filtro pulito per cost analysis
+- ✅ Override locale via Settings → flessibilità dev/staging/prod senza modifiche codice
+- ⚠️ Quota Editorial tracking rimane in `aied_actions_log` (separato da Ainstein Credits). I crediti AiService Ainstein consumati dal service user sono solo "costi tecnici interni", non quota utente
+- 📝 Task M6 polish: documentare in `docs/DEPLOY.md` come creare l'utente service in produzione e popolare il setting
+- 📝 Considerare in M3 generation: stesso pattern verrà esteso a `ArticleService` (riuso Settings con la stessa chiave)
