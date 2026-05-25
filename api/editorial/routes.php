@@ -67,9 +67,10 @@ Router::post($base . '/webhooks/lemonsqueezy',   $editorialPublic(\Editorial\Con
 // =========================================
 
 // --- Content Brain (M2) ---
+// Note: POST /content-brain/scan e' SSE-only (text/event-stream). Nessun job_id pattern:
+// lo stato deriva da aied_content_brain.last_scan_at. Vedi M2-content-brain.md §2.2.
 Router::get ($base . '/content-brain',                       $editorialAuth(\Editorial\Controllers\ContentBrainController::class, 'show'));
 Router::post($base . '/content-brain/scan',                  $editorialAuth(\Editorial\Controllers\ContentBrainController::class, 'scan'));
-Router::get ($base . '/content-brain/scan/{job_id}/stream',  $editorialAuth(\Editorial\Controllers\ContentBrainController::class, 'scanStream'));
 Router::put ($base . '/content-brain',                       $editorialAuth(\Editorial\Controllers\ContentBrainController::class, 'update'));
 
 // --- Keyword Research (M4) ---

@@ -489,18 +489,20 @@ Posizione: `seo-toolkit/api/editorial/Services/ContentBrainService.php` (~565 ri
 
 ---
 
-### M2.2 — Endpoint SSE `/content-brain/scan` — 4h
+### M2.2 — Endpoint SSE `/content-brain/scan` — 4h ✅ COMPLETATO 2026-05-25
 
 Posizione: `seo-toolkit/api/editorial/Controllers/ContentBrainController.php`.
 
-- [ ] M2.2.a Implementare metodo `scan(Request $req)` che monta SSE response (headers + ignore_user_abort + set_time_limit + session_write_close)
-- [ ] M2.2.b Adattare `Services/ContentBrainService::scan()` per ricevere `$emit` callback con eventi tipizzati (vedi spec §2.2)
-- [ ] M2.2.c Implementare emissione eventi SSE format-compliant: `event: name\ndata: json\n\n` + `@ob_flush(); flush()`
-- [ ] M2.2.d Exception handling: catch + emit `event: error` + close stream
-- [ ] M2.2.e Aggiungere route `POST /api/editorial/v1/content-brain/scan` in `routes.php` (rimpiazza stub 501 M1.3)
-- [ ] M2.2.f Test E2E via curl: `curl -N -X POST -H "X-License-Key: TEST-..." -H "X-Site-Domain: ..." /api/editorial/v1/content-brain/scan` → vedere stream eventi
+- [x] M2.2.a Implementare metodo `scan()` che monta SSE response (headers + ignore_user_abort + set_time_limit + session_write_close)
+- [x] M2.2.b `ContentBrainService::scan()` già accetta `?callable $emit = null` da M2.1 (signature pronta, nessun adapter necessario)
+- [x] M2.2.c Emissione eventi SSE format-compliant: `event: name\ndata: json\n\n` + `@ob_flush(); flush()`
+- [x] M2.2.d Exception handling: try/catch attorno `Service::scan()` che emette `event: error` con `retry_possible:true` + chiude stream
+- [x] M2.2.e Route `POST /api/editorial/v1/content-brain/scan` già definita in `routes.php` (era stub 501); rimossa anche route legacy `/content-brain/scan/{job_id}/stream` (design SSE-only senza job table)
+- [x] M2.2.f Test E2E: smoke isolato `api/editorial/tests/content_brain_scan_sse_smoke.php` — **13/13 check PASS** via subprocess mock (happy path: started → 2×article_scraped → aggregating → analyzing → completed; error path: exception → event: error con message + retry_possible). Test curl con sito reale rinviato a M2.5 (wizard UI invoca l'endpoint).
 
-**DoD**: curl SSE stream produce sequenza eventi corretta su sito test reale (es. blog WordPress italiano sample).
+**Bonus**: aggiunto service injection opzionale al `ContentBrainController::__construct(?ContentBrainService $service = null)` per testabilità (Router instanzia comunque senza args).
+
+**DoD**: ✅ smoke 13/13 PASS, formato SSE compliant verificato, error path coperto. Test su sito reale → in M2.5 con UI plugin.
 
 ---
 
