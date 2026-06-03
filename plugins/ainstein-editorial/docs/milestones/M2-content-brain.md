@@ -506,15 +506,17 @@ Posizione: `seo-toolkit/api/editorial/Controllers/ContentBrainController.php`.
 
 ---
 
-### M2.3 — Endpoint `GET` + `PUT /content-brain` — 3h
+### M2.3 — Endpoint `GET` + `PUT /content-brain` — 3h ✅ COMPLETATO 2026-06-01
 
-- [ ] M2.3.a Implementare `ContentBrainController::get(Request $req)` → ritorna content_brain corrente o 404
-- [ ] M2.3.b Implementare `ContentBrainController::update(Request $req)` → validate + delegate a service
-- [ ] M2.3.c Validation helper: tone enum, glossary shape, guidelines shape. Ritorna `[errors]` strutturato per UI.
-- [ ] M2.3.d Aggiungere routes in `routes.php` (rimpiazza stub 501)
-- [ ] M2.3.e Test via curl: GET prima dello scan → 404. POST scan completa. GET dopo → 200 con payload. PUT partial → 200 con merged. PUT con tone invalido → 422.
+- [x] M2.3.a `ContentBrainController::show()` → ritorna `{ content_brain: {...} }` o 404 (`"Content Brain non ancora creato. Completa l'onboarding."`). site_id derivato da `LicenseAuthMiddleware::$currentSite['id']`.
+- [x] M2.3.b `ContentBrainController::update()` → pre-flight `validatePatch()` poi delega a `Service::update()`
+- [x] M2.3.c Validation: riusa `ContentBrainService::validatePatch()` (tone enum, glossary/guidelines shape) → 422 `{ error, errors: [{field, message}] }`. Gestito anche `content_brain_not_found` → 404.
+- [x] M2.3.d Routes GET/PUT già definite in `routes.php` da M2.2 (non erano più stub 501)
+- [x] M2.3.e Test smoke isolato `api/editorial/tests/content_brain_get_put_smoke.php` — **13/13 PASS** via subprocess-mock (shutdown handler cattura `http_response_code()` in CLI). Copre i 4 scenari DoD + bonus PUT-su-brain-inesistente→404: GET pre-scan 404, GET post-scan 200, PUT partial 200 (tone+topic merged), PUT tone invalido 422, PUT 404.
 
-**DoD**: 4 test curl tutti corretti.
+**Decisione shape API**: GET e PUT ritornano entrambi `{ content_brain: {...} }` (wrapping consistente) anziché lo shape "flat" suggerito nella spec §2.3 per GET — più semplice da consumare lato plugin JS (M2.6) e simmetrico col payload `completed` SSE (`{ brain: {...} }`).
+
+**DoD**: ✅ smoke 13/13 PASS, 4 scenari DoD coperti. Unit (18/18) + SSE smoke (13/13) regression verde.
 
 ---
 

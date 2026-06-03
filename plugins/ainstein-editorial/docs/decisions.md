@@ -822,3 +822,23 @@ $ai->analyze($this->serviceUserId, $prompt, $payload, 'editorial-content-brain')
 - ⚠️ Quota Editorial tracking rimane in `aied_actions_log` (separato da Ainstein Credits). I crediti AiService Ainstein consumati dal service user sono solo "costi tecnici interni", non quota utente
 - 📝 Task M6 polish: documentare in `docs/DEPLOY.md` come creare l'utente service in produzione e popolare il setting
 - 📝 Considerare in M3 generation: stesso pattern verrà esteso a `ArticleService` (riuso Settings con la stessa chiave)
+
+---
+
+## ADR-031: Endpoint Content Brain GET/PUT ritornano shape wrapped `{ content_brain: {...} }`
+
+**Date**: 2026-06-01 · **Status**: Accepted · **Riferimento**: M2.3 ContentBrainController
+
+**Context**: la spec M2 §2.3 descriveva GET `/content-brain` con response "flat" (campi `site_id, site_topic, tone, ...` al top-level della response) mentre PUT con response wrapped (`{ updated_at, content_brain: {...} }`). Shape asimmetrico tra i due endpoint dello stesso resource. L'evento SSE `completed` di M2.2 emette già `{ brain: {...} }` (wrapped).
+
+**Decision**: GET e PUT ritornano **entrambi** `{ content_brain: {...} }`. Errori restano `{ error, [errors] }`. Niente campo `updated_at` separato (l'oggetto `content_brain` contiene già `last_scan_at`; l'update manuale non tocca un timestamp dedicato in M2 — eventuale `updated_at` colonna è rinviata a M6 se servirà audit).
+
+**Alternatives considered**:
+- **Shape flat per GET (come da spec)**: scartato per asimmetria con PUT e con l'evento SSE. Avrebbe costretto il plugin JS (M2.6) a due parser diversi per lo stesso oggetto.
+- **Unwrapped per entrambi**: scartato perché mescola dati e metadati (es. futuri `meta`, `warnings`) al top-level → meno estendibile.
+
+**Consequences**:
+- ✅ Plugin JS (M2.6 Content Brain page, M2.5 wizard step6) usa un solo accessor `resp.content_brain` per GET, PUT e — con rename `brain`→`content_brain` lato consumer — anche per l'evento SSE
+- ✅ Estendibile: si possono aggiungere `warnings`, `meta` a fianco di `content_brain` senza breaking change
+- 📝 Spec §2.3 ora diverge dall'implementazione: annotato il delta nel doc milestone M2.3
+- 📝 M2.6: il consumer SSE legge `data.brain`; valutare allineamento naming (`brain` vs `content_brain`) o lasciare l'evento SSE com'è per non toccare M2.2 testato

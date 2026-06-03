@@ -186,13 +186,13 @@ Tutti i deliverable per eseguire la Fase 1 sono già scritti in `docs/validation
 **Obiettivo**: utente attivato può completare onboarding e plugin "impara" il suo sito.
 
 #### Backend
-- [ ] **`ContentBrainService`** in `api/editorial/services/`
-  - Metodo `scanSite(siteId, articleUrls)`
+- [x] **`ContentBrainService`** in `api/editorial/Services/` (M2.1 ✅ 2026-05-22)
+  - Metodo `scan(siteId, articleUrls, emit)` + `get()` + `update()` + `discoverArticleUrls()`
   - Riusa `ScraperService` per fetch articoli
   - Riusa `AiService` per analisi brand voice
   - Salva risultati in `aied_content_brain`
-- [ ] **Endpoint `POST /content-brain/scan`** con SSE stream
-- [ ] **Endpoint `GET/PUT /content-brain`** per editing manuale
+- [x] **Endpoint `POST /content-brain/scan`** con SSE stream (M2.2 ✅ 2026-05-25)
+- [x] **Endpoint `GET/PUT /content-brain`** per editing manuale (M2.3 ✅ 2026-06-01)
 
 #### Plugin
 - [ ] **Admin page "Ainstein Editorial"** registrata in WP menu

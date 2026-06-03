@@ -13,8 +13,8 @@ use Throwable;
  *
  * Gestione del "Content Brain" del sito: scan iniziale (SSE), lettura, update manuale.
  *
- * M2.2 (questo file, current): POST /content-brain/scan con SSE stream.
- * M2.3 (prossimo): GET / PUT /content-brain.
+ * M2.2: POST /content-brain/scan con SSE stream.
+ * M2.3 (current): GET / PUT /content-brain (lettura + update parziale).
  *
  * Pattern SSE: copia da modules/seo-tracking/RankCheckController::processStream().
  * NO tabella aied_scan_jobs: stato deriva da aied_content_brain.last_scan_at (vedi
@@ -33,16 +33,80 @@ class ContentBrainController extends BaseController
         $this->service = $service;
     }
 
-    /** GET /content-brain — implementato in M2.3 */
+    /**
+     * GET /content-brain
+     *
+     * Ritorna il Content Brain del sito corrente (derivato dal token via
+     * LicenseAuthMiddleware). 404 se non ancora creato (onboarding non completato).
+     *
+     * Response 200: { content_brain: { site_id, site_topic, target_audience, tone,
+     *                  brand_voice_summary, brand_voice_examples, glossary,
+     *                  editorial_guidelines, language, last_scan_at, scanned_articles_count } }
+     * Response 404: { error: "Content Brain non ancora creato. Completa l'onboarding." }
+     */
     public function show(): string
     {
-        return $this->jsonNotImplemented('2.3');
+        $siteId = (int) (LicenseAuthMiddleware::$currentSite['id'] ?? 0);
+        if ($siteId <= 0) {
+            return $this->jsonError('Sito non identificato dal token.', 401);
+        }
+
+        $service = $this->service ?? new ContentBrainService();
+        $brain = $service->get($siteId);
+        if ($brain === null) {
+            return $this->jsonError(
+                "Content Brain non ancora creato. Completa l'onboarding.",
+                404
+            );
+        }
+
+        return $this->jsonOk(['content_brain' => $brain]);
     }
 
-    /** PUT /content-brain — implementato in M2.3 */
+    /**
+     * PUT /content-brain
+     *
+     * Update parziale dei campi editabili dall'utente: site_topic, target_audience,
+     * tone, glossary, editorial_guidelines. Campi read-only (brand_voice_summary,
+     * brand_voice_examples, scanned_articles_count, last_scan_at, language) ignorati:
+     * si aggiornano solo via scan.
+     *
+     * Pre-flight validation via ContentBrainService::validatePatch() → 422 strutturato.
+     *
+     * Response 200: { content_brain: {...refreshed...} }
+     * Response 404: { error: "Content Brain non ancora creato. Completa l'onboarding." }
+     * Response 422: { error: "Dati non validi", errors: [{field, message}, ...] }
+     */
     public function update(): string
     {
-        return $this->jsonNotImplemented('2.3');
+        $siteId = (int) (LicenseAuthMiddleware::$currentSite['id'] ?? 0);
+        if ($siteId <= 0) {
+            return $this->jsonError('Sito non identificato dal token.', 401);
+        }
+
+        $patch = $this->jsonInput();
+        $service = $this->service ?? new ContentBrainService();
+
+        // Pre-flight validation: ritorna 422 con errori strutturati per la UI.
+        $errors = $service->validatePatch($patch);
+        if (!empty($errors)) {
+            return $this->jsonError('Dati non validi', 422, ['errors' => $errors]);
+        }
+
+        $result = $service->update($siteId, $patch);
+        if (empty($result['success'])) {
+            $resultErrors = $result['errors'] ?? [];
+            if (in_array('content_brain_not_found', $resultErrors, true)) {
+                return $this->jsonError(
+                    "Content Brain non ancora creato. Completa l'onboarding.",
+                    404
+                );
+            }
+            // Validation race / shape error sfuggito al pre-flight → 422 strutturato.
+            return $this->jsonError('Aggiornamento non riuscito', 422, ['errors' => $resultErrors]);
+        }
+
+        return $this->jsonOk(['content_brain' => $result['content_brain']]);
     }
 
     /**
