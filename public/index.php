@@ -98,6 +98,14 @@ if (str_ends_with($basePath, '/public')) {
 }
 Router::setBasePath($basePath);
 
+// --- Ainstein Editorial API (prodotto plugin WordPress, namespace separato aied_*) ---
+// Delega completa a un front-controller JSON dedicato, fuori dallo stack HTML.
+// Riferimento: api/editorial/bootstrap.php — Milestone M1.3
+if (str_contains($_SERVER['REQUEST_URI'] ?? '', '/api/editorial/')) {
+    require BASE_PATH . '/api/editorial/bootstrap.php';
+    exit;
+}
+
 // Carica View.php per registrare le funzioni helper globali (url, e, csrf_field, etc.)
 require_once BASE_PATH . '/core/View.php';
 
