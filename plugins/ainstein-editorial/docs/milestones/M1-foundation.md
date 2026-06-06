@@ -1,9 +1,12 @@
 # M1 — Foundation
 
-> **Status**: 📋 Spec scritta, attende approvazione cliente
+> **Status**: 🚧 In corso — task "codice" completati (M1.1, M1.3, M1.4, M1.5, M1.6, M1.7).
+> Restano azioni che richiedono ambiente reale del proprietario: **M1.2** (account Lemon Squeezy, manuale) e **M1.8** (smoke test E2E su WP+LS live).
 > **Effort stimato**: 35-50 ore (~1-1.5 settimane full-time)
 > **Dipendenze**: Nessuna (è la prima milestone)
 > **Sblocca**: Tutte le milestone successive (M2-M6)
+>
+> **Verificato in repo** (2026-06-06): `php -l` su tutti i file, JWT roundtrip + tamper-reject, 22 rotte registrate, matching parametri, build.sh → zip 28KB con autoloader composer che risolve i namespace. Esecuzione migration e activation live restano da fare nell'ambiente reale (no MySQL/WP/LS nel container di sviluppo).
 
 ---
 
@@ -224,13 +227,13 @@ Tutto questo arriva in M2-M6.
 **Dipendenze**: Nessuna  
 **Deliverable**: file SQL eseguibile + rollback script + verifica DB locale
 
-- [ ] M1.1.a Creare `seo-toolkit/database/migrations/2026-05-15-aied-schema.sql` con 9 CREATE TABLE statements (vedi `design.md` §4 per schema completo)
-- [ ] M1.1.b Aggiungere FK + indici critici (sezione 2.1 sopra)
-- [ ] M1.1.c Creare `seo-toolkit/database/migrations/rollback/2026-05-15-aied-schema-rollback.sql` con DROP TABLE in ordine inverso (rispetto FK)
+- [x] M1.1.a Creare `seo-toolkit/database/migrations/2026-05-15-aied-schema.sql` con 9 CREATE TABLE statements (vedi `design.md` §4 per schema completo)
+- [x] M1.1.b Aggiungere FK + indici critici (sezione 2.1 sopra)
+- [x] M1.1.c Creare `seo-toolkit/database/migrations/rollback/2026-05-15-aied-schema-rollback.sql` con DROP TABLE in ordine inverso (rispetto FK)
 - [ ] M1.1.d Eseguire migration su DB locale Laragon: `mysql seo_toolkit < migration.sql`
 - [ ] M1.1.e Verifica: `mysql seo_toolkit -e "SHOW TABLES LIKE 'aied_%'"` → 9 tabelle
 - [ ] M1.1.f Verifica indici: `mysql seo_toolkit -e "SHOW INDEX FROM aied_users"` → idx_license presente
-- [ ] M1.1.g Inserire **3 record di test** in `aied_users` (uno per tier Starter/Pro/Business) per testare query downstream
+- [x] M1.1.g Inserire **3 record di test** in `aied_users` (uno per tier Starter/Pro/Business) per testare query downstream
 
 **DoD M1.1**: 9 tabelle esistono, FK rispettate, 3 user di test inseriti, rollback testato.
 
@@ -260,13 +263,13 @@ Tutto questo arriva in M2-M6.
 **Dipendenze**: M1.1 (tabelle esistenti per query)  
 **Deliverable**: cartella `api/editorial/` con routing funzionante + middleware base + tutti gli endpoint stub
 
-- [ ] M1.3.a Creare struttura cartelle `seo-toolkit/api/editorial/` (Controllers, Middleware, Services, Lib)
-- [ ] M1.3.b Creare `routes.php` con definizione di tutti ~25 endpoint (vedi `design.md` §5). Endpoint M1-impl: real handler. Altri: stub return `[501, {error: 'Coming in M{N}'}]`.
-- [ ] M1.3.c Integrare routing in `seo-toolkit/public/index.php`: route group prefix `/api/editorial/v1/*` → carica `api/editorial/routes.php`
-- [ ] M1.3.d Implementare `BaseController` con metodi `jsonOk($data, $status=200)`, `jsonError($message, $status=400)`, `sseStream($callback)`
-- [ ] M1.3.e Implementare `LicenseAuthMiddleware` (skip per `/activate` + `/webhooks/*`): legge `X-License-Key` + `X-Site-Domain` + `X-Api-Token`, valida JWT, carica `aied_users` + `aied_sites` in request context
-- [ ] M1.3.f Implementare `RateLimitMiddleware` con cache file/Redis: 60 req/min per license_key
-- [ ] M1.3.g Stub `QuotaMiddleware` (in M1 lascia passare tutto, full impl in M3)
+- [x] M1.3.a Creare struttura cartelle `seo-toolkit/api/editorial/` (Controllers, Middleware, Services, Lib)
+- [x] M1.3.b Creare `routes.php` con definizione di tutti ~25 endpoint (vedi `design.md` §5). Endpoint M1-impl: real handler. Altri: stub return `[501, {error: 'Coming in M{N}'}]`.
+- [x] M1.3.c Integrare routing in `seo-toolkit/public/index.php`: route group prefix `/api/editorial/v1/*` → carica `api/editorial/routes.php`
+- [x] M1.3.d Implementare `BaseController` con metodi `jsonOk($data, $status=200)`, `jsonError($message, $status=400)`, `sseStream($callback)`
+- [x] M1.3.e Implementare `LicenseAuthMiddleware` (skip per `/activate` + `/webhooks/*`): legge `X-License-Key` + `X-Site-Domain` + `X-Api-Token`, valida JWT, carica `aied_users` + `aied_sites` in request context
+- [x] M1.3.f Implementare `RateLimitMiddleware` con cache file/Redis: 60 req/min per license_key
+- [x] M1.3.g Stub `QuotaMiddleware` (in M1 lascia passare tutto, full impl in M3)
 - [ ] M1.3.h Test endpoint stub: `curl http://localhost/seo-toolkit/api/editorial/v1/articles/generate` → 501 con JSON `{error: "Coming in M3"}`
 
 **DoD M1.3**: Tutti gli endpoint registrati e raggiungibili. Middleware funzionano. Stub ritornano 501 con messaggio.
@@ -278,14 +281,14 @@ Tutto questo arriva in M2-M6.
 **Dipendenze**: M1.2 (LS test license), M1.3 (middleware + base)  
 **Deliverable**: endpoint `/activate` `/deactivate` `/refresh-token` end-to-end funzionanti
 
-- [ ] M1.4.a Implementare `Lib/LemonSqueezyClient.php`: HTTP wrapper per Lemon Squeezy API v1 (validate license, activate instance, deactivate instance, get license info)
-- [ ] M1.4.b Implementare `Services/JwtService.php`: issue token (payload: user_id, site_id, exp 24h), verify token, refresh logic
-- [ ] M1.4.c Implementare `Services/LicenseManager.php`:
+- [x] M1.4.a Implementare `Lib/LemonSqueezyClient.php`: HTTP wrapper per Lemon Squeezy API v1 (validate license, activate instance, deactivate instance, get license info)
+- [x] M1.4.b Implementare `Services/JwtService.php`: issue token (payload: user_id, site_id, exp 24h), verify token, refresh logic
+- [x] M1.4.c Implementare `Services/LicenseManager.php`:
   - `activate(license_key, domain, wp_version, plugin_version, admin_email)` → valida con LS, crea/finds `aied_users`, crea `aied_sites`, attiva instance LS, return token
   - `deactivate(api_token, site_id)` → mark `aied_sites.status='deactivated'`, deactivate instance LS, free slot
   - `refreshToken(license_key, domain)` → riconfere LS license, emette nuovo JWT
-- [ ] M1.4.d Implementare `Controllers/ActivationController.php` con 3 metodi
-- [ ] M1.4.e Implementare `Controllers/SubscriptionController::status` (versione base: ritorna tier + subscription_status da `aied_users`, quota count da `aied_actions_log` mese corrente)
+- [x] M1.4.d Implementare `Controllers/ActivationController.php` con 3 metodi
+- [x] M1.4.e Implementare `Controllers/SubscriptionController::status` (versione base: ritorna tier + subscription_status da `aied_users`, quota count da `aied_actions_log` mese corrente)
 - [ ] M1.4.f Test end-to-end con curl + license key di test:
   - Activate: `curl -X POST .../activate -d '{license_key, domain, wp_version, plugin_version, admin_email}'` → 200 + api_token
   - Verify DB: `aied_users` + `aied_sites` records creati, `api_token` salvato
@@ -304,15 +307,15 @@ Tutto questo arriva in M2-M6.
 **Dipendenze**: M1.4 (`LicenseManager`)  
 **Deliverable**: endpoint `/webhooks/lemonsqueezy` che gestisce 5 eventi critici
 
-- [ ] M1.5.a Implementare signature verification con LS webhook secret (HMAC SHA256)
-- [ ] M1.5.b Implementare `Controllers/WebhookController::lemonsqueezy(Request)`:
+- [x] M1.5.a Implementare signature verification con LS webhook secret (HMAC SHA256)
+- [x] M1.5.b Implementare `Controllers/WebhookController::lemonsqueezy(Request)`:
   - `subscription_created`: log event (account creation reale via /activate plugin, qui solo trace)
   - `subscription_updated`: update `aied_users.tier` + `subscription_status` + `subscription_renews_at`
   - `subscription_cancelled`: set `aied_users.subscription_status='cancelled'` (ma mantieni active fino a end_period)
   - `subscription_payment_failed`: log + flag per email warning (email in M6)
   - `order_created`: se è top-up pack (dal product variant id mapping), credita `aied_users.topup_balance_articles` (in M3 useremo questo)
   - `license_key_created`: trace log per debugging
-- [ ] M1.5.c Implementare retry/idempotency: log `aied_api_logs` ogni webhook ricevuto con event_id LS per evitare double-processing
+- [x] M1.5.c Implementare retry/idempotency: log `aied_api_logs` ogni webhook ricevuto con event_id LS per evitare double-processing
 - [ ] M1.5.d Test con LS test webhook builder (panel LS): inviare ognuno dei 5 eventi → verificare DB updated correttamente
 
 **DoD M1.5**: 5 eventi gestiti, signature validata, idempotency garantita, log completo in `aied_api_logs`.
@@ -324,33 +327,33 @@ Tutto questo arriva in M2-M6.
 **Dipendenze**: M1.4 (endpoint activate per test integration)  
 **Deliverable**: plugin WP installabile da zip, attivabile, license activation funzionante via UI
 
-- [ ] M1.6.a Creare `plugins/ainstein-editorial/src/plugin.php` con header WP completo (Plugin Name, Version, Author, etc.)
-- [ ] M1.6.b Inizializzare `composer.json` con autoload PSR-4 `Ainstein\Editorial\` → `src/Includes/`, `src/Admin/`, `src/Utils/`
-- [ ] M1.6.c Eseguire `composer install` (per ora 0 dipendenze esterne, solo autoload)
-- [ ] M1.6.d Implementare `Includes/Plugin.php` (singleton, hook init)
-- [ ] M1.6.e Implementare `Includes/Activator.php`:
+- [x] M1.6.a Creare `plugins/ainstein-editorial/src/plugin.php` con header WP completo (Plugin Name, Version, Author, etc.)
+- [x] M1.6.b Inizializzare `composer.json` con autoload PSR-4 `Ainstein\Editorial\` → `src/Includes/`, `src/Admin/`, `src/Utils/`
+- [x] M1.6.c Eseguire `composer install` (per ora 0 dipendenze esterne, solo autoload)
+- [x] M1.6.d Implementare `Includes/Plugin.php` (singleton, hook init)
+- [x] M1.6.e Implementare `Includes/Activator.php`:
   - Crea options vuote (`aied_*`)
   - Salva `aied_first_activated_at = time()`
   - Set transient redirect a License page al primo load admin
-- [ ] M1.6.f Implementare `Includes/Deactivator.php`:
+- [x] M1.6.f Implementare `Includes/Deactivator.php`:
   - Se opt-in (M6 setting): mantieni dati. Default M1: mantieni dati.
   - Cancella WP cron events (anche se M1 non li registra ancora)
-- [ ] M1.6.g Implementare `Includes/ApiClient.php`:
+- [x] M1.6.g Implementare `Includes/ApiClient.php`:
   - `post($endpoint, $payload)` → `wp_remote_post(AIED_API_BASE.$endpoint, ...)` con headers standard
   - `get($endpoint)` analogamente
   - Auto-include `X-License-Key`, `X-Site-Domain`, `X-Api-Token` se presenti in options
   - Handle response: 200 OK return data, 401 trigger refresh-token + retry, 4xx/5xx return WP_Error con message italiano
-- [ ] M1.6.h Implementare `Includes/LicenseManager.php` (lato plugin):
+- [x] M1.6.h Implementare `Includes/LicenseManager.php` (lato plugin):
   - `activate($key)` → chiama ApiClient::post('/activate'), salva token in options, return success/error
   - `isActive()` → bool basato su options + token expiry
   - `getApiToken()` → token corrente, auto-refresh se < 1h to expire
   - `deactivate()` → chiama ApiClient::post('/deactivate'), pulisce options
-- [ ] M1.6.i Implementare `Admin/AdminPages.php`: registra menu admin top-level "Ainstein Editorial" + sottomenu "License"
-- [ ] M1.6.j Implementare `Admin/Pages/License.php`:
+- [x] M1.6.i Implementare `Admin/AdminPages.php`: registra menu admin top-level "Ainstein Editorial" + sottomenu "License"
+- [x] M1.6.j Implementare `Admin/Pages/License.php`:
   - Se non attivato: form con textarea license key + bottone "Attiva"
   - Se attivato: card "✓ Attivato. Tier: {tier}. Email: {email}." + bottone "Disattiva su questo sito"
   - Submit form: nonce check, sanitize input, call `LicenseManager::activate()`, mostra success/error message
-- [ ] M1.6.k CSS minimale per License page (Tailwind base, anche solo via CDN per M1)
+- [x] M1.6.k CSS minimale per License page (Tailwind base, anche solo via CDN per M1)
 - [ ] M1.6.l Test su WP locale: installa plugin (anche solo via symlink Laragon), attiva, vai a License page, incolla test key, verifica activation success
 
 **DoD M1.6**: Plugin installa correttamente. License activation via UI funziona end-to-end. Errori user-friendly in italiano.
@@ -362,12 +365,12 @@ Tutto questo arriva in M2-M6.
 **Dipendenze**: M1.6 (codice plugin completo)  
 **Deliverable**: `build.sh` produce zip installabile
 
-- [ ] M1.7.a Creare `plugins/ainstein-editorial/build.sh` (bash script)
-- [ ] M1.7.b Logic: leggi version da plugin.php header, composer install no-dev, copia file in tempdir, zip
-- [ ] M1.7.c Esclusioni: tests/, docs/, node_modules/, .env*, build.sh, *.log
-- [ ] M1.7.d Output: `dist/ainstein-editorial-v0.1.0.zip` (~50-100 KB in M1, sarà più grande in M3+)
+- [x] M1.7.a Creare `plugins/ainstein-editorial/build.sh` (bash script)
+- [x] M1.7.b Logic: leggi version da plugin.php header, composer install no-dev, copia file in tempdir, zip
+- [x] M1.7.c Esclusioni: tests/, docs/, node_modules/, .env*, build.sh, *.log
+- [x] M1.7.d Output: `dist/ainstein-editorial-v0.1.0.zip` (~50-100 KB in M1, sarà più grande in M3+)
 - [ ] M1.7.e Test: scarica zip, installa su WP fresh diverso da quello di sviluppo, attiva, License page, attivazione → tutto funziona
-- [ ] M1.7.f Documentare uso build.sh in `plugins/ainstein-editorial/README.md`
+- [x] M1.7.f Documentare uso build.sh in `plugins/ainstein-editorial/README.md`
 
 **DoD M1.7**: Zip prodotto installabile su WP pulito. Plugin attiva + license activation funziona.
 

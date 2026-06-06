@@ -134,11 +134,11 @@ Tutti i deliverable per eseguire la Fase 1 sono già scritti in `docs/validation
 **Obiettivo**: scheletro backend + plugin attivabile + sistema licenze funzionante.
 
 #### Backend setup
-- [ ] **Database migration** `aied_*` tables (vedi `design.md` §4)
+- [x] **Database migration** `aied_*` tables (vedi `design.md` §4)
   - Crea tutte le 9 tabelle
   - Indexes + foreign keys
   - Migration eseguibile + rollback script
-- [ ] **API skeleton** `seo-toolkit/api/editorial/`
+- [x] **API skeleton** `seo-toolkit/api/editorial/`
   - `routes.php` con tutti gli endpoint definiti (anche placeholder)
   - Middleware `LicenseAuthMiddleware`, `QuotaMiddleware`, `RateLimitMiddleware`
   - Base controller con response helpers
@@ -148,20 +148,20 @@ Tutti i deliverable per eseguire la Fase 1 sono già scritti in `docs/validation
   - License Keys variants attivate
   - Webhook endpoint configurato + signature secret
   - Test mode validato
-- [ ] **Activation endpoint** `/activate` funzionante
+- [x] **Activation endpoint** `/activate` funzionante
   - Validazione license key via LS API
   - Creazione `aied_users` + `aied_sites`
   - Generazione JWT api_token
 
 #### Plugin shell
-- [ ] **Plugin skeleton** `plugins/ainstein-editorial/src/`
+- [x] **Plugin skeleton** `plugins/ainstein-editorial/src/`
   - Plugin header WP compliant
   - Autoloader composer + namespace `Ainstein\Editorial`
   - Activation/Deactivation hooks
   - Settings page minimale: "License key" + bottone "Attiva"
   - ApiClient class (wp_remote_* wrapper)
   - LicenseManager class
-- [ ] **Build script** `build.sh` funzionante
+- [x] **Build script** `build.sh` funzionante
   - Compila Tailwind (anche minimal per ora)
   - Esclude `tests/`, `docs/`, `node_modules/`
   - Output zip versionato

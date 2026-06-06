@@ -449,6 +449,36 @@ Top-up packs: +20 articoli €15 · +50 €30 · +100 €50. Articoli inclusi az
 
 ---
 
+## ADR-024: Scelte implementative M1 Foundation
+
+**Date**: 2026-06-06 · **Status**: Accepted
+
+**Context**: Avvio implementazione M1 (backend API + plugin shell + license). Servono decisioni tecniche concrete non coperte dal design ad alto livello, prese autonomamente come da workflow CLAUDE.md (decisioni tecniche → Claude decide).
+
+**Decision** (4 scelte):
+
+1. **Front controller JSON isolato per l'API editorial**. `public/index.php` rileva il prefisso `/api/editorial/` e delega a `api/editorial/bootstrap.php`, uno stack completamente separato dall'HTML di Ainstein (Router/Request/Response propri, namespace `Ainstein\Editorial\`). Motivo: l'API deve essere JSON-native, decoupled, e non ereditare session/layout/CSRF del monolite. Riusa solo `Core\Database`.
+
+2. **Tier derivato dall'`activation_limit` della license Lemon Squeezy** (1→starter, 3→pro, 10→business, 50→agency) invece che da una mappa variant_id→tier. Motivo: evita di dover hardcodare i variant_id LS (che esistono solo dopo il setup account M1.2) e rende l'attivazione funzionante a prescindere dall'ordine di creazione prodotti. La mappa variant→articoli per i top-up resta da definire in M3.
+
+3. **JWT HS256 self-implemented, zero dipendenze**. `JwtService` firma/verifica con `hash_hmac` nativo. Motivo: una sola necessità (api_token short-lived), nessun bisogno di firmr9.com/firebase-jwt; meno superfici di attacco e build più leggera. Secret in env `AIED_JWT_SECRET`.
+
+4. **Rate limit file-based** (contatore per-minuto su filesystem temp, no Redis). Motivo: MVP single-node su Hetzner; sufficiente per 60 req/min/license. Migrabile a Redis senza cambiare l'interfaccia del middleware.
+
+**Alternatives considered**:
+- API editorial dentro il Router HTML di Ainstein: scartata (accoppiamento a session/layout, 404 HTML invece di JSON).
+- Mappa variant_id→tier: scartata per M1 (dipendenza da setup LS non ancora fatto), riconsiderabile se servono tier non mappabili 1:1 sull'activation_limit.
+- libreria JWT esterna: overkill.
+
+**Consequences**:
+- ✅ Backend API testabile in isolamento, JSON puro, 22 rotte registrate (5 reali M1 + stub 501 M2-M5 + /ping)
+- ✅ Plugin si attiva senza conoscere i variant_id LS
+- ✅ Build plugin leggera (~28KB), nessuna dipendenza runtime
+- ⚠️ activation_limit deve essere impostato correttamente sui prodotti LS (M1.2) perché il tier sia corretto
+- ⚠️ Rate limit file-based non condiviso tra più nodi (irrilevante ora, da rivedere se si scala orizzontalmente)
+
+---
+
 ## ADR-023: Pivot build-first — scope completo MVP, no validation pre-dev, naming postponed
 
 **Date**: 2026-05-13 · **Status**: Accepted · **Supersedes**: ADR-018 (validation pre-dev obbligatoria), parti di ADR-022
