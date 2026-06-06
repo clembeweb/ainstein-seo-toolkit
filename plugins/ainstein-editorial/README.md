@@ -64,10 +64,27 @@ Leggi nell'ordine:
 
 - ✅ Brainstorming completato (2026-05-12)
 - ✅ Vision + design + roadmap documentati
-- ⏳ **PROSSIMO**: validation pre-development (landing + waitlist + survey — 2 settimane)
-- ⏳ Sviluppo MVP (16 settimane stimate)
+- 🔵 Validation pre-development → spostata a launch time (ADR-023, build-first)
+- ⏳ **IN CORSO**: MVP — Milestone M1 Foundation (backend API + plugin shell + license)
 - ⏳ Soft launch closed beta
 - ⏳ Public launch
+
+## Build & distribuzione
+
+Genera lo zip installabile del plugin:
+
+```bash
+cd plugins/ainstein-editorial
+./build.sh
+# → dist/ainstein-editorial-v{X.Y.Z}.zip
+```
+
+Lo script legge la versione dall'header di `src/plugin.php`, esegue `composer install --no-dev`,
+unisce `src/` + `assets/` (+ `languages/` da M5) e produce lo zip con root `ainstein-editorial/`.
+Esclude `tests/`, `docs/`, `node_modules/`, `.env*`. Installa lo zip da WP Admin → Plugin → Aggiungi nuovo → Carica.
+
+**Sviluppo locale**: in `wp-config.php` definisci `define('AIED_API_BASE', 'http://localhost/seo-toolkit/api/editorial/v1');`
+per puntare al backend locale invece che alla produzione.
 
 ## Repository structure
 

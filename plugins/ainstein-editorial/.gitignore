@@ -1,0 +1,13 @@
+# Build artifacts
+/dist/
+
+# Composer (rigenerato da build.sh)
+/src/vendor/
+/src/composer.lock
+
+# Env locali
+.env
+.env.local
+
+# Node (Tailwind toolchain, da M2/M3)
+/node_modules/
