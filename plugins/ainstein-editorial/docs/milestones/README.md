@@ -20,8 +20,8 @@
 
 | # | File | Stato | Effort stimato | Dipendenze |
 |---|------|-------|----------------|------------|
-| M1 | [`M1-foundation.md`](M1-foundation.md) | 📋 Spec scritta, attende approvazione | 35-50 ore (1.5 settimane) | — |
-| M2 | M2-content-brain.md | ⏳ Da scrivere dopo M1 | ~25-35 ore | M1 completata |
+| M1 | [`M1-foundation.md`](M1-foundation.md) | 🚧 Codice completo, attende verifica live (M1.2 + M1.8) | 35-50 ore (1.5 settimane) | — |
+| M2 | [`M2-content-brain.md`](M2-content-brain.md) | 📋 Spec scritta, attende approvazione | ~28-38 ore | M1 completata |
 | M3 | M3-article-generation.md | ⏳ Da scrivere dopo M2 | ~50-70 ore | M2 completata |
 | M4 | M4-keyword-research-autopilot.md | ⏳ Da scrivere dopo M3 | ~50-70 ore | M3 completata |
 | M5 | M5-internal-linking-extras.md | ⏳ Da scrivere dopo M4 | ~30-40 ore | M4 completata |
