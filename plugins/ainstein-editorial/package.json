@@ -1,0 +1,13 @@
+{
+  "name": "ainstein-editorial",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Design system (Tailwind) per il plugin Ainstein Editorial",
+  "scripts": {
+    "build": "tailwindcss -i ./assets/src/input.css -o ./assets/css/app.css --minify",
+    "watch": "tailwindcss -i ./assets/src/input.css -o ./assets/css/app.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}

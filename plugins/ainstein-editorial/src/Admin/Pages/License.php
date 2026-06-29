@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Ainstein\Editorial\Admin\Pages;
 
 use Ainstein\Editorial\Includes\LicenseManager;
+use Ainstein\Editorial\Utils\Icons;
 
 /**
  * Pagina admin "License": attivazione / disattivazione del plugin su questo sito.
@@ -68,14 +69,14 @@ class License
 
             <?php if ($manager->isActive()) : ?>
                 <div class="aied-card aied-card--active">
-                    <div class="aied-badge aied-badge--ok">✓ Attivato</div>
+                    <div class="aied-badge-success"><?php echo Icons::svg('check-circle', 'w-4 h-4 mr-1'); ?> Attivato</div>
                     <h2>Tutto pronto</h2>
                     <p>Piano: <strong><?php echo esc_html(ucfirst($manager->getTier())); ?></strong></p>
                     <p>Account: <strong><?php echo esc_html($manager->getEmail()); ?></strong></p>
                     <form method="post" action="">
                         <?php wp_nonce_field(self::NONCE_ACTION, self::NONCE_FIELD); ?>
                         <input type="hidden" name="aied_action" value="deactivate" />
-                        <button type="submit" class="button button-secondary aied-btn"
+                        <button type="submit" class="aied-btn-secondary"
                                 onclick="return confirm('Disattivare Ainstein Editorial su questo sito? La license tornerà disponibile per un altro sito.');">
                             Disattiva su questo sito
                         </button>
@@ -93,7 +94,7 @@ class License
                             <input type="text" id="aied_license_key" name="aied_license_key"
                                    class="regular-text aied-input" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" />
                         </p>
-                        <button type="submit" class="button button-primary aied-btn aied-btn--primary">Attiva</button>
+                        <button type="submit" class="aied-btn-primary"><?php echo Icons::svg('sparkles', 'w-4 h-4'); ?> Attiva</button>
                     </form>
                 </div>
             <?php endif; ?>

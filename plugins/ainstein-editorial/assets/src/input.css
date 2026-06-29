@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Ainstein Editorial — Design System (M2.6)
+ * Componenti riusabili con prefisso .aied-* per evitare conflitti con WP admin
+ * e altri plugin. Palette/typography da design.md §12.
+ */
+
+@layer components {
+    /* Layout pagina admin */
+    .aied-wrap {
+        @apply font-sans max-w-3xl text-slate-700;
+    }
+    .aied-title {
+        @apply text-3xl font-bold text-slate-900 mb-1;
+    }
+    .aied-subtitle {
+        @apply text-slate-500 mt-0 mb-6;
+    }
+    .aied-footer {
+        @apply mt-6 text-xs text-slate-400;
+    }
+    .aied-label {
+        @apply block font-semibold mb-1.5 text-slate-700;
+    }
+
+    /* Card */
+    .aied-card {
+        @apply bg-white border border-slate-200 rounded-xl p-6 shadow-sm max-w-xl;
+    }
+    .aied-card--active {
+        @apply border-emerald-300 bg-emerald-50;
+    }
+
+    /* Bottoni */
+    .aied-btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer no-underline;
+    }
+    .aied-btn-primary {
+        @apply aied-btn bg-indigo-500 text-white hover:bg-indigo-600;
+    }
+    .aied-btn-secondary {
+        @apply aied-btn bg-white text-slate-700 border border-slate-300 hover:bg-slate-50;
+    }
+    .aied-btn-ghost {
+        @apply aied-btn bg-transparent text-slate-600 hover:bg-slate-100;
+    }
+
+    /* Form */
+    .aied-input,
+    .aied-textarea,
+    .aied-select {
+        @apply w-full max-w-md rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800
+               focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none;
+    }
+    .aied-textarea {
+        @apply max-w-full min-h-[96px];
+    }
+
+    /* Badge stato */
+    .aied-badge {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    }
+    .aied-badge-success {
+        @apply aied-badge bg-emerald-100 text-emerald-800;
+    }
+    .aied-badge-warning {
+        @apply aied-badge bg-amber-100 text-amber-800;
+    }
+    .aied-badge-danger {
+        @apply aied-badge bg-red-100 text-red-800;
+    }
+    .aied-badge-info {
+        @apply aied-badge bg-blue-100 text-blue-800;
+    }
+
+    /* Modal (Alpine.js) */
+    .aied-modal {
+        @apply fixed inset-0 z-[100000] flex items-center justify-center bg-slate-900/50 p-4;
+    }
+    .aied-modal__panel {
+        @apply bg-white rounded-xl shadow-xl max-w-2xl w-full p-6;
+    }
+
+    /* Progress bar (SSE scan) */
+    .aied-progress {
+        @apply w-full h-2 rounded-full bg-slate-200 overflow-hidden;
+    }
+    .aied-progress__bar {
+        @apply h-full bg-indigo-500 transition-all duration-300 ease-out;
+    }
+
+    /* Skeleton loading */
+    .aied-skeleton {
+        @apply animate-pulse rounded bg-slate-200;
+    }
+
+    /* Onboarding step */
+    .aied-step {
+        @apply rounded-xl border border-slate-200 bg-white p-6;
+    }
+    .aied-step--active {
+        @apply border-indigo-300 ring-1 ring-indigo-200;
+    }
+
+    /* Card selezione tono */
+    .aied-tone-card {
+        @apply cursor-pointer rounded-xl border border-slate-200 bg-white p-4 text-center transition
+               hover:border-indigo-300 hover:shadow-sm;
+    }
+    .aied-tone-card--selected {
+        @apply border-indigo-500 ring-1 ring-indigo-500 bg-indigo-50;
+    }
+}

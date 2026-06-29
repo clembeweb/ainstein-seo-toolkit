@@ -70,13 +70,20 @@ class AdminPages
 
     public function assets(string $hook): void
     {
-        if ($hook !== 'toplevel_page_ainstein-editorial') {
+        // Carica il design system solo nelle pagine del plugin.
+        if (!str_contains($hook, 'ainstein-editorial')) {
             return;
         }
         wp_enqueue_style(
-            'ainstein-editorial-admin',
-            AIED_PLUGIN_URL . 'assets/css/admin.css',
+            'ainstein-editorial-fonts',
+            'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
             [],
+            AIED_VERSION
+        );
+        wp_enqueue_style(
+            'ainstein-editorial-app',
+            AIED_PLUGIN_URL . 'assets/css/app.css',
+            ['ainstein-editorial-fonts'],
             AIED_VERSION
         );
     }

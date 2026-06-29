@@ -195,10 +195,10 @@ File: `src/Admin/Pages/ContentBrain.php`
 ### M2.6 — Design system Tailwind + build
 **Effort**: 3-4h · **Dipendenze**: nessuna (parallelo) · **Deliverable**: Tailwind compilato + componenti
 
-- [ ] M2.6.a package.json + tailwind.config.js + assets/src/input.css
-- [ ] M2.6.b Componenti `.aied-*` + partial Heroicons
-- [ ] M2.6.c Step Tailwind in `build.sh` (npm ci + build minify) con fallback se npm assente
-- [ ] M2.6.d Sostituire CSS minimale M1 in pagina License con il design system
+- [x] M2.6.a package.json + tailwind.config.js + assets/src/input.css
+- [x] M2.6.b Componenti `.aied-*` + partial Heroicons
+- [x] M2.6.c Step Tailwind in `build.sh` (npm ci + build minify) con fallback se npm assente
+- [x] M2.6.d Sostituire CSS minimale M1 in pagina License con il design system
 
 ### M2.7 — QA su siti reali
 **Effort**: 2-3h · **Dipendenze**: tutti i precedenti · **Deliverable**: report test

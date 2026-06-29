@@ -30,6 +30,17 @@ if [[ -z "${VERSION}" ]]; then
 fi
 echo "→ Build Ainstein Editorial v${VERSION}"
 
+# --- Compila Tailwind CSS (assets/css/app.css) ---
+if [[ -f "${ROOT_DIR}/package.json" ]] && command -v npm >/dev/null 2>&1; then
+    echo "→ Compilazione Tailwind CSS"
+    (cd "${ROOT_DIR}" \
+        && { [[ -d node_modules ]] || npm ci --silent 2>/dev/null || npm install --silent 2>/dev/null; } \
+        && npm run build --silent 2>/dev/null) \
+        || echo "  (Tailwind non compilato: si userà assets/css/app.css esistente)"
+else
+    echo "  (npm assente: si userà assets/css/app.css committato)"
+fi
+
 # --- Staging dir pulita ---
 STAGING="$(mktemp -d)"
 PKG_DIR="${STAGING}/${PLUGIN_SLUG}"
@@ -65,6 +76,7 @@ find "${PKG_DIR}" -type d -name 'node_modules' -prune -exec rm -rf {} + 2>/dev/n
 find "${PKG_DIR}" -type f \( -name '.env' -o -name '.env.*' -o -name '*.log' -o -name 'build.sh' \) -delete 2>/dev/null || true
 find "${PKG_DIR}" -name '.git*' -exec rm -rf {} + 2>/dev/null || true
 rm -f "${PKG_DIR}/composer.lock" 2>/dev/null || true
+rm -rf "${PKG_DIR}/assets/src" 2>/dev/null || true   # CSS sorgente non distribuito (solo app.css compilato)
 
 # --- Crea lo zip ---
 mkdir -p "${DIST_DIR}"
