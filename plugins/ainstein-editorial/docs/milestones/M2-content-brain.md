@@ -89,6 +89,20 @@ Eventi SSE emessi: `started`, `scanning` (con `progress: i/N` per articolo letto
 
 > Nota architetturale: l'SSE bypassa l'helper `Response::json`. Va gestito un `RateLimit` più permissivo (lo scan è una sola richiesta lunga). Decisione implementativa da loggare in `decisions.md` durante M2.
 
+#### 2.3bis Transport SSE — vincolo critico (esito analisi)
+
+**Problema**: il browser non può collegare un `EventSource` direttamente al backend con l'`X-Api-Token` in header (EventSource fa solo `GET` senza header custom). E il proxy WP **non può** usare `ApiClient` (`wp_remote_*`) per fare passthrough dello stream: `wp_remote_*` **bufferizza** l'intera risposta → niente streaming, l'effetto "WOW" sparisce.
+
+**Soluzione adottata** (proxy cURL streaming, token server-side):
+- Endpoint plugin dedicato (non `admin-ajax` standard, ma un handler che fa flush): apre una connessione cURL verso il backend SSE con `CURLOPT_WRITEFUNCTION` che fa `echo $chunk; flush();` per ogni chunk ricevuto.
+- Header di auth (`X-Api-Token`, `X-License-Key`, `X-Site-Domain`) iniettati lato server dal proxy → **mai nel browser**.
+- Il proxy disabilita il buffering (`ignore_user_abort(true)`, `@ini_set('output_buffering','0')`, `header('X-Accel-Buffering: no')` per nginx).
+- Lato JS: `EventSource('<admin-ajax-url>?action=aied_cb_scan_stream&_wpnonce=...')`.
+
+**Fallback** se lo streaming cURL non funziona sull'hosting WP dell'utente (alcuni FastCGI bufferizzano): polling `GET /content-brain` + un endpoint `GET /content-brain/scan/status` con stato/percentuale, interrogato ogni 2s. La progress bar resta, perde solo la fluidità per-token.
+
+**Alternativa scartata**: EventSource diretto browser→backend con token JWT in query string. Più semplice ma espone il token nell'URL (log server, history) e richiede CORS. Riconsiderabile solo se il proxy cURL si rivela problematico in produzione.
+
 ### 2.4 Plugin — Onboarding wizard
 
 File: `src/Admin/Pages/Onboarding.php` + JS Alpine in `assets/js/onboarding.js`
@@ -157,8 +171,9 @@ File: `src/Admin/Pages/ContentBrain.php`
 **Effort**: 3-4h · **Dipendenze**: M1.6 ApiClient · **Deliverable**: handler wp_ajax che inoltrano al backend
 
 - [ ] M2.3.a Handler `wp_ajax_aied_content_brain_get/update` (nonce + capability, inoltro via ApiClient)
-- [ ] M2.3.b Endpoint plugin per proxy SSE scan (stream passthrough verso il backend, header corretti)
-- [ ] M2.3.c Gestione errori → messaggi italiani user-friendly nel frontend
+- [ ] M2.3.b Proxy SSE **streaming** via cURL `CURLOPT_WRITEFUNCTION` (NON `ApiClient`/wp_remote — bufferizza), token iniettato server-side, no-buffering headers (vedi §2.3bis)
+- [ ] M2.3.c Fallback polling `GET /content-brain/scan/status` se lo streaming non passa l'hosting
+- [ ] M2.3.d Gestione errori → messaggi italiani user-friendly nel frontend
 
 ### M2.4 — Onboarding wizard (UI)
 **Effort**: 6-8h · **Dipendenze**: M2.3 · **Deliverable**: wizard 5 step funzionante con SSE progress

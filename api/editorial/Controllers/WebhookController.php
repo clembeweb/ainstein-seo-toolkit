@@ -82,9 +82,16 @@ class WebhookController extends BaseController
     /** @param array<string,mixed> $attrs */
     private function updateSubscription(string $subscriptionId, array $attrs): void
     {
+        $renewsAt = null;
+        if (!empty($attrs['renews_at'])) {
+            $ts = strtotime((string) $attrs['renews_at']);
+            if ($ts !== false) {
+                $renewsAt = date('Y-m-d H:i:s', $ts);
+            }
+        }
         $update = [
-            'subscription_status'   => $this->mapStatus($attrs['status'] ?? 'active'),
-            'subscription_renews_at' => isset($attrs['renews_at']) ? date('Y-m-d H:i:s', strtotime((string) $attrs['renews_at'])) : null,
+            'subscription_status'    => $this->mapStatus($attrs['status'] ?? 'active'),
+            'subscription_renews_at' => $renewsAt,
         ];
         Database::update('aied_users', $update, 'lemon_squeezy_subscription_id = ?', [$subscriptionId]);
     }

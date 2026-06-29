@@ -93,12 +93,15 @@ class LicenseManager
             return $this->reissueForSite((int) $existing['id'], $userId, $tier, $domain, $licenseKey, $wpVersion, $pluginVersion, (string) $user['email']);
         }
 
-        // 4. Verifica limite siti (slot attivi vs activation_limit)
+        // 4. Verifica limite siti (slot attivi vs activation_limit).
+        // A questo punto $existing è null (nuovo dominio) oppure un sito NON attivo
+        // (quello attivo è già rientrato sopra). In entrambi i casi l'attivazione
+        // aggiunge uno slot attivo: blocca se siamo già al limite con altri siti.
         $activeSites = (int) Database::fetchColumn(
             'SELECT COUNT(*) FROM aied_sites WHERE user_id = ? AND status = "active"',
             [$userId]
         );
-        if ($existing === null && $activeSites >= $activationLimit) {
+        if ($activeSites >= $activationLimit) {
             throw new HttpException(422, 'Hai raggiunto il numero massimo di siti per il tuo piano (' . $activationLimit . ').', [
                 'code'  => 'site_limit_reached',
                 'limit' => $activationLimit,
@@ -117,13 +120,17 @@ class LicenseManager
         // 6. Crea/riattiva il sito + emetti JWT
         if ($existing !== null) {
             $siteId = (int) $existing['id'];
-            Database::update('aied_sites', [
+            $update = [
                 'status'         => 'active',
                 'wp_version'     => $wpVersion,
                 'plugin_version' => $pluginVersion,
-                'ls_instance_id' => $instanceId,
                 'deactivated_at' => null,
-            ], 'id = ?', [$siteId]);
+            ];
+            // Non sovrascrivere l'istanza esistente se LS non ne ha ritornata una nuova
+            if ($instanceId !== null) {
+                $update['ls_instance_id'] = $instanceId;
+            }
+            Database::update('aied_sites', $update, 'id = ?', [$siteId]);
         } else {
             $siteId = Database::insert('aied_sites', [
                 'user_id'        => $userId,

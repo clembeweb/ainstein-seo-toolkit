@@ -37,7 +37,7 @@ class LicenseAuthMiddleware implements MiddlewareInterface
         }
 
         $site = Database::fetch(
-            'SELECT s.*, u.license_key, u.email, u.tier, u.subscription_status
+            'SELECT s.*, u.license_key, u.email, u.tier, u.subscription_status, u.subscription_renews_at
                FROM aied_sites s
                JOIN aied_users u ON u.id = s.user_id
               WHERE s.id = ? AND s.api_token = ? AND s.status = "active"',
