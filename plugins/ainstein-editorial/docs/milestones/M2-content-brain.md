@@ -1,5 +1,10 @@
 # M2 — Content Brain + Onboarding
 
+> ⚠️ **UI/UX via Claude Design (ADR-025)**: le task UI (M2.4 onboarding, M2.5 pagina Content Brain)
+> sono **bloccate** finché non ci sono i mockup approvati da Claude Design (brief in `docs/design-brief-mockups.md`).
+> Il backend (M2.1 ContentBrainService, M2.2 endpoint/SSE, M2.3 proxy) è indipendente e implementabile.
+> M2.6 (design system Tailwind) è già fatto ma **provvisorio**: verrà sostituito dall'output dei mockup.
+>
 > **Status**: 📋 Spec scritta, attende approvazione cliente
 > **Effort stimato**: 25-35 ore (~1 settimana full-time)
 > **Dipendenze**: M1 completata (plugin attivabile + autenticato col backend)

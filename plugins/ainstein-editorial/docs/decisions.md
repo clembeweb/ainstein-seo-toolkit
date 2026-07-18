@@ -449,6 +449,34 @@ Top-up packs: +20 articoli €15 · +50 €30 · +100 €50. Articoli inclusi az
 
 ---
 
+## ADR-025: UI/UX del prodotto progettati con Claude Design (mockup-first)
+
+**Date**: 2026-07-18 · **Status**: Accepted
+
+**Context**: Durante la sessione lo sviluppo ha anticipato UI/CSS (design system Tailwind, pagina License stilizzata, anteprima HTML) prima che esistessero i mockup. Il proprietario (cliente finale) ha chiarito che **UI/UX si realizzano con Claude Design** a partire da mockup, e che lo sviluppo deve solo **tradurre in codice i mockup approvati**, schermata per schermata.
+
+**Decision**:
+- Il design visivo NON si decide nel codice. Flusso: **Claude Design produce i mockup → cliente approva → sviluppo li implementa**.
+- Creato `docs/design-brief-mockups.md`: brief empirico (persona "Maria/Cantina Rossi" + contenuti d'esempio) da passare a Claude Design. Pochi vincoli tecnici, massimo dettaglio concreto sulle 6 schermate del primo viaggio utente.
+- Il design system Tailwind + pagina License stilizzata (task M2.6) è **provvisorio**: resta in repo solo perché la pagina License di M1 ha bisogno di qualche stile per non essere rotta. Verrà **sostituito** dall'output di Claude Design. Non è la direzione grafica definitiva.
+- Le task UI di M2 (onboarding wizard, pagina Content Brain) sono **bloccate** finché non ci sono i mockup approvati. Il backend di M2 (ContentBrainService, endpoint/SSE) resta invece progettabile/implementabile in parallelo.
+
+**Alternatives considered**:
+- Continuare a definire l'UI nel codice: scartata, il cliente vuole design guidato da mockup dedicati.
+- Rimuovere subito M2.6: scartata, romperebbe lo stile della pagina License di M1 senza sostituto pronto. Meglio marcarlo provvisorio.
+
+**Consequences**:
+- ✅ Direzione grafica coerente, decisa a monte da chi progetta UX, non improvvisata in sviluppo
+- ✅ Brief pronto per far partire Claude Design
+- ⚠️ Parte del lavoro M2.6 sarà rifatto quando arrivano i mockup (accettato: costo basso, ~poche ore di CSS)
+- ⚠️ Le schermate M2/M3 non partono finché non arrivano i mockup approvati
+
+**Implicazioni operative**:
+- `docs/milestones/M2-content-brain.md`: task UI (M2.4, M2.5) dipendono dai mockup; M2.6 marcato provvisorio.
+- Prossima sessione: (a) far generare i mockup a Claude Design col brief; e/o (b) validare M1 live; e/o (c) costruire il backend M2 (indipendente dal design).
+
+---
+
 ## ADR-024: Scelte implementative M1 Foundation
 
 **Date**: 2026-06-06 · **Status**: Accepted

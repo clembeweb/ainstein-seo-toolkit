@@ -3,7 +3,7 @@
 > Piano di esecuzione fase per fase. Da seguire in ordine. Ogni milestone ha task espliciti + Definition of Done.
 > Per il contesto strategico vedi `README.md`. Per dettagli tecnici vedi `design.md`. Per decisioni storiche vedi `decisions.md`.
 >
-> **Stato corrente**: 2026-05-12 → fine fase 0 (design completato), pronto per fase 1 (validation).
+> **Stato corrente**: 2026-07-18 → M1 codice completo (attende verifica live: setup Lemon Squeezy + smoke test, vedi `milestones/M1-foundation-handoff.md`). M2 spec pronta. **UI/UX via Claude Design** (mockup-first, ADR-025 + `docs/design-brief-mockups.md`): le schermate si costruiscono dai mockup approvati.
 
 ---
 
