@@ -263,8 +263,8 @@ $isActive = in_array($run['status'], ['pending', 'running'], true);
                 <span class="text-slate-800 dark:text-slate-100"><?= e($h['text']) ?></span>
                 <?php if ($canEdit): ?>
                 <span class="flex gap-2">
-                    <form method="POST" action="<?= url("{$basePath}/facts/{$h['id']}/confirm") ?>"><input type="hidden" name="_csrf_token" value="<?= $csrf ?>"><input type="hidden" name="back" value="<?= e("{$basePath}/runs/{$run['id']}") ?>"><button type="submit" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs font-medium hover:bg-slate-700">Sì, è lui</button></form>
-                    <form method="POST" action="<?= url("{$basePath}/facts/{$h['id']}/reject") ?>"><input type="hidden" name="_csrf_token" value="<?= $csrf ?>"><input type="hidden" name="back" value="<?= e("{$basePath}/runs/{$run['id']}") ?>"><button type="submit" class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700">No, è un altro</button></form>
+                    <form method="POST" action="<?= url("{$basePath}/profile/facts/{$h['id']}/homonym-yes") ?>"><input type="hidden" name="_csrf_token" value="<?= $csrf ?>"><input type="hidden" name="back" value="<?= e("{$basePath}/runs/{$run['id']}") ?>"><button type="submit" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs font-medium hover:bg-slate-700">Sì, è lui</button></form>
+                    <form method="POST" action="<?= url("{$basePath}/profile/facts/{$h['id']}/homonym-no") ?>"><input type="hidden" name="_csrf_token" value="<?= $csrf ?>"><input type="hidden" name="back" value="<?= e("{$basePath}/runs/{$run['id']}") ?>"><button type="submit" class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700">No, è un altro</button></form>
                 </span>
                 <?php endif; ?>
             </li>

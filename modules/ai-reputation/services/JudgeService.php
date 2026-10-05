@@ -100,6 +100,19 @@ TXT;
         } else {
             $lines[] = "Note di disambiguazione: nessuna (nessun omonimo dichiarato).";
         }
+        $truth = $this->truth((int) $project['id']);
+        if ($truth['facts']) {
+            $lines[] = 'PROFILO CONFERMATO DAL SOGGETTO (verità di riferimento per claims e omonimia):';
+            foreach ($truth['facts'] as $t) {
+                $lines[] = "- {$t}";
+            }
+        }
+        if ($truth['rejected']) {
+            $lines[] = 'AFFERMAZIONI FALSE O DI ALTRI (se la risposta le ripete, segnalale in negative_reasons con sentiment negativo):';
+            foreach ($truth['rejected'] as $t) {
+                $lines[] = "- {$t}";
+            }
+        }
         $lines[] = '';
         $lines[] = "DOMANDA POSTA AL MOTORE (cluster {$response['prompt_cluster']}): " . $response['prompt_text'];
         $lines[] = "MOTORE: {$response['engine']}" . (!empty($response['model']) ? " ({$response['model']})" : '');
@@ -129,6 +142,27 @@ TXT;
             }
         }
         return implode("\n", $lines);
+    }
+
+    private array $truthCache = [];
+
+    /** Verità del brand e righe rifiutate dal profilo (cache per progetto nel corso di un run) */
+    private function truth(int $projectId): array
+    {
+        if (!isset($this->truthCache[$projectId])) {
+            $facts = new \Modules\AiReputation\Models\ProfileFact();
+            $flat = [];
+            foreach ($facts->truth($projectId) as $cat => $items) {
+                if ($cat === 'source') {
+                    continue;
+                }
+                foreach ($items as $t) {
+                    $flat[] = "[{$cat}] {$t}";
+                }
+            }
+            $this->truthCache[$projectId] = ['facts' => array_slice($flat, 0, 40), 'rejected' => array_slice($facts->rejected($projectId), 0, 20)];
+        }
+        return $this->truthCache[$projectId];
     }
 
     private function parseJson(string $text): array

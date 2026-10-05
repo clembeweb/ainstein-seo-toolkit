@@ -13,6 +13,7 @@ use Modules\AiReputation\Controllers\ProjectController;
 use Modules\AiReputation\Controllers\DashboardController;
 use Modules\AiReputation\Controllers\PromptController;
 use Modules\AiReputation\Controllers\RunController;
+use Modules\AiReputation\Controllers\ProfileController;
 
 if (!ModuleLoader::isModuleActive('ai-reputation')) {
     return;
@@ -124,9 +125,38 @@ Router::get('/ai-reputation/project/{id}/runs/{runId}', function ($id, $runId) {
     return (new RunController())->show((int) $id, (int) $runId);
 });
 
-// Omonimi da confermare (ADR-008): confirm = e' lui, reject = e' un altro
-Router::post('/ai-reputation/project/{id}/facts/{factId}/{decision}', function ($id, $factId, $decision) {
+// =============================================
+// PROFILO (onboarding agent + conferma righe, ADR-003/ADR-008)
+// =============================================
+
+Router::get('/ai-reputation/project/{id}/profile', function ($id) {
+    Middleware::auth();
+    return (new ProfileController())->index((int) $id);
+});
+
+// AJAX lungo (ricerca + scraping + AI)
+Router::post('/ai-reputation/project/{id}/profile/generate', function ($id) {
     Middleware::auth();
     Middleware::csrf();
-    return (new RunController())->decideFact((int) $id, (int) $factId, (string) $decision);
+    return (new ProfileController())->generate((int) $id);
+});
+
+Router::post('/ai-reputation/project/{id}/profile/facts', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new ProfileController())->store((int) $id);
+});
+
+// decision: confirm | reject | correct | delete | homonym-yes (e' lui) | homonym-no (e' un altro)
+Router::post('/ai-reputation/project/{id}/profile/facts/{factId}/{decision}', function ($id, $factId, $decision) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new ProfileController())->decide((int) $id, (int) $factId, (string) $decision);
+});
+
+// Prompt engine (AJAX lungo)
+Router::post('/ai-reputation/project/{id}/prompts/generate', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new PromptController())->generate((int) $id);
 });

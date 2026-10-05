@@ -110,14 +110,20 @@ $basePath = '/ai-reputation/project/' . $project['id'];
         <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between gap-4">
             <div>
                 <h2 class="text-base font-semibold text-slate-900 dark:text-white">Domande monitorate</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-400">Le domande che la gente fa alle AI su <?= e($project['subject_name']) ?>. Il prompt engine automatico arriva dopo: per ora si scrivono a mano.</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Le domande che la gente fa alle AI su <?= e($project['subject_name']) ?>. Generale dal <a href="<?= url($basePath . '/profile') ?>" class="text-indigo-600 dark:text-indigo-400 hover:underline">profilo confermato</a>, aggiungile a mano, o parti dalle 8 base.</p>
             </div>
-            <form method="POST" action="<?= url($basePath . '/prompts/seed') ?>">
-                <input type="hidden" name="_csrf_token" value="<?= $csrf ?>">
-                <button type="submit" class="inline-flex items-center px-3 py-2 rounded-lg border border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-900/30 text-sm font-medium transition-colors whitespace-nowrap">
-                    + Domande base
+            <div class="flex items-center gap-2" x-data="arPromptGen()">
+                <button type="button" @click="generate()" :disabled="busy" class="inline-flex items-center px-3 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60 text-sm font-medium transition-colors whitespace-nowrap" title="Il prompt engine scrive 40 domande dal profilo confermato">
+                    <svg x-show="busy" x-cloak class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
+                    <span x-text="busy ? 'Genero…' : 'Genera domande con AI'"></span>
                 </button>
-            </form>
+                <form method="POST" action="<?= url($basePath . '/prompts/seed') ?>">
+                    <input type="hidden" name="_csrf_token" value="<?= $csrf ?>">
+                    <button type="submit" class="inline-flex items-center px-3 py-2 rounded-lg border border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-900/30 text-sm font-medium transition-colors whitespace-nowrap">
+                        + Domande base
+                    </button>
+                </form>
+            </div>
         </div>
 
         <form method="POST" action="<?= url($basePath . '/prompts') ?>" class="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-3">
@@ -190,6 +196,25 @@ document.addEventListener('alpine:init', () => {
         labels: <?= json_encode($engineLabels) ?>,
     });
 });
+
+function arPromptGen() {
+    const base = '<?= url($basePath) ?>';
+    const csrf = '<?= $csrf ?>';
+    return {
+        busy: false,
+        async generate() {
+            this.busy = true;
+            try {
+                const fd = new FormData(); fd.append('_csrf_token', csrf); fd.append('target', '40');
+                const resp = await fetch(base + '/prompts/generate', { method: 'POST', body: fd });
+                if (!resp.ok) throw new Error('Errore server (' + resp.status + ')');
+                const data = await resp.json();
+                if (!data.success) throw new Error(data.error || 'Errore');
+                location.href = location.pathname + '?gen=' + data.added + '#prompts';
+            } catch (e) { alert(e.message); this.busy = false; }
+        },
+    };
+}
 
 function arRunner() {
     const base = '<?= url($basePath) ?>';

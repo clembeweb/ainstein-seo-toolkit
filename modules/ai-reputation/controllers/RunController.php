@@ -427,38 +427,6 @@ class RunController
         ]);
     }
 
-    /**
-     * POST /ai-reputation/project/{id}/facts/{factId}/{decision} - conferma (è lui) o rifiuta (è un altro) un omonimo
-     */
-    public function decideFact(int $projectId, int $factId, string $decision): void
-    {
-        $user = Auth::user();
-        $project = $this->project->findAccessible($projectId, $user['id']);
-        if (!$project || ($project['access_role'] ?? 'owner') === 'viewer') {
-            $_SESSION['_flash']['error'] = 'Permessi insufficienti';
-            Router::redirect('/ai-reputation');
-            return;
-        }
-        $fact = Database::fetch("SELECT * FROM ar_profile_facts WHERE id = ? AND project_id = ?", [$factId, $projectId]);
-        if (!$fact) {
-            $_SESSION['_flash']['error'] = 'Riga non trovata';
-            Router::redirect("/ai-reputation/project/{$projectId}");
-            return;
-        }
-        // "confirm" = è lui → la riga omonimo è rifiutata (non c'è omonimo). "reject" = è un altro → confermata come omonimo
-        $status = $decision === 'confirm' ? 'rejected' : 'confirmed';
-        Database::update('ar_profile_facts', ['status' => $status], 'id = ?', [$factId]);
-        if ($status === 'confirmed') {
-            // L'omonimo confermato finisce nelle note di disambiguazione, così il judge lo sa dal prossimo run
-            $notes = trim((string) ($project['disambiguation_notes'] ?? ''));
-            $notes .= ($notes !== '' ? "\n" : '') . 'Omonimo confermato: ' . $fact['text'];
-            $this->project->update($projectId, ['disambiguation_notes' => $notes]);
-        }
-        $_SESSION['_flash']['success'] = $status === 'confirmed' ? 'Segnato come omonimo: il judge ne terrà conto dal prossimo run' : 'Confermato: è il soggetto monitorato';
-        $back = $_POST['back'] ?? "/ai-reputation/project/{$projectId}";
-        Router::redirect($back);
-    }
-
     /** Menzione del soggetto nel testo (match sul nome completo o sul cognome) */
     public static function mentions(string $text, string $subject): bool
     {

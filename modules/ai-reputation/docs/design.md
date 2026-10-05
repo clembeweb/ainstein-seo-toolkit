@@ -212,15 +212,15 @@ Scenari (50 prompt, repeats 1):
 
 ## 7. Sequenza di costruzione (MVP call)
 
-1. ~~Test empirici degli engine~~ ✅ chiusi il 2026-10-05 sui 4 engine.
-2. Migrazione DB `ar_*` + `module.json` + attivazione da Global Projects.
-3. Onboarding agent + campo omonimi + UI conferma righe.
-4. Prompt engine.
-5. Collector come job: **OpenAI + Perplexity** (ADR-004). Gli adapter Gemini e Anthropic sono già
-   scritti negli script di test: aggiungerli costa poco, è una decisione di scope, non tecnica.
-6. Analyzer (con `citations_noise` e omonimia `uncertain`) + metriche base + divergenza tra engine.
-7. Pagina report run + piano d'azione + "Da confermare".
-8. Run completo su Marcaccini, revisione output per la call.
+Costruito per fette verticali (ADR-009), tutto il 2026-10-05:
+1. ~~Test empirici degli engine~~ ✅ 4 engine.
+2. ~~Migrazione DB `ar_*` + `module.json` + attivazione da Global Projects~~ ✅
+3. ~~Onboarding agent + campo omonimi + UI conferma righe~~ ✅ (`OnboardingService`, pagina Profilo)
+4. ~~Prompt engine~~ ✅ (`PromptEngineService`)
+5. ~~Collector come job~~ ✅ OpenAI + Gemini + Perplexity peso 0,3 (ADR-009), adapter Anthropic pronto (`EngineCollectorService`)
+6. ~~Analyzer + metriche + divergenza~~ ✅ (`JudgeService`, `ReportBuilderService`)
+7. ~~Pagina report run + piano d'azione + "Da confermare"~~ ✅
+8. Run completo su Marcaccini, revisione output per la call. ← **qui**
 
 ## 8. Fuori scope MVP (esplicito)
 

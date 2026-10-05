@@ -70,6 +70,39 @@ class PromptController
         Router::redirect("/ai-reputation/project/{$id}#prompts");
     }
 
+    /**
+     * POST /ai-reputation/project/{id}/prompts/generate (AJAX lungo, JSON) - prompt engine
+     */
+    public function generate(int $id): void
+    {
+        ignore_user_abort(true);
+        set_time_limit(300);
+        ob_start();
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->findAccessible($id, $user['id']);
+        if (!$project || ($project['access_role'] ?? 'owner') === 'viewer') {
+            ob_end_clean();
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato o permessi insufficienti']);
+            exit;
+        }
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+        $target = max(10, min(60, (int) ($_POST['target'] ?? 40)));
+        session_write_close();
+
+        try {
+            $result = (new \Modules\AiReputation\Services\PromptEngineService())->generate($creditUserId, $project, $target);
+        } catch (\Throwable $e) {
+            $result = ['success' => false, 'error' => 'Errore interno: ' . $e->getMessage()];
+        }
+        \Core\Database::reconnect();
+
+        ob_end_clean();
+        echo json_encode($result, JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     private function requireEditable(int $id): array
     {
         $user = Auth::user();
