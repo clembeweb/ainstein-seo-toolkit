@@ -64,6 +64,7 @@
 | Crawl Budget Optimizer | `crawl-budget` | `cb_` | Legacy (mergiato in SEO Audit) |
 | AI Optimizer | `ai-optimizer` | `ao_` | In sviluppo |
 | SEO On-Page | `seo-onpage` | `so_` | In sviluppo |
+| AI Reputation Radar | `ai-reputation` | `ar_` | Nuovo (2026-10-05) — stato in `modules/ai-reputation/docs/TASKS.md` |
 
 ---
 
