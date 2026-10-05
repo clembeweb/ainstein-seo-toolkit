@@ -123,3 +123,25 @@ nessun omonimo, dovrebbe essere lui.)
 **Consequences**: `ar_projects.disambiguation_notes` (TEXT); categoria `homonym` già prevista in
 `ar_profile_facts`; `ar_analyses.is_homonym` diventa enum `no|yes|uncertain`; il piano d'azione
 distingue `counter_content` di disambiguazione (omonimo confermato) da gestione fonte negativa (non omonimo).
+
+## ADR-009: Engine dell'MVP = OpenAI + Gemini; si costruisce per fette verticali
+
+**Date**: 2026-10-05 · **Status**: Accepted (decisione di Clemente dopo M0)
+
+**Context**: i 4 engine sono testati e funzionano. Per peso reale sugli utenti italiani contano
+ChatGPT e poi Gemini (è dentro la ricerca Google); Claude ha pubblico piccolo e costo alto; Perplexity
+quasi nessuno la usa, ma costa 0,0014 $ a domanda e ha trovato le fonti negative peggiori.
+
+**Decision**:
+1. Engine dell'MVP: **OpenAI (`gpt-5-mini`) + Gemini (`gemini-3.8-flash`)**. Perplexity `fast` resta
+   attiva come terzo occhio a **peso basso** (costo nullo, utile per le fonti), dichiarata come tale nel
+   report. Anthropic in v1 (adapter pronto nello script).
+2. Ordine di costruzione per **fette verticali**, per vedere qualcosa prima:
+   - fetta 1: migrazione + modulo + collector con prompt scritti a mano + pagina report minima (3-4 h);
+   - fetta 2: judge + metriche + piano d'azione (3-4 h);
+   - fetta 3: onboarding con campo omonimi + prompt engine (4-5 h).
+   Sostituisce la sequenza di `design.md` §7 (che resta valida come elenco, non come ordine).
+
+**Consequences**: `ar_projects.engines` default `["openai","gemini","perplexity"]` con peso per engine
+in `module.json` (openai 1, gemini 1, perplexity 0.3) usato dalle metriche aggregate; i prompt della
+fetta 1 sono righe `ar_prompts` con `origin = manual`.

@@ -11,10 +11,10 @@ sponsorizzati. Branch `claude/ai-reputation-radar-dd9004`
 nel checkout principale `C:\xampp\htdocs\seo-toolkit`.
 
 ## Prossimo passo (uno solo)
-**M1.1 — Migrazione `ar_*` + `module.json` + registrazione modulo + attivazione da Global Projects.**
-Data model in `design.md` §4 (v0.2). Pattern: `modules/ai-content/` (module.json, routes, controller base),
-`core/Models/GlobalProject.php` (MODULE_CONFIG). Migrazione in `database/2026-10-06-create-ar-tables.sql`.
-Prima però una decisione di Clemente (sotto): engine dell'MVP.
+**Fetta 1 (ADR-009) — M1.1 migrazione `ar_*` + `module.json` + registrazione modulo + attivazione da Global
+Projects.** Poi, nella stessa fetta: M1.4 collector OpenAI + Gemini (+ Perplexity peso basso) su 10 prompt
+scritti a mano per Marcaccini, e M1.7 pagina report minima (tabella engine x prompt con risposte e citazioni).
+Pattern: `modules/ai-content/`, `core/Models/GlobalProject.php`. Migrazione in `database/`.
 
 ## M0 — Test empirici
 - [x] M0.1 Prerequisiti: MySQL on, `.env` nel worktree, key verificate (OpenAI ✅ Anthropic ✅ Gemini ✅ Perplexity ✅ — le ultime due incollate il 2026-10-05)
@@ -24,21 +24,18 @@ Prima però una decisione di Clemente (sotto): engine dell'MVP.
 - [x] M0.5 Anthropic web_search_20260318: funziona solo in modalità `direct` per le citazioni; costo ~0,20 $/prompt con Opus → `docs/test-empirici/2026-10-05-anthropic.md`. Claude NON trova il rapporto mafie ma smaschera gli articoli sponsorizzati
 - [x] M0.6 `design.md` v0.2: formati citazioni e modalità per engine (§3.3), costi reali (§5), `search_count`/`sources_read`/`citations_noise` nel data model, judge con verifica fonte e omonimia `uncertain`, metrica "divergenza tra engine"
 
-## M1 — MVP call
+## M1 — MVP call (ordine per fette verticali, ADR-009: 1 = M1.1+M1.4+M1.7 · 2 = M1.5+M1.6 · 3 = M1.2+M1.3)
 - [ ] M1.1 Migrazione `ar_*` + `module.json` + registrazione modulo + attivazione da Global Projects
 - [ ] M1.2 Onboarding agent + UI conferma righe (profilo Marcaccini da confermare: brief §3) + campo libero "Omonimi e soggetti da non confondere" (persone e aziende, ADR-008)
 - [ ] M1.5b Analyzer: omonimia non dichiarata → riga `homonym` proposed + sezione "Da confermare" nel report (ADR-008; il blocco del run è v1)
 - [ ] M1.3 Prompt engine
-- [ ] M1.4 Collector OpenAI + Perplexity (job SSE)
+- [ ] M1.4 Collector OpenAI + Gemini (+ Perplexity peso 0.3) come job SSE, prompt manuali per la fetta 1
 - [ ] M1.5 Analyzer + metriche base
 - [ ] M1.6 Piano d'azione
 - [ ] M1.7 Pagina report run
 - [ ] M1.8 Run reale su Marcaccini + revisione per la call
 
 ## Decisioni in sospeso (di Clemente)
-- **Engine nell'MVP per la call**: solo OpenAI + Perplexity (ADR-004, demo ≈ 3-4 $ a run) oppure tutti e 4
-  (adapter già pronti dagli script; con Anthropic Sonnet ≈ 8-10 $ a run). La divergenza tra engine è
-  l'argomento forte della demo: con 4 si vede meglio, con 2 si vede comunque (Perplexity vs OpenAI)
 - Conferma riga per riga della bozza profilo Marcaccini (brief §3) → si fa nella UI in M1.2
 - Data e ora della call con Gabriele (settimana del 2026-10-06, mattina)
 - ~~Omonimia del "Marcaccini Federico" della confisca 2013~~ → **risolta 2026-10-05: Clemente conferma, nessun
