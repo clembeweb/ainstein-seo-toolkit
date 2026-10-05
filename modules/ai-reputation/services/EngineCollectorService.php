@@ -458,7 +458,8 @@ class EngineCollectorService
 
     private function cleanUrl(string $url): string
     {
-        return preg_replace('/([?&])utm_source=openai(&|$)/', '$1', $url) ?: $url;
+        $clean = preg_replace('/([?&])utm_source=openai(&|$)/', '$1', $url) ?: $url;
+        return rtrim($clean, '?&');
     }
 
     /** Gemini: gli URL sono redirect vertexaisearch → HEAD senza follow restituisce il Location reale */

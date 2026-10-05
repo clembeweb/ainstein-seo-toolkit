@@ -237,13 +237,20 @@ class RunController
                 $item['citations'] = json_decode((string) $item['citations'], true) ?: [];
                 $item['sources_read'] = json_decode((string) $item['sources_read'], true) ?: [];
 
-                $verdict = $judge->judge($creditUserId, $project, $item);
-                Database::reconnect();
-                if (isset($verdict['error'])) {
-                    $sendEvent('analysis_error', ['response_id' => (int) $item['id'], 'engine' => $item['engine'], 'error' => $verdict['error']]);
+                try {
+                    $verdict = $judge->judge($creditUserId, $project, $item);
+                    Database::reconnect();
+                    if (isset($verdict['error'])) {
+                        $sendEvent('analysis_error', ['response_id' => (int) $item['id'], 'engine' => $item['engine'], 'error' => $verdict['error']]);
+                        continue;
+                    }
+                    $this->analysis->save((int) $item['id'], $runId, $projectId, $verdict);
+                } catch (\Throwable $e) {
+                    Database::reconnect();
+                    $sendEvent('analysis_error', ['response_id' => (int) $item['id'], 'engine' => $item['engine'], 'error' => 'Errore interno: ' . $e->getMessage()]);
+                    error_log('[ai-reputation] judge error response ' . $item['id'] . ': ' . $e->getMessage());
                     continue;
                 }
-                $this->analysis->save((int) $item['id'], $runId, $projectId, $verdict);
                 Database::execute("UPDATE ar_runs SET analyses_done = analyses_done + 1 WHERE id = ?", [$runId]);
                 $sendEvent('analysis_completed', [
                     'response_id' => (int) $item['id'],

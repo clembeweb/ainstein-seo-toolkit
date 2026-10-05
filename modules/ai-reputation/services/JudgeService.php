@@ -72,7 +72,7 @@ Regole:
 3. "is_homonym": "no" se la risposta parla chiaramente del soggetto; "yes" SOLO se il soggetto stesso ha dichiarato quell'omonimo nelle note di disambiguazione; "uncertain" se la risposta o una fonte attribuisce al nome fatti incompatibili col profilo (altra professione, altra città, altra epoca) e non puoi stabilire se sia la stessa persona. NON dedurre mai "yes" o "no" dal solo nome. In "homonym_note" spiega in una frase cosa non torna (null se "no").
 4. "sentiment": da -2 (molto negativo) a 2 (molto positivo), 0 neutro, riferito a come la risposta presenta il soggetto. Se non è menzionato: 0.
 5. "verdict": "not_mentioned" se brand_mentioned è false; altrimenti "negative" se la risposta contiene fatti o giudizi negativi sul soggetto (procedimenti, truffe, sequestri, recensioni negative, dubbi espliciti sull'affidabilità attribuiti a lui); "positive" se lo presenta favorevolmente senza riserve; "mixed" se positivo e negativo insieme; "neutro" → usa "neutral" se descrittivo senza giudizio o se il motore dice di non poter giudicare.
-6. "negative": true se il verdetto è "negative" o "mixed" con un fatto negativo concreto. "negative_reasons": elenco breve dei motivi. "negative_urls": SOLO gli URL delle fonti citate che sostengono i fatti negativi.
+6. "negative": true se il verdetto è "negative" o "mixed" con un fatto negativo concreto. "negative_reasons": elenco breve dei motivi. "negative_urls": gli URL delle fonti citate che sostengono o riportano i fatti negativi (sequestri, confische, inchieste, arresti, condanne, truffe, usura, mafia, recensioni negative). OBBLIGATORIO: se "negative" è true e tra le fonti citate ce n'è una il cui titolo o URL riguarda quei fatti, DEVE stare in "negative_urls". Una fonte negativa non può mai finire in "citations_noise" se la risposta la usa per parlare del soggetto.
 7. Fonti: per ogni URL citato decidi se la pagina PARLA DEL SOGGETTO ("citations_about_subject") oppure è rumore, cioè un'altra pagina della stessa testata, un argomento diverso, un omonimo dichiarato ("citations_noise"). Usa titolo e snippet. Nel dubbio, "about_subject".
 8. "competitors": nomi di persone o aziende che la risposta propone come alternative o come "i migliori" al posto del soggetto (solo se la domanda è commerciale o competitiva; altrimenti []).
 9. "claims": massimo 6 affermazioni chiave sul soggetto, ciascuna {"text": "...", "negative": true|false}.
@@ -147,11 +147,26 @@ TXT;
         return $data;
     }
 
+    /** Titolo/URL che parla di cronaca giudiziaria o reputazione negativa (fallback, non sostituisce il judge) */
+    public static function looksNegative(string $text): bool
+    {
+        $text = mb_strtolower($text);
+        $keywords = ['sequestr', 'confisc', 'ndranghet', 'mafi', 'camorr', 'arrest', 'inchiest', 'indagin', 'condann',
+            'truff', 'frode', 'usura', 'riciclagg', 'procura', 'tribunal', 'cassazion', 'reato', 'antimafia', 'denunci',
+            'bancarott', 'fallimento', 'corruzion', 'tangent', 'scandal', 'spaccio', 'cocaina', 'droga', 'omicid'];
+        foreach ($keywords as $k) {
+            if (str_contains($text, $k)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private function normalize(array $d, array $response): array
     {
         $outcome = in_array($d['outcome'] ?? '', ['answered', 'clarification_requested', 'refused', 'empty'], true) ? $d['outcome'] : 'answered';
         $mentioned = (bool) ($d['brand_mentioned'] ?? false);
-        $verdict = $d['verdict'] ?? ($mentioned ? 'neutral' : 'not_mentioned');
+        $verdict = is_string($d['verdict'] ?? null) ? $d['verdict'] : ($mentioned ? 'neutral' : 'not_mentioned');
         if ($verdict === 'neutro') {
             $verdict = 'neutral';
         }
@@ -161,7 +176,8 @@ TXT;
         if (!$mentioned) {
             $verdict = 'not_mentioned';
         }
-        $isHomonym = in_array($d['is_homonym'] ?? 'no', ['no', 'yes', 'uncertain'], true) ? $d['is_homonym'] : 'no';
+        $ih = is_string($d['is_homonym'] ?? null) ? $d['is_homonym'] : 'no';
+        $isHomonym = in_array($ih, ['no', 'yes', 'uncertain'], true) ? $ih : 'no';
         $sentiment = max(-2, min(2, (int) ($d['sentiment'] ?? 0)));
         $negative = (bool) ($d['negative'] ?? ($verdict === 'negative'));
 
@@ -175,6 +191,20 @@ TXT;
             }
         }
         $negativeUrls = array_values(array_intersect($citedUrls, (array) ($d['negative_urls'] ?? [])));
+        // Rete di sicurezza deterministica: risposta negativa ma judge senza URL → fonti con titolo/URL da cronaca giudiziaria
+        if ($negative && empty($negativeUrls)) {
+            foreach ($response['citations'] ?? [] as $c) {
+                if (self::looksNegative(($c['title'] ?? '') . ' ' . $c['url'])) {
+                    $negativeUrls[] = $c['url'];
+                }
+            }
+            $noise = array_values(array_diff($noise, $negativeUrls));
+            foreach ($negativeUrls as $u) {
+                if (!in_array($u, $about, true)) {
+                    $about[] = $u;
+                }
+            }
+        }
         $domains = [];
         foreach ($about as $u) {
             $dom = EngineCollectorService::domainOf($u);
@@ -207,7 +237,10 @@ TXT;
             'verdict' => $verdict,
             'summary' => mb_substr((string) ($d['summary'] ?? ''), 0, 500),
             'negative' => $negative ? 1 : 0,
-            'negative_reasons' => array_values(array_filter(array_map('strval', (array) ($d['negative_reasons'] ?? [])))),
+            'negative_reasons' => array_values(array_filter(array_map(
+                fn($x) => is_scalar($x) ? (string) $x : json_encode($x, JSON_UNESCAPED_UNICODE),
+                (array) ($d['negative_reasons'] ?? [])
+            ))),
             'negative_urls' => $negativeUrls,
             'cited_domains' => array_keys($domains),
             'citations_noise' => $noise,
