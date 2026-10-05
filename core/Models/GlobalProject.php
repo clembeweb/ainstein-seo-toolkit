@@ -76,6 +76,13 @@ class GlobalProject
             'icon' => 'M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z',
             'route_prefix' => '/crawl-budget/projects',
         ],
+        'ai-reputation' => [
+            'table' => 'ar_projects',
+            'label' => 'AI Reputation Radar',
+            'color' => 'indigo',
+            'icon' => 'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z',
+            'route_prefix' => '/ai-reputation/project',
+        ],
     ];
 
     /**
@@ -732,6 +739,7 @@ class GlobalProject
             'ads-analyzer' => \Modules\AdsAnalyzer\Models\Project::class,
             'internal-links' => \Modules\InternalLinks\Models\Project::class,
             'content-creator' => \Modules\ContentCreator\Models\Project::class,
+            'ai-reputation' => \Modules\AiReputation\Models\Project::class,
         ];
 
         foreach ($activeModules as $module) {
@@ -946,6 +954,21 @@ class GlobalProject
                     // Crea record configurazione sito
                     Database::insert('cb_site_config', ['project_id' => $projectId]);
                     return $projectId;
+
+                case 'ai-reputation':
+                    $website = $domain ?: null;
+                    if ($website && !preg_match('#^https?://#i', $website)) {
+                        $website = 'https://' . $website;
+                    }
+                    return (new \Modules\AiReputation\Models\Project())->create([
+                        'user_id' => $userId,
+                        'global_project_id' => $globalProjectId,
+                        'name' => $name,
+                        'subject_name' => $name,
+                        'subject_type' => 'person',
+                        'website' => $website,
+                        'status' => 'active',
+                    ]);
 
                 default:
                     return null;

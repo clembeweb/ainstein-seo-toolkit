@@ -1,0 +1,336 @@
+{
+    "name": "AI Reputation Radar",
+    "slug": "ai-reputation",
+    "version": "0.1.0",
+    "description": "Monitora cosa dicono ChatGPT, Gemini e le altre AI di un soggetto: fonti citate, rischi reputazionali e piano d'azione",
+    "icon": "shield-check",
+    "color": "indigo",
+    "menu_order": 26,
+    "requires": {
+        "php": ">=8.0",
+        "credits": true,
+        "services": ["ai"]
+    },
+    "credits": {
+        "collect_response": 0.2,
+        "judge_response": 0.1,
+        "onboarding": 2
+    },
+    "settings_groups": {
+        "ai_config": {
+            "label": "Configurazione AI",
+            "icon": "sparkles",
+            "description": "Provider e modello AI per onboarding, prompt engine e judge (NON per gli engine misurati)",
+            "order": 0
+        },
+        "general": {
+            "label": "Impostazioni Generali",
+            "icon": "cog",
+            "description": "Ripetizioni e limiti di default per i run",
+            "order": 1
+        },
+        "engines": {
+            "label": "Engine misurati",
+            "icon": "globe-alt",
+            "description": "Quali AI interrogare, con quale modello e con quale peso nelle metriche. Le API key stanno in Impostazioni globali.",
+            "order": 2
+        },
+        "prices": {
+            "label": "Listini API (stima costi)",
+            "icon": "currency-dollar",
+            "description": "Prezzi in dollari usati per stimare il costo quando l'API non lo restituisce. Verificati il 2026-10-05.",
+            "order": 3,
+            "collapsed": true
+        },
+        "costs": {
+            "label": "Costi Operazioni",
+            "icon": "currency-euro",
+            "description": "Crediti consumati per ogni operazione",
+            "order": 99,
+            "collapsed": true
+        }
+    },
+    "settings": {
+        "ai_provider": {
+            "type": "select",
+            "label": "Provider AI",
+            "description": "Provider AI per onboarding, prompt engine e judge",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"},
+                {"value": "anthropic", "label": "Anthropic (Claude)"},
+                {"value": "openai", "label": "OpenAI (GPT)"}
+            ]
+        },
+        "ai_model": {
+            "type": "select",
+            "label": "Modello AI",
+            "description": "Modello AI per questo modulo",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"}
+            ]
+        },
+        "ai_fallback_enabled": {
+            "type": "select",
+            "label": "Fallback AI",
+            "description": "Fallback automatico su altro provider se il primario fallisce (solo per judge e onboarding)",
+            "default": "global",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "global", "label": "Usa impostazione globale"},
+                {"value": "1", "label": "Abilitato"},
+                {"value": "0", "label": "Disabilitato"}
+            ]
+        },
+        "default_repeats": {
+            "type": "number",
+            "label": "Ripetizioni per prompt",
+            "description": "Quante volte porre la stessa domanda a ogni engine (1 = MVP, 3 = score di stabilità)",
+            "default": 1,
+            "min": 1,
+            "max": 5,
+            "group": "general"
+        },
+        "max_prompts_per_run": {
+            "type": "number",
+            "label": "Massimo prompt per run",
+            "description": "Limite di sicurezza sui costi",
+            "default": 60,
+            "min": 1,
+            "max": 200,
+            "admin_only": true,
+            "group": "general"
+        },
+        "engine_openai_enabled": {
+            "type": "checkbox",
+            "label": "OpenAI (ChatGPT)",
+            "description": "Responses API + web_search",
+            "default": true,
+            "group": "engines"
+        },
+        "engine_openai_model": {
+            "type": "text",
+            "label": "Modello OpenAI",
+            "description": "Es. gpt-5-mini",
+            "default": "gpt-5-mini",
+            "admin_only": true,
+            "group": "engines"
+        },
+        "engine_openai_max_tool_calls": {
+            "type": "number",
+            "label": "OpenAI: max ricerche per risposta",
+            "description": "Cap sulle web_search (10 $/1.000). Senza cap un prompt può farne 14.",
+            "default": 3,
+            "min": 1,
+            "max": 10,
+            "admin_only": true,
+            "group": "engines"
+        },
+        "engine_openai_weight": {
+            "type": "number",
+            "label": "Peso OpenAI",
+            "description": "Peso nelle metriche aggregate",
+            "default": 1,
+            "min": 0,
+            "max": 1,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "engines"
+        },
+        "engine_gemini_enabled": {
+            "type": "checkbox",
+            "label": "Google Gemini",
+            "description": "generateContent + Grounding with Google Search",
+            "default": true,
+            "group": "engines"
+        },
+        "engine_gemini_model": {
+            "type": "text",
+            "label": "Modello Gemini",
+            "description": "Es. gemini-3.8-flash",
+            "default": "gemini-3.8-flash",
+            "admin_only": true,
+            "group": "engines"
+        },
+        "engine_gemini_weight": {
+            "type": "number",
+            "label": "Peso Gemini",
+            "description": "Peso nelle metriche aggregate",
+            "default": 1,
+            "min": 0,
+            "max": 1,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "engines"
+        },
+        "engine_perplexity_enabled": {
+            "type": "checkbox",
+            "label": "Perplexity",
+            "description": "Agent API preset fast (ex Sonar). Pochi utenti, costo quasi nullo, utile per le fonti",
+            "default": true,
+            "group": "engines"
+        },
+        "engine_perplexity_preset": {
+            "type": "text",
+            "label": "Preset Perplexity",
+            "description": "fast | low | medium | high",
+            "default": "fast",
+            "admin_only": true,
+            "group": "engines"
+        },
+        "engine_perplexity_weight": {
+            "type": "number",
+            "label": "Peso Perplexity",
+            "description": "Peso nelle metriche aggregate (ADR-009: 0.3)",
+            "default": 0.3,
+            "min": 0,
+            "max": 1,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "engines"
+        },
+        "engine_anthropic_enabled": {
+            "type": "checkbox",
+            "label": "Anthropic (Claude)",
+            "description": "Messages + web_search direct. Costoso (~0,10-0,20 $ a prompt): v1",
+            "default": false,
+            "group": "engines"
+        },
+        "engine_anthropic_model": {
+            "type": "text",
+            "label": "Modello Anthropic",
+            "description": "Es. claude-sonnet-5-5",
+            "default": "claude-sonnet-5-5",
+            "admin_only": true,
+            "group": "engines"
+        },
+        "engine_anthropic_weight": {
+            "type": "number",
+            "label": "Peso Anthropic",
+            "description": "Peso nelle metriche aggregate",
+            "default": 0.5,
+            "min": 0,
+            "max": 1,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "engines"
+        },
+        "price_openai_search_per_1k": {
+            "type": "number",
+            "label": "OpenAI: $ per 1.000 ricerche",
+            "default": 10,
+            "min": 0,
+            "step": 0.01,
+            "admin_only": true,
+            "group": "prices"
+        },
+        "price_openai_in_per_m": {
+            "type": "number",
+            "label": "OpenAI: $ per 1M token in ingresso",
+            "default": 0.25,
+            "min": 0,
+            "step": 0.01,
+            "admin_only": true,
+            "group": "prices"
+        },
+        "price_openai_out_per_m": {
+            "type": "number",
+            "label": "OpenAI: $ per 1M token in uscita",
+            "default": 2,
+            "min": 0,
+            "step": 0.01,
+            "admin_only": true,
+            "group": "prices"
+        },
+        "price_gemini_search_per_1k": {
+            "type": "number",
+            "label": "Gemini: $ per 1.000 ricerche (oltre quota gratuita)",
+            "default": 14,
+            "min": 0,
+            "step": 0.01,
+            "admin_only": true,
+            "group": "prices"
+        },
+        "price_gemini_in_per_m": {
+            "type": "number",
+            "label": "Gemini: $ per 1M token in ingresso",
+            "default": 0.75,
+            "min": 0,
+            "step": 0.01,
+            "admin_only": true,
+            "group": "prices"
+        },
+        "price_gemini_out_per_m": {
+            "type": "number",
+            "label": "Gemini: $ per 1M token in uscita",
+            "default": 3.75,
+            "min": 0,
+            "step": 0.01,
+            "admin_only": true,
+            "group": "prices"
+        },
+        "price_anthropic_search_per_1k": {
+            "type": "number",
+            "label": "Anthropic: $ per 1.000 ricerche",
+            "default": 10,
+            "min": 0,
+            "step": 0.01,
+            "admin_only": true,
+            "group": "prices"
+        },
+        "price_anthropic_in_per_m": {
+            "type": "number",
+            "label": "Anthropic: $ per 1M token in ingresso",
+            "default": 2,
+            "min": 0,
+            "step": 0.01,
+            "admin_only": true,
+            "group": "prices"
+        },
+        "price_anthropic_out_per_m": {
+            "type": "number",
+            "label": "Anthropic: $ per 1M token in uscita",
+            "default": 10,
+            "min": 0,
+            "step": 0.01,
+            "admin_only": true,
+            "group": "prices"
+        },
+        "cost_collect_response": {
+            "type": "number",
+            "label": "Costo risposta engine",
+            "description": "Crediti per ogni risposta raccolta (prompt x engine x ripetizione)",
+            "default": 0.2,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_judge_response": {
+            "type": "number",
+            "label": "Costo giudizio",
+            "description": "Crediti per ogni risposta analizzata dal judge",
+            "default": 0.1,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_onboarding": {
+            "type": "number",
+            "label": "Costo onboarding",
+            "description": "Crediti per la generazione del profilo",
+            "default": 2,
+            "min": 0,
+            "step": 0.5,
+            "admin_only": true,
+            "group": "costs"
+        }
+    }
+}

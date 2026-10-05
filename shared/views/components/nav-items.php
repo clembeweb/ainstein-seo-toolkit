@@ -141,6 +141,20 @@ if (preg_match('#^/ai-optimizer/project/(\d+)#', $currentPath, $matches)) {
     }
 }
 
+// Check if we're inside an ai-reputation project
+$arProjectId = null;
+$arProject = null;
+if (preg_match('#^/ai-reputation/project/(\d+)#', $currentPath, $matches)) {
+    $arProjectId = (int) $matches[1];
+    try {
+        if (class_exists('\\Modules\\AiReputation\\Models\\Project')) {
+            $arProject = (new \Modules\AiReputation\Models\Project())->find($arProjectId);
+        }
+    } catch (\Exception $e) {
+        // Silently fail - project info not critical for navigation
+    }
+}
+
 // Check if we're inside a keyword-research project
 $krProjectId = null;
 $krProject = null;
@@ -679,6 +693,38 @@ if ($_navGlobalProjectId && isset($user['id'])) {
                         <!-- Settings -->
                         <div class="pt-1 mt-1 border-t border-slate-200 dark:border-slate-700">
                             <?= navSubLink("/ads-analyzer/projects/{$adsAnalyzerProjectId}/edit", 'Impostazioni', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>', $currentPath) ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            <?php elseif ($module['slug'] === 'ai-reputation'): ?>
+                <!-- AI Reputation Radar Module with Accordion -->
+                <div x-data="{ expanded: <?= $arProjectId ? 'true' : 'false' ?> }">
+                    <div class="flex items-center">
+                        <a href="<?= url('/ai-reputation') ?>"
+                           class="flex-1 flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors <?= str_starts_with($currentPath, '/ai-reputation') ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white' ?>">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
+                            </svg>
+                            <span class="flex-1"><?= e($module['name']) ?></span>
+                        </a>
+                        <?php if ($arProjectId): ?>
+                        <button @click="expanded = !expanded" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                            <svg class="w-4 h-4 transition-transform" :class="expanded && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <?php endif; ?>
+                    </div>
+
+                    <?php if ($arProjectId && $arProject): ?>
+                    <div x-show="expanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="ml-3 mt-1 pl-3 border-l-2 border-slate-200 dark:border-slate-700 space-y-0.5">
+                        <div class="px-2 py-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 truncate" title="<?= e($arProject['name']) ?>">
+                            <?= e(mb_substr($arProject['name'], 0, 20)) ?><?= mb_strlen($arProject['name']) > 20 ? '...' : '' ?>
+                        </div>
+                        <?= navSubLink("/ai-reputation/project/{$arProjectId}", 'Overview', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>', $currentPath, true) ?>
+                        <div class="pt-1 mt-1 border-t border-slate-200 dark:border-slate-700">
+                            <?= navSubLink("/ai-reputation/project/{$arProjectId}/settings", 'Impostazioni', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>', $currentPath) ?>
                         </div>
                     </div>
                     <?php endif; ?>
