@@ -10,16 +10,18 @@ ma anche il più duro su Marcaccini → `docs/test-empirici/2026-10-05-perplexit
 Branch `claude/ai-reputation-radar-dd9004` nel checkout principale `C:\xampp\htdocs\seo-toolkit`.
 
 ## Prossimo passo (uno solo)
-**M0.4 — Test Gemini grounding.** Verifica online docs `generateContent` + tool `google_search`
-(`groundingMetadata.groundingChunks`, URL redirect `vertexaisearch…` da risolvere) e listino → script
-`scripts/test-engine-gemini.php` sul modello degli altri (3 prompt Marcaccini, JSON in `docs/test-empirici/`)
-→ nota `2026-10-05-gemini.md`. Poi M0.6 (aggiornare `design.md` §3.3 e §5 con i dati reali di tutti e 4).
+**M0.4 — Test Gemini: script pronto, bloccato dal credito.** `scripts/test-engine-gemini.php` (Interactions API
+e `generateContent`, docs verificate 2026-10-05) risponde **HTTP 402 "prepayment credits are depleted"**: la key è
+valida, ma il progetto Google AI Studio è a credito prepagato esaurito. Clemente ricarica su
+https://ai.studio/projects, poi dalla root del repo:
+`php modules/ai-reputation/scripts/test-engine-gemini.php gemini-3.8-flash interactions` e `… generate`
+→ nota `docs/test-empirici/2026-10-05-gemini.md`. Poi M0.6 (aggiornare `design.md` §3.3 e §5 con i dati reali di tutti e 4).
 
 ## M0 — Test empirici
 - [x] M0.1 Prerequisiti: MySQL on, `.env` nel worktree, key verificate (OpenAI ✅ Anthropic ✅ Gemini ✅ Perplexity ✅ — le ultime due incollate il 2026-10-05)
 - [x] M0.2 OpenAI Responses `web_search`: funziona, citazioni ok, costi reali misurati → `docs/test-empirici/2026-10-05-openai.md`. ⚠️ trovato contenuto negativo (rapporto mafie Lazio, possibile omonimo)
 - [x] M0.3 Perplexity Agent API (`/v1/agent`): preset `fast` (= `openai/gpt-6-luna` + indice Perplexity) dà citazioni inline `[n]` su `search_results`; `perplexity/sonar` esplicito NON cita → collector usa `fast`. ≈0,0014 $/prompt → `docs/test-empirici/2026-10-05-perplexity.md`. ⚠️ attribuisce a Marcaccini la confisca 2013 (Il Tempo, dirittiglobali)
-- [ ] M0.4 Idem Gemini grounding (se chiave disponibile)
+- [ ] M0.4 Gemini grounding: docs verificate (Interactions API GA + generateContent), script pronto, **402 credito prepagato esaurito** → ricarica su ai.studio
 - [x] M0.5 Anthropic web_search_20260318: funziona solo in modalità `direct` per le citazioni; costo ~0,20 $/prompt con Opus → `docs/test-empirici/2026-10-05-anthropic.md`. Claude NON trova il rapporto mafie ma smaschera gli articoli sponsorizzati
 - [ ] M0.6 Aggiornare `design.md` §3.3 e §5 con formato citazioni, modelli e costi reali
 
