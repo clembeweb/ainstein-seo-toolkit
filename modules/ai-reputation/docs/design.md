@@ -68,7 +68,7 @@ EngineResponse { engine, model, text, citations[] {url, title?, domain}, raw_jso
 | Engine | API | Da dove escono le fonti | ⚠️ da verificare online |
 |---|---|---|---|
 | OpenAI | Responses API + tool `web_search` | annotazioni `url_citation` (url, title) + `web_search_call.action.query` | ✅ testato 2026-10-05: 10 $/1k ricerche; cap ricerche da aggiungere (`max_tool_calls`) |
-| Perplexity | Chat completions `sonar` / `sonar-pro` | `citations` / `search_results` | quale modello, se c'è il titolo |
+| Perplexity | **Agent API `POST /v1/agent`** con `preset: fast` (sostituto ufficiale di `sonar`; le Chat Completions Sonar sono chiuse dal 2026-09-27) + tool `web_search` | output item `search_results` (url, title, snippet, date, id) + annotazioni `url_citation` nel messaggio + marker inline `[n]` risolti su `id` | ⚠️ script pronto (`test-engine-perplexity.php`), in attesa key. Listino 2026-10-05: 2,50 $/1k ricerche; `usage.cost.total_cost` dà il costo reale |
 | Gemini | `generateContent` + tool `google_search` | `groundingMetadata.groundingChunks` | URL redirect `vertexaisearch…` da risolvere |
 | Anthropic | Messages + `web_search_20260318` **con `allowed_callers: ["direct"]`** | `citations[]` tipo `web_search_result_location` (url, title, cited_text) | ✅ testato 2026-10-05: senza `direct` zero citazioni; 10 $/1k ricerche |
 

@@ -4,22 +4,23 @@
 > Ultimo aggiornamento: 2026-10-05
 
 ## Dove siamo
-Progetto appena nato. Brief ricevuto e analizzato, design v0.1 in bozza, decisioni ADR-001..006.
-Nessuna riga di codice del modulo ancora scritta. Branch `claude/ai-reputation-radar-dd9004` nel checkout
-principale `C:\xampp\htdocs\seo-toolkit` (servito da XAMPP). Test OpenAI e Anthropic fatti il 2026-10-05.
+M0 test empirici: OpenAI ✅ e Anthropic ✅ fatti il 2026-10-05. Perplexity: docs verificate online e script
+pronto (`scripts/test-engine-perplexity.php`), **manca solo la key**. Scoperta: Perplexity ha chiuso le Chat
+Completions Sonar il 2026-09-27 → si usa l'Agent API `/v1/agent` con `preset: fast` (sostituto ufficiale di
+`sonar`). Branch `claude/ai-reputation-radar-dd9004` nel checkout principale `C:\xampp\htdocs\seo-toolkit`.
 
 ## Prossimo passo (uno solo)
-**M0.3** — Test Perplexity. Prima Clemente incolla le key Gemini e Perplexity in
-`http://localhost/seo-toolkit/admin/settings` (campi pronti, righe DB create). Poi: verifica online docs
-Perplexity (Sonar chat completions con `citations`/`search_results` vs Agent API; la Search API dà solo
-risultati grezzi, non serve) → script `scripts/test-engine-perplexity.php` sul modello degli altri due
-(3 prompt su Marcaccini, JSON in `docs/test-empirici/`). Poi M0.4 Gemini grounding.
+**M0.3 — lanciare il test Perplexity.** Clemente incolla la key in `http://localhost/seo-toolkit/admin/settings`
+(campo "Perplexity", riga DB già creata). Poi dalla root del repo:
+`php modules/ai-reputation/scripts/test-engine-perplexity.php` (default `fast medium`; variante
+`perplexity/sonar medium` per il modello esplicito). Scrivere la nota `docs/test-empirici/2026-10-05-perplexity.md`
+sul modello di quella OpenAI. Poi M0.4 Gemini grounding (serve anche quella key).
 Aperto per Clemente: il "Marcaccini Federico" del rapporto mafie Lazio è un omonimo? (vedi test OpenAI)
 
 ## M0 — Test empirici
 - [x] M0.1 Prerequisiti: MySQL on, `.env` nel worktree, key verificate (OpenAI ✅ Anthropic ✅ Gemini ❌ Perplexity ❌)
 - [x] M0.2 OpenAI Responses `web_search`: funziona, citazioni ok, costi reali misurati → `docs/test-empirici/2026-10-05-openai.md`. ⚠️ trovato contenuto negativo (rapporto mafie Lazio, possibile omonimo)
-- [ ] M0.3 Idem Perplexity Sonar
+- [ ] M0.3 Perplexity Agent API (`/v1/agent`, preset `fast`): docs verificate + script pronto, in attesa key
 - [ ] M0.4 Idem Gemini grounding (se chiave disponibile)
 - [x] M0.5 Anthropic web_search_20260318: funziona solo in modalità `direct` per le citazioni; costo ~0,20 $/prompt con Opus → `docs/test-empirici/2026-10-05-anthropic.md`. Claude NON trova il rapporto mafie ma smaschera gli articoli sponsorizzati
 - [ ] M0.6 Aggiornare `design.md` §3.3 e §5 con formato citazioni, modelli e costi reali
