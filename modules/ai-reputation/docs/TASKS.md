@@ -9,14 +9,13 @@ Nessuna riga di codice del modulo ancora scritta. Branch: `claude/ai-reputation-
 (worktree in `.claude/worktrees/ai-reputation-radar-dd9004/`).
 
 ## Prossimo passo (uno solo)
-**M0.1 (quasi chiuso)** — `.env` copiato nel worktree, MySQL acceso. Key nel DB locale:
-OpenAI ✅, Anthropic ✅, Gemini ❌ (vuota), Perplexity ❌ (setting non esiste ancora).
-Aperto: Clemente decide se prendere una key Perplexity o usare Anthropic web search come secondo
-engine per la demo.
+**M0.5** — Test Anthropic web search (key presente). Poi Perplexity e Gemini quando Clemente
+fornisce le key (deciso 2026-10-05: tutti gli engine, test empirici prima).
+Aperto per Clemente: il "Marcaccini Federico" del rapporto mafie Lazio è un omonimo? (vedi test OpenAI)
 
 ## M0 — Test empirici
 - [x] M0.1 Prerequisiti: MySQL on, `.env` nel worktree, key verificate (OpenAI ✅ Anthropic ✅ Gemini ❌ Perplexity ❌)
-- [ ] M0.2 Verifica online docs + listino OpenAI Responses `web_search` → script `scripts/test-engine-openai.php`, 3 prompt, JSON in `docs/test-empirici/`
+- [x] M0.2 OpenAI Responses `web_search`: funziona, citazioni ok, costi reali misurati → `docs/test-empirici/2026-10-05-openai.md`. ⚠️ trovato contenuto negativo (rapporto mafie Lazio, possibile omonimo)
 - [ ] M0.3 Idem Perplexity Sonar
 - [ ] M0.4 Idem Gemini grounding (se chiave disponibile)
 - [ ] M0.5 Idem Anthropic web search (se chiave disponibile)
@@ -35,6 +34,8 @@ engine per la demo.
 ## Decisioni in sospeso (di Clemente)
 - Conferma riga per riga della bozza profilo Marcaccini (brief §3) → si fa nella UI in M1.2
 - Data e ora della call con Gabriele (settimana del 2026-10-06, mattina)
+- Omonimia o no del "Marcaccini Federico" citato nel III Rapporto Mafie Lazio (jemolo.it) → cambia la demo
+- Key Perplexity e Gemini da creare (Clemente)
 
 ## Fatto
 - 2026-10-05 Brief ricevuto, salvato in `docs/brief-2026-10-05.md`
