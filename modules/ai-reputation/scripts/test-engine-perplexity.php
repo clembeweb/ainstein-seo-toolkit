@@ -146,7 +146,7 @@ foreach ($prompts as $p) {
         'model_used' => $json['model'] ?? null,
         'tokens_in' => $usage['input_tokens'] ?? null,
         'tokens_out' => $usage['output_tokens'] ?? null,
-        'search_invocations' => $usage['tool_calls_details']['web_search']['invocation'] ?? null,
+        'search_invocations' => $usage['tool_calls_details']['search_web']['invocation'] ?? ($usage['tool_calls_details']['web_search']['invocation'] ?? null),
         'cost_usd' => $usage['cost']['total_cost'] ?? null,
         'queries' => $queries,
         'search_results' => $searchResults,

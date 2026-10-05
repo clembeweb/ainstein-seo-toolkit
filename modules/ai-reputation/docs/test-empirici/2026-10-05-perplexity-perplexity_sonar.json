@@ -1,0 +1,1095 @@
+[
+    {
+        "summary": {
+            "prompt": {
+                "cluster": "nav",
+                "lang": "it",
+                "text": "Chi è Federico Marcaccini?"
+            },
+            "http": 200,
+            "curl_error": null,
+            "latency_ms": 6207,
+            "status": "completed",
+            "model_used": "perplexity/sonar",
+            "tokens_in": 3952,
+            "tokens_out": 219,
+            "search_invocations": null,
+            "cost_usd": 0.00404,
+            "queries": [
+                "Federico Marcaccini",
+                "Federico Marcaccini biografia",
+                "Federico Marcaccini Italia"
+            ],
+            "search_results": [
+                {
+                    "id": 1,
+                    "url": "https://www.federicomarcaccini.it/",
+                    "title": "Federico Marcaccini | Real Estate Developer | Homepage",
+                    "date": "2026-09-08",
+                    "snippet": "### Real Estate Developer ed esperto analista del mercato immobiliare\n**Federico Marcaccini** è un Real Estate Developer e imprenditore romano, **specializzato in analisi di mercato e consulenza strat"
+                },
+                {
+                    "id": 2,
+                    "url": "https://www.federicomarcaccini.it/chi-sono/",
+                    "title": "Federico Marcaccini: imprenditore romano | Chi Sono",
+                    "date": "2026-09-08",
+                    "snippet": "Il Dr Federico Marcaccini è un **Real Estate Developer e imprenditore romano** con oltre venti anni di esperienza nel settore degli immobili.\nSpecializzato in **analisi di mercato e consulenza strateg"
+                },
+                {
+                    "id": 3,
+                    "url": "https://www.linkedin.com/in/federico-marcaccini-roma",
+                    "title": "Federico Marcaccini | LinkedIn",
+                    "date": null,
+                    "snippet": "**Federico Marcaccini**\n**Real Estate Investor**\n**Real Estate Investor | Analisi di mercato e consulenza strategica nel settore immobiliare**\nRome, Latium, Italy\n...\nFederico Marcaccini è un Real Est"
+                },
+                {
+                    "id": 4,
+                    "url": "https://www.dirittiglobali.it/2012/09/il-romanzo-criminale-della-ndrangheta-a-roma/",
+                    "title": "Il romanzo criminale della â€˜ndrangheta a Roma • Diritti Globali",
+                    "date": "2012-09-07",
+                    "snippet": "Quando il 29 novembre del 2010 viene arrestato per traffico internazionale di cocaina, Federico Marcaccini a Roma è già un gigante.\nPer tutti è il “pupone”.\nHa appena 32 anni, ma è straricco e lo fa v"
+                },
+                {
+                    "id": 5,
+                    "url": "https://notiziaoggi.it/idee-consigli/hotellerie-italiana-dalla-crescita-alla-gestione-nuova-fase-strategica-mercato-secondo-federico-marcaccini/",
+                    "title": "Hotellerie italiana, dalla crescita alla gestione: la nuova ...",
+                    "date": "2026-06-12",
+                    "snippet": "Secondo** Federico Marcaccini**, esperto del comparto immobiliare e degli investimenti, il vero tema strategico non riguarda più soltanto l’acquisto di strutture o la crescita quantitativa dell’offert"
+                },
+                {
+                    "id": 6,
+                    "url": "https://www.iltempo.it/roma-capitale/2013/10/29/news/sequestrati-beni-per-120-milioni-a-marcaccini-912730/amp/",
+                    "title": "Sequestrati beni per 120 milioni a Marcaccini - Roma",
+                    "date": "2013-10-29",
+                    "snippet": "I centri operativi della Dia di Roma e Reggio Calabria hanno dato esecuzione al provvedimento di confisca dei beni riconducibili al 43 enne noto imprenditore ed immobiliarista romano Federico Marcacci"
+                },
+                {
+                    "id": 7,
+                    "url": "https://www.federicomarcaccini.it/blog/",
+                    "title": "Ultime notizie | Blog",
+                    "date": "2026-09-04",
+                    "snippet": "#### Società immobiliare o persona fisica: la scelta più adatta per investire nel settore"
+                },
+                {
+                    "id": 8,
+                    "url": "https://www.linkedin.com/in/federica-marcaccini-b320706b",
+                    "title": "Federica Marcaccini | LinkedIn",
+                    "date": null,
+                    "snippet": "**Federica Marcaccini**\n**Progettazione Eventi Culturali Italy E Coaching**\n**Consulente Formazione, Eventi Ince**\nRome, Latium, Italy\n...\n### Experience\n- **Progettazione eventi culturali Italy e Coa"
+                },
+                {
+                    "id": 9,
+                    "url": "https://www.federicomarcaccini.it/press-review/",
+                    "title": "Federico Marcaccini | Ultime Notizie | PRESS",
+                    "date": "2025-09-12",
+                    "snippet": "Federico Marcaccini: Un Nuovo Leader nel Settore Immobiliare Italiano"
+                },
+                {
+                    "id": 10,
+                    "url": "https://storiedieccellenza.it/federico-marcaccini-e-i-trend-del-real-estate-levoluzione-dei-centri-commerciali/",
+                    "title": "Federico Marcaccini e i Trend del Real Estate: l’Evoluzione dei Centri Commerciali",
+                    "date": "2024-09-12",
+                    "snippet": "In un contesto di crescente interesse verso il settore immobiliare e la trasformazione dei centri commerciali, abbiamo avuto l’opportunità di intervistare\n**Federico Marcaccini**, un nome di spicco ne"
+                },
+                {
+                    "id": 11,
+                    "url": "https://www.lamiafinanza.it/real-estate-immobiliare/",
+                    "title": "REAL ESTATE – LMF – LaMiaFinanza",
+                    "date": "2026-09-30",
+                    "snippet": "## Dimore storiche e borghi, dal costo di manutenzione all’asset ricettivo: così il Centro Italia riscrive il valore del patrimonio. L’analisi di Federico Marcaccini\n** LMF Redazione LaMiaFinanza.it -"
+                },
+                {
+                    "id": 12,
+                    "url": "https://www.taxidrivers.it/page/53",
+                    "title": "Taxidrivers.it - Film, SerieTv, Festival - Taxidrivers.it",
+                    "date": "2026-08-15",
+                    "snippet": "Italy Short Film Days Berlin: Intervista alla regista e al direttore della fotografia di 'Ciao, Varsavia' - Taxidrivers.it\n...\n## Federico Marcaccini: una visione privilegiata sul boom degli investime"
+                },
+                {
+                    "id": 13,
+                    "url": "https://www.parmaquotidiano.info/",
+                    "title": "Homepage - ParmaQuotidiano.info",
+                    "date": null,
+                    "snippet": "### Federico Marcaccini: “Gli investimenti nel settore immobiliare sono una risposta alla trasformazione economica del Paese”\nnovembre 22, 2024"
+                },
+                {
+                    "id": 14,
+                    "url": "https://www.bloomberg.com/profile/person/4119819",
+                    "title": "Bloomberg",
+                    "date": null,
+                    "snippet": "For inquiries related to this message please contact our support team and provide the reference ID below."
+                },
+                {
+                    "id": 15,
+                    "url": "https://ilmessaggio.it/",
+                    "title": "Homepage - Benvenuto - Il Messaggio",
+                    "date": null,
+                    "snippet": "### Il boom dell’hôtellerie luxury in Italia: Federico Marcaccini analizza l'evoluzione del settore"
+                }
+            ],
+            "citations_annotations": [],
+            "citations_inline_ids": [],
+            "citations_inline": [],
+            "text": "Il nome **Federico Marcaccini** compare in fonti online riferite a persone diverse o a profili non sempre verificabili. Un profilo professionale recente lo descrive come imprenditore romano e consulente nel settore immobiliare.\n\nEsiste anche un Federico Marcaccini citato in cronache giudiziarie: secondo articoli di stampa, fu coinvolto nell’inchiesta *Overloading* sul traffico internazionale di cocaina e nel 2013 fu confermata la confisca di beni a lui riconducibili. Non posso stabilire se quel soggetto sia la stessa persona del profilo immobiliare attuale; quindi è meglio non confondere le due identità senza ulteriori elementi.",
+            "error": null
+        },
+        "raw": {
+            "background": false,
+            "completed_at": 1791218401,
+            "created_at": 1791218401,
+            "error": null,
+            "frequency_penalty": 0,
+            "id": "resp_41964538-30f2-4a87-b5b0-fc17cd41863b",
+            "incomplete_details": null,
+            "instructions": null,
+            "max_output_tokens": 4096,
+            "max_tool_calls": null,
+            "metadata": [],
+            "model": "perplexity/sonar",
+            "object": "response",
+            "output": [
+                {
+                    "queries": [
+                        "Federico Marcaccini",
+                        "Federico Marcaccini biografia",
+                        "Federico Marcaccini Italia"
+                    ],
+                    "results": [
+                        {
+                            "date": "2026-09-08",
+                            "id": 1,
+                            "last_updated": "2026-09-26",
+                            "snippet": "### Real Estate Developer ed esperto analista del mercato immobiliare\n**Federico Marcaccini** è un Real Estate Developer e imprenditore romano, **specializzato in analisi di mercato e consulenza strategica**.\nCon oltre 20 anni di esperienza, supporta grandi gruppi a ottimizzare i loro investimenti e gestire patrimoni immobiliari.\n...\n## Competenze principali del Dr Federico Marcaccini\n#### Analisi di mercato e valutazioni immobiliari\n#### Consulenza per investimenti immobiliari strategici\n#### Ottimizzazione e valorizzazione del portafoglio immobiliare\n## Aree di attività del Dr Federico Marcaccini\n### Real Estate Investments\n### Gestione patrimoniale immobiliare\n### Valorizzazione Immobiliare\n### Consulenza strategica per lo sviluppo di progetti immobiliari",
+                            "source": "web",
+                            "title": "Federico Marcaccini | Real Estate Developer | Homepage",
+                            "url": "https://www.federicomarcaccini.it/"
+                        },
+                        {
+                            "date": "2026-09-08",
+                            "id": 2,
+                            "last_updated": "2026-09-22",
+                            "snippet": "Il Dr Federico Marcaccini è un **Real Estate Developer e imprenditore romano** con oltre venti anni di esperienza nel settore degli immobili.\nSpecializzato in **analisi di mercato e consulenza strategica**, Federico Marcaccini è oggi un punto di riferimento per le grandi aziende che desiderano investire, acquistare o gestire patrimoni immobiliari.\nDopo aver conseguito titoli in economia con un focus sul settore immobiliare,\n**l’imprenditore romano Federico Marcaccini** ha intrapreso una carriera che lo ha portato a collaborare con alcune delle più importanti realtà del settore in Italia.\nLe sue competenze includono l**a valorizzazione, la pianificazione strategica, l'ottimizzazione degli investimenti e l'analisi di mercato avanzata**.\nNel corso della sua carriera, il Dr Federico Marcaccini ha aiutato aziende a **massimizzare il valore dei loro asset immobiliari, sviluppando strategie su misura basate su analisi approfondite e dati di mercato**.\nLa sua professionalità e il suo approccio innovativo lo rendono un partner ideale ed apprezzato da grandi investitori.\n### Aree di specializzazione:\nAnalisi di mercato per investimenti immobiliari\nConsulenza strategica per investimenti immobiliari\nOttimizzazione del portafoglio immobiliare\nPianificazione e valorizzazione di progetti immobiliari\nCon una visione moderna e semplificata dei processi di investimenti il Dr Federico Marcaccini fornisce soluzioni concrete ed efficaci garantendo dei risultati duraturi.",
+                            "source": "web",
+                            "title": "Federico Marcaccini: imprenditore romano | Chi Sono",
+                            "url": "https://www.federicomarcaccini.it/chi-sono/"
+                        },
+                        {
+                            "id": 3,
+                            "last_updated": "2026-09-15",
+                            "snippet": "**Federico Marcaccini**\n**Real Estate Investor**\n**Real Estate Investor | Analisi di mercato e consulenza strategica nel settore immobiliare**\nRome, Latium, Italy\n...\nFederico Marcaccini è un Real Estate Developer e imprenditore romano con oltre venti anni…\n### Experience\n- **Real Estate Investor**\n**Libero professionista consulenze immobiliari**\nJanuary 2005 - Present\n### Skills\n- **real estate developer**\n- **real estate investor**\n- **developer**\n- **real estate**\n- **entrepreneur**\n- **investor**",
+                            "source": "web",
+                            "title": "Federico Marcaccini | LinkedIn",
+                            "url": "https://www.linkedin.com/in/federico-marcaccini-roma"
+                        },
+                        {
+                            "date": "2012-09-07",
+                            "id": 4,
+                            "last_updated": "2025-04-18",
+                            "snippet": "Quando il 29 novembre del 2010 viene arrestato per traffico internazionale di cocaina, Federico Marcaccini a Roma è già un gigante.\nPer tutti è il “pupone”.\nHa appena 32 anni, ma è straricco e lo fa vedere.\nÈ un self made man che i soldi li ha fatti con imprese edili, immobiliari e col commercio d’automobili.\nLa Direzione investigativa antimafia gli sequestra un impero di società e immobili che vale 115 milioni di euro.\nMarcaccini è un compare, è amico dei figli di Giuseppe Pelle, del clan di San Luca.\n...\nSecondo l’accusa avrebbe finanziato l’acquisto di partite di cocaina.\n...\nMa Federico Marcaccini detto “pupone” a Roma è qualcosa di più di un palazzinaro.\nAmministrava la So.Ge.Sa., una Spa di gestione di servizi aeroportuali nonché ex sponsor della squadra femminile di pallavolo della città quando militava in serie A2.\nIl giovane e rampante imprenditore è anche socio occulto, secondo i documenti in mano agli investigatori antimafia, di Tiburtina Gestione, azienda attiva nella raccolta e nel trattamento rifiuti.",
+                            "source": "web",
+                            "title": "Il romanzo criminale della â€˜ndrangheta a Roma • Diritti Globali",
+                            "url": "https://www.dirittiglobali.it/2012/09/il-romanzo-criminale-della-ndrangheta-a-roma/"
+                        },
+                        {
+                            "date": "2026-06-12",
+                            "id": 5,
+                            "last_updated": "2026-09-22",
+                            "snippet": "Secondo** Federico Marcaccini**, esperto del comparto immobiliare e degli investimenti, il vero tema strategico non riguarda più soltanto l’acquisto di strutture o la crescita quantitativa dell’offerta, ma soprattutto la **capacità di gestire gli asset alberghieri in modo efficiente, professionale e orientato alla redditività di lungo periodo**.",
+                            "source": "web",
+                            "title": "Hotellerie italiana, dalla crescita alla gestione: la nuova ...",
+                            "url": "https://notiziaoggi.it/idee-consigli/hotellerie-italiana-dalla-crescita-alla-gestione-nuova-fase-strategica-mercato-secondo-federico-marcaccini/"
+                        },
+                        {
+                            "date": "2013-10-29",
+                            "id": 6,
+                            "last_updated": "2025-10-28",
+                            "snippet": "I centri operativi della Dia di Roma e Reggio Calabria hanno dato esecuzione al provvedimento di confisca dei beni riconducibili al 43 enne noto imprenditore ed immobiliarista romano Federico Marcaccini, divenuto definitivo dopo la pronuncia della Corte Suprema di Cassazione che ha dichiarato l'inammissibilità dei ricorsi proposti dall'interessato, condannandolo, tra l'altro, al pagamento delle spese processuali.\nIl provvedimento colpisce: il patrimonio aziendale di 33 società di capitali, di cui ventisette con sede a Roma, quattro in provincia di Roma e due a Latina, operanti nei settori immobiliare, edilizio, ricerca e sviluppo nei comparti ambientale e tecnologico, commercio di autovetture e gestione servizi aeroportuali; beni mobili e immobili di pregio per 120 milioni di euro circa riconducibili alle predette società.\n...\nMarcaccini era stato sottoposto, nell'ambito dell'operazione «Overloading», ad un provvedimento restrittivo di fermo emesso il 29 novembre 2010 dalla Procura Distrettuale di Catanzaro, unitamente ad altre 76 persone, tutte ritenute associate una vasta e ramificata organizzazione criminale di San Luca (Reggio Calabria) dedita al traffico internazionale di ingenti quantità di cocaina tra la Colombia e l'Italia.\nAll'interno dello scenario investigativo delineato, Marcaccini, detto «er pupone», grazie ai suoi contatti con esponenti della potente cosca Pelle del comune calabro, fungeva da importante finanziatore delle illecite attività realizzate dall'organizzazione criminale.\nL'attivismo imprenditoriale del Marcaccini, nonostante la sua giovane età e, soprattutto, la modestissima posizione reddituale ufficialmente dichiarata, aveva insospettito gli investigatori che, al termine di accertamenti patrimoniali disposti dal Direttore della Dia, hanno eseguito nel settembre 2011 un provvedimento di sequestro anticipato dei beni dell'imprenditore, disposto, ai sensi della normativa antimafia, dal Tribunale di Roma - Sezione per le Misure di Prevenzione.",
+                            "source": "web",
+                            "title": "Sequestrati beni per 120 milioni a Marcaccini - Roma",
+                            "url": "https://www.iltempo.it/roma-capitale/2013/10/29/news/sequestrati-beni-per-120-milioni-a-marcaccini-912730/amp/"
+                        },
+                        {
+                            "date": "2026-09-04",
+                            "id": 7,
+                            "last_updated": "2026-09-07",
+                            "snippet": "#### Società immobiliare o persona fisica: la scelta più adatta per investire nel settore",
+                            "source": "web",
+                            "title": "Ultime notizie | Blog",
+                            "url": "https://www.federicomarcaccini.it/blog/"
+                        },
+                        {
+                            "id": 8,
+                            "last_updated": "2026-09-15",
+                            "snippet": "**Federica Marcaccini**\n**Progettazione Eventi Culturali Italy E Coaching**\n**Consulente Formazione, Eventi Ince**\nRome, Latium, Italy\n...\n### Experience\n- **Progettazione eventi culturali Italy e Coaching**\n**Q 360 S.r.l.**\nJanuary 2003 - Present\nRoma, Italia\n- **Progettazione eventi- Location Manager**\n**Q 360**\nSeptember 2004 - September 2012 · 8 years 1 month\nProgettazione e Creatività in relazione ad eventi - Gestione Clienti\n### Education\n- **Università degli Studi di Roma 'La Sapienza'**\n**Laurea, Giurisprudenza**\n### Licenses & certifications\n- **Titolo professionale di Avvocato**\nIssued 962409600\n### Skills\n- **active directory**\n- **events**\n- **cultural events**\n- **event design**\n- **training**\n- **customer management**\n- **training and coaching**\n- **management**\n- **organization**\n- **creativity**\n- **coaching**\n- **design**\n- **location manager**",
+                            "source": "web",
+                            "title": "Federica Marcaccini | LinkedIn",
+                            "url": "https://www.linkedin.com/in/federica-marcaccini-b320706b"
+                        },
+                        {
+                            "date": "2025-09-12",
+                            "id": 9,
+                            "last_updated": "2025-09-12",
+                            "snippet": "Federico Marcaccini: Un Nuovo Leader nel Settore Immobiliare Italiano",
+                            "source": "web",
+                            "title": "Federico Marcaccini | Ultime Notizie | PRESS",
+                            "url": "https://www.federicomarcaccini.it/press-review/"
+                        },
+                        {
+                            "date": "2024-09-12",
+                            "id": 10,
+                            "last_updated": "2024-09-26",
+                            "snippet": "In un contesto di crescente interesse verso il settore immobiliare e la trasformazione dei centri commerciali, abbiamo avuto l’opportunità di intervistare\n**Federico Marcaccini**, un nome di spicco nel panorama degli affari e del real estate italiano.\nDurante l’intervista, Marcaccini ha condiviso le sue preziose intuizioni sui recenti trend del mercato e le sue aspettative per il futuro.\n...\nCon una visione chiara e un approccio olistico alla gestione dei centri commerciali, Federico Marcaccini emerge non solo come leader nel settore del real estate, ma anche come punto di riferimento per chi cerca di comprendere e anticipare le tendenze del mercato.",
+                            "source": "web",
+                            "title": "Federico Marcaccini e i Trend del Real Estate: l’Evoluzione dei Centri Commerciali",
+                            "url": "https://storiedieccellenza.it/federico-marcaccini-e-i-trend-del-real-estate-levoluzione-dei-centri-commerciali/"
+                        },
+                        {
+                            "date": "2026-09-30",
+                            "id": 11,
+                            "last_updated": "2026-10-04",
+                            "snippet": "## Dimore storiche e borghi, dal costo di manutenzione all’asset ricettivo: così il Centro Italia riscrive il valore del patrimonio. L’analisi di Federico Marcaccini\n** LMF Redazione LaMiaFinanza.it - ** 23/09/2026 00:01:00 (updated 23/09/2026 14:52:35)\nI beni culturali privati vincolati in Italia sono 46mila e costano ai proprietari oltre 50mila euro l’anno ciascuno, quasi sempre di tasca propria.",
+                            "source": "web",
+                            "title": "REAL ESTATE – LMF – LaMiaFinanza",
+                            "url": "https://www.lamiafinanza.it/real-estate-immobiliare/"
+                        },
+                        {
+                            "date": "2026-08-15",
+                            "id": 12,
+                            "last_updated": "2026-10-05",
+                            "snippet": "Italy Short Film Days Berlin: Intervista alla regista e al direttore della fotografia di 'Ciao, Varsavia' - Taxidrivers.it\n...\n## Federico Marcaccini: una visione privilegiata sul boom degli investimenti nel settore alberghiero\nNel contesto effervescente degli investimenti nel mercato immobiliare, specialmente nel segmento hospitality, abbiamo avuto il piacere di parlare con Federico Marcaccini, riconosciuto come “Key player of...\n- Eventi2 anni ago",
+                            "source": "web",
+                            "title": "Taxidrivers.it - Film, SerieTv, Festival - Taxidrivers.it",
+                            "url": "https://www.taxidrivers.it/page/53"
+                        },
+                        {
+                            "id": 13,
+                            "last_updated": "2026-10-03",
+                            "snippet": "### Federico Marcaccini: “Gli investimenti nel settore immobiliare sono una risposta alla trasformazione economica del Paese”\nnovembre 22, 2024",
+                            "source": "web",
+                            "title": "Homepage - ParmaQuotidiano.info",
+                            "url": "https://www.parmaquotidiano.info/"
+                        },
+                        {
+                            "id": 14,
+                            "last_updated": "2025-03-11",
+                            "snippet": "For inquiries related to this message please contact our support team and provide the reference ID below.",
+                            "source": "web",
+                            "title": "Bloomberg",
+                            "url": "https://www.bloomberg.com/profile/person/4119819"
+                        },
+                        {
+                            "id": 15,
+                            "last_updated": "2026-10-02",
+                            "snippet": "### Il boom dell’hôtellerie luxury in Italia: Federico Marcaccini analizza l'evoluzione del settore",
+                            "source": "web",
+                            "title": "Homepage - Benvenuto - Il Messaggio",
+                            "url": "https://ilmessaggio.it/"
+                        }
+                    ],
+                    "type": "search_results"
+                },
+                {
+                    "content": [
+                        {
+                            "annotations": [],
+                            "text": "Il nome **Federico Marcaccini** compare in fonti online riferite a persone diverse o a profili non sempre verificabili. Un profilo professionale recente lo descrive come imprenditore romano e consulente nel settore immobiliare.\n\nEsiste anche un Federico Marcaccini citato in cronache giudiziarie: secondo articoli di stampa, fu coinvolto nell’inchiesta *Overloading* sul traffico internazionale di cocaina e nel 2013 fu confermata la confisca di beni a lui riconducibili. Non posso stabilire se quel soggetto sia la stessa persona del profilo immobiliare attuale; quindi è meglio non confondere le due identità senza ulteriori elementi.",
+                            "type": "output_text"
+                        }
+                    ],
+                    "id": "msg_37f777a4-3530-4b8f-a12a-dc2c2eb6205c",
+                    "role": "assistant",
+                    "status": "completed",
+                    "type": "message"
+                }
+            ],
+            "parallel_tool_calls": true,
+            "presence_penalty": 0,
+            "previous_response_id": null,
+            "prompt_cache_key": null,
+            "reasoning": null,
+            "safety_identifier": null,
+            "service_tier": "default",
+            "status": "completed",
+            "store": true,
+            "temperature": 1,
+            "text": {
+                "format": {
+                    "type": "text"
+                }
+            },
+            "tool_choice": "auto",
+            "tools": [
+                {
+                    "type": "web_search",
+                    "search_context_size": "medium",
+                    "user_location": {
+                        "country": "IT"
+                    }
+                }
+            ],
+            "top_logprobs": 0,
+            "top_p": 1,
+            "truncation": "",
+            "usage": {
+                "cost": {
+                    "cache_creation_cost": 0.00085,
+                    "currency": "USD",
+                    "input_cost": 0.00014,
+                    "output_cost": 0.00055,
+                    "tool_calls_cost": 0.0025,
+                    "tool_calls_cost_details": {
+                        "search_web": 0.0025
+                    },
+                    "total_cost": 0.00404
+                },
+                "input_tokens": 3952,
+                "input_tokens_details": {
+                    "cache_creation_input_tokens": 3406,
+                    "cache_read_input_tokens": 0,
+                    "cached_tokens": 0
+                },
+                "output_tokens": 219,
+                "output_tokens_details": {
+                    "reasoning_tokens": 0
+                },
+                "tool_calls_details": {
+                    "search_web": {
+                        "cost_usd": 0.0025,
+                        "invocation": 1
+                    }
+                },
+                "total_tokens": 4171
+            },
+            "user": null
+        }
+    },
+    {
+        "summary": {
+            "prompt": {
+                "cluster": "rep",
+                "lang": "it",
+                "text": "Federico Marcaccini imprenditore immobiliare: è affidabile? Ci sono recensioni o problemi?"
+            },
+            "http": 200,
+            "curl_error": null,
+            "latency_ms": 10135,
+            "status": "completed",
+            "model_used": "perplexity/sonar",
+            "tokens_in": 4894,
+            "tokens_out": 435,
+            "search_invocations": null,
+            "cost_usd": 0.00481,
+            "queries": [
+                "Federico Marcaccini imprenditore immobiliare recensioni",
+                "Federico Marcaccini immobiliare problemi",
+                "Federico Marcaccini società immobiliare"
+            ],
+            "search_results": [
+                {
+                    "id": 1,
+                    "url": "https://www.federicomarcaccini.it/",
+                    "title": "Federico Marcaccini | Real Estate Developer | Homepage",
+                    "date": "2026-09-08",
+                    "snippet": "**Federico Marcaccini** è un Real Estate Developer e imprenditore romano, **specializzato in analisi di mercato e consulenza strategica**.\nCon oltre 20 anni di esperienza, supporta grandi gruppi a ott"
+                },
+                {
+                    "id": 2,
+                    "url": "https://www.federicomarcaccini.it/retail-real-estate-in-italia/",
+                    "title": "Il Retail Real Estate in Italia",
+                    "date": "2025-11-25",
+                    "snippet": "Federico Marcaccini è un Real Estate Developer e imprenditore romano, specializzato in analisi di mercato e consulenza strategica.\nCon oltre 20 anni di esperienza, supporta grandi gruppi a ottimizzare"
+                },
+                {
+                    "id": 3,
+                    "url": "https://www.federicomarcaccini.it/chi-sono/",
+                    "title": "Federico Marcaccini: imprenditore romano | Chi Sono",
+                    "date": "2026-09-08",
+                    "snippet": "Il Dr Federico Marcaccini è un **Real Estate Developer e imprenditore romano** con oltre venti anni di esperienza nel settore degli immobili.\nSpecializzato in **analisi di mercato e consulenza strateg"
+                },
+                {
+                    "id": 4,
+                    "url": "https://www.federicomarcaccini.it/blog/",
+                    "title": "Ultime notizie | Blog",
+                    "date": "2026-09-04",
+                    "snippet": "#### Società immobiliare o persona fisica: la scelta più adatta per investire nel settore"
+                },
+                {
+                    "id": 5,
+                    "url": "https://www.linkedin.com/in/federico-marcaccini-roma",
+                    "title": "Federico Marcaccini | LinkedIn",
+                    "date": null,
+                    "snippet": "**Real Estate Investor**\n**Real Estate Investor | Analisi di mercato e consulenza strategica nel settore immobiliare**\nRome, Latium, Italy\n...\nFederico Marcaccini è un Real Estate Developer e imprendi"
+                },
+                {
+                    "id": 6,
+                    "url": "https://www.iltempo.it/roma-capitale/2013/10/29/news/sequestrati-beni-per-120-milioni-a-marcaccini-912730/amp/",
+                    "title": "Sequestrati beni per 120 milioni a Marcaccini - Roma",
+                    "date": "2013-10-29",
+                    "snippet": "I centri operativi della Dia di Roma e Reggio Calabria hanno dato esecuzione al provvedimento di confisca dei beni riconducibili al 43 enne noto imprenditore ed immobiliarista romano Federico Marcacci"
+                },
+                {
+                    "id": 7,
+                    "url": "https://primadituttomilano.it/rubriche/idee-e-consigli/il-futuro-del-mercato-immobiliare-di-lusso-secondo-federico-marcaccini/",
+                    "title": "Il futuro del mercato immobiliare di lusso secondo Federico ...",
+                    "date": "2025-06-03",
+                    "snippet": "«Il mercato immobiliare di lusso in Italia sta cambiando pelle», afferma Federico Marcaccini, imprenditore ed esperto del settore, intervenendo sull’evoluzione di uno dei comparti più dinamici dell’ec"
+                },
+                {
+                    "id": 8,
+                    "url": "https://www.corriereromagna.it/societa/mercato-degli-hotel-5-stelle-in-italia-analisi-e-prospettive-secondo-federico-marcaccini-AE1776640",
+                    "title": "Mercato degli hotel 5 stelle in Italia: analisi e prospettive ...",
+                    "date": "2025-12-01",
+                    "snippet": "L’esperto del settore immobiliare\n__ analizza questi dati da un’ottica strategica, evidenziando le opportunità e i rischi nell’investimento in Federico Marcaccini__ **asset alberghieri di lusso**.\n..."
+                },
+                {
+                    "id": 9,
+                    "url": "https://www.federicomarcaccini.it/press-review/",
+                    "title": "Federico Marcaccini | Ultime Notizie | PRESS",
+                    "date": "2025-09-12",
+                    "snippet": "Federico Marcaccini analizza il Real Estate di Lusso in Italia: tra Stabilità e Crescita\n...\nFederico Marcaccini: “Gli investimenti nel settore immobiliare sono una risposta alla trasformazione econom"
+                },
+                {
+                    "id": 10,
+                    "url": "https://www.vicenzareport.it/economia/investimenti-immobiliari-hospitality/",
+                    "title": "Investimenti immobiliari hospitality: la visione Marcaccini",
+                    "date": "2026-01-23",
+                    "snippet": "Questa posizione non è solo un vanto statistico, ma rappresenta, come sottolineato dall’esperto **Federico Marcaccini**, il fondamento di una nuova strategia di **investimento immobiliare istituzional"
+                },
+                {
+                    "id": 11,
+                    "url": "https://www.dirittiglobali.it/2012/09/il-romanzo-criminale-della-ndrangheta-a-roma/",
+                    "title": "Il romanzo criminale della â€˜ndrangheta a Roma • Diritti Globali",
+                    "date": "2012-09-07",
+                    "snippet": "Quando il 29 novembre del 2010 viene arrestato per traffico internazionale di cocaina, Federico Marcaccini a Roma è già un gigante.\nPer tutti è il “pupone”.\nHa appena 32 anni, ma è straricco e lo fa v"
+                },
+                {
+                    "id": 12,
+                    "url": "https://www.story-time.it/riqualificazione-nel-settore-alberghiero-un-fenomeno-in-crescita/",
+                    "title": "Riqualificazione nel Settore Alberghiero: un fenomeno in crescita",
+                    "date": "2025-01-27",
+                    "snippet": "Federico Marcaccini, esperto nel settore immobiliare italiano, analizza le ultime **tendenze che stanno rivoluzionando il mercato alberghiero**.\nL’attenzione alla sostenibilità e alla valorizzazione d"
+                },
+                {
+                    "id": 13,
+                    "url": "https://storiedieccellenza.it/federico-marcaccini-e-i-trend-del-real-estate-levoluzione-dei-centri-commerciali/",
+                    "title": "Federico Marcaccini e i Trend del Real Estate: l’Evoluzione dei Centri Commerciali",
+                    "date": "2024-09-12",
+                    "snippet": "In un contesto di crescente interesse verso il settore immobiliare e la trasformazione dei centri commerciali, abbiamo avuto l’opportunità di intervistare\n**Federico Marcaccini**, un nome di spicco ne"
+                },
+                {
+                    "id": 14,
+                    "url": "https://primabergamo.it/rubriche/idee-e-consigli/abitare-oggi-le-sfide-strategiche-secondo-federico-marcaccini/",
+                    "title": "le sfide strategiche secondo Federico Marcaccini",
+                    "date": "2025-07-11",
+                    "snippet": "Con 635mila nuove unità abitative necessarie, l’Italia affronta una\n**sfida storica nel settore residenziale**.\nSecondo **Federico Marcaccini**, il fabbisogno non riguarda solo quantità, ma **qualità,"
+                },
+                {
+                    "id": 15,
+                    "url": "https://www.torinoggi.it/2025/09/25/leggi-notizia/argomenti/economia-4/articolo/federico-marcaccini-sulle-branded-residences-in-italia-tra-premium-di-prezzo-e-gestione.html",
+                    "title": "Federico Marcaccini sulle branded residences in Italia tra ...",
+                    "date": "2025-09-25",
+                    "snippet": "Come osserva Federico Marcaccini, **“il marchio vale quando difende standard e ricavi: senza execution, il premium si sgonfia”**."
+                }
+            ],
+            "citations_annotations": [],
+            "citations_inline_ids": [],
+            "citations_inline": [],
+            "text": "**Non posso concludere che sia affidabile sulla base delle recensioni online.** Le informazioni trovate sono scarse e, soprattutto, sembrano riferirsi a **due profili potenzialmente diversi** con lo stesso nome.\n\n- Un sito personale e un profilo LinkedIn presentano un Federico Marcaccini come consulente/investitore immobiliare a Roma. Queste sono informazioni promozionali o autodichiarate, non verifiche indipendenti. Non emergono dalle ricerche recensioni di clienti sufficientemente solide da valutare il suo operato.\n- Le notizie di cronaca del 2010–2013 parlano di un omonimo imprenditore romano coinvolto in un procedimento per traffico di droga e di una **confisca definitiva di beni**. Sono fatti seri, ma le sole corrispondenze del nome non bastano a stabilire che si tratti della stessa persona oggi attiva nel settore: serve verificare l’identità prima di attribuire quei precedenti.\n\n**In breve:** le informazioni pubbliche non consentono un giudizio affidabile; le notizie di cronaca rendono però essenziale chiarire l’eventuale omonimia prima di affidargli denaro o incarichi.\n\nPrima di procedere, chiederei ragione sociale e partita IVA, visura camerale aggiornata, referenze verificabili e incarichi conclusi; per un investimento, farei controllare da un professionista indipendente proprietà, ipoteche, procedure e contratti. Diffiderei di richieste di versamento su conti personali o di pressioni per firmare rapidamente.",
+            "error": null
+        },
+        "raw": {
+            "background": false,
+            "completed_at": 1791218409,
+            "created_at": 1791218409,
+            "error": null,
+            "frequency_penalty": 0,
+            "id": "resp_3eee1c24-75a8-4c98-9083-9ba6ea80948c",
+            "incomplete_details": null,
+            "instructions": null,
+            "max_output_tokens": 4096,
+            "max_tool_calls": null,
+            "metadata": [],
+            "model": "perplexity/sonar",
+            "object": "response",
+            "output": [
+                {
+                    "queries": [
+                        "Federico Marcaccini imprenditore immobiliare recensioni",
+                        "Federico Marcaccini immobiliare problemi",
+                        "Federico Marcaccini società immobiliare"
+                    ],
+                    "results": [
+                        {
+                            "date": "2026-09-08",
+                            "id": 1,
+                            "last_updated": "2026-09-26",
+                            "snippet": "**Federico Marcaccini** è un Real Estate Developer e imprenditore romano, **specializzato in analisi di mercato e consulenza strategica**.\nCon oltre 20 anni di esperienza, supporta grandi gruppi a ottimizzare i loro investimenti e gestire patrimoni immobiliari.\n...\n#### Analisi di mercato e valutazioni immobiliari\n#### Consulenza per investimenti immobiliari strategici\n#### Ottimizzazione e valorizzazione del portafoglio immobiliare\n...\n### Gestione patrimoniale immobiliare\n...\n### Consulenza strategica per lo sviluppo di progetti immobiliari",
+                            "source": "web",
+                            "title": "Federico Marcaccini | Real Estate Developer | Homepage",
+                            "url": "https://www.federicomarcaccini.it/"
+                        },
+                        {
+                            "date": "2025-11-25",
+                            "id": 2,
+                            "last_updated": "2026-09-26",
+                            "snippet": "Federico Marcaccini è un Real Estate Developer e imprenditore romano, specializzato in analisi di mercato e consulenza strategica.\nCon oltre 20 anni di esperienza, supporta grandi gruppi a ottimizzare i loro investimenti e gestire patrimoni immobiliari.",
+                            "source": "web",
+                            "title": "Il Retail Real Estate in Italia",
+                            "url": "https://www.federicomarcaccini.it/retail-real-estate-in-italia/"
+                        },
+                        {
+                            "date": "2026-09-08",
+                            "id": 3,
+                            "last_updated": "2026-09-22",
+                            "snippet": "Il Dr Federico Marcaccini è un **Real Estate Developer e imprenditore romano** con oltre venti anni di esperienza nel settore degli immobili.\nSpecializzato in **analisi di mercato e consulenza strategica**, Federico Marcaccini è oggi un punto di riferimento per le grandi aziende che desiderano investire, acquistare o gestire patrimoni immobiliari.\n...\nAnalisi di mercato per investimenti immobiliari\nConsulenza strategica per investimenti immobiliari\nOttimizzazione del portafoglio immobiliare\nPianificazione e valorizzazione di progetti immobiliari",
+                            "source": "web",
+                            "title": "Federico Marcaccini: imprenditore romano | Chi Sono",
+                            "url": "https://www.federicomarcaccini.it/chi-sono/"
+                        },
+                        {
+                            "date": "2026-09-04",
+                            "id": 4,
+                            "last_updated": "2026-09-07",
+                            "snippet": "#### Società immobiliare o persona fisica: la scelta più adatta per investire nel settore",
+                            "source": "web",
+                            "title": "Ultime notizie | Blog",
+                            "url": "https://www.federicomarcaccini.it/blog/"
+                        },
+                        {
+                            "id": 5,
+                            "last_updated": "2026-09-15",
+                            "snippet": "**Real Estate Investor**\n**Real Estate Investor | Analisi di mercato e consulenza strategica nel settore immobiliare**\nRome, Latium, Italy\n...\nFederico Marcaccini è un Real Estate Developer e imprenditore romano con oltre venti anni…\n...\n**Libero professionista consulenze immobiliari**\nJanuary 2005 - Present",
+                            "source": "web",
+                            "title": "Federico Marcaccini | LinkedIn",
+                            "url": "https://www.linkedin.com/in/federico-marcaccini-roma"
+                        },
+                        {
+                            "date": "2013-10-29",
+                            "id": 6,
+                            "last_updated": "2025-10-28",
+                            "snippet": "I centri operativi della Dia di Roma e Reggio Calabria hanno dato esecuzione al provvedimento di confisca dei beni riconducibili al 43 enne noto imprenditore ed immobiliarista romano Federico Marcaccini, divenuto definitivo dopo la pronuncia della Corte Suprema di Cassazione che ha dichiarato l'inammissibilità dei ricorsi proposti dall'interessato, condannandolo, tra l'altro, al pagamento delle spese processuali.\nIl provvedimento colpisce: il patrimonio aziendale di 33 società di capitali, di cui ventisette con sede a Roma, quattro in provincia di Roma e due a Latina, operanti nei settori immobiliare, edilizio, ricerca e sviluppo nei comparti ambientale e tecnologico, commercio di autovetture e gestione servizi aeroportuali; beni mobili e immobili di pregio per 120 milioni di euro circa riconducibili alle predette società.\nTra i beni confiscati di particolare rilievo, si segnalano a Roma: l'immobile locato alla società di gestione del teatro Ghione, quest'ultima estranea ai fatti ed al sequestro, adiacente piazza San Pietro; una villa in stile liberty a 4 piani in zona Nomentana-Porta Pia;\nun fabbricato con 10 unità immobiliari nella centralissima via di Ripetta; tre immobili adibiti a garage e magazzini per complessivi 1800 mq, nella via Tuscia, via Leone Magno e via Santa Maria delle Fornaci.\nE ancora due immobili adibiti ad uso alberghiero a Taormina, e Fabbrica di Roma (Viterbo); due ville a più piani con ampio parco annesso a Sabaudia (Latina); altre villette ed appartamenti a Fabrica di Roma, Mentana e Rignano Flaminio.\nLa confisca ha interessato, altresì, disponibilità finanziarie costituite da rapporti bancari di vario titolo per un valore stimato di circa un milione e mezzo di euro, nonchè dal contenuto di una cassetta di sicurezza in cui erano custoditi orologi e monili di cospicuo valore.\nMarcaccini era stato sottoposto, nell'ambito dell'operazione «Overloading», ad un provvedimento restrittivo di fermo emesso il 29 novembre 2010 dalla Procura Distrettuale di Catanzaro, unitamente ad altre 76 persone, tutte ritenute associate una vasta e ramificata organizzazione criminale di San Luca (Reggio Calabria) dedita al traffico internazionale di ingenti quantità di cocaina tra la Colombia e l'Italia.\nAll'interno dello scenario investigativo delineato, Marcaccini, detto «er pupone», grazie ai suoi contatti con esponenti della potente cosca Pelle del comune calabro, fungeva da importante finanziatore delle illecite attività realizzate dall'organizzazione criminale.\nL'attivismo imprenditoriale del Marcaccini, nonostante la sua giovane età e, soprattutto, la modestissima posizione reddituale ufficialmente dichiarata, aveva insospettito gli investigatori che, al termine di accertamenti patrimoniali disposti dal Direttore della Dia, hanno eseguito nel settembre 2011 un provvedimento di sequestro anticipato dei beni dell'imprenditore, disposto, ai sensi della normativa antimafia, dal Tribunale di Roma - Sezione per le Misure di Prevenzione.",
+                            "source": "web",
+                            "title": "Sequestrati beni per 120 milioni a Marcaccini - Roma",
+                            "url": "https://www.iltempo.it/roma-capitale/2013/10/29/news/sequestrati-beni-per-120-milioni-a-marcaccini-912730/amp/"
+                        },
+                        {
+                            "date": "2025-06-03",
+                            "id": 7,
+                            "last_updated": "2025-09-12",
+                            "snippet": "«Il mercato immobiliare di lusso in Italia sta cambiando pelle», afferma Federico Marcaccini, imprenditore ed esperto del settore, intervenendo sull’evoluzione di uno dei comparti più dinamici dell’economia nazionale.\nSecondo Marcaccini, non si tratta più soltanto di vendere prestigio, ma di creare valore duraturo attraverso\n**riqualificazione, innovazione tecnologica e sostenibilità**.\nNel suo approfondimento pubblicato sul portale ufficiale federicomarcaccini.it, l’imprenditore sottolinea come il concetto stesso di lusso stia mutando, diventando sinonimo di\n...\nMarcaccini identifica nella\n**riqualificazione edilizia** uno dei principali driver del settore.\n...\nIn conclusione, Federico Marcaccini delinea un\n**nuovo paradigma per il mercato immobiliare di lusso** in Italia: meno speculazione, più visione.",
+                            "source": "web",
+                            "title": "Il futuro del mercato immobiliare di lusso secondo Federico ...",
+                            "url": "https://primadituttomilano.it/rubriche/idee-e-consigli/il-futuro-del-mercato-immobiliare-di-lusso-secondo-federico-marcaccini/"
+                        },
+                        {
+                            "date": "2025-12-01",
+                            "id": 8,
+                            "last_updated": "2025-12-02",
+                            "snippet": "L’esperto del settore immobiliare\n__ analizza questi dati da un’ottica strategica, evidenziando le opportunità e i rischi nell’investimento in Federico Marcaccini__ **asset alberghieri di lusso**.\n...\nL’incremento dell’offerta alberghiera 5 stelle è sostanziale: con\n...\nNel 2024, il\n**ricavo medio per camera** nel segmento 5 stelle ha raggiunto valori elevati: la struttura con la performance più alta è **Aman Venice**, con circa **1 milione di euro per chiave**.",
+                            "source": "web",
+                            "title": "Mercato degli hotel 5 stelle in Italia: analisi e prospettive ...",
+                            "url": "https://www.corriereromagna.it/societa/mercato-degli-hotel-5-stelle-in-italia-analisi-e-prospettive-secondo-federico-marcaccini-AE1776640"
+                        },
+                        {
+                            "date": "2025-09-12",
+                            "id": 9,
+                            "last_updated": "2025-09-12",
+                            "snippet": "Federico Marcaccini analizza il Real Estate di Lusso in Italia: tra Stabilità e Crescita\n...\nFederico Marcaccini: “Gli investimenti nel settore immobiliare sono una risposta alla trasformazione economica del Paese”",
+                            "source": "web",
+                            "title": "Federico Marcaccini | Ultime Notizie | PRESS",
+                            "url": "https://www.federicomarcaccini.it/press-review/"
+                        },
+                        {
+                            "date": "2026-01-23",
+                            "id": 10,
+                            "last_updated": "2026-01-23",
+                            "snippet": "Questa posizione non è solo un vanto statistico, ma rappresenta, come sottolineato dall’esperto **Federico Marcaccini**, il fondamento di una nuova strategia di **investimento immobiliare istituzionale**.\n...\nNella visione di Federico Marcaccini, il passaggio dell’Italia a “super destinazione” mondiale è strettamente legato alla capacità di trasformare il\n**patrimonio architettonico** in asset ad alta redditività.\n...\nMarcaccini evidenzia come la domanda globale di esclusività stia spingendo una profonda ristrutturazione della proprietà immobiliare: si passa da una gestione familiare a una gestione governata da **fondi di private equity** e grandi catene internazionali.",
+                            "source": "web",
+                            "title": "Investimenti immobiliari hospitality: la visione Marcaccini",
+                            "url": "https://www.vicenzareport.it/economia/investimenti-immobiliari-hospitality/"
+                        },
+                        {
+                            "date": "2012-09-07",
+                            "id": 11,
+                            "last_updated": "2025-04-18",
+                            "snippet": "Quando il 29 novembre del 2010 viene arrestato per traffico internazionale di cocaina, Federico Marcaccini a Roma è già un gigante.\nPer tutti è il “pupone”.\nHa appena 32 anni, ma è straricco e lo fa vedere.\nÈ un self made man che i soldi li ha fatti con imprese edili, immobiliari e col commercio d’automobili.\nLa Direzione investigativa antimafia gli sequestra un impero di società e immobili che vale 115 milioni di euro.\nMarcaccini è un compare, è amico dei figli di Giuseppe Pelle, del clan di San Luca.\n...\nTra gli immobili che gli vengono confiscati, anche il palazzo che ospita il teatro Ghione, vicino a Piazza San Pietro.\n...\nMa Federico Marcaccini detto “pupone” a Roma è qualcosa di più di un palazzinaro.\nAmministrava la So.Ge.Sa., una Spa di gestione di servizi aeroportuali nonché ex sponsor della squadra femminile di pallavolo della città quando militava in serie A2.\nIl giovane e rampante imprenditore è anche socio occulto, secondo i documenti in mano agli investigatori antimafia, di Tiburtina Gestione, azienda attiva nella raccolta e nel trattamento rifiuti.",
+                            "source": "web",
+                            "title": "Il romanzo criminale della â€˜ndrangheta a Roma • Diritti Globali",
+                            "url": "https://www.dirittiglobali.it/2012/09/il-romanzo-criminale-della-ndrangheta-a-roma/"
+                        },
+                        {
+                            "date": "2025-01-27",
+                            "id": 12,
+                            "last_updated": "2026-07-05",
+                            "snippet": "Federico Marcaccini, esperto nel settore immobiliare italiano, analizza le ultime **tendenze che stanno rivoluzionando il mercato alberghiero**.\nL’attenzione alla sostenibilità e alla valorizzazione di asset immobiliari esistenti emerge come un elemento cruciale per il successo delle operazioni di riqualificazione.\n...\nLa** riqualificazione alberghiera** si distingue per la sua capacità di trasformare edifici obsoleti in strutture moderne e funzionali, rispondendo a una domanda sempre più esigente da parte dei viaggiatori.\n...\nFederico Marcaccini conclude sottolineando che il **futuro del settore alberghiero** risiede nella capacità di innovare e riqualificare, trasformando le sfide in opportunità.",
+                            "source": "web",
+                            "title": "Riqualificazione nel Settore Alberghiero: un fenomeno in crescita",
+                            "url": "https://www.story-time.it/riqualificazione-nel-settore-alberghiero-un-fenomeno-in-crescita/"
+                        },
+                        {
+                            "date": "2024-09-12",
+                            "id": 13,
+                            "last_updated": "2024-09-26",
+                            "snippet": "In un contesto di crescente interesse verso il settore immobiliare e la trasformazione dei centri commerciali, abbiamo avuto l’opportunità di intervistare\n**Federico Marcaccini**, un nome di spicco nel panorama degli affari e del real estate italiano.\n...\nCon un aumento dell’ **affluenza del 2,6%** rispetto a giugno del 2023 e un trend positivo del **+1,2** per tutto il primo semestre del 2024, questo segmento dimostra una ripresa solida e continua.\n...\nCon una visione chiara e un approccio olistico alla gestione dei centri commerciali, Federico Marcaccini emerge non solo come leader nel settore del real estate, ma anche come punto di riferimento per chi cerca di comprendere e anticipare le tendenze del mercato.",
+                            "source": "web",
+                            "title": "Federico Marcaccini e i Trend del Real Estate: l’Evoluzione dei Centri Commerciali",
+                            "url": "https://storiedieccellenza.it/federico-marcaccini-e-i-trend-del-real-estate-levoluzione-dei-centri-commerciali/"
+                        },
+                        {
+                            "date": "2025-07-11",
+                            "id": 14,
+                            "last_updated": "2025-09-12",
+                            "snippet": "Con 635mila nuove unità abitative necessarie, l’Italia affronta una\n**sfida storica nel settore residenziale**.\nSecondo **Federico Marcaccini**, il fabbisogno non riguarda solo quantità, ma **qualità, accessibilità e innovazione**.\n“Stiamo parlando di giovani, famiglie, anziani, studenti fuori sede.\nDi una\n**domanda frammentata e reale** che va accolta con un cambio di paradigma, a partire dalla riforma della fiscalità e dalla semplificazione burocratica.”\n...\nTra le proposte chiave:\n- Riduzione dell’IVA sulle locazioni al 5%\n- Esenzione IMU per alloggi in affitto come prima casa\n- Deduzione fiscale dei costi di riqualificazione\n- Revisione del regime di trasparenza per i fondi immobiliari\nPer Marcaccini, “Serve una\n**fiscalità funzionale alla rigenerazione**.\nNon una concessione, ma un investimento sul benessere del Paese.”\n...\nPermessi, destinazioni d’uso, vincoli e impugnazioni: la macchina normativa oggi frena ogni tentativo di accelerazione.\nIl modello proposto da Assoimmobiliare mira a tempi certi e iter chiari, in particolare per edilizia sociale, senior living, student housing.\nMarcaccini afferma: “Il tempo amministrativo dev’essere compatibile con il tempo degli investimenti.\nAltrimenti perdiamo occasioni e fiducia.”\n...\nIl nuovo abitare richiede\n**modelli flessibili, a lungo termine, ad alto impatto sociale**.\nBuild to rent, co-living, affordable housing sono strumenti noti a livello internazionale.\nIn Italia restano poco diffusi.\n“Manca un quadro normativo che li riconosca e li incentivi davvero” – dichiara Marcaccini – “Ma è qui che si gioca la partita della modernità e della coesione sociale.”\n...\nNel panorama attuale, il coinvolgimento del settore privato è imprescindibile.\nMa va accompagnato da\n**chiarezza normativa, stabilità fiscale e accesso agevolato ai fondi europei e nazionali**.\nMarcaccini insiste: “Gli investitori non temono il rischio, ma la\n**confusione normativa**.\n...\nIl patrimonio pubblico inutilizzato rappresenta una risorsa chiave.\nSecondo il MEF, è in corso una riforma per rendere questi asset utilizzabili a fini sociali.\n...\nL’Italia ha bisogno di un\n**organismo stabile** che coordini politiche abitative, norme fiscali, progetti urbanistici e programmazione economica.\n...\nPer",
+                            "source": "web",
+                            "title": "le sfide strategiche secondo Federico Marcaccini",
+                            "url": "https://primabergamo.it/rubriche/idee-e-consigli/abitare-oggi-le-sfide-strategiche-secondo-federico-marcaccini/"
+                        },
+                        {
+                            "date": "2025-09-25",
+                            "id": 15,
+                            "last_updated": "2025-10-02",
+                            "snippet": "Come osserva Federico Marcaccini, **“il marchio vale quando difende standard e ricavi: senza execution, il premium si sgonfia”**.",
+                            "source": "web",
+                            "title": "Federico Marcaccini sulle branded residences in Italia tra ...",
+                            "url": "https://www.torinoggi.it/2025/09/25/leggi-notizia/argomenti/economia-4/articolo/federico-marcaccini-sulle-branded-residences-in-italia-tra-premium-di-prezzo-e-gestione.html"
+                        }
+                    ],
+                    "type": "search_results"
+                },
+                {
+                    "content": [
+                        {
+                            "annotations": [],
+                            "text": "**Non posso concludere che sia affidabile sulla base delle recensioni online.** Le informazioni trovate sono scarse e, soprattutto, sembrano riferirsi a **due profili potenzialmente diversi** con lo stesso nome.\n\n- Un sito personale e un profilo LinkedIn presentano un Federico Marcaccini come consulente/investitore immobiliare a Roma. Queste sono informazioni promozionali o autodichiarate, non verifiche indipendenti. Non emergono dalle ricerche recensioni di clienti sufficientemente solide da valutare il suo operato.\n- Le notizie di cronaca del 2010–2013 parlano di un omonimo imprenditore romano coinvolto in un procedimento per traffico di droga e di una **confisca definitiva di beni**. Sono fatti seri, ma le sole corrispondenze del nome non bastano a stabilire che si tratti della stessa persona oggi attiva nel settore: serve verificare l’identità prima di attribuire quei precedenti.\n\n**In breve:** le informazioni pubbliche non consentono un giudizio affidabile; le notizie di cronaca rendono però essenziale chiarire l’eventuale omonimia prima di affidargli denaro o incarichi.\n\nPrima di procedere, chiederei ragione sociale e partita IVA, visura camerale aggiornata, referenze verificabili e incarichi conclusi; per un investimento, farei controllare da un professionista indipendente proprietà, ipoteche, procedure e contratti. Diffiderei di richieste di versamento su conti personali o di pressioni per firmare rapidamente.",
+                            "type": "output_text"
+                        }
+                    ],
+                    "id": "msg_bef9a6c4-4470-4528-b10b-7f1c7dc31225",
+                    "role": "assistant",
+                    "status": "completed",
+                    "type": "message"
+                }
+            ],
+            "parallel_tool_calls": true,
+            "presence_penalty": 0,
+            "previous_response_id": null,
+            "prompt_cache_key": null,
+            "reasoning": null,
+            "safety_identifier": null,
+            "service_tier": "default",
+            "status": "completed",
+            "store": true,
+            "temperature": 1,
+            "text": {
+                "format": {
+                    "type": "text"
+                }
+            },
+            "tool_choice": "auto",
+            "tools": [
+                {
+                    "type": "web_search",
+                    "search_context_size": "medium",
+                    "user_location": {
+                        "country": "IT"
+                    }
+                }
+            ],
+            "top_logprobs": 0,
+            "top_p": 1,
+            "truncation": "",
+            "usage": {
+                "cost": {
+                    "cache_creation_cost": 0.00108,
+                    "currency": "USD",
+                    "input_cost": 0.00014,
+                    "output_cost": 0.00109,
+                    "tool_calls_cost": 0.0025,
+                    "tool_calls_cost_details": {
+                        "search_web": 0.0025
+                    },
+                    "total_cost": 0.00481
+                },
+                "input_tokens": 4894,
+                "input_tokens_details": {
+                    "cache_creation_input_tokens": 4333,
+                    "cache_read_input_tokens": 0,
+                    "cached_tokens": 0
+                },
+                "output_tokens": 435,
+                "output_tokens_details": {
+                    "reasoning_tokens": 0
+                },
+                "tool_calls_details": {
+                    "search_web": {
+                        "cost_usd": 0.0025,
+                        "invocation": 1
+                    }
+                },
+                "total_tokens": 5329
+            },
+            "user": null
+        }
+    },
+    {
+        "summary": {
+            "prompt": {
+                "cluster": "comm",
+                "lang": "it",
+                "text": "Quali sono i migliori esperti di investimenti in hotel di lusso e riqualificazione alberghiera in Italia?"
+            },
+            "http": 200,
+            "curl_error": null,
+            "latency_ms": 8411,
+            "status": "completed",
+            "model_used": "perplexity/sonar",
+            "tokens_in": 4296,
+            "tokens_out": 581,
+            "search_invocations": null,
+            "cost_usd": 0.00502,
+            "queries": [
+                "Italy luxury hotel investment advisory hotel repositioning experts consulting",
+                "hotel real estate investment luxury Italy advisory firm hotel refurbishment",
+                "Italy hospitality consulting luxury hotels development investment firm hotel asset management"
+            ],
+            "search_results": [
+                {
+                    "id": 1,
+                    "url": "https://www.aaghospitality.com/",
+                    "title": "Hotel Asset Management in Italy | AA+G Hospitality",
+                    "date": "2026-09-24",
+                    "snippet": "Asset management, development and finance for owners and investors of independent hotels in Italy.\n...\nAA+G supports owners and investors of independent luxury and upscale hotels in Italy at every sta"
+                },
+                {
+                    "id": 2,
+                    "url": "https://www.wantadvisors.com/en/",
+                    "title": "Hospitality Real Estate Advisory - WANT Advisors",
+                    "date": null,
+                    "snippet": "WANT Advisors supports **investors, hoteliers, investment funds and property owners** throughout the entire project cycle – from feasibility to delivery and on to operational management – combining st"
+                },
+                {
+                    "id": 3,
+                    "url": "https://www.colliers.com/en-it/services/hospitality-services",
+                    "title": "Colliers | Hospitality Services",
+                    "date": null,
+                    "snippet": "Backed by the Colliers International brand and by our extensive global experience, we offer services to investors, developers and occupiers in the hotel sector.\nWe guarantee professionalism, expertise"
+                },
+                {
+                    "id": 4,
+                    "url": "https://corsinirealestate.com/hospitality/",
+                    "title": "Hospitality – Corsini Real Estate",
+                    "date": null,
+                    "snippet": "## Corsini Real Estate Consulting is a boutique advisory firm specializing in hospitality and real estate investments, with a strong focus on the Italian market and consolidated expertise across Europ"
+                },
+                {
+                    "id": 5,
+                    "url": "https://investimentialberghieri.it/blog/hotel-investment-italy-market-valuation-risks-and-deal-opportunities?lang=en",
+                    "title": "Hotel Investment in Italy: market, valuation, risks and deal ...",
+                    "date": "2026-06-29",
+                    "snippet": "At InvestimentiAlberghieri.it, we analyse the Italian hospitality investment market through hotel transactions, ownership structures, investment cases, distressed assets, luxury repositioning, operati"
+                },
+                {
+                    "id": 6,
+                    "url": "https://www.materiapartners.it/",
+                    "title": "Materia Partners | Hospitality Real Estate Investment & Advisory",
+                    "date": "2026-02-12",
+                    "snippet": "Our team is dedicated to identifying unique investment opportunities, optimizing asset performance, and driving sustainable, long-term growth.\nWe build lasting partnerships and deliver tailored soluti"
+                },
+                {
+                    "id": 7,
+                    "url": "https://www.cushmanwakefield.com/en/italy/industries/hospitality",
+                    "title": "Hotels & Hospitality | IT | Cushman & ...",
+                    "date": "2026-03-30",
+                    "snippet": "We help clients position assets, from boutique hotels to large resorts, to capture premium pricing and high occupancy.\n...\nWe guide clients through acquisition financing, structured debt, value-add re"
+                },
+                {
+                    "id": 8,
+                    "url": "https://upgrade-uat-www.cushmanwakefield.com/en/italy/industries/hospitality/capital-markets-hospitality-sector",
+                    "title": "Capital Markets Hospitality Sector | IT | Cushman & Wakefield",
+                    "date": "2026-03-30",
+                    "snippet": "In Capital Markets - Hospitality we understand the complexity of investment in the hotel industry and offer a wide variety of services.\n...\nThe consultancy work of Cushman & Wakefield in the Capital M"
+                },
+                {
+                    "id": 9,
+                    "url": "https://www.colliers.com/en-it/services/investment-services",
+                    "title": "Colliers | Investment Services",
+                    "date": null,
+                    "snippet": "We offer a complete range of commercial services for owners and investors, assisting them in finding the best investment opportunities on the national and international market and ensuring support at "
+                },
+                {
+                    "id": 10,
+                    "url": "https://www.hotel-consulting-network.com/",
+                    "title": "Arc Hotel Consulting Network is the Gateway to Hospitality ...",
+                    "date": "2013-11-14",
+                    "snippet": "Arc Hotel Consulting is a refined investment boutique dedicated to premium hotels, luxury residences, and exclusive off‑market assets.\nWith an international footprint and a deep understanding of the h"
+                },
+                {
+                    "id": 11,
+                    "url": "https://www.cushmanwakefield.com/en/italy/industries/hospitality/hospitality-investor-and-developer-services",
+                    "title": "Hospitality Investor & Developer Services | IT - Cushman & Wakefield",
+                    "date": "2025-09-26",
+                    "snippet": "Our team analyses and executes hotel development opportunities.\nThe team has a strong track record in transacting properties with hotel development potential within mixed use projects.\nWe have worked "
+                },
+                {
+                    "id": 12,
+                    "url": "https://www.753hospitality.com/",
+                    "title": "753 Hospitality | Professional Hospitality Services",
+                    "date": null,
+                    "snippet": "753 Hospitality | Professional Hospitality Services\n...\nAcquiring, re-developing and managing high-potential hotel assets\n...\nHarnessing Italian style and international creativity to reimagine existin"
+                },
+                {
+                    "id": 13,
+                    "url": "https://www.hospitalitasrealestate.com/",
+                    "title": "Hospitalitas | Real Estate",
+                    "date": null,
+                    "snippet": "## Hospitalitas Real Estate provides turnkey investment solutions for the hospitality and real estate industries\n## We source, select and negotiate hospitality deals and real estate investments in Ita"
+                },
+                {
+                    "id": 14,
+                    "url": "https://www.brandteliers.com/en-gb/locations/italy-hotel-branding-agency",
+                    "title": "Italy Hotel Branding | Brandteliers",
+                    "date": null,
+                    "snippet": "# Hotel branding & hospitality consulting for new hotels, resorts, branded residences, and mixed use developments in Italy\n...\nBrandteliers works with hotel developers, operators and owners shaping ho"
+                },
+                {
+                    "id": 15,
+                    "url": "https://www.pwc.com/it/en/publications/assets/docs/services-hospitality-living.pdf",
+                    "title": "[PDF] Real Estate Services | Hospitality & Living - PwC",
+                    "date": null,
+                    "snippet": "Investment advice\n• Deal Sourcing/Deal Origination\n• Investment strategy consulting\n• Conceptual design of real  \nestate funds\n• Evaluation of Asset and  \nShare Deals\n• ESG Strategy\n• Market Research "
+                }
+            ],
+            "citations_annotations": [],
+            "citations_inline_ids": [],
+            "citations_inline": [],
+            "text": "Non esiste una classifica oggettiva dei “migliori”: la scelta dipende dal mandato — comprare o vendere, valutare un investimento, riposizionare un hotel o gestire una ristrutturazione. Tra gli operatori con competenze dichiarate sul mercato italiano, valuterei:\n\n- **Colliers – Hotels & Leisure**: consulenza e operazioni immobiliari alberghiere, selezione di operatori, acquisizioni e cessioni; in Italia il referente indicato è **Marco Comensoli**.\n- **Cushman & Wakefield – Hospitality**: capital markets, valutazioni, sviluppo, negoziazione di contratti con operatori e strategie di riposizionamento, anche per il segmento luxury.\n- **WANT Advisors**: consulenza lungo il ciclo del progetto, dagli studi di fattibilità e dal posizionamento alla gestione di ristrutturazione e modello operativo.\n- **AA+G Hospitality**: asset management, sviluppo e finanza per hotel indipendenti in Italia; dichiara esperienza in piani CapEx e riposizionamento di strutture cinque stelle.\n- **Corsini Real Estate Consulting**: boutique focalizzata sulle operazioni hospitality in Italia, incluse transazioni, strutture contrattuali con gli operatori e riposizionamento degli asset.\n- **PwC Italia – Hospitality & Living**: adatta soprattutto a mandati strutturati di investimento, valutazione, due diligence, analisi del “highest and best use” e supporto a progetti di ristrutturazione.\n\n**Scelta rapida:** per acquisizioni e vendita, partirei da Colliers o Cushman & Wakefield; per fattibilità e riqualificazione, da WANT Advisors o AA+G; per un mandato boutique e più personalizzato, da Corsini. PwC può essere utile per analisi finanziarie e valutative complesse.\n\nPrima di incaricare qualcuno, chiederei **referenze verificabili su hotel comparabili**, nomi dei professionisti che seguiranno direttamente il lavoro, deliverable e compensi, oltre a chiarire se l’advisor opera anche come intermediario nella transazione. Per una riqualificazione, verificherei in particolare esperienza su budget CapEx, autorizzazioni, scelta del brand o dell’operatore, tempi di cantiere e impatto economico durante e dopo i lavori.",
+            "error": null
+        },
+        "raw": {
+            "background": false,
+            "completed_at": 1791218418,
+            "created_at": 1791218418,
+            "error": null,
+            "frequency_penalty": 0,
+            "id": "resp_2905e68f-0fda-4be1-b2a1-00a994a5cb2c",
+            "incomplete_details": null,
+            "instructions": null,
+            "max_output_tokens": 4096,
+            "max_tool_calls": null,
+            "metadata": [],
+            "model": "perplexity/sonar",
+            "object": "response",
+            "output": [
+                {
+                    "queries": [
+                        "Italy luxury hotel investment advisory hotel repositioning experts consulting",
+                        "hotel real estate investment luxury Italy advisory firm hotel refurbishment",
+                        "Italy hospitality consulting luxury hotels development investment firm hotel asset management"
+                    ],
+                    "results": [
+                        {
+                            "date": "2026-09-24",
+                            "id": 1,
+                            "last_updated": "2026-10-02",
+                            "snippet": "Asset management, development and finance for owners and investors of independent hotels in Italy.\n...\nAA+G supports owners and investors of independent luxury and upscale hotels in Italy at every stage of the asset’s life.\n...\n**London · Italy** headquarters in London, with teams in Rome, Milan and on the Amalfi Coast\n...\n### Reposition and add value\nFive year plans, CapEx with a clear return, rebranding of historic 5 star hotels.\n...\nRefinancing, due diligence, deal structuring with private equity, investors and hotel companies.\n...\nGreenfield, conversion or renovation: feasibility, design brief, contractors, timeline and handover to operations.\n...\nDevelopment, FF&E and OS&E, pre opening, operating and CapEx budgets, with reporting that owners and lenders trust.\n...\n33 Cavendish Square, 14th Floor\nLondon W1G 0PW, United Kingdom",
+                            "source": "web",
+                            "title": "Hotel Asset Management in Italy | AA+G Hospitality",
+                            "url": "https://www.aaghospitality.com/"
+                        },
+                        {
+                            "id": 2,
+                            "last_updated": "2026-08-31",
+                            "snippet": "WANT Advisors supports **investors, hoteliers, investment funds and property owners** throughout the entire project cycle – from feasibility to delivery and on to operational management – combining strategic advisory, trade expertise and know-how developed with leading international brands.\n...\nAs a consulting and development company, **WANT Advisors delivers tailor-made projects** for entrepreneurial and institutional partners looking to invest in hospitality.\n...\nReal estate and hotel feasibility analysis\n...\nProduct concept and market positioning\n- ### Delivery\nCoordination of the construction and renovation phase\n- ### Operations\n...\n- Email: Walter.Pecoraro@wantadvisors.com\n- Mobile: +39 335 815 8538\n...\nWANT Advisors is a consulting and development firm specializing in hospitality real estate.\nWe support private and institutional investors, investment funds, hoteliers, and property owners across the entire project lifecycle: from real estate feasibility analysis and product concept to renovation management and operational business model definition.",
+                            "source": "web",
+                            "title": "Hospitality Real Estate Advisory - WANT Advisors",
+                            "url": "https://www.wantadvisors.com/en/"
+                        },
+                        {
+                            "id": 3,
+                            "last_updated": "2025-11-03",
+                            "snippet": "Backed by the Colliers International brand and by our extensive global experience, we offer services to investors, developers and occupiers in the hotel sector.\nWe guarantee professionalism, expertise, operating flexibility and in depth local market knowledge.\nOur comprehensive service offer transforms the vision of our clients into real projects, supporting them in their decision making process with customised advisory services.\nWe take into account your specific requirements and the characteristics of the designated use.\nOur services cover management of a real estate asset during its entire lifecycle:\n- Acquisition\n- Search for and selection of operators\n- Management\n- Sale\nThe hotel assets we advise on are:\n- Hotels\n- Tourist Villages & Resorts\n- Aparthotels / Residences / Holiday Homes\n- Residential Resorts\n...\nMarco Comensoli\nHead of Hotels & Leisure\nMilan\nResponsible for advisory and transactional services for the Hotels & Leisure department in Italy, he helps investors in improving the performance of their hotels portfolio and searching (and creating) new hospitality opportunities.\nIn his previous roles in Italy, he was the Country Director for Luxury Hotel Partners Ltd, a company specialised in luxury hotel consulting and earlier Senior Hospitality Consultant for Advisor Hotels & Tourism working with a number of high profile, international luxury hotel companies and independent properties.",
+                            "source": "web",
+                            "title": "Colliers | Hospitality Services",
+                            "url": "https://www.colliers.com/en-it/services/hospitality-services"
+                        },
+                        {
+                            "id": 4,
+                            "last_updated": "2026-09-29",
+                            "snippet": "## Corsini Real Estate Consulting is a boutique advisory firm specializing in hospitality and real estate investments, with a strong focus on the Italian market and consolidated expertise across Europe.\nWe advise investment funds, family offices, private investors, and hospitality operators in both prime and secondary markets, combining capillary knowledge of the Italian territory with international standards of execution.\nWe leverage our international outlook to deliver unique access to off-market opportunities in Italy, supporting leading brands and operators with innovative expansion strategies.\nOur expertise spans single-asset and portfolio transactions, lease structuring, hotel management agreements, franchise and branding partnerships, and asset repositioning — ensuring seamless execution and sustainable value creation.\n...\nCREC specializes in sourcing, structuring, and executing hospitality transactions, from off-market opportunities and single-asset acquisitions to complex multi-asset portfolio sales.\nWe operate across the business, leisure, upscale, and luxury segments, advising on strategies ranging from core and value-add to opportunistic.\n...\nCREC advises on the structuring and negotiation of Hotel Management Agreements, creating frameworks that maximize asset performance and align with ownership objectives.\n...\nCREC advises on branding and franchise partnerships, leveraging an extensive network of international operators to align each client’s vision with the most suitable brand positioning.",
+                            "source": "web",
+                            "title": "Hospitality – Corsini Real Estate",
+                            "url": "https://corsinirealestate.com/hospitality/"
+                        },
+                        {
+                            "date": "2026-06-29",
+                            "id": 5,
+                            "last_updated": "2026-10-04",
+                            "snippet": "At InvestimentiAlberghieri.it, we analyse the Italian hospitality investment market through hotel transactions, ownership structures, investment cases, distressed assets, luxury repositioning, operating risk and value creation strategies.\n...\nFor confidential advisory, valuation, due diligence, asset management or hotel repositioning mandates, investors and ownership groups can contact HotelManagementGroup.it.\n...\n1. market analysis;\n2. asset screening;\n3. preliminary valuation;\n4. operating review;\n5. lease and contract analysis;\n6. capex estimate;\n7. debt and tax review;\n8. brand or operator assessment;\n9. repositioning strategy;\n10. exit planning.",
+                            "source": "web",
+                            "title": "Hotel Investment in Italy: market, valuation, risks and deal ...",
+                            "url": "https://investimentialberghieri.it/blog/hotel-investment-italy-market-valuation-risks-and-deal-opportunities?lang=en"
+                        },
+                        {
+                            "date": "2026-02-12",
+                            "id": 6,
+                            "last_updated": "2026-09-03",
+                            "snippet": "Our team is dedicated to identifying unique investment opportunities, optimizing asset performance, and driving sustainable, long-term growth.\nWe build lasting partnerships and deliver tailored solutions aligned with our clients’ objectives, acting as a trusted partner focused on maximizing the long-term value of hospitality investments.\n...\nMateria Partners works closely with clients to define clear investment parameters and ensure strong alignment from the outset.\n...\nWith a primary focus on Italy, we are also active across select European markets, targeting luxury and upper-upscale hospitality assets.",
+                            "source": "web",
+                            "title": "Materia Partners | Hospitality Real Estate Investment & Advisory",
+                            "url": "https://www.materiapartners.it/"
+                        },
+                        {
+                            "date": "2026-03-30",
+                            "id": 7,
+                            "last_updated": "2026-09-27",
+                            "snippet": "We help clients position assets, from boutique hotels to large resorts, to capture premium pricing and high occupancy.\n...\nWe guide clients through acquisition financing, structured debt, value-add repositioning, and exit strategies for single assets or portfolios.\n...\nWe help clients turn these forces into a competitive advantage through repositioning, ESG-aligned capex planning, and brand alignment.\n...\nWe advise on hotel acquisitions, disposals, and portfolio transactions.\nOur deal execution combines rigorous financial modelling, market intelligence, and active buyer/seller networks to deliver optimal outcomes.\n...\nWe advise owners on operating structures and negotiate terms that protect asset value and align incentives, leveraging our deep relationships with hotel chains.\n...\nOur RICS-qualified valuers cover all hospitality assets in Italy.\nAppraisals are led by specialists with deep knowledge of Italian operator agreements and investment dynamics, ensuring accurate and insightful valuations.\n...\nWith limited hotel supply growth in Italy, development projects are strategic.\nWe guide clients through feasibility, positioning, and capex planning to ensure new supply enters the market with a competitive edge.\n...\nInvestment is high, particularly in value-add strategies and the luxury segment.",
+                            "source": "web",
+                            "title": "Hotels & Hospitality | IT | Cushman & ...",
+                            "url": "https://www.cushmanwakefield.com/en/italy/industries/hospitality"
+                        },
+                        {
+                            "date": "2026-03-30",
+                            "id": 8,
+                            "last_updated": "2026-09-24",
+                            "snippet": "In Capital Markets - Hospitality we understand the complexity of investment in the hotel industry and offer a wide variety of services.\n...\nThe consultancy work of Cushman & Wakefield in the Capital Markets area may adopt any of a number of possible approaches, whether dealing with sales or acquisitions.\nThrough its EMEA and global network, our Hospitality team analyses and proposes opportunities for the development of the hotel business from both an operational and asset investment viewpoint.\nExperience spanning more than 25 years in the sector enables us to work in all hotel segments and destinations - Limited Service, Midscale, Lifestyle, Upscale and Luxury, as well as with alternative products such as hostels, campsites and glamp sites.\nUsing our market intelligence and supported by our dedicated Capital Markets and Investment teams, we provide advisory services to investors seeking to acquire or sell hotel assets.\nWe advise on factors that have the potential to grow value, such as the ownership structure, branding and asset management opportunities.",
+                            "source": "web",
+                            "title": "Capital Markets Hospitality Sector | IT | Cushman & Wakefield",
+                            "url": "https://upgrade-uat-www.cushmanwakefield.com/en/italy/industries/hospitality/capital-markets-hospitality-sector"
+                        },
+                        {
+                            "id": 9,
+                            "last_updated": "2025-11-04",
+                            "snippet": "We offer a complete range of commercial services for owners and investors, assisting them in finding the best investment opportunities on the national and international market and ensuring support at all stages of the process until conclusion of the negotiation.\n...\nOur offer\n- Buying and selling of individual assets and real estate portfolios\n- Search for developers, investors and equity partners\n- Assistance in the financial definition of investments\n- Strategic advice to investors\n- Identification of investment opportunities\n- Feasibility studies, business plans and due diligence\n- Advice in the development of real estate initiatives\n...\nMarco Comensoli\n...\nResponsible for advisory and transactional services for the Hotels & Leisure department in Italy, he helps investors in improving the performance of their hotels portfolio and searching (and creating) new hospitality opportunities.",
+                            "source": "web",
+                            "title": "Colliers | Investment Services",
+                            "url": "https://www.colliers.com/en-it/services/investment-services"
+                        },
+                        {
+                            "date": "2013-11-14",
+                            "id": 10,
+                            "last_updated": "2026-09-12",
+                            "snippet": "Arc Hotel Consulting is a refined investment boutique dedicated to premium hotels, luxury residences, and exclusive off‑market assets.\nWith an international footprint and a deep understanding of the hospitality world, we guide investors through complex transactions with elegance, discretion, and strategic insight.\n...\nWe curate a selection of premium hotels and resorts, focusing on assets with strong character, strategic locations, and long‑term value creation potential.\n...\nWe support investors with market intelligence, feasibility analysis, brand selection, and repositioning strategies tailored to luxury standards.\n...\nCross‑border expertise for global investors seeking seamless access to the Italian and European hospitality markets.",
+                            "source": "web",
+                            "title": "Arc Hotel Consulting Network is the Gateway to Hospitality ...",
+                            "url": "https://www.hotel-consulting-network.com/"
+                        },
+                        {
+                            "date": "2025-09-26",
+                            "id": 11,
+                            "last_updated": "2025-10-28",
+                            "snippet": "Our team analyses and executes hotel development opportunities.\nThe team has a strong track record in transacting properties with hotel development potential within mixed use projects.\nWe have worked on properties that have become Budget, Midscale, Lifestyle, Upscale and Luxury hotels\n...\nWe represent a varied client group, from commercial developers to hotel owners seeking to maximise the value of their assets.\nWhether advising on a hotel forming part of a mixed-use scheme or an individual asset, our skill and ability in identifying the optimal occupational solution is unrivalled.\nWe negotiate occupational leases, hotel management contracts and franchise agreements, and advise on joint venture deal structuring.\nWe also assist in structuring ground rents.\n...\nThe data, information and analysis required to determine the correct form, type and size of development is held within our team.\n...\nHowever, it is often necessary to conduct more detailed, focused analysis – so we frequently provide bespoke research reports to help our clients make informed decisions.\nOur Hospitality Research team works on strategic reports, helping to coordinate Hotel Development Advisory work across EMEA.\n...\nWe focus on providing our clients with solutions that adapt to their very specific investment and occupational needs, such as leasing, management contracts or franchising.\n...\nA successful development requires a stable, well structured capital stack and, working with our Hospitality Capital Markets team (link) and companies granting loans, we secure the best mix between debt and equity for the client.",
+                            "source": "web",
+                            "title": "Hospitality Investor & Developer Services | IT - Cushman & Wakefield",
+                            "url": "https://www.cushmanwakefield.com/en/italy/industries/hospitality/hospitality-investor-and-developer-services"
+                        },
+                        {
+                            "id": 12,
+                            "last_updated": "2026-10-03",
+                            "snippet": "753 Hospitality | Professional Hospitality Services\n...\nAcquiring, re-developing and managing high-potential hotel assets\n...\nHarnessing Italian style and international creativity to reimagine existing assets and contribute to the growth and sustainable development of Italian hospitality and generate superior financial returns.\n...\n- Hotel investment - Former independent hospitality investment advisor to Oaktree Capital Management and Arsenale Group in Europe",
+                            "source": "web",
+                            "title": "753 Hospitality | Professional Hospitality Services",
+                            "url": "https://www.753hospitality.com/"
+                        },
+                        {
+                            "id": 13,
+                            "last_updated": "2026-10-04",
+                            "snippet": "## Hospitalitas Real Estate provides turnkey investment solutions for the hospitality and real estate industries\n## We source, select and negotiate hospitality deals and real estate investments in Italy and beyond\n...\nUrban and resort properties – key destinations and secondary cities – from small hotels to medium and big hotels – semi serviced and full serviced properties – distressed assets – new developments and extension projects\n...\nWe are a hospitality real estate consulting firm and we bring over 20 years’ experience in the European Hospitality and Commercial Real Estate industries.\n...\nWe provide a range of consulting and advisory services for hospitality real estate investments within Italy and other European countries.\nCovering acquisitions/disposal, UTP & NPL opportunities, valuations & transactions, strategic advisory and business development.",
+                            "source": "web",
+                            "title": "Hospitalitas | Real Estate",
+                            "url": "https://www.hospitalitasrealestate.com/"
+                        },
+                        {
+                            "id": 14,
+                            "last_updated": "2026-09-22",
+                            "snippet": "# Hotel branding & hospitality consulting for new hotels, resorts, branded residences, and mixed use developments in Italy\n...\nBrandteliers works with hotel developers, operators and owners shaping hospitality projects across Italy.\n...\nWe support new openings, heritage property repositioning, renovation-led relaunches and branded residence programmes.\n...\nMarkets shift.\nNew luxury brands enter.\nPositioning becomes unclear.\nWe work with ownership teams to sharpen focus, rebuild identity and reclaim market position through cultural clarity and operational precision.",
+                            "source": "web",
+                            "title": "Italy Hotel Branding | Brandteliers",
+                            "url": "https://www.brandteliers.com/en-gb/locations/italy-hotel-branding-agency"
+                        },
+                        {
+                            "id": 15,
+                            "last_updated": "2025-09-08",
+                            "snippet": "Investment advice\n• Deal Sourcing/Deal Origination\n• Investment strategy consulting\n• Conceptual design of real  \nestate funds\n• Evaluation of Asset and  \nShare Deals\n• ESG Strategy\n• Market Research and Analysis\nPost Deal Services\n• Analysis of integration progress\n• Consulting on repositioning  \nin the market\n• Assessment of available options of \naction (sale and lease back analysis)\n• ESG Valorization Strategy\n• Highest and Best Use Analysis\n...\nValuation and Advisory services of hospitality and living assets  \n(i.e. business hotels, luxury hotels, mountain, seaside and country resorts,  \nbuild to rent residential, student housing, nursing homes, etc.), according  \nto the International Valuation Standards (IVS) and the Royal Institution of Chartered Surveyors (RICS).\n...\nFor new developments or refurbishment plans supporting client in the\nProject & Construction management and Green building certification activities.",
+                            "source": "web",
+                            "title": "[PDF] Real Estate Services | Hospitality & Living - PwC",
+                            "url": "https://www.pwc.com/it/en/publications/assets/docs/services-hospitality-living.pdf"
+                        }
+                    ],
+                    "type": "search_results"
+                },
+                {
+                    "content": [
+                        {
+                            "annotations": [],
+                            "text": "Non esiste una classifica oggettiva dei “migliori”: la scelta dipende dal mandato — comprare o vendere, valutare un investimento, riposizionare un hotel o gestire una ristrutturazione. Tra gli operatori con competenze dichiarate sul mercato italiano, valuterei:\n\n- **Colliers – Hotels & Leisure**: consulenza e operazioni immobiliari alberghiere, selezione di operatori, acquisizioni e cessioni; in Italia il referente indicato è **Marco Comensoli**.\n- **Cushman & Wakefield – Hospitality**: capital markets, valutazioni, sviluppo, negoziazione di contratti con operatori e strategie di riposizionamento, anche per il segmento luxury.\n- **WANT Advisors**: consulenza lungo il ciclo del progetto, dagli studi di fattibilità e dal posizionamento alla gestione di ristrutturazione e modello operativo.\n- **AA+G Hospitality**: asset management, sviluppo e finanza per hotel indipendenti in Italia; dichiara esperienza in piani CapEx e riposizionamento di strutture cinque stelle.\n- **Corsini Real Estate Consulting**: boutique focalizzata sulle operazioni hospitality in Italia, incluse transazioni, strutture contrattuali con gli operatori e riposizionamento degli asset.\n- **PwC Italia – Hospitality & Living**: adatta soprattutto a mandati strutturati di investimento, valutazione, due diligence, analisi del “highest and best use” e supporto a progetti di ristrutturazione.\n\n**Scelta rapida:** per acquisizioni e vendita, partirei da Colliers o Cushman & Wakefield; per fattibilità e riqualificazione, da WANT Advisors o AA+G; per un mandato boutique e più personalizzato, da Corsini. PwC può essere utile per analisi finanziarie e valutative complesse.\n\nPrima di incaricare qualcuno, chiederei **referenze verificabili su hotel comparabili**, nomi dei professionisti che seguiranno direttamente il lavoro, deliverable e compensi, oltre a chiarire se l’advisor opera anche come intermediario nella transazione. Per una riqualificazione, verificherei in particolare esperienza su budget CapEx, autorizzazioni, scelta del brand o dell’operatore, tempi di cantiere e impatto economico durante e dopo i lavori.",
+                            "type": "output_text"
+                        }
+                    ],
+                    "id": "msg_3c9dee48-ccf4-4224-abc9-2eb13e7b2ea1",
+                    "role": "assistant",
+                    "status": "completed",
+                    "type": "message"
+                }
+            ],
+            "parallel_tool_calls": true,
+            "presence_penalty": 0,
+            "previous_response_id": null,
+            "prompt_cache_key": null,
+            "reasoning": null,
+            "safety_identifier": null,
+            "service_tier": "default",
+            "status": "completed",
+            "store": true,
+            "temperature": 1,
+            "text": {
+                "format": {
+                    "type": "text"
+                }
+            },
+            "tool_choice": "auto",
+            "tools": [
+                {
+                    "type": "web_search",
+                    "search_context_size": "medium",
+                    "user_location": {
+                        "country": "IT"
+                    }
+                }
+            ],
+            "top_logprobs": 0,
+            "top_p": 1,
+            "truncation": "",
+            "usage": {
+                "cost": {
+                    "cache_creation_cost": 0.00093,
+                    "currency": "USD",
+                    "input_cost": 0.00014,
+                    "output_cost": 0.00145,
+                    "tool_calls_cost": 0.0025,
+                    "tool_calls_cost_details": {
+                        "search_web": 0.0025
+                    },
+                    "total_cost": 0.00502
+                },
+                "input_tokens": 4296,
+                "input_tokens_details": {
+                    "cache_creation_input_tokens": 3732,
+                    "cache_read_input_tokens": 0,
+                    "cached_tokens": 0
+                },
+                "output_tokens": 581,
+                "output_tokens_details": {
+                    "reasoning_tokens": 0
+                },
+                "tool_calls_details": {
+                    "search_web": {
+                        "cost_usd": 0.0025,
+                        "invocation": 1
+                    }
+                },
+                "total_tokens": 4877
+            },
+            "user": null
+        }
+    }
+]
