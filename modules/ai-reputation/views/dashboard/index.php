@@ -47,7 +47,7 @@ $basePath = '/ai-reputation/project/' . $project['id'];
         <!-- Avanzamento run (Alpine, SSE) -->
         <div x-data x-show="$store.arRun.running || $store.arRun.message" x-cloak class="px-5 py-4 border-b border-slate-200 dark:border-slate-700 bg-indigo-50/50 dark:bg-indigo-900/10">
             <div class="flex items-center justify-between text-sm mb-2">
-                <span class="text-slate-700 dark:text-slate-200" x-text="$store.arRun.message || ('Raccolta in corso: ' + $store.arRun.done + ' / ' + $store.arRun.total)"></span>
+                <span class="text-slate-700 dark:text-slate-200" x-text="$store.arRun.message || ($store.arRun.phase + ': ' + $store.arRun.done + ' / ' + $store.arRun.total)"></span>
                 <span class="text-slate-500 dark:text-slate-400" x-text="$store.arRun.percent + '%'"></span>
             </div>
             <div class="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
@@ -185,7 +185,7 @@ $basePath = '/ai-reputation/project/' . $project['id'];
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.store('arRun', {
-        running: false, runId: null, total: 0, done: 0, percent: 0,
+        running: false, runId: null, total: 0, done: 0, percent: 0, phase: 'Raccolta risposte',
         currentEngine: '', currentPrompt: '', message: '', reportUrl: '', log: [],
         labels: <?= json_encode($engineLabels) ?>,
     });
@@ -224,6 +224,9 @@ function arRunner() {
             const s = this.$store.arRun;
             this.es = new EventSource(base + '/runs/stream?run_id=' + s.runId);
             this.es.addEventListener('started', e => { const d = JSON.parse(e.data); s.total = d.total; });
+            this.es.addEventListener('phase', e => { const d = JSON.parse(e.data); s.phase = d.label; s.total = d.total; s.done = 0; s.percent = 0; });
+            this.es.addEventListener('analysis_completed', e => { const d = JSON.parse(e.data); s.done++; s.percent = s.total ? Math.round(s.done / s.total * 100) : 0; s.log.unshift({ id: 'a' + d.response_id, error: false, text: 'Giudizio ' + (s.labels[d.engine] || d.engine) + ': ' + d.verdict + ' · ' + (d.summary || '') }); });
+            this.es.addEventListener('analysis_error', e => { const d = JSON.parse(e.data); s.done++; s.log.unshift({ id: 'ae' + d.response_id, error: true, text: 'Giudizio ' + (s.labels[d.engine] || d.engine) + ': errore · ' + d.error }); });
             this.es.addEventListener('progress', e => { const d = JSON.parse(e.data); s.currentEngine = d.engine; s.currentPrompt = d.prompt; });
             const onItem = (e, isError) => {
                 const d = JSON.parse(e.data);
@@ -234,7 +237,7 @@ function arRunner() {
             };
             this.es.addEventListener('item_completed', e => onItem(e, false));
             this.es.addEventListener('item_error', e => onItem(e, true));
-            this.es.addEventListener('completed', e => { const d = JSON.parse(e.data); this.finish('Run completato: ' + d.done + ' risposte raccolte' + (d.errors ? ', ' + d.errors + ' errori' : '') + ' · ' + Number(d.cost_total).toFixed(3) + ' $', d.report_url); });
+            this.es.addEventListener('completed', e => { const d = JSON.parse(e.data); this.finish('Run completato: ' + d.done + ' risposte, ' + d.analyses + ' analizzate, ' + d.actions + ' azioni proposte' + (d.errors ? ', ' + d.errors + ' errori' : '') + ' · ' + Number(d.cost_total).toFixed(3) + ' $', d.report_url); });
             this.es.addEventListener('cancelled', () => this.finish('Run annullato', ''));
             this.es.onerror = () => { if (this.es) { this.es.close(); this.es = null; } this.startPolling(); };
         },

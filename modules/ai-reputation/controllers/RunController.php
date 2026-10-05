@@ -11,10 +11,13 @@ use Core\ModuleLoader;
 use Modules\AiReputation\Models\Project;
 use Modules\AiReputation\Models\Prompt;
 use Modules\AiReputation\Models\Run;
+use Modules\AiReputation\Models\Analysis;
 use Modules\AiReputation\Services\EngineCollectorService;
+use Modules\AiReputation\Services\JudgeService;
+use Modules\AiReputation\Services\ReportBuilderService;
 
 /**
- * RunController - avvio run (job), stream SSE del collector, stato, annullamento, report.
+ * RunController - avvio run, stream SSE (fase 1 collector, fase 2 judge), stato, annullamento, report.
  * Pattern: modules/seo-tracking/controllers/RankCheckController.php
  */
 class RunController
@@ -22,12 +25,14 @@ class RunController
     private Project $project;
     private Prompt $prompt;
     private Run $run;
+    private Analysis $analysis;
 
     public function __construct()
     {
         $this->project = new Project();
         $this->prompt = new Prompt();
         $this->run = new Run();
+        $this->analysis = new Analysis();
     }
 
     /**
@@ -75,8 +80,10 @@ class RunController
         $total = count($prompts) * count($engines) * $repeats;
         $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
         $unitCost = Credits::getCost('collect_response', Project::SLUG, 0.2);
-        if (!Credits::hasEnough($creditUserId, $total * $unitCost)) {
-            echo json_encode(['success' => false, 'error' => 'Crediti insufficienti. Necessari: ' . ($total * $unitCost) . ', disponibili: ' . Credits::getBalance($creditUserId)]);
+        $judgeCost = Credits::getCost('ai_analysis_medium', null, 1);
+        $needed = $total * ($unitCost + $judgeCost);
+        if (!Credits::hasEnough($creditUserId, $needed)) {
+            echo json_encode(['success' => false, 'error' => 'Crediti insufficienti. Necessari: ' . $needed . ', disponibili: ' . Credits::getBalance($creditUserId)]);
             exit;
         }
 
@@ -88,13 +95,36 @@ class RunController
             'responses_total' => $total,
             'engines' => $engines,
             'engines_missing' => array_values($missing),
-            'estimated_credits' => $total * $unitCost,
+            'estimated_credits' => $needed,
         ]);
         exit;
     }
 
     /**
+     * POST /ai-reputation/project/{id}/runs/{runId}/reanalyze (JSON) - cancella i giudizi, poi lo stream li rifà
+     */
+    public function reanalyze(int $projectId, int $runId): void
+    {
+        header('Content-Type: application/json');
+        $user = Auth::user();
+        $project = $this->project->findAccessible($projectId, $user['id']);
+        $run = $project ? $this->run->find($runId, $projectId) : null;
+        if (!$run || ($project['access_role'] ?? 'owner') === 'viewer') {
+            echo json_encode(['success' => false, 'error' => 'Run non trovato']);
+            exit;
+        }
+        if (in_array($run['status'], [Run::STATUS_PENDING, Run::STATUS_RUNNING], true)) {
+            echo json_encode(['success' => false, 'error' => 'Il run è ancora in corso']);
+            exit;
+        }
+        $this->analysis->deleteByRun($runId);
+        echo json_encode(['success' => true, 'run_id' => $runId, 'to_judge' => (int) $run['responses_done']]);
+        exit;
+    }
+
+    /**
      * GET /ai-reputation/project/{id}/runs/stream?run_id=X (SSE)
+     * Fase 1: raccoglie le risposte pending. Fase 2: giudica le risposte senza analisi. Poi costruisce il report.
      */
     public function stream(int $projectId): void
     {
@@ -131,86 +161,133 @@ class RunController
             flush();
         };
 
+        $wasCompleted = $run['status'] === Run::STATUS_COMPLETED;
         if ($run['status'] === Run::STATUS_PENDING) {
             $this->run->start($runId);
         }
         $sendEvent('started', ['run_id' => $runId, 'total' => (int) $run['responses_total']]);
 
         $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
-        $unitCost = Credits::getCost('collect_response', Project::SLUG, 0.2);
-        $collector = new EngineCollectorService();
         $subject = $project['subject_name'];
 
-        while (true) {
-            Database::reconnect();
+        // ---------- FASE 1: collector ----------
+        $pendingTotal = (int) Database::fetchColumn("SELECT COUNT(*) FROM ar_responses WHERE run_id = ? AND status = 'pending'", [$runId]);
+        if ($pendingTotal > 0) {
+            $sendEvent('phase', ['phase' => 'collect', 'total' => $pendingTotal, 'label' => 'Raccolta risposte']);
+            $unitCost = Credits::getCost('collect_response', Project::SLUG, 0.2);
+            $collector = new EngineCollectorService();
 
-            if ($this->run->isCancelled($runId)) {
-                $sendEvent('cancelled', ['run_id' => $runId]);
-                break;
-            }
-
-            $item = $this->run->nextPending($runId);
-            if (!$item) {
-                $this->run->complete($runId);
-                $final = $this->run->find($runId);
-                $sendEvent('completed', [
-                    'run_id' => $runId,
-                    'done' => (int) $final['responses_done'],
-                    'errors' => (int) $final['responses_error'],
-                    'cost_total' => (float) $final['cost_total'],
-                    'report_url' => \Core\Router::url("/ai-reputation/project/{$projectId}/runs/{$runId}"),
-                ]);
-                try {
-                    Database::reconnect();
-                    \Services\NotificationService::send($user['id'], 'operation_completed', "AI Reputation Radar: run completato per {$subject}", [
-                        'icon' => 'check-circle',
-                        'color' => 'indigo',
-                        'action_url' => "/ai-reputation/project/{$projectId}/runs/{$runId}",
-                        'body' => "Raccolte {$final['responses_done']} risposte" . ((int) $final['responses_error'] > 0 ? ", {$final['responses_error']} errori" : '') . '.',
-                        'data' => ['module' => Project::SLUG, 'project_id' => $projectId, 'run_id' => $runId],
-                    ]);
-                } catch (\Throwable $e) {
-                    // non bloccante
+            while (true) {
+                Database::reconnect();
+                if ($this->run->isCancelled($runId)) {
+                    $sendEvent('cancelled', ['run_id' => $runId]);
+                    exit;
                 }
-                break;
-            }
+                $item = $this->run->nextPending($runId);
+                if (!$item) {
+                    break;
+                }
+                $sendEvent('progress', ['run_id' => $runId, 'engine' => $item['engine'], 'prompt' => $item['prompt_text']]);
 
-            $sendEvent('progress', [
-                'run_id' => $runId,
-                'engine' => $item['engine'],
-                'prompt' => $item['prompt_text'],
-            ]);
+                $result = $collector->ask($item['engine'], $item['prompt_text'], [
+                    'cluster' => $item['prompt_cluster'],
+                    'user_id' => $user['id'],
+                    'context' => "run {$runId} prompt {$item['prompt_id']}",
+                ]);
+                Database::reconnect();
+                $this->run->saveResponse((int) $item['id'], $result);
 
-            $result = $collector->ask($item['engine'], $item['prompt_text'], [
-                'cluster' => $item['prompt_cluster'],
-                'user_id' => $user['id'],
-                'context' => "run {$runId} prompt {$item['prompt_id']}",
-            ]);
+                $ok = $result['status'] === 'ok';
+                $credits = 0.0;
+                if ($ok) {
+                    $credits = $unitCost;
+                    Credits::consume($creditUserId, $unitCost, 'collect_response', Project::SLUG, [
+                        'project_id' => $projectId, 'run_id' => $runId, 'engine' => $item['engine'],
+                    ]);
+                }
+                $this->run->addProgress($runId, $ok, (float) $result['cost'], $credits);
 
-            Database::reconnect();
-            $this->run->saveResponse((int) $item['id'], $result);
-
-            $ok = $result['status'] === 'ok';
-            $credits = 0.0;
-            if ($ok) {
-                $credits = $unitCost;
-                Credits::consume($creditUserId, $unitCost, 'collect_response', Project::SLUG, [
-                    'project_id' => $projectId, 'run_id' => $runId, 'engine' => $item['engine'],
+                $sendEvent($ok ? 'item_completed' : 'item_error', [
+                    'run_id' => $runId,
+                    'response_id' => (int) $item['id'],
+                    'prompt_id' => (int) $item['prompt_id'],
+                    'engine' => $item['engine'],
+                    'mentioned' => $ok ? self::mentions($result['text'], $subject) : null,
+                    'citations' => $ok ? count($result['citations']) : 0,
+                    'latency_ms' => $result['latency_ms'],
+                    'cost' => $result['cost'],
+                    'error' => $result['error_message'],
                 ]);
             }
-            $this->run->addProgress($runId, $ok, (float) $result['cost'], $credits);
+        }
 
-            $sendEvent($ok ? 'item_completed' : 'item_error', [
-                'run_id' => $runId,
-                'response_id' => (int) $item['id'],
-                'prompt_id' => (int) $item['prompt_id'],
-                'engine' => $item['engine'],
-                'mentioned' => $ok ? self::mentions($result['text'], $subject) : null,
-                'citations' => $ok ? count($result['citations']) : 0,
-                'latency_ms' => $result['latency_ms'],
-                'cost' => $result['cost'],
-                'error' => $result['error_message'],
-            ]);
+        // ---------- FASE 2: judge ----------
+        Database::reconnect();
+        $toJudge = $this->analysis->pendingForRun($runId);
+        if (!empty($toJudge)) {
+            $sendEvent('phase', ['phase' => 'analyze', 'total' => count($toJudge), 'label' => 'Analisi delle risposte']);
+            $judge = new JudgeService();
+            foreach ($toJudge as $item) {
+                Database::reconnect();
+                if (!$wasCompleted && $this->run->isCancelled($runId)) {
+                    $sendEvent('cancelled', ['run_id' => $runId]);
+                    exit;
+                }
+                $sendEvent('progress', ['run_id' => $runId, 'engine' => $item['engine'], 'prompt' => $item['prompt_text']]);
+                $item['citations'] = json_decode((string) $item['citations'], true) ?: [];
+                $item['sources_read'] = json_decode((string) $item['sources_read'], true) ?: [];
+
+                $verdict = $judge->judge($creditUserId, $project, $item);
+                Database::reconnect();
+                if (isset($verdict['error'])) {
+                    $sendEvent('analysis_error', ['response_id' => (int) $item['id'], 'engine' => $item['engine'], 'error' => $verdict['error']]);
+                    continue;
+                }
+                $this->analysis->save((int) $item['id'], $runId, $projectId, $verdict);
+                Database::execute("UPDATE ar_runs SET analyses_done = analyses_done + 1 WHERE id = ?", [$runId]);
+                $sendEvent('analysis_completed', [
+                    'response_id' => (int) $item['id'],
+                    'engine' => $item['engine'],
+                    'verdict' => $verdict['verdict'],
+                    'outcome' => $verdict['outcome'],
+                    'is_homonym' => $verdict['is_homonym'],
+                    'summary' => $verdict['summary'],
+                ]);
+            }
+        }
+
+        // ---------- REPORT: fonti, competitor, azioni, omonimi ----------
+        Database::reconnect();
+        $responses = $this->run->responses($runId);
+        $analyses = $this->analysis->byRun($runId);
+        $built = (new ReportBuilderService())->persist($runId, $projectId, $project, $responses, $analyses, Project::ENGINE_LABELS);
+        $this->run->complete($runId);
+        $final = $this->run->find($runId);
+
+        $sendEvent('completed', [
+            'run_id' => $runId,
+            'done' => (int) $final['responses_done'],
+            'errors' => (int) $final['responses_error'],
+            'analyses' => (int) $final['analyses_done'],
+            'actions' => count($built['actions']),
+            'homonyms' => $built['homonyms'],
+            'cost_total' => (float) $final['cost_total'],
+            'report_url' => Router::url("/ai-reputation/project/{$projectId}/runs/{$runId}"),
+        ]);
+
+        if (!$wasCompleted) {
+            try {
+                Database::reconnect();
+                \Services\NotificationService::send($user['id'], 'operation_completed', "AI Reputation Radar: run completato per {$subject}", [
+                    'icon' => 'check-circle',
+                    'color' => 'indigo',
+                    'action_url' => "/ai-reputation/project/{$projectId}/runs/{$runId}",
+                    'body' => "Raccolte {$final['responses_done']} risposte, {$final['analyses_done']} analizzate, " . count($built['actions']) . ' azioni proposte.',
+                    'data' => ['module' => Project::SLUG, 'project_id' => $projectId, 'run_id' => $runId],
+                ]);
+            } catch (\Throwable $e) {
+                // non bloccante
+            }
         }
         exit;
     }
@@ -235,8 +312,9 @@ class RunController
             'total' => (int) $run['responses_total'],
             'done' => (int) $run['responses_done'],
             'errors' => (int) $run['responses_error'],
+            'analyses' => (int) $run['analyses_done'],
             'cost_total' => (float) $run['cost_total'],
-            'report_url' => \Core\Router::url("/ai-reputation/project/{$projectId}/runs/{$runId}"),
+            'report_url' => Router::url("/ai-reputation/project/{$projectId}/runs/{$runId}"),
         ]]);
         exit;
     }
@@ -279,36 +357,23 @@ class RunController
         }
 
         $responses = $this->run->responses($runId);
-        $subject = $project['subject_name'];
+        $analyses = $this->analysis->byRun($runId);
         $engines = $run['engines'];
+        $builder = new ReportBuilderService();
 
-        // Griglia prompt x engine + aggregati (fetta 1: menzione = match testuale, giudizio AI in fetta 2)
         $grid = [];
-        $domains = [];
-        $mentioned = 0;
-        $okCount = 0;
         foreach ($responses as $r) {
-            $r['mentioned'] = $r['status'] === 'ok' ? self::mentions((string) $r['text'], $subject) : null;
-            if ($r['status'] === 'ok') {
-                $okCount++;
-                if ($r['mentioned']) {
-                    $mentioned++;
-                }
-                foreach ($r['citations'] as $c) {
-                    $d = $c['domain'] ?? EngineCollectorService::domainOf($c['url']);
-                    if (!$d) {
-                        continue;
-                    }
-                    $domains[$d] ??= ['domain' => $d, 'count' => 0, 'engines' => [], 'urls' => []];
-                    $domains[$d]['count']++;
-                    $domains[$d]['engines'][$r['engine']] = true;
-                    $domains[$d]['urls'][$c['url']] = $c['title'] ?? '';
-                }
-            }
+            $r['analysis'] = $analyses[(int) $r['id']] ?? null;
+            $r['mentioned'] = $r['status'] === 'ok' ? self::mentions((string) $r['text'], $project['subject_name']) : null;
             $grid[$r['prompt_id']]['prompt'] = ['id' => $r['prompt_id'], 'text' => $r['prompt_text'], 'cluster' => $r['prompt_cluster']];
             $grid[$r['prompt_id']]['cells'][$r['engine']][] = $r;
         }
-        usort($domains, fn($a, $b) => $b['count'] <=> $a['count']);
+
+        $metrics = $builder->metrics($responses, $analyses, $engines, $project);
+        $sources = $builder->sources($responses, $analyses);
+        $competitors = $builder->competitors($analyses);
+        $actions = Database::fetchAll("SELECT * FROM ar_actions WHERE run_id = ? ORDER BY FIELD(type, 'removal', 'counter_content', 'gap_article', 'correction'), id", [$runId]);
+        $homonyms = Database::fetchAll("SELECT * FROM ar_profile_facts WHERE project_id = ? AND category = 'homonym' AND status = 'proposed' ORDER BY id", [$projectId]);
 
         return View::render('ai-reputation::runs/show', [
             'title' => "Report run #{$runId} - " . $project['name'],
@@ -319,15 +384,12 @@ class RunController
             'engines' => $engines,
             'engineLabels' => Project::ENGINE_LABELS,
             'grid' => $grid,
-            'domains' => array_slice($domains, 0, 15),
-            'stats' => [
-                'ok' => $okCount,
-                'errors' => (int) $run['responses_error'],
-                'mentioned' => $mentioned,
-                'share' => $okCount > 0 ? round($mentioned / $okCount * 100) : 0,
-                'cost' => (float) $run['cost_total'],
-                'domains' => count($domains),
-            ],
+            'metrics' => $metrics,
+            'sources' => array_slice($sources, 0, 20),
+            'competitors' => array_slice($competitors, 0, 12),
+            'actions' => $actions,
+            'homonyms' => $homonyms,
+            'hasAnalyses' => !empty($analyses),
             'responsesJson' => json_encode(array_map(fn($r) => [
                 'id' => (int) $r['id'],
                 'engine' => $r['engine'],
@@ -341,11 +403,56 @@ class RunController
                 'cost' => $r['cost'],
                 'error' => $r['error_message'],
                 'prompt' => $r['prompt_text'],
+                'analysis' => isset($analyses[(int) $r['id']]) ? [
+                    'verdict' => $analyses[(int) $r['id']]['verdict'],
+                    'outcome' => $analyses[(int) $r['id']]['outcome'],
+                    'summary' => $analyses[(int) $r['id']]['summary'],
+                    'sentiment' => (int) $analyses[(int) $r['id']]['sentiment'],
+                    'is_homonym' => $analyses[(int) $r['id']]['is_homonym'],
+                    'homonym_note' => $analyses[(int) $r['id']]['homonym_note'],
+                    'negative_reasons' => $analyses[(int) $r['id']]['negative_reasons'],
+                    'negative_urls' => $analyses[(int) $r['id']]['negative_urls'],
+                    'citations_noise' => $analyses[(int) $r['id']]['citations_noise'],
+                    'claims' => $analyses[(int) $r['id']]['claims'],
+                    'competitors' => $analyses[(int) $r['id']]['competitors'],
+                ] : null,
             ], $responses), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT),
         ]);
     }
 
-    /** Menzione del soggetto nel testo (fetta 1: match sul nome completo o sul cognome) */
+    /**
+     * POST /ai-reputation/project/{id}/facts/{factId}/{decision} - conferma (è lui) o rifiuta (è un altro) un omonimo
+     */
+    public function decideFact(int $projectId, int $factId, string $decision): void
+    {
+        $user = Auth::user();
+        $project = $this->project->findAccessible($projectId, $user['id']);
+        if (!$project || ($project['access_role'] ?? 'owner') === 'viewer') {
+            $_SESSION['_flash']['error'] = 'Permessi insufficienti';
+            Router::redirect('/ai-reputation');
+            return;
+        }
+        $fact = Database::fetch("SELECT * FROM ar_profile_facts WHERE id = ? AND project_id = ?", [$factId, $projectId]);
+        if (!$fact) {
+            $_SESSION['_flash']['error'] = 'Riga non trovata';
+            Router::redirect("/ai-reputation/project/{$projectId}");
+            return;
+        }
+        // "confirm" = è lui → la riga omonimo è rifiutata (non c'è omonimo). "reject" = è un altro → confermata come omonimo
+        $status = $decision === 'confirm' ? 'rejected' : 'confirmed';
+        Database::update('ar_profile_facts', ['status' => $status], 'id = ?', [$factId]);
+        if ($status === 'confirmed') {
+            // L'omonimo confermato finisce nelle note di disambiguazione, così il judge lo sa dal prossimo run
+            $notes = trim((string) ($project['disambiguation_notes'] ?? ''));
+            $notes .= ($notes !== '' ? "\n" : '') . 'Omonimo confermato: ' . $fact['text'];
+            $this->project->update($projectId, ['disambiguation_notes' => $notes]);
+        }
+        $_SESSION['_flash']['success'] = $status === 'confirmed' ? 'Segnato come omonimo: il judge ne terrà conto dal prossimo run' : 'Confermato: è il soggetto monitorato';
+        $back = $_POST['back'] ?? "/ai-reputation/project/{$projectId}";
+        Router::redirect($back);
+    }
+
+    /** Menzione del soggetto nel testo (match sul nome completo o sul cognome) */
     public static function mentions(string $text, string $subject): bool
     {
         $text = mb_strtolower($text);

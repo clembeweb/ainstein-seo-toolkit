@@ -113,7 +113,20 @@ Router::post('/ai-reputation/project/{id}/runs/cancel', function ($id) {
     return (new RunController())->cancel((int) $id);
 });
 
+Router::post('/ai-reputation/project/{id}/runs/{runId}/reanalyze', function ($id, $runId) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new RunController())->reanalyze((int) $id, (int) $runId);
+});
+
 Router::get('/ai-reputation/project/{id}/runs/{runId}', function ($id, $runId) {
     Middleware::auth();
     return (new RunController())->show((int) $id, (int) $runId);
+});
+
+// Omonimi da confermare (ADR-008): confirm = e' lui, reject = e' un altro
+Router::post('/ai-reputation/project/{id}/facts/{factId}/{decision}', function ($id, $factId, $decision) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new RunController())->decideFact((int) $id, (int) $factId, (string) $decision);
 });

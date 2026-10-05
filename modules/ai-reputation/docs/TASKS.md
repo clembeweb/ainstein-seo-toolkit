@@ -4,19 +4,20 @@
 > Ultimo aggiornamento: 2026-10-05
 
 ## Dove siamo
-**Fetta 1 chiusa** (2026-10-05): il modulo esiste e gira. Progetto "Federico Marcaccini" (`ar_projects.id = 1`,
-global project 1) attivato da Global Projects, 9 domande, **primo run reale completato: 27/27 risposte,
-0,44 $, 5 min**, report in `/ai-reputation/project/1/runs/1`. M0 chiuso prima (4 engine testati, design v0.2).
-Branch `claude/ai-reputation-radar-dd9004` nel checkout principale `C:\xampp\htdocs\seo-toolkit`.
-Nota dal run: OpenAI alla domanda "è affidabile?" ha chiesto "a quale Marcaccini ti riferisci?" invece di
-rispondere → il judge deve riconoscere la "richiesta di chiarimento" come esito a sé.
+**Fette 1 e 2 chiuse** (2026-10-05): modulo, collector, judge, metriche, piano d'azione e report completo.
+Progetto "Federico Marcaccini" (`ar_projects.id = 1`), run 1: 27/27 risposte (0,44 $, 5 min) + 27 giudizi
+(judge su `claude-sonnet-4` via AiService, ~4 s l'uno) → rischio Alto 65/100, 6 negative, 4 fonti negative,
+5 domande con divergenza tra engine, 8 azioni, 2 omonimi da confermare. Report: `/ai-reputation/project/1/runs/1`.
+"Avvia run" dalla dashboard fa collector + judge + report in un solo stream SSE. Branch
+`claude/ai-reputation-radar-dd9004` nel checkout principale `C:\xampp\htdocs\seo-toolkit`.
 
 ## Prossimo passo (uno solo)
-**Fetta 2 (ADR-009) — M1.5 Analyzer (judge)**: `services/JudgeService.php` via AiService (Golden Rule 1), una
-chiamata per risposta con il JSON rigido di `design.md` §3.4 (+ esito `clarification_requested`), salvataggio in
-`ar_analyses`, verifica che le fonti parlino del soggetto (`citations_noise`), omonimia `uncertain` (ADR-008).
-Lanciabile dal report ("Analizza risposte", job SSE come il collector). Poi M1.5 metriche + divergenza, M1.6
-piano d'azione, e il report si completa con verdetti colorati, fonti ok/negative, azioni, "Da confermare".
+**Fetta 3 (ADR-009) — M1.2 Onboarding agent + M1.3 Prompt engine**: (1) `services/OnboardingService.php`:
+una chiamata Perplexity `fast` "Chi è X?" per la lista fonti (search_results con snippet) + `ScraperService::fetchRaw()`
+sui top URL + una chiamata AiService → righe `ar_profile_facts` (identity/activity/alias/person/fact/risk/homonym/source)
+in stato `proposed`; UI conferma riga per riga ✅/❌/✏️ (design §3.1). (2) `services/PromptEngineService.php`: dal
+profilo confermato → 40-60 prompt (cluster, lingua, persona) in `ar_prompts` con `origin = ai`. Entrambi come
+pulsanti nella dashboard, AJAX lungo (pattern ob_start + ignore_user_abort). Poi M1.8 run completo e revisione per la call.
 
 ## M0 — Test empirici
 - [x] M0.1 Prerequisiti: MySQL on, `.env` nel worktree, key verificate (OpenAI ✅ Anthropic ✅ Gemini ✅ Perplexity ✅ — le ultime due incollate il 2026-10-05)
@@ -29,12 +30,12 @@ piano d'azione, e il report si completa con verdetti colorati, fonti ok/negative
 ## M1 — MVP call (ordine per fette verticali, ADR-009: 1 = M1.1+M1.4+M1.7 · 2 = M1.5+M1.6 · 3 = M1.2+M1.3)
 - [x] M1.1 Migrazione `ar_*` + `module.json` + registrazione modulo + attivazione da Global Projects (2026-10-05, testato in locale)
 - [ ] M1.2 Onboarding agent + UI conferma righe (profilo Marcaccini da confermare: brief §3) + campo libero "Omonimi e soggetti da non confondere" (persone e aziende, ADR-008)
-- [ ] M1.5b Analyzer: omonimia non dichiarata → riga `homonym` proposed + sezione "Da confermare" nel report (ADR-008; il blocco del run è v1)
+- [x] M1.5b Omonimia non dichiarata → riga `homonym` proposed (solo da risposte nel merito) + sezione "Da confermare" nel report con Sì/No che aggiorna le note di disambiguazione (2026-10-05)
 - [ ] M1.3 Prompt engine
 - [x] M1.4 Collector OpenAI + Gemini + Perplexity come job SSE (`EngineCollectorService`, adapter Anthropic pronto), prompt manuali (2026-10-05, run reale 27/27)
-- [ ] M1.5 Analyzer + metriche base
-- [ ] M1.6 Piano d'azione
-- [x] M1.7 Pagina report run, versione fetta 1: KPI, griglia domanda x engine con modal, domini citati (i verdetti arrivano col judge)
+- [x] M1.5 Judge (`JudgeService`, AiService, JSON rigido con outcome/verdict/noise) + metriche pesate (share, sentiment, rischio, divergenza) in `ReportBuilderService` (2026-10-05)
+- [x] M1.6 Piano d'azione a regole: removal per URL negativo, counter_content per domanda rep negativa/ambigua, gap_article per comm/comp senza menzione; testata suggerita = dominio ok più citato (2026-10-05)
+- [x] M1.7 Pagina report run completa: KPI, divergenza, griglia con verdetti e riassunto per cella, fonti ok/negative/rumore, piano d'azione, competitor, "Da confermare", Rianalizza (2026-10-05)
 - [ ] M1.8 Run reale su Marcaccini + revisione per la call
 
 ## Decisioni in sospeso (di Clemente)
