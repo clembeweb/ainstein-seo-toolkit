@@ -9,12 +9,13 @@ Nessuna riga di codice del modulo ancora scritta. Branch: `claude/ai-reputation-
 (worktree in `.claude/worktrees/ai-reputation-radar-dd9004/`).
 
 ## Prossimo passo (uno solo)
-**M0.1** — Prerequisiti per i test empirici: MySQL di XAMPP acceso, `.env` copiato nel worktree
-(è gitignored: esiste solo nel checkout principale), elenco delle API key disponibili
-(OpenAI / Perplexity / Gemini / Anthropic: quali ci sono davvero).
+**M0.1 (quasi chiuso)** — `.env` copiato nel worktree, MySQL acceso. Key nel DB locale:
+OpenAI ✅, Anthropic ✅, Gemini ❌ (vuota), Perplexity ❌ (setting non esiste ancora).
+Aperto: Clemente decide se prendere una key Perplexity o usare Anthropic web search come secondo
+engine per la demo.
 
 ## M0 — Test empirici
-- [ ] M0.1 Prerequisiti (MySQL on, `.env` nel worktree, API key disponibili)
+- [x] M0.1 Prerequisiti: MySQL on, `.env` nel worktree, key verificate (OpenAI ✅ Anthropic ✅ Gemini ❌ Perplexity ❌)
 - [ ] M0.2 Verifica online docs + listino OpenAI Responses `web_search` → script `scripts/test-engine-openai.php`, 3 prompt, JSON in `docs/test-empirici/`
 - [ ] M0.3 Idem Perplexity Sonar
 - [ ] M0.4 Idem Gemini grounding (se chiave disponibile)
