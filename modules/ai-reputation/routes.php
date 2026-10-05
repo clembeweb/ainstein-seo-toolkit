@@ -12,6 +12,7 @@ use Core\ModuleLoader;
 use Modules\AiReputation\Controllers\ProjectController;
 use Modules\AiReputation\Controllers\DashboardController;
 use Modules\AiReputation\Controllers\PromptController;
+use Modules\AiReputation\Controllers\RunController;
 
 if (!ModuleLoader::isModuleActive('ai-reputation')) {
     return;
@@ -84,4 +85,35 @@ Router::post('/ai-reputation/project/{id}/prompts/{promptId}/delete', function (
     Middleware::auth();
     Middleware::csrf();
     return (new PromptController())->destroy((int) $id, (int) $promptId);
+});
+
+// =============================================
+// RUN (collector in background, SSE)
+// =============================================
+
+Router::post('/ai-reputation/project/{id}/runs/start', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new RunController())->start((int) $id);
+});
+
+// SSE: auth gestita internamente (niente redirect su stream)
+Router::get('/ai-reputation/project/{id}/runs/stream', function ($id) {
+    return (new RunController())->stream((int) $id);
+});
+
+Router::get('/ai-reputation/project/{id}/runs/status', function ($id) {
+    Middleware::auth();
+    return (new RunController())->status((int) $id);
+});
+
+Router::post('/ai-reputation/project/{id}/runs/cancel', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new RunController())->cancel((int) $id);
+});
+
+Router::get('/ai-reputation/project/{id}/runs/{runId}', function ($id, $runId) {
+    Middleware::auth();
+    return (new RunController())->show((int) $id, (int) $runId);
 });

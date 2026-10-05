@@ -33,12 +33,31 @@ $basePath = '/ai-reputation/project/' . $project['id'];
                 <h2 class="text-base font-semibold text-slate-900 dark:text-white">Run</h2>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Ogni run pone tutte le domande attive a ogni engine e salva le risposte con le fonti citate.</p>
             </div>
-            <?php if ($promptsActive > 0): ?>
-            <button type="button" disabled class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400 font-medium cursor-not-allowed" title="Il collector arriva nel prossimo passo (M1.4)">
-                <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg>
-                Avvia run
-            </button>
+            <?php if ($promptsActive > 0 && ($project['access_role'] ?? 'owner') !== 'viewer'): ?>
+            <div x-data="arRunner()" x-init="init()" class="flex items-center gap-3">
+                <button type="button" x-show="!running" @click="start()" class="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors whitespace-nowrap">
+                    <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg>
+                    Avvia run
+                </button>
+                <button type="button" x-show="running" x-cloak @click="cancel()" class="inline-flex items-center px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700 font-medium transition-colors whitespace-nowrap">Annulla</button>
+            </div>
             <?php endif; ?>
+        </div>
+
+        <!-- Avanzamento run (Alpine, SSE) -->
+        <div x-data x-show="$store.arRun.running || $store.arRun.message" x-cloak class="px-5 py-4 border-b border-slate-200 dark:border-slate-700 bg-indigo-50/50 dark:bg-indigo-900/10">
+            <div class="flex items-center justify-between text-sm mb-2">
+                <span class="text-slate-700 dark:text-slate-200" x-text="$store.arRun.message || ('Raccolta in corso: ' + $store.arRun.done + ' / ' + $store.arRun.total)"></span>
+                <span class="text-slate-500 dark:text-slate-400" x-text="$store.arRun.percent + '%'"></span>
+            </div>
+            <div class="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                <div class="h-2 bg-indigo-600 transition-all" :style="'width:' + $store.arRun.percent + '%'"></div>
+            </div>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400 truncate" x-show="$store.arRun.running" x-text="$store.arRun.currentEngine ? ($store.arRun.labels[$store.arRun.currentEngine] || $store.arRun.currentEngine) + ' · ' + $store.arRun.currentPrompt : ''"></p>
+            <ul class="mt-2 space-y-0.5 text-xs text-slate-600 dark:text-slate-300 max-h-40 overflow-y-auto">
+                <template x-for="l in $store.arRun.log" :key="l.id"><li x-text="l.text" :class="l.error ? 'text-red-600 dark:text-red-400' : ''"></li></template>
+            </ul>
+            <a x-show="$store.arRun.reportUrl" :href="$store.arRun.reportUrl" class="inline-flex mt-3 items-center px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">Apri il report</a>
         </div>
         <?php if (empty($runs)): ?>
         <div class="p-8 text-center text-sm text-slate-500 dark:text-slate-400">
@@ -162,3 +181,91 @@ $basePath = '/ai-reputation/project/' . $project['id'];
         <?php endif; ?>
     </div>
 </div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.store('arRun', {
+        running: false, runId: null, total: 0, done: 0, percent: 0,
+        currentEngine: '', currentPrompt: '', message: '', reportUrl: '', log: [],
+        labels: <?= json_encode($engineLabels) ?>,
+    });
+});
+
+function arRunner() {
+    const base = '<?= url($basePath) ?>';
+    const csrf = '<?= $csrf ?>';
+    const activeRunId = <?= (int) (array_values(array_filter($runs, fn($r) => in_array($r['status'], ['pending', 'running'], true)))[0]['id'] ?? 0) ?>;
+    return {
+        es: null, poll: null,
+        get running() { return this.$store.arRun.running; },
+        init() {
+            if (activeRunId) { this.$store.arRun.runId = activeRunId; this.$store.arRun.running = true; this.connect(); }
+        },
+        notify(msg, type) {
+            if (window.ainstein && typeof window.ainstein.alert === 'function') { window.ainstein.alert(msg, type); } else { alert(msg); }
+        },
+        async start() {
+            const s = this.$store.arRun;
+            s.message = ''; s.reportUrl = ''; s.log = []; s.done = 0; s.percent = 0;
+            try {
+                const fd = new FormData(); fd.append('_csrf_token', csrf);
+                const resp = await fetch(base + '/runs/start', { method: 'POST', body: fd });
+                if (!resp.ok) throw new Error('Errore server (' + resp.status + ')');
+                const data = await resp.json();
+                if (!data.success) throw new Error(data.error || 'Errore avvio run');
+                s.runId = data.run_id; s.total = data.responses_total; s.running = true;
+                if (data.engines_missing && data.engines_missing.length) {
+                    s.log.push({ id: 'm', text: 'Engine senza API key, saltati: ' + data.engines_missing.join(', '), error: true });
+                }
+                this.connect();
+            } catch (e) { this.notify(e.message, 'error'); }
+        },
+        connect() {
+            const s = this.$store.arRun;
+            this.es = new EventSource(base + '/runs/stream?run_id=' + s.runId);
+            this.es.addEventListener('started', e => { const d = JSON.parse(e.data); s.total = d.total; });
+            this.es.addEventListener('progress', e => { const d = JSON.parse(e.data); s.currentEngine = d.engine; s.currentPrompt = d.prompt; });
+            const onItem = (e, isError) => {
+                const d = JSON.parse(e.data);
+                s.done++; s.percent = s.total ? Math.round(s.done / s.total * 100) : 0;
+                const name = s.labels[d.engine] || d.engine;
+                s.log.unshift({ id: d.response_id, error: isError,
+                    text: isError ? (name + ': errore · ' + (d.error || '')) : (name + ': ' + (d.mentioned ? 'citato' : 'non citato') + ' · ' + d.citations + ' fonti · ' + Math.round(d.latency_ms / 1000) + ' s') });
+            };
+            this.es.addEventListener('item_completed', e => onItem(e, false));
+            this.es.addEventListener('item_error', e => onItem(e, true));
+            this.es.addEventListener('completed', e => { const d = JSON.parse(e.data); this.finish('Run completato: ' + d.done + ' risposte raccolte' + (d.errors ? ', ' + d.errors + ' errori' : '') + ' · ' + Number(d.cost_total).toFixed(3) + ' $', d.report_url); });
+            this.es.addEventListener('cancelled', () => this.finish('Run annullato', ''));
+            this.es.onerror = () => { if (this.es) { this.es.close(); this.es = null; } this.startPolling(); };
+        },
+        startPolling() {
+            if (this.poll) return;
+            this.poll = setInterval(async () => {
+                try {
+                    const resp = await fetch(base + '/runs/status?run_id=' + this.$store.arRun.runId);
+                    if (!resp.ok) return;
+                    const data = await resp.json();
+                    if (!data.success) return;
+                    const s = this.$store.arRun; const r = data.run;
+                    s.total = r.total; s.done = r.done + r.errors; s.percent = r.total ? Math.round(s.done / r.total * 100) : 0;
+                    if (['completed', 'failed', 'cancelled'].includes(r.status)) {
+                        this.finish(r.status === 'completed' ? 'Run completato' : 'Run ' + r.status, r.status === 'completed' ? r.report_url : '');
+                    }
+                } catch (e) { /* riprova al prossimo giro */ }
+            }, 4000);
+        },
+        async cancel() {
+            try {
+                const fd = new FormData(); fd.append('_csrf_token', csrf); fd.append('run_id', this.$store.arRun.runId);
+                await fetch(base + '/runs/cancel', { method: 'POST', body: fd });
+            } catch (e) { this.notify(e.message, 'error'); }
+        },
+        finish(message, reportUrl) {
+            const s = this.$store.arRun;
+            s.running = false; s.message = message; s.reportUrl = reportUrl; s.percent = 100;
+            if (this.es) { this.es.close(); this.es = null; }
+            if (this.poll) { clearInterval(this.poll); this.poll = null; }
+        },
+    };
+}
+</script>
