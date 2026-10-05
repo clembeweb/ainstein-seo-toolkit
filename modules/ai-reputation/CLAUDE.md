@@ -68,7 +68,15 @@ cliente TD, Riccardo Concetti, **non c'entra** con questo progetto).
 
 ## Ambiente locale (XAMPP)
 
-- XAMPP serve il checkout principale `C:\xampp\htdocs\seo-toolkit` su `http://localhost/seo-toolkit`.
-  Questo worktree **non** è servito e **non ha `.env`** (gitignored): per gli script CLI copiarlo
-  dal checkout principale. MySQL va acceso da XAMPP prima dei test.
-- API key: in DB (`settings`), mai in file. Verificare quali provider sono configurati prima dei test.
+- **Si sviluppa qui, nel worktree** (branch `claude/ai-reputation-radar-dd9004`): la sessione Claude è
+  legata a questa cartella e l'app blocca le modifiche al checkout principale.
+- **XAMPP serve il checkout principale** `C:\xampp\htdocs\seo-toolkit` su `http://localhost/seo-toolkit`,
+  che sta sul branch di servizio `serve-ai-reputation`. **Dopo ogni commit qui**, allineare il servito:
+  ```
+  git -C C:/xampp/htdocs/seo-toolkit merge --ff-only claude/ai-reputation-radar-dd9004
+  ```
+  Il branch Editorial (`feat/editorial-m1`) è intatto (avanzi del 2026-05-14 messi in un commit WIP).
+- Il worktree non ha `vendor/` (lock non installabile) né `.env` (copiato a mano, gitignored): gli
+  script CLI caricano l'autoloader del checkout principale. MySQL va acceso da XAMPP prima dei test.
+- API key: in DB (`settings`), mai in file. Si incollano dal pannello `/admin/settings` (campi
+  OpenAI, Anthropic, Gemini, Perplexity). Da terminale: `scripts/set-api-key.php <key_name>`.

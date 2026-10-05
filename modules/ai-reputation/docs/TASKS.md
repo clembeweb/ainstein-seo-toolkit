@@ -5,12 +5,13 @@
 
 ## Dove siamo
 Progetto appena nato. Brief ricevuto e analizzato, design v0.1 in bozza, decisioni ADR-001..006.
-Nessuna riga di codice del modulo ancora scritta. Branch: `claude/ai-reputation-radar-dd9004`
-(worktree in `.claude/worktrees/ai-reputation-radar-dd9004/`).
+Nessuna riga di codice del modulo ancora scritta. Branch: `claude/ai-reputation-radar-dd9004` nel worktree;
+XAMPP serve il checkout principale sul branch `serve-ai-reputation` (vedi CLAUDE.md del modulo per il sync).
 
 ## Prossimo passo (uno solo)
-**M0.3 / M0.4** — Test Perplexity e Gemini: servono le key da Clemente (deciso 2026-10-05: tutti gli
-engine, test empirici prima). Nel frattempo si può chiudere M0.6 (design aggiornato con i dati reali).
+**M0.3 / M0.4** — Test Perplexity e Gemini. Clemente incolla le key in `http://localhost/seo-toolkit/admin/settings`
+(campi pronti), poi si lanciano gli script. Prima: verifica online docs Perplexity (Sonar chat
+completions con citations vs Agent API vs Search API) e Gemini grounding.
 Aperto per Clemente: il "Marcaccini Federico" del rapporto mafie Lazio è un omonimo? (vedi test OpenAI)
 
 ## M0 — Test empirici
