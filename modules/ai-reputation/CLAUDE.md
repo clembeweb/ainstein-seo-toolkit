@@ -61,7 +61,7 @@ cliente TD, Riccardo Concetti, **non c'entra** con questo progetto).
 |---|---|
 | `docs/brief-2026-10-05.md` | brief di origine, integrale |
 | `docs/design.md` | analisi + architettura + data model (bozza finché M0 non è chiuso) |
-| `docs/decisions.md` | ADR-001..006 |
+| `docs/decisions.md` | ADR-001..008 |
 | `docs/roadmap.md` | M0 → M4 |
 | `docs/TASKS.md` | stato e prossimo passo |
 | `docs/test-empirici/` | risultati dei test API |

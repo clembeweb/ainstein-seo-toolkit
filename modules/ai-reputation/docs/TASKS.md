@@ -14,7 +14,6 @@ Branch `claude/ai-reputation-radar-dd9004` nel checkout principale `C:\xampp\htd
 (`groundingMetadata.groundingChunks`, URL redirect `vertexaisearch…` da risolvere) e listino → script
 `scripts/test-engine-gemini.php` sul modello degli altri (3 prompt Marcaccini, JSON in `docs/test-empirici/`)
 → nota `2026-10-05-gemini.md`. Poi M0.6 (aggiornare `design.md` §3.3 e §5 con i dati reali di tutti e 4).
-Aperto per Clemente: il "Marcaccini Federico" del rapporto mafie Lazio è un omonimo? (vedi test OpenAI)
 
 ## M0 — Test empirici
 - [x] M0.1 Prerequisiti: MySQL on, `.env` nel worktree, key verificate (OpenAI ✅ Anthropic ✅ Gemini ✅ Perplexity ✅ — le ultime due incollate il 2026-10-05)
@@ -26,7 +25,8 @@ Aperto per Clemente: il "Marcaccini Federico" del rapporto mafie Lazio è un omo
 
 ## M1 — MVP call
 - [ ] M1.1 Migrazione `ar_*` + `module.json` + registrazione modulo + attivazione da Global Projects
-- [ ] M1.2 Onboarding agent + UI conferma righe (profilo Marcaccini da confermare: brief §3)
+- [ ] M1.2 Onboarding agent + UI conferma righe (profilo Marcaccini da confermare: brief §3) + campo libero "Omonimi e soggetti da non confondere" (persone e aziende, ADR-008)
+- [ ] M1.5b Analyzer: omonimia non dichiarata → riga `homonym` proposed + sezione "Da confermare" nel report (ADR-008; il blocco del run è v1)
 - [ ] M1.3 Prompt engine
 - [ ] M1.4 Collector OpenAI + Perplexity (job SSE)
 - [ ] M1.5 Analyzer + metriche base
@@ -37,10 +37,8 @@ Aperto per Clemente: il "Marcaccini Federico" del rapporto mafie Lazio è un omo
 ## Decisioni in sospeso (di Clemente)
 - Conferma riga per riga della bozza profilo Marcaccini (brief §3) → si fa nella UI in M1.2
 - Data e ora della call con Gabriele (settimana del 2026-10-06, mattina)
-- Omonimia o no del "Marcaccini Federico" citato nel III Rapporto Mafie Lazio (jemolo.it) → cambia la demo.
-  ⚠️ Dopo il test Perplexity la domanda è più urgente: Il Tempo 2013 lo descrive come "noto imprenditore ed
-  immobiliarista romano", 33 società immobiliari/edilizie; tre engine su quattro portano la storia.
-  **Da chiarire con Gabriele PRIMA della call** (vedi nota Perplexity, sezione omonimia)
+- ~~Omonimia del "Marcaccini Federico" della confisca 2013~~ → **risolta 2026-10-05: Clemente conferma, nessun
+  omonimo, dovrebbe essere lui.** La demo è il caso "fonte negativa reale" (ADR-007 counter_content + removal TD)
 - Key Perplexity e Gemini da creare (Clemente)
 - Instagram @fedemarcaccini: Claude dice che è un maestro di sci argentino, il brief lo dava come suo → verificare
 - Modello Anthropic da misurare: Opus 5.5 (fatto) e/o Sonnet 5.5 (metà costo, più diffuso su claude.ai)

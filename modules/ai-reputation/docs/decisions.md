@@ -97,3 +97,29 @@ le AI citano (Source Map). Si affianca a `removal` (TD) e vale sia se la fonte �
 
 **Consequences**: `ar_actions.type` ∈ {removal, gap_article, correction, counter_content};
 il cluster `rep` è quello che genera più valore commerciale per entrambi (TD e Clemente).
+
+## ADR-008: Omonimi dichiarati dall'utente in onboarding; omonimie emerse dai run si confermano, non si deducono
+
+**Date**: 2026-10-05 · **Status**: Accepted (decisione di Clemente dopo il test Perplexity)
+
+**Context**: tre engine su quattro attribuiscono a Marcaccini la confisca del 2013 (Il Tempo,
+dirittiglobali, rapporto mafie Lazio). Le AI non stabiliscono se sia la stessa persona: o gliela
+attribuiscono o la mettono accanto al nome. Noi non possiamo deciderlo dai dati, e non dobbiamo:
+**l'omonimia la conferma l'utente**, non il tool. (Per Marcaccini Clemente ha confermato il 2026-10-05:
+nessun omonimo, dovrebbe essere lui.)
+
+**Decision**:
+1. In onboarding un **campo libero** "Omonimi e soggetti da non confondere" (persone **e aziende**:
+   es. "Marcaccini S.r.l. di Ancona non c'entra", "Federica Marcaccini è un'altra persona"). Facoltativo,
+   coerente con ADR-003 (zero campi obbligatori). Va nel prompt dell'onboarding agent e del judge.
+2. Quando un run fa emergere una **possibile omonimia non dichiarata** (judge: `is_homonym = uncertain`
+   o fonte che descrive il soggetto in modo incompatibile col profilo confermato), il tool **non decide**:
+   la segnala come riga `ar_profile_facts` di categoria `homonym` con stato `proposed` e chiede conferma
+   all'utente (✅ è lui / ❌ è un altro). Finché non è confermata, l'analisi la tratta come "attribuita
+   dalle AI", non come vera né come falsa, e il report la mostra in una sezione "Da confermare".
+3. MVP call: solo il campo (1) e la segnalazione (2) in report. Il blocco del run in attesa di conferma
+   è v1, non MVP.
+
+**Consequences**: `ar_projects.disambiguation_notes` (TEXT); categoria `homonym` già prevista in
+`ar_profile_facts`; `ar_analyses.is_homonym` diventa enum `no|yes|uncertain`; il piano d'azione
+distingue `counter_content` di disambiguazione (omonimo confermato) da gestione fonte negativa (non omonimo).

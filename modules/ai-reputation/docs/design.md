@@ -40,7 +40,9 @@ piano d'azione automatico. La demo va puntata lì, non sulla singola risposta.
 ## 3. Cosa va costruito
 
 ### 3.1 Onboarding agent (Step 1)
-Input: nome (+ sito/città opzionali). Pipeline, la più semplice che funziona:
+Input: nome (+ sito/città opzionali) + **campo libero "Omonimi e soggetti da non confondere"**
+(persone e aziende, facoltativo, ADR-008: entra nel prompt dell'agent e del judge).
+Pipeline, la più semplice che funziona:
 1. ricerca web ⚠️ (opzione A: chiedere a un engine del collector "chi è X" con web search e usare
    le sue citazioni come lista URL; opzione B: SERP API DataForSEO già integrata. Si sceglie nel test);
 2. `ScraperService::fetchRaw()` sui top URL → testi;
@@ -50,6 +52,9 @@ Input: nome (+ sito/città opzionali). Pipeline, la più semplice che funziona:
 5. UI conferma riga per riga: ✅ confirmed · ❌ rejected (diventa "errore da monitorare") · ✏️ corrected.
 
 Solo le righe `confirmed/corrected` sono la **verità del brand** usata dall'analyzer.
+Se un run fa emergere una possibile omonimia non dichiarata, il tool **non decide**: crea una riga
+`homonym` in stato `proposed` e la mette nel report in "Da confermare" (✅ è lui / ❌ è un altro).
+MVP: solo segnalazione. v1: run in pausa finché l'utente non conferma (ADR-008).
 
 ### 3.2 Prompt engine (Step 2)
 Una chiamata AiService con il profilo confermato → 40-60 prompt in JSON: cluster
@@ -117,12 +122,12 @@ Stampabile via browser. Dashboard, trend e scheduling in v1.
 
 | Tabella | Scopo | Campi chiave |
 |---|---|---|
-| `ar_projects` | un soggetto monitorato | user_id, global_project_id, subject_name, subject_type (person/company), website, city, status |
+| `ar_projects` | un soggetto monitorato | user_id, global_project_id, subject_name, subject_type (person/company), website, city, **disambiguation_notes** (TEXT, omonimi persone/aziende, ADR-008), status |
 | `ar_profile_facts` | righe del profilo | project_id, category (identity/activity/alias/person/fact/risk/homonym/source), text, status (proposed/confirmed/rejected/corrected), corrected_text, source_url |
 | `ar_prompts` | domande monitorate | project_id, cluster, lang, persona, text, is_active, origin (ai/manual) |
 | `ar_runs` | un'esecuzione | project_id, status, engines (json), repeats, started_at, finished_at, cost_total |
 | `ar_responses` | una risposta grezza | run_id, prompt_id, engine, model, repeat_idx, status, text, citations (json), raw (json), tokens_in/out, cost, latency_ms |
-| `ar_analyses` | giudizio di una risposta | response_id, brand_mentioned, mention_position, is_homonym, sentiment, claims (json), competitors (json), negative, negative_urls (json), cited_domains (json), judge_model |
+| `ar_analyses` | giudizio di una risposta | response_id, brand_mentioned, mention_position, is_homonym (no/yes/uncertain), sentiment, claims (json), competitors (json), negative, negative_urls (json), cited_domains (json), judge_model |
 | `ar_sources` | domini aggregati | project_id, domain, citations_count, negative_count, sentiment_avg, first_seen_run_id, last_seen_run_id |
 | `ar_competitors` | nomi emersi | project_id, name, mentions_count, first_seen_run_id, is_confirmed |
 | `ar_actions` | piano d'azione | project_id, run_id, type (removal/gap_article/correction/counter_content), target_url, target_domain, title, rationale, status |
