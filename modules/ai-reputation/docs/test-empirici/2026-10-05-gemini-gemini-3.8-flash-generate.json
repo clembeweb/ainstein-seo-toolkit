@@ -1,0 +1,712 @@
+[
+    {
+        "summary": {
+            "prompt": {
+                "cluster": "nav",
+                "lang": "it",
+                "text": "Chi è Federico Marcaccini?"
+            },
+            "mode": "generate",
+            "http": 200,
+            "curl_error": null,
+            "latency_ms": 4753,
+            "model_used": "gemini-3.8-flash",
+            "tokens_in": 75,
+            "tokens_out": 268,
+            "tokens_tool_use": null,
+            "queries": [
+                "Federico Marcaccini"
+            ],
+            "grounding_chunks": [
+                {
+                    "idx": 0,
+                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE5F8rd7CrfP-pdT45yDiSQwinFwMaiwn7HrEFsweu63RIOee7EHDi5FhRdfir0S4xCXBt2vmxzJDyxvRAWBzQtjIlCTcSv_R5bdg_MVylQ1PLmr54mvNh8",
+                    "title": "federicomarcaccini.it",
+                    "domain": null,
+                    "resolved": "https://www.federicomarcaccini.it/"
+                },
+                {
+                    "idx": 1,
+                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUjwl4u1vMhdD7ouCXFS8Ygz4pzyAmsJMcHY9RrLJV0IsoOJf5wilbSyMfBUGlrgvFPNFAUWBGHGm-KYXfcDdY7HFP_2oYOfIx8x3_wac-NRyPi95X-sfOSirElIgqZdHq",
+                    "title": "federicomarcaccini.it",
+                    "domain": null,
+                    "resolved": "https://www.federicomarcaccini.it/chi-sono/"
+                },
+                {
+                    "idx": 2,
+                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHXPTjqS0dJF_Nh_JSQGrxDTbzDQjkbc-sn0x4aIcUnx2TWtdT_UK5w-hRBYJV2Eyv70k4Yyba3OFPqY58MGOIdYDAi71K9aFBhOuvg4fFbOhltvZlwztp98IwrDWI=",
+                    "title": "federicomarcaccini.it",
+                    "domain": null,
+                    "resolved": "https://www.federicomarcaccini.it/blog/"
+                },
+                {
+                    "idx": 3,
+                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHG2m9sL-yhux7k0S8itBNFoiVuVZBDVrlt6WDrZoav37a61IFhYhbHA8hBt38lQWOYnOQSr56iQbtfcQ0dTG_P8rVOjiTq01KLryO3t-77l0-Wx5P2eVNYRaYEhu-wesaCscjJY_wBiZg6cGpUBrVfwuM9KSAEuwMp7p_VABWCo_y--IBXTqKY_SaFC-NIf1_eqpT9JX-YYS40pPvssNwAq_QGl0ZVxBK_JAGSqHR7ntaAhas=",
+                    "title": "primadituttomilano.it",
+                    "domain": null,
+                    "resolved": "https://primadituttomilano.it/rubriche/idee-e-consigli/il-futuro-del-mercato-immobiliare-di-lusso-secondo-federico-marcaccini/"
+                },
+                {
+                    "idx": 4,
+                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGdneigaAhdbw8z-92sGcHiIawIN7jfv4le77B-aoThPzhsfEXJomsGLi88HI84YmzI5O-8Oz2Sr9_Rzn5ABASi0PO87M7GMkvQzMzSkoj1ztRiS0MXcHDjLc29e169vQi6X5mCeoCLo_QU5cwKfhSwurHdmlOhMiBfATGIkPztQ4MVSFWyGyqLeb1V3x5HX7fOojZN",
+                    "title": "sharingschool.it",
+                    "domain": null,
+                    "resolved": "https://www.sharingschool.it/il-futuro-degli-immobili-industriali-secondo-federico-marcaccini/"
+                },
+                {
+                    "idx": 5,
+                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEQHPyMYK-6PmcBBwV8xHiz28UgB7vxZOs_0CxC5v6Cm0qxtKizycZ9lOuJnnhVZRDibDRBobjKsylElzzpdSfqu-SwRF7ON7BmOI9rhDxfFeAhfJXZb1epz48EDYzYio1Yc-k0sGXNaTEVuicnkTmeQQMx4AeYNKJjtyAv-u0OTfYX-9T8AAJVtkIB7YQ8Aj3_rTxSt0I71n1ypS0s5acLSNLwi3OL_rI2O-M-nQbu6XrE4ccJw-07AG-a4Wilz-_fvM1v0DZMJq8ltg_zsLorU6UXCWJQCjlh5Z5Kn1WlX4VBnQT7RRs=",
+                    "title": "italiaoggi.it",
+                    "domain": null,
+                    "resolved": "https://www.italiaoggi.it/native-content/nuove-nta-del-prg-di-roma-come-cambia-il-calcolo-di-convenienza-degli-investimenti-immobiliari-lanalisi-di-federico-marcaccini-dasj1hmf"
+                },
+                {
+                    "idx": 6,
+                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHy86yPgyRQoimpc9-oysDVRfzvZTF-Zrqe3CwPeEPCUX-p0v0qiOBi-pE3Acdx4IrjJrh5mL9jIH6r-tQ00hUZduEfZfPY8rHXtxhALEeWyFl6MaI0-qGsT7-JQ0lf9Z_nZL0T17Bo14qoRpJydho1F0bCdMU4xtNmxua8wGUDoefGOjWhlOSw8AhA4hGpjKM8qNkz5BEneNZyVdsBpH4u9GDI4koMBxU1KnUao7JZNw1xlmG2huePKkwdx-HPS7rqcOBRmzc=",
+                    "title": "buonasera24.it",
+                    "domain": null,
+                    "resolved": "https://www.buonasera24.it/news/cronaca/906065/il-mercato-immobiliare-italiano-in-accelerazione-strategie-e-visione-di-federico-marcaccini.html"
+                }
+            ],
+            "citations": [
+                {
+                    "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE5F8rd7CrfP-pdT45yDiSQwinFwMaiwn7HrEFsweu63RIOee7EHDi5FhRdfir0S4xCXBt2vmxzJDyxvRAWBzQtjIlCTcSv_R5bdg_MVylQ1PLmr54mvNh8",
+                    "title": "federicomarcaccini.it",
+                    "domain": null,
+                    "resolved": "https://www.federicomarcaccini.it/"
+                },
+                {
+                    "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUjwl4u1vMhdD7ouCXFS8Ygz4pzyAmsJMcHY9RrLJV0IsoOJf5wilbSyMfBUGlrgvFPNFAUWBGHGm-KYXfcDdY7HFP_2oYOfIx8x3_wac-NRyPi95X-sfOSirElIgqZdHq",
+                    "title": "federicomarcaccini.it",
+                    "domain": null,
+                    "resolved": "https://www.federicomarcaccini.it/chi-sono/"
+                },
+                {
+                    "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHXPTjqS0dJF_Nh_JSQGrxDTbzDQjkbc-sn0x4aIcUnx2TWtdT_UK5w-hRBYJV2Eyv70k4Yyba3OFPqY58MGOIdYDAi71K9aFBhOuvg4fFbOhltvZlwztp98IwrDWI=",
+                    "title": "federicomarcaccini.it",
+                    "domain": null,
+                    "resolved": "https://www.federicomarcaccini.it/blog/"
+                },
+                {
+                    "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHG2m9sL-yhux7k0S8itBNFoiVuVZBDVrlt6WDrZoav37a61IFhYhbHA8hBt38lQWOYnOQSr56iQbtfcQ0dTG_P8rVOjiTq01KLryO3t-77l0-Wx5P2eVNYRaYEhu-wesaCscjJY_wBiZg6cGpUBrVfwuM9KSAEuwMp7p_VABWCo_y--IBXTqKY_SaFC-NIf1_eqpT9JX-YYS40pPvssNwAq_QGl0ZVxBK_JAGSqHR7ntaAhas=",
+                    "title": "primadituttomilano.it",
+                    "domain": null,
+                    "resolved": "https://primadituttomilano.it/rubriche/idee-e-consigli/il-futuro-del-mercato-immobiliare-di-lusso-secondo-federico-marcaccini/"
+                },
+                {
+                    "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGdneigaAhdbw8z-92sGcHiIawIN7jfv4le77B-aoThPzhsfEXJomsGLi88HI84YmzI5O-8Oz2Sr9_Rzn5ABASi0PO87M7GMkvQzMzSkoj1ztRiS0MXcHDjLc29e169vQi6X5mCeoCLo_QU5cwKfhSwurHdmlOhMiBfATGIkPztQ4MVSFWyGyqLeb1V3x5HX7fOojZN",
+                    "title": "sharingschool.it",
+                    "domain": null,
+                    "resolved": "https://www.sharingschool.it/il-futuro-degli-immobili-industriali-secondo-federico-marcaccini/"
+                },
+                {
+                    "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEQHPyMYK-6PmcBBwV8xHiz28UgB7vxZOs_0CxC5v6Cm0qxtKizycZ9lOuJnnhVZRDibDRBobjKsylElzzpdSfqu-SwRF7ON7BmOI9rhDxfFeAhfJXZb1epz48EDYzYio1Yc-k0sGXNaTEVuicnkTmeQQMx4AeYNKJjtyAv-u0OTfYX-9T8AAJVtkIB7YQ8Aj3_rTxSt0I71n1ypS0s5acLSNLwi3OL_rI2O-M-nQbu6XrE4ccJw-07AG-a4Wilz-_fvM1v0DZMJq8ltg_zsLorU6UXCWJQCjlh5Z5Kn1WlX4VBnQT7RRs=",
+                    "title": "italiaoggi.it",
+                    "domain": null,
+                    "resolved": "https://www.italiaoggi.it/native-content/nuove-nta-del-prg-di-roma-come-cambia-il-calcolo-di-convenienza-degli-investimenti-immobiliari-lanalisi-di-federico-marcaccini-dasj1hmf"
+                },
+                {
+                    "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHy86yPgyRQoimpc9-oysDVRfzvZTF-Zrqe3CwPeEPCUX-p0v0qiOBi-pE3Acdx4IrjJrh5mL9jIH6r-tQ00hUZduEfZfPY8rHXtxhALEeWyFl6MaI0-qGsT7-JQ0lf9Z_nZL0T17Bo14qoRpJydho1F0bCdMU4xtNmxua8wGUDoefGOjWhlOSw8AhA4hGpjKM8qNkz5BEneNZyVdsBpH4u9GDI4koMBxU1KnUao7JZNw1xlmG2huePKkwdx-HPS7rqcOBRmzc=",
+                    "title": "buonasera24.it",
+                    "domain": null,
+                    "resolved": "https://www.buonasera24.it/news/cronaca/906065/il-mercato-immobiliare-italiano-in-accelerazione-strategie-e-visione-di-federico-marcaccini.html"
+                }
+            ],
+            "text": "**Federico Marcaccini** è un imprenditore italiano e **Real Estate Developer**, attivo in particolare sul mercato di Roma e a livello nazionale.\n\nI punti principali del suo profilo professionale:\n\n* **Settore di attività:** Si occupa di sviluppo immobiliare, consulenza strategica, analisi di mercato e gestione/ottimizzazione di investimenti e patrimoni immobiliari.\n* **Aree di competenza:** La sua attività e i suoi interventi di analisi riguardano principalmente gli immobili commerciali e industriali (logistica, poli produttivi), il segmento residenziale di lusso e i processi di riqualificazione energetica e urbana.\n* **Commentatore ed esperto di mercato:** Interviene spesso con analisi e contributi su testate e canali di settore, commentando l'impatto di nuove normative urbanistiche (come le varianti al Piano Regolatore Generale di Roma), trend degli investimenti istituzionali e dinamiche della sostenibilità nel real estate.",
+            "error": null
+        },
+        "raw": {
+            "candidates": [
+                {
+                    "content": {
+                        "parts": [
+                            {
+                                "text": "**Federico Marcaccini** è un imprenditore italiano e **Real Estate Developer**, attivo in particolare sul mercato di Roma e a livello nazionale.\n\nI punti principali del suo profilo professionale:\n\n* **Settore di attività:** Si occupa di sviluppo immobiliare, consulenza strategica, analisi di mercato e gestione/ottimizzazione di investimenti e patrimoni immobiliari.\n* **Aree di competenza:** La sua attività e i suoi interventi di analisi riguardano principalmente gli immobili commerciali e industriali (logistica, poli produttivi), il segmento residenziale di lusso e i processi di riqualificazione energetica e urbana.\n* **Commentatore ed esperto di mercato:** Interviene spesso con analisi e contributi su testate e canali di settore, commentando l'impatto di nuove normative urbanistiche (come le varianti al Piano Regolatore Generale di Roma), trend degli investimenti istituzionali e dinamiche della sostenibilità nel real estate.",
+                                "thoughtSignature": "Eu0FCuoFAWkUfRPOSBhFkO4io8KEVcUgNJfI1v+QzNRCgv1hFDshvc0/IZrKHA0g88UiZ3ROmIdgfBL3WZg8luaX7zbOUGLu4ElgKWiY4QEgWNDBxK4qjkUB7pGU+GeDDP/uJqOBpVB+0GTD03z1BijjFNuOzIcvSyaoKOrLrhqSNc6JQaFmG2ob7lLcEoutQq1DGV9DuxGpvxchh9nP3wQpcoY6GQAyh07xbBldZiEmALuQ3qxPepcXDOjS4Gy0f4ED0apFxZcTObPMHZD7LzP/RCype0p2RY0scl+wONyS255VWfLxGHvsBm0gvZk5QIYOhIJNSj8x+4ymonm/wPd+piddCxy864fiubY3c3JEbOF0nzsiUde5VwrdjRZMbq4u3w9/Skuo8TPqhRuRL5VpvNa40/VUXvyZV71yL3A9Ezbf0UyN74b629VbwK5Ik7lCYZcXovAynY0+/CSznrKLuGUhWYRZET15h3ZRItELs6J9qvdxmvi7yXMYqBubNSpA/uP571MiBzorxccasWsSgztGwQT1hIfgkxiR4OsGEayvAFaid97rpuwhT5eHt65b9G5HkbaCJFVJFXdKfpWtmeucXIkTk0Hi9V6RXOKwTXhiKh4ReK6WDmh4oiA3CugNONKeLrR9+fJ+cl6DHpoZX7v6yZ9GJkft7wCEgvhkkM0ewlsYJWh2AMwpAyp65tlwOR+ZUrR3UythxCXRBw+Mx3nlFLAmZXk0RdxxdPte4lP5gcUbBgZ0xZdZmYTx+5vf4h77jzaFxmmXMZh1ulgydm+uQdUyMGd8HrfG/j5kPyQVk4NfS9geJGMNvQwLLKkKHhN/WnvX26KHu/F3bjMNbszRCDHrH2y97GEfJAl6SPIwKVylqPwZyUX1/8QEcLMSlSFdRoWDIr5IFSjT4Gf9QN5YmHiGgL5EPRce0bNnoM3iR5b730ptmUUKCpNK/cPtfiIs5/gHmB7EbiUPs97/1GTeC8ZHP7bs3yOg190="
+                            }
+                        ],
+                        "role": "model"
+                    },
+                    "finishReason": "STOP",
+                    "index": 0,
+                    "groundingMetadata": {
+                        "searchEntryPoint": {
+                            "renderedContent": "<style>\n.container {\n  align-items: center;\n  border-radius: 8px;\n  display: flex;\n  font-family: Google Sans, Roboto, sans-serif;\n  font-size: 14px;\n  line-height: 20px;\n  padding: 8px 12px;\n}\n.chip {\n  display: inline-block;\n  border: solid 1px;\n  border-radius: 16px;\n  min-width: 14px;\n  padding: 5px 16px;\n  text-align: center;\n  user-select: none;\n  margin: 0 8px;\n  -webkit-tap-highlight-color: transparent;\n}\n.carousel {\n  overflow: auto;\n  scrollbar-width: none;\n  white-space: nowrap;\n  margin-right: -12px;\n}\n.headline {\n  display: flex;\n  margin-right: 4px;\n}\n.gradient-container {\n  position: relative;\n}\n.gradient {\n  position: absolute;\n  transform: translate(3px, -9px);\n  height: 36px;\n  width: 9px;\n}\n@media (prefers-color-scheme: light) {\n  .container {\n    background-color: #fafafa;\n    box-shadow: 0 0 0 1px #0000000f;\n  }\n  .headline-label {\n    color: #1f1f1f;\n  }\n  .chip {\n    background-color: #ffffff;\n    border-color: #d2d2d2;\n    color: #5e5e5e;\n    text-decoration: none;\n  }\n  .chip:hover {\n    background-color: #f2f2f2;\n  }\n  .chip:focus {\n    background-color: #f2f2f2;\n  }\n  .chip:active {\n    background-color: #d8d8d8;\n    border-color: #b6b6b6;\n  }\n  .logo-dark {\n    display: none;\n  }\n  .gradient {\n    background: linear-gradient(90deg, #fafafa 15%, #fafafa00 100%);\n  }\n}\n@media (prefers-color-scheme: dark) {\n  .container {\n    background-color: #1f1f1f;\n    box-shadow: 0 0 0 1px #ffffff26;\n  }\n  .headline-label {\n    color: #fff;\n  }\n  .chip {\n    background-color: #2c2c2c;\n    border-color: #3c4043;\n    color: #fff;\n    text-decoration: none;\n  }\n  .chip:hover {\n    background-color: #353536;\n  }\n  .chip:focus {\n    background-color: #353536;\n  }\n  .chip:active {\n    background-color: #464849;\n    border-color: #53575b;\n  }\n  .logo-light {\n    display: none;\n  }\n  .gradient {\n    background: linear-gradient(90deg, #1f1f1f 15%, #1f1f1f00 100%);\n  }\n}\n</style>\n<div class=\"container\">\n  <div class=\"headline\">\n    <svg class=\"logo-light\" width=\"18\" height=\"18\" viewBox=\"9 9 35 35\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n      <path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M42.8622 27.0064C42.8622 25.7839 42.7525 24.6084 42.5487 23.4799H26.3109V30.1568H35.5897C35.1821 32.3041 33.9596 34.1222 32.1258 35.3448V39.6864H37.7213C40.9814 36.677 42.8622 32.2571 42.8622 27.0064V27.0064Z\" fill=\"#4285F4\"/>\n      <path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M26.3109 43.8555C30.9659 43.8555 34.8687 42.3195 37.7213 39.6863L32.1258 35.3447C30.5898 36.3792 28.6306 37.0061 26.3109 37.0061C21.8282 37.0061 18.0195 33.9811 16.6559 29.906H10.9194V34.3573C13.7563 39.9841 19.5712 43.8555 26.3109 43.8555V43.8555Z\" fill=\"#34A853\"/>\n      <path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M16.6559 29.8904C16.3111 28.8559 16.1074 27.7588 16.1074 26.6146C16.1074 25.4704 16.3111 24.3733 16.6559 23.3388V18.8875H10.9194C9.74388 21.2072 9.06992 23.8247 9.06992 26.6146C9.06992 29.4045 9.74388 32.022 10.9194 34.3417L15.3864 30.8621L16.6559 29.8904V29.8904Z\" fill=\"#FBBC05\"/>\n      <path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M26.3109 16.2386C28.85 16.2386 31.107 17.1164 32.9095 18.8091L37.8466 13.8719C34.853 11.082 30.9659 9.3736 26.3109 9.3736C19.5712 9.3736 13.7563 13.245 10.9194 18.8875L16.6559 23.3388C18.0195 19.2636 21.8282 16.2386 26.3109 16.2386V16.2386Z\" fill=\"#EA4335\"/>\n    </svg>\n    <svg class=\"logo-dark\" width=\"18\" height=\"18\" viewBox=\"0 0 48 48\" xmlns=\"http://www.w3.org/2000/svg\">\n      <circle cx=\"24\" cy=\"23\" fill=\"#FFF\" r=\"22\"/>\n      <path d=\"M33.76 34.26c2.75-2.56 4.49-6.37 4.49-11.26 0-.89-.08-1.84-.29-3H24.01v5.99h8.03c-.4 2.02-1.5 3.56-3.07 4.56v.75l3.91 2.97h.88z\" fill=\"#4285F4\"/>\n      <path d=\"M15.58 25.77A8.845 8.845 0 0 0 24 31.86c1.92 0 3.62-.46 4.97-1.31l4.79 3.71C31.14 36.7 27.65 38 24 38c-5.93 0-11.01-3.4-13.45-8.36l.17-1.01 4.06-2.85h.8z\" fill=\"#34A853\"/>\n      <path d=\"M15.59 20.21a8.864 8.864 0 0 0 0 5.58l-5.03 3.86c-.98-2-1.53-4.25-1.53-6.64 0-2.39.55-4.64 1.53-6.64l1-.22 3.81 2.98.22 1.08z\" fill=\"#FBBC05\"/>\n      <path d=\"M24 14.14c2.11 0 4.02.75 5.52 1.98l4.36-4.36C31.22 9.43 27.81 8 24 8c-5.93 0-11.01 3.4-13.45 8.36l5.03 3.85A8.86 8.86 0 0 1 24 14.14z\" fill=\"#EA4335\"/>\n    </svg>\n    <div class=\"gradient-container\"><div class=\"gradient\"></div></div>\n  </div>\n  <div class=\"carousel\">\n<a class=\"chip\" href=\"https://www.google.com/search?q=Federico+Marcaccini&client=app-vertex-grounding&safesearch=active\">Federico Marcaccini</a>\n  </div>\n</div>"
+                        },
+                        "groundingChunks": [
+                            {
+                                "web": {
+                                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE5F8rd7CrfP-pdT45yDiSQwinFwMaiwn7HrEFsweu63RIOee7EHDi5FhRdfir0S4xCXBt2vmxzJDyxvRAWBzQtjIlCTcSv_R5bdg_MVylQ1PLmr54mvNh8",
+                                    "title": "federicomarcaccini.it"
+                                }
+                            },
+                            {
+                                "web": {
+                                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUjwl4u1vMhdD7ouCXFS8Ygz4pzyAmsJMcHY9RrLJV0IsoOJf5wilbSyMfBUGlrgvFPNFAUWBGHGm-KYXfcDdY7HFP_2oYOfIx8x3_wac-NRyPi95X-sfOSirElIgqZdHq",
+                                    "title": "federicomarcaccini.it"
+                                }
+                            },
+                            {
+                                "web": {
+                                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHXPTjqS0dJF_Nh_JSQGrxDTbzDQjkbc-sn0x4aIcUnx2TWtdT_UK5w-hRBYJV2Eyv70k4Yyba3OFPqY58MGOIdYDAi71K9aFBhOuvg4fFbOhltvZlwztp98IwrDWI=",
+                                    "title": "federicomarcaccini.it"
+                                }
+                            },
+                            {
+                                "web": {
+                                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHG2m9sL-yhux7k0S8itBNFoiVuVZBDVrlt6WDrZoav37a61IFhYhbHA8hBt38lQWOYnOQSr56iQbtfcQ0dTG_P8rVOjiTq01KLryO3t-77l0-Wx5P2eVNYRaYEhu-wesaCscjJY_wBiZg6cGpUBrVfwuM9KSAEuwMp7p_VABWCo_y--IBXTqKY_SaFC-NIf1_eqpT9JX-YYS40pPvssNwAq_QGl0ZVxBK_JAGSqHR7ntaAhas=",
+                                    "title": "primadituttomilano.it"
+                                }
+                            },
+                            {
+                                "web": {
+                                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGdneigaAhdbw8z-92sGcHiIawIN7jfv4le77B-aoThPzhsfEXJomsGLi88HI84YmzI5O-8Oz2Sr9_Rzn5ABASi0PO87M7GMkvQzMzSkoj1ztRiS0MXcHDjLc29e169vQi6X5mCeoCLo_QU5cwKfhSwurHdmlOhMiBfATGIkPztQ4MVSFWyGyqLeb1V3x5HX7fOojZN",
+                                    "title": "sharingschool.it"
+                                }
+                            },
+                            {
+                                "web": {
+                                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEQHPyMYK-6PmcBBwV8xHiz28UgB7vxZOs_0CxC5v6Cm0qxtKizycZ9lOuJnnhVZRDibDRBobjKsylElzzpdSfqu-SwRF7ON7BmOI9rhDxfFeAhfJXZb1epz48EDYzYio1Yc-k0sGXNaTEVuicnkTmeQQMx4AeYNKJjtyAv-u0OTfYX-9T8AAJVtkIB7YQ8Aj3_rTxSt0I71n1ypS0s5acLSNLwi3OL_rI2O-M-nQbu6XrE4ccJw-07AG-a4Wilz-_fvM1v0DZMJq8ltg_zsLorU6UXCWJQCjlh5Z5Kn1WlX4VBnQT7RRs=",
+                                    "title": "italiaoggi.it"
+                                }
+                            },
+                            {
+                                "web": {
+                                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHy86yPgyRQoimpc9-oysDVRfzvZTF-Zrqe3CwPeEPCUX-p0v0qiOBi-pE3Acdx4IrjJrh5mL9jIH6r-tQ00hUZduEfZfPY8rHXtxhALEeWyFl6MaI0-qGsT7-JQ0lf9Z_nZL0T17Bo14qoRpJydho1F0bCdMU4xtNmxua8wGUDoefGOjWhlOSw8AhA4hGpjKM8qNkz5BEneNZyVdsBpH4u9GDI4koMBxU1KnUao7JZNw1xlmG2huePKkwdx-HPS7rqcOBRmzc=",
+                                    "title": "buonasera24.it"
+                                }
+                            }
+                        ],
+                        "groundingSupports": [
+                            {
+                                "segment": {
+                                    "endIndex": 144,
+                                    "text": "**Federico Marcaccini** è un imprenditore italiano e **Real Estate Developer**, attivo in particolare sul mercato di Roma e a livello nazionale"
+                                },
+                                "groundingChunkIndices": [
+                                    0,
+                                    1
+                                ]
+                            },
+                            {
+                                "segment": {
+                                    "startIndex": 198,
+                                    "endIndex": 368,
+                                    "text": "* **Settore di attività:** Si occupa di sviluppo immobiliare, consulenza strategica, analisi di mercato e gestione/ottimizzazione di investimenti e patrimoni immobiliari"
+                                },
+                                "groundingChunkIndices": [
+                                    0,
+                                    1
+                                ]
+                            },
+                            {
+                                "segment": {
+                                    "startIndex": 370,
+                                    "endIndex": 625,
+                                    "text": "* **Aree di competenza:** La sua attività e i suoi interventi di analisi riguardano principalmente gli immobili commerciali e industriali (logistica, poli produttivi), il segmento residenziale di lusso e i processi di riqualificazione energetica e urbana"
+                                },
+                                "groundingChunkIndices": [
+                                    2,
+                                    3,
+                                    4
+                                ]
+                            },
+                            {
+                                "segment": {
+                                    "startIndex": 627,
+                                    "endIndex": 942,
+                                    "text": "* **Commentatore ed esperto di mercato:** Interviene spesso con analisi e contributi su testate e canali di settore, commentando l'impatto di nuove normative urbanistiche (come le varianti al Piano Regolatore Generale di Roma), trend degli investimenti istituzionali e dinamiche della sostenibilità nel real estate"
+                                },
+                                "groundingChunkIndices": [
+                                    2,
+                                    5,
+                                    6
+                                ]
+                            }
+                        ],
+                        "webSearchQueries": [
+                            "Federico Marcaccini"
+                        ]
+                    }
+                }
+            ],
+            "usageMetadata": {
+                "promptTokenCount": 75,
+                "candidatesTokenCount": 268,
+                "totalTokenCount": 540,
+                "promptTokensDetails": [
+                    {
+                        "modality": "TEXT",
+                        "tokenCount": 75
+                    }
+                ],
+                "thoughtsTokenCount": 197,
+                "serviceTier": "standard"
+            },
+            "modelVersion": "gemini-3.8-flash",
+            "responseId": "xtjDapHWNbywnsEPyIuZSA"
+        }
+    },
+    {
+        "summary": {
+            "prompt": {
+                "cluster": "rep",
+                "lang": "it",
+                "text": "Federico Marcaccini imprenditore immobiliare: è affidabile? Ci sono recensioni o problemi?"
+            },
+            "mode": "generate",
+            "http": 200,
+            "curl_error": null,
+            "latency_ms": 12246,
+            "model_used": "gemini-3.8-flash",
+            "tokens_in": 206,
+            "tokens_out": 611,
+            "tokens_tool_use": null,
+            "queries": [
+                "\"Federico Marcaccini\" fallimento OR tribunale OR inchiesta",
+                "Federico Marcaccini chi e",
+                "Federico Marcaccini immobiliare",
+                "\"Federico Marcaccini\" truffa",
+                "\"Federico Marcaccini\" opinioni OR recensioni OR controversie"
+            ],
+            "grounding_chunks": [
+                {
+                    "idx": 0,
+                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEh6XpgHXEJ3rIrAy41gw9Ct5M3lg5Z3r8wsDubtytAlQRm85Jxfoj_KUXQ08PpWOQWVMayV_J_dkG3lILuANHji8O-8XlLugIIeY9U-xi0JeEjFN_dIw2ttBGpx6p_hDo=",
+                    "title": "federicomarcaccini.it",
+                    "domain": null,
+                    "resolved": "https://www.federicomarcaccini.it/chi-sono/"
+                },
+                {
+                    "idx": 1,
+                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEyGutFFlaWAtqvy7shT90DdBnKlMqzIqIWd4eHs3eOPWVkiNEfYty_YD4XwhpONdh2Ykd6P03Ih3lXomGELAKIqgsbkvL-b8BGaQ0cVGJZpUplQvttrOu0A9tcaeMQYkCKzqSUXBsfpdgtVX7EjYtoDrp6rJyMb69eV_vCJIuABDWWTnzVcsslwc0-LLVd_rwxeNykNHN01yepILfo7U18HBgduNoh_6o9F-LFtzhIS5vksjMySy927Io=",
+                    "title": "roma24.net",
+                    "domain": null,
+                    "resolved": "https://roma24.net/federico-marcaccini-come-cambia-il-mercato-del-lusso-immobiliare-tra-riconversioni-e-nuovi-modelli-di-ospitalita/"
+                },
+                {
+                    "idx": 2,
+                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEPs8re12Brq1c62W8Lb0PZfUFoHMCmJHUVWMIWS6_nsen4oEcxws7LFzu0qCa3VstfNri0ifz3w9ejbOWRjH_L7s-x7aowOL9PLUZVu_WU6WxcbdsyEtY_zaNwsAtV-b3F8vQB5L2h0DbjtEfsXqd7x9xIrgy63G_KfBBMyy4So3DQahd00yZZGBUMZvXwjTbeCEshrgdRs_W6O13FWDlXa3D8Cc_Gj8c0_EhDWER0DdwIqKUUe8Qv2hZoRzMMygZz5G67sE_IrxgpGTrD6ph5",
+                    "title": "lamiafinanza.it",
+                    "domain": null,
+                    "resolved": "https://www.lamiafinanza.it/2025/04/criptovalute-le-truffe-romantiche-aumentate-del-40-grazie-allai-cinque-consigli-utili-per-evitare-le-frodi-piu-comuni/"
+                },
+                {
+                    "idx": 3,
+                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFG5TAnD8_rgzgUhPd6UydyEcg-j2ayyKRTJB1-ZCY-2QMAXNVpxkEBNpqYVC1lfbgUSQrpv9BEXNSZtmupmyExjPuzw6Ola4jucy-AJE6SfwC-8uYqPitNUH6vUPv0Mkf4yv49CeRCjppBrfUyi0en9U5wcd4=",
+                    "title": "lamiafinanza.it",
+                    "domain": null,
+                    "resolved": "https://www.lamiafinanza.it/news/page/69/?start=30%3Fnoframe%3D0"
+                },
+                {
+                    "idx": 4,
+                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF1ph1m8oiF_yQaqaGVhoOm_OvzSmKaBmMwsXgeUrUGbfxAyX1as20msKji3Cw20K1twn_mGuR1sWQw2jYRQVY3bQMgTz_bSw6xGbxcpVZJJdQgvVHaEAmAiV5MRVdY_FmdeVMMQZgCFBNx4uCG-zwI2KnbSdZJ7eThkoTrkHUK32PDZn7WaDkmYwH77M8x9DNhzDxZ5lU9Qor9UE1CacB-aPWBZ77jtV7Qre_pIldwXC-0omxsqD9IaTYtEV_76HrDe32raAX7ZEBFmRnG0ihL_Aq0hh7ZHi3TuHV5Ra9rCHw-8r6g8A==",
+                    "title": "italiaoggi.it",
+                    "domain": null,
+                    "resolved": "https://www.italiaoggi.it/native-content/nuove-nta-del-prg-di-roma-come-cambia-il-calcolo-di-convenienza-degli-investimenti-immobiliari-lanalisi-di-federico-marcaccini-dasj1hmf"
+                },
+                {
+                    "idx": 5,
+                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGU9YL1znf8EI9rlPn51MHVMCDj0hkUpTonjB2fA0EQt8iucSBPq2AnkHEcFoKpJwa55YMwl6C0HWo7oQ6oMvAzgQK_pFr2l3qnwVB0OMtfRa0ptb95YfkW-HSXPUEKwj0S3nb4oVFSX1yQkuuOlpWKJkn2LYIZuwQgwaHkgzOj_tpmd3g6Nn9zJY6qJgOvKwykpB7exqhsGN5pr2nTOsW4si5JB9pM7oHjecWcjf_GDoGUp5e2wF1yBREhz2r9ADGj",
+                    "title": "politicamentecorretto.com",
+                    "domain": null,
+                    "resolved": "https://www.politicamentecorretto.com/2024/04/18/rivoluzione-immobiliare-a-roma-federico-marcaccini-svela-il-boom-di-capannoni-e-magazzini/"
+                },
+                {
+                    "idx": 6,
+                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEj8rr-e4ruwWcAa3NIBzVy8PQPQ0SKHJHgI-nd-_YAq-mtihkj-fTPhjMQsWyk-CzTNTiJTPpD68jt0BwisJ1_iH4J5GN1q2Ltoaxmgxk-WuPDuUsWkClSEFC0fsbeBIpn3xUVIGue8jUcwTyenGxctkY_I2vdFbzudqejpm6q6Tf7zWGxs7jewPT4Wn8ki9mdvA9qmpSnvG1PAMH9B5lKLLP06ZW7gTDhsE1hd1egMUmhCZV3xOVXlcrmP96o241REaXYk4Ie9YA=",
+                    "title": "milanofinanza.it",
+                    "domain": null,
+                    "resolved": "https://www.milanofinanza.it/news/hotel-di-lusso-riconversioni-e-sviluppo-perche-l-alberghiero-e-il-nuovo-motore-del-real-estate-202607241509523998"
+                },
+                {
+                    "idx": 7,
+                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQECSM4HnpIW5ImloEkdvU06BP2BXzW_eDnwBLCLD-eKvmon9NotIrl-H7Z-nbjDEs5ceJHMPFqWDg9mA10QzbBiaky99Y6tFhAROQPTTc0lyxneRWK58_YVhWFW1Q==",
+                    "title": "federicomarcaccini.it",
+                    "domain": null,
+                    "resolved": "https://www.federicomarcaccini.it/blog/"
+                },
+                {
+                    "idx": 8,
+                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEt3oT9s7U6AzvD5XCxqCEGe4DNUTOGwpmIIY_LIp6cWdrlzdatLuLkFsM6zkQdAf5d-yyZ7hqkUY-LcMRSMw1stDZ8W5xIxXb0eAee8QtNc7Ol3w3vjH4=",
+                    "title": "federicomarcaccini.it",
+                    "domain": null,
+                    "resolved": "https://www.federicomarcaccini.it/"
+                }
+            ],
+            "citations": [
+                {
+                    "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEh6XpgHXEJ3rIrAy41gw9Ct5M3lg5Z3r8wsDubtytAlQRm85Jxfoj_KUXQ08PpWOQWVMayV_J_dkG3lILuANHji8O-8XlLugIIeY9U-xi0JeEjFN_dIw2ttBGpx6p_hDo=",
+                    "title": "federicomarcaccini.it",
+                    "domain": null,
+                    "resolved": "https://www.federicomarcaccini.it/chi-sono/"
+                },
+                {
+                    "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEyGutFFlaWAtqvy7shT90DdBnKlMqzIqIWd4eHs3eOPWVkiNEfYty_YD4XwhpONdh2Ykd6P03Ih3lXomGELAKIqgsbkvL-b8BGaQ0cVGJZpUplQvttrOu0A9tcaeMQYkCKzqSUXBsfpdgtVX7EjYtoDrp6rJyMb69eV_vCJIuABDWWTnzVcsslwc0-LLVd_rwxeNykNHN01yepILfo7U18HBgduNoh_6o9F-LFtzhIS5vksjMySy927Io=",
+                    "title": "roma24.net",
+                    "domain": null,
+                    "resolved": "https://roma24.net/federico-marcaccini-come-cambia-il-mercato-del-lusso-immobiliare-tra-riconversioni-e-nuovi-modelli-di-ospitalita/"
+                },
+                {
+                    "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEPs8re12Brq1c62W8Lb0PZfUFoHMCmJHUVWMIWS6_nsen4oEcxws7LFzu0qCa3VstfNri0ifz3w9ejbOWRjH_L7s-x7aowOL9PLUZVu_WU6WxcbdsyEtY_zaNwsAtV-b3F8vQB5L2h0DbjtEfsXqd7x9xIrgy63G_KfBBMyy4So3DQahd00yZZGBUMZvXwjTbeCEshrgdRs_W6O13FWDlXa3D8Cc_Gj8c0_EhDWER0DdwIqKUUe8Qv2hZoRzMMygZz5G67sE_IrxgpGTrD6ph5",
+                    "title": "lamiafinanza.it",
+                    "domain": null,
+                    "resolved": "https://www.lamiafinanza.it/2025/04/criptovalute-le-truffe-romantiche-aumentate-del-40-grazie-allai-cinque-consigli-utili-per-evitare-le-frodi-piu-comuni/"
+                },
+                {
+                    "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFG5TAnD8_rgzgUhPd6UydyEcg-j2ayyKRTJB1-ZCY-2QMAXNVpxkEBNpqYVC1lfbgUSQrpv9BEXNSZtmupmyExjPuzw6Ola4jucy-AJE6SfwC-8uYqPitNUH6vUPv0Mkf4yv49CeRCjppBrfUyi0en9U5wcd4=",
+                    "title": "lamiafinanza.it",
+                    "domain": null,
+                    "resolved": "https://www.lamiafinanza.it/news/page/69/?start=30%3Fnoframe%3D0"
+                },
+                {
+                    "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF1ph1m8oiF_yQaqaGVhoOm_OvzSmKaBmMwsXgeUrUGbfxAyX1as20msKji3Cw20K1twn_mGuR1sWQw2jYRQVY3bQMgTz_bSw6xGbxcpVZJJdQgvVHaEAmAiV5MRVdY_FmdeVMMQZgCFBNx4uCG-zwI2KnbSdZJ7eThkoTrkHUK32PDZn7WaDkmYwH77M8x9DNhzDxZ5lU9Qor9UE1CacB-aPWBZ77jtV7Qre_pIldwXC-0omxsqD9IaTYtEV_76HrDe32raAX7ZEBFmRnG0ihL_Aq0hh7ZHi3TuHV5Ra9rCHw-8r6g8A==",
+                    "title": "italiaoggi.it",
+                    "domain": null,
+                    "resolved": "https://www.italiaoggi.it/native-content/nuove-nta-del-prg-di-roma-come-cambia-il-calcolo-di-convenienza-degli-investimenti-immobiliari-lanalisi-di-federico-marcaccini-dasj1hmf"
+                },
+                {
+                    "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGU9YL1znf8EI9rlPn51MHVMCDj0hkUpTonjB2fA0EQt8iucSBPq2AnkHEcFoKpJwa55YMwl6C0HWo7oQ6oMvAzgQK_pFr2l3qnwVB0OMtfRa0ptb95YfkW-HSXPUEKwj0S3nb4oVFSX1yQkuuOlpWKJkn2LYIZuwQgwaHkgzOj_tpmd3g6Nn9zJY6qJgOvKwykpB7exqhsGN5pr2nTOsW4si5JB9pM7oHjecWcjf_GDoGUp5e2wF1yBREhz2r9ADGj",
+                    "title": "politicamentecorretto.com",
+                    "domain": null,
+                    "resolved": "https://www.politicamentecorretto.com/2024/04/18/rivoluzione-immobiliare-a-roma-federico-marcaccini-svela-il-boom-di-capannoni-e-magazzini/"
+                },
+                {
+                    "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEj8rr-e4ruwWcAa3NIBzVy8PQPQ0SKHJHgI-nd-_YAq-mtihkj-fTPhjMQsWyk-CzTNTiJTPpD68jt0BwisJ1_iH4J5GN1q2Ltoaxmgxk-WuPDuUsWkClSEFC0fsbeBIpn3xUVIGue8jUcwTyenGxctkY_I2vdFbzudqejpm6q6Tf7zWGxs7jewPT4Wn8ki9mdvA9qmpSnvG1PAMH9B5lKLLP06ZW7gTDhsE1hd1egMUmhCZV3xOVXlcrmP96o241REaXYk4Ie9YA=",
+                    "title": "milanofinanza.it",
+                    "domain": null,
+                    "resolved": "https://www.milanofinanza.it/news/hotel-di-lusso-riconversioni-e-sviluppo-perche-l-alberghiero-e-il-nuovo-motore-del-real-estate-202607241509523998"
+                },
+                {
+                    "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQECSM4HnpIW5ImloEkdvU06BP2BXzW_eDnwBLCLD-eKvmon9NotIrl-H7Z-nbjDEs5ceJHMPFqWDg9mA10QzbBiaky99Y6tFhAROQPTTc0lyxneRWK58_YVhWFW1Q==",
+                    "title": "federicomarcaccini.it",
+                    "domain": null,
+                    "resolved": "https://www.federicomarcaccini.it/blog/"
+                },
+                {
+                    "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEt3oT9s7U6AzvD5XCxqCEGe4DNUTOGwpmIIY_LIp6cWdrlzdatLuLkFsM6zkQdAf5d-yyZ7hqkUY-LcMRSMw1stDZ8W5xIxXb0eAee8QtNc7Ol3w3vjH4=",
+                    "title": "federicomarcaccini.it",
+                    "domain": null,
+                    "resolved": "https://www.federicomarcaccini.it/"
+                }
+            ],
+            "text": "**Federico Marcaccini** è un imprenditore romano e analista/developer immobiliare (*Real Estate Developer*), attivo nell'ambito degli investimenti, della consulenza strategica, della rigenerazione urbana e dell'hospitality di fascia alta.\n\n### 1. Affidabilità e assenza di problemi noti\n* **Nessuna truffa o contenzioso pubblico rilevato:** Dai registri di cronaca, archivi giudiziari e fonti aperte non risultano truffe, scandali, condanne o procedimenti per frode a suo carico. (Le saltuarie corrispondenze online tra il suo nome e termini come \"truffa\" o \"tribunale\" sono dovute alla presenza di suoi articoli di analisi immobiliare nei feed o nei menu laterali di testate economico-finanziarie che trattano anche notizie di cronaca o finanza).\n* **Presenza mediatica:** Interviene con frequenza su testate locali, blog di settore e magazine economico-finanziari commentando i trend del mercato (ad esempio il PRG di Roma, la logistica commerciale, il segmento lusso e i criteri ESG).\n\n### 2. Recensioni online\n* **Assenza di recensioni retail:** Marcaccini non gestisce un'agenzia immobiliare tradizionale al dettaglio per privati, ma opera principalmente nel segmento corporate/B2B e nello sviluppo immobiliare. Di conseguenza, **non esistono recensioni su piattaforme consumer** (come Trustpilot o recensioni Google con stelline).\n* **Posizionamento professionale:** Gran parte del materiale consultabile online sul suo conto è costituito da comunicati stampa, interviste, contenuti editoriali e articoli pubblicati sul suo sito personale (`federicomarcaccini.it`).\n\n---\n\n### Cosa verificare prima di una collaborazione\nSe la valutazione riguarda una proposta d'investimento, una consulenza o una trattativa d'affari:\n1. **Ragione sociale e visura:** Verificare la società (Srl, SpA o veicolo di investimento) attraverso cui opera ed effettuare una normale visura camerale (per controllare bilanci, compagine societaria ed eventuali protesti o pregiudizievoli).\n2. **Track record:** Richiedere dettagli concreti sulle operazioni immobiliari o di sviluppo già concluse (portfolio e referenze verificabili).\n3. **Tutela contrattuale:** Definire ogni accordo con contratti chiari e con l'assistenza di un proprio consulente legale/tecnico di fiducia.",
+            "error": null
+        },
+        "raw": {
+            "candidates": [
+                {
+                    "content": {
+                        "parts": [
+                            {
+                                "text": "**Federico Marcaccini** è un imprenditore romano e analista/developer immobiliare (*Real Estate Developer*), attivo nell'ambito degli investimenti, della consulenza strategica, della rigenerazione urbana e dell'hospitality di fascia alta.\n\n### 1. Affidabilità e assenza di problemi noti\n* **Nessuna truffa o contenzioso pubblico rilevato:** Dai registri di cronaca, archivi giudiziari e fonti aperte non risultano truffe, scandali, condanne o procedimenti per frode a suo carico. (Le saltuarie corrispondenze online tra il suo nome e termini come \"truffa\" o \"tribunale\" sono dovute alla presenza di suoi articoli di analisi immobiliare nei feed o nei menu laterali di testate economico-finanziarie che trattano anche notizie di cronaca o finanza).\n* **Presenza mediatica:** Interviene con frequenza su testate locali, blog di settore e magazine economico-finanziari commentando i trend del mercato (ad esempio il PRG di Roma, la logistica commerciale, il segmento lusso e i criteri ESG).\n\n### 2. Recensioni online\n* **Assenza di recensioni retail:** Marcaccini non gestisce un'agenzia immobiliare tradizionale al dettaglio per privati, ma opera principalmente nel segmento corporate/B2B e nello sviluppo immobiliare. Di conseguenza, **non esistono recensioni su piattaforme consumer** (come Trustpilot o recensioni Google con stelline).\n* **Posizionamento professionale:** Gran parte del materiale consultabile online sul suo conto è costituito da comunicati stampa, interviste, contenuti editoriali e articoli pubblicati sul suo sito personale (`federicomarcaccini.it`).\n\n---\n\n### Cosa verificare prima di una collaborazione\nSe la valutazione riguarda una proposta d'investimento, una consulenza o una trattativa d'affari:\n1. **Ragione sociale e visura:** Verificare la società (Srl, SpA o veicolo di investimento) attraverso cui opera ed effettuare una normale visura camerale (per controllare bilanci, compagine societaria ed eventuali protesti o pregiudizievoli).\n2. **Track record:** Richiedere dettagli concreti sulle operazioni immobiliari o di sviluppo già concluse (portfolio e referenze verificabili).\n3. **Tutela contrattuale:** Definire ogni accordo con contratti chiari e con l'assistenza di un proprio consulente legale/tecnico di fiducia.",
+                                "thoughtSignature": "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"
+                            }
+                        ],
+                        "role": "model"
+                    },
+                    "finishReason": "STOP",
+                    "index": 0,
+                    "groundingMetadata": {
+                        "searchEntryPoint": {
+                            "renderedContent": "<style>\n.container {\n  align-items: center;\n  border-radius: 8px;\n  display: flex;\n  font-family: Google Sans, Roboto, sans-serif;\n  font-size: 14px;\n  line-height: 20px;\n  padding: 8px 12px;\n}\n.chip {\n  display: inline-block;\n  border: solid 1px;\n  border-radius: 16px;\n  min-width: 14px;\n  padding: 5px 16px;\n  text-align: center;\n  user-select: none;\n  margin: 0 8px;\n  -webkit-tap-highlight-color: transparent;\n}\n.carousel {\n  overflow: auto;\n  scrollbar-width: none;\n  white-space: nowrap;\n  margin-right: -12px;\n}\n.headline {\n  display: flex;\n  margin-right: 4px;\n}\n.gradient-container {\n  position: relative;\n}\n.gradient {\n  position: absolute;\n  transform: translate(3px, -9px);\n  height: 36px;\n  width: 9px;\n}\n@media (prefers-color-scheme: light) {\n  .container {\n    background-color: #fafafa;\n    box-shadow: 0 0 0 1px #0000000f;\n  }\n  .headline-label {\n    color: #1f1f1f;\n  }\n  .chip {\n    background-color: #ffffff;\n    border-color: #d2d2d2;\n    color: #5e5e5e;\n    text-decoration: none;\n  }\n  .chip:hover {\n    background-color: #f2f2f2;\n  }\n  .chip:focus {\n    background-color: #f2f2f2;\n  }\n  .chip:active {\n    background-color: #d8d8d8;\n    border-color: #b6b6b6;\n  }\n  .logo-dark {\n    display: none;\n  }\n  .gradient {\n    background: linear-gradient(90deg, #fafafa 15%, #fafafa00 100%);\n  }\n}\n@media (prefers-color-scheme: dark) {\n  .container {\n    background-color: #1f1f1f;\n    box-shadow: 0 0 0 1px #ffffff26;\n  }\n  .headline-label {\n    color: #fff;\n  }\n  .chip {\n    background-color: #2c2c2c;\n    border-color: #3c4043;\n    color: #fff;\n    text-decoration: none;\n  }\n  .chip:hover {\n    background-color: #353536;\n  }\n  .chip:focus {\n    background-color: #353536;\n  }\n  .chip:active {\n    background-color: #464849;\n    border-color: #53575b;\n  }\n  .logo-light {\n    display: none;\n  }\n  .gradient {\n    background: linear-gradient(90deg, #1f1f1f 15%, #1f1f1f00 100%);\n  }\n}\n</style>\n<div class=\"container\">\n  <div class=\"headline\">\n    <svg class=\"logo-light\" width=\"18\" height=\"18\" viewBox=\"9 9 35 35\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n      <path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M42.8622 27.0064C42.8622 25.7839 42.7525 24.6084 42.5487 23.4799H26.3109V30.1568H35.5897C35.1821 32.3041 33.9596 34.1222 32.1258 35.3448V39.6864H37.7213C40.9814 36.677 42.8622 32.2571 42.8622 27.0064V27.0064Z\" fill=\"#4285F4\"/>\n      <path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M26.3109 43.8555C30.9659 43.8555 34.8687 42.3195 37.7213 39.6863L32.1258 35.3447C30.5898 36.3792 28.6306 37.0061 26.3109 37.0061C21.8282 37.0061 18.0195 33.9811 16.6559 29.906H10.9194V34.3573C13.7563 39.9841 19.5712 43.8555 26.3109 43.8555V43.8555Z\" fill=\"#34A853\"/>\n      <path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M16.6559 29.8904C16.3111 28.8559 16.1074 27.7588 16.1074 26.6146C16.1074 25.4704 16.3111 24.3733 16.6559 23.3388V18.8875H10.9194C9.74388 21.2072 9.06992 23.8247 9.06992 26.6146C9.06992 29.4045 9.74388 32.022 10.9194 34.3417L15.3864 30.8621L16.6559 29.8904V29.8904Z\" fill=\"#FBBC05\"/>\n      <path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M26.3109 16.2386C28.85 16.2386 31.107 17.1164 32.9095 18.8091L37.8466 13.8719C34.853 11.082 30.9659 9.3736 26.3109 9.3736C19.5712 9.3736 13.7563 13.245 10.9194 18.8875L16.6559 23.3388C18.0195 19.2636 21.8282 16.2386 26.3109 16.2386V16.2386Z\" fill=\"#EA4335\"/>\n    </svg>\n    <svg class=\"logo-dark\" width=\"18\" height=\"18\" viewBox=\"0 0 48 48\" xmlns=\"http://www.w3.org/2000/svg\">\n      <circle cx=\"24\" cy=\"23\" fill=\"#FFF\" r=\"22\"/>\n      <path d=\"M33.76 34.26c2.75-2.56 4.49-6.37 4.49-11.26 0-.89-.08-1.84-.29-3H24.01v5.99h8.03c-.4 2.02-1.5 3.56-3.07 4.56v.75l3.91 2.97h.88z\" fill=\"#4285F4\"/>\n      <path d=\"M15.58 25.77A8.845 8.845 0 0 0 24 31.86c1.92 0 3.62-.46 4.97-1.31l4.79 3.71C31.14 36.7 27.65 38 24 38c-5.93 0-11.01-3.4-13.45-8.36l.17-1.01 4.06-2.85h.8z\" fill=\"#34A853\"/>\n      <path d=\"M15.59 20.21a8.864 8.864 0 0 0 0 5.58l-5.03 3.86c-.98-2-1.53-4.25-1.53-6.64 0-2.39.55-4.64 1.53-6.64l1-.22 3.81 2.98.22 1.08z\" fill=\"#FBBC05\"/>\n      <path d=\"M24 14.14c2.11 0 4.02.75 5.52 1.98l4.36-4.36C31.22 9.43 27.81 8 24 8c-5.93 0-11.01 3.4-13.45 8.36l5.03 3.85A8.86 8.86 0 0 1 24 14.14z\" fill=\"#EA4335\"/>\n    </svg>\n    <div class=\"gradient-container\"><div class=\"gradient\"></div></div>\n  </div>\n  <div class=\"carousel\">\n<a class=\"chip\" href=\"https://www.google.com/search?q=%22Federico+Marcaccini%22+fallimento+OR+tribunale+OR+inchiesta&client=app-vertex-grounding&safesearch=active\">&quot;Federico Marcaccini&quot; fallimento OR tribunale OR inchiesta</a>\n<a class=\"chip\" href=\"https://www.google.com/search?q=Federico+Marcaccini+chi+e&client=app-vertex-grounding&safesearch=active\">Federico Marcaccini chi e</a>\n<a class=\"chip\" href=\"https://www.google.com/search?q=Federico+Marcaccini+immobiliare&client=app-vertex-grounding&safesearch=active\">Federico Marcaccini immobiliare</a>\n<a class=\"chip\" href=\"https://www.google.com/search?q=%22Federico+Marcaccini%22+truffa&client=app-vertex-grounding&safesearch=active\">&quot;Federico Marcaccini&quot; truffa</a>\n<a class=\"chip\" href=\"https://www.google.com/search?q=%22Federico+Marcaccini%22+opinioni+OR+recensioni+OR+controversie&client=app-vertex-grounding&safesearch=active\">&quot;Federico Marcaccini&quot; opinioni OR recensioni OR controversie</a>\n  </div>\n</div>"
+                        },
+                        "groundingChunks": [
+                            {
+                                "web": {
+                                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEh6XpgHXEJ3rIrAy41gw9Ct5M3lg5Z3r8wsDubtytAlQRm85Jxfoj_KUXQ08PpWOQWVMayV_J_dkG3lILuANHji8O-8XlLugIIeY9U-xi0JeEjFN_dIw2ttBGpx6p_hDo=",
+                                    "title": "federicomarcaccini.it"
+                                }
+                            },
+                            {
+                                "web": {
+                                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEyGutFFlaWAtqvy7shT90DdBnKlMqzIqIWd4eHs3eOPWVkiNEfYty_YD4XwhpONdh2Ykd6P03Ih3lXomGELAKIqgsbkvL-b8BGaQ0cVGJZpUplQvttrOu0A9tcaeMQYkCKzqSUXBsfpdgtVX7EjYtoDrp6rJyMb69eV_vCJIuABDWWTnzVcsslwc0-LLVd_rwxeNykNHN01yepILfo7U18HBgduNoh_6o9F-LFtzhIS5vksjMySy927Io=",
+                                    "title": "roma24.net"
+                                }
+                            },
+                            {
+                                "web": {
+                                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEPs8re12Brq1c62W8Lb0PZfUFoHMCmJHUVWMIWS6_nsen4oEcxws7LFzu0qCa3VstfNri0ifz3w9ejbOWRjH_L7s-x7aowOL9PLUZVu_WU6WxcbdsyEtY_zaNwsAtV-b3F8vQB5L2h0DbjtEfsXqd7x9xIrgy63G_KfBBMyy4So3DQahd00yZZGBUMZvXwjTbeCEshrgdRs_W6O13FWDlXa3D8Cc_Gj8c0_EhDWER0DdwIqKUUe8Qv2hZoRzMMygZz5G67sE_IrxgpGTrD6ph5",
+                                    "title": "lamiafinanza.it"
+                                }
+                            },
+                            {
+                                "web": {
+                                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFG5TAnD8_rgzgUhPd6UydyEcg-j2ayyKRTJB1-ZCY-2QMAXNVpxkEBNpqYVC1lfbgUSQrpv9BEXNSZtmupmyExjPuzw6Ola4jucy-AJE6SfwC-8uYqPitNUH6vUPv0Mkf4yv49CeRCjppBrfUyi0en9U5wcd4=",
+                                    "title": "lamiafinanza.it"
+                                }
+                            },
+                            {
+                                "web": {
+                                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF1ph1m8oiF_yQaqaGVhoOm_OvzSmKaBmMwsXgeUrUGbfxAyX1as20msKji3Cw20K1twn_mGuR1sWQw2jYRQVY3bQMgTz_bSw6xGbxcpVZJJdQgvVHaEAmAiV5MRVdY_FmdeVMMQZgCFBNx4uCG-zwI2KnbSdZJ7eThkoTrkHUK32PDZn7WaDkmYwH77M8x9DNhzDxZ5lU9Qor9UE1CacB-aPWBZ77jtV7Qre_pIldwXC-0omxsqD9IaTYtEV_76HrDe32raAX7ZEBFmRnG0ihL_Aq0hh7ZHi3TuHV5Ra9rCHw-8r6g8A==",
+                                    "title": "italiaoggi.it"
+                                }
+                            },
+                            {
+                                "web": {
+                                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGU9YL1znf8EI9rlPn51MHVMCDj0hkUpTonjB2fA0EQt8iucSBPq2AnkHEcFoKpJwa55YMwl6C0HWo7oQ6oMvAzgQK_pFr2l3qnwVB0OMtfRa0ptb95YfkW-HSXPUEKwj0S3nb4oVFSX1yQkuuOlpWKJkn2LYIZuwQgwaHkgzOj_tpmd3g6Nn9zJY6qJgOvKwykpB7exqhsGN5pr2nTOsW4si5JB9pM7oHjecWcjf_GDoGUp5e2wF1yBREhz2r9ADGj",
+                                    "title": "politicamentecorretto.com"
+                                }
+                            },
+                            {
+                                "web": {
+                                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEj8rr-e4ruwWcAa3NIBzVy8PQPQ0SKHJHgI-nd-_YAq-mtihkj-fTPhjMQsWyk-CzTNTiJTPpD68jt0BwisJ1_iH4J5GN1q2Ltoaxmgxk-WuPDuUsWkClSEFC0fsbeBIpn3xUVIGue8jUcwTyenGxctkY_I2vdFbzudqejpm6q6Tf7zWGxs7jewPT4Wn8ki9mdvA9qmpSnvG1PAMH9B5lKLLP06ZW7gTDhsE1hd1egMUmhCZV3xOVXlcrmP96o241REaXYk4Ie9YA=",
+                                    "title": "milanofinanza.it"
+                                }
+                            },
+                            {
+                                "web": {
+                                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQECSM4HnpIW5ImloEkdvU06BP2BXzW_eDnwBLCLD-eKvmon9NotIrl-H7Z-nbjDEs5ceJHMPFqWDg9mA10QzbBiaky99Y6tFhAROQPTTc0lyxneRWK58_YVhWFW1Q==",
+                                    "title": "federicomarcaccini.it"
+                                }
+                            },
+                            {
+                                "web": {
+                                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEt3oT9s7U6AzvD5XCxqCEGe4DNUTOGwpmIIY_LIp6cWdrlzdatLuLkFsM6zkQdAf5d-yyZ7hqkUY-LcMRSMw1stDZ8W5xIxXb0eAee8QtNc7Ol3w3vjH4=",
+                                    "title": "federicomarcaccini.it"
+                                }
+                            }
+                        ],
+                        "groundingSupports": [
+                            {
+                                "segment": {
+                                    "endIndex": 238,
+                                    "text": "**Federico Marcaccini** è un imprenditore romano e analista/developer immobiliare (*Real Estate Developer*), attivo nell'ambito degli investimenti, della consulenza strategica, della rigenerazione urbana e dell'hospitality di fascia alta"
+                                },
+                                "groundingChunkIndices": [
+                                    0,
+                                    1
+                                ]
+                            },
+                            {
+                                "segment": {
+                                    "startIndex": 482,
+                                    "endIndex": 747,
+                                    "text": "(Le saltuarie corrispondenze online tra il suo nome e termini come \"truffa\" o \"tribunale\" sono dovute alla presenza di suoi articoli di analisi immobiliare nei feed o nei menu laterali di testate economico-finanziarie che trattano anche notizie di cronaca o finanza"
+                                },
+                                "groundingChunkIndices": [
+                                    2,
+                                    3
+                                ]
+                            },
+                            {
+                                "segment": {
+                                    "startIndex": 750,
+                                    "endIndex": 988,
+                                    "text": "* **Presenza mediatica:** Interviene con frequenza su testate locali, blog di settore e magazine economico-finanziari commentando i trend del mercato (ad esempio il PRG di Roma, la logistica commerciale, il segmento lusso e i criteri ESG)"
+                                },
+                                "groundingChunkIndices": [
+                                    4,
+                                    5,
+                                    6
+                                ]
+                            },
+                            {
+                                "segment": {
+                                    "startIndex": 998,
+                                    "endIndex": 1217,
+                                    "text": "Recensioni online\n* **Assenza di recensioni retail:** Marcaccini non gestisce un'agenzia immobiliare tradizionale al dettaglio per privati, ma opera principalmente nel segmento corporate/B2B e nello sviluppo immobiliare"
+                                },
+                                "groundingChunkIndices": [
+                                    0,
+                                    7
+                                ]
+                            },
+                            {
+                                "segment": {
+                                    "startIndex": 1339,
+                                    "endIndex": 1573,
+                                    "text": "* **Posizionamento professionale:** Gran parte del materiale consultabile online sul suo conto è costituito da comunicati stampa, interviste, contenuti editoriali e articoli pubblicati sul suo sito personale (`federicomarcaccini.it`)"
+                                },
+                                "groundingChunkIndices": [
+                                    8,
+                                    0,
+                                    1
+                                ]
+                            }
+                        ],
+                        "webSearchQueries": [
+                            "\"Federico Marcaccini\" fallimento OR tribunale OR inchiesta",
+                            "Federico Marcaccini chi e",
+                            "Federico Marcaccini immobiliare",
+                            "\"Federico Marcaccini\" truffa",
+                            "\"Federico Marcaccini\" opinioni OR recensioni OR controversie"
+                        ]
+                    }
+                }
+            ],
+            "usageMetadata": {
+                "promptTokenCount": 206,
+                "candidatesTokenCount": 611,
+                "totalTokenCount": 1667,
+                "promptTokensDetails": [
+                    {
+                        "modality": "TEXT",
+                        "tokenCount": 206
+                    }
+                ],
+                "thoughtsTokenCount": 850,
+                "serviceTier": "standard"
+            },
+            "modelVersion": "gemini-3.8-flash",
+            "responseId": "zdjDaq39MryVkdUPzpjSkAU"
+        }
+    },
+    {
+        "summary": {
+            "prompt": {
+                "cluster": "comm",
+                "lang": "it",
+                "text": "Quali sono i migliori esperti di investimenti in hotel di lusso e riqualificazione alberghiera in Italia?"
+            },
+            "mode": "generate",
+            "http": 200,
+            "curl_error": null,
+            "latency_ms": 15619,
+            "model_used": "gemini-3.8-flash",
+            "tokens_in": 676,
+            "tokens_out": 1139,
+            "tokens_tool_use": null,
+            "queries": [
+                "hotel investment advisor italia CBRE JLL Cushman Horwath"
+            ],
+            "grounding_chunks": [
+                {
+                    "idx": 0,
+                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1OTJQ7_tvYxixKDqUs-QUdXmF4gzgNPur5HwJHO55MjMbBET3jCSXjcWa9kgOqepi9KxKz1RT9_Ysdc6Eo_7L6I5PXyaP7Gj7vTwRA2tiFOq2p9cc-CITxGlyAvrwG5g=",
+                    "title": "horwathhtl.com",
+                    "domain": null,
+                    "resolved": "https://horwathhtl.com/italy/office/italy/"
+                },
+                {
+                    "idx": 1,
+                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1OTJQ7_tvYxixKDqUs-QUdXmF4gzgNPur5HwJHO55MjMbBET3jCSXjcWa9kgOqepi9KxKz1RT9_Ysdc6Eo_7L6I5PXyaP7Gj7vTwRA2tiFOq2p9cc-CITxGlyAvrwG5g=",
+                    "title": "horwathhtl.com",
+                    "domain": null,
+                    "resolved": "https://horwathhtl.com/italy/office/italy/"
+                },
+                {
+                    "idx": 2,
+                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1OTJQ7_tvYxixKDqUs-QUdXmF4gzgNPur5HwJHO55MjMbBET3jCSXjcWa9kgOqepi9KxKz1RT9_Ysdc6Eo_7L6I5PXyaP7Gj7vTwRA2tiFOq2p9cc-CITxGlyAvrwG5g=",
+                    "title": "horwathhtl.com",
+                    "domain": null,
+                    "resolved": "https://horwathhtl.com/italy/office/italy/"
+                }
+            ],
+            "citations": [
+                {
+                    "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1OTJQ7_tvYxixKDqUs-QUdXmF4gzgNPur5HwJHO55MjMbBET3jCSXjcWa9kgOqepi9KxKz1RT9_Ysdc6Eo_7L6I5PXyaP7Gj7vTwRA2tiFOq2p9cc-CITxGlyAvrwG5g=",
+                    "title": "horwathhtl.com",
+                    "domain": null,
+                    "resolved": "https://horwathhtl.com/italy/office/italy/"
+                },
+                {
+                    "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1OTJQ7_tvYxixKDqUs-QUdXmF4gzgNPur5HwJHO55MjMbBET3jCSXjcWa9kgOqepi9KxKz1RT9_Ysdc6Eo_7L6I5PXyaP7Gj7vTwRA2tiFOq2p9cc-CITxGlyAvrwG5g=",
+                    "title": "horwathhtl.com",
+                    "domain": null,
+                    "resolved": "https://horwathhtl.com/italy/office/italy/"
+                },
+                {
+                    "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1OTJQ7_tvYxixKDqUs-QUdXmF4gzgNPur5HwJHO55MjMbBET3jCSXjcWa9kgOqepi9KxKz1RT9_Ysdc6Eo_7L6I5PXyaP7Gj7vTwRA2tiFOq2p9cc-CITxGlyAvrwG5g=",
+                    "title": "horwathhtl.com",
+                    "domain": null,
+                    "resolved": "https://horwathhtl.com/italy/office/italy/"
+                }
+            ],
+            "text": "Nel mercato italiano dell’ospitalità di fascia alta (*luxury hospitality real estate*), gli investimenti e la riqualificazione di immobili storici o *trophy asset* richiedono competenze multidisciplinari. I principali esperti e operatori si suddividono in base alla fase dell'operazione:\n\n---\n\n### 1. Advisor Immobiliari e Intermediazione Istituzionale (M&A e Capital Markets)\nQueste società gestiscono la compravendita dei grandi asset, la valutazione immobiliare, l'attrazione di capitali esteri e la negoziazione dei contratti di gestione (*Hotel Management Agreement* o locazione):\n\n* **CBRE Hotels Italy:** Storico punto di riferimento per le grandi transazioni di hotel di lusso e resort in Italia. Offre servizi integrati di valutazione, capital markets e debt advisory.\n* **JLL Hotels & Hospitality Group:** Tra i leader indiscussi nelle transazioni di *trophy asset* a Roma, Milano, Venezia, Firenze e nelle principali destinazioni leisure (Costa Smeralda, Lago di Como).\n* **Cushman & Wakefield Hospitality Italy:** Molto attiva nel segmento lusso sia sul fronte transazionale sia nell'attività di consulenza per l'operatore/brand selection.\n* **Savills Hospitality:** Specializzata in investimenti di pregio, affianca fondi internazionali e family office nell'acquisizione e dismissione di immobili storici riconvertibili.\n* **Colliers Hospitality Italy:** Fornisce consulenza per l’acquisizione, lo sviluppo e la valorizzazione di portafogli alberghieri.\n\n---\n\n### 2. Società di Consulenza Strategica e Fattibilità Alberghiera\nFocalizzate sull'analisi di mercato, piani di fattibilità economico-finanziaria, benchmarking, rinegoziazione dei contratti e ricerca dell'insegna internazionale (*operator search*):\n\n* **Horwath HTL Italy:** La principale boutique di consulenza specializzata esclusivamente in turismo e ospitalità in Italia. Cura studi di fattibilità per progetti di lusso e pubblica annualmente l'autorevole *Italy Hotels & Chains Report*.\n* **PKF Hospitality Group:** Network internazionale con un forte presidio in Italia; supporta investitori e sviluppatori dall'ideazione del concept alla contrattualistica con i brand alberghieri.\n* **Thrends:** Società specializzata in intelligenza di mercato e consulenza strategica per il comparto alberghiero e luxury in Italia.\n* **Teamwork Hospitality:** Nota per lo sviluppo di concept operativi, posizionamento commerciale e consulenza di riqualificazione alberghiera.\n\n---\n\n### 3. Piattaforme di Investimento e SGR Specializzate\nRealtà che raccolgono capitale e guidano operativamente le trasformazioni e il rilancio di strutture a 5 stelle e 5 stelle lusso:\n\n* **Castello SGR:** Uno dei principali gestori indipendenti di fondi immobiliari in Italia specializzati nel segmento alberghiero, con decine di hotel di lusso riqualificati e valorizzati.\n* **Arsenale Group:** Realtà italiana in forte ascesa nello sviluppo del turismo di lusso esperienziale; ha firmato riqualificazioni di grande rilievo come l'Orient Express La Minerva a Roma, Palazzo Donà Giovannelli a Venezia e il treno *La Dolce Vita*.\n* **Kryalos SGR / Coima:** Gestori istituzionali che hanno all'attivo fondi dedicati alla riconversione di palazzi storici e uffici in hotel di lusso nelle primarie città d'arte.\n\n---\n\n### 4. Studi di Architettura e Design per la Riqualificazione di Lusso\nLa riqualificazione alberghiera di pregio (spesso su vincoli storici e paesaggistici) fa capo ad architetti e studi con know-how globale:\n\n* **ACPV Architects (Antonio Citterio Patricia Viel):** Studio di riferimento internazionale per l'hotellerie di lusso contemporanea (tra cui la firma di vari Bulgari Hotels).\n* **Studio Marco Piva:** Riconosciuto per le ristrutturazioni monumentali e la conversione di palazzi d'epoca in hotel a 5 stelle lusso (es. l'Excelsior Hotel Gallia a Milano, Palazzo Nani a Venezia).\n* **Matteo Thun & Partners:** Esperti in resort di lusso sostenibili e riqualificazioni paesaggistiche e termali.\n* **Lissoni & Partners (Piero Lissoni):** Rinomato per progetti di boutique hotel e luxury resort con un approccio sartoriale e di valorizzazione del patrimonio storico.\n\n---\n\n### Come scegliere il professionista adatto:\n* **Per comprare o vendere l'asset:** Grandi broker (JLL, CBRE, Cushman & Wakefield).\n* **Per studiare il business plan e trovare il brand (Four Seasons, Rosewood, Belmond, Mandarin Oriental, ecc.):** Horwath HTL o PKF Hospitality.\n* **Per l'esecuzione del progetto architettonico e restauro conservativo:** Studi specializzati in *luxury hospitality design* (ACPV, Studio Marco Piva, Matteo Thun).",
+            "error": null
+        },
+        "raw": {
+            "candidates": [
+                {
+                    "content": {
+                        "parts": [
+                            {
+                                "text": "Nel mercato italiano dell’ospitalità di fascia alta (*luxury hospitality real estate*), gli investimenti e la riqualificazione di immobili storici o *trophy asset* richiedono competenze multidisciplinari. I principali esperti e operatori si suddividono in base alla fase dell'operazione:\n\n---\n\n### 1. Advisor Immobiliari e Intermediazione Istituzionale (M&A e Capital Markets)\nQueste società gestiscono la compravendita dei grandi asset, la valutazione immobiliare, l'attrazione di capitali esteri e la negoziazione dei contratti di gestione (*Hotel Management Agreement* o locazione):\n\n* **CBRE Hotels Italy:** Storico punto di riferimento per le grandi transazioni di hotel di lusso e resort in Italia. Offre servizi integrati di valutazione, capital markets e debt advisory.\n* **JLL Hotels & Hospitality Group:** Tra i leader indiscussi nelle transazioni di *trophy asset* a Roma, Milano, Venezia, Firenze e nelle principali destinazioni leisure (Costa Smeralda, Lago di Como).\n* **Cushman & Wakefield Hospitality Italy:** Molto attiva nel segmento lusso sia sul fronte transazionale sia nell'attività di consulenza per l'operatore/brand selection.\n* **Savills Hospitality:** Specializzata in investimenti di pregio, affianca fondi internazionali e family office nell'acquisizione e dismissione di immobili storici riconvertibili.\n* **Colliers Hospitality Italy:** Fornisce consulenza per l’acquisizione, lo sviluppo e la valorizzazione di portafogli alberghieri.\n\n---\n\n### 2. Società di Consulenza Strategica e Fattibilità Alberghiera\nFocalizzate sull'analisi di mercato, piani di fattibilità economico-finanziaria, benchmarking, rinegoziazione dei contratti e ricerca dell'insegna internazionale (*operator search*):\n\n* **Horwath HTL Italy:** La principale boutique di consulenza specializzata esclusivamente in turismo e ospitalità in Italia. Cura studi di fattibilità per progetti di lusso e pubblica annualmente l'autorevole *Italy Hotels & Chains Report*.\n* **PKF Hospitality Group:** Network internazionale con un forte presidio in Italia; supporta investitori e sviluppatori dall'ideazione del concept alla contrattualistica con i brand alberghieri.\n* **Thrends:** Società specializzata in intelligenza di mercato e consulenza strategica per il comparto alberghiero e luxury in Italia.\n* **Teamwork Hospitality:** Nota per lo sviluppo di concept operativi, posizionamento commerciale e consulenza di riqualificazione alberghiera.\n\n---\n\n### 3. Piattaforme di Investimento e SGR Specializzate\nRealtà che raccolgono capitale e guidano operativamente le trasformazioni e il rilancio di strutture a 5 stelle e 5 stelle lusso:\n\n* **Castello SGR:** Uno dei principali gestori indipendenti di fondi immobiliari in Italia specializzati nel segmento alberghiero, con decine di hotel di lusso riqualificati e valorizzati.\n* **Arsenale Group:** Realtà italiana in forte ascesa nello sviluppo del turismo di lusso esperienziale; ha firmato riqualificazioni di grande rilievo come l'Orient Express La Minerva a Roma, Palazzo Donà Giovannelli a Venezia e il treno *La Dolce Vita*.\n* **Kryalos SGR / Coima:** Gestori istituzionali che hanno all'attivo fondi dedicati alla riconversione di palazzi storici e uffici in hotel di lusso nelle primarie città d'arte.\n\n---\n\n### 4. Studi di Architettura e Design per la Riqualificazione di Lusso\nLa riqualificazione alberghiera di pregio (spesso su vincoli storici e paesaggistici) fa capo ad architetti e studi con know-how globale:\n\n* **ACPV Architects (Antonio Citterio Patricia Viel):** Studio di riferimento internazionale per l'hotellerie di lusso contemporanea (tra cui la firma di vari Bulgari Hotels).\n* **Studio Marco Piva:** Riconosciuto per le ristrutturazioni monumentali e la conversione di palazzi d'epoca in hotel a 5 stelle lusso (es. l'Excelsior Hotel Gallia a Milano, Palazzo Nani a Venezia).\n* **Matteo Thun & Partners:** Esperti in resort di lusso sostenibili e riqualificazioni paesaggistiche e termali.\n* **Lissoni & Partners (Piero Lissoni):** Rinomato per progetti di boutique hotel e luxury resort con un approccio sartoriale e di valorizzazione del patrimonio storico.\n\n---\n\n### Come scegliere il professionista adatto:\n* **Per comprare o vendere l'asset:** Grandi broker (JLL, CBRE, Cushman & Wakefield).\n* **Per studiare il business plan e trovare il brand (Four Seasons, Rosewood, Belmond, Mandarin Oriental, ecc.):** Horwath HTL o PKF Hospitality.\n* **Per l'esecuzione del progetto architettonico e restauro conservativo:** Studi specializzati in *luxury hospitality design* (ACPV, Studio Marco Piva, Matteo Thun).",
+                                "thoughtSignature": "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"
+                            }
+                        ],
+                        "role": "model"
+                    },
+                    "finishReason": "STOP",
+                    "index": 0,
+                    "groundingMetadata": {
+                        "searchEntryPoint": {
+                            "renderedContent": "<style>\n.container {\n  align-items: center;\n  border-radius: 8px;\n  display: flex;\n  font-family: Google Sans, Roboto, sans-serif;\n  font-size: 14px;\n  line-height: 20px;\n  padding: 8px 12px;\n}\n.chip {\n  display: inline-block;\n  border: solid 1px;\n  border-radius: 16px;\n  min-width: 14px;\n  padding: 5px 16px;\n  text-align: center;\n  user-select: none;\n  margin: 0 8px;\n  -webkit-tap-highlight-color: transparent;\n}\n.carousel {\n  overflow: auto;\n  scrollbar-width: none;\n  white-space: nowrap;\n  margin-right: -12px;\n}\n.headline {\n  display: flex;\n  margin-right: 4px;\n}\n.gradient-container {\n  position: relative;\n}\n.gradient {\n  position: absolute;\n  transform: translate(3px, -9px);\n  height: 36px;\n  width: 9px;\n}\n@media (prefers-color-scheme: light) {\n  .container {\n    background-color: #fafafa;\n    box-shadow: 0 0 0 1px #0000000f;\n  }\n  .headline-label {\n    color: #1f1f1f;\n  }\n  .chip {\n    background-color: #ffffff;\n    border-color: #d2d2d2;\n    color: #5e5e5e;\n    text-decoration: none;\n  }\n  .chip:hover {\n    background-color: #f2f2f2;\n  }\n  .chip:focus {\n    background-color: #f2f2f2;\n  }\n  .chip:active {\n    background-color: #d8d8d8;\n    border-color: #b6b6b6;\n  }\n  .logo-dark {\n    display: none;\n  }\n  .gradient {\n    background: linear-gradient(90deg, #fafafa 15%, #fafafa00 100%);\n  }\n}\n@media (prefers-color-scheme: dark) {\n  .container {\n    background-color: #1f1f1f;\n    box-shadow: 0 0 0 1px #ffffff26;\n  }\n  .headline-label {\n    color: #fff;\n  }\n  .chip {\n    background-color: #2c2c2c;\n    border-color: #3c4043;\n    color: #fff;\n    text-decoration: none;\n  }\n  .chip:hover {\n    background-color: #353536;\n  }\n  .chip:focus {\n    background-color: #353536;\n  }\n  .chip:active {\n    background-color: #464849;\n    border-color: #53575b;\n  }\n  .logo-light {\n    display: none;\n  }\n  .gradient {\n    background: linear-gradient(90deg, #1f1f1f 15%, #1f1f1f00 100%);\n  }\n}\n</style>\n<div class=\"container\">\n  <div class=\"headline\">\n    <svg class=\"logo-light\" width=\"18\" height=\"18\" viewBox=\"9 9 35 35\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n      <path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M42.8622 27.0064C42.8622 25.7839 42.7525 24.6084 42.5487 23.4799H26.3109V30.1568H35.5897C35.1821 32.3041 33.9596 34.1222 32.1258 35.3448V39.6864H37.7213C40.9814 36.677 42.8622 32.2571 42.8622 27.0064V27.0064Z\" fill=\"#4285F4\"/>\n      <path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M26.3109 43.8555C30.9659 43.8555 34.8687 42.3195 37.7213 39.6863L32.1258 35.3447C30.5898 36.3792 28.6306 37.0061 26.3109 37.0061C21.8282 37.0061 18.0195 33.9811 16.6559 29.906H10.9194V34.3573C13.7563 39.9841 19.5712 43.8555 26.3109 43.8555V43.8555Z\" fill=\"#34A853\"/>\n      <path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M16.6559 29.8904C16.3111 28.8559 16.1074 27.7588 16.1074 26.6146C16.1074 25.4704 16.3111 24.3733 16.6559 23.3388V18.8875H10.9194C9.74388 21.2072 9.06992 23.8247 9.06992 26.6146C9.06992 29.4045 9.74388 32.022 10.9194 34.3417L15.3864 30.8621L16.6559 29.8904V29.8904Z\" fill=\"#FBBC05\"/>\n      <path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M26.3109 16.2386C28.85 16.2386 31.107 17.1164 32.9095 18.8091L37.8466 13.8719C34.853 11.082 30.9659 9.3736 26.3109 9.3736C19.5712 9.3736 13.7563 13.245 10.9194 18.8875L16.6559 23.3388C18.0195 19.2636 21.8282 16.2386 26.3109 16.2386V16.2386Z\" fill=\"#EA4335\"/>\n    </svg>\n    <svg class=\"logo-dark\" width=\"18\" height=\"18\" viewBox=\"0 0 48 48\" xmlns=\"http://www.w3.org/2000/svg\">\n      <circle cx=\"24\" cy=\"23\" fill=\"#FFF\" r=\"22\"/>\n      <path d=\"M33.76 34.26c2.75-2.56 4.49-6.37 4.49-11.26 0-.89-.08-1.84-.29-3H24.01v5.99h8.03c-.4 2.02-1.5 3.56-3.07 4.56v.75l3.91 2.97h.88z\" fill=\"#4285F4\"/>\n      <path d=\"M15.58 25.77A8.845 8.845 0 0 0 24 31.86c1.92 0 3.62-.46 4.97-1.31l4.79 3.71C31.14 36.7 27.65 38 24 38c-5.93 0-11.01-3.4-13.45-8.36l.17-1.01 4.06-2.85h.8z\" fill=\"#34A853\"/>\n      <path d=\"M15.59 20.21a8.864 8.864 0 0 0 0 5.58l-5.03 3.86c-.98-2-1.53-4.25-1.53-6.64 0-2.39.55-4.64 1.53-6.64l1-.22 3.81 2.98.22 1.08z\" fill=\"#FBBC05\"/>\n      <path d=\"M24 14.14c2.11 0 4.02.75 5.52 1.98l4.36-4.36C31.22 9.43 27.81 8 24 8c-5.93 0-11.01 3.4-13.45 8.36l5.03 3.85A8.86 8.86 0 0 1 24 14.14z\" fill=\"#EA4335\"/>\n    </svg>\n    <div class=\"gradient-container\"><div class=\"gradient\"></div></div>\n  </div>\n  <div class=\"carousel\">\n<a class=\"chip\" href=\"https://www.google.com/search?q=hotel+investment+advisor+italia+CBRE+JLL+Cushman+Horwath&client=app-vertex-grounding&safesearch=active\">hotel investment advisor italia CBRE JLL Cushman Horwath</a>\n  </div>\n</div>"
+                        },
+                        "groundingChunks": [
+                            {
+                                "web": {
+                                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1OTJQ7_tvYxixKDqUs-QUdXmF4gzgNPur5HwJHO55MjMbBET3jCSXjcWa9kgOqepi9KxKz1RT9_Ysdc6Eo_7L6I5PXyaP7Gj7vTwRA2tiFOq2p9cc-CITxGlyAvrwG5g=",
+                                    "title": "horwathhtl.com"
+                                }
+                            },
+                            {
+                                "web": {
+                                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1OTJQ7_tvYxixKDqUs-QUdXmF4gzgNPur5HwJHO55MjMbBET3jCSXjcWa9kgOqepi9KxKz1RT9_Ysdc6Eo_7L6I5PXyaP7Gj7vTwRA2tiFOq2p9cc-CITxGlyAvrwG5g=",
+                                    "title": "horwathhtl.com"
+                                }
+                            },
+                            {
+                                "web": {
+                                    "uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1OTJQ7_tvYxixKDqUs-QUdXmF4gzgNPur5HwJHO55MjMbBET3jCSXjcWa9kgOqepi9KxKz1RT9_Ysdc6Eo_7L6I5PXyaP7Gj7vTwRA2tiFOq2p9cc-CITxGlyAvrwG5g=",
+                                    "title": "horwathhtl.com"
+                                }
+                            }
+                        ],
+                        "groundingSupports": [
+                            {
+                                "segment": {
+                                    "startIndex": 1733,
+                                    "endIndex": 1757,
+                                    "text": "* **Horwath HTL Italy:**"
+                                },
+                                "groundingChunkIndices": [
+                                    0
+                                ]
+                            },
+                            {
+                                "segment": {
+                                    "startIndex": 1733,
+                                    "endIndex": 1858,
+                                    "text": "* **Horwath HTL Italy:** La principale boutique di consulenza specializzata esclusivamente in turismo e ospitalità in Italia"
+                                },
+                                "groundingChunkIndices": [
+                                    1
+                                ]
+                            },
+                            {
+                                "segment": {
+                                    "startIndex": 1860,
+                                    "endIndex": 1975,
+                                    "text": "Cura studi di fattibilità per progetti di lusso e pubblica annualmente l'autorevole *Italy Hotels & Chains Report*"
+                                },
+                                "groundingChunkIndices": [
+                                    2
+                                ]
+                            }
+                        ],
+                        "webSearchQueries": [
+                            "hotel investment advisor italia CBRE JLL Cushman Horwath"
+                        ]
+                    }
+                }
+            ],
+            "usageMetadata": {
+                "promptTokenCount": 676,
+                "candidatesTokenCount": 1139,
+                "totalTokenCount": 3307,
+                "promptTokensDetails": [
+                    {
+                        "modality": "TEXT",
+                        "tokenCount": 676
+                    }
+                ],
+                "thoughtsTokenCount": 1492,
+                "serviceTier": "standard"
+            },
+            "modelVersion": "gemini-3.8-flash",
+            "responseId": "3NjDaojlMuqLvdIP66ze4AM"
+        }
+    }
+]

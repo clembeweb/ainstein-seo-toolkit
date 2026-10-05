@@ -74,7 +74,7 @@ EngineResponse { engine, model, text, citations[] {url, title?, domain}, raw_jso
 |---|---|---|---|
 | OpenAI | Responses API + tool `web_search` | annotazioni `url_citation` (url, title) + `web_search_call.action.query` | ✅ testato 2026-10-05: 10 $/1k ricerche; cap ricerche da aggiungere (`max_tool_calls`) |
 | Perplexity | **Agent API `POST /v1/agent`** con `preset: fast` (sostituto ufficiale di `sonar`; le Chat Completions Sonar sono chiuse dal 2026-09-27) + tool `web_search` | output item `search_results` (url, title, snippet, date, id) + annotazioni `url_citation` nel messaggio + marker inline `[n]` risolti su `id` | ✅ testato 2026-10-05: `fast` gira su `openai/gpt-6-luna` e cita inline; `perplexity/sonar` esplicito NON cita. ≈0,0014 $/prompt, costo reale in `usage.cost.total_cost` |
-| Gemini | `generateContent` + tool `google_search` | `groundingMetadata.groundingChunks` | URL redirect `vertexaisearch…` da risolvere |
+| Gemini | `generateContent` + tool `googleSearch` (l'Interactions API GA funziona uguale ma dà meno metadati) | `groundingMetadata`: `webSearchQueries`, `groundingChunks[].web.{uri,title,domain}`, `groundingSupports` (letto vs citato) | ✅ testato 2026-10-05: URL redirect `vertexaisearch` → HEAD senza follow dà il `Location`; `domain` già in chiaro. Gemini può decidere di NON cercare (0 citazioni = dato). 5.000 ricerche/mese gratis poi 14 $/1k |
 | Anthropic | Messages + `web_search_20260318` **con `allowed_callers: ["direct"]`** | `citations[]` tipo `web_search_result_location` (url, title, cited_text) | ✅ testato 2026-10-05: senza `direct` zero citazioni; 10 $/1k ricerche |
 
 Regole (ADR-002):

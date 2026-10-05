@@ -108,7 +108,7 @@ foreach ($prompts as $p) {
     if ($mode === 'interactions') {
         foreach ($json['steps'] ?? [] as $step) {
             $type = $step['type'] ?? '';
-            if ($type === 'google_search_call') $queries = array_merge($queries, $step['queries'] ?? []);
+            if ($type === 'google_search_call') $queries = array_merge($queries, $step['arguments']['queries'] ?? $step['queries'] ?? []);
             if ($type === 'model_output') {
                 foreach ($step['content'] ?? [] as $c) {
                     $text .= $c['text'] ?? '';

@@ -4,24 +4,23 @@
 > Ultimo aggiornamento: 2026-10-05
 
 ## Dove siamo
-M0 test empirici: OpenAI ✅, Anthropic ✅, Perplexity ✅ (2026-10-05). Perplexity via Agent API `/v1/agent`
-preset `fast` (le Chat Completions Sonar sono chiuse dal 2026-09-27): engine più economico (0,0014 $/prompt),
-ma anche il più duro su Marcaccini → `docs/test-empirici/2026-10-05-perplexity.md`. Key Gemini presente in DB.
-Branch `claude/ai-reputation-radar-dd9004` nel checkout principale `C:\xampp\htdocs\seo-toolkit`.
+**M0 test empirici chiusi sui 4 engine** (2026-10-05): OpenAI ✅ Anthropic ✅ Perplexity ✅ Gemini ✅, note in
+`docs/test-empirici/`. Dato chiave per la call: alla domanda "è affidabile?" Perplexity attribuisce a Marcaccini
+la confisca antimafia 2013, Gemini dice "nessun problema noto", OpenAI è nel mezzo, Claude smaschera gli
+sponsorizzati. Manca solo M0.6 (consolidare il design con i dati reali). Branch `claude/ai-reputation-radar-dd9004`
+nel checkout principale `C:\xampp\htdocs\seo-toolkit`.
 
 ## Prossimo passo (uno solo)
-**M0.4 — Test Gemini: script pronto, bloccato dal credito.** `scripts/test-engine-gemini.php` (Interactions API
-e `generateContent`, docs verificate 2026-10-05) risponde **HTTP 402 "prepayment credits are depleted"**: la key è
-valida, ma il progetto Google AI Studio è a credito prepagato esaurito. Clemente ricarica su
-https://ai.studio/projects, poi dalla root del repo:
-`php modules/ai-reputation/scripts/test-engine-gemini.php gemini-3.8-flash interactions` e `… generate`
-→ nota `docs/test-empirici/2026-10-05-gemini.md`. Poi M0.6 (aggiornare `design.md` §3.3 e §5 con i dati reali di tutti e 4).
+**M0.6 — Aggiornare `design.md` con i dati reali dei 4 test**: §3.3 (formato citazioni per engine e modalità
+scelte: OpenAI `max_tool_calls` + `low` per nav/rep, Perplexity preset `fast`, Anthropic `direct`, Gemini
+`generateContent`), §5 costi reali per engine e per run, §4 `ar_responses.search_count`. Togliere "bozza"
+dall'intestazione. Poi M1.1 (migrazione + modulo).
 
 ## M0 — Test empirici
 - [x] M0.1 Prerequisiti: MySQL on, `.env` nel worktree, key verificate (OpenAI ✅ Anthropic ✅ Gemini ✅ Perplexity ✅ — le ultime due incollate il 2026-10-05)
 - [x] M0.2 OpenAI Responses `web_search`: funziona, citazioni ok, costi reali misurati → `docs/test-empirici/2026-10-05-openai.md`. ⚠️ trovato contenuto negativo (rapporto mafie Lazio, possibile omonimo)
 - [x] M0.3 Perplexity Agent API (`/v1/agent`): preset `fast` (= `openai/gpt-6-luna` + indice Perplexity) dà citazioni inline `[n]` su `search_results`; `perplexity/sonar` esplicito NON cita → collector usa `fast`. ≈0,0014 $/prompt → `docs/test-empirici/2026-10-05-perplexity.md`. ⚠️ attribuisce a Marcaccini la confisca 2013 (Il Tempo, dirittiglobali)
-- [ ] M0.4 Gemini grounding: docs verificate (Interactions API GA + generateContent), script pronto, **402 credito prepagato esaurito** → ricarica su ai.studio
+- [x] M0.4 Gemini `gemini-3.8-flash` grounding: funziona in Interactions API e `generateContent` → collector usa `generateContent` (ha `domain`, query, letto/citato). Redirect risolti con HEAD. ≈0,005-0,02 $/prompt, 5.000 ricerche/mese gratis → `docs/test-empirici/2026-10-05-gemini.md`. ⚠️ Gemini dice "nessun problema noto": l'opposto di Perplexity
 - [x] M0.5 Anthropic web_search_20260318: funziona solo in modalità `direct` per le citazioni; costo ~0,20 $/prompt con Opus → `docs/test-empirici/2026-10-05-anthropic.md`. Claude NON trova il rapporto mafie ma smaschera gli articoli sponsorizzati
 - [ ] M0.6 Aggiornare `design.md` §3.3 e §5 con formato citazioni, modelli e costi reali
 
