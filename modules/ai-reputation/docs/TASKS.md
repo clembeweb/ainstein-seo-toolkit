@@ -47,7 +47,7 @@ report con occhio da demo: verdetti, fonti, azioni, "Da confermare". Annotare qu
 - ~~Omonimia del "Marcaccini Federico" della confisca 2013~~ → **risolta 2026-10-05: Clemente conferma, nessun
   omonimo, dovrebbe essere lui.** La demo è il caso "fonte negativa reale" (ADR-007 counter_content + removal TD)
 - Key Perplexity e Gemini da creare (Clemente)
-- Instagram @fedemarcaccini: Claude dice che è un maestro di sci argentino, il brief lo dava come suo → verificare
+- ~~Instagram @fedemarcaccini~~ → risolto 2026-10-05: lo sciatore è un omonimo (Clemente). Scritto nelle note di disambiguazione del progetto; il soggetto è quello della confisca 2013
 - Modello Anthropic da misurare: Opus 5.5 (fatto) e/o Sonnet 5.5 (metà costo, più diffuso su claude.ai)
 
 ## Fatto
