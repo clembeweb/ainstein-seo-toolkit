@@ -5,13 +5,15 @@
 
 ## Dove siamo
 Progetto appena nato. Brief ricevuto e analizzato, design v0.1 in bozza, decisioni ADR-001..006.
-Nessuna riga di codice del modulo ancora scritta. Branch: `claude/ai-reputation-radar-dd9004` nel worktree;
-XAMPP serve il checkout principale sul branch `serve-ai-reputation` (vedi CLAUDE.md del modulo per il sync).
+Nessuna riga di codice del modulo ancora scritta. Branch `claude/ai-reputation-radar-dd9004` nel checkout
+principale `C:\xampp\htdocs\seo-toolkit` (servito da XAMPP). Test OpenAI e Anthropic fatti il 2026-10-05.
 
 ## Prossimo passo (uno solo)
-**M0.3 / M0.4** — Test Perplexity e Gemini. Clemente incolla le key in `http://localhost/seo-toolkit/admin/settings`
-(campi pronti), poi si lanciano gli script. Prima: verifica online docs Perplexity (Sonar chat
-completions con citations vs Agent API vs Search API) e Gemini grounding.
+**M0.3** — Test Perplexity. Prima Clemente incolla le key Gemini e Perplexity in
+`http://localhost/seo-toolkit/admin/settings` (campi pronti, righe DB create). Poi: verifica online docs
+Perplexity (Sonar chat completions con `citations`/`search_results` vs Agent API; la Search API dà solo
+risultati grezzi, non serve) → script `scripts/test-engine-perplexity.php` sul modello degli altri due
+(3 prompt su Marcaccini, JSON in `docs/test-empirici/`). Poi M0.4 Gemini grounding.
 Aperto per Clemente: il "Marcaccini Federico" del rapporto mafie Lazio è un omonimo? (vedi test OpenAI)
 
 ## M0 — Test empirici

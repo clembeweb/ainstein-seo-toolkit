@@ -68,15 +68,12 @@ cliente TD, Riccardo Concetti, **non c'entra** con questo progetto).
 
 ## Ambiente locale (XAMPP)
 
-- **Si sviluppa qui, nel worktree** (branch `claude/ai-reputation-radar-dd9004`): la sessione Claude è
-  legata a questa cartella e l'app blocca le modifiche al checkout principale.
-- **XAMPP serve il checkout principale** `C:\xampp\htdocs\seo-toolkit` su `http://localhost/seo-toolkit`,
-  che sta sul branch di servizio `serve-ai-reputation`. **Dopo ogni commit qui**, allineare il servito:
-  ```
-  git -C C:/xampp/htdocs/seo-toolkit merge --ff-only claude/ai-reputation-radar-dd9004
-  ```
-  Il branch Editorial (`feat/editorial-m1`) è intatto (avanzi del 2026-05-14 messi in un commit WIP).
-- Il worktree non ha `vendor/` (lock non installabile) né `.env` (copiato a mano, gitignored): gli
-  script CLI caricano l'autoloader del checkout principale. MySQL va acceso da XAMPP prima dei test.
+- **Si lavora nel checkout principale `C:\xampp\htdocs\seo-toolkit`**, branch
+  `claude/ai-reputation-radar-dd9004`, servito da XAMPP su `http://localhost/seo-toolkit`.
+  **Niente worktree** (deciso da Clemente il 2026-10-05: complicavano e basta). Il worktree
+  `.claude/worktrees/ai-reputation-radar-dd9004/` della prima sessione è a HEAD staccato: si può
+  cancellare con `git worktree remove --force .claude/worktrees/ai-reputation-radar-dd9004`.
+- Il branch Editorial (`feat/editorial-m1`) è intatto (avanzi del 2026-05-14 messi in un commit WIP).
+- MySQL va acceso da XAMPP prima dei test. Gli script in `scripts/` girano con `php` dalla root del repo.
 - API key: in DB (`settings`), mai in file. Si incollano dal pannello `/admin/settings` (campi
-  OpenAI, Anthropic, Gemini, Perplexity). Da terminale: `scripts/set-api-key.php <key_name>`.
+  OpenAI, Anthropic, Gemini, Perplexity). Mai chiederle in chat, mai inserirle al posto di Clemente.
