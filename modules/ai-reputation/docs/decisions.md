@@ -80,3 +80,20 @@ la documentazione e il listino attuali, (2) uno script CLI minimo che salva la r
 funziona; se esiste già un servizio o un'API che fa la cosa, si usa quello invece di costruirlo.
 
 **Consequences**: `design.md` resta bozza finché M0 non è chiuso; ogni ⚠️ nel design è un test da fare.
+
+## ADR-007: Il piano d'azione include il "contro-contenuto" reputazionale
+
+**Date**: 2026-10-05 · **Status**: Accepted (intuizione di Clemente dopo il test OpenAI)
+
+**Context**: la SERP di Google su Marcaccini è piena di articoli sponsorizzati, ma alla domanda
+"è affidabile?" l'AI fa una ricerca mirata ("sequestro beni … confisca") e pesca **un documento su
+cento** (III Rapporto Mafie Lazio). Il volume di articoli non protegge dalla domanda reputazionale:
+serve un contenuto che **risponda a quella domanda**.
+
+**Decision**: quarto tipo di azione `counter_content`: quando un prompt del cluster `rep` produce
+una risposta negativa o ambigua (omonimia), il piano propone un articolo che risponde direttamente
+alla domanda (es. "Chi è Federico Marcaccini: profilo, attività, affidabilità"), su una testata che
+le AI citano (Source Map). Si affianca a `removal` (TD) e vale sia se la fonte è un omonimo sia se no.
+
+**Consequences**: `ar_actions.type` ∈ {removal, gap_article, correction, counter_content};
+il cluster `rep` è quello che genera più valore commerciale per entrambi (TD e Clemente).

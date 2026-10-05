@@ -105,6 +105,7 @@ Regole deterministiche generano `ar_actions`:
 - cluster `comm`/`comp` senza menzione ma con competitor → `gap_article` (target Clemente), con
   testata proposta presa dalla Source Map (domini che le AI citano davvero)
 - claim `matches_truth = false` → `correction`
+- risposta `rep` negativa o ambigua (omonimo) → `counter_content`: articolo che risponde alla domanda reputazionale, su testata citata dalle AI (ADR-007)
 
 Una chiamata AiService riscrive le azioni in linguaggio da report (titolo, perché, cosa fare).
 
@@ -124,7 +125,7 @@ Stampabile via browser. Dashboard, trend e scheduling in v1.
 | `ar_analyses` | giudizio di una risposta | response_id, brand_mentioned, mention_position, is_homonym, sentiment, claims (json), competitors (json), negative, negative_urls (json), cited_domains (json), judge_model |
 | `ar_sources` | domini aggregati | project_id, domain, citations_count, negative_count, sentiment_avg, first_seen_run_id, last_seen_run_id |
 | `ar_competitors` | nomi emersi | project_id, name, mentions_count, first_seen_run_id, is_confirmed |
-| `ar_actions` | piano d'azione | project_id, run_id, type (removal/gap_article/correction), target_url, target_domain, title, rationale, status |
+| `ar_actions` | piano d'azione | project_id, run_id, type (removal/gap_article/correction/counter_content), target_url, target_domain, title, rationale, status |
 
 Le metriche non hanno tabella nell'MVP: si calcolano da `ar_analyses`. In v1 `ar_run_metrics` per i trend.
 
