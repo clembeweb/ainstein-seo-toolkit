@@ -17,7 +17,7 @@
 | **Per chi** | Tutela Digitale (agenzia reputazione, Bologna, CEO Gabriele), white-label per i loro clienti. Primo soggetto: Federico Marcaccini |
 | **Slug / prefisso DB** | `ai-reputation` / `ar_` |
 | **Branch** | `claude/ai-reputation-radar-dd9004` |
-| **Milestone attiva** | M0 test empirici → M1 MVP per la call (settimana del 2026-10-06) |
+| **Milestone attiva** | M0 chiuso (4 engine testati) → M1 MVP per la call (settimana del 2026-10-06) |
 
 ## Regole specifiche del modulo
 
@@ -60,7 +60,7 @@ cliente TD, Riccardo Concetti, **non c'entra** con questo progetto).
 | File | Cosa |
 |---|---|
 | `docs/brief-2026-10-05.md` | brief di origine, integrale |
-| `docs/design.md` | analisi + architettura + data model (bozza finché M0 non è chiuso) |
+| `docs/design.md` | analisi + architettura + data model (v0.2, validato dai test empirici) |
 | `docs/decisions.md` | ADR-001..008 |
 | `docs/roadmap.md` | M0 → M4 |
 | `docs/TASKS.md` | stato e prossimo passo |

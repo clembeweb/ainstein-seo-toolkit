@@ -4,17 +4,17 @@
 > Ultimo aggiornamento: 2026-10-05
 
 ## Dove siamo
-**M0 test empirici chiusi sui 4 engine** (2026-10-05): OpenAI ✅ Anthropic ✅ Perplexity ✅ Gemini ✅, note in
+**M0 chiuso** (2026-10-05): 4 engine testati e `design.md` v0.2 consolidato con i dati reali, note in
 `docs/test-empirici/`. Dato chiave per la call: alla domanda "è affidabile?" Perplexity attribuisce a Marcaccini
 la confisca antimafia 2013, Gemini dice "nessun problema noto", OpenAI è nel mezzo, Claude smaschera gli
-sponsorizzati. Manca solo M0.6 (consolidare il design con i dati reali). Branch `claude/ai-reputation-radar-dd9004`
+sponsorizzati. Branch `claude/ai-reputation-radar-dd9004`
 nel checkout principale `C:\xampp\htdocs\seo-toolkit`.
 
 ## Prossimo passo (uno solo)
-**M0.6 — Aggiornare `design.md` con i dati reali dei 4 test**: §3.3 (formato citazioni per engine e modalità
-scelte: OpenAI `max_tool_calls` + `low` per nav/rep, Perplexity preset `fast`, Anthropic `direct`, Gemini
-`generateContent`), §5 costi reali per engine e per run, §4 `ar_responses.search_count`. Togliere "bozza"
-dall'intestazione. Poi M1.1 (migrazione + modulo).
+**M1.1 — Migrazione `ar_*` + `module.json` + registrazione modulo + attivazione da Global Projects.**
+Data model in `design.md` §4 (v0.2). Pattern: `modules/ai-content/` (module.json, routes, controller base),
+`core/Models/GlobalProject.php` (MODULE_CONFIG). Migrazione in `database/2026-10-06-create-ar-tables.sql`.
+Prima però una decisione di Clemente (sotto): engine dell'MVP.
 
 ## M0 — Test empirici
 - [x] M0.1 Prerequisiti: MySQL on, `.env` nel worktree, key verificate (OpenAI ✅ Anthropic ✅ Gemini ✅ Perplexity ✅ — le ultime due incollate il 2026-10-05)
@@ -22,7 +22,7 @@ dall'intestazione. Poi M1.1 (migrazione + modulo).
 - [x] M0.3 Perplexity Agent API (`/v1/agent`): preset `fast` (= `openai/gpt-6-luna` + indice Perplexity) dà citazioni inline `[n]` su `search_results`; `perplexity/sonar` esplicito NON cita → collector usa `fast`. ≈0,0014 $/prompt → `docs/test-empirici/2026-10-05-perplexity.md`. ⚠️ attribuisce a Marcaccini la confisca 2013 (Il Tempo, dirittiglobali)
 - [x] M0.4 Gemini `gemini-3.8-flash` grounding: funziona in Interactions API e `generateContent` → collector usa `generateContent` (ha `domain`, query, letto/citato). Redirect risolti con HEAD. ≈0,005-0,02 $/prompt, 5.000 ricerche/mese gratis → `docs/test-empirici/2026-10-05-gemini.md`. ⚠️ Gemini dice "nessun problema noto": l'opposto di Perplexity
 - [x] M0.5 Anthropic web_search_20260318: funziona solo in modalità `direct` per le citazioni; costo ~0,20 $/prompt con Opus → `docs/test-empirici/2026-10-05-anthropic.md`. Claude NON trova il rapporto mafie ma smaschera gli articoli sponsorizzati
-- [ ] M0.6 Aggiornare `design.md` §3.3 e §5 con formato citazioni, modelli e costi reali
+- [x] M0.6 `design.md` v0.2: formati citazioni e modalità per engine (§3.3), costi reali (§5), `search_count`/`sources_read`/`citations_noise` nel data model, judge con verifica fonte e omonimia `uncertain`, metrica "divergenza tra engine"
 
 ## M1 — MVP call
 - [ ] M1.1 Migrazione `ar_*` + `module.json` + registrazione modulo + attivazione da Global Projects
@@ -36,6 +36,9 @@ dall'intestazione. Poi M1.1 (migrazione + modulo).
 - [ ] M1.8 Run reale su Marcaccini + revisione per la call
 
 ## Decisioni in sospeso (di Clemente)
+- **Engine nell'MVP per la call**: solo OpenAI + Perplexity (ADR-004, demo ≈ 3-4 $ a run) oppure tutti e 4
+  (adapter già pronti dagli script; con Anthropic Sonnet ≈ 8-10 $ a run). La divergenza tra engine è
+  l'argomento forte della demo: con 4 si vede meglio, con 2 si vede comunque (Perplexity vs OpenAI)
 - Conferma riga per riga della bozza profilo Marcaccini (brief §3) → si fa nella UI in M1.2
 - Data e ora della call con Gabriele (settimana del 2026-10-06, mattina)
 - ~~Omonimia del "Marcaccini Federico" della confisca 2013~~ → **risolta 2026-10-05: Clemente conferma, nessun
