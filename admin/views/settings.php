@@ -213,8 +213,30 @@ $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
                                     </button>
                                 </div>
                                 <p class="mt-1 text-xs text-slate-500">
-                                    Usata per la generazione immagini in Content Creator.
+                                    Usata per la generazione immagini in Content Creator e come engine in AI Reputation Radar.
                                     <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-purple-600 dark:text-purple-400 hover:underline">Ottieni API Key</a>
+                                </p>
+                            </div>
+                            <!-- Perplexity API Key -->
+                            <div>
+                                <label for="perplexity_api_key" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                    Perplexity API Key
+                                    <?php if (!empty($settings['perplexity_api_key']['value'] ?? '')): ?>
+                                        <span class="text-green-600 dark:text-green-400 text-xs ml-1">Configurata</span>
+                                    <?php endif; ?>
+                                </label>
+                                <div class="relative">
+                                    <input type="password" name="perplexity_api_key" id="perplexity_api_key"
+                                           value="<?= e($settings['perplexity_api_key']['value'] ?? '') ?>"
+                                           placeholder="pplx-..."
+                                           class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 pr-10 focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                                    <button type="button" onclick="togglePassword('perplexity_api_key')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    </button>
+                                </div>
+                                <p class="mt-1 text-xs text-slate-500">
+                                    Usata come engine (Sonar) in AI Reputation Radar.
+                                    <a href="https://www.perplexity.ai/settings/api" target="_blank" class="text-purple-600 dark:text-purple-400 hover:underline">Ottieni API Key</a>
                                 </p>
                             </div>
                         </div>
