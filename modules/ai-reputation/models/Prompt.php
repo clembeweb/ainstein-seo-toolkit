@@ -32,6 +32,31 @@ class Prompt
         ['cluster' => 'comp', 'text' => 'Chi sono i principali concorrenti o alternative a {subject}?'],
     ];
 
+    /**
+     * Domanda "mirata" (ADR-011): nomina o presuppone un fatto negativo specifico sul soggetto
+     * ("cosa è successo con la confisca del 2013?", "ha risolto i problemi legali?").
+     * Le domande generiche che chiunque fa ("è affidabile?", "ci sono notizie negative?", "truffe?") restano neutre:
+     * sono proprio quelle che misurano se l'AI tira fuori il negativo DA SOLA.
+     */
+    public static function isLeadingText(string $text): bool
+    {
+        $t = mb_strtolower($text);
+        $patterns = [
+            '/confisc|sequestr|condann|arrest|indagat|rinviat[oa] a giudizio|patteggi|ndranghet|mafi|camorr|clan |cosca|overloading|antimafia/u',
+            '/procediment\w*\s+(legal\w*|giudiziar\w*|penal\w*)/u',     // "i procedimenti legali" (presuppone che esistano)
+            '/problemi\s+(legal\w*|giudiziar\w*|con la giustizia)/u',
+            '/posizione\s+(legale|giudiziaria|processuale)/u',
+            '/oltre a quell[ei] not[ei]|già not[ei]|nonostante/u',      // presuppone fatti noti
+            '/\b(19|20)\d{2}\b.*\b(inchiest|caso|vicend|scandal)|\b(inchiest|caso|vicend|scandal)\w*\b.*\b(19|20)\d{2}\b/u',
+        ];
+        foreach ($patterns as $p) {
+            if (preg_match($p, $t)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public function find(int $id, int $projectId): ?array
     {
         return Database::fetch("SELECT * FROM {$this->table} WHERE id = ? AND project_id = ?", [$id, $projectId]);
@@ -52,7 +77,7 @@ class Prompt
         return Database::count($this->table, 'project_id = ? AND is_active = 1', [$projectId]);
     }
 
-    public function create(int $projectId, string $text, string $cluster = 'nav', string $lang = 'it', string $origin = 'manual'): int
+    public function create(int $projectId, string $text, string $cluster = 'nav', string $lang = 'it', string $origin = 'manual', ?bool $leading = null): int
     {
         if (!isset(self::CLUSTERS[$cluster])) {
             $cluster = 'nav';
@@ -63,11 +88,26 @@ class Prompt
             'cluster' => $cluster,
             'lang' => $lang,
             'persona' => 'neutro',
+            'is_leading' => ($leading || self::isLeadingText($text)) ? 1 : 0,
             'text' => $text,
             'is_active' => 1,
             'origin' => $origin,
             'sort_order' => $maxOrder + 1,
         ]);
+    }
+
+    /** Ricalcola is_leading per tutte le domande del progetto (dopo un cambio di regole) */
+    public function reclassify(int $projectId): int
+    {
+        $n = 0;
+        foreach ($this->allByProject($projectId) as $p) {
+            $lead = self::isLeadingText($p['text']) ? 1 : 0;
+            if ((int) $p['is_leading'] !== $lead) {
+                Database::update($this->table, ['is_leading' => $lead], 'id = ? AND project_id = ?', [(int) $p['id'], $projectId]);
+                $n++;
+            }
+        }
+        return $n;
     }
 
     /**

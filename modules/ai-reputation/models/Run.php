@@ -175,7 +175,7 @@ class Run
         $rows = Database::fetchAll("
             SELECT r.id, r.prompt_id, r.engine, r.model, r.repeat_idx, r.status, r.text, r.citations, r.sources_read,
                    r.queries, r.search_count, r.tokens_in, r.tokens_out, r.cost, r.cost_is_real, r.latency_ms, r.error_message,
-                   p.text AS prompt_text, p.cluster AS prompt_cluster, p.sort_order
+                   p.text AS prompt_text, p.cluster AS prompt_cluster, p.is_leading AS prompt_leading, p.sort_order
             FROM ar_responses r
             JOIN ar_prompts p ON p.id = r.prompt_id
             WHERE r.run_id = ?

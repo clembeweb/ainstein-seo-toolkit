@@ -163,3 +163,24 @@ restano leggibili da API, Gemini, Perplexity e da chiunque costruisca su quei mo
 
 **Consequences**: etichetta engine "ChatGPT (API)" nei report; campo futuro per segnare "rimozione ottenuta su
 app" per engine (v1). Test di riferimento: `scratchpad` 2026-10-06, nessun costo rilevante.
+
+## ADR-011: Domande "mirate" fuori dal rischio; rischio = % di risposte negative a domande neutre
+
+**Date**: 2026-10-06 · **Status**: Accepted (analisi critica del run 2)
+
+**Context**: nel run 2, 14 risposte negative su 18 venivano da domande che nominavano già il fatto negativo
+("cosa è successo con la confisca del 2013?"): 47% negative contro il 5% delle domande neutre. Il rischio 100/100
+misurava le nostre domande, non le AI. La vecchia formula inoltre saturava a 100.
+
+**Decision**:
+1. `ar_prompts.is_leading`: "mirata" = nomina o presuppone un fatto negativo specifico. Regola deterministica
+   (`Prompt::isLeadingText`) OR flag del prompt engine, che ne genera al massimo il 20% tra le rep.
+   Le domande generiche ("è affidabile?", "ci sono notizie negative?", "truffe?") restano neutre.
+2. Share of voice, risposte negative, divergenza e rischio si calcolano SOLO sulle neutre. Le mirate hanno un
+   blocco a parte nel report: "cosa esce se qualcuno sa già cosa cercare".
+3. Rischio = % pesata per engine di risposte negative alle domande neutre del cluster rep. Basso < 10%,
+   Medio 10-29%, Alto ≥ 30%. Non satura, ed è spiegabile in una frase.
+4. Le fonti negative contano comunque, da qualunque domanda arrivino: sono reali.
+
+**Consequences**: run 2 Marcaccini: da "Alto 100/100" a "Alto 38%" (8 su 18 risposte neutre sulla reputazione),
+mirate 8 negative su 18. Run 1: "Medio 28%".

@@ -55,7 +55,7 @@ class PromptEngineService
             $seen[] = $key;
             $cluster = in_array($p['cluster'] ?? '', array_keys(Prompt::CLUSTERS), true) ? $p['cluster'] : 'nav';
             $lang = in_array($p['lang'] ?? 'it', ['it', 'en'], true) ? $p['lang'] : 'it';
-            $id = $prompts->create((int) $project['id'], $text, $cluster, $lang, 'ai');
+            $id = $prompts->create((int) $project['id'], $text, $cluster, $lang, 'ai', !empty($p['leading']));
             $persona = preg_replace('/[^a-z_]/', '', mb_strtolower((string) ($p['persona'] ?? 'neutro'))) ?: 'neutro';
             Database::update('ar_prompts', ['persona' => mb_substr($persona, 0, 50)], 'id = ?', [$id]);
             $added++;
@@ -84,9 +84,10 @@ Regole:
 3. Le domande rep devono includere sia forme neutre ("è affidabile?") sia forme ostili ("è stato coinvolto in...?", "truffa?") sia forme su fatti specifici dei temi di rischio del profilo, se presenti.
 4. Niente duplicati o parafrasi della stessa domanda. Non ripetere le domande già esistenti elencate.
 5. Usa il nome nella forma più usata ("Nome Cognome").
+6. Campo "leading": true se la domanda NOMINA o PRESUPPONE un fatto negativo specifico del soggetto (es. "cosa è successo con la confisca del 2013?", "ha risolto i problemi legali?"); false per le domande generiche che chiunque fa ("è affidabile?", "ci sono notizie negative?", "truffe?"). Al massimo il 20% delle domande rep può essere "leading": il sistema misura soprattutto se l'AI tira fuori il negativo da sola.
 
 Formato:
-{"prompts":[{"cluster":"rep","lang":"it","persona":"investitore","text":"..."}, ...]}
+{"prompts":[{"cluster":"rep","lang":"it","persona":"investitore","leading":false,"text":"..."}, ...]}
 TXT;
     }
 

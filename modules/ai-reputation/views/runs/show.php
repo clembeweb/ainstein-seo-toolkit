@@ -87,15 +87,15 @@ $isActive = in_array($run['status'], ['pending', 'running'], true);
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">AI share of voice</p>
             <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= $hasAnalyses ? $metrics['share'] . '%' : '–' ?></p>
-            <p class="text-xs text-slate-400"><?= $hasAnalyses ? "citato in {$metrics['mentioned_n']} risposte su {$metrics['judged']} (pesate per engine)" : 'dopo l\'analisi' ?></p>
+            <p class="text-xs text-slate-400"><?= $hasAnalyses ? "citato in {$metrics['mentioned_n']} risposte neutre su {$metrics['judged']} (pesate per engine)" : 'dopo l\'analisi' ?></p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Rischio reputazione</p>
-            <p class="text-2xl font-bold <?= $riskClass ?>"><?= $hasAnalyses ? $metrics['risk_label'] : '–' ?> <?php if ($hasAnalyses): ?><span class="text-sm font-normal text-slate-400"><?= $metrics['risk'] ?>/100</span><?php endif; ?></p>
-            <p class="text-xs text-slate-400"><?= $hasAnalyses ? ($metrics['negative_domains'] . ' fonti negative' . ($metrics['sentiment'] !== null ? ' · sentiment ' . $metrics['sentiment'] : '')) : 'dopo l\'analisi' ?></p>
+            <p class="text-2xl font-bold <?= $riskClass ?>"><?= $hasAnalyses ? $metrics['risk_label'] : '–' ?> <?php if ($hasAnalyses): ?><span class="text-sm font-normal text-slate-400"><?= $metrics['risk'] ?>%</span><?php endif; ?></p>
+            <p class="text-xs text-slate-400"><?= $hasAnalyses ? e($metrics['risk_basis']) . ' sono negative · ' . $metrics['negative_domains'] . ' fonti negative' : 'dopo l\'analisi' ?></p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
-            <p class="text-sm text-slate-500 dark:text-slate-400">Risposte negative</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Risposte negative (domande neutre)</p>
             <p class="text-2xl font-bold <?= $metrics['negative'] > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white' ?>"><?= $hasAnalyses ? $metrics['negative'] : '–' ?> <?php if ($hasAnalyses): ?><span class="text-sm font-normal text-slate-400">/ <?= $metrics['judged'] ?></span><?php endif; ?></p>
             <p class="text-xs text-slate-400"><?php if ($hasAnalyses && $metrics['negative_by_engine']): ?><?= e(implode(' · ', array_map(fn($k, $v) => ($engineLabels[$k] ?? $k) . ' ' . $v, array_keys($metrics['negative_by_engine']), $metrics['negative_by_engine']))) ?><?php elseif ($hasAnalyses): ?>nessuna<?php else: ?>dopo l'analisi<?php endif; ?></p>
         </div>
@@ -105,6 +105,20 @@ $isActive = in_array($run['status'], ['pending', 'running'], true);
             <p class="text-xs text-slate-400"><?= $hasAnalyses ? ($metrics['divergent'] ? 'le AI non sono d\'accordo' : 'le AI concordano') : 'dopo l\'analisi' ?> · costo API <?= number_format((float) $run['cost_total'], 3) ?> $</p>
         </div>
     </div>
+
+    <?php if ($hasAnalyses && $metrics['leading']['total'] > 0): ?>
+    <?php $ld = $metrics['leading']; ?>
+    <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 px-5 py-4">
+        <h3 class="text-base font-semibold text-slate-900 dark:text-white">Domande mirate: cosa esce se qualcuno sa già cosa cercare</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            <?= count($ld['prompts']) ?> domande nominano già un fatto negativo (es. "<?= e(mb_substr((string) reset($ld['prompts']), 0, 90)) ?>"). Non entrano nel rischio né nelle metriche sopra:
+            mostrano cosa raccontano le AI a chi cerca proprio quel fatto.
+        </p>
+        <p class="text-sm text-slate-800 dark:text-slate-100 mt-2">
+            <strong><?= $ld['negative'] ?> risposte negative su <?= $ld['total'] ?></strong><?php if ($ld['by_engine']): ?> · <?= e(implode(' · ', array_map(fn($k, $v) => ($engineLabels[$k] ?? $k) . ' ' . $v, array_keys($ld['by_engine']), $ld['by_engine']))) ?><?php endif; ?>
+        </p>
+    </div>
+    <?php endif; ?>
 
     <?php if ($hasAnalyses && $metrics['divergent']): ?>
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 px-5 py-4">
@@ -141,6 +155,7 @@ $isActive = in_array($run['status'], ['pending', 'running'], true);
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 align-top">
                         <td class="px-4 py-3 text-sm text-slate-900 dark:text-white">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-2 <?= $clusterClass($row['prompt']['cluster']) ?>"><?= strtoupper($row['prompt']['cluster']) ?></span>
+                            <?php if (!empty($row['prompt']['leading'])): ?><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-2 bg-slate-200 text-slate-700 dark:bg-slate-600 dark:text-slate-200" title="Nomina già un fatto negativo: esclusa dal rischio">mirata</span><?php endif; ?>
                             <?= e($row['prompt']['text']) ?>
                         </td>
                         <?php foreach ($engines as $engine): ?>

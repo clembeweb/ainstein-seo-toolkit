@@ -445,7 +445,7 @@ class RunController
         foreach ($responses as $r) {
             $r['analysis'] = $analyses[(int) $r['id']] ?? null;
             $r['mentioned'] = $r['status'] === 'ok' ? self::mentions((string) $r['text'], $project['subject_name']) : null;
-            $grid[$r['prompt_id']]['prompt'] = ['id' => $r['prompt_id'], 'text' => $r['prompt_text'], 'cluster' => $r['prompt_cluster']];
+            $grid[$r['prompt_id']]['prompt'] = ['id' => $r['prompt_id'], 'text' => $r['prompt_text'], 'cluster' => $r['prompt_cluster'], 'leading' => (int) ($r['prompt_leading'] ?? 0)];
             $grid[$r['prompt_id']]['cells'][$r['engine']][] = $r;
         }
 

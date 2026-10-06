@@ -162,7 +162,7 @@ $basePath = '/ai-reputation/project/' . $project['id'];
                     ?>
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 <?= (int) $p['is_active'] ? '' : 'opacity-50' ?>">
                         <td class="px-4 py-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $clusterClass ?>"><?= strtoupper($p['cluster']) ?></span></td>
-                        <td class="px-4 py-3 text-sm text-slate-900 dark:text-white"><?= e($p['text']) ?></td>
+                        <td class="px-4 py-3 text-sm text-slate-900 dark:text-white"><?php if ((int) ($p['is_leading'] ?? 0) === 1): ?><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-2 bg-slate-200 text-slate-700 dark:bg-slate-600 dark:text-slate-200" title="Nomina già un fatto negativo: nel report sta in un blocco a parte, fuori dal rischio">mirata</span><?php endif; ?><?= e($p['text']) ?></td>
                         <td class="px-4 py-3">
                             <form method="POST" action="<?= url($basePath . '/prompts/' . $p['id'] . '/toggle') ?>">
                                 <input type="hidden" name="_csrf_token" value="<?= $csrf ?>">

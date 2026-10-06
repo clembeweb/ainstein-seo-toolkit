@@ -14,6 +14,13 @@ class ReportBuilderService
 {
     /**
      * Metriche di un run a partire da risposte + analisi (indicizzate per response_id).
+     *
+     * ADR-011: share of voice, negative, divergenza e rischio si calcolano SOLO sulle domande neutre.
+     * Le domande "mirate" (che nominano già un fatto negativo) misurano un'altra cosa — cosa esce se
+     * qualcuno sa già cosa cercare — e vanno in un blocco a parte.
+     *
+     * Rischio = % pesata (per engine) di risposte negative alle domande neutre del cluster rep.
+     * Non satura: è 100 solo se tutte le AI rispondono in negativo a tutte le domande reputazionali.
      */
     public function metrics(array $responses, array $analyses, array $engines, array $project): array
     {
@@ -26,6 +33,7 @@ class ReportBuilderService
         $judged = 0;
         $wTotal = 0.0;
         $wMentioned = 0.0;
+        $mentionedN = 0;
         $sentSum = 0;
         $sentN = 0;
         $negative = 0;
@@ -35,8 +43,11 @@ class ReportBuilderService
         $homonymUncertain = 0;
         $negRepW = 0.0;
         $repW = 0.0;
+        $repN = 0;
+        $repNeg = 0;
         $negDomains = [];
         $byPrompt = [];
+        $lead = ['total' => 0, 'negative' => 0, 'by_engine' => [], 'prompts' => []];
 
         foreach ($responses as $r) {
             if ($r['status'] !== 'ok') {
@@ -47,11 +58,31 @@ class ReportBuilderService
             if (!$a) {
                 continue;
             }
+            $isNeg = (int) $a['negative'] === 1;
+            foreach ($a['negative_urls'] as $u) {
+                $d = EngineCollectorService::domainOf($u);
+                if ($d) {
+                    $negDomains[$d] = true; // le fonti negative sono reali comunque si sia arrivati a leggerle
+                }
+            }
+
+            // Domande mirate: blocco a parte
+            if ((int) ($r['prompt_leading'] ?? 0) === 1) {
+                $lead['total']++;
+                $lead['prompts'][(int) $r['prompt_id']] = $r['prompt_text'];
+                if ($isNeg) {
+                    $lead['negative']++;
+                    $lead['by_engine'][$r['engine']] = ($lead['by_engine'][$r['engine']] ?? 0) + 1;
+                }
+                continue;
+            }
+
             $judged++;
             $w = $weights[$r['engine']] ?? 1.0;
             $wTotal += $w;
             if ((int) $a['brand_mentioned'] === 1) {
                 $wMentioned += $w;
+                $mentionedN++;
                 $sentSum += (int) $a['sentiment'];
                 $sentN++;
             }
@@ -62,21 +93,16 @@ class ReportBuilderService
             if ($a['is_homonym'] === 'uncertain') {
                 $homonymUncertain++;
             }
-            $isNeg = (int) $a['negative'] === 1;
             if ($isNeg) {
                 $negative++;
                 $negByEngine[$r['engine']] = ($negByEngine[$r['engine']] ?? 0) + 1;
-                foreach ($a['negative_urls'] as $u) {
-                    $d = EngineCollectorService::domainOf($u);
-                    if ($d) {
-                        $negDomains[$d] = true;
-                    }
-                }
             }
             if ($r['prompt_cluster'] === 'rep') {
                 $repW += $w;
+                $repN++;
                 if ($isNeg) {
                     $negRepW += $w;
+                    $repNeg++;
                 }
             }
             $pid = (int) $r['prompt_id'];
@@ -84,12 +110,12 @@ class ReportBuilderService
             $byPrompt[$pid]['engines'][$r['engine']] = true;
             if ($isNeg) {
                 $byPrompt[$pid]['negative'][$r['engine']] = true;
-            } elseif (in_array($a['verdict'], ['positive'], true)) {
+            } elseif ($a['verdict'] === 'positive') {
                 $byPrompt[$pid]['positive'][$r['engine']] = true;
             }
         }
 
-        // Divergenza: prompt dove almeno un engine è negativo e almeno uno no
+        // Divergenza (solo domande neutre): almeno un engine negativo e almeno uno no
         $divergent = [];
         foreach ($byPrompt as $pid => $p) {
             $n = count($p['engines']);
@@ -101,19 +127,21 @@ class ReportBuilderService
         }
         usort($divergent, fn($a, $b) => ($b['cluster'] === 'rep') <=> ($a['cluster'] === 'rep'));
 
-        $negRepShare = $repW > 0 ? $negRepW / $repW : 0.0;
-        $negOtherShare = $wTotal > 0 ? max(0, ($negative - $negRepW) / max(1, $wTotal)) : 0.0;
-        $risk = min(100, (int) round(60 * $negRepShare + 10 * count($negDomains) + 20 * $negOtherShare + ($homonymUncertain > 0 ? 5 : 0)));
-        $riskLabel = $risk >= 50 ? 'Alto' : ($risk >= 25 ? 'Medio' : 'Basso');
-        if ($judged === 0) {
-            $riskLabel = '–';
+        // Rischio: % pesata di risposte negative alle domande neutre sulla reputazione
+        if ($repW > 0) {
+            $risk = (int) round($negRepW / $repW * 100);
+            $riskBasis = "{$repNeg} su {$repN} risposte neutre sulla reputazione";
+        } else {
+            $risk = $wTotal > 0 ? (int) round($negative / max(1, $judged) * 100) : 0;
+            $riskBasis = "{$negative} su {$judged} risposte neutre";
         }
+        $riskLabel = $judged === 0 ? '–' : ($risk >= 30 ? 'Alto' : ($risk >= 10 ? 'Medio' : 'Basso'));
 
         return [
             'ok' => $ok,
             'judged' => $judged,
             'share' => $wTotal > 0 ? (int) round($wMentioned / $wTotal * 100) : 0,
-            'mentioned_n' => $verdicts['positive'] + $verdicts['neutral'] + $verdicts['mixed'] + $verdicts['negative'],
+            'mentioned_n' => $mentionedN,
             'sentiment' => $sentN > 0 ? round($sentSum / $sentN, 1) : null,
             'negative' => $negative,
             'negative_by_engine' => $negByEngine,
@@ -122,8 +150,10 @@ class ReportBuilderService
             'homonym_uncertain' => $homonymUncertain,
             'risk' => $risk,
             'risk_label' => $riskLabel,
+            'risk_basis' => $riskBasis,
             'negative_domains' => count($negDomains),
             'divergent' => $divergent,
+            'leading' => $lead,
         ];
     }
 
