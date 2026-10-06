@@ -346,6 +346,8 @@ function arReport() {
                 }
                 this.analyzing = true; this.message = ''; this.log = []; this.done = 0; this.percent = 0;
                 this.es = new EventSource(base + '/runs/stream?run_id=' + runId);
+                this.es.addEventListener('snapshot', e => { const d = JSON.parse(e.data); this.total = d.total; this.done = d.done; this.percent = d.total ? Math.round(d.done / d.total * 100) : 0; });
+                this.es.addEventListener('stalled', e => { const d = JSON.parse(e.data); this.message = d.message; this.analyzing = false; this.es.close(); });
                 this.es.addEventListener('phase', e => { const d = JSON.parse(e.data); this.total = d.total; this.done = 0; this.percent = 0; });
                 this.es.addEventListener('analysis_completed', e => { const d = JSON.parse(e.data); this.done++; this.percent = this.total ? Math.round(this.done / this.total * 100) : 0; this.log.unshift({ id: d.response_id, text: (this.labels[d.engine] || d.engine) + ': ' + d.verdict + ' · ' + (d.summary || '') }); });
                 this.es.addEventListener('analysis_error', e => { const d = JSON.parse(e.data); this.done++; this.log.unshift({ id: 'e' + d.response_id, text: (this.labels[d.engine] || d.engine) + ': errore judge · ' + d.error }); });

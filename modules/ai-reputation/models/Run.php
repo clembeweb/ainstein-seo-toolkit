@@ -91,6 +91,37 @@ class Run
         return Database::update('ar_runs', ['status' => self::STATUS_CANCELLED, 'finished_at' => date('Y-m-d H:i:s')], "id = ? AND status IN ('pending', 'running')", [$id]) > 0;
     }
 
+    /**
+     * Lease: prova a diventare l'unico stream che elabora il run. Rinnova se già proprietario.
+     * Scade dopo $staleSeconds senza heartbeat (stream morto).
+     */
+    public function acquireLease(int $id, string $token, int $staleSeconds = 300): bool
+    {
+        return Database::execute(
+            "UPDATE ar_runs SET locked_by = ?, locked_at = NOW()
+             WHERE id = ? AND (locked_by IS NULL OR locked_by = ? OR locked_at < NOW() - INTERVAL ? SECOND)",
+            [$token, $id, $token, $staleSeconds]
+        ) > 0 || (string) Database::fetchColumn("SELECT locked_by FROM ar_runs WHERE id = ?", [$id]) === $token;
+    }
+
+    public function releaseLease(int $id, string $token): void
+    {
+        Database::execute("UPDATE ar_runs SET locked_by = NULL, locked_at = NULL WHERE id = ? AND locked_by = ?", [$id, $token]);
+    }
+
+    /** Ricalcola i contatori dalle righe reali (robusto a riprese e interruzioni) */
+    public function recount(int $id): void
+    {
+        Database::execute("
+            UPDATE ar_runs r SET
+                responses_done = (SELECT COUNT(*) FROM ar_responses WHERE run_id = r.id AND status = 'ok'),
+                responses_error = (SELECT COUNT(*) FROM ar_responses WHERE run_id = r.id AND status = 'error'),
+                analyses_done = (SELECT COUNT(*) FROM ar_analyses WHERE run_id = r.id),
+                cost_total = (SELECT COALESCE(SUM(cost), 0) FROM ar_responses WHERE run_id = r.id)
+            WHERE r.id = ?
+        ", [$id]);
+    }
+
     public function isCancelled(int $id): bool
     {
         return Database::fetchColumn("SELECT status FROM ar_runs WHERE id = ?", [$id]) === self::STATUS_CANCELLED;

@@ -167,6 +167,21 @@ class RunController
         }
         $sendEvent('started', ['run_id' => $runId, 'total' => (int) $run['responses_total']]);
 
+        // Un solo stream elabora il run (lease su ar_runs). Gli altri seguono l'avanzamento dal DB.
+        $token = bin2hex(random_bytes(8));
+        if (!$this->run->acquireLease($runId, $token)) {
+            $this->follow($runId, $projectId, $sendEvent);
+            exit;
+        }
+        register_shutdown_function(function () use ($runId, $token) {
+            try {
+                Database::reconnect();
+                (new Run())->releaseLease($runId, $token);
+            } catch (\Throwable $e) {
+                // il lease scade comunque da solo
+            }
+        });
+
         $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
         $subject = $project['subject_name'];
 
@@ -179,6 +194,7 @@ class RunController
 
             while (true) {
                 Database::reconnect();
+                $this->run->acquireLease($runId, $token);
                 if ($this->run->isCancelled($runId)) {
                     $sendEvent('cancelled', ['run_id' => $runId]);
                     exit;
@@ -229,6 +245,7 @@ class RunController
             $judge = new JudgeService();
             foreach ($toJudge as $item) {
                 Database::reconnect();
+                $this->run->acquireLease($runId, $token);
                 if (!$wasCompleted && $this->run->isCancelled($runId)) {
                     $sendEvent('cancelled', ['run_id' => $runId]);
                     exit;
@@ -268,7 +285,9 @@ class RunController
         $responses = $this->run->responses($runId);
         $analyses = $this->analysis->byRun($runId);
         $built = (new ReportBuilderService())->persist($runId, $projectId, $project, $responses, $analyses, Project::ENGINE_LABELS);
+        $this->run->recount($runId);
         $this->run->complete($runId);
+        $this->run->releaseLease($runId, $token);
         $final = $this->run->find($runId);
 
         $sendEvent('completed', [
@@ -297,6 +316,60 @@ class RunController
             }
         }
         exit;
+    }
+
+    /**
+     * Stream "spettatore": un altro processo sta elaborando il run. Emette snapshot dal DB finché finisce.
+     */
+    private function follow(int $runId, int $projectId, callable $sendEvent): void
+    {
+        $sendEvent('attached', ['run_id' => $runId, 'message' => 'Run già in elaborazione: mostro l\'avanzamento']);
+        $last = '';
+        $idle = 0;
+        while (true) {
+            Database::reconnect();
+            $r = $this->run->find($runId);
+            if (!$r) {
+                break;
+            }
+            $total = (int) $r['responses_total'];
+            $done = (int) Database::fetchColumn("SELECT COUNT(*) FROM ar_responses WHERE run_id = ? AND status <> 'pending'", [$runId]);
+            $analyzed = (int) Database::fetchColumn("SELECT COUNT(*) FROM ar_analyses WHERE run_id = ?", [$runId]);
+            $phase = $done < $total ? 'Raccolta risposte' : 'Analisi delle risposte';
+            $snap = [
+                'run_id' => $runId, 'phase' => $phase,
+                'done' => $done < $total ? $done : $analyzed,
+                'total' => $done < $total ? $total : (int) $r['responses_done'],
+            ];
+            $key = json_encode($snap);
+            if ($key !== $last) {
+                $sendEvent('snapshot', $snap);
+                $last = $key;
+                $idle = 0;
+            }
+            if (in_array($r['status'], [Run::STATUS_COMPLETED, Run::STATUS_FAILED, Run::STATUS_CANCELLED], true)) {
+                $sendEvent($r['status'] === Run::STATUS_CANCELLED ? 'cancelled' : 'completed', [
+                    'run_id' => $runId,
+                    'done' => (int) $r['responses_done'],
+                    'errors' => (int) $r['responses_error'],
+                    'analyses' => (int) $r['analyses_done'],
+                    'actions' => (int) Database::fetchColumn("SELECT COUNT(*) FROM ar_actions WHERE run_id = ?", [$runId]),
+                    'homonyms' => 0,
+                    'cost_total' => (float) $r['cost_total'],
+                    'report_url' => Router::url("/ai-reputation/project/{$projectId}/runs/{$runId}"),
+                ]);
+                return;
+            }
+            // lease scaduto (processo morto): fermati, la prossima apertura della pagina riprende il lavoro
+            if ($r['locked_by'] === null || (strtotime((string) $r['locked_at']) < time() - 300)) {
+                $sendEvent('stalled', ['run_id' => $runId, 'message' => 'Elaborazione interrotta: ricarica la pagina per riprendere']);
+                return;
+            }
+            if (++$idle > 600) {
+                return;
+            }
+            sleep(3);
+        }
     }
 
     /**
