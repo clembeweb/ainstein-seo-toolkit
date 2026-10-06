@@ -31,6 +31,12 @@ report con occhio da demo: verdetti, fonti, azioni, "Da confermare". Annotare qu
   crediti ignorati, run che restava "in corso" su errore o finiva "completato" senza risposte, cancellazione domande che
   riscriveva lo storico (ora si disattiva), link non http(s), sito non pubblico (SSRF), redirect `back`, doppio clic su
   Avvia run. Testato con un progetto di prova: 2 stream insieme → 4 risposte, 4 chiamate API, nessun doppione.
+- Fatto 2026-10-06 sera: controllo a campione 20 verdetti (negativo sì/no 20/20; rumore sbagliato 8/20 → corretto;
+  contraddizioni coi fatti → nuovo campo) in `docs/2026-10-06-controllo-verdetti-judge.md`. Run 4 con 3 ripetizioni
+  ChatGPT sulle rep (138 risposte, 0 errori, 2,70 $, 50 min): rischio Alto 47%, stabilità ChatGPT 3 celle su 6,
+  Gemini smentisce i fatti confermati in 5 risposte ("non risultano procedimenti"), 17 fonti negative, sito ufficiale
+  mai più nel rumore (6 → 0). Report: `/ai-reputation/project/1/runs/4`. Da valutare: 23 azioni di rimozione sono
+  tante, raggrupparle per dominio.
 - Aperto: judge può girare sul modello di fallback (judge_model registrato non è quello reale); sezioni C (costi/tenuta)
   e D (prodotto/demo) dell'analisi ancora da presentare a Clemente.
 
