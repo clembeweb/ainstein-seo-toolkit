@@ -112,195 +112,230 @@ $isActive = in_array($run['status'], ['pending', 'running'], true);
         </div>
     </div>
 
-    <?php if ($hasAnalyses && $metrics['leading']['total'] > 0): ?>
-    <?php $ld = $metrics['leading']; ?>
-    <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 px-5 py-4">
-        <h3 class="text-base font-semibold text-slate-900 dark:text-white">Domande mirate: cosa esce se qualcuno sa già cosa cercare</h3>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            <?= count($ld['prompts']) ?> domande nominano già un fatto negativo (es. "<?= e(mb_substr((string) reset($ld['prompts']), 0, 90)) ?>"). Non entrano nel rischio né nelle metriche sopra:
-            mostrano cosa raccontano le AI a chi cerca proprio quel fatto.
-        </p>
-        <p class="text-sm text-slate-800 dark:text-slate-100 mt-2">
-            <strong><?= $ld['negative'] ?> risposte negative su <?= $ld['total'] ?></strong><?php if ($ld['by_engine']): ?> · <?= e(implode(' · ', array_map(fn($k, $v) => ($engineLabels[$k] ?? $k) . ' ' . $v, array_keys($ld['by_engine']), $ld['by_engine']))) ?><?php endif; ?>
-        </p>
-    </div>
-    <?php endif; ?>
-
-    <?php if ($hasAnalyses && $metrics['divergent']): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 px-5 py-4">
-        <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-2">Dove le AI non sono d'accordo</h3>
-        <ul class="space-y-1 text-sm">
-            <?php foreach ($metrics['divergent'] as $d): ?>
-            <li class="text-slate-700 dark:text-slate-200">
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-1 <?= $clusterClass($d['cluster']) ?>"><?= strtoupper($d['cluster']) ?></span>
-                "<?= e($d['prompt']) ?>" → negativo per <strong><?= e(implode(', ', array_map(fn($x) => $engineLabels[$x] ?? $x, $d['negative_engines']))) ?></strong>, non per gli altri (<?= $d['negative'] ?>/<?= $d['total'] ?>)
-            </li>
-            <?php endforeach; ?>
-        </ul>
-    </div>
-    <?php endif; ?>
-
-    <!-- Griglia domanda x engine -->
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-        <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
-            <h3 class="text-base font-semibold text-slate-900 dark:text-white">Cosa risponde ogni AI</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Clicca una cella per leggere la risposta, il giudizio e le fonti.</p>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-slate-50 dark:bg-slate-700/50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-2/5">Domanda</th>
-                        <?php foreach ($engines as $engine): ?>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= e($engineLabels[$engine] ?? $engine) ?></th>
-                        <?php endforeach; ?>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                    <?php foreach ($grid as $row): ?>
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 align-top">
-                        <td class="px-4 py-3 text-sm text-slate-900 dark:text-white">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-2 <?= $clusterClass($row['prompt']['cluster']) ?>"><?= strtoupper($row['prompt']['cluster']) ?></span>
-                            <?php if (!empty($row['prompt']['leading'])): ?><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-2 bg-slate-200 text-slate-700 dark:bg-slate-600 dark:text-slate-200" title="Nomina già un fatto negativo: esclusa dal rischio">mirata</span><?php endif; ?>
-                            <?= e($row['prompt']['text']) ?>
-                        </td>
-                        <?php foreach ($engines as $engine): ?>
-                        <td class="px-4 py-3">
-                            <?php foreach ($row['cells'][$engine] ?? [] as $r): ?>
-                                <?php if (in_array($r['status'], ['pending', 'processing'], true)): ?>
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400">in attesa</span>
-                                <?php elseif ($r['status'] === 'error'): ?>
-                                <button type="button" @click="open(<?= (int) $r['id'] ?>)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300" title="<?= e((string) $r['error_message']) ?>">errore</button>
-                                <?php else: ?>
-                                <?php [$label, $cls] = $verdictChip($r['analysis'], $r['mentioned']); ?>
-                                <button type="button" @click="open(<?= (int) $r['id'] ?>)" class="group text-left block mb-1">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $cls ?>"><?= e($label) ?></span>
-                                    <span class="block mt-1 text-xs text-slate-500 dark:text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 max-w-[14rem]">
-                                        <?= $r['analysis'] && $r['analysis']['summary'] ? e(mb_substr($r['analysis']['summary'], 0, 110)) . (mb_strlen($r['analysis']['summary']) > 110 ? '…' : '') : count($r['citations']) . ' fonti · ' . round(((int) $r['latency_ms']) / 1000) . ' s' ?>
-                                    </span>
-                                </button>
-                                <?php endif; ?>
-                            <?php endforeach; ?>
-                        </td>
-                        <?php endforeach; ?>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Fonti citate -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-            <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
-                <h3 class="text-base font-semibold text-slate-900 dark:text-white">Fonti che le AI citano</h3>
-                <p class="text-sm text-slate-500 dark:text-slate-400">Chi alimenta le risposte. "Negativa" = sostiene fatti negativi. "Rumore" = non parla del soggetto.</p>
+    <?php
+    // ---- dati per la parte centrale: interventi raggruppati, filtri della griglia ----
+    $removals = array_values(array_filter($actions, fn($a) => $a['type'] === 'removal'));
+    $writes = array_values(array_filter($actions, fn($a) => $a['type'] !== 'removal'));
+    $divergentIds = array_flip(array_map(fn($d) => (int) $d['prompt_id'], $metrics['divergent'] ?? []));
+    $rowFlags = [];
+    foreach ($grid as $pid => $row) {
+        $neg = false;
+        foreach ($row['cells'] as $cells) {
+            foreach ($cells as $r) {
+                if (!empty($r['analysis']) && (int) $r['analysis']['negative'] === 1) {
+                    $neg = true;
+                }
+            }
+        }
+        $rowFlags[$pid] = ['neg' => $neg, 'div' => isset($divergentIds[(int) $pid])];
+    }
+    $countRep = count(array_filter($grid, fn($r) => $r['prompt']['cluster'] === 'rep'));
+    $countNeg = count(array_filter($rowFlags, fn($f) => $f['neg']));
+    $countDiv = count($divergentIds);
+    $ld = $metrics['leading'] ?? ['total' => 0];
+    $actionRow = function (array $a) use ($actionClass, $actionLabel): string {
+        $urls = array_values(array_filter((array) (json_decode((string) ($a['target_urls'] ?? ''), true) ?: ($a['target_url'] ? [$a['target_url']] : [])), fn($u) => preg_match('#^https?://#i', (string) $u)));
+        ob_start(); ?>
+        <li class="px-5 py-2.5" x-data="{ open: false }">
+            <button type="button" @click="open = !open" class="w-full flex items-center gap-3 text-left">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap <?= $actionClass[$a['type']] ?? '' ?>"><?= $actionLabel[$a['type']] ?? $a['type'] ?></span>
+                <span class="flex-1 min-w-0 truncate text-sm font-medium text-slate-900 dark:text-white"><?= e($a['title']) ?></span>
+                <svg class="w-4 h-4 text-slate-400 shrink-0 transition-transform" :class="open && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+            </button>
+            <div x-show="open" x-cloak class="mt-2 ml-1 pl-3 border-l-2 border-slate-200 dark:border-slate-700 text-xs space-y-1">
+                <p class="text-slate-600 dark:text-slate-300"><?= e((string) $a['rationale']) ?></p>
+                <?php foreach (array_slice($urls, 0, 8) as $u): ?>
+                <a href="<?= e($u) ?>" target="_blank" rel="noopener" class="block text-indigo-600 dark:text-indigo-400 hover:underline break-all"><?= e(mb_strimwidth($u, 0, 120, '…')) ?></a>
+                <?php endforeach; ?>
+                <?php if (count($urls) > 8): ?><p class="text-slate-400">+<?= count($urls) - 8 ?> pagine</p><?php endif; ?>
             </div>
-            <?php if (empty($sources)): ?>
-            <div class="p-8 text-center text-sm text-slate-500 dark:text-slate-400">Nessuna fonte citata.</div>
-            <?php else: ?>
+        </li>
+        <?php return (string) ob_get_clean();
+    };
+    ?>
+
+    <!-- Interventi suggeriti: subito sotto i numeri -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700" x-data="{ allRem: false }">
+        <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex flex-wrap items-baseline justify-between gap-2">
+            <h3 class="text-base font-semibold text-slate-900 dark:text-white">Interventi suggeriti</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400"><?= count($writes) ?> contenuti da pubblicare · <?= count($removals) ?> siti da contattare · clicca una riga per i dettagli</p>
+        </div>
+        <?php if (empty($actions)): ?>
+        <div class="p-6 text-center text-sm text-slate-500 dark:text-slate-400"><?= $hasAnalyses ? 'Nessun intervento necessario: nessun contenuto negativo e soggetto citato dove conta.' : 'Compaiono dopo l\'analisi.' ?></div>
+        <?php else: ?>
+        <div class="grid grid-cols-1 lg:grid-cols-2 lg:divide-x divide-slate-200 dark:divide-slate-700">
+            <div>
+                <p class="px-5 pt-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Da pubblicare</p>
+                <ul class="divide-y divide-slate-100 dark:divide-slate-700/60">
+                    <?php foreach ($writes as $a): ?><?= $actionRow($a) ?><?php endforeach; ?>
+                    <?php if (!$writes): ?><li class="px-5 py-3 text-sm text-slate-400">Nessuno</li><?php endif; ?>
+                </ul>
+            </div>
+            <div>
+                <p class="px-5 pt-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Da far rimuovere o aggiornare</p>
+                <ul class="divide-y divide-slate-100 dark:divide-slate-700/60">
+                    <?php foreach ($removals as $i => $a): ?>
+                    <?php if ($i >= 6): ?><template x-if="allRem"><div><?= $actionRow($a) ?></div></template><?php else: ?><?= $actionRow($a) ?><?php endif; ?>
+                    <?php endforeach; ?>
+                    <?php if (!$removals): ?><li class="px-5 py-3 text-sm text-slate-400">Nessuno</li><?php endif; ?>
+                </ul>
+                <?php if (count($removals) > 6): ?>
+                <button type="button" @click="allRem = !allRem" class="px-5 py-2.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline" x-text="allRem ? 'Mostra meno' : 'Mostra tutti i <?= count($removals) ?> siti'"></button>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Dettaglio in schede: niente scroll infinito -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700" x-data="{ tab: 'answers', filter: 'rep' }">
+        <div class="border-b border-slate-200 dark:border-slate-700 px-3 flex flex-wrap gap-1">
+            <?php
+            $tabs = ['answers' => 'Risposte delle AI', 'sources' => 'Fonti (' . count($sources) . ')'];
+            if (!empty($competitors)) $tabs['competitors'] = 'Chi citano al posto suo (' . count($competitors) . ')';
+            if (!empty($homonyms)) $tabs['homonyms'] = 'Da confermare (' . count($homonyms) . ')';
+            ?>
+            <?php foreach ($tabs as $k => $label): ?>
+            <button type="button" @click="tab = '<?= $k ?>'" class="px-3 py-3 text-sm font-medium border-b-2 -mb-px transition-colors" :class="tab === '<?= $k ?>' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'">
+                <?= e($label) ?><?php if ($k === 'homonyms'): ?><span class="ml-1 inline-block w-2 h-2 rounded-full bg-amber-500 align-middle"></span><?php endif; ?>
+            </button>
+            <?php endforeach; ?>
+        </div>
+
+        <!-- Scheda: risposte -->
+        <div x-show="tab === 'answers'">
+            <div class="px-5 py-3 flex flex-wrap items-center gap-2 border-b border-slate-100 dark:border-slate-700/60">
+                <?php foreach (['rep' => "Reputazione ({$countRep})", 'div' => "Le AI non concordano ({$countDiv})", 'neg' => "Con risposte negative ({$countNeg})", 'all' => 'Tutte (' . count($grid) . ')'] as $k => $label): ?>
+                <button type="button" @click="filter = '<?= $k ?>'" class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors" :class="filter === '<?= $k ?>' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300'"><?= e($label) ?></button>
+                <?php endforeach; ?>
+                <?php if ($hasAnalyses && ($ld['total'] ?? 0) > 0): ?>
+                <span class="ml-auto text-xs text-slate-500 dark:text-slate-400" title="Domande che nominano già un fatto negativo: fuori dal rischio">Domande "mirate": <?= (int) $ld['negative'] ?> negative su <?= (int) $ld['total'] ?></span>
+                <?php endif; ?>
+            </div>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-slate-50 dark:bg-slate-700/50">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Dominio</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cit.</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stato</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pagine</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-2/5">Domanda</th>
+                            <?php foreach ($engines as $engine): ?>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= e($engineLabels[$engine] ?? $engine) ?></th>
+                            <?php endforeach; ?>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                        <?php foreach ($sources as $d): ?>
-                        <?php [$sl, $sc] = match ($d['status']) {
-                            'negative' => ['negativa', 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'],
-                            'noise' => ['rumore', 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400'],
-                            default => [$hasAnalyses ? 'ok' : '–', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'],
-                        }; ?>
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 align-top">
-                            <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white"><?= e($d['domain']) ?><div class="text-xs font-normal text-slate-400"><?= e(implode(', ', array_map(fn($en) => $engineLabels[$en] ?? $en, array_keys($d['engines'])))) ?></div></td>
-                            <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300"><?= (int) $d['count'] ?></td>
-                            <td class="px-4 py-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $sc ?>"><?= $sl ?></span></td>
-                            <td class="px-4 py-3 text-xs">
-                                <?php foreach (array_slice($d['urls'], 0, 3, true) as $u => $info): ?>
-                                <a href="<?= e($u) ?>" target="_blank" rel="noopener" class="block truncate max-w-[16rem] <?= $info['negative'] ? 'text-red-600 dark:text-red-400' : 'text-indigo-600 dark:text-indigo-400' ?> hover:underline" title="<?= e($u) ?>"><?= e($info['title'] ?: $u) ?></a>
-                                <?php endforeach; ?>
-                                <?php if (count($d['urls']) > 3): ?><span class="text-slate-400">+<?= count($d['urls']) - 3 ?></span><?php endif; ?>
+                        <?php foreach ($grid as $pid => $row): ?>
+                        <?php $f = $rowFlags[$pid]; $cl = $row['prompt']['cluster']; ?>
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 align-top"
+                            x-show="filter === 'all' || (filter === 'rep' && <?= $cl === 'rep' ? 'true' : 'false' ?>) || (filter === 'div' && <?= $f['div'] ? 'true' : 'false' ?>) || (filter === 'neg' && <?= $f['neg'] ? 'true' : 'false' ?>)">
+                            <td class="px-4 py-3 text-sm text-slate-900 dark:text-white">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-1 <?= $clusterClass($cl) ?>"><?= strtoupper($cl) ?></span>
+                                <?php if (!empty($row['prompt']['leading'])): ?><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-1 bg-slate-200 text-slate-700 dark:bg-slate-600 dark:text-slate-200" title="Nomina già un fatto negativo: esclusa dal rischio">mirata</span><?php endif; ?>
+                                <?php if ($f['div']): ?><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-1 bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300" title="Almeno un'AI risponde in negativo e almeno una no">disaccordo</span><?php endif; ?>
+                                <?= e($row['prompt']['text']) ?>
                             </td>
+                            <?php foreach ($engines as $engine): ?>
+                            <td class="px-4 py-3">
+                                <?php $cells = $row['cells'][$engine] ?? []; ?>
+                                <div class="flex flex-wrap gap-1">
+                                <?php foreach ($cells as $r): ?>
+                                    <?php if (in_array($r['status'], ['pending', 'processing'], true)): ?>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400">in attesa</span>
+                                    <?php elseif ($r['status'] === 'error'): ?>
+                                    <button type="button" @click="open(<?= (int) $r['id'] ?>)" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300" title="<?= e((string) $r['error_message']) ?>">errore</button>
+                                    <?php else: ?>
+                                    <?php [$label, $cls] = $verdictChip($r['analysis'], $r['mentioned']); ?>
+                                    <button type="button" @click="open(<?= (int) $r['id'] ?>)" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium hover:ring-2 hover:ring-indigo-300 <?= $cls ?>" title="<?= e((string) ($r['analysis']['summary'] ?? '')) ?>"><?= e($label) ?></button>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                                </div>
+                                <?php if (count($cells) === 1 && !empty($cells[0]['analysis']['summary'])): ?>
+                                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-[14rem] line-clamp-2"><?= e($cells[0]['analysis']['summary']) ?></p>
+                                <?php endif; ?>
+                            </td>
+                            <?php endforeach; ?>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
+            <p class="px-5 py-2.5 text-xs text-slate-400 border-t border-slate-100 dark:border-slate-700/60">Clicca un esito per leggere risposta, giudizio e fonti. Più esiti nella stessa cella = ripetizioni.</p>
+        </div>
+
+        <!-- Scheda: fonti -->
+        <div x-show="tab === 'sources'" x-cloak x-data="{ allSrc: false }">
+            <?php if (empty($sources)): ?>
+            <div class="p-8 text-center text-sm text-slate-500 dark:text-slate-400">Nessuna fonte citata.</div>
+            <?php else: ?>
+            <p class="px-5 py-3 text-xs text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700/60">"Negativa" = sostiene fatti negativi · "rumore" = non parla del soggetto.</p>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-slate-50 dark:bg-slate-700/50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Sito</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Citazioni</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stato</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">AI che lo citano</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                        <?php foreach ($sources as $i => $d): ?>
+                        <?php [$sl, $sc] = match ($d['status']) {
+                            'negative' => ['negativa', 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'],
+                            'noise' => ['rumore', 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400'],
+                            default => [$hasAnalyses ? 'ok' : '–', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'],
+                        }; ?>
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50" <?= $i >= 10 ? 'x-show="allSrc"' : '' ?>>
+                            <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">
+                                <?php $firstUrl = (string) array_key_first($d['urls']); ?>
+                                <a href="<?= e($firstUrl) ?>" target="_blank" rel="noopener" class="hover:underline" title="<?= e((string) ($d['urls'][$firstUrl]['title'] ?? '')) ?>"><?= e($d['domain']) ?></a>
+                                <?php if (count($d['urls']) > 1): ?><span class="text-xs font-normal text-slate-400"> · <?= count($d['urls']) ?> pagine</span><?php endif; ?>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300"><?= (int) $d['count'] ?></td>
+                            <td class="px-4 py-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $sc ?>"><?= $sl ?></span></td>
+                            <td class="px-4 py-3 text-xs text-slate-500 dark:text-slate-400"><?= e(implode(', ', array_map(fn($en) => $engineLabels[$en] ?? $en, array_keys($d['engines'])))) ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php if (count($sources) > 10): ?>
+            <button type="button" @click="allSrc = !allSrc" class="px-5 py-2.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline" x-text="allSrc ? 'Mostra meno' : 'Mostra tutti i <?= count($sources) ?> siti'"></button>
+            <?php endif; ?>
             <?php endif; ?>
         </div>
 
-        <!-- Piano d'azione + competitor -->
-        <div class="space-y-6">
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-                <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
-                    <h3 class="text-base font-semibold text-slate-900 dark:text-white">Piano d'azione</h3>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">Cosa far rimuovere, cosa far scrivere.</p>
-                </div>
-                <?php if (empty($actions)): ?>
-                <div class="p-8 text-center text-sm text-slate-500 dark:text-slate-400"><?= $hasAnalyses ? 'Nessuna azione necessaria: nessun contenuto negativo e soggetto citato dove conta.' : 'Compare dopo l\'analisi.' ?></div>
-                <?php else: ?>
-                <ul class="divide-y divide-slate-200 dark:divide-slate-700">
-                    <?php foreach ($actions as $a): ?>
-                    <li class="px-5 py-3 flex gap-3 items-start">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap mt-0.5 <?= $actionClass[$a['type']] ?? '' ?>"><?= $actionLabel[$a['type']] ?? $a['type'] ?></span>
-                        <div class="min-w-0 text-sm">
-                            <p class="font-medium text-slate-900 dark:text-white"><?= e($a['title']) ?></p>
-                            <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5"><?= e((string) $a['rationale']) ?></p>
-                            <?php $urls = array_values(array_filter((array) (json_decode((string) ($a['target_urls'] ?? ''), true) ?: ($a['target_url'] ? [$a['target_url']] : [])), fn($u) => preg_match('#^https?://#i', (string) $u))); ?>
-                            <?php if ($urls): ?>
-                            <ul class="mt-1 space-y-0.5">
-                                <?php foreach (array_slice($urls, 0, 5) as $u): ?>
-                                <li><a href="<?= e($u) ?>" target="_blank" rel="noopener" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline break-all"><?= e(mb_strimwidth($u, 0, 110, '…')) ?></a></li>
-                                <?php endforeach; ?>
-                                <?php if (count($urls) > 5): ?><li class="text-xs text-slate-400">+<?= count($urls) - 5 ?> pagine</li><?php endif; ?>
-                            </ul>
-                            <?php endif; ?>
-                        </div>
-                    </li>
-                    <?php endforeach; ?>
-                </ul>
-                <?php endif; ?>
+        <?php if (!empty($competitors)): ?>
+        <!-- Scheda: concorrenti -->
+        <div x-show="tab === 'competitors'" x-cloak class="px-5 py-4">
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Nomi che le AI propongono quando la domanda è commerciale o competitiva. Il numero è quante volte compaiono.</p>
+            <div class="flex flex-wrap gap-1.5">
+                <?php foreach ($competitors as $c): ?>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200"><?= e($c['name']) ?> <span class="ml-1 text-slate-400"><?= (int) $c['count'] ?></span></span>
+                <?php endforeach; ?>
             </div>
-
-            <?php if (!empty($competitors)): ?>
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 px-5 py-4">
-                <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-2">Chi citano al posto suo</h3>
-                <div class="flex flex-wrap gap-1.5">
-                    <?php foreach ($competitors as $c): ?>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200"><?= e($c['name']) ?> <span class="ml-1 text-slate-400"><?= (int) $c['count'] ?></span></span>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-            <?php endif; ?>
         </div>
-    </div>
+        <?php endif; ?>
 
-    <!-- Da confermare (ADR-008) -->
-    <?php if (!empty($homonyms)): ?>
-    <div class="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 px-5 py-4">
-        <h3 class="text-base font-semibold text-amber-900 dark:text-amber-200">Da confermare: possibili omonimi</h3>
-        <p class="text-sm text-amber-800 dark:text-amber-300 mb-3">Le AI hanno attribuito al nome fatti che non tornano col profilo. Il tool non decide: dillo tu.</p>
-        <ul class="space-y-2">
-            <?php foreach ($homonyms as $h): ?>
-            <li class="flex flex-wrap items-center justify-between gap-3 bg-white/70 dark:bg-slate-800/60 rounded-lg px-4 py-3 text-sm">
-                <span class="text-slate-800 dark:text-slate-100"><?= e($h['text']) ?></span>
-                <?php if ($canEdit): ?>
-                <span class="flex gap-2">
-                    <form method="POST" action="<?= url("{$basePath}/profile/facts/{$h['id']}/homonym-yes") ?>"><input type="hidden" name="_csrf_token" value="<?= $csrf ?>"><input type="hidden" name="back" value="<?= e("{$basePath}/runs/{$run['id']}") ?>"><button type="submit" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs font-medium hover:bg-slate-700">Sì, è lui</button></form>
-                    <form method="POST" action="<?= url("{$basePath}/profile/facts/{$h['id']}/homonym-no") ?>"><input type="hidden" name="_csrf_token" value="<?= $csrf ?>"><input type="hidden" name="back" value="<?= e("{$basePath}/runs/{$run['id']}") ?>"><button type="submit" class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700">No, è un altro</button></form>
-                </span>
-                <?php endif; ?>
-            </li>
-            <?php endforeach; ?>
-        </ul>
+        <?php if (!empty($homonyms)): ?>
+        <!-- Scheda: omonimi da confermare (ADR-008) -->
+        <div x-show="tab === 'homonyms'" x-cloak class="px-5 py-4">
+            <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Le AI hanno attribuito al nome fatti che non tornano col profilo. Il tool non decide: dillo tu.</p>
+            <ul class="space-y-2">
+                <?php foreach ($homonyms as $h): ?>
+                <li class="flex flex-wrap items-center justify-between gap-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg px-4 py-3 text-sm">
+                    <span class="text-slate-800 dark:text-slate-100"><?= e($h['text']) ?></span>
+                    <?php if ($canEdit): ?>
+                    <span class="flex gap-2">
+                        <form method="POST" action="<?= url("{$basePath}/profile/facts/{$h['id']}/homonym-yes") ?>"><input type="hidden" name="_csrf_token" value="<?= $csrf ?>"><input type="hidden" name="back" value="<?= e("{$basePath}/runs/{$run['id']}") ?>"><button type="submit" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs font-medium hover:bg-slate-700">Sì, è lui</button></form>
+                        <form method="POST" action="<?= url("{$basePath}/profile/facts/{$h['id']}/homonym-no") ?>"><input type="hidden" name="_csrf_token" value="<?= $csrf ?>"><input type="hidden" name="back" value="<?= e("{$basePath}/runs/{$run['id']}") ?>"><button type="submit" class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700">No, è un altro</button></form>
+                    </span>
+                    <?php endif; ?>
+                </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+        <?php endif; ?>
     </div>
-    <?php endif; ?>
 
     <!-- Modal risposta -->
     <div x-show="current" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60" @click.self="current = null" @keydown.escape.window="current = null">
