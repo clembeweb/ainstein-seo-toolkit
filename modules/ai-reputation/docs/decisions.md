@@ -145,3 +145,21 @@ quasi nessuno la usa, ma costa 0,0014 $ a domanda e ha trovato le fonti negative
 **Consequences**: `ar_projects.engines` default `["openai","gemini","perplexity"]` con peso per engine
 in `module.json` (openai 1, gemini 1, perplexity 0.3) usato dalle metriche aggregate; i prompt della
 fetta 1 sono righe `ar_prompts` con `origin = manual`.
+
+## ADR-010: Il "blocco" su ChatGPT non vale per l'API: il report misura due cose diverse e lo dice
+
+**Date**: 2026-10-06 · **Status**: Accepted (dopo il messaggio di Gabriele "abbiamo bloccato la query su ChatGPT")
+
+**Context**: Tutela Digitale ha ottenuto che ChatGPT (app consumer) non risponda più su Marcaccini, presumibilmente
+con una richiesta privacy/diritto all'oblio a OpenAI (privacy.openai.com, "Remove my personal data from ChatGPT
+responses"). Test del 2026-10-06 sull'API Responses (`gpt-5-mini` + web_search): risponde ancora, con fonti, a
+"Chi è Federico Marcaccini?". Le richieste di rimozione OpenAI sono documentate per le risposte di ChatGPT; il
+filtro non risulta applicato all'API.
+
+**Decision**: il tool continua a misurare via API (ADR-005), ma il report lo dichiara in chiaro: "ChatGPT (API)"
+non è "ChatGPT app". Per i soggetti con rimozione ottenuta, un controllo manuale sull'app resta il dato di verità
+per quel canale. Il blocco è anche un argomento commerciale: blocca un canale, non l'informazione (le stesse fonti
+restano leggibili da API, Gemini, Perplexity e da chiunque costruisca su quei modelli).
+
+**Consequences**: etichetta engine "ChatGPT (API)" nei report; campo futuro per segnare "rimozione ottenuta su
+app" per engine (v1). Test di riferimento: `scratchpad` 2026-10-06, nessun costo rilevante.

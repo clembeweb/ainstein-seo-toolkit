@@ -17,7 +17,7 @@ class Project
     public const ENGINES = ['openai', 'gemini', 'perplexity', 'anthropic'];
 
     public const ENGINE_LABELS = [
-        'openai' => 'ChatGPT (OpenAI)',
+        'openai' => 'ChatGPT (API)',
         'gemini' => 'Gemini (Google)',
         'perplexity' => 'Perplexity',
         'anthropic' => 'Claude (Anthropic)',
