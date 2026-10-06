@@ -252,7 +252,15 @@ $isActive = in_array($run['status'], ['pending', 'running'], true);
                         <div class="min-w-0 text-sm">
                             <p class="font-medium text-slate-900 dark:text-white"><?= e($a['title']) ?></p>
                             <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5"><?= e((string) $a['rationale']) ?></p>
-                            <?php if (!empty($a['target_url'])): ?><a href="<?= e($a['target_url']) ?>" target="_blank" rel="noopener" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline break-all"><?= e($a['target_url']) ?></a><?php endif; ?>
+                            <?php $urls = array_values(array_filter((array) (json_decode((string) ($a['target_urls'] ?? ''), true) ?: ($a['target_url'] ? [$a['target_url']] : [])), fn($u) => preg_match('#^https?://#i', (string) $u))); ?>
+                            <?php if ($urls): ?>
+                            <ul class="mt-1 space-y-0.5">
+                                <?php foreach (array_slice($urls, 0, 5) as $u): ?>
+                                <li><a href="<?= e($u) ?>" target="_blank" rel="noopener" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline break-all"><?= e(mb_strimwidth($u, 0, 110, '…')) ?></a></li>
+                                <?php endforeach; ?>
+                                <?php if (count($urls) > 5): ?><li class="text-xs text-slate-400">+<?= count($urls) - 5 ?> pagine</li><?php endif; ?>
+                            </ul>
+                            <?php endif; ?>
                         </div>
                     </li>
                     <?php endforeach; ?>

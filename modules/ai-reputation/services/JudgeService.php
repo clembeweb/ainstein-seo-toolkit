@@ -183,6 +183,37 @@ TXT;
         return $data;
     }
 
+    /** Chiave di confronto URL: niente schema, www, barra finale, utm_*, maiuscole nell'host */
+    public static function urlKey(string $url): string
+    {
+        $u = trim($url);
+        $u = preg_replace('/([?&])utm_[a-z]+=[^&#]*/i', '$1', $u) ?? $u;
+        $u = preg_replace('#^https?://(www\.)?#i', '', $u) ?? $u;
+        $u = rtrim($u, '/?&#');
+        $slash = strpos($u, '/');
+        return $slash === false ? strtolower($u) : strtolower(substr($u, 0, $slash)) . substr($u, $slash);
+    }
+
+    /** URL citati (forma originale) che corrispondono a quelli indicati dal judge */
+    public static function matchUrls(array $cited, array $fromJudge): array
+    {
+        $keys = [];
+        foreach ($fromJudge as $u) {
+            if (is_string($u) && $u !== '') {
+                $keys[self::urlKey($u)] = true;
+            }
+        }
+        return array_values(array_filter($cited, fn($u) => isset($keys[self::urlKey((string) $u)])));
+    }
+
+    /**
+     * Rinormalizza un giudizio già salvato (dal JSON grezzo) con le regole attuali, senza richiamare l'AI.
+     */
+    public function renormalize(array $raw, array $response, array $project): array
+    {
+        return $this->normalize($raw, $response, $project);
+    }
+
     /** Titolo/URL che parla di cronaca giudiziaria o reputazione negativa (fallback, non sostituisce il judge) */
     public static function looksNegative(string $text): bool
     {
@@ -218,8 +249,9 @@ TXT;
         $negative = (bool) ($d['negative'] ?? ($verdict === 'negative'));
 
         $citedUrls = array_map(fn($c) => $c['url'], $response['citations'] ?? []);
-        $about = array_values(array_intersect($citedUrls, (array) ($d['citations_about_subject'] ?? [])));
-        $noise = array_values(array_intersect($citedUrls, (array) ($d['citations_noise'] ?? [])));
+        $about = self::matchUrls($citedUrls, (array) ($d['citations_about_subject'] ?? []));
+        $noise = self::matchUrls($citedUrls, (array) ($d['citations_noise'] ?? []));
+        $judgeNoise = $noise; // prima delle correzioni deterministiche
         // Controllo a campione 2026-10-06: il judge segnava come "rumore" il sito del soggetto e articoli su di lui.
         $ownDomain = !empty($project['website']) ? EngineCollectorService::domainOf((string) $project['website']) : null;
         $nameParts = preg_split('/\s+/', mb_strtolower(trim((string) ($project['subject_name'] ?? ''))));
@@ -241,10 +273,13 @@ TXT;
                 $about[] = $u;
             }
         }
-        $negativeUrls = array_values(array_intersect($citedUrls, (array) ($d['negative_urls'] ?? [])));
+        $negativeUrls = self::matchUrls($citedUrls, (array) ($d['negative_urls'] ?? []));
         // Rete di sicurezza deterministica: risposta negativa ma judge senza URL → fonti con titolo/URL da cronaca giudiziaria
         if ($negative && empty($negativeUrls)) {
             foreach ($response['citations'] ?? [] as $c) {
+                if (in_array($c['url'], $judgeNoise, true)) {
+                    continue; // es. "truffa dei 50 euro sul parabrezza": cronaca, ma non su di lui
+                }
                 if (self::looksNegative(($c['title'] ?? '') . ' ' . $c['url'])) {
                     $negativeUrls[] = $c['url'];
                 }

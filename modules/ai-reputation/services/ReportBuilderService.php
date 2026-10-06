@@ -272,7 +272,8 @@ class ReportBuilderService
             $engine = $engineLabels[$r['engine']] ?? $r['engine'];
             foreach ($a['negative_urls'] as $u) {
                 $seenUrl[$u]['engines'][$engine] = true;
-                $seenUrl[$u]['prompt'] = $r['prompt_text'];
+                $seenUrl[$u]['prompts'][$r['prompt_text']] = true;
+                $seenUrl[$u]['hits'] = ($seenUrl[$u]['hits'] ?? 0) + 1;
                 foreach ($r['citations'] as $c) {
                     if ($c['url'] === $u) {
                         $seenUrl[$u]['title'] = $c['title'] ?? '';
@@ -292,14 +293,48 @@ class ReportBuilderService
                 $gapByPrompt[$r['prompt_id']]['engines'][$engine] = true;
             }
         }
+        // Una azione per SITO (non per pagina): chi fa la richiesta di rimozione la fa al sito.
+        $bySite = [];
         foreach ($seenUrl as $url => $info) {
-            $domain = EngineCollectorService::domainOf($url);
+            $domain = EngineCollectorService::domainOf($url) ?? $url;
+            $bySite[$domain]['pages'][$url] = $info['title'] ?? '';
+            $bySite[$domain]['engines'] = ($bySite[$domain]['engines'] ?? []) + $info['engines'];
+            $bySite[$domain]['prompts'] = ($bySite[$domain]['prompts'] ?? []) + $info['prompts'];
+            $bySite[$domain]['hits'] = ($bySite[$domain]['hits'] ?? 0) + ($info['hits'] ?? 1);
+        }
+        // Prima i siti citati da più AI e più spesso: sono quelli che pesano di più sulle risposte
+        uasort($bySite, fn($x, $y) => [count($y['engines']), $y['hits']] <=> [count($x['engines']), $x['hits']]);
+        foreach ($bySite as $domain => $site) {
+            $pages = $site['pages'];
+            $n = count($pages);
+            $firstUrl = (string) array_key_first($pages);
+            $firstTitle = (string) reset($pages);
+            $prompts = array_keys($site['prompts']);
+            // Atti di Parlamento, Regioni, ministeri: non si chiede la rimozione, si lavora sul contesto
+            if (preg_match('/(^|\.)(parlamento\.it|camera\.it|senato\.it|gov\.it|giustizia\.it|cortedicassazione\.it|europa\.eu)$|(^|\.)regione\.[a-z-]+\.it$|^legislature\.camera\.it$/i', $domain)) {
+                $actions[] = [
+                    'type' => 'removal',
+                    'target_url' => $firstUrl,
+                    'target_urls' => json_encode(array_keys($pages), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                    'target_domain' => $domain,
+                    'title' => 'Fonte istituzionale: ' . ($n === 1 ? self::siteTitle($domain, $firstTitle) : "{$domain} ({$n} documenti)"),
+                    'rationale' => 'Atto pubblico citato ' . $site['hits'] . ' volt' . ($site['hits'] === 1 ? 'a' : 'e') . ' da ' . implode(', ', array_keys($site['engines']))
+                        . '. Rimozione di fatto non praticabile: va bilanciato con contenuti che ne diano esito e contesto (vedi contro-contenuto).',
+                ];
+                continue;
+            }
             $actions[] = [
                 'type' => 'removal',
-                'target_url' => $url,
+                'target_url' => $firstUrl,
+                'target_urls' => json_encode(array_keys($pages), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
                 'target_domain' => $domain,
-                'title' => 'Fonte negativa: ' . ($info['title'] ?: $url),
-                'rationale' => 'Citata da ' . implode(', ', array_keys($info['engines'])) . ' alla domanda "' . $info['prompt'] . '". Valutare rimozione, deindicizzazione o aggiornamento della pagina.',
+                'title' => $n === 1
+                    ? 'Fonte negativa: ' . self::siteTitle($domain, $firstTitle)
+                    : "Fonte negativa: {$domain} ({$n} pagine)",
+                'rationale' => 'Citat' . ($n === 1 ? 'a' : 'e') . ' ' . $site['hits'] . ' volt' . ($site['hits'] === 1 ? 'a' : 'e')
+                    . ' da ' . implode(', ', array_keys($site['engines']))
+                    . ' su ' . count($prompts) . ' domand' . (count($prompts) === 1 ? 'a' : 'e') . ' (es. "' . $prompts[0] . '"). '
+                    . 'Valutare rimozione, deindicizzazione o aggiornamento delle pagine con il sito.',
             ];
         }
         // 2. counter_content: UNA azione per tutte le domande rep negative (+ una di disambiguazione se serve).
@@ -356,6 +391,25 @@ class ReportBuilderService
     /**
      * Persiste Source Map, competitor, piano d'azione e omonimi da confermare per un run.
      */
+    /**
+     * Titolo leggibile per un'azione: sempre il sito davanti; i titoli tecnici dei PDF
+     * ("Microsoft Word - 20141025gazb", "023n16t01.pdf", "Copertina definitiva 2018(5mm)") diventano "documento".
+     */
+    public static function siteTitle(string $domain, string $title): string
+    {
+        $t = trim($title);
+        $junk = $t === ''
+            || preg_match('/\.(pdf|docx?)$|^microsoft word|\^|\d+\s?mm\b|_dorso|^\S+$|^[\d\W]+$/iu', $t)
+            || preg_match_all('/\p{L}{3,}/u', $t) < 3;
+        if ($junk) {
+            return "{$domain} (documento)";
+        }
+        if (str_starts_with(mb_strtolower($t), mb_strtolower($domain))) {
+            return mb_strimwidth($t, 0, 110, '…');
+        }
+        return $domain . ' — ' . mb_strimwidth($t, 0, 90, '…');
+    }
+
     /**
      * Ricostruisce da zero ar_sources e ar_competitors del progetto sommando tutti i run analizzati.
      */
@@ -423,6 +477,7 @@ class ReportBuilderService
         foreach ($actions as $a) {
             $a['title'] = mb_substr((string) $a['title'], 0, 500);
             $a['target_url'] = $a['target_url'] !== null ? mb_substr((string) $a['target_url'], 0, 2000) : null;
+            $a['target_urls'] = $a['target_urls'] ?? null;
             $status = $previous[$a['type'] . '|' . $a['target_url'] . '|' . $a['title']] ?? 'proposed';
             Database::insert('ar_actions', array_merge($a, ['project_id' => $projectId, 'run_id' => $runId, 'status' => $status]));
         }
