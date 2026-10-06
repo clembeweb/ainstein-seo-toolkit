@@ -9,6 +9,7 @@ use Core\Database;
 use Core\ModuleLoader;
 use Modules\AiReputation\Models\Project;
 use Modules\AiReputation\Models\Prompt;
+use Modules\AiReputation\Models\ProfileFact;
 
 /**
  * DashboardController - overview del progetto (prompt, run, costi)
@@ -48,6 +49,9 @@ class DashboardController
             [$id]
         );
         $lastRun = $runs[0] ?? null;
+        $factCounts = (new ProfileFact())->counts($id);
+        $profileConfirmed = ($factCounts['confirmed'] + $factCounts['corrected']) > 0;
+        $lastCompletedRun = array_values(array_filter($runs, fn($r) => $r['status'] === 'completed'))[0] ?? null;
 
         return View::render('ai-reputation::dashboard/index', [
             'title' => $project['name'] . ' - AI Reputation Radar',
@@ -62,6 +66,8 @@ class DashboardController
             'runsCompleted' => $runsCompleted,
             'costTotal' => $costTotal,
             'lastRun' => $lastRun,
+            'profileConfirmed' => $profileConfirmed,
+            'lastCompletedRun' => $lastCompletedRun,
         ]);
     }
 }
