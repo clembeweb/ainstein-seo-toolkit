@@ -1,26 +1,35 @@
 # TASKS — AI Reputation Radar
 
 > Stato del lavoro. Aggiornare a ogni sessione: fatto, in corso, prossimo passo.
-> Ultimo aggiornamento: 2026-10-05
+> Ultimo aggiornamento: 2026-10-06 (fine sessione)
 
 ## Dove siamo
-**Fette 1, 2 e 3 chiuse** (2026-10-05): il flusso "metti un nome e parte" è completo. Onboarding agent
-(2 ricerche Perplexity + 5 pagine lette + 1 chiamata AI → 27 righe profilo in 22 s, rischi inclusi), conferma riga
-per riga, prompt engine (39 domande in 4 cluster dal profilo confermato), collector, judge, report.
-Su Marcaccini: 6 righe confermate, 48 domande attive. **Manca solo M1.8**: run completo sulle 48 domande
-(≈144 risposte, ≈2,5 $ API + ≈150 crediti judge, ≈25 min) e revisione del report per la call.
-Prima: modulo, collector, judge, metriche, piano d'azione e report completo.
-Progetto "Federico Marcaccini" (`ar_projects.id = 1`), run 1: 27/27 risposte (0,44 $, 5 min) + 27 giudizi
-(judge su `claude-sonnet-4` via AiService, ~4 s l'uno) → rischio Alto 65/100, 6 negative, 4 fonti negative,
-5 domande con divergenza tra engine, 8 azioni, 2 omonimi da confermare. Report: `/ai-reputation/project/1/runs/1`.
-"Avvia run" dalla dashboard fa collector + judge + report in un solo stream SSE. Branch
-`claude/ai-reputation-radar-dd9004` nel checkout principale `C:\xampp\htdocs\seo-toolkit`.
+**MVP completo e funzionante in locale.** Flusso: progetto da Global Projects → Profilo (onboarding + conferma
+righe) → domande (base / AI / manuali) → "Avvia run" (raccolta + judge + report in un solo stream SSE) → report.
+Engine: ChatGPT (API) + Gemini + Perplexity peso 0,3 (Claude pronto, spento). ChatGPT ripete 3 volte le domande rep.
+**Run di riferimento per la demo: run 4** (`/ai-reputation/project/1/runs/4`): 138 risposte, rischio Alto 47%,
+5 smentite di Gemini, 15 siti negativi (3 istituzionali), report corto con interventi in cima e schede.
+Branch `claude/ai-reputation-radar-dd9004` (pushato su origin il 2026-10-06), NON mergiato in `main`, NON online.
+Demo per Gabriele: **in locale** (decisione di Clemente). Prima della call riavviare MySQL pulito da XAMPP e non
+lanciare run in diretta.
 
 ## Prossimo passo (uno solo)
-**M1.8 — Run completo su Marcaccini e revisione per la call.** Clemente conferma/corregge le righe del profilo in
-`/ai-reputation/project/1/profile` (bastano 5 minuti: ✅ vero, ❌ falso, "È un altro" sullo sciatore), disattiva le
-domande deboli tra le 48, poi "Avvia run" dalla dashboard (collector + judge + report in un colpo). Rivedere il
-report con occhio da demo: verdetti, fonti, azioni, "Da confermare". Annotare qui cosa non torna. Poi M2 (vedi roadmap).
+**Revisione del report del run 4 da parte di Clemente**, con occhio da demo per Gabriele: aprire
+`/ai-reputation/project/1/runs/4`, guardare "Interventi suggeriti" e la scheda "Risposte delle AI" (filtro
+Reputazione). Annotare qui cosa non torna, poi correggere.
+
+## Dopo (in ordine)
+1. Decidere se accendere Claude come quarto engine per la demo (~4 $ e ~50 min a run).
+2. Domanda aperta a Clemente: Andrea Marcaccini che rapporto ha con Federico? (se coinvolto nelle stesse
+   vicende, il judge deve trattare le sue notizie come rischio per Federico).
+3. Online: merge in `main` + 8 migrazioni SQL in `database/` (in ordine di data) + key Gemini/Perplexity in
+   prod + deploy. Solo con via esplicito di Clemente.
+4. Golden Rule 18: guida utente `shared/views/docs/ai-reputation.php` + `docs/data-model.html` + landing
+   "Scopri cosa puoi fare".
+5. Minori: judge_model registrato anche se AiService usa il fallback; 7 "articoli gap" ancora uno per domanda;
+   sezioni C (costi/tenuta) e D (prodotto/demo) dell'analisi critica da presentare.
+6. Pulizia: cancellare il worktree `.claude/worktrees/ai-reputation-radar-dd9004/`; nella root del repo
+   `public/landing3.php` e `token-form-filled.png` non tracciati, estranei al modulo (da decidere con Clemente).
 
 ## Analisi critica 2026-10-06 (fatta, vedi ADR-010, ADR-011)
 - Metodo: 14 negative su 18 venivano da domande "mirate" → ADR-011, rischio ora = % negative a domande neutre (run 2: Alto 38%).
@@ -57,7 +66,7 @@ report con occhio da demo: verdetti, fonti, azioni, "Da confermare". Annotare qu
 - [x] M1.5 Judge (`JudgeService`, AiService, JSON rigido con outcome/verdict/noise) + metriche pesate (share, sentiment, rischio, divergenza) in `ReportBuilderService` (2026-10-05)
 - [x] M1.6 Piano d'azione a regole: removal per URL negativo, counter_content per domanda rep negativa/ambigua, gap_article per comm/comp senza menzione; testata suggerita = dominio ok più citato (2026-10-05)
 - [x] M1.7 Pagina report run completa: KPI, divergenza, griglia con verdetti e riassunto per cella, fonti ok/negative/rumore, piano d'azione, competitor, "Da confermare", Rianalizza (2026-10-05)
-- [~] M1.8 Run 2 completato il 2026-10-06 (38 domande × 3 engine = 114 risposte, 0 errori, 1,97 $ API): rischio Alto 100/100, 18 negative (Perplexity 9, ChatGPT 5, Gemini 4), 10 fonti negative, 9 domande con divergenza, 29 azioni, 4 omonimi da confermare. Report `/ai-reputation/project/1/runs/2`. **Manca la revisione di Clemente.**
+- [x] M1.8 Run 2 completato il 2026-10-06 (38 domande × 3 engine = 114 risposte, 0 errori, 1,97 $ API): rischio Alto 100/100, 18 negative (Perplexity 9, ChatGPT 5, Gemini 4), 10 fonti negative, 9 domande con divergenza, 29 azioni, 4 omonimi da confermare. Report `/ai-reputation/project/1/runs/2`. **Manca la revisione di Clemente.**
   Ritocchi fatti il 2026-10-06: contro-contenuti raggruppati in 1 azione (+1 di disambiguazione se serve), piano run 2 da 29 a 21 azioni; titoli fonti leggibili (Gemini: ricavati dall'URL; caratteri rotti riparati). MySQL XAMPP bloccato a metà run (ripreso senza perdite); bug doppio stream corretto (lease). Demo per Gabriele: **in locale** (decisione di Clemente).
 
 ## Decisioni in sospeso (di Clemente)
