@@ -241,18 +241,41 @@ class ReportBuilderService
                 'rationale' => 'Citata da ' . implode(', ', array_keys($info['engines'])) . ' alla domanda "' . $info['prompt'] . '". Valutare rimozione, deindicizzazione o aggiornamento della pagina.',
             ];
         }
-        // 2. counter_content: una per domanda rep negativa/ambigua
-        foreach ($repNegative as $info) {
+        // 2. counter_content: UNA azione per tutte le domande rep negative (+ una di disambiguazione se serve).
+        //    Una pagina autorevole ben fatta risponde a tutte: dieci azioni quasi uguali gonfiano il piano.
+        if ($repNegative) {
+            $subject = $project['subject_name'];
+            $engines = [];
+            $prompts = [];
+            $homonym = false;
+            foreach ($repNegative as $info) {
+                $prompts[] = $info['prompt'];
+                $engines += $info['engines'];
+                $homonym = $homonym || $info['homonym'];
+            }
+            $examples = array_slice($prompts, 0, 3);
+            $more = count($prompts) - count($examples);
             $actions[] = [
                 'type' => 'counter_content',
                 'target_url' => null,
                 'target_domain' => $suggested,
-                'title' => 'Contenuto che risponde a: "' . $info['prompt'] . '"',
-                'rationale' => ($info['homonym'] ? 'Le AI confondono il soggetto con un omonimo o attribuiscono fatti incerti. ' : 'Le AI rispondono con contenuti negativi. ')
-                    . 'Serve una pagina autorevole che risponda esattamente a questa domanda (chi è, cosa fa, affidabilità, eventuale disambiguazione)'
-                    . ($suggested ? ", pubblicata su una testata che le AI già citano: {$suggested}." : '.')
-                    . ' Engine coinvolti: ' . implode(', ', array_keys($info['engines'])) . '.',
+                'title' => "Pagina autorevole che risponda a \"{$subject} è affidabile?\"",
+                'rationale' => 'Le AI rispondono in negativo o con dubbi a ' . count($prompts) . ' domande reputazionali, tra cui: "'
+                    . implode('", "', $examples) . '"' . ($more > 0 ? " e altre {$more}" : '') . '. '
+                    . 'Una sola pagina ben fatta le copre tutte: chi è, cosa fa oggi, i fatti passati con esito e contesto, referenze verificabili'
+                    . ($suggested ? ", pubblicata su una testata che le AI già citano ({$suggested})." : '.')
+                    . ' Engine coinvolti: ' . implode(', ', array_keys($engines)) . '.',
             ];
+            if ($homonym) {
+                $actions[] = [
+                    'type' => 'counter_content',
+                    'target_url' => null,
+                    'target_domain' => $suggested,
+                    'title' => "Disambiguazione: chi è (e chi non è) {$subject}",
+                    'rationale' => 'Alcune risposte mescolano il soggetto con persone omonime o attribuiscono fatti incerti. '
+                        . 'Serve un contenuto che separi chiaramente le identità (attività, città, periodo), da collegare al sito ufficiale.',
+                ];
+            }
         }
         // 3. gap_article: domande comm/comp senza menzione ma con competitor
         foreach ($gapByPrompt as $info) {

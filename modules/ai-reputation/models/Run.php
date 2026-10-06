@@ -183,6 +183,11 @@ class Run
         ", [$runId]);
         foreach ($rows as &$row) {
             $row['citations'] = json_decode((string) $row['citations'], true) ?: [];
+            // titoli leggibili anche per le risposte salvate prima del fix (Gemini: solo dominio)
+            foreach ($row['citations'] as &$cit) {
+                $cit['title'] = \Modules\AiReputation\Services\EngineCollectorService::readableTitle((string) $cit['url'], $cit['title'] ?? null);
+            }
+            unset($cit);
             $row['sources_read'] = json_decode((string) $row['sources_read'], true) ?: [];
             $row['queries'] = json_decode((string) $row['queries'], true) ?: [];
         }

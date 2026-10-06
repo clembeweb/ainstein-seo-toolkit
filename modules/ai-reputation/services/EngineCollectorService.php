@@ -488,7 +488,7 @@ class EngineCollectorService
             $seen[$url] = true;
             $citations[] = [
                 'url' => $url,
-                'title' => $c['title'] ?? null,
+                'title' => self::readableTitle($url, $c['title'] ?? null),
                 'domain' => $c['domain'] ?? self::domainOf($url),
             ];
         }
@@ -517,6 +517,59 @@ class EngineCollectorService
             'error_message' => $r['error_message'] ?? null,
             'raw' => $r['raw'] ?? null,
         ];
+    }
+
+    /**
+     * Titolo leggibile per una fonte. Gemini dà come titolo solo il dominio: in quel caso lo ricava
+     * dall'ultimo pezzo dell'URL ("/2025/12/litalia-come-piattaforma-strategica.html" → "Litalia come piattaforma strategica").
+     */
+    public static function readableTitle(string $url, ?string $title): string
+    {
+        $title = self::fixMojibake(trim((string) $title));
+        $domain = self::domainOf($url) ?? '';
+        $isDomainOnly = $title === '' || strtolower(preg_replace('/^www\./', '', $title)) === $domain;
+        if (!$isDomainOnly) {
+            return $title;
+        }
+        $path = (string) parse_url($url, PHP_URL_PATH);
+        $segments = array_values(array_filter(explode('/', $path), fn($s) => $s !== ''));
+        $clean = function (string $seg): string {
+            $seg = self::fixMojibake(urldecode($seg));
+            $seg = preg_replace('/\.(html?|php|aspx?|shtml|pdf|docx?)$/i', '', $seg);
+            return preg_replace('/[-_][a-z0-9]*\d[a-z0-9]{5,}$/i', '', $seg) ?? $seg; // id finali tipo -dasj1hmf o -202607241509
+        };
+        $pretty = function (string $words) use ($domain): string {
+            $words = trim(preg_replace('/[-_]+|(?<=[a-z])(?=[A-Z])/', ' ', $words));
+            return $domain . ' — ' . mb_strtoupper(mb_substr($words, 0, 1)) . mb_substr($words, 1, 110);
+        };
+        // 1. ultimo segmento "parlante" (almeno 3 parole)
+        for ($i = count($segments) - 1; $i >= 0; $i--) {
+            $seg = $clean($segments[$i]);
+            if (preg_match('/[a-z]/i', $seg) && substr_count($seg, '-') + substr_count($seg, '_') >= 2 && mb_strlen($seg) >= 12) {
+                return $pretty($seg);
+            }
+        }
+        // 2. altrimenti l'ultimo segmento non numerico (es. "beniDia" → "Beni Dia")
+        for ($i = count($segments) - 1; $i >= 0; $i--) {
+            $seg = $clean($segments[$i]);
+            if (preg_match('/[a-z]{3,}/i', $seg) && !in_array(strtolower($seg), ['index', 'home', 'news', 'cs', 'it', 'en', 'amp'], true)) {
+                return $pretty($seg);
+            }
+        }
+        return $domain !== '' ? $domain : $url;
+    }
+
+    /** Ripara testo UTF-8 letto come Windows-1252 (es. "â€˜ndrangheta" → "‘ndrangheta") */
+    private static function fixMojibake(string $s): string
+    {
+        if ($s === '' || !preg_match('/Ã|â€|Â/u', $s)) {
+            return $s;
+        }
+        // Sostituzione mirata delle sequenze rotte più comuni (il resto del titolo può essere già corretto)
+        return strtr($s, [
+            'â€˜' => '‘', 'â€™' => '’', 'â€œ' => '“', 'â€' . "\u{009D}" => '”', 'â€“' => '–', 'â€”' => '—', 'â€¦' => '…', 'â€¢' => '•',
+            'Ã¨' => 'è', 'Ã©' => 'é', 'Ã ' => 'à', 'Ã²' => 'ò', 'Ã¹' => 'ù', 'Ã¬' => 'ì', 'Ã‰' => 'É', 'Ãˆ' => 'È', 'Â ' => ' ', 'Â«' => '«', 'Â»' => '»',
+        ]);
     }
 
     public static function domainOf(string $url): ?string

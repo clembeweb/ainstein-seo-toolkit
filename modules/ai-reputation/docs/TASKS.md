@@ -40,7 +40,7 @@ report con occhio da demo: verdetti, fonti, azioni, "Da confermare". Annotare qu
 - [x] M1.6 Piano d'azione a regole: removal per URL negativo, counter_content per domanda rep negativa/ambigua, gap_article per comm/comp senza menzione; testata suggerita = dominio ok più citato (2026-10-05)
 - [x] M1.7 Pagina report run completa: KPI, divergenza, griglia con verdetti e riassunto per cella, fonti ok/negative/rumore, piano d'azione, competitor, "Da confermare", Rianalizza (2026-10-05)
 - [~] M1.8 Run 2 completato il 2026-10-06 (38 domande × 3 engine = 114 risposte, 0 errori, 1,97 $ API): rischio Alto 100/100, 18 negative (Perplexity 9, ChatGPT 5, Gemini 4), 10 fonti negative, 9 domande con divergenza, 29 azioni, 4 omonimi da confermare. Report `/ai-reputation/project/1/runs/2`. **Manca la revisione di Clemente.**
-  Note di revisione già viste: 10 contro-contenuti quasi uguali (uno per domanda rep) → raggrupparli in 1-2 azioni; titoli fonte Gemini = solo dominio; MySQL XAMPP si è bloccato a metà run (ripreso senza perdite); bug doppio stream corretto (lease).
+  Ritocchi fatti il 2026-10-06: contro-contenuti raggruppati in 1 azione (+1 di disambiguazione se serve), piano run 2 da 29 a 21 azioni; titoli fonti leggibili (Gemini: ricavati dall'URL; caratteri rotti riparati). MySQL XAMPP bloccato a metà run (ripreso senza perdite); bug doppio stream corretto (lease). Demo per Gabriele: **in locale** (decisione di Clemente).
 
 ## Decisioni in sospeso (di Clemente)
 - Conferma riga per riga della bozza profilo Marcaccini (brief §3) → si fa nella UI in M1.2
