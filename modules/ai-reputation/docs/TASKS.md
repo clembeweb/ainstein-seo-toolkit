@@ -39,7 +39,7 @@ report con occhio da demo: verdetti, fonti, azioni, "Da confermare". Annotare qu
 - [x] M1.5 Judge (`JudgeService`, AiService, JSON rigido con outcome/verdict/noise) + metriche pesate (share, sentiment, rischio, divergenza) in `ReportBuilderService` (2026-10-05)
 - [x] M1.6 Piano d'azione a regole: removal per URL negativo, counter_content per domanda rep negativa/ambigua, gap_article per comm/comp senza menzione; testata suggerita = dominio ok più citato (2026-10-05)
 - [x] M1.7 Pagina report run completa: KPI, divergenza, griglia con verdetti e riassunto per cella, fonti ok/negative/rumore, piano d'azione, competitor, "Da confermare", Rianalizza (2026-10-05)
-- [ ] M1.8 Run completo su Marcaccini (48 domande × 3 engine) + revisione report per la call
+- [ ] M1.8 Run completo su Marcaccini: **run 2 lanciato il 2026-10-06** (38 domande attive × 3 engine = 114 risposte; 10 domande generiche disattivate) → poi revisione report per la call
 
 ## Decisioni in sospeso (di Clemente)
 - Conferma riga per riga della bozza profilo Marcaccini (brief §3) → si fa nella UI in M1.2
