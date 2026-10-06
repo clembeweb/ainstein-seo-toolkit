@@ -69,6 +69,14 @@ class ProjectController
         $subjectName = trim($_POST['subject_name'] ?? '');
         $subjectType = ($_POST['subject_type'] ?? 'person') === 'company' ? 'company' : 'person';
         $website = trim($_POST['website'] ?? '');
+        if ($website !== '' && !preg_match('#^https?://#i', $website)) {
+            $website = 'https://' . $website;
+        }
+        if ($website !== '' && !self::isPublicWebUrl($website)) {
+            $_SESSION['_flash']['error'] = 'Il sito deve essere un indirizzo web pubblico (http o https)';
+            Router::redirect("/ai-reputation/project/{$id}/settings");
+            return;
+        }
         $city = trim($_POST['city'] ?? '');
         $notes = trim($_POST['disambiguation_notes'] ?? '');
         $repeats = max(1, min(5, (int) ($_POST['repeats'] ?? 1)));
@@ -98,6 +106,28 @@ class ProjectController
 
         $_SESSION['_flash']['success'] = 'Impostazioni salvate';
         Router::redirect("/ai-reputation/project/{$id}/settings");
+    }
+
+    /** URL http(s) con host che risolve solo su IP pubblici (protezione SSRF per lo scraping dell'onboarding) */
+    public static function isPublicWebUrl(string $url): bool
+    {
+        if (!filter_var($url, FILTER_VALIDATE_URL) || !preg_match('#^https?://#i', $url)) {
+            return false;
+        }
+        $host = (string) parse_url($url, PHP_URL_HOST);
+        if ($host === '' || preg_match('/^(localhost|.*\.local|.*\.internal)$/i', $host)) {
+            return false;
+        }
+        $ips = filter_var($host, FILTER_VALIDATE_IP) ? [$host] : (gethostbynamel($host) ?: []);
+        if (!$ips) {
+            return false;
+        }
+        foreach ($ips as $ip) {
+            if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public function destroy(int $id): void

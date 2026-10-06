@@ -107,7 +107,10 @@ class ProfileController
     {
         $project = $this->requireEditable($id);
         $fact = $this->facts->find($factId, $id);
-        $back = $_POST['back'] ?? "/ai-reputation/project/{$id}/profile";
+        $back = (string) ($_POST['back'] ?? '');
+        if (!str_starts_with($back, "/ai-reputation/project/{$id}/") || str_contains($back, '//')) {
+            $back = "/ai-reputation/project/{$id}/profile";
+        }
         if (!$fact) {
             $_SESSION['_flash']['error'] = 'Riga non trovata';
             Router::redirect($back);

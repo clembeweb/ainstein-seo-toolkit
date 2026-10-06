@@ -95,13 +95,44 @@ class Run
      * Lease: prova a diventare l'unico stream che elabora il run. Rinnova se già proprietario.
      * Scade dopo $staleSeconds senza heartbeat (stream morto).
      */
-    public function acquireLease(int $id, string $token, int $staleSeconds = 300): bool
+    /** Scadenza del lease: ben oltre la chiamata più lenta (curl 180 s + redirect Gemini + fallback judge) */
+    public const LEASE_TTL = 900;
+
+    public function acquireLease(int $id, string $token, int $staleSeconds = self::LEASE_TTL): bool
     {
         return Database::execute(
             "UPDATE ar_runs SET locked_by = ?, locked_at = NOW()
              WHERE id = ? AND (locked_by IS NULL OR locked_by = ? OR locked_at < NOW() - INTERVAL ? SECOND)",
             [$token, $id, $token, $staleSeconds]
         ) > 0 || (string) Database::fetchColumn("SELECT locked_by FROM ar_runs WHERE id = ?", [$id]) === $token;
+    }
+
+    /**
+     * Prende in carico la prossima risposta da raccogliere in modo atomico (pending → processing).
+     * Anche se due stream girassero insieme, ogni item lo lavora uno solo.
+     */
+    public function claimNext(int $runId): ?array
+    {
+        for ($i = 0; $i < 5; $i++) {
+            $item = $this->nextPending($runId);
+            if (!$item) {
+                return null;
+            }
+            $claimed = Database::execute(
+                "UPDATE ar_responses SET status = 'processing' WHERE id = ? AND status = 'pending'",
+                [(int) $item['id']]
+            ) > 0;
+            if ($claimed) {
+                return $item;
+            }
+        }
+        return null;
+    }
+
+    /** Item rimasti in lavorazione da uno stream morto tornano in coda */
+    public function resetProcessing(int $runId): int
+    {
+        return Database::execute("UPDATE ar_responses SET status = 'pending' WHERE run_id = ? AND status = 'processing'", [$runId]);
     }
 
     public function releaseLease(int $id, string $token): void

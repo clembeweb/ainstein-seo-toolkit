@@ -251,6 +251,7 @@ function arRunner() {
             this.es.addEventListener('started', e => { const d = JSON.parse(e.data); s.total = d.total; });
             this.es.addEventListener('snapshot', e => { const d = JSON.parse(e.data); s.phase = d.phase; s.total = d.total; s.done = d.done; s.percent = d.total ? Math.round(d.done / d.total * 100) : 0; });
             this.es.addEventListener('stalled', e => { const d = JSON.parse(e.data); this.finish(d.message, ''); });
+            this.es.addEventListener('failed', e => { const d = JSON.parse(e.data); this.finish(d.message, ''); });
             this.es.addEventListener('phase', e => { const d = JSON.parse(e.data); s.phase = d.label; s.total = d.total; s.done = 0; s.percent = 0; });
             this.es.addEventListener('analysis_completed', e => { const d = JSON.parse(e.data); s.done++; s.percent = s.total ? Math.round(s.done / s.total * 100) : 0; s.log.unshift({ id: 'a' + d.response_id, error: false, text: 'Giudizio ' + (s.labels[d.engine] || d.engine) + ': ' + d.verdict + ' · ' + (d.summary || '') }); });
             this.es.addEventListener('analysis_error', e => { const d = JSON.parse(e.data); s.done++; s.log.unshift({ id: 'ae' + d.response_id, error: true, text: 'Giudizio ' + (s.labels[d.engine] || d.engine) + ': errore · ' + d.error }); });

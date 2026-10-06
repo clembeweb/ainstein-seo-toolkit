@@ -65,8 +65,15 @@ class PromptController
     public function destroy(int $id, int $promptId): void
     {
         $this->requireEditable($id);
-        $this->prompt->delete($promptId, $id);
-        $_SESSION['_flash']['success'] = 'Domanda eliminata';
+        $used = (int) \Core\Database::fetchColumn("SELECT COUNT(*) FROM ar_responses WHERE prompt_id = ? AND project_id = ?", [$promptId, $id]);
+        if ($used > 0) {
+            // Ha risposte in run passati: cancellarla riscriverebbe i report storici. Si disattiva.
+            \Core\Database::update('ar_prompts', ['is_active' => 0], 'id = ? AND project_id = ?', [$promptId, $id]);
+            $_SESSION['_flash']['success'] = 'Domanda disattivata: compare nei report passati, quindi non viene cancellata';
+        } else {
+            $this->prompt->delete($promptId, $id);
+            $_SESSION['_flash']['success'] = 'Domanda eliminata';
+        }
         Router::redirect("/ai-reputation/project/{$id}#prompts");
     }
 

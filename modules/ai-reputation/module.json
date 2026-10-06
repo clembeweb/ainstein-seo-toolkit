@@ -9,12 +9,12 @@
     "requires": {
         "php": ">=8.0",
         "credits": true,
-        "services": ["ai"]
+        "services": [
+            "ai"
+        ]
     },
     "credits": {
-        "collect_response": 0.2,
-        "judge_response": 0.1,
-        "onboarding": 2
+        "collect_response": 0.2
     },
     "settings_groups": {
         "ai_config": {
@@ -45,7 +45,7 @@
         "costs": {
             "label": "Costi Operazioni",
             "icon": "currency-euro",
-            "description": "Crediti consumati per ogni operazione",
+            "description": "Crediti per ogni risposta raccolta. Judge, onboarding e prompt engine pagano i crediti AI standard (ai_analysis_*).",
             "order": 99,
             "collapsed": true
         }
@@ -59,9 +59,18 @@
             "admin_only": true,
             "group": "ai_config",
             "options": [
-                {"value": "global", "label": "Usa impostazione globale"},
-                {"value": "anthropic", "label": "Anthropic (Claude)"},
-                {"value": "openai", "label": "OpenAI (GPT)"}
+                {
+                    "value": "global",
+                    "label": "Usa impostazione globale"
+                },
+                {
+                    "value": "anthropic",
+                    "label": "Anthropic (Claude)"
+                },
+                {
+                    "value": "openai",
+                    "label": "OpenAI (GPT)"
+                }
             ]
         },
         "ai_model": {
@@ -72,7 +81,10 @@
             "admin_only": true,
             "group": "ai_config",
             "options": [
-                {"value": "global", "label": "Usa impostazione globale"}
+                {
+                    "value": "global",
+                    "label": "Usa impostazione globale"
+                }
             ]
         },
         "ai_fallback_enabled": {
@@ -83,9 +95,18 @@
             "admin_only": true,
             "group": "ai_config",
             "options": [
-                {"value": "global", "label": "Usa impostazione globale"},
-                {"value": "1", "label": "Abilitato"},
-                {"value": "0", "label": "Disabilitato"}
+                {
+                    "value": "global",
+                    "label": "Usa impostazione globale"
+                },
+                {
+                    "value": "1",
+                    "label": "Abilitato"
+                },
+                {
+                    "value": "0",
+                    "label": "Disabilitato"
+                }
             ]
         },
         "default_repeats": {
@@ -309,26 +330,6 @@
             "default": 0.2,
             "min": 0,
             "step": 0.1,
-            "admin_only": true,
-            "group": "costs"
-        },
-        "cost_judge_response": {
-            "type": "number",
-            "label": "Costo giudizio",
-            "description": "Crediti per ogni risposta analizzata dal judge",
-            "default": 0.1,
-            "min": 0,
-            "step": 0.1,
-            "admin_only": true,
-            "group": "costs"
-        },
-        "cost_onboarding": {
-            "type": "number",
-            "label": "Costo onboarding",
-            "description": "Crediti per la generazione del profilo",
-            "default": 2,
-            "min": 0,
-            "step": 0.5,
             "admin_only": true,
             "group": "costs"
         }

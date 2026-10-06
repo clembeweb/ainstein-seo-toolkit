@@ -57,7 +57,7 @@ class OnboardingService
 
         // 2. Testi: sito ufficiale + top fonti
         $toFetch = [];
-        if (!empty($project['website'])) {
+        if (!empty($project['website']) && \Modules\AiReputation\Controllers\ProjectController::isPublicWebUrl($project['website'])) {
             $toFetch[] = $project['website'];
         }
         foreach (array_keys($sources) as $u) {

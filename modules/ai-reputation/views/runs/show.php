@@ -161,7 +161,7 @@ $isActive = in_array($run['status'], ['pending', 'running'], true);
                         <?php foreach ($engines as $engine): ?>
                         <td class="px-4 py-3">
                             <?php foreach ($row['cells'][$engine] ?? [] as $r): ?>
-                                <?php if ($r['status'] === 'pending'): ?>
+                                <?php if (in_array($r['status'], ['pending', 'processing'], true)): ?>
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400">in attesa</span>
                                 <?php elseif ($r['status'] === 'error'): ?>
                                 <button type="button" @click="open(<?= (int) $r['id'] ?>)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300" title="<?= e((string) $r['error_message']) ?>">errore</button>
@@ -363,6 +363,7 @@ function arReport() {
                 this.es = new EventSource(base + '/runs/stream?run_id=' + runId);
                 this.es.addEventListener('snapshot', e => { const d = JSON.parse(e.data); this.total = d.total; this.done = d.done; this.percent = d.total ? Math.round(d.done / d.total * 100) : 0; });
                 this.es.addEventListener('stalled', e => { const d = JSON.parse(e.data); this.message = d.message; this.analyzing = false; this.es.close(); });
+                this.es.addEventListener('failed', e => { const d = JSON.parse(e.data); this.message = d.message; this.analyzing = false; this.es.close(); });
                 this.es.addEventListener('phase', e => { const d = JSON.parse(e.data); this.total = d.total; this.done = 0; this.percent = 0; });
                 this.es.addEventListener('analysis_completed', e => { const d = JSON.parse(e.data); this.done++; this.percent = this.total ? Math.round(this.done / this.total * 100) : 0; this.log.unshift({ id: d.response_id, text: (this.labels[d.engine] || d.engine) + ': ' + d.verdict + ' · ' + (d.summary || '') }); });
                 this.es.addEventListener('analysis_error', e => { const d = JSON.parse(e.data); this.done++; this.log.unshift({ id: 'e' + d.response_id, text: (this.labels[d.engine] || d.engine) + ': errore judge · ' + d.error }); });

@@ -22,6 +22,18 @@ Progetto "Federico Marcaccini" (`ar_projects.id = 1`), run 1: 27/27 risposte (0,
 domande deboli tra le 48, poi "Avvia run" dalla dashboard (collector + judge + report in un colpo). Rivedere il
 report con occhio da demo: verdetti, fonti, azioni, "Da confermare". Annotare qui cosa non torna. Poi M2 (vedi roadmap).
 
+## Analisi critica 2026-10-06 (fatta, vedi ADR-010, ADR-011)
+- Metodo: 14 negative su 18 venivano da domande "mirate" → ADR-011, rischio ora = % negative a domande neutre (run 2: Alto 38%).
+  ChatGPT (API) stabile solo 4 volte su 9 tra run 1 e run 2 → da fare: 3 ripetizioni sulle domande rep (non ancora fatto).
+  Judge mai validato a campione → da fare: Clemente rivede 20 verdetti.
+- Codice (revisione indipendente): corretti viewer che avviava lo stream, lease non applicato + item non prenotati
+  (stato `processing`), `persist()` non idempotente (aggregati ricalcolati da tutti i run, stato azioni conservato),
+  crediti ignorati, run che restava "in corso" su errore o finiva "completato" senza risposte, cancellazione domande che
+  riscriveva lo storico (ora si disattiva), link non http(s), sito non pubblico (SSRF), redirect `back`, doppio clic su
+  Avvia run. Testato con un progetto di prova: 2 stream insieme → 4 risposte, 4 chiamate API, nessun doppione.
+- Aperto: judge può girare sul modello di fallback (judge_model registrato non è quello reale); sezioni C (costi/tenuta)
+  e D (prodotto/demo) dell'analisi ancora da presentare a Clemente.
+
 ## M0 — Test empirici
 - [x] M0.1 Prerequisiti: MySQL on, `.env` nel worktree, key verificate (OpenAI ✅ Anthropic ✅ Gemini ✅ Perplexity ✅ — le ultime due incollate il 2026-10-05)
 - [x] M0.2 OpenAI Responses `web_search`: funziona, citazioni ok, costi reali misurati → `docs/test-empirici/2026-10-05-openai.md`. ⚠️ trovato contenuto negativo (rapporto mafie Lazio, possibile omonimo)

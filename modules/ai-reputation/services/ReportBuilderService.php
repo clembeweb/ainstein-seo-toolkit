@@ -325,31 +325,75 @@ class ReportBuilderService
     /**
      * Persiste Source Map, competitor, piano d'azione e omonimi da confermare per un run.
      */
+    /**
+     * Ricostruisce da zero ar_sources e ar_competitors del progetto sommando tutti i run analizzati.
+     */
+    public function rebuildProjectAggregates(int $projectId): void
+    {
+        $runModel = new \Modules\AiReputation\Models\Run();
+        $analysisModel = new \Modules\AiReputation\Models\Analysis();
+        $sources = [];
+        $competitors = [];
+        $runIds = array_map('intval', array_column(
+            Database::fetchAll("SELECT DISTINCT run_id FROM ar_analyses WHERE project_id = ? ORDER BY run_id", [$projectId]),
+            'run_id'
+        ));
+        foreach ($runIds as $rid) {
+            $responses = $runModel->responses($rid);
+            $analyses = $analysisModel->byRun($rid);
+            foreach ($this->sources($responses, $analyses) as $s) {
+                $sources[$s['domain']] ??= ['count' => 0, 'negative' => 0, 'first' => $rid, 'last' => $rid];
+                $sources[$s['domain']]['count'] += $s['count'];
+                $sources[$s['domain']]['negative'] += $s['negative'];
+                $sources[$s['domain']]['last'] = $rid;
+            }
+            foreach ($this->competitors($analyses) as $c) {
+                $key = mb_strtolower($c['name']);
+                $competitors[$key] ??= ['name' => mb_substr($c['name'], 0, 255), 'count' => 0, 'first' => $rid, 'last' => $rid];
+                $competitors[$key]['count'] += $c['count'];
+                $competitors[$key]['last'] = $rid;
+            }
+        }
+        $confirmed = array_flip(array_map('mb_strtolower', array_column(
+            Database::fetchAll("SELECT name FROM ar_competitors WHERE project_id = ? AND is_confirmed = 1", [$projectId]),
+            'name'
+        )));
+        Database::delete('ar_sources', 'project_id = ?', [$projectId]);
+        Database::delete('ar_competitors', 'project_id = ?', [$projectId]);
+        foreach ($sources as $domain => $s) {
+            Database::insert('ar_sources', [
+                'project_id' => $projectId, 'domain' => mb_substr($domain, 0, 255), 'citations_count' => $s['count'],
+                'negative_count' => $s['negative'], 'first_seen_run_id' => $s['first'], 'last_seen_run_id' => $s['last'],
+            ]);
+        }
+        foreach ($competitors as $key => $c) {
+            Database::insert('ar_competitors', [
+                'project_id' => $projectId, 'name' => $c['name'], 'mentions_count' => $c['count'],
+                'first_seen_run_id' => $c['first'], 'last_seen_run_id' => $c['last'], 'is_confirmed' => isset($confirmed[$key]) ? 1 : 0,
+            ]);
+        }
+    }
+
     public function persist(int $runId, int $projectId, array $project, array $responses, array $analyses, array $engineLabels): array
     {
         $sources = $this->sources($responses, $analyses);
         $competitors = $this->competitors($analyses);
         $actions = $this->actions($project, $responses, $analyses, $sources, $engineLabels);
 
-        foreach ($sources as $s) {
-            $sentiments = [];
-            Database::execute("
-                INSERT INTO ar_sources (project_id, domain, citations_count, negative_count, first_seen_run_id, last_seen_run_id)
-                VALUES (?, ?, ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE citations_count = citations_count + VALUES(citations_count),
-                    negative_count = negative_count + VALUES(negative_count), last_seen_run_id = VALUES(last_seen_run_id)
-            ", [$projectId, $s['domain'], $s['count'], $s['negative'], $runId, $runId]);
-        }
-        foreach ($competitors as $c) {
-            Database::execute("
-                INSERT INTO ar_competitors (project_id, name, mentions_count, first_seen_run_id, last_seen_run_id)
-                VALUES (?, ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE mentions_count = mentions_count + VALUES(mentions_count), last_seen_run_id = VALUES(last_seen_run_id)
-            ", [$projectId, $c['name'], $c['count'], $runId, $runId]);
+        // Fonti e competitor del progetto: ricalcolati da tutti i run (idempotente: rianalizzare non raddoppia)
+        $this->rebuildProjectAggregates($projectId);
+
+        // Azioni: si rigenerano, ma lo stato deciso dall'utente (accettata, fatta, scartata) si conserva
+        $previous = [];
+        foreach (Database::fetchAll("SELECT type, target_url, title, status FROM ar_actions WHERE run_id = ?", [$runId]) as $old) {
+            $previous[$old['type'] . '|' . $old['target_url'] . '|' . $old['title']] = $old['status'];
         }
         Database::delete('ar_actions', 'run_id = ?', [$runId]);
         foreach ($actions as $a) {
-            Database::insert('ar_actions', array_merge($a, ['project_id' => $projectId, 'run_id' => $runId, 'status' => 'proposed']));
+            $a['title'] = mb_substr((string) $a['title'], 0, 500);
+            $a['target_url'] = $a['target_url'] !== null ? mb_substr((string) $a['target_url'], 0, 2000) : null;
+            $status = $previous[$a['type'] . '|' . $a['target_url'] . '|' . $a['title']] ?? 'proposed';
+            Database::insert('ar_actions', array_merge($a, ['project_id' => $projectId, 'run_id' => $runId, 'status' => $status]));
         }
 
         // Omonimi da confermare (ADR-008): una riga per nota distinta, solo se non già presente

@@ -90,7 +90,7 @@ class ProfileFact
             'category' => $category,
             'text' => mb_substr(trim($text), 0, 1000),
             'status' => $status,
-            'source_url' => $sourceUrl ? mb_substr($sourceUrl, 0, 2000) : null,
+            'source_url' => ($sourceUrl && preg_match('#^https?://#i', $sourceUrl)) ? mb_substr($sourceUrl, 0, 2000) : null,
             'origin' => $origin,
             'run_id' => $runId,
             'sort_order' => $maxOrder + 1,

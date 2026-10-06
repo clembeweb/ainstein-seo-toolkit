@@ -482,6 +482,9 @@ class EngineCollectorService
         $seen = [];
         foreach ($r['citations'] ?? [] as $c) {
             $url = trim((string) ($c['url'] ?? ''));
+            if (!preg_match('#^https?://#i', $url)) {
+                continue; // solo link web: mai javascript:, data:, file:
+            }
             if ($url === '' || isset($seen[$url])) {
                 continue;
             }
@@ -495,6 +498,9 @@ class EngineCollectorService
         $sources = [];
         foreach ($r['sources_read'] ?? [] as $s) {
             $url = trim((string) ($s['url'] ?? ''));
+            if (!preg_match('#^https?://#i', $url)) {
+                continue;
+            }
             if ($url === '') {
                 continue;
             }

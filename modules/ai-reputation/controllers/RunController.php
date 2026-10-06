@@ -87,7 +87,24 @@ class RunController
             exit;
         }
 
-        $runId = $this->run->create($projectId, $user['id'], $prompts, $engines, $repeats);
+        // Creazione atomica: due clic ravvicinati non devono creare due run (lock sulla riga del progetto)
+        Database::beginTransaction();
+        try {
+            Database::fetch("SELECT id FROM ar_projects WHERE id = ? FOR UPDATE", [$projectId]);
+            if ($this->run->getActiveForProject($projectId)) {
+                Database::rollback();
+                echo json_encode(['success' => false, 'error' => 'C\'è già un run in corso per questo progetto']);
+                exit;
+            }
+            $runId = $this->run->create($projectId, $user['id'], $prompts, $engines, $repeats);
+            Database::commit();
+        } catch (\Throwable $e) {
+            if (Database::inTransaction()) {
+                Database::rollback();
+            }
+            echo json_encode(['success' => false, 'error' => 'Impossibile creare il run: ' . $e->getMessage()]);
+            exit;
+        }
 
         echo json_encode([
             'success' => true,
@@ -147,6 +164,7 @@ class RunController
             header('HTTP/1.1 404 Not Found');
             exit('Run non trovato');
         }
+        $isViewer = ($project['access_role'] ?? 'owner') === 'viewer';
 
         header('Content-Type: text/event-stream');
         header('Cache-Control: no-cache');
@@ -160,12 +178,13 @@ class RunController
             if (ob_get_level()) ob_flush();
             flush();
         };
-
-        $wasCompleted = $run['status'] === Run::STATUS_COMPLETED;
-        if ($run['status'] === Run::STATUS_PENDING) {
-            $this->run->start($runId);
-        }
         $sendEvent('started', ['run_id' => $runId, 'total' => (int) $run['responses_total']]);
+
+        // Il viewer può solo guardare: mai avviare, riprendere o rianalizzare (spende i crediti dell'owner)
+        if ($isViewer) {
+            $this->follow($runId, $projectId, $sendEvent);
+            exit;
+        }
 
         // Un solo stream elabora il run (lease su ar_runs). Gli altri seguono l'avanzamento dal DB.
         $token = bin2hex(random_bytes(8));
@@ -182,6 +201,38 @@ class RunController
             }
         });
 
+        try {
+            $this->process($run, $project, $user, $token, $sendEvent);
+        } catch (\Throwable $e) {
+            // Qualunque errore imprevisto: il run va in "fallito" (non resta appeso in "in corso") e la UI lo sa
+            error_log("[ai-reputation] stream run {$runId}: " . $e->getMessage());
+            try {
+                Database::reconnect();
+                $this->run->resetProcessing($runId);
+                $this->run->fail($runId, mb_substr('Errore interno: ' . $e->getMessage(), 0, 1000));
+                $this->run->releaseLease($runId, $token);
+            } catch (\Throwable $e2) {
+                // niente da fare
+            }
+            $sendEvent('failed', ['run_id' => $runId, 'message' => 'Il run si è interrotto per un errore interno. Dettagli nel log del server.']);
+        }
+        exit;
+    }
+
+    /**
+     * Corpo dello stream (solo per chi ha il lease): raccolta → giudizi → report.
+     */
+    private function process(array $run, array $project, array $user, string $token, callable $sendEvent): void
+    {
+        $runId = (int) $run['id'];
+        $projectId = (int) $project['id'];
+        $wasCompleted = $run['status'] === Run::STATUS_COMPLETED;
+        if ($run['status'] === Run::STATUS_PENDING) {
+            $this->run->start($runId);
+        }
+        // Item rimasti "in lavorazione" da uno stream morto: tornano in coda (abbiamo il lease, siamo soli)
+        $this->run->resetProcessing($runId);
+
         $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
         $subject = $project['subject_name'];
 
@@ -194,12 +245,15 @@ class RunController
 
             while (true) {
                 Database::reconnect();
-                $this->run->acquireLease($runId, $token);
-                if ($this->run->isCancelled($runId)) {
-                    $sendEvent('cancelled', ['run_id' => $runId]);
-                    exit;
+                if (!$this->run->acquireLease($runId, $token)) {
+                    return; // un altro stream ha preso il run (il nostro lease era scaduto): ci fermiamo
                 }
-                $item = $this->run->nextPending($runId);
+                if ($this->run->isCancelled($runId)) {
+                    $this->run->resetProcessing($runId);
+                    $sendEvent('cancelled', ['run_id' => $runId]);
+                    return;
+                }
+                $item = $this->run->claimNext($runId);
                 if (!$item) {
                     break;
                 }
@@ -216,10 +270,15 @@ class RunController
                 $ok = $result['status'] === 'ok';
                 $credits = 0.0;
                 if ($ok) {
-                    $credits = $unitCost;
-                    Credits::consume($creditUserId, $unitCost, 'collect_response', Project::SLUG, [
+                    if (!Credits::consume($creditUserId, $unitCost, 'collect_response', Project::SLUG, [
                         'project_id' => $projectId, 'run_id' => $runId, 'engine' => $item['engine'],
-                    ]);
+                    ])) {
+                        $this->run->recount($runId);
+                        $this->run->fail($runId, 'Crediti esauriti durante la raccolta');
+                        $sendEvent('failed', ['run_id' => $runId, 'message' => 'Crediti esauriti: la raccolta si è fermata. Le risposte già raccolte restano salvate.']);
+                        return;
+                    }
+                    $credits = $unitCost;
                 }
                 $this->run->addProgress($runId, $ok, (float) $result['cost'], $credits);
 
@@ -237,18 +296,31 @@ class RunController
             }
         }
 
-        // ---------- FASE 2: judge ----------
+        // Nessuna risposta valida (es. API key sbagliate): il run è fallito, non "completato"
         Database::reconnect();
+        $this->run->recount($runId);
+        $okCount = (int) Database::fetchColumn("SELECT COUNT(*) FROM ar_responses WHERE run_id = ? AND status = 'ok'", [$runId]);
+        if ($okCount === 0) {
+            $firstError = (string) Database::fetchColumn("SELECT error_message FROM ar_responses WHERE run_id = ? AND status = 'error' LIMIT 1", [$runId]);
+            $this->run->fail($runId, 'Nessuna risposta raccolta' . ($firstError ? ': ' . mb_substr($firstError, 0, 300) : ''));
+            $this->run->releaseLease($runId, $token);
+            $sendEvent('failed', ['run_id' => $runId, 'message' => 'Nessuna AI ha risposto' . ($firstError ? ': ' . mb_substr($firstError, 0, 200) : '') . '. Controlla le API key in Impostazioni globali.']);
+            return;
+        }
+
+        // ---------- FASE 2: judge ----------
         $toJudge = $this->analysis->pendingForRun($runId);
         if (!empty($toJudge)) {
             $sendEvent('phase', ['phase' => 'analyze', 'total' => count($toJudge), 'label' => 'Analisi delle risposte']);
             $judge = new JudgeService();
             foreach ($toJudge as $item) {
                 Database::reconnect();
-                $this->run->acquireLease($runId, $token);
+                if (!$this->run->acquireLease($runId, $token)) {
+                    return;
+                }
                 if (!$wasCompleted && $this->run->isCancelled($runId)) {
                     $sendEvent('cancelled', ['run_id' => $runId]);
-                    exit;
+                    return;
                 }
                 $sendEvent('progress', ['run_id' => $runId, 'engine' => $item['engine'], 'prompt' => $item['prompt_text']]);
                 $item['citations'] = json_decode((string) $item['citations'], true) ?: [];
@@ -315,39 +387,50 @@ class RunController
                 // non bloccante
             }
         }
-        exit;
     }
 
     /**
-     * Stream "spettatore": un altro processo sta elaborando il run. Emette snapshot dal DB finché finisce.
+     * Stream "spettatore": un altro processo (o nessuno, per il viewer) elabora il run. Emette snapshot dal DB.
+     * Si ferma se il browser chiude la connessione: non tiene occupato un worker per tutto il run.
      */
     private function follow(int $runId, int $projectId, callable $sendEvent): void
     {
-        $sendEvent('attached', ['run_id' => $runId, 'message' => 'Run già in elaborazione: mostro l\'avanzamento']);
+        $sendEvent('attached', ['run_id' => $runId, 'message' => 'Mostro l\'avanzamento del run']);
         $last = '';
-        $idle = 0;
+        $ticks = 0;
         while (true) {
+            echo ": ping\n\n";
+            if (ob_get_level()) ob_flush();
+            flush();
+            if (connection_aborted()) {
+                return;
+            }
             Database::reconnect();
             $r = $this->run->find($runId);
             if (!$r) {
-                break;
+                return;
             }
             $total = (int) $r['responses_total'];
-            $done = (int) Database::fetchColumn("SELECT COUNT(*) FROM ar_responses WHERE run_id = ? AND status <> 'pending'", [$runId]);
+            $done = (int) Database::fetchColumn("SELECT COUNT(*) FROM ar_responses WHERE run_id = ? AND status IN ('ok', 'error')", [$runId]);
             $analyzed = (int) Database::fetchColumn("SELECT COUNT(*) FROM ar_analyses WHERE run_id = ?", [$runId]);
-            $phase = $done < $total ? 'Raccolta risposte' : 'Analisi delle risposte';
+            $collecting = $done < $total;
             $snap = [
-                'run_id' => $runId, 'phase' => $phase,
-                'done' => $done < $total ? $done : $analyzed,
-                'total' => $done < $total ? $total : (int) $r['responses_done'],
+                'run_id' => $runId,
+                'phase' => $collecting ? 'Raccolta risposte' : 'Analisi delle risposte',
+                'done' => $collecting ? $done : $analyzed,
+                'total' => $collecting ? $total : (int) $r['responses_done'],
             ];
             $key = json_encode($snap);
             if ($key !== $last) {
                 $sendEvent('snapshot', $snap);
                 $last = $key;
-                $idle = 0;
             }
-            if (in_array($r['status'], [Run::STATUS_COMPLETED, Run::STATUS_FAILED, Run::STATUS_CANCELLED], true)) {
+            $finished = in_array($r['status'], [Run::STATUS_COMPLETED, Run::STATUS_FAILED, Run::STATUS_CANCELLED], true) && $r['locked_by'] === null;
+            if ($finished) {
+                if ($r['status'] === Run::STATUS_FAILED) {
+                    $sendEvent('failed', ['run_id' => $runId, 'message' => (string) ($r['error_message'] ?: 'Run fallito')]);
+                    return;
+                }
                 $sendEvent($r['status'] === Run::STATUS_CANCELLED ? 'cancelled' : 'completed', [
                     'run_id' => $runId,
                     'done' => (int) $r['responses_done'],
@@ -360,13 +443,15 @@ class RunController
                 ]);
                 return;
             }
-            // lease scaduto (processo morto): fermati, la prossima apertura della pagina riprende il lavoro
-            if ($r['locked_by'] === null || (strtotime((string) $r['locked_at']) < time() - 300)) {
-                $sendEvent('stalled', ['run_id' => $runId, 'message' => 'Elaborazione interrotta: ricarica la pagina per riprendere']);
-                return;
-            }
-            if (++$idle > 600) {
-                return;
+            // Nessuno lavora il run (lease scaduto o mai preso): fermati, riaprire la pagina lo riprende
+            if (in_array($r['status'], [Run::STATUS_PENDING, Run::STATUS_RUNNING], true)
+                && ($r['locked_by'] === null || strtotime((string) $r['locked_at']) < time() - Run::LEASE_TTL)) {
+                if (++$ticks > 3) {
+                    $sendEvent('stalled', ['run_id' => $runId, 'message' => 'Elaborazione ferma: ricarica la pagina per riprendere']);
+                    return;
+                }
+            } else {
+                $ticks = 0;
             }
             sleep(3);
         }
