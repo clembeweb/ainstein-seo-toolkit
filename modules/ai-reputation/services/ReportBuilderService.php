@@ -49,6 +49,16 @@ class ReportBuilderService
         $byPrompt = [];
         $lead = ['total' => 0, 'negative' => 0, 'by_engine' => [], 'prompts' => []];
 
+        // Con le ripetizioni una cella (domanda x engine) ha più risposte: ognuna pesa 1/n, la cella vale una volta
+        $cellCount = [];
+        foreach ($responses as $r) {
+            if ($r['status'] === 'ok' && isset($analyses[(int) $r['id']])) {
+                $k = $r['prompt_id'] . '|' . $r['engine'];
+                $cellCount[$k] = ($cellCount[$k] ?? 0) + 1;
+            }
+        }
+        $cellNeg = [];
+
         foreach ($responses as $r) {
             if ($r['status'] !== 'ok') {
                 continue;
@@ -78,7 +88,9 @@ class ReportBuilderService
             }
 
             $judged++;
-            $w = $weights[$r['engine']] ?? 1.0;
+            $cellKey = $r['prompt_id'] . '|' . $r['engine'];
+            $w = ($weights[$r['engine']] ?? 1.0) / max(1, $cellCount[$cellKey] ?? 1);
+            $cellNeg[$cellKey][] = $isNeg ? 1 : 0;
             $wTotal += $w;
             if ((int) $a['brand_mentioned'] === 1) {
                 $wMentioned += $w;
@@ -108,9 +120,9 @@ class ReportBuilderService
             $pid = (int) $r['prompt_id'];
             $byPrompt[$pid] ??= ['prompt' => $r['prompt_text'], 'cluster' => $r['prompt_cluster'], 'engines' => [], 'negative' => [], 'positive' => []];
             $byPrompt[$pid]['engines'][$r['engine']] = true;
-            if ($isNeg) {
-                $byPrompt[$pid]['negative'][$r['engine']] = true;
-            } elseif ($a['verdict'] === 'positive') {
+            $byPrompt[$pid]['neg_votes'][$r['engine']] = ($byPrompt[$pid]['neg_votes'][$r['engine']] ?? 0) + ($isNeg ? 1 : 0);
+            $byPrompt[$pid]['votes'][$r['engine']] = ($byPrompt[$pid]['votes'][$r['engine']] ?? 0) + 1;
+            if ($a['verdict'] === 'positive') {
                 $byPrompt[$pid]['positive'][$r['engine']] = true;
             }
         }
@@ -118,6 +130,13 @@ class ReportBuilderService
         // Divergenza (solo domande neutre): almeno un engine negativo e almeno uno no
         $divergent = [];
         foreach ($byPrompt as $pid => $p) {
+            $p['negative'] = [];
+            foreach ($p['votes'] as $eng => $v) {
+                if (($p['neg_votes'][$eng] ?? 0) * 2 > $v) {
+                    $p['negative'][$eng] = true; // maggioranza delle ripetizioni negativa
+                }
+            }
+            $p['positive'] = array_diff_key($p['positive'] ?? [], $p['negative']);
             $n = count($p['engines']);
             $neg = count($p['negative']);
             if ($neg > 0 && $neg < $n) {
@@ -126,6 +145,11 @@ class ReportBuilderService
             }
         }
         usort($divergent, fn($a, $b) => ($b['cluster'] === 'rep') <=> ($a['cluster'] === 'rep'));
+
+        // Stabilità: tra le celle ripetute, quante danno lo stesso esito (negativo / non negativo) ogni volta
+        $multi = array_filter($cellNeg, fn($v) => count($v) > 1);
+        $stable = count(array_filter($multi, fn($v) => count(array_unique($v)) === 1));
+        $stability = $multi ? ['cells' => count($multi), 'stable' => $stable] : null;
 
         // Rischio: % pesata di risposte negative alle domande neutre sulla reputazione
         if ($repW > 0) {
@@ -154,6 +178,7 @@ class ReportBuilderService
             'negative_domains' => count($negDomains),
             'divergent' => $divergent,
             'leading' => $lead,
+            'stability' => $stability,
         ];
     }
 

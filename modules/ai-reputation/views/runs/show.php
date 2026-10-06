@@ -103,6 +103,9 @@ $isActive = in_array($run['status'], ['pending', 'running'], true);
             <p class="text-sm text-slate-500 dark:text-slate-400">Divergenza tra engine</p>
             <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= $hasAnalyses ? count($metrics['divergent']) : '–' ?> <?php if ($hasAnalyses): ?><span class="text-sm font-normal text-slate-400">domande</span><?php endif; ?></p>
             <p class="text-xs text-slate-400"><?= $hasAnalyses ? ($metrics['divergent'] ? 'le AI non sono d\'accordo' : 'le AI concordano') : 'dopo l\'analisi' ?> · costo API <?= number_format((float) $run['cost_total'], 3) ?> $</p>
+            <?php if (!empty($metrics['stability'])): ?>
+            <p class="text-xs text-slate-400" title="Domande poste più volte allo stesso engine: in quante l'esito è stato sempre lo stesso">stabilità ripetizioni: <?= (int) $metrics['stability']['stable'] ?> su <?= (int) $metrics['stability']['cells'] ?></p>
+            <?php endif; ?>
         </div>
     </div>
 

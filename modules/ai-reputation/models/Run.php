@@ -42,6 +42,32 @@ class Run
      * Crea il run e la coda di risposte (prompt x engine x repeat), tutte pending.
      * @return int run id
      */
+    /**
+     * Quante volte porre una domanda a un engine. Base = ripetizioni del progetto; per le domande
+     * reputazionali un engine può averne di più (ChatGPT API cambiava verdetto 5 volte su 9 tra due run).
+     */
+    public static function repeatsFor(string $engine, string $cluster, int $base): int
+    {
+        $base = max(1, $base);
+        if ($cluster === 'rep') {
+            $rep = (int) \Core\ModuleLoader::getSetting('ai-reputation', "engine_{$engine}_rep_repeats", $engine === 'openai' ? 3 : 1);
+            return max($base, min(5, $rep));
+        }
+        return $base;
+    }
+
+    /** Totale risposte previste per un run */
+    public static function plannedTotal(array $prompts, array $engines, int $repeats): int
+    {
+        $n = 0;
+        foreach ($prompts as $p) {
+            foreach ($engines as $e) {
+                $n += self::repeatsFor($e, (string) $p['cluster'], $repeats);
+            }
+        }
+        return $n;
+    }
+
     public function create(int $projectId, int $userId, array $prompts, array $engines, int $repeats = 1): int
     {
         $runId = Database::insert('ar_runs', [
@@ -51,12 +77,13 @@ class Run
             'engines' => json_encode(array_values($engines)),
             'repeats' => $repeats,
             'prompts_total' => count($prompts),
-            'responses_total' => count($prompts) * count($engines) * $repeats,
+            'responses_total' => self::plannedTotal($prompts, $engines, $repeats),
         ]);
 
         foreach ($prompts as $prompt) {
             foreach ($engines as $engine) {
-                for ($i = 0; $i < $repeats; $i++) {
+                $n = self::repeatsFor($engine, (string) $prompt['cluster'], $repeats);
+                for ($i = 0; $i < $n; $i++) {
                     Database::insert('ar_responses', [
                         'run_id' => $runId,
                         'project_id' => $projectId,

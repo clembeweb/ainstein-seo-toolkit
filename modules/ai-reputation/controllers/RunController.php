@@ -77,7 +77,7 @@ class RunController
         }
 
         $repeats = max(1, (int) ($project['repeats'] ?? 1));
-        $total = count($prompts) * count($engines) * $repeats;
+        $total = Run::plannedTotal($prompts, $engines, $repeats);
         $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
         $unitCost = Credits::getCost('collect_response', Project::SLUG, 0.2);
         $judgeCost = Credits::getCost('ai_analysis_medium', null, 1);
