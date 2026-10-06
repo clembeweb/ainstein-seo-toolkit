@@ -97,6 +97,9 @@ $isActive = in_array($run['status'], ['pending', 'running'], true);
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Risposte negative (domande neutre)</p>
             <p class="text-2xl font-bold <?= $metrics['negative'] > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white' ?>"><?= $hasAnalyses ? $metrics['negative'] : '–' ?> <?php if ($hasAnalyses): ?><span class="text-sm font-normal text-slate-400">/ <?= $metrics['judged'] ?></span><?php endif; ?></p>
+            <?php if ($hasAnalyses && !empty($metrics['contradictions']['total'])): ?>
+            <p class="text-xs text-amber-600 dark:text-amber-400" title="Risposte che affermano cose in contrasto con il profilo confermato (es. 'nessun procedimento' quando la confisca è confermata)"><?= (int) $metrics['contradictions']['total'] ?> in contrasto con i fatti confermati (<?= e(implode(', ', array_map(fn($k, $v) => ($engineLabels[$k] ?? $k) . ' ' . $v, array_keys($metrics['contradictions']['by_engine']), $metrics['contradictions']['by_engine']))) ?>)</p>
+            <?php endif; ?>
             <p class="text-xs text-slate-400"><?php if ($hasAnalyses && $metrics['negative_by_engine']): ?><?= e(implode(' · ', array_map(fn($k, $v) => ($engineLabels[$k] ?? $k) . ' ' . $v, array_keys($metrics['negative_by_engine']), $metrics['negative_by_engine']))) ?><?php elseif ($hasAnalyses): ?>nessuna<?php else: ?>dopo l'analisi<?php endif; ?></p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
@@ -311,6 +314,7 @@ $isActive = in_array($run['status'], ['pending', 'running'], true);
                                 <p class="text-slate-800 dark:text-slate-100" x-text="current.analysis.summary"></p>
                                 <p class="text-xs text-slate-500 dark:text-slate-400" x-text="'Verdetto: ' + current.analysis.verdict + ' · sentiment ' + current.analysis.sentiment + (current.analysis.is_homonym !== 'no' ? ' · omonimia: ' + current.analysis.is_homonym : '') + (current.analysis.outcome !== 'answered' ? ' · esito: ' + current.analysis.outcome : '')"></p>
                                 <p class="text-xs text-amber-700 dark:text-amber-300" x-show="current.analysis.homonym_note" x-text="current.analysis.homonym_note"></p>
+                                <p class="text-xs text-amber-700 dark:text-amber-300" x-show="current.analysis.contradiction_note" x-text="'In contrasto con i fatti confermati: ' + current.analysis.contradiction_note"></p>
                                 <ul class="text-xs text-red-700 dark:text-red-300 list-disc ml-4" x-show="current.analysis.negative_reasons.length"><template x-for="n in current.analysis.negative_reasons" :key="n"><li x-text="n"></li></template></ul>
                             </div>
                         </template>

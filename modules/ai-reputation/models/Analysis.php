@@ -32,6 +32,8 @@ class Analysis
             'negative_urls' => $enc($a['negative_urls']),
             'cited_domains' => $enc($a['cited_domains']),
             'citations_noise' => $enc($a['citations_noise']),
+            'contradicts_profile' => (int) ($a['contradicts_profile'] ?? 0),
+            'contradiction_note' => $a['contradiction_note'] ?? null,
             'judge_model' => $a['judge_model'],
             'raw' => $enc($a['raw']),
         ]);

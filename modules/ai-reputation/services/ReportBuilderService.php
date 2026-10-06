@@ -58,6 +58,7 @@ class ReportBuilderService
             }
         }
         $cellNeg = [];
+        $contradictions = ['total' => 0, 'by_engine' => []];
 
         foreach ($responses as $r) {
             if ($r['status'] !== 'ok') {
@@ -69,6 +70,10 @@ class ReportBuilderService
                 continue;
             }
             $isNeg = (int) $a['negative'] === 1;
+            if ((int) ($a['contradicts_profile'] ?? 0) === 1) {
+                $contradictions['total']++;
+                $contradictions['by_engine'][$r['engine']] = ($contradictions['by_engine'][$r['engine']] ?? 0) + 1;
+            }
             foreach ($a['negative_urls'] as $u) {
                 $d = EngineCollectorService::domainOf($u);
                 if ($d) {
@@ -179,6 +184,7 @@ class ReportBuilderService
             'divergent' => $divergent,
             'leading' => $lead,
             'stability' => $stability,
+            'contradictions' => $contradictions,
         ];
     }
 

@@ -575,6 +575,7 @@ class RunController
                     'sentiment' => (int) $analyses[(int) $r['id']]['sentiment'],
                     'is_homonym' => $analyses[(int) $r['id']]['is_homonym'],
                     'homonym_note' => $analyses[(int) $r['id']]['homonym_note'],
+                    'contradiction_note' => (int) ($analyses[(int) $r['id']]['contradicts_profile'] ?? 0) === 1 ? $analyses[(int) $r['id']]['contradiction_note'] : null,
                     'negative_reasons' => $analyses[(int) $r['id']]['negative_reasons'],
                     'negative_urls' => $analyses[(int) $r['id']]['negative_urls'],
                     'citations_noise' => $analyses[(int) $r['id']]['citations_noise'],

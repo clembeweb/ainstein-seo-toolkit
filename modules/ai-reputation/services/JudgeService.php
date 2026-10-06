@@ -56,7 +56,7 @@ class JudgeService
             return ['error' => 'JSON judge non valido: ' . $e->getMessage(), 'raw_text' => $result['result']];
         }
 
-        return $this->normalize($data, $response);
+        return $this->normalize($data, $response, $project);
     }
 
     private function systemPrompt(): string
@@ -73,13 +73,15 @@ Regole:
 4. "sentiment": da -2 (molto negativo) a 2 (molto positivo), 0 neutro, riferito a come la risposta presenta il soggetto. Se non è menzionato: 0.
 5. "verdict": "not_mentioned" se brand_mentioned è false; altrimenti "negative" se la risposta contiene fatti o giudizi negativi sul soggetto (procedimenti, truffe, sequestri, recensioni negative, dubbi espliciti sull'affidabilità attribuiti a lui); "positive" se lo presenta favorevolmente senza riserve; "mixed" se positivo e negativo insieme; "neutro" → usa "neutral" se descrittivo senza giudizio o se il motore dice di non poter giudicare.
 6. "negative": true se il verdetto è "negative" o "mixed" con un fatto negativo concreto. "negative_reasons": elenco breve dei motivi. "negative_urls": gli URL delle fonti citate che sostengono o riportano i fatti negativi (sequestri, confische, inchieste, arresti, condanne, truffe, usura, mafia, recensioni negative). OBBLIGATORIO: se "negative" è true e tra le fonti citate ce n'è una il cui titolo o URL riguarda quei fatti, DEVE stare in "negative_urls". Una fonte negativa non può mai finire in "citations_noise" se la risposta la usa per parlare del soggetto.
-7. Fonti: per ogni URL citato decidi se la pagina PARLA DEL SOGGETTO ("citations_about_subject") oppure è rumore, cioè un'altra pagina della stessa testata, un argomento diverso, un omonimo dichiarato ("citations_noise"). Usa titolo e snippet. Nel dubbio, "about_subject".
+7. Fonti: per ogni URL citato decidi se la pagina PARLA DEL SOGGETTO ("citations_about_subject") oppure è rumore ("citations_noise"). Rumore è SOLO una pagina chiaramente estranea: argomento diverso senza legame col soggetto, un omonimo dichiarato, una pagina indice generica. NON è rumore: il sito del soggetto, i suoi profili, articoli che lo citano o lo intervistano, e qualunque pagina che il motore usa per raccontare fatti del soggetto (anche cronaca giudiziaria il cui titolo non contiene il nome: se la risposta la usa per parlare di lui, parla di lui). Nel dubbio, "about_subject".
+8b. "contradicts_profile": true se la risposta afferma qualcosa in contrasto con il PROFILO CONFERMATO (es. dice "nessun procedimento giudiziario" quando il profilo confermato riporta una confisca; attribuisce un'attività che il profilo non ha). In "contradiction_note" una frase su cosa contraddice. false se non c'è profilo confermato o non ci sono contrasti.
+2b. Se il motore chiede chiarimenti ma nomina il soggetto (anche tra le opzioni), "brand_mentioned" è true.
 8. "competitors": nomi di persone o aziende che la risposta propone come alternative o come "i migliori" al posto del soggetto (solo se la domanda è commerciale o competitiva; altrimenti []).
 9. "claims": massimo 6 affermazioni chiave sul soggetto, ciascuna {"text": "...", "negative": true|false}.
 10. "summary": una frase in italiano, max 160 caratteri, che dice cosa risponde il motore sul soggetto. Lingua: italiano.
 
 Formato esatto:
-{"outcome":"answered","brand_mentioned":true,"mention_position":1,"is_homonym":"no","homonym_note":null,"sentiment":0,"verdict":"neutral","summary":"...","negative":false,"negative_reasons":[],"negative_urls":[],"citations_about_subject":[],"citations_noise":[],"competitors":[],"claims":[]}
+{"outcome":"answered","brand_mentioned":true,"mention_position":1,"is_homonym":"no","homonym_note":null,"sentiment":0,"verdict":"neutral","summary":"...","negative":false,"contradicts_profile":false,"contradiction_note":null,"negative_reasons":[],"negative_urls":[],"citations_about_subject":[],"citations_noise":[],"competitors":[],"claims":[]}
 TXT;
     }
 
@@ -196,7 +198,7 @@ TXT;
         return false;
     }
 
-    private function normalize(array $d, array $response): array
+    private function normalize(array $d, array $response, array $project = []): array
     {
         $outcome = in_array($d['outcome'] ?? '', ['answered', 'clarification_requested', 'refused', 'empty'], true) ? $d['outcome'] : 'answered';
         $mentioned = (bool) ($d['brand_mentioned'] ?? false);
@@ -218,6 +220,21 @@ TXT;
         $citedUrls = array_map(fn($c) => $c['url'], $response['citations'] ?? []);
         $about = array_values(array_intersect($citedUrls, (array) ($d['citations_about_subject'] ?? [])));
         $noise = array_values(array_intersect($citedUrls, (array) ($d['citations_noise'] ?? [])));
+        // Controllo a campione 2026-10-06: il judge segnava come "rumore" il sito del soggetto e articoli su di lui.
+        $ownDomain = !empty($project['website']) ? EngineCollectorService::domainOf((string) $project['website']) : null;
+        $nameParts = preg_split('/\s+/', mb_strtolower(trim((string) ($project['subject_name'] ?? ''))));
+        $surname = $nameParts ? end($nameParts) : '';
+        $titles = [];
+        foreach ($response['citations'] ?? [] as $c) {
+            $titles[$c['url']] = (string) ($c['title'] ?? '');
+        }
+        $noise = array_values(array_filter($noise, function ($u) use ($ownDomain, $surname, $titles) {
+            $hay = mb_strtolower(urldecode($u) . ' ' . ($titles[$u] ?? ''));
+            if ($ownDomain && EngineCollectorService::domainOf($u) === $ownDomain) {
+                return false;
+            }
+            return !(mb_strlen($surname) >= 4 && str_contains($hay, $surname));
+        }));
         // URL citati non classificati dal judge → nel dubbio "about_subject"
         foreach ($citedUrls as $u) {
             if (!in_array($u, $about, true) && !in_array($u, $noise, true)) {
@@ -278,6 +295,8 @@ TXT;
             'negative_urls' => $negativeUrls,
             'cited_domains' => array_keys($domains),
             'citations_noise' => $noise,
+            'contradicts_profile' => !empty($d['contradicts_profile']) ? 1 : 0,
+            'contradiction_note' => !empty($d['contradiction_note']) && is_string($d['contradiction_note']) ? mb_substr($d['contradiction_note'], 0, 500) : null,
             'competitors' => array_values(array_unique($competitors)),
             'claims' => $claims,
             'judge_model' => $this->model(),
