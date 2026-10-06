@@ -1,7 +1,7 @@
 # TASKS — AI Reputation Radar
 
 > Stato del lavoro. Aggiornare a ogni sessione: fatto, in corso, prossimo passo.
-> Ultimo aggiornamento: 2026-10-06 (fine sessione)
+> Ultimo aggiornamento: 2026-10-06 (sera, deciso di andare online)
 
 ## Dove siamo
 **MVP completo e funzionante in locale.** Flusso: progetto da Global Projects → Profilo (onboarding + conferma
@@ -14,16 +14,23 @@ Demo per Gabriele: **in locale** (decisione di Clemente). Prima della call riavv
 lanciare run in diretta.
 
 ## Prossimo passo (uno solo)
-**Revisione del report del run 4 da parte di Clemente**, con occhio da demo per Gabriele: aprire
-`/ai-reputation/project/1/runs/4`, guardare "Interventi suggeriti" e la scheda "Risposte delle AI" (filtro
-Reputazione). Annotare qui cosa non torna, poi correggere.
+**Messa online (via esplicito di Clemente, 2026-10-06 sera).** Bloccata sulla postazione "Clemente": manca
+`~/.ssh/ainstein_hetzner` e SSH a `91.99.20.247` va in timeout. Clemente riprova dall'altra postazione.
+Lì, nell'ordine:
+1. Verificare accesso: `ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247 "cd /var/www/ainstein.it/public_html && git log --oneline -1 && git status --short"`.
+2. Backup DB prod prima di tutto (mysqldump in `/home/ainstein/backups/`).
+3. Merge `claude/ai-reputation-radar-dd9004` → `main` (fast-forward, 0 conflitti verificati) + push.
+4. Su prod: `git pull origin main` + le 8 migrazioni di `modules/ai-reputation/database/` in ordine di nome
+   (`2026-10-05-create-ar-tables.sql` per prima: crea tabelle + INSERT in `modules`).
+5. Clemente incolla le key Gemini e Perplexity in `/admin/settings` su ainstein.it (mai Claude).
+6. Prova online con un progetto di test (Overview → guida "Come si usa").
+Già fatto oggi: guida "Come si usa" in 4 passi nell'Overview (commit 1e9804d). La revisione del run 4 resta da fare.
 
 ## Dopo (in ordine)
 1. Decidere se accendere Claude come quarto engine per la demo (~4 $ e ~50 min a run).
 2. Domanda aperta a Clemente: Andrea Marcaccini che rapporto ha con Federico? (se coinvolto nelle stesse
    vicende, il judge deve trattare le sue notizie come rischio per Federico).
-3. Online: merge in `main` + 8 migrazioni SQL in `database/` (in ordine di data) + key Gemini/Perplexity in
-   prod + deploy. Solo con via esplicito di Clemente.
+3. Revisione report run 4 con occhio da demo per Gabriele (era il prossimo passo prima della messa online).
 4. Golden Rule 18: guida utente `shared/views/docs/ai-reputation.php` + `docs/data-model.html` + landing
    "Scopri cosa puoi fare".
 5. Minori: judge_model registrato anche se AiService usa il fallback; 7 "articoli gap" ancora uno per domanda;
