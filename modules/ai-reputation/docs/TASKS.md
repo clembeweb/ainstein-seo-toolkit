@@ -18,8 +18,8 @@ lanciare run in diretta.
 ordinato Contabo Cloud VPS 4 (`184.174.32.213`, vedi `docs/DEPLOY.md`), installato lo stack, `main` fast-forwardato
 a questo branch (`bd41005`, Radar incluso), DB ricreato dallo schema locale + tabelle di config (admin, moduli,
 settings con API key). Login e pagine Radar verificati via curl con `Host: ainstein.it`.
-Manca: (1) record A `@` e `www` di ainstein.it → `184.174.32.213` nel DNS Zone Editor di SiteGround (ns1/ns2.siteground.net,
-TTL 300); (2) `sudo certbot --apache -d ainstein.it -d www.ainstein.it`; (3) prova online (Overview → "Come si usa").
+DNS (SiteGround) puntato a `184.174.32.213` e HTTPS Let's Encrypt attivo (scade 2027-01-05, rinnovo automatico): **ainstein.it è online**.
+Manca: prova online del Radar con un progetto di test (Overview → "Come si usa"); i dati del run 4 della demo restano solo in locale (XAMPP, altra postazione).
 Mail a Hetzner inviata il 2026-10-07: se rispondono con il DB, si può reimportare.
 Già fatto: guida "Come si usa" in 4 passi nell'Overview (commit 1e9804d). La revisione del run 4 resta da fare.
 

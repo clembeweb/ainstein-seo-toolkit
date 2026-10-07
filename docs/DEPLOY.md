@@ -245,7 +245,7 @@ Add-on Auto Backup attivo (2,01 EUR/mese IVA incl.): backup giornaliero off-serv
 
 ## SSL / HTTPS
 
-### Installazione (da fare dopo DNS pointing)
+### Installazione (fatta il 2026-10-07, cert valido fino al 2027-01-05)
 
 ```bash
 sudo certbot --apache -d ainstein.it -d www.ainstein.it
