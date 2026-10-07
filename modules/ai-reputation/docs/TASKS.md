@@ -1,7 +1,7 @@
 # TASKS — AI Reputation Radar
 
 > Stato del lavoro. Aggiornare a ogni sessione: fatto, in corso, prossimo passo.
-> Ultimo aggiornamento: 2026-10-06 (sera, deciso di andare online)
+> Ultimo aggiornamento: 2026-10-07 (sera, nuovo server Contabo online)
 
 ## Dove siamo
 **MVP completo e funzionante in locale.** Flusso: progetto da Global Projects → Profilo (onboarding + conferma
@@ -14,20 +14,14 @@ Demo per Gabriele: **in locale** (decisione di Clemente). Prima della call riavv
 lanciare run in diretta.
 
 ## Prossimo passo (uno solo)
-**⚠️ 2026-10-07: produzione GIÙ.** Account Hetzner disabilitato (Clemente non accede); su 91.99.20.247 risponde
-"Caddy works!" dal 2026-06-03, 443 rifiutata, SSH in timeout → il server non è più nostro. Mail al supporto Hetzner
-mandata il 2026-10-07. In attesa risposta: se riattivano → passi sotto; se no in 1-2 giorni → nuovo VPS (OVHcloud o
-DigitalOcean, account creato da Clemente) e i passi sotto si rifanno sul server nuovo. Modulo già installato nel
-Laragon locale (postazione LaptopoClem, DB `seo_toolkit`, senza dati del run 4).
-**Messa online (via esplicito di Clemente, 2026-10-06 sera)**, nell'ordine:
-1. Verificare accesso: `ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247 "cd /var/www/ainstein.it/public_html && git log --oneline -1 && git status --short"`.
-2. Backup DB prod prima di tutto (mysqldump in `/home/ainstein/backups/`).
-3. Merge `claude/ai-reputation-radar-dd9004` → `main` (fast-forward, 0 conflitti verificati) + push.
-4. Su prod: `git pull origin main` + le 8 migrazioni di `modules/ai-reputation/database/` in ordine di nome
-   (`2026-10-05-create-ar-tables.sql` per prima: crea tabelle + INSERT in `modules`).
-5. Clemente incolla le key Gemini e Perplexity in `/admin/settings` su ainstein.it (mai Claude).
-6. Prova online con un progetto di test (Overview → guida "Come si usa").
-Già fatto oggi: guida "Come si usa" in 4 passi nell'Overview (commit 1e9804d). La revisione del run 4 resta da fare.
+**DNS + HTTPS.** Il 2026-10-07 l'account Hetzner risultava disabilitato (server 91.99.20.247 perso, DB prod perso):
+ordinato Contabo Cloud VPS 4 (`184.174.32.213`, vedi `docs/DEPLOY.md`), installato lo stack, `main` fast-forwardato
+a questo branch (`bd41005`, Radar incluso), DB ricreato dallo schema locale + tabelle di config (admin, moduli,
+settings con API key). Login e pagine Radar verificati via curl con `Host: ainstein.it`.
+Manca: (1) record A `@` e `www` di ainstein.it → `184.174.32.213` nel DNS Zone Editor di SiteGround (ns1/ns2.siteground.net,
+TTL 300); (2) `sudo certbot --apache -d ainstein.it -d www.ainstein.it`; (3) prova online (Overview → "Come si usa").
+Mail a Hetzner inviata il 2026-10-07: se rispondono con il DB, si può reimportare.
+Già fatto: guida "Come si usa" in 4 passi nell'Overview (commit 1e9804d). La revisione del run 4 resta da fare.
 
 ## Dopo (in ordine)
 1. Decidere se accendere Claude come quarto engine per la demo (~4 $ e ~50 min a run).

@@ -1,6 +1,6 @@
 # Guida al Deploy - Ainstein SEO Toolkit
 
-> Ultimo aggiornamento: 2026-03-10 (Migrazione da SiteGround a Hetzner VPS)
+> Ultimo aggiornamento: 2026-10-07 (Migrazione da Hetzner a Contabo VPS — account Hetzner disabilitato, server perso)
 
 ---
 
@@ -8,31 +8,32 @@
 
 | Ambiente | URL | Server | Tipo |
 |----------|-----|--------|------|
-| **Produzione** | https://ainstein.it | Hetzner VPS `91.99.20.247` | CPX22 Ubuntu 24.04 |
+| **Produzione** | https://ainstein.it | Contabo Cloud VPS 4 `184.174.32.213` | Ubuntu 24.04 |
+| ~~Produzione 2026-03→06~~ | | ~~Hetzner `184.174.32.213`~~ | ~~Account disabilitato, dati persi~~ |
 | **Locale** | http://localhost/seo-toolkit | Windows/Laragon | PHP 8.3 |
 | ~~Produzione legacy~~ | ~~ssh.ainstein.it~~ | ~~SiteGround~~ | ~~Dismesso~~ |
 
 ---
 
-## Specifiche Server Produzione (Hetzner VPS)
+## Specifiche Server Produzione (Contabo VPS)
 
 | Componente | Dettaglio |
 |-----------|-----------|
-| **Piano** | CPX22 Regular Performance (AMD) |
-| **CPU** | 2 vCPU |
-| **RAM** | 4 GB |
-| **Disco** | 80 GB SSD |
+| **Piano** | Contabo Cloud VPS 4 (2026), contratto mensile + Auto Backup |
+| **CPU** | 4 vCPU |
+| **RAM** | 8 GB |
+| **Disco** | 100 GB SSD |
 | **OS** | Ubuntu 24.04 LTS |
-| **Location** | Nuremberg, Germania (eu-central) |
-| **IP** | `91.99.20.247` |
-| **Costo** | ~6.49 EUR/mese (server + IPv4) |
+| **Location** | Hub Europe (UE), Contabo |
+| **IP** | `184.174.32.213` |
+| **Costo** | 7,15 EUR/mese netto (server 5,50 + Auto Backup 1,65; reverse charge) |
 
 ### Stack installato
 
 | Software | Versione | Config |
 |----------|---------|--------|
 | PHP | 8.3 + FPM | `memory_limit=512M`, `max_execution_time=300`, `timezone=Europe/Rome` |
-| MySQL | 8.0 | `innodb_buffer_pool_size=1G`, `max_connections=150`, `utf8mb4` |
+| MySQL | 8.0 | `innodb_buffer_pool_size=2G`, `max_connections=150`, `utf8mb4` |
 | Apache | 2.4 + mod_rewrite, mod_ssl, proxy_fcgi | VirtualHost su `/var/www/ainstein.it/public_html/public` |
 | Composer | latest | Dipendenze in `vendor/` |
 | Certbot | latest | Let's Encrypt auto-renew |
@@ -50,14 +51,16 @@ openssl, json, readline, dom, SimpleXML, fileinfo, exif, sockets
 
 ## Connessione SSH
 
-### Produzione (Hetzner VPS)
+### Produzione (Contabo VPS)
 
 ```bash
 # Connessione standard
-ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247
+ssh -i ~/.ssh/ainstein_hetzner ainstein@184.174.32.213
 
-# Chiave SSH locale: ~/.ssh/ainstein_hetzner (ed25519)
-# Utente: ainstein (sudo senza password)
+# Chiave SSH locale: ~/.ssh/ainstein_hetzner (ed25519, stessa chiave riusata su Contabo)
+# Utente: ainstein (sudo senza password). Esiste anche `ubuntu` (utente creato da Contabo, stessa chiave)
+# Pannello Contabo: https://my.contabo.com (cliente 15508547, login bewebsolution@gmail.com)
+# Reinstall OS: pannello → VPS control → Reinstall → tab Advanced → chiave SSH (la chiave finisce sull'utente `ubuntu`)
 # Root login: DISABILITATO
 # Password auth: DISABILITATO
 ```
@@ -133,7 +136,7 @@ DB_PASS=Ainstein_DB_2026!Secure
 
 ```bash
 # 1. Connettiti al VPS
-ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247
+ssh -i ~/.ssh/ainstein_hetzner ainstein@184.174.32.213
 
 # 2. Pull aggiornamenti
 cd /var/www/ainstein.it/public_html
@@ -165,7 +168,7 @@ mysql -u ainstein -p'Ainstein_DB_2026!Secure' ainstein_seo < modules/{modulo}/da
 git push origin main
 
 # Pull su VPS (one-liner)
-ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247 "cd /var/www/ainstein.it/public_html && git pull origin main"
+ssh -i ~/.ssh/ainstein_hetzner ainstein@184.174.32.213 "cd /var/www/ainstein.it/public_html && git pull origin main"
 ```
 
 ---
@@ -176,10 +179,10 @@ Tutti i cron sono nel crontab dell'utente `ainstein`. I log vanno in `/var/log/a
 
 ```bash
 # Visualizza crontab attivo
-ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247 "crontab -l"
+ssh -i ~/.ssh/ainstein_hetzner ainstein@184.174.32.213 "crontab -l"
 
 # Modifica crontab
-ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247 "crontab -e"
+ssh -i ~/.ssh/ainstein_hetzner ainstein@184.174.32.213 "crontab -e"
 ```
 
 ### Lista completa cron job
@@ -201,7 +204,7 @@ ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247 "crontab -e"
 
 ### Differenze rispetto a SiteGround
 
-| Aspetto | SiteGround (prima) | Hetzner VPS (ora) |
+| Aspetto | SiteGround (prima) | VPS (ora) |
 |---------|--------------------|--------------------|
 | Gestione | Pannello web (no redirect `>>`) | `crontab -e` (pieno controllo) |
 | Path PHP | `/usr/bin/php` | `/usr/bin/php` |
@@ -220,10 +223,10 @@ Lo script `/home/ainstein/backup-db.sh` gira ogni notte alle 2:00:
 
 ```bash
 # Verifica backup esistenti
-ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247 "ls -lh /home/ainstein/backups/"
+ssh -i ~/.ssh/ainstein_hetzner ainstein@184.174.32.213 "ls -lh /home/ainstein/backups/"
 
 # Backup manuale
-ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247 "/home/ainstein/backup-db.sh"
+ssh -i ~/.ssh/ainstein_hetzner ainstein@184.174.32.213 "/home/ainstein/backup-db.sh"
 ```
 
 ### Restore da backup
@@ -232,12 +235,11 @@ ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247 "/home/ainstein/backup-db.s
 gunzip < /home/ainstein/backups/ainstein_XXXXXXXX_XXXX.sql.gz | mysql -u ainstein -p'Ainstein_DB_2026!Secure' ainstein_seo
 ```
 
-### Backup Hetzner (snapshot)
+### Backup Contabo (Auto Backup)
 
-Dalla [Hetzner Console](https://console.hetzner.com):
-- Server > ainstein-vps > Snapshots > Create Snapshot
-- Costo: ~0.01 EUR/GB/mese
-- Include TUTTO (OS, codice, DB, config)
+Add-on Auto Backup attivo (2,01 EUR/mese IVA incl.): backup giornaliero off-server, ultime 10 versioni, ripristino 1-click da my.contabo.com → Auto Backup. Include TUTTO (OS, codice, DB, config).
+
+> **Lezione Hetzner (2026-10)**: i backup DB in `/home/ainstein/backups/` stanno sullo stesso server; se l'account del provider viene disabilitato si perde tutto. Valutare copia esterna periodica.
 
 ---
 
@@ -268,12 +270,12 @@ curl -I https://ainstein.it
 
 ## DNS
 
-Per completare la migrazione, puntare i record DNS di `ainstein.it`:
+I nameserver di `ainstein.it` sono ancora SiteGround (`ns1/ns2.siteground.net`): i record si modificano da Site Tools → Domain → DNS Zone Editor. Record attuali:
 
 | Tipo | Nome | Valore | TTL |
 |------|------|--------|-----|
-| A | `@` | `91.99.20.247` | 300 (poi 3600) |
-| A | `www` | `91.99.20.247` | 300 (poi 3600) |
+| A | `@` | `184.174.32.213` | 300 (poi 3600) |
+| A | `www` | `184.174.32.213` | 300 (poi 3600) |
 
 > **IMPORTANTE**: Abbassare il TTL a 300 almeno 24h prima del cutover. Dopo la verifica, rialzare a 3600.
 
@@ -387,7 +389,7 @@ default_time_zone = '+01:00'
 | Storage non scrivibile | `chmod -R 775 storage/ && chown -R ainstein:www-data storage/` |
 | Disco pieno | `df -h`, controllare backup in `/home/ainstein/backups/` |
 | SSL scaduto | `sudo certbot renew` |
-| SSE non funziona | Su Hetzner funziona nativamente (no proxy come SiteGround) |
+| SSE non funziona | Su VPS funziona nativamente (no proxy come SiteGround) |
 
 ### Comandi diagnostici
 
@@ -431,12 +433,7 @@ php -r "phpinfo();" | grep memory_limit
 
 ## Scalabilita
 
-Se il server CPX22 non basta, si scala verticalmente dalla Hetzner Console:
-
-1. Server > ainstein-vps > Rescale
-2. Scegli piano superiore (es. CPX32: 4 vCPU, 8GB RAM)
-3. Il server si riavvia (~30 secondi di downtime)
-4. Nessuna riconfigurazione necessaria
+Se il Cloud VPS 4 non basta, upgrade dal pannello Contabo (VPS control → Manage → Upgrade VPS): VPS 6 = 6 vCPU/12 GB. Nessuna riconfigurazione necessaria.
 
 ---
 

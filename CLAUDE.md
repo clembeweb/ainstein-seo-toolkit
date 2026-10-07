@@ -1,6 +1,6 @@
 # AINSTEIN - Istruzioni Claude Code
 
-> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-03-13 (Audit piattaforma completo + fix 11 critical)
+> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-10-07 (Produzione migrata su Contabo VPS)
 
 ---
 
@@ -14,7 +14,7 @@
 | **Stack** | PHP 8+, MySQL, Tailwind CSS, Alpine.js, HTMX |
 | **AI Provider** | Claude API (Anthropic) + OpenAI fallback |
 | **Lingua UI** | Italiano (sempre) |
-| **Database** | MySQL `seo_toolkit` (locale) / `ainstein_seo` (prod Hetzner) |
+| **Database** | MySQL `seo_toolkit` (locale) / `ainstein_seo` (prod Contabo) |
 
 ---
 
@@ -316,7 +316,7 @@ Regole critiche SSE:
 - `Database::reconnect()` dopo ogni chiamata AI (non dopo ogni query breve)
 - `if (ob_get_level()) ob_flush(); flush();` per inviare eventi
 - Salvare risultati nel DB PRIMA dell'evento `completed`
-- Polling fallback opzionale (Hetzner VPS supporta SSE nativamente, no proxy)
+- Polling fallback opzionale (VPS supporta SSE nativamente, no proxy)
 
 Eventi standard: `started`, `progress`, `item_completed`, `item_error`, `completed`, `cancelled`
 
@@ -387,20 +387,20 @@ Colori bordi modulo: amber(aic), emerald(sa), blue(st), purple(kr), cyan(il), ro
 ## COMANDI FREQUENTI
 
 ```bash
-# SSH Produzione (Hetzner VPS)
-ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247
+# SSH Produzione (Contabo VPS — dal 2026-10-07; Hetzner dismesso)
+ssh -i ~/.ssh/ainstein_hetzner ainstein@184.174.32.213
 cd /var/www/ainstein.it/public_html
 
 # Deploy
 git push origin main          # locale
 git pull origin main          # produzione (da SSH)
 # One-liner deploy da locale:
-ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247 "cd /var/www/ainstein.it/public_html && git pull origin main"
+ssh -i ~/.ssh/ainstein_hetzner ainstein@184.174.32.213 "cd /var/www/ainstein.it/public_html && git pull origin main"
 
 # Verifica sintassi PHP
 php -l path/to/file.php
 
-# Database produzione (Hetzner)
+# Database produzione (Contabo)
 mysql -u ainstein -p'Ainstein_DB_2026!Secure' ainstein_seo < file.sql
 mysql -u ainstein -p'Ainstein_DB_2026!Secure' ainstein_seo -e "SHOW TABLES LIKE 'prefisso_%';"
 
@@ -408,8 +408,8 @@ mysql -u ainstein -p'Ainstein_DB_2026!Secure' ainstein_seo -e "SHOW TABLES LIKE 
 mysql -u root seo_toolkit -e "SHOW TABLES;"
 
 # Log produzione
-ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247 "tail -f /var/log/ainstein/cron.log"
-ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247 "tail -f /var/log/apache2/ainstein-error.log"
+ssh -i ~/.ssh/ainstein_hetzner ainstein@184.174.32.213 "tail -f /var/log/ainstein/cron.log"
+ssh -i ~/.ssh/ainstein_hetzner ainstein@184.174.32.213 "tail -f /var/log/apache2/ainstein-error.log"
 
 # Test locale
 # URL: http://localhost/seo-toolkit
@@ -429,12 +429,13 @@ ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247 "tail -f /var/log/apache2/a
 
 **IMPORTANTE**: MAI usare l'email personale dell'utente per test automatici.
 
-### Produzione: Hetzner VPS
+### Produzione: Contabo VPS (dal 2026-10-07)
 
 | Dettaglio | Valore |
 |-----------|--------|
-| Server | CPX22, Nuremberg (eu-central), Ubuntu 24.04 |
-| IP | `91.99.20.247` |
+| Server | Contabo Cloud VPS 4 (4 vCPU, 8 GB, 100 GB), Hub Europe, Ubuntu 24.04 |
+| IP | `184.174.32.213` |
+| Pannello | https://my.contabo.com (cliente 15508547) — reinstall/backup/upgrade |
 | SSH Key | `~/.ssh/ainstein_hetzner` |
 | Utente | `ainstein` (sudo NOPASSWD) |
 | Web root | `/var/www/ainstein.it/public_html` |
@@ -443,7 +444,7 @@ ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247 "tail -f /var/log/apache2/a
 | PHP | 8.3-fpm, 512MB, Europe/Rome |
 | Logs cron | `/var/log/ainstein/cron.log` |
 | Logs Apache | `/var/log/apache2/ainstein-error.log` |
-| Backup DB | `/home/ainstein/backups/` (daily, 7gg retention) |
+| Backup DB | `/home/ainstein/backups/` (daily, 7gg) + Contabo Auto Backup (off-server, 10 versioni) |
 
 ### Cron Jobs (crontab utente ainstein)
 
@@ -506,7 +507,7 @@ modules/content-creator/cron/image-cleanup.php     # Daily (0 5 * * *)
 | AJAX lungo: processo muore | Manca `ob_start()` → warning corrompe JSON (GR #17) |
 | AJAX lungo: JSON corrotto | `ob_end_clean()` prima di `echo json_encode()` + `exit` |
 | SSE blocca altre request | `session_write_close()` prima del loop |
-| SSE "Connessione persa" | `ignore_user_abort(true)` — su Hetzner VPS SSE funziona nativamente (no proxy) |
+| SSE "Connessione persa" | `ignore_user_abort(true)` — su VPS SSE funziona nativamente (no proxy) |
 | SSE dati persi | Salvare nel DB PRIMA dell'evento `completed` |
 | `ob_flush(): Failed to flush` | `if (ob_get_level()) ob_flush()` |
 | `getModuleSetting()` undefined | Usare `ModuleLoader::getSetting(slug, key, default)` |
