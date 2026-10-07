@@ -14,9 +14,12 @@ Demo per Gabriele: **in locale** (decisione di Clemente). Prima della call riavv
 lanciare run in diretta.
 
 ## Prossimo passo (uno solo)
-**Messa online (via esplicito di Clemente, 2026-10-06 sera).** Bloccata sulla postazione "Clemente": manca
-`~/.ssh/ainstein_hetzner` e SSH a `91.99.20.247` va in timeout. Clemente riprova dall'altra postazione.
-Lì, nell'ordine:
+**⚠️ 2026-10-07: produzione GIÙ.** Account Hetzner disabilitato (Clemente non accede); su 91.99.20.247 risponde
+"Caddy works!" dal 2026-06-03, 443 rifiutata, SSH in timeout → il server non è più nostro. Mail al supporto Hetzner
+mandata il 2026-10-07. In attesa risposta: se riattivano → passi sotto; se no in 1-2 giorni → nuovo VPS (OVHcloud o
+DigitalOcean, account creato da Clemente) e i passi sotto si rifanno sul server nuovo. Modulo già installato nel
+Laragon locale (postazione LaptopoClem, DB `seo_toolkit`, senza dati del run 4).
+**Messa online (via esplicito di Clemente, 2026-10-06 sera)**, nell'ordine:
 1. Verificare accesso: `ssh -i ~/.ssh/ainstein_hetzner ainstein@91.99.20.247 "cd /var/www/ainstein.it/public_html && git log --oneline -1 && git status --short"`.
 2. Backup DB prod prima di tutto (mysqldump in `/home/ainstein/backups/`).
 3. Merge `claude/ai-reputation-radar-dd9004` → `main` (fast-forward, 0 conflitti verificati) + push.
