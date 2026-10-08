@@ -82,4 +82,34 @@ $check('senza allowedSources il controllo sulla fonte non si applica (solo non v
 
 $check('parseJson con fence', (S::parseJson("```json\n{\"a\":1}\n```")['a'] ?? null) === 1);
 $check('parseJson senza oggetto → null', S::parseJson('niente') === null);
+
+// --- Fix review finale: omonimi e fatti negativi non citabili ---
+$rows = [
+    ['category' => 'identity', 'status' => 'confirmed', 'text' => 'Avvocato a Bologna', 'corrected_text' => null, 'source_url' => 'https://mario.it/chi-sono'],
+    ['category' => 'activity', 'status' => 'corrected', 'text' => 'vecchio', 'corrected_text' => 'Socio dello studio', 'source_url' => ''],
+    ['category' => 'homonym', 'status' => 'confirmed', 'text' => 'Mario Rossi calciatore', 'corrected_text' => null, 'source_url' => 'https://sport.it/rossi'],
+    ['category' => 'risk', 'status' => 'confirmed', 'text' => 'Indagine 2019 archiviata', 'corrected_text' => null, 'source_url' => 'https://cronaca.it/art'],
+    ['category' => 'source', 'status' => 'confirmed', 'text' => 'https://fonte.it', 'corrected_text' => null, 'source_url' => 'https://fonte.it'],
+    ['category' => 'fact', 'status' => 'rejected', 'text' => 'falso', 'corrected_text' => null, 'source_url' => 'https://falso.it'],
+];
+$b = S::factBlocks($rows, false);
+$check('factBlocks: citabili senza omonimi, rischi, fonti e rifiutati',
+    count($b['citable']) === 2 && str_contains($b['citable'][0], 'Avvocato a Bologna') && str_contains($b['citable'][1], 'Socio dello studio')
+    && !str_contains(implode(' ', $b['citable']), 'calciatore') && !str_contains(implode(' ', $b['citable']), 'Indagine'));
+$check('factBlocks: omonimi e rischi in blocchi separati', $b['homonyms'] === ['Mario Rossi calciatore'] && count($b['risks']) === 1 && str_contains($b['risks'][0], 'Indagine 2019'));
+$check('factBlocks contenuto: fonti di omonimi e rischi non ammesse',
+    in_array('https://mario.it/chi-sono', $b['sources'], true) && !in_array('https://sport.it/rossi', $b['sources'], true) && !in_array('https://cronaca.it/art', $b['sources'], true) && !in_array('https://fonte.it', $b['sources'], true));
+$br = S::factBlocks($rows, true);
+$check('factBlocks rimozione: fonti di omonimi e rischi ammesse', in_array('https://sport.it/rossi', $br['sources'], true) && in_array('https://cronaca.it/art', $br['sources'], true) && !in_array('https://falso.it', $br['sources'], true));
+$check('systemPrompt: regola omonimi e fatti negativi', str_contains(S::systemPrompt(), 'Non attribuire al soggetto i fatti degli omonimi'));
+
+// --- Domande: prima quelle citate nel titolo dell'intervento ---
+$qs = [];
+for ($i = 1; $i <= 12; $i++) {
+    $qs[] = ['text' => "Domanda {$i}?", 'verdicts' => []];
+}
+$qs[] = ['text' => 'Chi è il miglior avvocato a Bologna?', 'verdicts' => []];
+$o = S::orderQuestions($qs, 'Articolo su "chi è il miglior avvocato a Bologna?"');
+$check('orderQuestions: domanda del titolo per prima, massimo 10', count($o) === 10 && $o[0]['text'] === 'Chi è il miglior avvocato a Bologna?' && $o[1]['text'] === 'Domanda 1?');
+$check('orderQuestions: senza corrispondenze ordine invariato', array_column(S::orderQuestions($qs, 'Altro titolo'), 'text') === array_column(array_slice($qs, 0, 10), 'text'));
 exit($fail ? 1 : 0);

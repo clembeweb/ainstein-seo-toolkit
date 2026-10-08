@@ -46,7 +46,9 @@ class ActionBriefService
         }
         $dossier = $this->dossier($action, $run, $project);
         // charge_credits=false: l'unico addebito della scheda e' cost_action_brief, applicato dal controller dopo il salvataggio
-        $options = ['max_tokens' => 8192, 'effort' => 'high', 'timeout' => 240, 'system' => self::systemPrompt(), 'charge_credits' => false];
+        // max_tokens 16000: con il ragionamento esteso i token di thinking contano nel limite.
+        // timeout 180: primaria + eventuale fallback (120s) restano sotto i ~300s della richiesta AJAX
+        $options = ['max_tokens' => 16000, 'effort' => 'high', 'timeout' => 180, 'system' => self::systemPrompt(), 'charge_credits' => false];
         if ($this->model() !== 'global') {
             $options['model'] = $this->model();
         }
@@ -145,27 +147,15 @@ class ActionBriefService
                 unset($q);
             }
         }
-        $questions = array_slice($questions, 0, 10);
-        // Fatti confermati con la loro fonte (le fonti-URL del profilo, categoria 'source', non sono fatti)
-        $facts = [];
-        $allowedSources = [];
+        $questions = self::orderQuestions(array_values($questions), (string) ($action['title'] ?? ''));
+        // Fatti del profilo: citabili, omonimi e fatti negativi noti in blocchi separati (le fonti-URL, categoria 'source', non sono fatti)
         $factRows = Database::fetchAll(
             "SELECT category, status, text, corrected_text, source_url FROM ar_profile_facts WHERE project_id = ? AND status IN ('confirmed','corrected') AND category <> 'source' ORDER BY category, sort_order, id",
             [(int) $project['id']]
         );
-        foreach ($factRows as $f) {
-            $text = $f['status'] === 'corrected' && $f['corrected_text'] !== null ? $f['corrected_text'] : $f['text'];
-            $src = trim((string) ($f['source_url'] ?? ''));
-            if ($src !== '') {
-                $allowedSources[] = $src;
-                $d = EngineCollectorService::domainOf($src);
-                if ($d) {
-                    $allowedSources[] = $d;
-                }
-            }
-            $facts[] = "[{$f['category']}] {$text} (fonte: " . ($src !== '' ? $src : self::PROFILE_SOURCE) . ')';
-        }
-        $allowedSources = array_merge($allowedSources, $okDomains, $negDomainNames, $pages);
+        $blocks = self::factBlocks($factRows, $action['type'] === 'removal');
+        $facts = $blocks['citable'];
+        $allowedSources = array_merge($blocks['sources'], $okDomains, $negDomainNames, $pages);
         if ($pageDomain) {
             $allowedSources[] = $pageDomain;
         }
@@ -186,6 +176,12 @@ class ActionBriefService
         }
         $lines[] = 'FATTI CONFERMATI DEL PROFILO (gli unici fatti citabili):';
         $lines[] = $facts ? '- ' . implode("\n- ", array_slice($facts, 0, 40)) : '- (nessuno confermato)';
+        if ($blocks['homonyms']) {
+            $lines[] = 'NON È IL SOGGETTO (omonimi da non confondere, non citarli): ' . implode('; ', array_slice($blocks['homonyms'], 0, 15));
+        }
+        if ($blocks['risks']) {
+            $lines[] = 'FATTI NEGATIVI NOTI (contesto: non citarli nei contenuti; usali solo come base per le richieste di rimozione): ' . implode('; ', array_slice($blocks['risks'], 0, 15));
+        }
         $lines[] = "INTERVENTO: tipo={$action['type']}; titolo=\"{$action['title']}\"; motivazione=\"{$action['rationale']}\"" . ($pageDomain ? "; sito={$pageDomain}" : '');
         if ($pages) {
             $lines[] = "PAGINE DELL'INTERVENTO:\n- " . implode("\n- ", array_slice($pages, 0, 15));
@@ -207,6 +203,66 @@ class ActionBriefService
         return ['prompt' => implode("\n", $lines), 'ok_domains' => $okDomains, 'allowed_sources' => $allowedSources];
     }
 
+    /** Categorie del profilo che non sono fatti citabili: fonti-URL, omonimi, temi di rischio. */
+    public const NON_CITABLE_CATEGORIES = ['source', 'homonym', 'risk'];
+
+    /**
+     * Divide i fatti confermati/corretti del profilo in: citabili (con fonte), omonimi, fatti negativi noti.
+     * 'sources': URL/domini ammessi come fonte dei fatti. Le fonti di omonimi e rischi valgono solo
+     * per le richieste di rimozione ($isRemoval), mai come fonte di un contenuto.
+     *
+     * @return array{citable: string[], homonyms: string[], risks: string[], sources: string[]}
+     */
+    public static function factBlocks(array $factRows, bool $isRemoval): array
+    {
+        $out = ['citable' => [], 'homonyms' => [], 'risks' => [], 'sources' => []];
+        foreach ($factRows as $f) {
+            $category = (string) ($f['category'] ?? '');
+            $status = (string) ($f['status'] ?? '');
+            if ($category === 'source' || !in_array($status, ['confirmed', 'corrected'], true)) {
+                continue;
+            }
+            $text = ($status === 'corrected' && ($f['corrected_text'] ?? null) !== null) ? (string) $f['corrected_text'] : (string) ($f['text'] ?? '');
+            $src = trim((string) ($f['source_url'] ?? ''));
+            $citable = !in_array($category, self::NON_CITABLE_CATEGORIES, true);
+            if ($src !== '' && ($citable || $isRemoval)) {
+                $out['sources'][] = $src;
+                $d = EngineCollectorService::domainOf($src);
+                if ($d) {
+                    $out['sources'][] = $d;
+                }
+            }
+            if ($category === 'homonym') {
+                $out['homonyms'][] = $text;
+            } elseif ($category === 'risk') {
+                $out['risks'][] = $text . ($src !== '' ? " (fonte: {$src})" : '');
+            } else {
+                $out['citable'][] = "[{$category}] {$text} (fonte: " . ($src !== '' ? $src : self::PROFILE_SOURCE) . ')';
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Domande collegate: prima quelle il cui testo compare nel titolo dell'intervento
+     * (per gap_article il titolo contiene la domanda tra virgolette), poi le altre; massimo 10.
+     */
+    public static function orderQuestions(array $questions, string $title): array
+    {
+        $title = mb_strtolower($title);
+        $first = [];
+        $rest = [];
+        foreach ($questions as $q) {
+            $text = mb_strtolower(trim((string) ($q['text'] ?? '')));
+            if ($text !== '' && $title !== '' && str_contains($title, $text)) {
+                $first[] = $q;
+            } else {
+                $rest[] = $q;
+            }
+        }
+        return array_slice(array_merge($first, $rest), 0, 10);
+    }
+
     public static function systemPrompt(): string
     {
         return "Sei un consulente senior di reputazione digitale e un copywriter esperto. Lavori per un'agenzia che deve eseguire interventi concreti per un cliente.\n"
@@ -214,6 +270,7 @@ class ActionBriefService
             . "- Rispondi SOLO con un oggetto JSON valido, senza testo prima o dopo, senza markdown.\n"
             . "- Scrivi in italiano.\n"
             . "- Non inventare fatti: cita solo i FATTI CONFERMATI DEL PROFILO e i dati del dossier, indicando la fonte.\n"
+            . "- Non attribuire al soggetto i fatti degli omonimi e non citare nei contenuti i fatti negativi noti: servono solo come contesto.\n"
             . "- Non citare costi, tariffe o prezzi di testate o servizi.\n"
             . "- Non spiegare come sono stati raccolti i dati né come lavorano le AI: concentrati su cosa fare.\n"
             . "- suggested_outlets può contenere solo domini presenti nell'elenco TESTATE CHE LE AI CITANO.";
