@@ -17,7 +17,7 @@ Migrazione `modules/ai-reputation/database/2026-10-08-actions-brief.sql` su `ar_
 
 | Colonna | Tipo | Significato |
 |---|---|---|
-| `channel` | ENUM('own_site','external','both') NULL | Canale deciso dall'AI. NULL = scheda non generata |
+| `channel` | ENUM('own_site','external','both') NULL | Canale deciso dall'AI per i contenuti. Sempre NULL per le rimozioni (il canale non si applica) |
 | `channel_rationale` | TEXT NULL | Perché quel canale (1-3 frasi) |
 | `suggested_outlets` | JSON NULL | 1-3 domini esterni suggeriti, es. `["ilsole24ore.com","wired.it"]` |
 | `brief` | JSON NULL | Scheda operativa (shape in §3.3) |
@@ -25,20 +25,22 @@ Migrazione `modules/ai-reputation/database/2026-10-08-actions-brief.sql` su `ar_
 | `brief_generated_at` | DATETIME NULL | Quando |
 | `brief_error` | VARCHAR(500) NULL | Ultimo errore di generazione (vuoto se ok) |
 
-Nessuna tabella nuova. Nessuna modifica a `ar_runs`: il lock della generazione schede è in memoria/DB tramite `brief_error`/`brief_generated_at` (vedi §3.5).
+Nessuna tabella nuova. Su `ar_runs` due colonne dedicate al lock della generazione schede: `briefs_lock_token` VARCHAR(40) NULL, `briefs_locked_at` TIMESTAMP NULL (separate dal lease della raccolta, vedi §3.5).
 
 Nuove impostazioni in `module.json` (gruppo `ai_config` / `costs`):
 - `brief_model` (select, default `claude-opus-5-5`; opzioni: `claude-opus-5-5`, `claude-sonnet-5-5`, `global`) — il judge **non** cambia (regola 6 del modulo).
 - `cost_action_brief` (number, default 1) — crediti per scheda generata.
 
-Modifica a `services/AiService.php::MODELS['anthropic']`: aggiunti `claude-opus-5-5` (4 / 20 $ per M token), `claude-sonnet-5-5` (2 / 10), `claude-haiku-5-5` (0,10 / 0,50); nomi "Claude Opus 5.5", ecc. I prezzi in `MODELS` sono per 1K token (0.004 / 0.020, 0.002 / 0.010, 0.0001 / 0.0005). `AiService` manda solo `model`, `max_tokens`, `messages`, `system`: compatibile con Opus 5.5 senza altre modifiche (niente `temperature`, niente prefill).
+Modifica a `services/AiService.php::MODELS['anthropic']`: aggiunti `claude-opus-5-5` (4 / 20 $ per M token), `claude-sonnet-5-5` (2 / 10), `claude-haiku-5-5` (0,10 / 0,50); nomi "Claude Opus 5.5", ecc. I prezzi in `MODELS` sono per 1K token (0.004 / 0.020, 0.002 / 0.010, 0.0001 / 0.0005). `AiService` manda solo `model`, `max_tokens`, `messages`, `system`: compatibile con Opus 5.5 (niente `temperature`, niente prefill). Unica aggiunta: `complete()` accetta l'opzione `effort` e, solo per Anthropic, la invia come `output_config: {effort}` (Opus 5.5 altrimenti lavora a `medium`); le schede usano `high`.
 
 ## 3. Generazione delle schede
 
 ### 3.1 Servizio
 `modules/ai-reputation/services/ActionBriefService.php`
 - `__construct()` — `new AiService('ai-reputation')`; il modello usato è `brief_model` (se `global`, quello di AiService). La chiamata è `AiService::complete($userId, $messages, ['model' => $briefModel, 'max_tokens' => 8192, 'system' => $systemPrompt], 'ai-reputation')`: `complete()` accetta già `model`, `max_tokens` e `system` nelle opzioni (verificato).
-- `generateForRun(int $runId, int $userId, bool $force = false): array` — ritorna `['total' => n, 'done' => n, 'failed' => n, 'skipped' => n]`. Per ogni azione del run con `status <> 'dismissed'`: se `brief` già presente e `!$force` → skipped; altrimenti costruisce il dossier, chiama l'AI, valida, salva. `Database::reconnect()` dopo ogni chiamata (GR 10). Crediti: `Credits::consume` solo a scheda salvata.
+- `generateBatch(int $runId, int $userId, int $limit = 4): array` — processa al massimo `$limit` azioni del run con `status <> 'dismissed'` e `brief IS NULL` (le fallite vengono riprovate solo se `brief_error` è vuoto o se il chiamante passa `retryFailed`), nell'ordine del piano; per ognuna costruisce il dossier, chiama l'AI, valida, salva. Ritorna `['total', 'done', 'failed', 'pending']`. `Database::reconnect()` dopo ogni chiamata (GR 10). Crediti: `Credits::consume` solo a scheda salvata. Il batch da 4 tiene ogni richiesta HTTP sotto i 300 s anche con Opus 5.5 (30-40 s a scheda).
+- `reset(int $runId): void` — azzera `brief*` di tutte le azioni del run (usato da "Rigenera le schede", `force=1`), poi si riparte a batch.
+- Il modello salvato in `brief_model` è quello restituito da AiService (`model_used`): se il fallback su OpenAI scatta, viene registrato quello reale.
 - `generateOne(int $actionId, int $userId): bool` — per il link "Rigenera questa scheda".
 - `status(int $runId): array` — `['total', 'done', 'failed', 'pending']` leggendo `ar_actions` (done = `brief IS NOT NULL`, failed = `brief_error <> ''`).
 
@@ -77,7 +79,7 @@ Contenuti (`counter_content`, `gap_article`, `correction`):
 Rimozioni (`removal`):
 ```json
 {
-  "channel": "external",
+  "channel": null,
   "channel_rationale": "…",
   "suggested_outlets": [],
   "brief": {
@@ -90,21 +92,21 @@ Rimozioni (`removal`):
   }
 }
 ```
-Validazione: `channel` nell'enum, `brief.kind` coerente col tipo, `points` ≥ 3 per i contenuti, `pages` ⊆ `target_urls`. Se non valida → `brief_error`, nessun salvataggio, nessun credito.
+Validazione: `channel` nell'enum (NULL per le rimozioni), `brief.kind` coerente col tipo, `points` ≥ 3 per i contenuti, `pages` ⊆ `target_urls`, `suggested_outlets` filtrate ai domini "ok" passati nel dossier (le testate non presenti vengono scartate: l'AI non può inventare fonti). Se non valida → `brief_error`, nessun salvataggio, nessun credito.
 
 ### 3.4 Route e controller (`RunController` o nuovo `BriefController`)
 Pattern route del modulo: `/ai-reputation/project/{id}/runs/{runId}/…`, tutte con `Middleware::auth()`, progetto via `findAccessible`, CSRF `_csrf_token` sulle POST.
 
 | Route | Cosa |
 |---|---|
-| `POST …/briefs/generate` (body: `force=0/1`) | AJAX lungo (GR 15/17/23): `ignore_user_abort`, `set_time_limit(300)`, `ob_start`, `session_write_close`, controllo crediti (`total_pending × cost_action_brief`), poi `generateForRun`. Risposta JSON `{success, total, done, failed}`; `ob_end_clean()` prima di ogni `echo`, inclusi gli early return |
+| `POST …/briefs/generate` (body: `force=0/1`, `retry_failed=0/1`) | AJAX lungo (GR 15/17/23): `ignore_user_abort`, `set_time_limit(300)`, `ob_start`, `session_write_close`; con `force=1` prima `reset()`; controllo crediti su tutte le schede ancora da fare (`pending × cost_action_brief`); poi `generateBatch` (max 4). Risposta JSON `{success, total, done, failed, pending}`; il frontend richiama finché `pending > 0`. `ob_end_clean()` prima di ogni `echo`, inclusi gli early return |
 | `GET …/briefs/status` | JSON `{total, done, failed, pending, running}` per il contatore (polling ogni 2 s) |
 | `POST …/actions/{actionId}/brief/regenerate` | rigenera una sola scheda (AJAX breve, stessa cura su `ob_*`) |
 | `GET …/export/plan.pdf` | PDF (§4) |
 
 ### 3.5 Concorrenza e ripresa
 - Il generatore salva ogni scheda appena pronta: una pagina chiusa a metà non perde lavoro; il clic successivo processa solo le azioni con `brief IS NULL` (o tutte se `force`).
-- Doppio clic: prima di partire si scrive un marcatore `running` nel run (`ar_runs.locked_by = 'briefs:<token>'`, `locked_at`), riusando le colonne del lease esistente; se un lock `briefs:*` più giovane di 10 minuti è presente, il secondo POST risponde `{success:false, error:'Generazione già in corso'}`. Il lock si libera a fine lavoro (anche su errore, in `finally`).
+- Doppio clic: ogni batch prende un lock su `ar_runs.briefs_lock_token`/`briefs_locked_at` (UPDATE condizionale: token NULL o `briefs_locked_at` più vecchio di 5 minuti); se non lo ottiene risponde `{success:false, error:'Generazione già in corso'}`. Il lock si libera a fine batch (anche su errore, in `finally`). Colonne separate dal lease della raccolta (`locked_by`/`locked_at`), così il resto del modulo non scambia la generazione schede per un run in corso.
 - `status` espone `running` leggendo quel lock.
 
 ### 3.6 Errori
@@ -123,12 +125,12 @@ Pattern route del modulo: `/ai-reputation/project/{id}/runs/{runId}/…`, tutte 
 ## 5. Interfaccia (report del run, `views/runs/show.php`)
 
 Testata, accanto a "Rianalizza" (solo `canEdit` e run non attivo):
-- **Prepara le schede** — pulsante pieno indigo (classi di "Analizza le risposte"). Al clic: conferma con costo ("7 schede · 7 crediti, saldo N"), poi stato "Preparo le schede… 3 di 7" con spinner, polling `briefs/status` ogni 2 s, reload a fine lavoro. Se tutte le schede esistono: diventa **Rigenera le schede** (bordo) e chiede conferma perché sovrascrive e spende crediti (`force=1`).
+- **Prepara le schede** — pulsante pieno indigo (classi di "Analizza le risposte"). Al clic: conferma con costo ("7 schede · 7 crediti, saldo N"), poi stato "Preparo le schede… 3 di 7" con spinner: il JS chiama `briefs/generate` in sequenza (ogni risposta aggiorna il contatore) finché `pending = 0`, poi reload. `briefs/status` serve al caricamento pagina per sapere se una generazione è in corso da un'altra scheda del browser. Se tutte le schede esistono: diventa **Rigenera le schede** (bordo) e chiede conferma perché sovrascrive e spende crediti (`force=1`).
 - **Esporta PDF** — pulsante con bordo; `disabled` + tooltip "Prima prepara le schede" finché `pending > 0`.
 - Avviso rosso sotto la testata se `failed > 0`: "N schede non riuscite — riprova".
 
 Riga intervento (dentro `$actionRow`, sezione a scomparsa già esistente):
-- badge canale (`inline-flex … rounded-full text-xs font-medium`): Sito proprietario / Esterno / Entrambi, colori indigo/teal/amber; testate suggerite come link;
+- badge canale (`inline-flex … rounded-full text-xs font-medium`): Sito proprietario / Esterno / Entrambi, colori indigo/teal/amber; testate suggerite come link (solo per i contenuti: le rimozioni non hanno canale);
 - `channel_rationale` in una riga;
 - brief o richiesta con le stesse voci del PDF (liste puntate compatte);
 - riga finale piccola "Scheda generata il … con <modello>" + link "Rigenera questa scheda" (POST con conferma);
