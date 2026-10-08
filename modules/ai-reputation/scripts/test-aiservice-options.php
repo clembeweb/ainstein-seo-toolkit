@@ -1,5 +1,6 @@
 <?php
-// Test senza rete: i modelli 5.5 sono in listino e il payload Anthropic porta output_config.effort.
+// Test senza rete: modelli 5.5 in listino, output_config.effort solo sui modelli che lo supportano,
+// estrazione del testo dalle risposte Messages API (blocchi thinking ignorati).
 // Run: php modules/ai-reputation/scripts/test-aiservice-options.php
 declare(strict_types=1);
 require __DIR__ . '/../../../vendor/autoload.php';
@@ -24,5 +25,27 @@ $check('payload senza effort e senza system', !isset($p2['output_config']) && !i
 $check('modello Anthropic di default invariato (primo del listino)', array_key_first(\Services\AiService::MODELS['anthropic']) === 'claude-sonnet-4-20250514');
 $p3 = \Services\AiService::buildAnthropicPayload('claude-opus-5-5', [['role' => 'user', 'content' => 'ciao']], 4096, null, 'ultra');
 $check('effort non valido ignorato', !isset($p3['output_config']));
+
+// Effort inviato solo ai modelli che lo supportano (Claude 4.5+ e 5.x)
+$msg = [['role' => 'user', 'content' => 'ciao']];
+$p4 = \Services\AiService::buildAnthropicPayload('claude-sonnet-4-20250514', $msg, 4096, null, 'high');
+$check('effort ignorato su claude-sonnet-4-20250514', !isset($p4['output_config']));
+$p5 = \Services\AiService::buildAnthropicPayload('claude-opus-5-5', $msg, 4096, null, 'high');
+$check('effort high su claude-opus-5-5', ($p5['output_config']['effort'] ?? null) === 'high');
+$p6 = \Services\AiService::buildAnthropicPayload('claude-sonnet-4-6', $msg, 4096, null, 'high');
+$check('effort presente su claude-sonnet-4-6', ($p6['output_config']['effort'] ?? null) === 'high');
+$check('effort ignorato su claude-3-5-haiku-20241022', !isset(\Services\AiService::buildAnthropicPayload('claude-3-5-haiku-20241022', $msg, 4096, null, 'high')['output_config']));
+$check('effort ignorato su claude-opus-4-20250514', !isset(\Services\AiService::buildAnthropicPayload('claude-opus-4-20250514', $msg, 4096, null, 'high')['output_config']));
+
+// Estrazione testo dalle risposte Messages API
+$x = fn(array $r): string => \Services\AiService::extractAnthropicText($r);
+$check('estrazione: solo testo', $x(['content' => [['type' => 'text', 'text' => 'ciao']]]) === 'ciao');
+$check('estrazione: thinking + testo -> solo testo', $x(['content' => [
+    ['type' => 'thinking', 'thinking' => 'ragiono...', 'signature' => 'abc'],
+    ['type' => 'redacted_thinking', 'data' => 'xyz'],
+    ['type' => 'text', 'text' => '{"ok":true}'],
+]]) === '{"ok":true}');
+$check('estrazione: due blocchi testo uniti', $x(['content' => [['type' => 'text', 'text' => 'uno'], ['type' => 'text', 'text' => 'due']]]) === "uno\ndue");
+$check('estrazione: nessun blocco testo -> stringa vuota', $x(['content' => [['type' => 'thinking', 'thinking' => 'x']]]) === '' && $x([]) === '');
 
 exit($fail ? 1 : 0);

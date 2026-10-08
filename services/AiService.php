@@ -255,7 +255,8 @@ class AiService
         }
 
         // Call API with fallback
-        $result = $this->executeWithFallback($userId, $messages, $maxTokens, $system, $cost, $model);
+        // In ai_logs credits_used riflette l'addebito reale: 0 se addebita il chiamante
+        $result = $this->executeWithFallback($userId, $messages, $maxTokens, $system, $chargeCredits ? $cost : 0, $model);
 
         if (isset($result['error'])) {
             return $result;
@@ -442,7 +443,7 @@ class AiService
 
     /**
      * Body della richiesta Messages API (testabile senza rete).
-     * $effort: low|medium|high|xhigh|max → output_config.effort (modelli Claude 4.6+); null = default del modello.
+     * $effort: low|medium|high|xhigh|max → output_config.effort (solo modelli Claude 4.5+/5.x, vedi modelSupportsEffort()); null = default del modello.
      */
     public static function buildAnthropicPayload(string $model, array $messages, int $maxTokens, ?string $system, ?string $effort): array
     {
@@ -450,10 +451,35 @@ class AiService
         if ($system) {
             $data['system'] = $system;
         }
-        if ($effort && in_array($effort, ['low', 'medium', 'high', 'xhigh', 'max'], true)) {
+        if ($effort && in_array($effort, ['low', 'medium', 'high', 'xhigh', 'max'], true) && self::modelSupportsEffort($model)) {
             $data['output_config'] = ['effort' => $effort];
         }
         return $data;
+    }
+
+    /**
+     * output_config.effort e' accettato solo dai modelli Claude 4.5+ e 5.x:
+     * ai modelli precedenti (es. claude-sonnet-4-20250514) non va inviato (HTTP 400).
+     */
+    public static function modelSupportsEffort(string $model): bool
+    {
+        return (bool) preg_match('/^claude-(opus|sonnet|haiku|fable|mythos)-(4-[5-9]|[5-9])/', $model);
+    }
+
+    /**
+     * Testo di una risposta Messages API: concatena (in ordine, separati da "\n") i blocchi
+     * di tipo `text`, ignorando thinking/redacted_thinking/tool. I modelli Claude 4.6+/5.x
+     * possono aprire la risposta con un blocco `thinking`, quindi content[0] non e' affidabile.
+     */
+    public static function extractAnthropicText(array $result): string
+    {
+        $parts = [];
+        foreach ($result['content'] ?? [] as $block) {
+            if (is_array($block) && ($block['type'] ?? '') === 'text' && isset($block['text']) && is_string($block['text'])) {
+                $parts[] = $block['text'];
+            }
+        }
+        return implode("\n", $parts);
     }
 
     /**
@@ -502,8 +528,18 @@ class AiService
 
         $result = json_decode($response, true);
 
+        if (is_array($result) && ($result['stop_reason'] ?? null) === 'max_tokens') {
+            // Risposta troncata: con il ragionamento esteso i token di thinking contano in max_tokens
+            \Core\Logger::channel('ai')->warning('Risposta Anthropic troncata (stop_reason=max_tokens)', [
+                'module' => $this->moduleSlug,
+                'model' => $model,
+                'max_tokens' => $maxTokens,
+                'tokens_output' => $result['usage']['output_tokens'] ?? null,
+            ]);
+        }
+
         return [
-            'content' => $result['content'][0]['text'] ?? '',
+            'content' => is_array($result) ? self::extractAnthropicText($result) : '',
             'tokens_input' => $result['usage']['input_tokens'] ?? 0,
             'tokens_output' => $result['usage']['output_tokens'] ?? 0,
             'raw_response' => $result,
