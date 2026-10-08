@@ -35,6 +35,8 @@ $check('effort high su claude-opus-5-5', ($p5['output_config']['effort'] ?? null
 $p6 = \Services\AiService::buildAnthropicPayload('claude-sonnet-4-6', $msg, 4096, null, 'high');
 $check('effort presente su claude-sonnet-4-6', ($p6['output_config']['effort'] ?? null) === 'high');
 $check('effort ignorato su claude-3-5-haiku-20241022', !isset(\Services\AiService::buildAnthropicPayload('claude-3-5-haiku-20241022', $msg, 4096, null, 'high')['output_config']));
+$check('effort ignorato su claude-sonnet-4-5', !isset(\Services\AiService::buildAnthropicPayload('claude-sonnet-4-5', $msg, 4096, null, 'high')['output_config']));
+$check('effort ignorato su claude-haiku-4-5', !isset(\Services\AiService::buildAnthropicPayload('claude-haiku-4-5', $msg, 4096, null, 'high')['output_config']));
 $check('effort ignorato su claude-opus-4-20250514', !isset(\Services\AiService::buildAnthropicPayload('claude-opus-4-20250514', $msg, 4096, null, 'high')['output_config']));
 
 // Estrazione testo dalle risposte Messages API

@@ -458,12 +458,12 @@ class AiService
     }
 
     /**
-     * output_config.effort e' accettato solo dai modelli Claude 4.5+ e 5.x:
-     * ai modelli precedenti (es. claude-sonnet-4-20250514) non va inviato (HTTP 400).
+     * output_config.effort e' accettato solo da Opus 4.5+, Sonnet 4.6+ e dai modelli 5.x:
+     * a Sonnet/Haiku 4.5 e ai modelli precedenti (es. claude-sonnet-4-20250514) non va inviato (HTTP 400).
      */
     public static function modelSupportsEffort(string $model): bool
     {
-        return (bool) preg_match('/^claude-(opus|sonnet|haiku|fable|mythos)-(4-[5-9]|[5-9])/', $model);
+        return (bool) preg_match('/^claude-(?:opus-4-[5-9]|sonnet-4-[6-9]|(?:opus|sonnet|haiku|fable|mythos)-[5-9])(?![0-9])/', $model);
     }
 
     /**
