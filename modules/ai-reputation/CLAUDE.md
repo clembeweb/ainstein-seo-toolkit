@@ -17,7 +17,7 @@
 | **Per chi** | Tutela Digitale (agenzia reputazione, Bologna, CEO Gabriele), white-label per i loro clienti. Primo soggetto: Federico Marcaccini |
 | **Slug / prefisso DB** | `ai-reputation` / `ar_` |
 | **Branch** | `claude/ai-reputation-radar-dd9004` |
-| **Milestone attiva** | M1 MVP chiuso in locale (run 4 = demo) → revisione Clemente, poi call con Gabriele e messa online |
+| **Milestone attiva** | M1 MVP chiuso in locale (run 4 = demo) → revisione Clemente, online su ainstein.it dal 2026-10-07; prossimi: PDF e schede in produzione, call con Gabriele |
 
 ## Regole specifiche del modulo
 

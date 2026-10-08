@@ -10,19 +10,21 @@ Engine: ChatGPT (API) + Gemini + Perplexity peso 0,3 (Claude pronto, spento). Ch
 **Run di riferimento per la demo: run 4** (`/ai-reputation/project/1/runs/4`): 138 risposte, rischio Alto 47%,
 5 smentite di Gemini, 15 siti negativi (3 istituzionali), report corto con interventi in cima e schede.
 **Export PDF del piano e "Genera scheda" (Opus 5.5) per intervento: fatti il 2026-10-08** (spec in `docs/superpowers/specs/2026-10-08-ai-reputation-schede-operative-pdf-design.md`, ADR-012/013). Non ancora in produzione: vedi Prossimo passo.
-Branch `claude/ai-reputation-radar-dd9004` (pushato su origin il 2026-10-06), NON mergiato in `main`, NON online.
+Branch `claude/ai-reputation-radar-dd9004`: `main` è stato portato a questo branch il 2026-10-07 (Radar già online su ainstein.it); i commit del 2026-10-08 (PDF + schede) sono solo sul branch, non ancora in `main` né in produzione.
 Demo per Gabriele: **in locale** (decisione di Clemente). Prima della call riavviare MySQL pulito da XAMPP e non
 lanciare run in diretta.
 
 ## Prossimo passo (uno solo)
-Prova reale in locale di PDF + schede su un run (es. run 4), poi deploy su ainstein.it (`git pull`, migrazione `2026-10-08-actions-brief.sql`) **dopo l'ok di Clemente**, poi la prova online del Radar con un progetto di test (Overview → "Come si usa"). ainstein.it è online dal 2026-10-07 su Contabo (`184.174.32.213`, vedi `docs/DEPLOY.md`); i dati del run 4 restano solo in locale.
+Prova reale in locale di PDF + schede su un run (es. run 4), poi, **dopo l'ok di Clemente**, merge fast-forward del branch in `main` e push, poi `git pull` + migrazione `2026-10-08-actions-brief.sql` in produzione, poi la prova online del Radar con un progetto di test (Overview → "Come si usa"). I dati del run 4 restano solo in locale.
+Produzione dal 2026-10-07 su Contabo VPS `184.174.32.213` (Hetzner perso: account disabilitato, DB di produzione perso; DB ricreato dallo schema locale; HTTPS Let's Encrypt fino al 2027-01-05 con rinnovo automatico; dettagli in `docs/DEPLOY.md`). Mail a Hetzner inviata il 2026-10-07: se restituiscono il DB, si reimporta.
+Già fatto: guida "Come si usa" in 4 passi nell'Overview (commit 1e9804d).
 
 ## Dopo (in ordine)
-0b. Fase C: PDF per il cliente finale (sintesi, meno dettaglio operativo), stesso motore `ActionPlanPdfService`.
+0. Fase C: PDF per il cliente finale (sintesi, meno dettaglio operativo), stesso motore `ActionPlanPdfService`.
 1. Decidere se accendere Claude come quarto engine per la demo (~4 $ e ~50 min a run).
 2. Domanda aperta a Clemente: Andrea Marcaccini che rapporto ha con Federico? (se coinvolto nelle stesse
    vicende, il judge deve trattare le sue notizie come rischio per Federico).
-3. Revisione report run 4 con occhio da demo per Gabriele (era il prossimo passo prima della messa online).
+3. Revisione report run 4 con occhio da demo per Gabriele.
 4. Golden Rule 18: guida utente `shared/views/docs/ai-reputation.php` + `docs/data-model.html` + landing
    "Scopri cosa puoi fare" (la guida deve includere la sezione "Schede operative e PDF").
 5. Minori: judge_model registrato anche se AiService usa il fallback; 7 "articoli gap" ancora uno per domanda;
