@@ -1,61 +1,85 @@
-# AI Reputation Radar — Schede operative degli interventi + export PDF
+# AI Reputation Radar — Export PDF degli interventi + scheda operativa per intervento
 
-> Design approvato a blocchi con Clemente il 2026-10-08. Modulo `ai-reputation`, branch `claude/ai-reputation-radar-dd9004`.
+> Design approvato a blocchi con Clemente il 2026-10-08 (v2: semplificato, generazione per singolo intervento). Modulo `ai-reputation`, branch `claude/ai-reputation-radar-dd9004`.
 > Fase B della richiesta ("PDF operativo per chi esegue gli interventi"). La fase C (PDF per il cliente finale) è fuori scope e riuserà lo stesso motore.
 
 ## 1. Obiettivo
 
-Chi esegue gli interventi del piano d'azione (Tutela Digitale, il copywriter, chi scrive ai siti) deve ricevere un **PDF con una scheda operativa per ogni intervento**: dove pubblicare (sito proprietario del soggetto, siti esterni o entrambi), perché, e un brief completo del contenuto; per i siti da contattare, la traccia della richiesta.
+Chi esegue gli interventi del piano d'azione (Tutela Digitale, il copywriter, chi scrive ai siti) deve poter ricevere un **PDF con gli interventi del run**. Ogni intervento può essere arricchito, su richiesta e uno per volta, con una **scheda operativa generata dall'AI**: dove pubblicare (sito proprietario del soggetto, siti esterni o entrambi), perché, e un brief completo del contenuto; per i siti da contattare, la traccia della richiesta.
 
-Le schede sono generate **su richiesta** dall'AI (pulsante nel report), salvate nel DB, visibili nel report web ed esportate in PDF. Il PDF è la stampa di ciò che si vede nel report.
+Regola unica: **il PDF mostra esattamente ciò che si vede nel report web in quel momento**. Senza schede generate contiene gli interventi come sono oggi; con le schede, le mostra nello stesso posto.
+
+Due consegne, in quest'ordine:
+1. **Export PDF degli interventi** così come sono (nessuna AI).
+2. **Scheda operativa per singolo intervento** (Claude Opus 5.5), visibile nell'app e nel PDF.
 
 Regole commerciali del modulo che valgono anche qui: mai esporre il metodo, mai costi delle testate, tutto in italiano.
 
 ## 2. Dati
 
-Migrazione `modules/ai-reputation/database/2026-10-08-actions-brief.sql` su `ar_actions`:
+Migrazione `modules/ai-reputation/database/2026-10-08-actions-brief.sql` su `ar_actions` (serve dalla consegna 2, ma si applica subito):
 
 | Colonna | Tipo | Significato |
 |---|---|---|
 | `channel` | ENUM('own_site','external','both') NULL | Canale deciso dall'AI per i contenuti. Sempre NULL per le rimozioni (il canale non si applica) |
 | `channel_rationale` | TEXT NULL | Perché quel canale (1-3 frasi) |
 | `suggested_outlets` | JSON NULL | 1-3 domini esterni suggeriti, es. `["ilsole24ore.com","wired.it"]` |
-| `brief` | JSON NULL | Scheda operativa (shape in §3.3) |
-| `brief_model` | VARCHAR(80) NULL | Modello che ha generato la scheda |
+| `brief` | JSON NULL | Scheda operativa (shape in §4.3). NULL = scheda non generata |
+| `brief_model` | VARCHAR(80) NULL | Modello che ha generato la scheda (quello realmente usato) |
 | `brief_generated_at` | DATETIME NULL | Quando |
 | `brief_error` | VARCHAR(500) NULL | Ultimo errore di generazione (vuoto se ok) |
 
-Nessuna tabella nuova. Su `ar_runs` due colonne dedicate al lock della generazione schede: `briefs_lock_token` VARCHAR(40) NULL, `briefs_locked_at` TIMESTAMP NULL (separate dal lease della raccolta, vedi §3.5).
+Nessuna tabella nuova, nessuna modifica a `ar_runs`.
 
-Nuove impostazioni in `module.json` (gruppo `ai_config` / `costs`):
-- `brief_model` (select, default `claude-opus-5-5`; opzioni: `claude-opus-5-5`, `claude-sonnet-5-5`, `global`) — il judge **non** cambia (regola 6 del modulo).
-- `cost_action_brief` (number, default 1) — crediti per scheda generata.
+Nuove impostazioni in `module.json`:
+- `brief_model` (gruppo `ai_config`; select, default `claude-opus-5-5`; opzioni `claude-opus-5-5`, `claude-sonnet-5-5`, `global`) — il judge **non** cambia (regola 6 del modulo).
+- `cost_action_brief` (gruppo `costs`; number, default 1) — crediti per scheda generata.
 
-Modifica a `services/AiService.php::MODELS['anthropic']`: aggiunti `claude-opus-5-5` (4 / 20 $ per M token), `claude-sonnet-5-5` (2 / 10), `claude-haiku-5-5` (0,10 / 0,50); nomi "Claude Opus 5.5", ecc. I prezzi in `MODELS` sono per 1K token (0.004 / 0.020, 0.002 / 0.010, 0.0001 / 0.0005). `AiService` manda solo `model`, `max_tokens`, `messages`, `system`: compatibile con Opus 5.5 (niente `temperature`, niente prefill). Unica aggiunta: `complete()` accetta l'opzione `effort` e, solo per Anthropic, la invia come `output_config: {effort}` (Opus 5.5 altrimenti lavora a `medium`); le schede usano `high`.
+Modifica a `services/AiService.php`:
+- `MODELS['anthropic']`: aggiunti `claude-opus-5-5` (name "Claude Opus 5.5", input 0.004, output 0.020 per 1K token), `claude-sonnet-5-5` ("Claude Sonnet 5.5", 0.002 / 0.010), `claude-haiku-5-5` ("Claude Haiku 5.5", 0.0001 / 0.0005).
+- `complete()` accetta l'opzione `effort` (`low|medium|high|xhigh|max`); `callAnthropic()` la invia come `output_config: {effort}` solo se presente. Opus 5.5 altrimenti lavora a `medium`; le schede usano `high`. AiService manda già solo `model`, `max_tokens`, `messages`, `system`: compatibile con Opus 5.5 (niente `temperature`, niente prefill).
 
-## 3. Generazione delle schede
+## 3. Consegna 1 — Export PDF degli interventi
 
 ### 3.1 Servizio
+`modules/ai-reputation/services/ActionPlanPdfService.php`, con mPDF (`mpdf/mpdf` già in `composer.json`, mai usato finora).
+- `render(array $project, array $run, array $actions, array $metrics): string` — ritorna il PDF binario. `$actions` sono le azioni del run con `status <> 'dismissed'` (stessa query del report), già arricchite con le colonne della scheda (NULL nella consegna 1).
+- `filename(array $project, array $run): string` — `piano-interventi-<slug soggetto>-run<id>-<YYYY-MM-DD>.pdf`.
+- Template `modules/ai-reputation/views/pdf/action-plan.php`: HTML semplice con CSS inline (niente Tailwind: mPDF non lo rende), font DejaVu Sans, colore indigo `#4f46e5` per intestazioni e badge, link cliccabili. Riusa `ReportBuilderService::siteTitle()` e le etichette `$actionLabel` del report per i tipi.
+
+### 3.2 Struttura del PDF
+1. **Intestazione** (prima pagina): nome soggetto, data del run, rischio reputazione (etichetta + percentuale come nel report), conteggio interventi: "N contenuti da pubblicare · M siti da contattare".
+2. **Interventi**, prima i contenuti (`counter_content`, `gap_article`, `correction`) poi le rimozioni (`removal`), nello stesso ordine del report. Per ognuno:
+   - badge tipo (stesse etichette del report: contro-contenuto, articolo gap, correzione, rimozione) + badge stato (proposto / accettato / fatto);
+   - titolo;
+   - motivazione (`rationale`);
+   - elenco pagine (`target_urls`, link cliccabili, titolo leggibile via `siteTitle`);
+   - **se la scheda esiste** (consegna 2): blocco "Dove" (canale, motivazione, testate) e blocco "Brief" o "Richiesta"; **se non esiste**: riga grigia "Scheda operativa non generata".
+   Interventi `dismissed` esclusi.
+3. Piè di pagina: "Ainstein · AI Reputation Radar · pagina X di Y".
+
+Niente metodo, niente costi, niente sezione "Perché" con le domande (le domande restano nel report web; si valuta per la fase C).
+
+### 3.3 Route e UI
+- `GET /ai-reputation/project/{id}/runs/{runId}/export/plan.pdf` → `RunController::exportPlanPdf(int $id, int $runId): void`. `Middleware::auth()`, progetto via `findAccessible`, run del progetto, altrimenti 404. Header `Content-Type: application/pdf`, `Content-Disposition: attachment; filename="…"`. Errore mPDF → log (`storage/logs`) e redirect al report con flash "Export non riuscito, riprova"; mai pagina bianca.
+- Nel report (`views/runs/show.php`), testata accanto a "Rianalizza": link **"Esporta PDF"** con icona Heroicons `arrow-down-tray`, stile bordo (classi di "Rianalizza"), visibile quando il run ha analisi (`$hasAnalyses`) e almeno un intervento. Sempre attivo.
+
+## 4. Consegna 2 — Scheda operativa per singolo intervento
+
+### 4.1 Flusso
+Nel report, dentro la riga dell'intervento (sezione a scomparsa esistente), pulsante **"Genera scheda"** (1 credito). Al clic: conferma ("1 credito · 20-40 secondi"), spinner "Genero la scheda…", una chiamata AJAX lunga; a risposta ricevuta la riga si aggiorna con la scheda (senza ricaricare tutta la pagina: il controller risponde con l'HTML della scheda renderizzato via `View::partial`). Se esiste già: link "Rigenera scheda" con conferma (sovrascrive, spende 1 credito).
+
+Nessun "genera tutte", nessun batch, nessun lock sul run: una richiesta alla volta per intervento. Un doppio clic sullo stesso intervento è impedito lato client (pulsante disabilitato durante la chiamata); lato server, se arriva comunque, la seconda chiamata trova la scheda già salvata e ritorna quella senza richiamare l'AI (controllo `brief_generated_at` più recente di 2 minuti → ritorna l'esistente).
+
+### 4.2 Servizio
 `modules/ai-reputation/services/ActionBriefService.php`
-- `__construct()` — `new AiService('ai-reputation')`; il modello usato è `brief_model` (se `global`, quello di AiService). La chiamata è `AiService::complete($userId, $messages, ['model' => $briefModel, 'max_tokens' => 8192, 'system' => $systemPrompt], 'ai-reputation')`: `complete()` accetta già `model`, `max_tokens` e `system` nelle opzioni (verificato).
-- `generateBatch(int $runId, int $userId, int $limit = 4): array` — processa al massimo `$limit` azioni del run con `status <> 'dismissed'` e `brief IS NULL` (le fallite vengono riprovate solo se `brief_error` è vuoto o se il chiamante passa `retryFailed`), nell'ordine del piano; per ognuna costruisce il dossier, chiama l'AI, valida, salva. Ritorna `['total', 'done', 'failed', 'pending']`. `Database::reconnect()` dopo ogni chiamata (GR 10). Crediti: `Credits::consume` solo a scheda salvata. Il batch da 4 tiene ogni richiesta HTTP sotto i 300 s anche con Opus 5.5 (30-40 s a scheda).
-- `reset(int $runId): void` — azzera `brief*` di tutte le azioni del run (usato da "Rigenera le schede", `force=1`), poi si riparte a batch.
-- Il modello salvato in `brief_model` è quello restituito da AiService (`model_used`): se il fallback su OpenAI scatta, viene registrato quello reale.
-- `generateOne(int $actionId, int $userId): bool` — per il link "Rigenera questa scheda".
-- `status(int $runId): array` — `['total', 'done', 'failed', 'pending']` leggendo `ar_actions` (done = `brief IS NOT NULL`, failed = `brief_error <> ''`).
+- `__construct()` — `new AiService('ai-reputation')`.
+- `model(): string` — `ModuleLoader::getSetting('ai-reputation', 'brief_model', 'claude-opus-5-5')`; se `global`, non passa `model` a `complete()` (usa quello di AiService).
+- `generate(int $actionId, int $userId): array` — carica azione, run e progetto; costruisce il dossier (§4.4); chiama `AiService::complete($userId, [['role' => 'user', 'content' => $dossierPrompt]], ['model' => $model, 'max_tokens' => 8192, 'effort' => 'high', 'system' => $systemPrompt], 'ai-reputation')`; `Database::reconnect()`; valida (§4.3); salva `channel`, `channel_rationale`, `suggested_outlets`, `brief`, `brief_model` (= `model` restituito da AiService, così se scatta il fallback OpenAI è registrato quello reale), `brief_generated_at`, `brief_error = ''`. Ritorna `['success' => true, 'action' => $actionAggiornata]` oppure `['success' => false, 'error' => 'messaggio corto']` dopo aver scritto `brief_error`. I crediti li consuma il controller solo su `success`.
+- `parseJson(string $text): ?array` — stessa pulizia di `JudgeService::parseJson` (rimozione ``` e ritaglio al primo `{` / ultimo `}`); duplicata in forma di metodo statico in `ActionBriefService` per non accoppiare i due servizi.
 
-### 3.2 Dossier passato all'AI (per intervento)
-Tutto da dati già nel DB, nessuna chiamata esterna:
-- profilo confermato del soggetto (`ar_profile_facts` status confermato), nome, tipo, città, `website`, note di disambiguazione;
-- l'intervento: tipo, titolo, rationale, pagine (`target_urls`), dominio;
-- le domande collegate: per `counter_content`/`gap_article` le domande rep/comm/comp citate nel rationale; per `removal` le domande in cui le pagine sono state citate (da `ar_analyses.negative_urls`/`cited_domains`);
-- per quelle domande: verdetto per engine, riassunto, domini citati "ok" e "negativi" con conteggi (Source Map del run, `ar_sources`);
-- se `website` del soggetto compare mai tra i domini citati del run (sì/no, quante volte);
-- competitor nominati (`ar_competitors`);
-- riga di contesto: "Le testate che seguono sono citate dalle AI come fonti affidabili: …" (top 5 domini ok per numero di citazioni).
-
-### 3.3 Output JSON richiesto (shape di `brief`)
-Prompt di sistema con le regole (italiano, niente costi, niente metodo, non inventare fatti: ogni fatto citato deve venire dal dossier con la sua fonte). Risposta solo JSON, pulizia ``` come in `JudgeService::parseJson`.
+### 4.3 Output JSON richiesto (shape di `brief`)
+System prompt con le regole: italiano; niente costi di testate; niente spiegazione del metodo; non inventare fatti: ogni fatto citato deve venire dal dossier con la sua fonte; rispondere solo con JSON.
 
 Contenuti (`counter_content`, `gap_article`, `correction`):
 ```json
@@ -80,11 +104,11 @@ Rimozioni (`removal`):
 ```json
 {
   "channel": null,
-  "channel_rationale": "…",
+  "channel_rationale": "",
   "suggested_outlets": [],
   "brief": {
     "kind": "removal",
-    "recipient": "a chi scrivere (redazione, webmaster, ufficio stampa, PEC se noto dal dossier)",
+    "recipient": "a chi scrivere (redazione, webmaster, ufficio stampa)",
     "request": "removal|deindex|update",
     "basis": "su quale base (es. notizia superata, esito del procedimento, diritto all'oblio)",
     "pages": ["url", "…"],
@@ -92,67 +116,54 @@ Rimozioni (`removal`):
   }
 }
 ```
-Validazione: `channel` nell'enum (NULL per le rimozioni), `brief.kind` coerente col tipo, `points` ≥ 3 per i contenuti, `pages` ⊆ `target_urls`, `suggested_outlets` filtrate ai domini "ok" passati nel dossier (le testate non presenti vengono scartate: l'AI non può inventare fonti). Se non valida → `brief_error`, nessun salvataggio, nessun credito.
+Validazione (`ActionBriefService::validate(array $data, array $action, array $okDomains): array|string`): `channel` nell'enum (NULL per le rimozioni), `brief.kind` coerente col tipo, `points` ≥ 3 per i contenuti, `pages` ⊆ `target_urls`, `suggested_outlets` filtrate ai domini "ok" del dossier (le testate non presenti vengono scartate: l'AI non può inventare fonti). Ritorna i dati normalizzati oppure una stringa di errore → `brief_error`, nessun salvataggio, nessun credito.
 
-### 3.4 Route e controller (`RunController` o nuovo `BriefController`)
-Pattern route del modulo: `/ai-reputation/project/{id}/runs/{runId}/…`, tutte con `Middleware::auth()`, progetto via `findAccessible`, CSRF `_csrf_token` sulle POST.
+### 4.4 Dossier passato all'AI (per intervento)
+Tutto da dati già nel DB, nessuna chiamata esterna:
+- profilo confermato del soggetto (`ar_profile_facts` con status confermato), nome, tipo, città, `website`, note di disambiguazione;
+- l'intervento: tipo, titolo, rationale, pagine (`target_urls`), dominio;
+- le domande collegate: per `counter_content`/`gap_article` le domande rep/comm/comp del run con verdetto negativo/misto/non citato; per `removal` le domande (`ar_analyses`) in cui le pagine del sito sono state citate (`negative_urls`/`cited_domains`);
+- per quelle domande: verdetto per engine e riassunto (`ar_analyses.summary`);
+- Source Map del run (`ar_sources`): domini "ok" e "negativi" con conteggi; i top 5 "ok" per citazioni vengono dichiarati come "testate che le AI citano come fonti affidabili" (lista usata anche per validare `suggested_outlets`);
+- se `website` del soggetto compare tra i domini citati del run (sì/no, quante volte);
+- competitor nominati (`ar_competitors`).
+
+### 4.5 Route e controller
+In `RunController` (pattern route del modulo, `Middleware::auth()`, `findAccessible`, CSRF `_csrf_token`):
 
 | Route | Cosa |
 |---|---|
-| `POST …/briefs/generate` (body: `force=0/1`, `retry_failed=0/1`) | AJAX lungo (GR 15/17/23): `ignore_user_abort`, `set_time_limit(300)`, `ob_start`, `session_write_close`; con `force=1` prima `reset()`; controllo crediti su tutte le schede ancora da fare (`pending × cost_action_brief`); poi `generateBatch` (max 4). Risposta JSON `{success, total, done, failed, pending}`; il frontend richiama finché `pending > 0`. `ob_end_clean()` prima di ogni `echo`, inclusi gli early return |
-| `GET …/briefs/status` | JSON `{total, done, failed, pending, running}` per il contatore (polling ogni 2 s) |
-| `POST …/actions/{actionId}/brief/regenerate` | rigenera una sola scheda (AJAX breve, stessa cura su `ob_*`) |
-| `GET …/export/plan.pdf` | PDF (§4) |
+| `POST /ai-reputation/project/{id}/runs/{runId}/actions/{actionId}/brief` | AJAX lungo (GR 15/17/23): `ignore_user_abort(true)`, `set_time_limit(300)`, `ob_start()`, `session_write_close()`; controllo `Credits::hasEnough($ownerId, $cost)` (402 se no); `ActionBriefService::generate`; su success `Credits::consume($ownerId, $cost, 'action_brief', 'ai-reputation')`; risposta JSON `{success, html}` dove `html` è il partial `views/partials/action-brief.php` renderizzato per l'azione aggiornata; su errore `{success:false, error}`. `ob_end_clean()` prima di ogni `echo`, inclusi gli early return |
 
-### 3.5 Concorrenza e ripresa
-- Il generatore salva ogni scheda appena pronta: una pagina chiusa a metà non perde lavoro; il clic successivo processa solo le azioni con `brief IS NULL` (o tutte se `force`).
-- Doppio clic: ogni batch prende un lock su `ar_runs.briefs_lock_token`/`briefs_locked_at` (UPDATE condizionale: token NULL o `briefs_locked_at` più vecchio di 5 minuti); se non lo ottiene risponde `{success:false, error:'Generazione già in corso'}`. Il lock si libera a fine batch (anche su errore, in `finally`). Colonne separate dal lease della raccolta (`locked_by`/`locked_at`), così il resto del modulo non scambia la generazione schede per un run in corso.
-- `status` espone `running` leggendo quel lock.
+Il partial `views/partials/action-brief.php` è usato sia dal report (render iniziale) sia dalla risposta AJAX, così la scheda è identica nei due casi; la stessa struttura è ripresa nel template PDF (`views/pdf/action-plan.php`) con markup proprio.
 
-### 3.6 Errori
-- Chiamata fallita / JSON non valido → `brief_error` con messaggio corto, si prosegue; a fine lavoro il report mostra "N schede non riuscite — riprova".
+### 4.6 UI nella riga intervento (`$actionRow` in `views/runs/show.php`)
+Sotto motivazione e pagine, il partial `action-brief.php`:
+- se `brief` NULL: pulsante **"Genera scheda"** (pieno indigo, piccolo, icona Heroicons `sparkles`) + testo "1 credito · 20-40 s"; se `brief_error` non vuoto: riga rossa "Generazione non riuscita: <errore>" e pulsante "Riprova";
+- se `brief` presente: per i contenuti, badge canale (`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium`, indigo = Sito proprietario, teal = Esterno, amber = Entrambi), testate suggerite come link, `channel_rationale`, poi il brief con le voci: titolo proposto, taglio, punti da coprire, fatti da citare (con fonte), cosa evitare, lunghezza e lingua, nota per il sito ufficiale; per le rimozioni: destinatario, cosa chiedere, su quale base, pagine, se rifiutano;
+- riga finale piccola "Scheda generata il … con <modello>" + link "Rigenera scheda" (conferma).
+Tutto italiano, dark mode, Heroicons; frontend con `response.ok` prima di `response.json()` (GR 24), CSRF `_csrf_token` nel body del POST; pulsante disabilitato durante la chiamata.
+
+### 4.7 Errori
+- Chiamata AI fallita, JSON non valido o validazione fallita → `brief_error`, messaggio nella riga, nessun credito.
 - Crediti insufficienti → 402 con messaggio, nessuna chiamata.
-- Errori imprevisti → log in `storage/logs` (Logger esistente) e JSON di errore; mai pagina bianca.
+- Errori imprevisti → log (`Logger` esistente) e JSON di errore; mai pagina bianca.
 
-## 4. PDF
-
-- `modules/ai-reputation/services/ActionPlanPdfService.php` con mPDF (`mpdf/mpdf` già in `composer.json`). Metodo `render(int $runId): string` (binario PDF). Il controller manda `Content-Type: application/pdf` e `Content-Disposition: attachment; filename="piano-interventi-<slug soggetto>-run<id>-<data>.pdf"`.
-- Template `modules/ai-reputation/views/pdf/action-plan.php`: HTML semplice con CSS inline (niente Tailwind: mPDF non lo rende), font DejaVu Sans, colore indigo `#4f46e5` per intestazioni e badge, link cliccabili.
-- Struttura: (1) copertina — soggetto, data run, rischio, conteggio interventi per tipo; (2) indice — tabella tipo / titolo / canale / stato; (3) una scheda per intervento, prima i contenuti poi le rimozioni, con sezioni **Dove**, **Brief** o **Richiesta**, **Perché** (domande ed engine coinvolti). Interventi `dismissed` esclusi; stato in badge.
-- Scheda mancante → riquadro "Scheda da generare" al posto del brief; l'export non si blocca. Il pulsante nel report è comunque attivo solo a schede complete (§5).
-- Errore mPDF → log + messaggio "Export non riuscito, riprova" (nessuna pagina bianca).
-
-## 5. Interfaccia (report del run, `views/runs/show.php`)
-
-Testata, accanto a "Rianalizza" (solo `canEdit` e run non attivo):
-- **Prepara le schede** — pulsante pieno indigo (classi di "Analizza le risposte"). Al clic: conferma con costo ("7 schede · 7 crediti, saldo N"), poi stato "Preparo le schede… 3 di 7" con spinner: il JS chiama `briefs/generate` in sequenza (ogni risposta aggiorna il contatore) finché `pending = 0`, poi reload. `briefs/status` serve al caricamento pagina per sapere se una generazione è in corso da un'altra scheda del browser. Se tutte le schede esistono: diventa **Rigenera le schede** (bordo) e chiede conferma perché sovrascrive e spende crediti (`force=1`).
-- **Esporta PDF** — pulsante con bordo; `disabled` + tooltip "Prima prepara le schede" finché `pending > 0`.
-- Avviso rosso sotto la testata se `failed > 0`: "N schede non riuscite — riprova".
-
-Riga intervento (dentro `$actionRow`, sezione a scomparsa già esistente):
-- badge canale (`inline-flex … rounded-full text-xs font-medium`): Sito proprietario / Esterno / Entrambi, colori indigo/teal/amber; testate suggerite come link (solo per i contenuti: le rimozioni non hanno canale);
-- `channel_rationale` in una riga;
-- brief o richiesta con le stesse voci del PDF (liste puntate compatte);
-- riga finale piccola "Scheda generata il … con <modello>" + link "Rigenera questa scheda" (POST con conferma);
-- se manca: riquadro tratteggiato "Scheda non ancora generata" (o l'errore, se `brief_error`).
-
-Tutto italiano, dark mode, Heroicons, frontend con `response.ok` prima di `response.json()` (GR 24), CSRF `_csrf_token`.
-
-## 6. Crediti e costi
-- 1 credito a scheda (`cost_action_brief`), scalato solo a scheda salvata; costo API reale nei log AI come oggi (stima 0,02-0,04 $ a scheda con Opus 5.5, 5-10 schede a run).
+## 5. Crediti e costi
+- 1 credito a scheda (`cost_action_brief`), scalato solo a scheda salvata; costo API reale nei log AI come oggi (stima 0,02-0,04 $ a scheda con Opus 5.5).
+- L'export PDF è gratuito.
 - Il judge resta sul modello del modulo/globale (riproducibilità tra run). Cambiarlo è una decisione separata.
 
-## 7. Test
+## 6. Test
 - `php -l` su ogni file; migrazione applicata al DB locale `seo_toolkit`.
-- Prova end-to-end in locale su un run analizzato di un progetto di test (4-5 domande): generazione schede, controllo di canale/brief/richiesta, PDF aperto in Chrome (copertina, indice, schede, link).
-- Caso d'errore: chiave Anthropic sbagliata → "N schede non riuscite", nessun credito scalato; secondo clic riprende solo le mancanti.
-- Doppio clic: il secondo POST risponde "già in corso".
+- Consegna 1: su un run analizzato in locale, scarico il PDF via browser e lo apro in Chrome: intestazione, badge, titoli, pagine con link, interventi scartati assenti, piè di pagina.
+- Consegna 2: su 2-3 interventi (un contenuto, una rimozione) genero la scheda, controllo canale/testate/brief/richiesta, poi riesporto il PDF e verifico che le schede compaiano. Caso d'errore: chiave Anthropic sbagliata → messaggio nella riga, nessun credito scalato; "Riprova" funziona.
 - Deploy: `git pull` su ainstein.it + migrazione; verifica su un run reale.
 
-## 8. Documentazione
-- `modules/ai-reputation/docs/decisions.md`: ADR-012 (canale deciso dall'AI; il sito proprietario del soggetto diventa un canale possibile, con il segnale "sito ufficiale mai citato dalle AI"), ADR-013 (schede su Opus 5.5 via `brief_model`, judge invariato; modelli 5.5 aggiunti ad AiService).
+## 7. Documentazione
+- `modules/ai-reputation/docs/decisions.md`: ADR-012 (canale deciso dall'AI; il sito proprietario del soggetto diventa un canale possibile, con il segnale "sito ufficiale mai citato dalle AI"), ADR-013 (schede su Opus 5.5 via `brief_model`, generazione per singolo intervento su richiesta, judge invariato; modelli 5.5 aggiunti ad AiService).
 - `TASKS.md` e `roadmap.md` del modulo.
 - Guida utente `shared/views/docs/ai-reputation.php` (sezione "Schede operative e PDF") e `docs/data-model.html` (colonne nuove di `ar_actions`).
 
-## 9. Fuori scope
-PDF cliente (fase C), export Word/Excel, tracciamento dello stato degli interventi nel PDF, scelta del canale con regole fisse (scartata: lo decide l'AI), cambio modello del judge.
+## 8. Fuori scope
+PDF cliente (fase C), export Word/Excel, "genera tutte le schede" in un colpo, tracciamento dello stato degli interventi nel PDF, scelta del canale con regole fisse (lo decide l'AI), cambio modello del judge, sezione "Perché" (domande ed engine) nel PDF.
