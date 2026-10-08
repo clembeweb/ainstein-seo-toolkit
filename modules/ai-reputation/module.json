@@ -87,6 +87,19 @@
                 }
             ]
         },
+        "brief_model": {
+            "type": "select",
+            "label": "Modello per le schede operative",
+            "description": "Modello usato da \"Genera scheda\" (canale, testate, brief). Il judge non cambia.",
+            "default": "claude-opus-5-5",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "claude-opus-5-5", "label": "Claude Opus 5.5 (consigliato)"},
+                {"value": "claude-sonnet-5-5", "label": "Claude Sonnet 5.5"},
+                {"value": "global", "label": "Usa il modello del modulo/globale"}
+            ]
+        },
         "ai_fallback_enabled": {
             "type": "select",
             "label": "Fallback AI",
@@ -340,6 +353,16 @@
             "default": 0.2,
             "min": 0,
             "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_action_brief": {
+            "type": "number",
+            "label": "Costo scheda operativa",
+            "description": "Crediti per ogni scheda generata con \"Genera scheda\" (un intervento)",
+            "default": 1,
+            "min": 0,
+            "step": 0.5,
             "admin_only": true,
             "group": "costs"
         }
