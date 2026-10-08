@@ -58,6 +58,12 @@ $isActive = in_array($run['status'], ['pending', 'running'], true);
             <?php foreach ($engines as $engine): ?>
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"><?= e($engineLabels[$engine] ?? $engine) ?></span>
             <?php endforeach; ?>
+            <?php if ($hasAnalyses && !empty($actions)): ?>
+            <a href="<?= url("{$basePath}/runs/{$run['id']}/export/plan.pdf") ?>" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700 text-sm font-medium transition-colors" title="Scarica il piano degli interventi in PDF">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                Esporta PDF
+            </a>
+            <?php endif; ?>
             <?php if ($canEdit && !$isActive): ?>
             <button type="button" x-show="!analyzing" @click="analyze(<?= $hasAnalyses ? 'true' : 'false' ?>)" class="inline-flex items-center px-3 py-1.5 rounded-lg <?= $hasAnalyses ? 'border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700' : 'bg-indigo-600 text-white hover:bg-indigo-700' ?> text-sm font-medium transition-colors">
                 <?= $hasAnalyses ? 'Rianalizza' : 'Analizza le risposte' ?>

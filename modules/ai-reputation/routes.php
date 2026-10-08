@@ -120,6 +120,11 @@ Router::post('/ai-reputation/project/{id}/runs/{runId}/reanalyze', function ($id
     return (new RunController())->reanalyze((int) $id, (int) $runId);
 });
 
+Router::get('/ai-reputation/project/{id}/runs/{runId}/export/plan.pdf', function ($id, $runId) {
+    Middleware::auth();
+    return (new RunController())->exportPlanPdf((int) $id, (int) $runId);
+});
+
 Router::get('/ai-reputation/project/{id}/runs/{runId}', function ($id, $runId) {
     Middleware::auth();
     return (new RunController())->show((int) $id, (int) $runId);

@@ -12,6 +12,7 @@ use Modules\AiReputation\Models\Project;
 use Modules\AiReputation\Models\Prompt;
 use Modules\AiReputation\Models\Run;
 use Modules\AiReputation\Models\Analysis;
+use Modules\AiReputation\Services\ActionPlanPdfService;
 use Modules\AiReputation\Services\EngineCollectorService;
 use Modules\AiReputation\Services\JudgeService;
 use Modules\AiReputation\Services\ReportBuilderService;
@@ -584,6 +585,41 @@ class RunController
                 ] : null,
             ], $responses), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT),
         ]);
+    }
+
+    /**
+     * GET /ai-reputation/project/{id}/runs/{runId}/export/plan.pdf - PDF del piano d'azione del run
+     * (interventi come nel report, con la scheda operativa se generata).
+     */
+    public function exportPlanPdf(int $projectId, int $runId): void
+    {
+        $user = Auth::user();
+        $project = $this->project->findAccessible($projectId, $user['id']);
+        $run = $project ? $this->run->find($runId, $projectId) : null;
+        if (!$project || !$run) {
+            $_SESSION['_flash']['error'] = 'Run non trovato';
+            Router::redirect('/ai-reputation');
+            exit;
+        }
+        $responses = $this->run->responses($runId);
+        $analyses = $this->analysis->byRun($runId);
+        $metrics = (new ReportBuilderService())->metrics($responses, $analyses, $run['engines'], $project);
+        $actions = Database::fetchAll("SELECT * FROM ar_actions WHERE run_id = ? ORDER BY FIELD(type, 'removal', 'counter_content', 'gap_article', 'correction'), id", [$runId]);
+        try {
+            $pdfService = new ActionPlanPdfService();
+            $pdf = $pdfService->render($project, $run, $actions, $metrics);
+        } catch (\Throwable $e) {
+            \Core\Logger::channel('ai-reputation')->error('Export PDF fallito', ['run_id' => $runId, 'error' => $e->getMessage()]);
+            $_SESSION['_flash']['error'] = 'Export PDF non riuscito, riprova tra poco.';
+            Router::redirect("/ai-reputation/project/{$projectId}/runs/{$runId}");
+            exit;
+        }
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $pdfService->filename($project, $run) . '"');
+        header('Content-Length: ' . strlen($pdf));
+        header('Cache-Control: private, no-store');
+        echo $pdf;
+        exit;
     }
 
     /** Menzione del soggetto nel testo (match sul nome completo o sul cognome) */
