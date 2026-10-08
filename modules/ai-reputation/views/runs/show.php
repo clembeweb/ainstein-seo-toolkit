@@ -42,6 +42,8 @@ $actionLabel = ['removal' => 'rimozione', 'counter_content' => 'contro-contenuto
 $actionClass = ['removal' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300', 'counter_content' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300', 'gap_article' => 'bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300', 'correction' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'];
 $isActive = in_array($run['status'], ['pending', 'running'], true);
 $briefCost = $briefCost ?? 1;
+// Costo scheda per i confirm JS, formattato come nel partial: "1 credito", "1,5 crediti"
+$briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'), ',') . ' credit' . ((float) $briefCost == 1 ? 'o' : 'i');
 ?>
 
 <div class="space-y-6" x-data="arReport()">
@@ -411,7 +413,8 @@ function arReport() {
         async generateBrief(actionId, ev, regenerate) {
             const box = document.getElementById('brief-' + actionId);
             if (!box || this.generatingBrief[actionId]) return;
-            if (!confirm(regenerate ? 'Rigenerare la scheda? Sovrascrive quella attuale e costa <?= e((string) $briefCost) ?> crediti.' : 'Generare la scheda operativa? Costa <?= e((string) $briefCost) ?> crediti e richiede 20-40 secondi.')) return;
+            const costLabel = <?= json_encode($briefCostLabel, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>;
+            if (!confirm(regenerate ? 'Rigenerare la scheda? Sovrascrive quella attuale e costa ' + costLabel + '.' : 'Generare la scheda operativa? Costa ' + costLabel + ' e richiede 20-40 secondi.')) return;
             this.generatingBrief[actionId] = true;
             const btn = ev.currentTarget; const oldHtml = btn.innerHTML;
             btn.disabled = true; btn.innerHTML = '<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg> Genero la scheda…';
@@ -425,6 +428,8 @@ function arReport() {
                 }
                 const data = await resp.json();
                 if (!data.success) throw new Error(data.error || 'Generazione non riuscita');
+                // Scheda salvata ma partial non renderizzato: ricarica la pagina per mostrarla
+                if (data.reload) { location.reload(); return; }
                 box.outerHTML = data.html;
             } catch (e) {
                 alert(e.message); btn.disabled = false; btn.innerHTML = oldHtml;

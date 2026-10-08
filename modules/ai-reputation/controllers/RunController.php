@@ -651,6 +651,19 @@ class RunController
             echo json_encode(['success' => false, 'error' => 'Non autorizzato']);
             exit;
         }
+        // Prima di crediti e AI: niente schede per interventi scartati o rimozioni senza pagine da contattare
+        if (($action['status'] ?? '') === 'dismissed') {
+            ob_end_clean();
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Intervento scartato']);
+            exit;
+        }
+        if ($action['type'] === 'removal' && !ActionPlanPdfService::pages($action)) {
+            ob_end_clean();
+            http_response_code(422);
+            echo json_encode(['success' => false, 'error' => 'Nessuna pagina da contattare per questo intervento']);
+            exit;
+        }
         $force = !empty($_POST['force']);
         // Doppio clic: scheda appena generata → ritorna quella senza richiamare l'AI
         if (!$force && !empty($action['brief']) && !empty($action['brief_generated_at']) && strtotime($action['brief_generated_at']) > time() - 120) {
@@ -670,9 +683,12 @@ class RunController
         try {
             $res = (new ActionBriefService())->generate($actionId, $creditUserId);
         } catch (\Throwable $e) {
+            // Il messaggio grezzo va solo nel log, mai in brief_error (visibile in pagina)
+            \Core\Logger::channel('ai-reputation')->error('Generazione scheda fallita', ['action_id' => $actionId, 'run_id' => $runId, 'error' => $e->getMessage()]);
             Database::reconnect();
-            Database::execute("UPDATE ar_actions SET brief_error = ? WHERE id = ?", [mb_strimwidth('Errore: ' . $e->getMessage(), 0, 490, '…'), $actionId]);
-            $res = ['success' => false, 'error' => 'Errore imprevisto durante la generazione'];
+            $genericError = 'Errore imprevisto durante la generazione, riprova.';
+            Database::execute("UPDATE ar_actions SET brief_error = ? WHERE id = ?", [$genericError, $actionId]);
+            $res = ['success' => false, 'error' => $genericError];
         }
         Database::reconnect();
         if (empty($res['success'])) {
@@ -680,9 +696,20 @@ class RunController
             echo json_encode(['success' => false, 'error' => $res['error'] ?? 'Generazione non riuscita']);
             exit;
         }
-        Credits::consume($creditUserId, $cost, 'action_brief', Project::SLUG, ['action_id' => $actionId, 'run_id' => $runId]);
+        // La scheda e' gia' salvata: un addebito fallito (es. saldo sceso nel frattempo) si logga, non blocca la risposta
+        if (!Credits::consume($creditUserId, $cost, 'action_brief', Project::SLUG, ['action_id' => $actionId, 'run_id' => $runId])) {
+            \Core\Logger::channel('ai-reputation')->warning('Addebito scheda non riuscito', ['action_id' => $actionId, 'run_id' => $runId, 'user_id' => $creditUserId, 'cost' => $cost]);
+        }
+        try {
+            $html = $this->briefHtml($res['action'], $project, $run);
+        } catch (\Throwable $e) {
+            \Core\Logger::channel('ai-reputation')->error('Render scheda fallito', ['action_id' => $actionId, 'run_id' => $runId, 'error' => $e->getMessage()]);
+            ob_end_clean();
+            echo json_encode(['success' => true, 'html' => '', 'reload' => true]);
+            exit;
+        }
         ob_end_clean();
-        echo json_encode(['success' => true, 'html' => $this->briefHtml($res['action'], $project, $run)]);
+        echo json_encode(['success' => true, 'html' => $html]);
         exit;
     }
 
