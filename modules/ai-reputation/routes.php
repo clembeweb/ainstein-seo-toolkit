@@ -125,6 +125,12 @@ Router::get('/ai-reputation/project/{id}/runs/{runId}/export/plan.pdf', function
     return (new RunController())->exportPlanPdf((int) $id, (int) $runId);
 });
 
+Router::post('/ai-reputation/project/{id}/runs/{runId}/actions/{actionId}/brief', function ($id, $runId, $actionId) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new RunController())->generateBrief((int) $id, (int) $runId, (int) $actionId);
+});
+
 Router::get('/ai-reputation/project/{id}/runs/{runId}', function ($id, $runId) {
     Middleware::auth();
     return (new RunController())->show((int) $id, (int) $runId);

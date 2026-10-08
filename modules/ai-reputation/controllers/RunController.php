@@ -12,6 +12,7 @@ use Modules\AiReputation\Models\Project;
 use Modules\AiReputation\Models\Prompt;
 use Modules\AiReputation\Models\Run;
 use Modules\AiReputation\Models\Analysis;
+use Modules\AiReputation\Services\ActionBriefService;
 use Modules\AiReputation\Services\ActionPlanPdfService;
 use Modules\AiReputation\Services\EngineCollectorService;
 use Modules\AiReputation\Services\JudgeService;
@@ -554,6 +555,7 @@ class RunController
             'sources' => array_slice($sources, 0, 20),
             'competitors' => array_slice($competitors, 0, 12),
             'actions' => $actions,
+            'briefCost' => Credits::getCost('action_brief', Project::SLUG, 1),
             'homonyms' => $homonyms,
             'hasAnalyses' => !empty($analyses),
             'responsesJson' => json_encode(array_map(fn($r) => [
@@ -620,6 +622,80 @@ class RunController
         header('Cache-Control: private, no-store');
         echo $pdf;
         exit;
+    }
+
+    /**
+     * POST /ai-reputation/project/{id}/runs/{runId}/actions/{actionId}/brief
+     * Genera (o rigenera con force=1) la scheda operativa di un intervento. AJAX lungo (GR 15/17/23).
+     * Unico punto di addebito: ActionBriefService chiama AiService con charge_credits=false.
+     */
+    public function generateBrief(int $projectId, int $runId, int $actionId): void
+    {
+        ignore_user_abort(true);
+        set_time_limit(300);
+        ob_start();
+        header('Content-Type: application/json');
+        $user = Auth::user();
+        $project = $this->project->findAccessible($projectId, $user['id']);
+        $run = $project ? $this->run->find($runId, $projectId) : null;
+        $action = $run ? Database::fetch("SELECT * FROM ar_actions WHERE id = ? AND run_id = ? AND project_id = ?", [$actionId, $runId, $projectId]) : null;
+        if (!$project || !$run || !$action) {
+            ob_end_clean();
+            http_response_code(404);
+            echo json_encode(['success' => false, 'error' => 'Intervento non trovato']);
+            exit;
+        }
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            ob_end_clean();
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Non autorizzato']);
+            exit;
+        }
+        $force = !empty($_POST['force']);
+        // Doppio clic: scheda appena generata → ritorna quella senza richiamare l'AI
+        if (!$force && !empty($action['brief']) && !empty($action['brief_generated_at']) && strtotime($action['brief_generated_at']) > time() - 120) {
+            ob_end_clean();
+            echo json_encode(['success' => true, 'html' => $this->briefHtml($action, $project, $run)]);
+            exit;
+        }
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+        $cost = Credits::getCost('action_brief', Project::SLUG, 1);
+        if (!Credits::hasEnough($creditUserId, $cost)) {
+            ob_end_clean();
+            http_response_code(402);
+            echo json_encode(['success' => false, 'error' => 'Crediti insufficienti. Necessari: ' . $cost . ', disponibili: ' . Credits::getBalance($creditUserId)]);
+            exit;
+        }
+        session_write_close();
+        try {
+            $res = (new ActionBriefService())->generate($actionId, $creditUserId);
+        } catch (\Throwable $e) {
+            Database::reconnect();
+            Database::execute("UPDATE ar_actions SET brief_error = ? WHERE id = ?", [mb_strimwidth('Errore: ' . $e->getMessage(), 0, 490, '…'), $actionId]);
+            $res = ['success' => false, 'error' => 'Errore imprevisto durante la generazione'];
+        }
+        Database::reconnect();
+        if (empty($res['success'])) {
+            ob_end_clean();
+            echo json_encode(['success' => false, 'error' => $res['error'] ?? 'Generazione non riuscita']);
+            exit;
+        }
+        Credits::consume($creditUserId, $cost, 'action_brief', Project::SLUG, ['action_id' => $actionId, 'run_id' => $runId]);
+        ob_end_clean();
+        echo json_encode(['success' => true, 'html' => $this->briefHtml($res['action'], $project, $run)]);
+        exit;
+    }
+
+    private function briefHtml(array $action, array $project, array $run): string
+    {
+        return View::partial('ai-reputation::partials/action-brief', [
+            'a' => $action,
+            'basePath' => '/ai-reputation/project/' . $project['id'],
+            'run' => $run,
+            'csrf' => csrf_token(),
+            'canEdit' => ($project['access_role'] ?? 'owner') !== 'viewer',
+            'briefCost' => Credits::getCost('action_brief', Project::SLUG, 1),
+        ]);
     }
 
     /** Menzione del soggetto nel testo (match sul nome completo o sul cognome) */
