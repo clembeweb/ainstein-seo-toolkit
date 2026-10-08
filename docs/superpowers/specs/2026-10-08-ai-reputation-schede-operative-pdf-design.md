@@ -163,7 +163,7 @@ Tutto italiano, dark mode, Heroicons; frontend con `response.ok` prima di `respo
 ## 7. Documentazione
 - `modules/ai-reputation/docs/decisions.md`: ADR-012 (canale deciso dall'AI; il sito proprietario del soggetto diventa un canale possibile, con il segnale "sito ufficiale mai citato dalle AI"), ADR-013 (schede su Opus 5.5 via `brief_model`, generazione per singolo intervento su richiesta, judge invariato; modelli 5.5 aggiunti ad AiService).
 - `TASKS.md` e `roadmap.md` del modulo.
-- Guida utente `shared/views/docs/ai-reputation.php` (sezione "Schede operative e PDF") e `docs/data-model.html` (colonne nuove di `ar_actions`).
+- Guida utente: la pagina `shared/views/docs/ai-reputation.php` non esiste ancora; è il task GR18 già aperto in TASKS (voce 4), che includerà la sezione "Schede operative e PDF". `data-model.html` non documenta ancora le tabelle `ar_*`: stesso task.
 
 ## 8. Fuori scope
 PDF cliente (fase C), export Word/Excel, "genera tutte le schede" in un colpo, tracciamento dello stato degli interventi nel PDF, scelta del canale con regole fisse (lo decide l'AI), cambio modello del judge, sezione "Perché" (domande ed engine) nel PDF.

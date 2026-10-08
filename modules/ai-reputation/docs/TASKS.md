@@ -1,7 +1,7 @@
 # TASKS — AI Reputation Radar
 
 > Stato del lavoro. Aggiornare a ogni sessione: fatto, in corso, prossimo passo.
-> Ultimo aggiornamento: 2026-10-07 (sera, nuovo server Contabo online)
+> Ultimo aggiornamento: 2026-10-08
 
 ## Dove siamo
 **MVP completo e funzionante in locale.** Flusso: progetto da Global Projects → Profilo (onboarding + conferma
@@ -9,27 +9,22 @@ righe) → domande (base / AI / manuali) → "Avvia run" (raccolta + judge + rep
 Engine: ChatGPT (API) + Gemini + Perplexity peso 0,3 (Claude pronto, spento). ChatGPT ripete 3 volte le domande rep.
 **Run di riferimento per la demo: run 4** (`/ai-reputation/project/1/runs/4`): 138 risposte, rischio Alto 47%,
 5 smentite di Gemini, 15 siti negativi (3 istituzionali), report corto con interventi in cima e schede.
+**Export PDF del piano e "Genera scheda" (Opus 5.5) per intervento: fatti il 2026-10-08** (spec in `docs/superpowers/specs/2026-10-08-ai-reputation-schede-operative-pdf-design.md`, ADR-012/013). Non ancora in produzione: vedi Prossimo passo.
 Branch `claude/ai-reputation-radar-dd9004` (pushato su origin il 2026-10-06), NON mergiato in `main`, NON online.
 Demo per Gabriele: **in locale** (decisione di Clemente). Prima della call riavviare MySQL pulito da XAMPP e non
 lanciare run in diretta.
 
 ## Prossimo passo (uno solo)
-**DNS + HTTPS.** Il 2026-10-07 l'account Hetzner risultava disabilitato (server 91.99.20.247 perso, DB prod perso):
-ordinato Contabo Cloud VPS 4 (`184.174.32.213`, vedi `docs/DEPLOY.md`), installato lo stack, `main` fast-forwardato
-a questo branch (`bd41005`, Radar incluso), DB ricreato dallo schema locale + tabelle di config (admin, moduli,
-settings con API key). Login e pagine Radar verificati via curl con `Host: ainstein.it`.
-DNS (SiteGround) puntato a `184.174.32.213` e HTTPS Let's Encrypt attivo (scade 2027-01-05, rinnovo automatico): **ainstein.it è online**.
-Manca: prova online del Radar con un progetto di test (Overview → "Come si usa"); i dati del run 4 della demo restano solo in locale (XAMPP, altra postazione).
-Mail a Hetzner inviata il 2026-10-07: se rispondono con il DB, si può reimportare.
-Già fatto: guida "Come si usa" in 4 passi nell'Overview (commit 1e9804d). La revisione del run 4 resta da fare.
+Prova reale in locale di PDF + schede su un run (es. run 4), poi deploy su ainstein.it (`git pull`, migrazione `2026-10-08-actions-brief.sql`) **dopo l'ok di Clemente**, poi la prova online del Radar con un progetto di test (Overview → "Come si usa"). ainstein.it è online dal 2026-10-07 su Contabo (`184.174.32.213`, vedi `docs/DEPLOY.md`); i dati del run 4 restano solo in locale.
 
 ## Dopo (in ordine)
+0b. Fase C: PDF per il cliente finale (sintesi, meno dettaglio operativo), stesso motore `ActionPlanPdfService`.
 1. Decidere se accendere Claude come quarto engine per la demo (~4 $ e ~50 min a run).
 2. Domanda aperta a Clemente: Andrea Marcaccini che rapporto ha con Federico? (se coinvolto nelle stesse
    vicende, il judge deve trattare le sue notizie come rischio per Federico).
 3. Revisione report run 4 con occhio da demo per Gabriele (era il prossimo passo prima della messa online).
 4. Golden Rule 18: guida utente `shared/views/docs/ai-reputation.php` + `docs/data-model.html` + landing
-   "Scopri cosa puoi fare".
+   "Scopri cosa puoi fare" (la guida deve includere la sezione "Schede operative e PDF").
 5. Minori: judge_model registrato anche se AiService usa il fallback; 7 "articoli gap" ancora uno per domanda;
    sezioni C (costi/tenuta) e D (prodotto/demo) dell'analisi critica da presentare.
 6. Pulizia: cancellare il worktree `.claude/worktrees/ai-reputation-radar-dd9004/`; nella root del repo
@@ -83,5 +78,6 @@ Già fatto: guida "Come si usa" in 4 passi nell'Overview (commit 1e9804d). La re
 - Modello Anthropic da misurare: Opus 5.5 (fatto) e/o Sonnet 5.5 (metà costo, più diffuso su claude.ai)
 
 ## Fatto
+- 2026-10-08 Export PDF del piano, "Genera scheda" per intervento su Opus 5.5 (ADR-012/013), scheda stampata nel PDF
 - 2026-10-05 Brief ricevuto, salvato in `docs/brief-2026-10-05.md`
 - 2026-10-05 Analisi e design v0.1, ADR-001..006, roadmap, struttura cartella modulo

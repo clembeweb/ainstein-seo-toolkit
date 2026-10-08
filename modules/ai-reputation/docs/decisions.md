@@ -184,3 +184,37 @@ misurava le nostre domande, non le AI. La vecchia formula inoltre saturava a 100
 
 **Consequences**: run 2 Marcaccini: da "Alto 100/100" a "Alto 38%" (8 su 18 risposte neutre sulla reputazione),
 mirate 8 negative su 18. Run 1: "Medio 28%".
+
+## ADR-012: Il canale di pubblicazione lo decide l'AI, e il sito proprietario è un canale
+
+**Date**: 2026-10-08 · **Status**: Accepted (richiesta di Clemente)
+
+**Context**: il piano d'azione suggeriva una sola "testata suggerita" (il dominio ok più citato) e non
+considerava mai il sito ufficiale del soggetto. Chi esegue gli interventi deve sapere dove pubblicare e perché.
+
+**Decision**: per ogni intervento di contenuto, su richiesta ("Genera scheda"), un modello AI decide il canale
+(`own_site`, `external`, `both`) leggendo il dossier del run (profilo confermato, verdetti, Source Map, se il sito
+ufficiale è mai citato, competitor) e suggerisce fino a 3 testate **solo tra i domini che le AI già citano come
+fonti affidabili** (validazione lato server: le altre vengono scartate; il sito del soggetto è escluso dalle testate
+perché è già il canale `own_site`). Per le rimozioni il canale non si applica. Il "sito ufficiale mai citato dalle AI"
+è un segnale esplicito a favore di `own_site`/`both`. Il dossier riporta ogni fatto del profilo confermato con la sua
+fonte (URL o "profilo confermato dal cliente"): in validazione i fatti senza fonte o con fonte sconosciuta vengono
+scartati, così la scheda non afferma nulla che non sia tracciabile.
+
+## ADR-013: Schede operative su Claude Opus 5.5, per singolo intervento, judge invariato
+
+**Date**: 2026-10-08 · **Status**: Accepted
+
+**Context**: scegliere canale e scrivere un brief corretto sui fatti richiede ragionamento; il judge gira sul modello
+del modulo (Sonnet 4) e deve restare stabile tra run (regola 6). I modelli Claude 5.5 non erano nel listino di AiService.
+
+**Decision**: setting `brief_model` (default `claude-opus-5-5`, effort `high`) usato solo da `ActionBriefService`;
+il judge non cambia. Generazione su richiesta, un intervento per volta (niente batch, niente lock), salvata in
+`ar_actions` e mostrata identica nel report web e nel PDF. Il PDF è sempre la stampa dello stato corrente degli
+interventi. `AiService::MODELS` include ora Opus/Sonnet/Haiku 5.5, aggiunti **dopo** le voci Anthropic esistenti
+perché il default resta `claude-sonnet-4`; `complete()` accetta `effort` e `timeout` (l'effort non si propaga al
+fallback) e ritorna anche il `model` realmente usato: il modello salvato nella scheda è quello effettivo (fallback
+incluso). Nel PDF non si stampa il nome del modello.
+**Credito unico**: una scheda costa solo `cost_action_brief` (default 1 credito), scalato dal controller a scheda
+salvata; l'addebito interno di AiService è disattivato per questa chiamata (`charge_credits => false`), quindi non
+c'è doppio addebito. Il costo API reale resta nei log AI.

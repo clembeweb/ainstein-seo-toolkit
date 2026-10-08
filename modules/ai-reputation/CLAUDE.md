@@ -2,7 +2,7 @@
 
 > Caricato quando si lavora in questa cartella. Il CLAUDE.md root di Ainstein vale sempre
 > (Golden Rules, pattern, comandi). Questo file aggiunge solo ciò che è specifico del modulo.
-> Ultimo aggiornamento: 2026-10-05
+> Ultimo aggiornamento: 2026-10-08
 
 ## A inizio sessione (sempre)
 1. Leggi `docs/TASKS.md` → di' a Clemente in 2 righe **dove siamo e il prossimo passo**.
@@ -61,7 +61,7 @@ cliente TD, Riccardo Concetti, **non c'entra** con questo progetto).
 |---|---|
 | `docs/brief-2026-10-05.md` | brief di origine, integrale |
 | `docs/design.md` | analisi + architettura + data model (v0.2, validato dai test empirici) |
-| `docs/decisions.md` | ADR-001..011 |
+| `docs/decisions.md` | ADR-001..013 |
 | `docs/roadmap.md` | M0 → M4 |
 | `docs/TASKS.md` | stato e prossimo passo |
 | `docs/test-empirici/` | risultati dei test API |
@@ -77,3 +77,4 @@ cliente TD, Riccardo Concetti, **non c'entra** con questo progetto).
 - MySQL va acceso da XAMPP prima dei test. Gli script in `scripts/` girano con `php` dalla root del repo.
 - API key: in DB (`settings`), mai in file. Si incollano dal pannello `/admin/settings` (campi
   OpenAI, Anthropic, Gemini, Perplexity). Mai chiederle in chat, mai inserirle al posto di Clemente.
+- Postazione LaptopoClem (Laragon): si lavora nel worktree `.claude/worktrees/ai-reputation-m0-3-69e6ee` sul branch del modulo; per vedere le modifiche su `http://localhost/seo-toolkit` si lancia `bash modules/ai-reputation/scripts/sync-to-main.sh` dopo il commit (il checkout principale è sul branch Editorial).

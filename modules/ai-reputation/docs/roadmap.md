@@ -17,6 +17,7 @@
 - Piano d'azione (removal / gap_article / correction).
 - Pagina report run. Run reale su Marcaccini.
 - **Definition of done**: report Marcaccini mostrabile in call senza spiegare il metodo.
+- Export PDF del piano + scheda operativa per intervento (Opus 5.5) — fatto 2026-10-08.
 
 ## M2 — v1 vendibile (dopo la call, se Gabriele conferma)
 - Gemini + Anthropic come engine; repeats 3 + score di stabilità.
