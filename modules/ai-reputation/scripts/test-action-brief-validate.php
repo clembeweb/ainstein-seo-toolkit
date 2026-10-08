@@ -38,6 +38,48 @@ $check('rimozione: pagine fuori target scartate', is_array($r) && $r['brief']['p
 $wrongKind = $good; $wrongKind['brief']['kind'] = 'removal';
 $check('kind incoerente → errore', is_string(S::validate($wrongKind, $content, $ok)));
 
+// --- Fix round 1 ---
+$norm = $good; $norm['suggested_outlets'] = ['https://www.wired.it/', 'WIRED.it', 'ilsole24ore.com/'];
+$r = S::validate($norm, $content, $ok);
+$check('outlet normalizzati (url, maiuscole, duplicati)', is_array($r) && $r['suggested_outlets'] === ['wired.it', 'ilsole24ore.com']);
+
+$own = ['channel' => 'own_site'] + $good;
+$r = S::validate($own, $content, $ok);
+$check('own_site svuota le testate', is_array($r) && $r['channel'] === 'own_site' && $r['suggested_outlets'] === []);
+
+$badReq = $rem; $badReq['brief']['request'] = 'cancella';
+$check('rimozione con request non valida → errore', is_string(S::validate($badReq, $removal, $ok)));
+
+$outside = $rem; $outside['brief']['pages'] = ['https://altro.it/z'];
+$r = S::validate($outside, $removal, $ok);
+$check('rimozione: pagine tutte fuori target → pagine dell\'intervento', is_array($r) && $r['brief']['pages'] === ['https://x.it/a', 'https://x.it/b']);
+
+$noPages = ['type' => 'removal', 'target_urls' => null, 'target_url' => null];
+$check('rimozione senza pagine proprie né valide → errore', is_string(S::validate($rem, $noPages, $ok)));
+
+$noRecipient = $rem; $noRecipient['brief']['recipient'] = '';
+$check('rimozione senza destinatario → errore', is_string(S::validate($noRecipient, $removal, $ok)));
+$noBasis = $rem; $noBasis['brief']['basis'] = ' ';
+$check('rimozione senza motivazione → errore', is_string(S::validate($noBasis, $removal, $ok)));
+
+$noSrc = $good; $noSrc['brief']['facts'] = [['fact' => 'a', 'source' => ''], ['fact' => 'b', 'source' => 'wired.it']];
+$r = S::validate($noSrc, $content, $ok);
+$check('fatto con fonte vuota scartato', is_array($r) && count($r['brief']['facts']) === 1 && $r['brief']['facts'][0]['fact'] === 'b');
+
+$allowed = ['https://mario.it/chi-sono', 'mario.it', 'wired.it'];
+$srcs = $good;
+$srcs['brief']['facts'] = [
+    ['fact' => 'inventata', 'source' => 'Wikipedia'],
+    ['fact' => 'dal profilo', 'source' => 'Profilo confermato dal cliente'],
+    ['fact' => 'da url', 'source' => 'https://mario.it/chi-sono'],
+    ['fact' => 'da dominio', 'source' => 'articolo su wired.it'],
+];
+$r = S::validate($srcs, $content, $ok, $allowed);
+$check('allowedSources: fonte inventata scartata, profilo e fonti note tenute',
+    is_array($r) && array_column($r['brief']['facts'], 'fact') === ['dal profilo', 'da url', 'da dominio']);
+$r = S::validate($srcs, $content, $ok);
+$check('senza allowedSources il controllo sulla fonte non si applica (solo non vuota)', is_array($r) && count($r['brief']['facts']) === 4);
+
 $check('parseJson con fence', (S::parseJson("```json\n{\"a\":1}\n```")['a'] ?? null) === 1);
 $check('parseJson senza oggetto → null', S::parseJson('niente') === null);
 exit($fail ? 1 : 0);

@@ -229,6 +229,8 @@ class AiService
         $system = $options['system'] ?? null;
         $this->requestEffort = $options['effort'] ?? null;
         $this->requestTimeout = (int) ($options['timeout'] ?? 120);
+        // charge_credits=false: il chiamante addebita da se' (nessun controllo ne' consumo qui)
+        $chargeCredits = ($options['charge_credits'] ?? true) !== false;
 
         // Calculate content size for cost
         $contentSize = 0;
@@ -244,7 +246,7 @@ class AiService
         $cost = Credits::getCost($costType);
 
         // Check credits
-        if (!Credits::hasEnough($userId, $cost)) {
+        if ($chargeCredits && !Credits::hasEnough($userId, $cost)) {
             return [
                 'error' => true,
                 'message' => 'Crediti insufficienti',
@@ -264,15 +266,18 @@ class AiService
         }
 
         // Consume credits
-        Credits::consume($userId, $cost, $costType, $this->moduleSlug, [
-            'tokens_estimate' => $tokenEstimate,
-            'model' => $result['model_used'] ?? $model,
-        ]);
+        if ($chargeCredits) {
+            Credits::consume($userId, $cost, $costType, $this->moduleSlug, [
+                'tokens_estimate' => $tokenEstimate,
+                'model' => $result['model_used'] ?? $model,
+            ]);
+        }
 
         return [
             'success' => true,
             'result' => $result['content'],
-            'credits_used' => $cost,
+            'credits_used' => $chargeCredits ? $cost : 0,
+            'model' => $result['model_used'] ?? $model,
         ];
     }
 

@@ -18,6 +18,8 @@ class ActionBriefService
 {
     public const SLUG = 'ai-reputation';
     public const CHANNELS = ['own_site', 'external', 'both'];
+    public const PROFILE_SOURCE = 'profilo confermato dal cliente';
+    private const JSON_FLAGS = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE;
     private AiService $ai;
 
     public function __construct()
@@ -43,7 +45,8 @@ class ActionBriefService
             return ['success' => false, 'error' => 'Run o progetto non trovato'];
         }
         $dossier = $this->dossier($action, $run, $project);
-        $options = ['max_tokens' => 8192, 'effort' => 'high', 'timeout' => 240, 'system' => self::systemPrompt()];
+        // charge_credits=false: l'unico addebito della scheda e' cost_action_brief, applicato dal controller dopo il salvataggio
+        $options = ['max_tokens' => 8192, 'effort' => 'high', 'timeout' => 240, 'system' => self::systemPrompt(), 'charge_credits' => false];
         if ($this->model() !== 'global') {
             $options['model'] = $this->model();
         }
@@ -56,7 +59,7 @@ class ActionBriefService
         if ($data === null) {
             return $this->fail($actionId, 'Risposta AI non in formato JSON');
         }
-        $valid = self::validate($data, $action, $dossier['ok_domains']);
+        $valid = self::validate($data, $action, $dossier['ok_domains'], $dossier['allowed_sources']);
         if (is_string($valid)) {
             return $this->fail($actionId, $valid);
         }
@@ -65,9 +68,9 @@ class ActionBriefService
             [
                 $valid['channel'],
                 $valid['channel_rationale'],
-                json_encode($valid['suggested_outlets'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
-                json_encode($valid['brief'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
-                (string) ($res['model'] ?? $options['model'] ?? 'global'),
+                json_encode($valid['suggested_outlets'], self::JSON_FLAGS),
+                json_encode($valid['brief'], self::JSON_FLAGS),
+                (string) ($res['model'] ?? $options['model'] ?? 'sconosciuto'),
                 $actionId,
             ]
         );
@@ -82,7 +85,7 @@ class ActionBriefService
     }
 
     /**
-     * Dossier: tutto ciò che il modello deve sapere, solo da dati già nel DB. Ritorna ['prompt' => string, 'ok_domains' => string[]].
+     * Dossier: tutto ciò che il modello deve sapere, solo da dati già nel DB. Ritorna ['prompt' => string, 'ok_domains' => string[], 'allowed_sources' => string[]].
      */
     public function dossier(array $action, array $run, array $project): array
     {
@@ -90,18 +93,21 @@ class ActionBriefService
         $responses = (new Run())->responses($runId);
         $analyses = (new Analysis())->byRun($runId);
         $sources = (new ReportBuilderService())->sources($responses, $analyses);
+        $website = trim((string) ($project['website'] ?? ''));
+        $siteDomain = $website ? EngineCollectorService::domainOf($website) : null;
         $okDomains = [];
         $negDomains = [];
+        $negDomainNames = [];
         foreach ($sources as $s) {
-            if ($s['status'] === 'ok' && count($okDomains) < 8) {
+            // il sito del soggetto e' il canale "own_site", non una testata esterna
+            if ($s['status'] === 'ok' && count($okDomains) < 8 && !($siteDomain && $s['domain'] === $siteDomain)) {
                 $okDomains[] = $s['domain'];
             }
             if ($s['status'] === 'negative' && count($negDomains) < 8) {
                 $negDomains[] = $s['domain'] . ' (' . $s['negative'] . ' negative)';
+                $negDomainNames[] = $s['domain'];
             }
         }
-        $website = trim((string) ($project['website'] ?? ''));
-        $siteDomain = $website ? EngineCollectorService::domainOf($website) : null;
         $siteCited = 0;
         foreach ($sources as $s) {
             if ($siteDomain && $s['domain'] === $siteDomain) {
@@ -110,7 +116,7 @@ class ActionBriefService
         }
         // Domande collegate all'intervento
         $pages = array_map(fn($p) => $p['url'], ActionPlanPdfService::pages($action));
-        $pageDomain = $action['target_domain'] ?: null;
+        $pageDomain = $action['target_domain'] ? strtolower((string) $action['target_domain']) : null;
         $questions = [];
         foreach ($responses as $r) {
             if ($r['status'] !== 'ok') {
@@ -123,7 +129,7 @@ class ActionBriefService
             $hit = false;
             if ($action['type'] === 'removal') {
                 foreach (array_merge($a['negative_urls'], $a['cited_domains']) as $u) {
-                    if (($pageDomain && str_contains((string) $u, $pageDomain)) || in_array($u, $pages, true)) {
+                    if (in_array($u, $pages, true) || ($pageDomain && self::domainMatches((string) $u, $pageDomain))) {
                         $hit = true;
                         break;
                     }
@@ -140,12 +146,36 @@ class ActionBriefService
             }
         }
         $questions = array_slice($questions, 0, 10);
+        // Fatti confermati con la loro fonte (le fonti-URL del profilo, categoria 'source', non sono fatti)
         $facts = [];
-        foreach ((new ProfileFact())->truth((int) $project['id']) as $cat => $items) {
-            foreach ($items as $t) {
-                $facts[] = "[{$cat}] {$t}";
+        $allowedSources = [];
+        $factRows = Database::fetchAll(
+            "SELECT category, status, text, corrected_text, source_url FROM ar_profile_facts WHERE project_id = ? AND status IN ('confirmed','corrected') AND category <> 'source' ORDER BY category, sort_order, id",
+            [(int) $project['id']]
+        );
+        foreach ($factRows as $f) {
+            $text = $f['status'] === 'corrected' && $f['corrected_text'] !== null ? $f['corrected_text'] : $f['text'];
+            $src = trim((string) ($f['source_url'] ?? ''));
+            if ($src !== '') {
+                $allowedSources[] = $src;
+                $d = EngineCollectorService::domainOf($src);
+                if ($d) {
+                    $allowedSources[] = $d;
+                }
             }
+            $facts[] = "[{$f['category']}] {$text} (fonte: " . ($src !== '' ? $src : self::PROFILE_SOURCE) . ')';
         }
+        $allowedSources = array_merge($allowedSources, $okDomains, $negDomainNames, $pages);
+        if ($pageDomain) {
+            $allowedSources[] = $pageDomain;
+        }
+        if ($siteDomain) {
+            $allowedSources[] = $siteDomain;
+        }
+        if ($website !== '') {
+            $allowedSources[] = $website;
+        }
+        $allowedSources = array_values(array_unique(array_filter(array_map(fn($x) => strtolower(trim((string) $x)), $allowedSources))));
         $competitors = Database::fetchAll("SELECT name, mentions_count FROM ar_competitors WHERE project_id = ? ORDER BY mentions_count DESC LIMIT 8", [(int) $project['id']]);
 
         $lines = [];
@@ -174,7 +204,7 @@ class ActionBriefService
         }
         $lines[] = '';
         $lines[] = $action['type'] === 'removal' ? self::removalInstructions() : self::contentInstructions();
-        return ['prompt' => implode("\n", $lines), 'ok_domains' => $okDomains];
+        return ['prompt' => implode("\n", $lines), 'ok_domains' => $okDomains, 'allowed_sources' => $allowedSources];
     }
 
     public static function systemPrompt(): string
@@ -196,7 +226,7 @@ class ActionBriefService
             . "Rispondi con questo JSON:\n"
             . '{"channel":"own_site|external|both","channel_rationale":"1-3 frasi","suggested_outlets":["dominio",...],'
             . '"brief":{"kind":"content","title":"titolo proposto","angle":"taglio in 1-2 frasi","points":["almeno 4 punti da coprire"],'
-            . '"facts":[{"fact":"fatto da citare","source":"fonte dal dossier"}],"avoid":["cosa evitare"],"length_words":900,"language":"it",'
+            . '"facts":[{"fact":"fatto da citare","source":"la fonte indicata tra parentesi nel dossier (URL o dominio), oppure profilo confermato dal cliente"}],"avoid":["cosa evitare"],"length_words":900,"language":"it",'
             . '"own_site_note":"cosa pubblicare sul sito ufficiale se channel è own_site o both, altrimenti stringa vuota"}}';
     }
 
@@ -208,6 +238,13 @@ class ActionBriefService
             . '"brief":{"kind":"removal","recipient":"a chi scrivere (redazione, webmaster, ufficio stampa)","request":"removal|deindex|update",'
             . '"basis":"su quale base chiedere (es. notizia superata, esito del procedimento, diritto all\'oblio), riferita ai fatti confermati",'
             . '"pages":["solo URL tra le PAGINE DELL\'INTERVENTO"],"fallback":"cosa fare se rifiutano"}}';
+    }
+
+    /** True se $u (URL o dominio nudo) appartiene al dominio $domain (uguale o sottodominio). */
+    private static function domainMatches(string $u, string $domain): bool
+    {
+        $d = EngineCollectorService::domainOf($u) ?? preg_replace('/^www\./', '', strtolower(trim($u)));
+        return $d === $domain || str_ends_with($d, '.' . $domain);
     }
 
     /** Pulizia della risposta: via i fence ```, ritaglio dal primo { all'ultimo }. */
@@ -226,8 +263,9 @@ class ActionBriefService
 
     /**
      * Normalizza e valida l'output AI. Ritorna i dati pronti da salvare oppure una stringa di errore.
+     * $allowedSources (opzionale): fonti ammesse per i fatti; se vuoto si controlla solo che la fonte non sia vuota.
      */
-    public static function validate(array $data, array $action, array $okDomains): array|string
+    public static function validate(array $data, array $action, array $okDomains, array $allowedSources = []): array|string
     {
         $isRemoval = ($action['type'] ?? '') === 'removal';
         $brief = $data['brief'] ?? null;
@@ -254,7 +292,7 @@ class ActionBriefService
                 $outlets[] = $o;
             }
         }
-        $outlets = array_slice($outlets, 0, 3);
+        $outlets = $channel === 'own_site' ? [] : array_slice($outlets, 0, 3);
         $clean = ['channel' => $channel, 'channel_rationale' => trim((string) ($data['channel_rationale'] ?? '')), 'suggested_outlets' => $isRemoval ? [] : $outlets];
         $str = fn($v) => trim((string) (is_scalar($v) ? $v : ''));
         $list = fn($v) => array_values(array_filter(array_map($str, is_array($v) ? $v : []), fn($x) => $x !== ''));
@@ -265,9 +303,27 @@ class ActionBriefService
             }
             $facts = [];
             foreach ((array) ($brief['facts'] ?? []) as $f) {
-                if (is_array($f) && $str($f['fact'] ?? '') !== '') {
-                    $facts[] = ['fact' => $str($f['fact']), 'source' => $str($f['source'] ?? '')];
+                if (!is_array($f) || $str($f['fact'] ?? '') === '') {
+                    continue;
                 }
+                $src = $str($f['source'] ?? '');
+                if ($src === '') {
+                    continue;
+                }
+                if ($allowedSources) {
+                    $srcLow = strtolower($src);
+                    $known = str_contains($srcLow, self::PROFILE_SOURCE);
+                    foreach ($allowedSources as $al) {
+                        if ($al !== '' && str_contains($srcLow, strtolower((string) $al))) {
+                            $known = true;
+                            break;
+                        }
+                    }
+                    if (!$known) {
+                        continue;
+                    }
+                }
+                $facts[] = ['fact' => $str($f['fact']), 'source' => $src];
             }
             $clean['brief'] = [
                 'kind' => 'content',
@@ -287,9 +343,18 @@ class ActionBriefService
         }
         $allowed = array_map(fn($p) => $p['url'], ActionPlanPdfService::pages($action));
         $pages = array_values(array_filter($list($brief['pages'] ?? []), fn($u) => in_array($u, $allowed, true)));
+        if (!$pages) {
+            $pages = $allowed;
+        }
+        if (!$pages) {
+            return 'Nessuna pagina valida per la richiesta di rimozione';
+        }
         $request = $str($brief['request'] ?? '');
         if (!in_array($request, ['removal', 'deindex', 'update'], true)) {
             return 'Tipo di richiesta non valido';
+        }
+        if ($str($brief['recipient'] ?? '') === '' || $str($brief['basis'] ?? '') === '') {
+            return 'Richiesta incompleta: mancano destinatario o motivazione';
         }
         $clean['brief'] = [
             'kind' => 'removal',
