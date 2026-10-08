@@ -19,6 +19,9 @@ class AiService
      */
     public const MODELS = [
         'anthropic' => [
+            'claude-opus-5-5' => ['name' => 'Claude Opus 5.5', 'input' => 0.004, 'output' => 0.020],
+            'claude-sonnet-5-5' => ['name' => 'Claude Sonnet 5.5', 'input' => 0.002, 'output' => 0.010],
+            'claude-haiku-5-5' => ['name' => 'Claude Haiku 5.5', 'input' => 0.0001, 'output' => 0.0005],
             'claude-sonnet-4-20250514' => ['name' => 'Claude Sonnet 4', 'input' => 0.003, 'output' => 0.015],
             'claude-opus-4-20250514' => ['name' => 'Claude Opus 4', 'input' => 0.015, 'output' => 0.075],
             'claude-3-5-sonnet-20241022' => ['name' => 'Claude 3.5 Sonnet', 'input' => 0.003, 'output' => 0.015],
@@ -44,6 +47,10 @@ class AiService
     private string $apiKey;
     private bool $fallbackEnabled;
     private string $moduleSlug;
+
+    /** Opzioni per-chiamata (solo Anthropic): sforzo di ragionamento e timeout curl */
+    private ?string $requestEffort = null;
+    private int $requestTimeout = 120;
 
     public function __construct(?string $moduleSlug = null)
     {
@@ -151,6 +158,10 @@ class AiService
             $this->moduleSlug = $moduleSlug;
         }
 
+        // Le opzioni per-chiamata (effort/timeout) non devono ereditare quelle di complete()
+        $this->requestEffort = null;
+        $this->requestTimeout = 120;
+
         if (!$this->isConfigured()) {
             return ['error' => true, 'message' => 'API Key AI non configurata'];
         }
@@ -216,6 +227,8 @@ class AiService
         $maxTokens = $options['max_tokens'] ?? 4096;
         $model = $options['model'] ?? $this->model;
         $system = $options['system'] ?? null;
+        $this->requestEffort = $options['effort'] ?? null;
+        $this->requestTimeout = (int) ($options['timeout'] ?? 120);
 
         // Calculate content size for cost
         $contentSize = 0;
@@ -421,6 +434,22 @@ class AiService
     }
 
     /**
+     * Body della richiesta Messages API (testabile senza rete).
+     * $effort: low|medium|high|xhigh|max → output_config.effort (modelli Claude 4.6+); null = default del modello.
+     */
+    public static function buildAnthropicPayload(string $model, array $messages, int $maxTokens, ?string $system, ?string $effort): array
+    {
+        $data = ['model' => $model, 'max_tokens' => $maxTokens, 'messages' => $messages];
+        if ($system) {
+            $data['system'] = $system;
+        }
+        if ($effort && in_array($effort, ['low', 'medium', 'high', 'xhigh', 'max'], true)) {
+            $data['output_config'] = ['effort' => $effort];
+        }
+        return $data;
+    }
+
+    /**
      * Call Anthropic Claude API
      */
     private function callAnthropic(string $apiKey, string $model, array $messages, int $maxTokens, ?string $system = null): array
@@ -428,15 +457,7 @@ class AiService
         // Sanitize messages content for valid UTF-8
         $messages = $this->sanitizeMessagesUtf8($messages);
 
-        $data = [
-            'model' => $model,
-            'max_tokens' => $maxTokens,
-            'messages' => $messages,
-        ];
-
-        if ($system) {
-            $data['system'] = $this->sanitizeStringUtf8($system);
-        }
+        $data = self::buildAnthropicPayload($model, $messages, $maxTokens, $system ? $this->sanitizeStringUtf8($system) : null, $this->requestEffort);
 
         $jsonData = json_encode($data, JSON_UNESCAPED_UNICODE);
         if ($jsonData === false) {
@@ -454,7 +475,7 @@ class AiService
                 'x-api-key: ' . $apiKey,
                 'anthropic-version: 2023-06-01',
             ],
-            CURLOPT_TIMEOUT => 120,
+            CURLOPT_TIMEOUT => max(120, $this->requestTimeout),
         ]);
 
         $response = curl_exec($ch);
