@@ -19,13 +19,13 @@ class AiService
      */
     public const MODELS = [
         'anthropic' => [
-            'claude-opus-5-5' => ['name' => 'Claude Opus 5.5', 'input' => 0.004, 'output' => 0.020],
-            'claude-sonnet-5-5' => ['name' => 'Claude Sonnet 5.5', 'input' => 0.002, 'output' => 0.010],
-            'claude-haiku-5-5' => ['name' => 'Claude Haiku 5.5', 'input' => 0.0001, 'output' => 0.0005],
             'claude-sonnet-4-20250514' => ['name' => 'Claude Sonnet 4', 'input' => 0.003, 'output' => 0.015],
             'claude-opus-4-20250514' => ['name' => 'Claude Opus 4', 'input' => 0.015, 'output' => 0.075],
             'claude-3-5-sonnet-20241022' => ['name' => 'Claude 3.5 Sonnet', 'input' => 0.003, 'output' => 0.015],
             'claude-3-5-haiku-20241022' => ['name' => 'Claude 3.5 Haiku', 'input' => 0.0008, 'output' => 0.004],
+            'claude-opus-5-5' => ['name' => 'Claude Opus 5.5', 'input' => 0.004, 'output' => 0.020],
+            'claude-sonnet-5-5' => ['name' => 'Claude Sonnet 5.5', 'input' => 0.002, 'output' => 0.010],
+            'claude-haiku-5-5' => ['name' => 'Claude Haiku 5.5', 'input' => 0.0001, 'output' => 0.0005],
         ],
         'openai' => [
             'gpt-4o' => ['name' => 'GPT-4o', 'input' => 0.005, 'output' => 0.015],
@@ -346,6 +346,8 @@ class AiService
                 if (!empty($fallbackKey)) {
                     try {
                         $fallbackModel = $this->getDefaultModelForProvider($fallbackProvider);
+                        // Il modello di fallback puo' non supportare output_config.effort (400): non propagarlo
+                        $this->requestEffort = null;
                         $result = $this->callProvider($fallbackProvider, $fallbackModel, $messages, $maxTokens, $system);
 
                         $this->logCall(

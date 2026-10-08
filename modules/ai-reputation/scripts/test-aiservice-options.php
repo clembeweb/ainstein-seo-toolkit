@@ -21,4 +21,8 @@ $check('payload con effort', ($p['output_config']['effort'] ?? null) === 'high' 
 $p2 = \Services\AiService::buildAnthropicPayload('claude-sonnet-4-20250514', [['role' => 'user', 'content' => 'ciao']], 4096, null, null);
 $check('payload senza effort e senza system', !isset($p2['output_config']) && !isset($p2['system']));
 
+$check('modello Anthropic di default invariato (primo del listino)', array_key_first(\Services\AiService::MODELS['anthropic']) === 'claude-sonnet-4-20250514');
+$p3 = \Services\AiService::buildAnthropicPayload('claude-opus-5-5', [['role' => 'user', 'content' => 'ciao']], 4096, null, 'ultra');
+$check('effort non valido ignorato', !isset($p3['output_config']));
+
 exit($fail ? 1 : 0);
