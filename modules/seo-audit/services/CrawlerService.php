@@ -134,10 +134,11 @@ class CrawlerService
         // User-Agent (preset o custom)
         if (isset($config['user_agent'])) {
             $userAgentPresets = [
-                'default' => 'SEOToolkit Spider/1.0',
+                'ainstein' => 'Mozilla/5.0 (compatible; AinsteinBot/1.0; +https://ainstein.it)',
+                'default' => 'Mozilla/5.0 (compatible; AinsteinBot/1.0; +https://ainstein.it)',
                 'googlebot' => 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
                 'googlebot-mobile' => 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/W.X.Y.Z Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-                'chrome' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'chrome' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
             ];
             $ua = $config['user_agent'];
             $this->userAgent = $userAgentPresets[$ua] ?? $ua;
@@ -894,12 +895,13 @@ class CrawlerService
             ],
         ]);
 
-        // Accetta qualsiasi risposta 2xx come successo
+        // Accetta qualsiasi risposta 2xx come successo, ma non le pagine-sfida anti-bot (es. SiteGround 202 sgcaptcha)
         $httpCode = $result['http_code'] ?? 0;
-        if (isset($result['error']) || $httpCode < 200 || $httpCode >= 300) {
-            // Retry su errore se configurato
+        $isChallenge = $this->isBotProtectionPage($result['body'] ?? '', $httpCode);
+        if (isset($result['error']) || $httpCode < 200 || $httpCode >= 300 || $isChallenge) {
+            // Retry su errore se configurato (backoff più lungo se è una sfida anti-bot)
             if ($retryCount < $this->maxRetries) {
-                usleep(500000); // 500ms prima del retry
+                usleep($isChallenge ? 2000000 : 500000);
                 return $this->fetchUrlRaw($url, $retryCount + 1);
             }
             return null;
@@ -1050,6 +1052,12 @@ class CrawlerService
         // Sucuri WAF
         if (stripos($html, 'sucuri-firewall') !== false
             || stripos($html, 'Access Denied - Sucuri') !== false) {
+            return true;
+        }
+
+        // SiteGround anti-bot: 202 con meta refresh verso /.well-known/sgcaptcha/
+        if (stripos($html, 'sgcaptcha') !== false
+            || ($httpCode === 202 && strlen($html) < 1000 && stripos($html, 'http-equiv="refresh"') !== false)) {
             return true;
         }
 

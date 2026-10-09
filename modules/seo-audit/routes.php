@@ -516,10 +516,11 @@ Router::post('/seo-audit/api/spider', function () {
 
         // Mappa user-agent presets
         $userAgents = [
-            'default' => 'SEOToolkit Spider/1.0',
+            'ainstein' => 'Mozilla/5.0 (compatible; AinsteinBot/1.0; +https://ainstein.it)',
+            'default' => 'Mozilla/5.0 (compatible; AinsteinBot/1.0; +https://ainstein.it)',
             'googlebot' => 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
             'googlebot-mobile' => 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/W.X.Y.Z Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-            'chrome' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'chrome' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
         ];
         $userAgent = $userAgents[$userAgentSetting] ?? $userAgentSetting;
 

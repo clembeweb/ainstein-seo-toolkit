@@ -17,6 +17,9 @@ return [
         'export_csv' => 0,
         'export_excel' => 0,
 
+        // Scansione SEO Audit: 0.1 cr a pagina (100 pagine = 10 crediti)
+        'crawl_per_page' => 0.1,
+
         // Base (1 cr) - operazioni singole leggere
         'scrape_url' => 1,
         'content_scrape' => 1,

@@ -83,7 +83,7 @@ class ProjectController
         $name = trim($_POST['name'] ?? '');
         $baseUrl = trim($_POST['base_url'] ?? '');
         $crawlMode = $_POST['crawl_mode'] ?? 'both';
-        $maxPages = (int) ($_POST['max_pages'] ?? 500);
+        $maxPages = (int) ($_POST['max_pages'] ?? 100);
 
         // Validazione
         $errors = [];

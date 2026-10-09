@@ -45,7 +45,8 @@ Clemente lo usa per i suoi clienti al posto di SEMrush. Il feedback farà il res
 
 ### Punto 2. Test modulo per modulo (utilità / funzionamento / UI-UX / codice)
 Per ciascuno: lo provo io da browser su un sito vero, riporto "cosa funziona" → "cosa non va" → "cosa facciamo".
-- [ ] 1. SEO Audit
+- [x] 1. SEO Audit — testato 2026-10-09. Fix: crawler si presenta come Chrome 121 (SiteGround blocca Chrome 120/122/131 e i bot sconosciuti dal server), riconosce la pagina-sfida SiteGround (202 sgcaptcha) invece di contarla come pagina, costo 0.1 cr/pagina (era 1), primo audit 100 pagine con ritmo 300ms. Verificato: 21 pagine su ainstein.it, 2.2 crediti. Da rifare a mano: pulsante "Avvia Scansione" e avanzamento live (pannello browser bloccato).
+  - Dopo il post: pagina pubblica del bot + IP fisso per le liste bianche degli hosting (come SemrushBot/AhrefsBot); ainstein.it stesso ha score 47/100 (3 critici, 64 warning): sistemare prima del post.
 - [ ] 2. AI Reputation Radar
 - [ ] 3. AI Content Generator
 - [ ] 4. AI Keyword Research

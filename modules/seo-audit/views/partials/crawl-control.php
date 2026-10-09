@@ -32,18 +32,19 @@ if ($session) {
 // Default config con tutti i parametri spider
 $config = $project['crawl_config'] ? json_decode($project['crawl_config'], true) : [];
 $config = array_merge([
-    'max_pages' => $project['max_pages'] ?? 500,
+    // Primo audit: parte da 100 pagine (Veloce), bastano i 30 crediti iniziali. Poi ricorda l'ultima scelta.
+    'max_pages' => (($project['pages_crawled'] ?? 0) > 0) ? ($project['max_pages'] ?? 100) : 100,
     'max_depth' => 3,
-    'request_delay' => 200,
+    'request_delay' => 300,
     'timeout' => 20,
     'max_retries' => 2,
     'user_agent' => 'chrome',
     'respect_robots' => 1,
     'follow_redirects' => 1,
 ], $config);
-// Forza Chrome come UA default: googlebot viene bloccato dalla maggior parte dei siti
-// L'utente può ancora scegliere googlebot dal dropdown se vuole
-if (($config['user_agent'] ?? '') === 'googlebot') {
+// Default Chrome (121): è l'unico UA che passa i WAF (es. SiteGround) sia da PC che da server.
+// googlebot e il vecchio 'default' vengono riallineati; l'utente può comunque scegliere dal dropdown.
+if (in_array($config['user_agent'] ?? '', ['googlebot', 'default'], true)) {
     $config['user_agent'] = 'chrome';
 }
 
@@ -55,7 +56,7 @@ $presets = [
         'desc' => '100 pagine, profondità 2',
         'max_pages' => 100,
         'max_depth' => 2,
-        'request_delay' => 0,
+        'request_delay' => 300,
     ],
     'bilanciato' => [
         'label' => 'Bilanciato',
@@ -379,9 +380,9 @@ if ($isStopping) {
                     <select name="user_agent" x-model="userAgent"
                             class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
                         <option value="chrome">Chrome Browser (consigliato)</option>
+                        <option value="ainstein">AinsteinBot</option>
                         <option value="googlebot">Googlebot</option>
                         <option value="googlebot-mobile">Googlebot Mobile</option>
-                        <option value="default">SEOToolkit Spider</option>
                     </select>
                 </div>
 
@@ -438,7 +439,7 @@ window.crawlConfigForm = function() {
     return {
         // Preset configurations
         presets: <?= json_encode($presets) ?>,
-        currentPreset: 'bilanciato',
+        currentPreset: '<?= ((int) $config['max_pages'] <= 100) ? 'veloce' : (((int) $config['max_pages'] <= 500) ? 'bilanciato' : 'completo') ?>',
 
         // Form values
         maxPages: <?= $config['max_pages'] ?>,
