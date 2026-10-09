@@ -71,8 +71,8 @@
                 <input id="terms" name="terms" type="checkbox" required
                        class="h-4 w-4 mt-0.5 rounded border-gray-300 text-primary-600 focus:ring-primary-500">
                 <label for="terms" class="ml-2 block text-sm text-gray-900 dark:text-gray-300">
-                    Accetto i <a href="<?= \Core\Router::url('/terms') ?>" class="text-primary-600 hover:text-primary-500" target="_blank">Termini di Servizio</a>
-                    e la <a href="<?= \Core\Router::url('/privacy') ?>" class="text-primary-600 hover:text-primary-500" target="_blank">Privacy Policy</a>
+                    Accetto i <a href="<?= \Core\Router::url('/docs/terms') ?>" class="text-primary-600 hover:text-primary-500" target="_blank">Termini di Servizio</a>
+                    e la <a href="<?= \Core\Router::url('/docs/privacy') ?>" class="text-primary-600 hover:text-primary-500" target="_blank">Privacy Policy</a>
                 </label>
             </div>
 
