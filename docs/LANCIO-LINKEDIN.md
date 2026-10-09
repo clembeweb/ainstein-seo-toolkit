@@ -84,7 +84,9 @@ niente crediti, niente elenco di funzioni da brochure. Serve a lui: fa gioco nel
 lavoro, e per lui "è come far nascere un figlio". Voce in prima persona, storia personale, il prodotto è il figlio,
 non la merce. Il link ci sta solo come "se vi va di vederlo". La v0 qui sotto è BOCCIATA per questo motivo.
 
-**Bozza v1 (dopo la correzione):**
+**Decisione finale 2026-10-09: il post si scrive ALLA FINE di tutto (dopo test e landing), da zero, con Clemente. Le bozze qui sotto non contano: restano solo come memoria di cosa NON fare.**
+
+**Bozza v1 (scartata, da rifare alla fine):**
 
 > Dopo 4 anni ho detto BASTA.
 >
