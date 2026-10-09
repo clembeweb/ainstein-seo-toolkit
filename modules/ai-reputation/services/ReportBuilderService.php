@@ -554,23 +554,29 @@ class ReportBuilderService
     {
         $sources = $this->sources($responses, $analyses);
         $competitors = $this->competitors($analyses);
-        $actions = $this->actions($project, $responses, $analyses, $sources, $engineLabels);
+        // ADR-014: le domande scoperte le raggruppa l'AI (una chiamata); se fallisce, actions() mette una riga per domanda
+        $gapByPrompt = $this->gapQuestions($responses, $analyses, $engineLabels);
+        $gapGroups = $gapByPrompt ? (new GapGroupingService())->group($project, $gapByPrompt, (int) $project['user_id']) : null;
+        $actions = $this->actions($project, $responses, $analyses, $sources, $engineLabels, $gapGroups);
 
         // Fonti e competitor del progetto: ricalcolati da tutti i run (idempotente: rianalizzare non raddoppia)
         $this->rebuildProjectAggregates($projectId);
 
-        // Azioni: si rigenerano, ma lo stato deciso dall'utente (accettata, fatta, scartata) si conserva
+        // Azioni: si rigenerano, ma lo stato deciso dall'utente (accettata, fatta, scartata) E la scheda operativa
+        // gia' generata si conservano, per chiave stabile (actionKey)
+        $keep = ['status', 'channel', 'channel_rationale', 'suggested_outlets', 'brief', 'brief_model', 'brief_generated_at', 'brief_error'];
         $previous = [];
-        foreach (Database::fetchAll("SELECT type, target_url, title, status FROM ar_actions WHERE run_id = ?", [$runId]) as $old) {
-            $previous[$old['type'] . '|' . $old['target_url'] . '|' . $old['title']] = $old['status'];
+        foreach (Database::fetchAll("SELECT type, target_url, title, covered_prompts, " . implode(', ', $keep) . " FROM ar_actions WHERE run_id = ?", [$runId]) as $old) {
+            $previous[self::actionKey($old)] = array_intersect_key($old, array_flip($keep));
         }
         Database::delete('ar_actions', 'run_id = ?', [$runId]);
         foreach ($actions as $a) {
             $a['title'] = mb_substr((string) $a['title'], 0, 500);
             $a['target_url'] = $a['target_url'] !== null ? mb_substr((string) $a['target_url'], 0, 2000) : null;
             $a['target_urls'] = $a['target_urls'] ?? null;
-            $status = $previous[$a['type'] . '|' . $a['target_url'] . '|' . $a['title']] ?? 'proposed';
-            Database::insert('ar_actions', array_merge($a, ['project_id' => $projectId, 'run_id' => $runId, 'status' => $status]));
+            $a['covered_prompts'] = $a['covered_prompts'] ?? null;
+            $kept = $previous[self::actionKey($a)] ?? ['status' => 'proposed'];
+            Database::insert('ar_actions', array_merge($a, $kept, ['project_id' => $projectId, 'run_id' => $runId]));
         }
 
         // Omonimi da confermare (ADR-008): una riga per nota distinta, solo se non già presente
