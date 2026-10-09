@@ -318,7 +318,7 @@ class ReportBuilderService
                     'target_urls' => json_encode(array_keys($pages), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
                     'target_domain' => $domain,
                     'title' => 'Fonte istituzionale: ' . ($n === 1 ? self::siteTitle($domain, $firstTitle) : "{$domain} ({$n} documenti)"),
-                    'rationale' => 'Atto pubblico citato ' . $site['hits'] . ' volt' . ($site['hits'] === 1 ? 'a' : 'e') . ' da ' . implode(', ', array_keys($site['engines']))
+                    'rationale' => 'Atto pubblico citato ' . $site['hits'] . ' volt' . ($site['hits'] === 1 ? 'a' : 'e') . ' da ' . self::engineNames(array_keys($site['engines']))
                         . '. Rimozione di fatto non praticabile: va bilanciato con contenuti che ne diano esito e contesto (vedi contro-contenuto).',
                 ];
                 continue;
@@ -332,7 +332,7 @@ class ReportBuilderService
                     ? 'Fonte negativa: ' . self::siteTitle($domain, $firstTitle)
                     : "Fonte negativa: {$domain} ({$n} pagine)",
                 'rationale' => 'Citat' . ($n === 1 ? 'a' : 'e') . ' ' . $site['hits'] . ' volt' . ($site['hits'] === 1 ? 'a' : 'e')
-                    . ' da ' . implode(', ', array_keys($site['engines']))
+                    . ' da ' . self::engineNames(array_keys($site['engines']))
                     . ' su ' . count($prompts) . ' domand' . (count($prompts) === 1 ? 'a' : 'e') . ' (es. "' . $prompts[0] . '"). '
                     . 'Valutare rimozione, deindicizzazione o aggiornamento delle pagine con il sito.',
             ];
@@ -360,7 +360,7 @@ class ReportBuilderService
                     . implode('", "', $examples) . '"' . ($more > 0 ? " e altre {$more}" : '') . '. '
                     . 'Una sola pagina ben fatta le copre tutte: chi è, cosa fa oggi, i fatti passati con esito e contesto, referenze verificabili'
                     . ($suggested ? ", pubblicata su una testata che le AI già citano ({$suggested})." : '.')
-                    . ' Engine coinvolti: ' . implode(', ', array_keys($engines)) . '.',
+                    . ' AI coinvolte: ' . self::engineNames(array_keys($engines)) . '.',
             ];
             if ($homonym) {
                 $actions[] = [
@@ -391,6 +391,14 @@ class ReportBuilderService
     /**
      * Persiste Source Map, competitor, piano d'azione e omonimi da confermare per un run.
      */
+    /** Nomi leggibili degli engine per i testi del piano ("ChatGPT, Gemini"), mai gli slug tecnici. */
+    public const ENGINE_NAMES = ['openai' => 'ChatGPT', 'gemini' => 'Gemini', 'perplexity' => 'Perplexity', 'anthropic' => 'Claude'];
+
+    public static function engineNames(array $engines): string
+    {
+        return implode(', ', array_map(fn($e) => self::ENGINE_NAMES[$e] ?? ucfirst((string) $e), $engines));
+    }
+
     /**
      * Titolo leggibile per un'azione: sempre il sito davanti; i titoli tecnici dei PDF
      * ("Microsoft Word - 20141025gazb", "023n16t01.pdf", "Copertina definitiva 2018(5mm)") diventano "documento".
