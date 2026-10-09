@@ -74,6 +74,38 @@ Per ciascuno: lo provo io da browser su un sito vero, riporto "cosa funziona" �
 - [ ] Bozza dal pensiero di Clemente + 2-3 screenshot veri
 - [ ] Pubblicazione
 
+## Segnato per dopo (raccolta completa del 2026-10-09)
+
+### Prima del post (piccoli, ma visibili)
+- [ ] ainstein.it stesso: SEO Audit dà score 47/100 (3 critici, 64 warning). Sistemare i critici.
+- [ ] Landing: togliere Content Creator, aggiungere GEO Audit, allineare ai 5 moduli accesi.
+- [ ] Tailwind caricato da CDN (`cdn.tailwindcss.com`) in produzione: warning in console, lento. Build locale del CSS.
+- [ ] Email in produzione (benvenuto, reset password) mai verificate: registrare un account vero e controllare.
+- [ ] Clemente: disattivare in prod AI Content Bulk Creator e AI Google Ads Tools (admin/modules).
+- [ ] Verifiche a mano con Clemente: pulsante "Avvia Scansione" + avanzamento live (SEO Audit); "Avanti" dopo il brief e step "Pubblica" senza WordPress (AI Content).
+
+### Crediti (ragionamento da fare con i numeri veri)
+- Costi API misurati: audit 100 pagine ≈ 0 $; articolo completo ≈ 0,25 $; keyword research ≈ 0,13 $; copertina 0,04 $.
+- In produzione il modulo AI Content ha ancora scraping 12 cr/URL e brief 5 (config dice 1 e 3). Decidere e allineare.
+- 30 crediti iniziali: con i default attuali bastano per 1 audit + 1 articolo + 1 ricerca keyword.
+
+### UX da utente nuovo (non bloccanti)
+- Keyword Research: brief e seed si perdono dopo errore/reload; ricerca precedente in "Error" non riprendibile; gergo ("seed", "clustering", "intent"); docs dicono 5-10 seed, form max 5; stato "Collecting" in inglese.
+- AI Content: step "Pubblica" senza sito WordPress mostra solo "Indietro"; wizard a volte non aggiorna la pagina dopo il brief (verificare con click vero).
+- Modal "Attiva modulo" di Keyword Research: descrizioni in gergo, nessun "consigliato per iniziare".
+- SEO Audit: lo stesso canonical viene segnalato due volte (warning Indicizzabilità + notice Tecnico).
+- Console: una risorsa 404 nella pagina wizard AI Content (da individuare).
+
+### Tecnico
+- Crawler: pagina pubblica del bot + IP fisso per le liste bianche degli hosting (come SemrushBot). SiteGround blocca Chrome 120/122/131 e i bot sconosciuti dal server; dopo molte richieste mette il captcha sull'IP.
+- Link interni automatici (AI Content): 0 inseriti perché il WordPress collegato (SiteGround) ha risposto con la sfida anti-bot. Riprovare dal server e gestire il 202.
+- AiService: quando il primario fallisce e scatta il fallback, il fallimento non viene loggato in ai_logs.
+- config/app.php: modello di default `claude-sonnet-4-20250514` ritirato → mettere `claude-sonnet-5-5`; stesso per gli ambienti locali (Clemente usa opus-5-5 in prod).
+- DataForSEO come riserva SERP automatica per AI Content/Keyword Research (oggi solo Serper → SerpAPI).
+- gpt-image-1-mini in ritiro il 2026-12-01: la copertina usa gpt-image-2, ok; tenere d'occhio prezzi.
+- Google Ads API: Google ritira una versione ogni ~3 mesi (v25 oggi). Controllare `docs/sunset-dates` ogni trimestre o lo stesso 404 tornerà.
+- Architettura Sito e Piano Editoriale (Keyword Research) non testati.
+
 ## Dopo il post (non prima)
 - AI Optimizer e SEO On-Page: completare e accendere
 - Google Ads Analyzer: test OAuth e riaccensione
