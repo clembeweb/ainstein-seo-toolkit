@@ -1,7 +1,7 @@
 <?php
 
 /**
- * SEO Toolkit - Entry Point
+ * Ainstein - Entry Point
  */
 
 // Error reporting (display in dev only)
@@ -9,6 +9,15 @@ error_reporting(E_ALL);
 $isDebug = (getenv('APP_DEBUG') === 'true' || getenv('APP_DEBUG') === '1');
 ini_set('display_errors', $isDebug ? '1' : '0');
 ini_set('log_errors', '1');
+
+// Dominio canonico: www.* -> senza www (301). Evita doppio sito, sessioni divise e OAuth redirect_uri_mismatch.
+$__host = $_SERVER['HTTP_HOST'] ?? '';
+if (PHP_SAPI !== 'cli' && str_starts_with(strtolower($__host), 'www.')) {
+    $__scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    header('Location: ' . $__scheme . '://' . substr($__host, 4) . ($_SERVER['REQUEST_URI'] ?? '/'), true, 301);
+    exit;
+}
+unset($__host);
 
 // Session security
 session_set_cookie_params([
@@ -288,7 +297,7 @@ Router::post('/register', function () {
         error_log('Welcome email failed: ' . $e->getMessage());
     }
 
-    $_SESSION['_flash']['success'] = 'Registrazione completata! Benvenuto in SEO Toolkit.';
+    $_SESSION['_flash']['success'] = 'Registrazione completata! Benvenuto in Ainstein.';
 
     // Check for pending invite token (project sharing)
     if (!empty($_SESSION['invite_token'])) {
@@ -448,6 +457,15 @@ Router::post('/reset-password', function () {
 
 // --- Documentation Routes (Public) ---
 
+// Alias corti pagine legali (usati nel form di registrazione)
+foreach (['terms', 'privacy', 'cookies'] as $__legal) {
+    Router::get('/' . $__legal, function () use ($__legal) {
+        Router::redirect('/docs/' . $__legal);
+        return '';
+    });
+}
+unset($__legal);
+
 Router::get('/docs', function () {
     $content = View::render('docs/index', ['currentPage' => 'index'], null);
 
@@ -474,6 +492,9 @@ Router::get('/docs/{slug}', function (string $slug) {
         'content-creator' => 'Content Creator',
         'credits' => 'Sistema Crediti',
         'faq' => 'FAQ',
+        'privacy' => 'Privacy Policy',
+        'terms' => 'Termini di Servizio',
+        'cookies' => 'Cookie Policy',
     ];
 
     if (!isset($validPages[$slug])) {

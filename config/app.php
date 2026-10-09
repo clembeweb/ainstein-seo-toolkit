@@ -4,7 +4,7 @@
 require_once __DIR__ . '/environment.php';
 
 return [
-    'name' => env('APP_NAME', 'SEO Toolkit'),
+    'name' => env('APP_NAME', 'Ainstein'),
     'url' => env('APP_URL', 'http://localhost/seo-toolkit'),
     'debug' => env('APP_DEBUG', false),
 
@@ -83,7 +83,7 @@ return [
         'port' => env('SMTP_PORT', 587),
         'username' => env('SMTP_USER', ''),
         'password' => env('SMTP_PASS', ''),
-        'from_email' => env('SMTP_FROM_EMAIL', 'noreply@seo-toolkit.local'),
-        'from_name' => env('SMTP_FROM_NAME', 'SEO Toolkit'),
+        'from_email' => env('SMTP_FROM_EMAIL', 'noreply@ainstein.it'),
+        'from_name' => env('SMTP_FROM_NAME', 'Ainstein'),
     ],
 ];
