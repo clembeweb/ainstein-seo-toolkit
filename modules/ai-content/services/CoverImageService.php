@@ -44,7 +44,7 @@ class CoverImageService
 
         $imagePrompt = $promptResult['prompt'];
 
-        // 2. Chiama DALL-E 3
+        // 2. Chiama l'API immagini OpenAI (gpt-image-*; DALL-E 3 ritirato il 2026-05-12)
         $dalleResult = $this->callDallE($imagePrompt);
 
         Database::reconnect();
@@ -54,7 +54,7 @@ class CoverImageService
         }
 
         // 3. Scarica e salva immagine
-        $savePath = $this->saveImage($dalleResult['url'], $articleId);
+        $savePath = $this->saveImage($dalleResult['url'] ?? '', $articleId, $dalleResult['b64'] ?? null);
 
         if (!$savePath) {
             return [
@@ -85,7 +85,7 @@ class CoverImageService
         }
 
         $prompt = <<<PROMPT
-Sei un esperto di image prompting per DALL-E 3. Genera un prompt in inglese per creare un'immagine di copertina per un articolo blog.
+Sei un esperto di image prompting per modelli text-to-image. Genera un prompt in inglese per creare un'immagine di copertina per un articolo blog.
 
 Titolo articolo: {$title}
 Keyword: {$keyword}
@@ -108,7 +108,9 @@ PROMPT;
         $result = $this->aiService->complete($userId, [
             ['role' => 'user', 'content' => $prompt],
         ], [
-            'max_tokens' => 200,
+            // 200 troncava la risposta: con i modelli attuali il ragionamento conta nel tetto
+            'max_tokens' => 1500,
+            'charge_credits' => false, // il chiamante addebita cover_image_generation
         ], 'ai-content');
 
         if (isset($result['error'])) {
@@ -152,13 +154,18 @@ PROMPT;
             ];
         }
 
+        // Modello configurabile dall'admin (default gpt-image-2: DALL-E 3 ritirato il 2026-05-12,
+        // gpt-image-1-mini in ritiro il 2026-12-01). Risposta sempre in base64 per i modelli gpt-image-*.
+        $model = \Core\ModuleLoader::getSetting('ai-content', 'cover_image_model', 'gpt-image-2') ?: 'gpt-image-2';
+        $quality = \Core\ModuleLoader::getSetting('ai-content', 'cover_image_quality', 'medium') ?: 'medium';
         $data = [
-            'model' => 'dall-e-3',
+            'model' => $model,
             'prompt' => $prompt,
             'n' => 1,
-            'size' => '1792x1024',
-            'quality' => 'standard',
-            // 'style' non è più accettato dall'API immagini OpenAI (400 unknown_parameter)
+            'size' => '1536x1024',
+            'quality' => $quality,
+            'output_format' => 'jpeg',
+            'output_compression' => 85,
         ];
 
         $jsonData = json_encode($data, JSON_UNESCAPED_UNICODE);
@@ -208,17 +215,19 @@ PROMPT;
 
         $result = json_decode($response, true);
         $imageUrl = $result['data'][0]['url'] ?? null;
+        $imageB64 = $result['data'][0]['b64_json'] ?? null;
 
-        if (empty($imageUrl)) {
+        if (empty($imageUrl) && empty($imageB64)) {
             return [
                 'success' => false,
-                'error' => 'Risposta DALL-E non contiene URL immagine'
+                'error' => 'Risposta API immagini senza dati immagine'
             ];
         }
 
         return [
             'success' => true,
             'url' => $imageUrl,
+            'b64' => $imageB64,
             'revised_prompt' => $result['data'][0]['revised_prompt'] ?? null,
         ];
     }
@@ -228,7 +237,7 @@ PROMPT;
      *
      * @return string|null Path relativo dell'immagine salvata, o null se errore
      */
-    private function saveImage(string $imageUrl, int $articleId): ?string
+    private function saveImage(string $imageUrl, int $articleId, ?string $base64 = null): ?string
     {
         // Crea directory anno/mese
         $year = date('Y');
@@ -239,7 +248,34 @@ PROMPT;
             mkdir($dir, 0755, true);
         }
 
-        // Download immagine
+        // Immagine in base64 (gpt-image-*): nessun download
+
+        if (!empty($base64)) {
+
+            $imageData = base64_decode($base64, true);
+
+            if (empty($imageData)) {
+
+                return null;
+
+            }
+
+            $filename = $articleId . '_' . time() . '.jpg';
+
+            $fullPath = $dir . '/' . $filename;
+
+            if (file_put_contents($fullPath, $imageData) === false) {
+
+                return null;
+
+            }
+
+            return 'storage/images/covers/' . $year . '/' . $month . '/' . $filename;
+
+        }
+
+
+        // Download immagine da URL (modelli legacy)
         $startTime = microtime(true);
 
         $ch = curl_init($imageUrl);
