@@ -4,6 +4,12 @@
 
 ---
 
+## LAVORO IN CORSO (leggere per primo)
+
+**Lancio di Ainstein su LinkedIn** — file di stato: `docs/LANCIO-LINKEDIN.md` (dove siamo, prossimo passo,
+decisioni sui moduli, costi reali misurati, cose rimandate). Ogni sessione riparte da lì. Un modulo alla volta.
+Metodo di risposta a Clemente: un blocco per messaggio (cosa funziona → "procedi" → cosa non va → "prosegui" → cosa facciamo).
+
 ## CONTESTO PROGETTO
 
 | Aspetto | Dettaglio |
