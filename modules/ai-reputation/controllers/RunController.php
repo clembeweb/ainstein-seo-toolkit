@@ -358,6 +358,8 @@ class RunController
         Database::reconnect();
         $responses = $this->run->responses($runId);
         $analyses = $this->analysis->byRun($runId);
+        // ADR-014: il raggruppamento AI degli articoli dura 20-40 s; la UI mostra "engine · prompt" dell'evento progress
+        $sendEvent('progress', ['run_id' => $runId, 'engine' => 'Piano', 'prompt' => 'Raggruppamento degli articoli…']);
         $built = (new ReportBuilderService())->persist($runId, $projectId, $project, $responses, $analyses, Project::ENGINE_LABELS);
         $this->run->recount($runId);
         $this->run->complete($runId);
