@@ -1,7 +1,7 @@
 # TASKS — AI Reputation Radar
 
 > Stato del lavoro. Aggiornare a ogni sessione: fatto, in corso, prossimo passo.
-> Ultimo aggiornamento: 2026-10-09
+> Ultimo aggiornamento: 2026-10-09 (sera: ADR-014 raggruppamento articoli gap)
 
 ## Dove siamo
 **MVP completo e funzionante in locale.** Flusso: progetto da Global Projects → Profilo (onboarding + conferma
@@ -10,12 +10,14 @@ Engine: ChatGPT (API) + Gemini + Perplexity peso 0,3 (Claude pronto, spento). Ch
 **Run di riferimento per la demo: run 4** (`/ai-reputation/project/1/runs/4`): 138 risposte, rischio Alto 47%,
 5 smentite di Gemini, 15 siti negativi (3 istituzionali), report corto con interventi in cima e schede.
 **Export PDF del piano e "Genera scheda" (Opus 5.5) per intervento: fatti il 2026-10-08** (spec in `docs/superpowers/specs/2026-10-08-ai-reputation-schede-operative-pdf-design.md`, ADR-012/013). **Online su ainstein.it dal 2026-10-09.**
-Branch `claude/ai-reputation-radar-dd9004` = `main` = produzione (ultimo deploy 2026-10-09, commit 85c59c9 + docs).
+**Raggruppamento AI degli articoli gap (ADR-014): fatto il 2026-10-09, solo in locale.** A fine run una chiamata (`brief_model`, ~0,03 $) raggruppa le domande scoperte in pochi articoli veri e mette in sospeso quelle senza fatti confermati (blocco "Da valutare: serve una prova dal cliente", tipo `gap_pending`). Run 4 ricalcolato con `scripts/rebuild-plan.php 4`: 7 righe "Non citato" → 2 articoli + 2 domande in sospeso (hotel di lusso); scheda "è affidabile?" conservata. Spec `docs/superpowers/specs/2026-10-09-ai-reputation-raggruppamento-articoli-gap-design.md`, piano `docs/superpowers/plans/2026-10-09-ai-reputation-raggruppamento-articoli-gap.md`. Migrazione `database/2026-10-09-actions-gap-grouping.sql` applicata in locale, **non ancora in produzione**.
+Branch `claude/ai-reputation-radar-dd9004` avanti rispetto a `main`/produzione (ultimo deploy 2026-10-09, commit 85c59c9 + docs).
 Demo per Gabriele: **in locale** (decisione di Clemente). Prima della call riavviare MySQL pulito da XAMPP e non
 lanciare run in diretta.
 
 ## Prossimo passo (uno solo)
-Prova online del Radar con un progetto di test (Overview → "Come si usa"), incluse "Genera scheda" ed "Esporta PDF". Su ainstein.it mancano ancora le key Gemini e Perplexity in `/admin/settings` (le incolla Clemente). I dati del run 4 restano solo in locale.
+Decidere con Clemente cosa viene prima: (a) deploy del raggruppamento in produzione (`git push`, `git pull` su Contabo, migrazione `2026-10-09-actions-gap-grouping.sql`), oppure (b) revisione del prompt della scheda sul canale (oggi spinge quasi sempre verso le testate esterne; il blog del soggetto riceve solo `own_site_note`): per Marcaccini servono anche schede "blog" per il team interno. Fuori scope dell'ADR-014, da fare su un piano già pulito.
+Passo precedente (ancora valido): prova online del Radar con un progetto di test (Overview → "Come si usa"), incluse "Genera scheda" ed "Esporta PDF". Su ainstein.it mancano ancora le key Gemini e Perplexity in `/admin/settings` (le incolla Clemente). I dati del run 4 restano solo in locale.
 Già provato il 2026-10-09 in locale (progetto fittizio "TEST E2E schede", Studio Bianchi Consulenze): 3 schede Opus 5.5 corrette, "Genera scheda" dal browser ok (1 credito), PDF ok; in produzione: deploy + migrazione applicati, pagine dei moduli 200, test CLI verdi.
 Produzione dal 2026-10-07 su Contabo VPS `184.174.32.213` (Hetzner perso: account disabilitato, DB di produzione perso; DB ricreato dallo schema locale; HTTPS Let's Encrypt fino al 2027-01-05 con rinnovo automatico; dettagli in `docs/DEPLOY.md`). Mail a Hetzner inviata il 2026-10-07: se restituiscono il DB, si reimporta.
 Già fatto: guida "Come si usa" in 4 passi nell'Overview (commit 1e9804d).
@@ -28,7 +30,8 @@ Già fatto: guida "Come si usa" in 4 passi nell'Overview (commit 1e9804d).
 3. Revisione report run 4 con occhio da demo per Gabriele.
 4. Golden Rule 18: guida utente `shared/views/docs/ai-reputation.php` + `docs/data-model.html` + landing
    "Scopri cosa puoi fare" (la guida deve includere la sezione "Schede operative e PDF").
-5. Minori: judge_model registrato anche se AiService usa il fallback; 7 "articoli gap" ancora uno per domanda;
+5. Minori: judge_model registrato anche se AiService usa il fallback; titoli delle rimozioni ricavati dall'URL poco
+   leggibili (es. "liberoquotidiano.it — Ndrangheta dia roma e reggio calabria confiscano beni per 120 mln a imprenditore 2");
    sezioni C (costi/tenuta) e D (prodotto/demo) dell'analisi critica da presentare.
 6. Pulizia: cancellare il worktree `.claude/worktrees/ai-reputation-radar-dd9004/`; nella root del repo
    `public/landing3.php` e `token-form-filled.png` non tracciati, estranei al modulo (da decidere con Clemente).

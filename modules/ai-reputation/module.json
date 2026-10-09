@@ -90,7 +90,7 @@
         "brief_model": {
             "type": "select",
             "label": "Modello per le schede operative",
-            "description": "Modello usato da \"Genera scheda\" (canale, testate, brief). Il judge non cambia.",
+            "description": "Modello usato da \"Genera scheda\" (canale, testate, brief) e dal raggruppamento AI degli articoli a fine run. Il judge non cambia.",
             "default": "claude-opus-5-5",
             "admin_only": true,
             "group": "ai_config",

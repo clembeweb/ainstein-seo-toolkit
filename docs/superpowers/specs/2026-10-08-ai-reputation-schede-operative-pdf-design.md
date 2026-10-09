@@ -150,7 +150,7 @@ Tutto italiano, dark mode, Heroicons; frontend con `response.ok` prima di `respo
 - Errori imprevisti → log (`Logger` esistente) e JSON di errore; mai pagina bianca.
 
 ## 5. Crediti e costi
-- 1 credito a scheda (`cost_action_brief`), scalato solo a scheda salvata; costo API reale nei log AI come oggi (stima 0,02-0,04 $ a scheda con Opus 5.5).
+- 1 credito a scheda (`cost_action_brief`), scalato solo a scheda salvata; costo API reale nei log AI come oggi (misurato il 2026-10-09 su Marcaccini: 0,07-0,08 $ a scheda con Opus 5.5, ~4.200 token in ingresso e ~3.000 in uscita incluso il ragionamento, 30-35 s).
 - L'export PDF è gratuito.
 - Il judge resta sul modello del modulo/globale (riproducibilità tra run). Cambiarlo è una decisione separata.
 

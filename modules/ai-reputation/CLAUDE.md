@@ -2,7 +2,7 @@
 
 > Caricato quando si lavora in questa cartella. Il CLAUDE.md root di Ainstein vale sempre
 > (Golden Rules, pattern, comandi). Questo file aggiunge solo ciò che è specifico del modulo.
-> Ultimo aggiornamento: 2026-10-08
+> Ultimo aggiornamento: 2026-10-09
 
 ## A inizio sessione (sempre)
 1. Leggi `docs/TASKS.md` → di' a Clemente in 2 righe **dove siamo e il prossimo passo**.
@@ -61,7 +61,7 @@ cliente TD, Riccardo Concetti, **non c'entra** con questo progetto).
 |---|---|
 | `docs/brief-2026-10-05.md` | brief di origine, integrale |
 | `docs/design.md` | analisi + architettura + data model (v0.2, validato dai test empirici) |
-| `docs/decisions.md` | ADR-001..013 |
+| `docs/decisions.md` | ADR-001..014 |
 | `docs/roadmap.md` | M0 → M4 |
 | `docs/TASKS.md` | stato e prossimo passo |
 | `docs/test-empirici/` | risultati dei test API |
@@ -75,6 +75,8 @@ cliente TD, Riccardo Concetti, **non c'entra** con questo progetto).
   cancellare con `git worktree remove --force .claude/worktrees/ai-reputation-radar-dd9004`.
 - Il branch Editorial (`feat/editorial-m1`) è intatto (avanzi del 2026-05-14 messi in un commit WIP).
 - MySQL va acceso da XAMPP prima dei test. Gli script in `scripts/` girano con `php` dalla root del repo.
+- Ricalcolare il piano di un run senza rifare il judge (ADR-014): `php modules/ai-reputation/scripts/rebuild-plan.php <runId>`
+  (una chiamata AI, ~0,03 $; stato e schede si conservano). Test senza rete: `scripts/test-*.php`.
 - API key: in DB (`settings`), mai in file. Si incollano dal pannello `/admin/settings` (campi
   OpenAI, Anthropic, Gemini, Perplexity). Mai chiederle in chat, mai inserirle al posto di Clemente.
 - Postazione LaptopoClem (Laragon): si lavora nel worktree `.claude/worktrees/ai-reputation-m0-3-69e6ee` sul branch del modulo; per vedere le modifiche su `http://localhost/seo-toolkit` si lancia `bash modules/ai-reputation/scripts/sync-to-main.sh` dopo il commit (il checkout principale è sul branch Editorial).
