@@ -516,6 +516,7 @@ function researchWizard() {
                     const d = JSON.parse(e.data);
                     this.collectionStatus = 'Errore: ' + d.message;
                     this.collecting = false;
+                    this.collectionFailed = true; // evita che onerror sovrascriva il messaggio con 'Connessione persa'
                     this.eventSource.close();
                 } catch (_) {
                     // Errore nativo SSE (no data), gestito da onerror
@@ -524,7 +525,7 @@ function researchWizard() {
 
             this.eventSource.onerror = () => {
                 this.eventSource.close();
-                if (!this.collectionDone) {
+                if (!this.collectionDone && !this.collectionFailed) {
                     // Se progresso >= 85%, i dati sono probabilmente salvati nel DB - polling fallback
                     if (this.collectionProgress >= 85) {
                         this.collectionStatus = 'Recupero risultati...';

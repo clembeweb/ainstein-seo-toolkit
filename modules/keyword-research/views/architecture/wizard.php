@@ -344,6 +344,7 @@ function architectureWizard() {
                     const d = JSON.parse(e.data);
                     this.collectionStatus = 'Errore: ' + d.message;
                     this.collecting = false;
+                    this.collectionFailed = true; // evita che onerror sovrascriva il messaggio con 'Connessione persa'
                     this.eventSource.close();
                 } catch (_) {
                     // Errore nativo SSE (no data), gestito da onerror
@@ -352,7 +353,7 @@ function architectureWizard() {
 
             this.eventSource.onerror = () => {
                 this.eventSource.close();
-                if (!this.collectionDone) {
+                if (!this.collectionDone && !this.collectionFailed) {
                     if (this.collectionProgress >= 85) {
                         this.collectionStatus = 'Recupero risultati...';
                         this.pollCollectionResults();

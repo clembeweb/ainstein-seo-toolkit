@@ -516,13 +516,14 @@ function editorialWizard() {
                     const d = JSON.parse(e.data);
                     this.collectionStatus = 'Errore: ' + d.message;
                     this.collecting = false;
+                    this.collectionFailed = true; // evita che onerror sovrascriva il messaggio con 'Connessione persa'
                     this.eventSource.close();
                 } catch (_) {}
             });
 
             this.eventSource.onerror = () => {
                 this.eventSource.close();
-                if (!this.collectionDone) {
+                if (!this.collectionDone && !this.collectionFailed) {
                     if (this.collectionProgress >= 70) {
                         this.collectionStatus = 'Recupero risultati...';
                         this.pollCollectionResults();
