@@ -79,7 +79,30 @@ Per ciascuno: lo provo io da browser su un sito vero, riporto "cosa funziona" �
 
 ### Punto 4. Post LinkedIn
 
-**Bozza v0 (2026-10-09 sera, da rivedere lunedì con screenshot veri):**
+**REGOLA (Clemente, 2026-10-09 sera, arrabbiato):** il post NON ha scopo commerciale. Niente "prova gratis",
+niente crediti, niente elenco di funzioni da brochure. Serve a lui: fa gioco nelle nuove candidature e nel cercare
+lavoro, e per lui "è come far nascere un figlio". Voce in prima persona, storia personale, il prodotto è il figlio,
+non la merce. Il link ci sta solo come "se vi va di vederlo". La v0 qui sotto è BOCCIATA per questo motivo.
+
+**Bozza v1 (dopo la correzione):**
+
+> Dopo 4 anni ho detto BASTA.
+>
+> Basta tenerlo nel cassetto perché "non è ancora perfetto". Basta la vocina che dice "ti bruci".
+>
+> Quattro anni fa ho iniziato a costruire una piattaforma SEO con l'AI dentro. L'ho lasciata e ripresa non so quante volte. Ogni volta mi fermavo per perfezionismo, mai per mancanza di idee.
+>
+> Oggi è online. Si chiama Ainstein.
+>
+> L'ho fatta da solo. Nessun team, nessun designer, nessun investitore. Io, vent'anni di SEO e Google Ads, e l'intelligenza artificiale che mi ha dato le mani che non avevo: quelle di chi sa programmare.
+>
+> Non è perfetta. Ha difetti evidentissimi, e me ne frego. Non la pubblico per venderla e non mi aspetto nessun boom. La pubblico perché tenerla nascosta era l'ennesima cosa che non vedeva la luce, e non mi sembrava giusto. Per me è come far nascere un figlio.
+>
+> Se vi va di vederla, è su ainstein.it. Se la provate e vi sembra utile, miglioriamola insieme. Se vi sembra inutile, ditemelo: è il regalo più grande.
+>
+> Questa non è una buona pubblicità per il prodotto. Lo è per me. E oggi preferisco così.
+
+**Bozza v0 (BOCCIATA: troppo commerciale):**
 
 > Dopo 4 anni ho detto BASTA.
 >
