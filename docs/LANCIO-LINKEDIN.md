@@ -78,6 +78,29 @@ Per ciascuno: lo provo io da browser su un sito vero, riporto "cosa funziona" �
 - [ ] Allineare i moduli mostrati a quelli accesi (oggi manca AI Reputation Radar, c'è Content Creator)
 
 ### Punto 4. Post LinkedIn
+
+**Bozza v0 (2026-10-09 sera, da rivedere lunedì con screenshot veri):**
+
+> Dopo 4 anni ho detto BASTA.
+>
+> Basta tenere nel cassetto una cosa perché "non è ancora perfetta".
+>
+> Si chiama Ainstein. È una piattaforma SEO con l'AI dentro: audit del sito, ricerca keyword con i volumi veri di Google, articoli pronti da pubblicare, monitoraggio posizioni. E una cosa che non ho visto altrove: ti dice cosa pensano di te ChatGPT e le altre AI.
+>
+> L'ho fatta da solo. Nessun team IT, nessun designer, nessun investitore. Io, le mie competenze (non pochissime, lo dico con umiltà) e l'AI che mi ha dato le mani che non avevo.
+>
+> Non è perfetta. Lo so. Se cercavo di renderla perfetta finiva come sempre: nell'oblio. Quindi la pubblico così.
+>
+> Me ne frego dei soldi. Me ne frego se è "l'ennesimo tool". Non è l'ennesimo tool: è il MIO.
+>
+> Se lo provi e ti sembra utile, miglioriamolo insieme. Se ti sembra inutile, dimmelo lo stesso: è la cosa più utile che puoi fare per me.
+>
+> Si prova gratis, 30 crediti senza carta: ainstein.it
+>
+> Questa non è una buona pubblicità per il prodotto. Lo è per me. E oggi preferisco così.
+
+Note per la revisione: prima riga sotto i 150 caratteri (resta sopra il taglio "…altro"); "4 anni" viene dal suo testo (lui aveva scritto "2 anni" come esempio di gancio: scegliere); verificare che il GEO Audit sia presentabile prima di citarlo; 2-3 screenshot veri (cluster Stabia Boat Rental, audit, articolo con copertina).
+
 - [ ] Bozza dal pensiero di Clemente + 2-3 screenshot veri
 - [ ] Pubblicazione
 
