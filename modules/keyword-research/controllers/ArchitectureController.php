@@ -419,7 +419,7 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
         }
 
         $aiStart = microtime(true);
-        $aiResult = $ai->analyzeWithSystem($user['id'], $systemPrompt, $userPrompt, 'keyword-research');
+        $aiResult = $ai->analyzeWithSystem($user['id'], $systemPrompt, $userPrompt, 'keyword-research', ['charge_credits' => false]); // addebita il controller, evita il doppio ai_analysis_*
         $aiElapsed = (int) round((microtime(true) - $aiStart) * 1000);
 
         Database::reconnect();

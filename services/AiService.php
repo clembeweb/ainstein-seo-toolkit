@@ -289,13 +289,13 @@ class AiService
      * Analyze with system prompt (convenience method)
      * RETROCOMPATIBLE - Same signature as before
      */
-    public function analyzeWithSystem(int $userId, string $systemPrompt, string $userPrompt, ?string $moduleSlug = null): array
+    public function analyzeWithSystem(int $userId, string $systemPrompt, string $userPrompt, ?string $moduleSlug = null, array $options = []): array
     {
         return $this->complete($userId, [
             ['role' => 'user', 'content' => $userPrompt],
-        ], [
+        ], array_merge($options, [
             'system' => $systemPrompt,
-        ], $moduleSlug);
+        ]), $moduleSlug);
     }
 
     /**

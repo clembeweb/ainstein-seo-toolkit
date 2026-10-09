@@ -508,6 +508,7 @@ class EditorialController
                 ], [
                     'system' => $systemPrompt,
                     'max_tokens' => $maxTokens,
+                    'charge_credits' => false, // addebita il controller (kr_editorial_plan), evita il doppio ai_analysis_*
                 ], 'keyword-research');
                 $aiElapsed += (int) round((microtime(true) - $aiStart2) * 1000);
 
