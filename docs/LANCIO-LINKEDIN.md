@@ -3,8 +3,11 @@
 > File di stato del lancio. Aggiornato: 2026-10-09 sera.
 >
 > **DOVE SIAMO:** testati e sistemati SEO Audit, AI Content Generator, Keyword Research (tutti online).
-> **PROSSIMO PASSO:** 5. SEO Position Tracking (test da utente, in produzione dal Chrome di Clemente).
-> Poi: giro completo da utente nuovo → landing → post. Produzione è al commit `d787ae3`.
+> **PROSSIMO PASSO (lunedì 2026-10-12, deciso da Clemente):** prima si chiude il giro di test
+> (5. SEO Position Tracking da utente in produzione, poi giro completo da utente nuovo), SUBITO DOPO la
+> landing nuova (2-3 h, direttamente nel codice, voce dei pensieri di Clemente, screenshot veri), poi il post.
+> Landing attuale bocciata: promette in generale, dice "7 moduli" e vende Google Ads (spento), non mostra il GEO Audit.
+> Produzione è al commit `d787ae3` (+ docs).
 > **Aperto per Clemente:** su https://ainstein.it/admin/modules premere "Disattiva" su AI Content Bulk Creator e AI Google Ads Tools (a Claude è bloccato).
 > Regola: ogni sessione riparte da qui. Un modulo alla volta. Veloce, non perfetto.
 
