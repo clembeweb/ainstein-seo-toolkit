@@ -327,11 +327,15 @@ class KeywordPlannerService
         $competitionIndex = $metrics['competitionIndex'] ?? null;
         $competitionEnum = $metrics['competition'] ?? 'UNSPECIFIED';
 
+        // L'API restituisce il mese come enum (JANUARY..DECEMBER): (int) dava sempre 0
+        static $monthMap = ['JANUARY' => 1, 'FEBRUARY' => 2, 'MARCH' => 3, 'APRIL' => 4, 'MAY' => 5, 'JUNE' => 6,
+            'JULY' => 7, 'AUGUST' => 8, 'SEPTEMBER' => 9, 'OCTOBER' => 10, 'NOVEMBER' => 11, 'DECEMBER' => 12];
         $monthlySearches = [];
         foreach ($metrics['monthlySearchVolumes'] ?? [] as $mv) {
+            $rawMonth = $mv['month'] ?? 0;
             $monthlySearches[] = [
                 'year' => (int) ($mv['year'] ?? 0),
-                'month' => (int) ($mv['month'] ?? 0),
+                'month' => is_numeric($rawMonth) ? (int) $rawMonth : ($monthMap[strtoupper((string) $rawMonth)] ?? 0),
                 'search_volume' => (int) ($mv['monthlySearches'] ?? 0),
             ];
         }
