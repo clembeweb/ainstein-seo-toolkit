@@ -1,6 +1,11 @@
 # Lancio Ainstein su LinkedIn
 
-> File di stato del lancio. Aggiornato: 2026-10-09.
+> File di stato del lancio. Aggiornato: 2026-10-09 sera.
+>
+> **DOVE SIAMO:** testati e sistemati SEO Audit, AI Content Generator, Keyword Research (tutti online).
+> **PROSSIMO PASSO:** 5. SEO Position Tracking (test da utente, in produzione dal Chrome di Clemente).
+> Poi: giro completo da utente nuovo → landing → post. Produzione è al commit `d787ae3`.
+> **Aperto per Clemente:** su https://ainstein.it/admin/modules premere "Disattiva" su AI Content Bulk Creator e AI Google Ads Tools (a Claude è bloccato).
 > Regola: ogni sessione riparte da qui. Un modulo alla volta. Veloce, non perfetto.
 
 ## Il pensiero di Clemente (2026-10-09, testo originale, non toccare)
