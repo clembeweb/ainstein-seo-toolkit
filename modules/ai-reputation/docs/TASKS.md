@@ -30,6 +30,10 @@ Già fatto: guida "Come si usa" in 4 passi nell'Overview (commit 1e9804d).
 3. Revisione report run 4 con occhio da demo per Gabriele.
 4. Golden Rule 18: guida utente `shared/views/docs/ai-reputation.php` + `docs/data-model.html` + landing
    "Scopri cosa puoi fare" (la guida deve includere la sezione "Schede operative e PDF").
+4b. Scheda: inventario del sito ufficiale nel dossier (home, menu, sitemap via ScraperService: titolo, lunghezza, schema
+   Person, versione EN di ogni pagina), così l'AI scrive "aggiorna /chi-sono/" invece di "pubblica una pagina Chi sono"
+   (caso Marcaccini 2026-10-09: la pagina esisteva già, 207 parole promozionali senza Person/sameAs/EN). Per ora
+   Clemente lo dice a voce al cliente. Da fare insieme alla revisione del prompt del canale.
 5. Minori: judge_model registrato anche se AiService usa il fallback; titoli delle rimozioni ricavati dall'URL poco
    leggibili (es. "liberoquotidiano.it — Ndrangheta dia roma e reggio calabria confiscano beni per 120 mln a imprenditore 2");
    sezioni C (costi/tenuta) e D (prodotto/demo) dell'analisi critica da presentare.
