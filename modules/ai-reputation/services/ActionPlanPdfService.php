@@ -11,7 +11,7 @@ use Mpdf\Output\Destination;
  */
 class ActionPlanPdfService
 {
-    public const TYPE_LABELS = ['removal' => 'Rimozione', 'counter_content' => 'Contro-contenuto', 'gap_article' => 'Articolo gap', 'correction' => 'Correzione'];
+    public const TYPE_LABELS = ['removal' => 'Rimozione', 'counter_content' => 'Contro-contenuto', 'gap_article' => 'Articolo gap', 'correction' => 'Correzione', 'gap_pending' => 'Da valutare'];
     public const STATUS_LABELS = ['proposed' => 'Proposto', 'accepted' => 'Accettato', 'done' => 'Fatto', 'dismissed' => 'Scartato'];
     public const CHANNEL_LABELS = ['own_site' => 'Sito proprietario', 'external' => 'Siti esterni', 'both' => 'Sito proprietario + siti esterni'];
 
@@ -19,11 +19,14 @@ class ActionPlanPdfService
     public function html(array $project, array $run, array $actions, array $metrics): string
     {
         $actions = array_values(array_filter($actions, fn($a) => ($a['status'] ?? 'proposed') !== 'dismissed'));
-        $contents = array_values(array_filter($actions, fn($a) => $a['type'] !== 'removal'));
+        // Le domande in sospeso (gap_pending, ADR-014) hanno una sezione propria e non contano tra i contenuti da pubblicare
+        $contents = array_values(array_filter($actions, fn($a) => !in_array($a['type'], ['removal', 'gap_pending'], true)));
+        $pendings = array_values(array_filter($actions, fn($a) => $a['type'] === 'gap_pending'));
         $removals = array_values(array_filter($actions, fn($a) => $a['type'] === 'removal'));
-        foreach ([&$contents, &$removals] as &$list) {
+        foreach ([&$contents, &$pendings, &$removals] as &$list) {
             foreach ($list as &$a) {
                 $a['pages'] = self::pages($a);
+                $a['covered'] = ReportBuilderService::coveredPrompts($a);
                 $a['brief_data'] = is_string($a['brief'] ?? null) ? (json_decode($a['brief'], true) ?: null) : ($a['brief'] ?? null);
                 $a['outlets'] = is_string($a['suggested_outlets'] ?? null) ? (json_decode($a['suggested_outlets'], true) ?: []) : ($a['suggested_outlets'] ?? []);
             }

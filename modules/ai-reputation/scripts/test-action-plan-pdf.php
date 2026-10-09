@@ -22,6 +22,10 @@ $actions = [
      'brief' => json_encode(['kind' => 'removal', 'recipient' => 'redazione@blog-y.it', 'request' => 'deindex', 'basis' => 'Contenuto diffamatorio', 'pages' => ['https://blog-y.it/p'], 'fallback' => 'Segnalare a Google']),
      'brief_model' => 'claude-opus-5-5', 'brief_generated_at' => '2026-10-08 11:00:00', 'brief_error' => ''],
     ['id' => 3, 'type' => 'gap_article', 'status' => 'dismissed', 'title' => 'SCARTATO: non deve comparire', 'rationale' => '', 'target_url' => null, 'target_urls' => null, 'target_domain' => null, 'channel' => null, 'brief' => null, 'brief_error' => null],
+    ['id' => 6, 'type' => 'gap_article', 'status' => 'proposed', 'title' => 'Il real estate a Roma', 'rationale' => 'Copre 2 domande.', 'target_url' => null, 'target_urls' => null, 'target_domain' => 'wired.it', 'channel' => null, 'brief' => null, 'brief_error' => null,
+     'covered_prompts' => json_encode([['id' => 10, 'text' => 'Chi sono i migliori a Roma?'], ['id' => 11, 'text' => 'Who are the best in Rome?']])],
+    ['id' => 7, 'type' => 'gap_pending', 'status' => 'proposed', 'title' => 'Esperti di hotel di lusso?', 'rationale' => 'Serve una prova dal cliente: un hotel documentato', 'target_url' => null, 'target_urls' => null, 'target_domain' => null, 'channel' => null, 'brief' => null, 'brief_error' => null,
+     'covered_prompts' => json_encode([['id' => 12, 'text' => 'Esperti di hotel di lusso?']])],
 ];
 
 $svc = new \Modules\AiReputation\Services\ActionPlanPdfService();
@@ -29,11 +33,14 @@ $html = $svc->html($project, $run, $actions, $metrics);
 $fail = 0;
 $check = function (string $name, bool $ok) use (&$fail): void { echo ($ok ? 'PASS' : 'FAIL') . " {$name}\n"; if (!$ok) { $fail++; } };
 $check('intestazione con soggetto e rischio', str_contains($html, 'Mario Rossi') && str_contains($html, 'Alto') && str_contains($html, '47%'));
-$check('conteggi', str_contains($html, '2 contenut') && str_contains($html, '2 sit'));
+$check('conteggi (il pending non conta tra i contenuti)', str_contains($html, '3 contenut') && str_contains($html, '2 sit'));
 $check('contenuti prima delle rimozioni', strpos($html, 'Pagina autorevole') < strpos($html, 'Fonte negativa'));
 $check('pagine della rimozione come link', substr_count($html, 'href="https://giornale-x.it/') === 2);
 $check('scartati esclusi', !str_contains($html, 'SCARTATO'));
-$check('scheda non generata', substr_count($html, 'Scheda operativa non generata') === 2);
+$check('scheda non generata (non per il pending)', substr_count($html, 'Scheda operativa non generata') === 3);
+$check('domande coperte elencate', str_contains($html, 'Who are the best in Rome?'));
+$check('sezione Da valutare dopo i contenuti e prima delle rimozioni', strpos($html, 'Da valutare') > strpos($html, 'Il real estate a Roma') && strpos($html, 'Da valutare') < strpos($html, 'Fonte negativa'));
+$check('pending: prova richiesta, nessuna scheda', str_contains($html, 'un hotel documentato') && substr_count($html, 'Esperti di hotel di lusso?') === 1);
 $check('scheda nel pdf: canale e testata', str_contains($html, 'Sito proprietario + siti esterni') && str_contains($html, 'wired.it'));
 $check('scheda nel pdf: brief', str_contains($html, 'Titolo di prova') && str_contains($html, 'p3') && str_contains($html, 'Pagina chi siamo'));
 $check('scheda rimozione: destinatario e richiesta', str_contains($html, 'A chi scrivere') && str_contains($html, 'redazione@blog-y.it') && str_contains($html, 'Deindicizzazione'));
