@@ -19,7 +19,11 @@
 
 > **Secondo pensiero (stesso giorno, "da amico"):** parlando proprio rivolto ad un amico, poi inizio a chiedermi: e ma la parte di gestione, amministrativa, burocratica, e questo e quello e bla bla bla. E allora quello si vedrà dopo e sti cazzi, capito che dico? 2000 problemi che, visto che tanto non lo cagherà nessuno, mi interesseranno poco; poi se faccio il boom, allora sti cazzi. E ma i costi, i piani e mille altri cazzi. L'ennesima piattaforma a crediti? Non è l'ennesima piattaforma, è LA MIA piattaforma! :) Cioè è da 4 anni che provavo a dargli vita in qualche modo e alla fine (grazie all'AI) l'ho messa in piedi da solo, con tutti gli evidentissimi difetti.
 
-Questo testo è la voce del post LinkedIn e del brief per la landing. Tono: onesto, diretto, niente marketing gonfiato.
+> **Terzo pensiero (2026-10-09 sera, "pippe mentali al volo"):** sti cazzi "il lancio del prodotto": eccolo, il lancio del prodotto. Se veramente lo ritenete utile e migliorabile, lo miglioriamo insieme. L'ho fatto da solo: nessun team IT, design e bla bla. Da solo, con le mie (non pochissime, detto con umiltà) competenze. E questo non è una buona pubblicità per il prodotto, sicuramente, ma lo è per me! E in questo momento preferisco così.
+>
+> **Idea per l'apertura del post:** una frase che invogli a cliccare "altro", tipo **"Dopo 2 anni ho detto BASTA!"** (gancio in prima riga, prima del taglio "…altro" di LinkedIn).
+
+Questo testo è la voce del post LinkedIn e del brief per la landing. Tono: onesto, diretto, niente marketing gonfiato. Il post è pubblicità per Clemente prima che per il prodotto: "l'ho fatto da solo, miglioriamolo insieme". Prima riga = gancio ("Dopo 2 anni ho detto BASTA!").
 
 ## Obiettivo
 
