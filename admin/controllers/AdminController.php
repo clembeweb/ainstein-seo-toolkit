@@ -243,10 +243,29 @@ class AdminController
     {
         Middleware::csrf();
 
+        // Chiavi che la pagina impostazioni può creare se mancano in DB (whitelist esplicita).
+        // Prima venivano aggiornate solo le righe già esistenti: su un'installazione dove la riga
+        // non c'era (es. serper_api_key in locale) il valore inserito spariva in silenzio al salvataggio.
+        $creatable = [
+            'site_name', 'free_credits',
+            'ai_provider', 'ai_model', 'ai_fallback_enabled',
+            'anthropic_api_key', 'openai_api_key', 'google_gemini_api_key', 'perplexity_api_key',
+            'serper_api_key', 'serper_api_key_2', 'serp_api_key', 'serp_api_key_2',
+            'dataforseo_login', 'dataforseo_password',
+            'rapidapi_keyword_key', 'keywordseverywhere_api_key',
+            'gsc_client_id', 'gsc_client_secret',
+            'gads_developer_token', 'gads_mcc_customer_id',
+            'kp_enabled', 'kp_daily_limit_global', 'kp_daily_limit_per_user', 'kp_cache_ttl_days',
+            'smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_from_email', 'smtp_from_name',
+            'email_logo_url', 'email_brand_color', 'email_footer_text',
+            'stripe_public_key', 'stripe_secret_key',
+            'cost_ai_analysis_small', 'cost_ai_analysis_medium', 'cost_ai_analysis_large',
+            'cost_scrape_url', 'cost_export_csv', 'cost_export_excel',
+        ];
+
         foreach ($_POST as $key => $value) {
             if ($key === '_csrf_token') continue;
 
-            // Solo aggiornare chiavi già esistenti in DB (whitelist implicita)
             $existing = Database::fetch("SELECT id FROM settings WHERE key_name = ?", [$key]);
 
             if ($existing) {
@@ -256,8 +275,16 @@ class AdminController
                     'key_name = ?',
                     [$key]
                 );
+            } elseif (in_array($key, $creatable, true) && $value !== '') {
+                $isSecret = (bool) preg_match('/(_key|_password|_secret|_token)(_2)?$/', $key);
+                Database::insert('settings', [
+                    'key_name' => $key,
+                    'value' => $value,
+                    'is_secret' => $isSecret ? 1 : 0,
+                    'updated_by' => Auth::id(),
+                ]);
             }
-            // Ignora chiavi non esistenti - previene iniezione di settings arbitrari
+            // Chiavi sconosciute ignorate - previene iniezione di settings arbitrari
         }
 
         Settings::clearCache();
