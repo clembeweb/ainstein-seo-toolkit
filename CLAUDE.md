@@ -56,7 +56,7 @@
 |--------|------|-------------|-------|
 | AI Content Generator | `ai-content` | `aic_` | Completo (reference pattern) |
 | SEO Audit | `seo-audit` | `sa_` | Completo (+ Crawl Budget integrato) |
-| Google Ads Analyzer | `ads-analyzer` | `ga_` | Completo (Google Ads API v18) |
+| Google Ads Analyzer | `ads-analyzer` | `ga_` | Completo (Google Ads API v25) |
 | SEO Tracking | `seo-tracking` | `st_` | Completo |
 | AI Keyword Research | `keyword-research` | `kr_` | Completo |
 | Content Creator | `content-creator` | `cc_` | Completo (4 CMS connectors + image generation) |

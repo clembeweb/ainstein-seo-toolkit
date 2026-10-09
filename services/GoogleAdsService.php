@@ -21,7 +21,7 @@ use Modules\AdsAnalyzer\Models\ApiUsage;
  */
 class GoogleAdsService
 {
-    private const BASE_URL = 'https://googleads.googleapis.com/v20';
+    private const BASE_URL = 'https://googleads.googleapis.com/v25'; // v20 ritirata il 2026-06-10 (404): Google tiene ~4 versioni, controllare docs/sunset-dates
     private const MAX_RETRIES = 3;
     private const RETRY_BASE_DELAY = 1; // secondi
 
