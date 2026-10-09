@@ -1,7 +1,7 @@
 # TASKS — AI Reputation Radar
 
 > Stato del lavoro. Aggiornare a ogni sessione: fatto, in corso, prossimo passo.
-> Ultimo aggiornamento: 2026-10-08
+> Ultimo aggiornamento: 2026-10-09
 
 ## Dove siamo
 **MVP completo e funzionante in locale.** Flusso: progetto da Global Projects → Profilo (onboarding + conferma
@@ -9,13 +9,14 @@ righe) → domande (base / AI / manuali) → "Avvia run" (raccolta + judge + rep
 Engine: ChatGPT (API) + Gemini + Perplexity peso 0,3 (Claude pronto, spento). ChatGPT ripete 3 volte le domande rep.
 **Run di riferimento per la demo: run 4** (`/ai-reputation/project/1/runs/4`): 138 risposte, rischio Alto 47%,
 5 smentite di Gemini, 15 siti negativi (3 istituzionali), report corto con interventi in cima e schede.
-**Export PDF del piano e "Genera scheda" (Opus 5.5) per intervento: fatti il 2026-10-08** (spec in `docs/superpowers/specs/2026-10-08-ai-reputation-schede-operative-pdf-design.md`, ADR-012/013). Non ancora in produzione: vedi Prossimo passo.
-Branch `claude/ai-reputation-radar-dd9004`: `main` è stato portato a questo branch il 2026-10-07 (Radar già online su ainstein.it); i commit del 2026-10-08 (PDF + schede) sono solo sul branch, non ancora in `main` né in produzione.
+**Export PDF del piano e "Genera scheda" (Opus 5.5) per intervento: fatti il 2026-10-08** (spec in `docs/superpowers/specs/2026-10-08-ai-reputation-schede-operative-pdf-design.md`, ADR-012/013). **Online su ainstein.it dal 2026-10-09.**
+Branch `claude/ai-reputation-radar-dd9004` = `main` = produzione (ultimo deploy 2026-10-09, commit 85c59c9 + docs).
 Demo per Gabriele: **in locale** (decisione di Clemente). Prima della call riavviare MySQL pulito da XAMPP e non
 lanciare run in diretta.
 
 ## Prossimo passo (uno solo)
-Prova reale in locale di PDF + schede su un run (es. run 4), poi, **dopo l'ok di Clemente**, merge fast-forward del branch in `main` e push, poi `git pull` + migrazione `2026-10-08-actions-brief.sql` in produzione, poi la prova online del Radar con un progetto di test (Overview → "Come si usa"). I dati del run 4 restano solo in locale.
+Prova online del Radar con un progetto di test (Overview → "Come si usa"), incluse "Genera scheda" ed "Esporta PDF". Su ainstein.it mancano ancora le key Gemini e Perplexity in `/admin/settings` (le incolla Clemente). I dati del run 4 restano solo in locale.
+Già provato il 2026-10-09 in locale (progetto fittizio "TEST E2E schede", Studio Bianchi Consulenze): 3 schede Opus 5.5 corrette, "Genera scheda" dal browser ok (1 credito), PDF ok; in produzione: deploy + migrazione applicati, pagine dei moduli 200, test CLI verdi.
 Produzione dal 2026-10-07 su Contabo VPS `184.174.32.213` (Hetzner perso: account disabilitato, DB di produzione perso; DB ricreato dallo schema locale; HTTPS Let's Encrypt fino al 2027-01-05 con rinnovo automatico; dettagli in `docs/DEPLOY.md`). Mail a Hetzner inviata il 2026-10-07: se restituiscono il DB, si reimporta.
 Già fatto: guida "Come si usa" in 4 passi nell'Overview (commit 1e9804d).
 
