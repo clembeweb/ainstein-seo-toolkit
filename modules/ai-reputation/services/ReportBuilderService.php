@@ -246,7 +246,7 @@ class ReportBuilderService
     /**
      * Piano d'azione (regole deterministiche, design §3.6 + ADR-007). Ritorna righe pronte per ar_actions.
      */
-    public function actions(array $project, array $responses, array $analyses, array $sources, array $engineLabels): array
+    public function actions(array $project, array $responses, array $analyses, array $sources, array $engineLabels, ?array $gapGroups = null): array
     {
         $actions = [];
         $ownDomain = !empty($project['website']) ? EngineCollectorService::domainOf($project['website']) : null;
@@ -263,7 +263,6 @@ class ReportBuilderService
         // 1. removal: ogni URL negativo citato
         $seenUrl = [];
         $repNegative = [];
-        $gapByPrompt = [];
         foreach ($responses as $r) {
             $a = $analyses[(int) $r['id']] ?? null;
             if (!$a) {
@@ -285,14 +284,8 @@ class ReportBuilderService
                 $repNegative[$r['prompt_id']]['engines'][$engine] = true;
                 $repNegative[$r['prompt_id']]['homonym'] = ($repNegative[$r['prompt_id']]['homonym'] ?? false) || $a['is_homonym'] === 'uncertain';
             }
-            if (in_array($r['prompt_cluster'], ['comm', 'comp'], true) && (int) $a['brand_mentioned'] === 0 && !empty($a['competitors'])) {
-                $gapByPrompt[$r['prompt_id']]['prompt'] = $r['prompt_text'];
-                foreach ($a['competitors'] as $name) {
-                    $gapByPrompt[$r['prompt_id']]['competitors'][$name] = true;
-                }
-                $gapByPrompt[$r['prompt_id']]['engines'][$engine] = true;
-            }
         }
+        $gapByPrompt = $this->gapQuestions($responses, $analyses, $engineLabels);
         // Una azione per SITO (non per pagina): chi fa la richiesta di rimozione la fa al sito.
         $bySite = [];
         foreach ($seenUrl as $url => $info) {
@@ -373,24 +366,114 @@ class ReportBuilderService
                 ];
             }
         }
-        // 3. gap_article: domande comm/comp senza menzione ma con competitor
-        foreach ($gapByPrompt as $info) {
-            $names = array_slice(array_keys($info['competitors']), 0, 6);
-            $actions[] = [
-                'type' => 'gap_article',
-                'target_url' => null,
-                'target_domain' => $suggested,
-                'title' => 'Non citato: "' . $info['prompt'] . '"',
-                'rationale' => 'Le AI citano ' . implode(', ', $names) . ' e non il soggetto. Serve un contenuto che posizioni il soggetto su questa domanda'
-                    . ($suggested ? ", su {$suggested} o testata equivalente." : '.'),
-            ];
+        // 3. gap_article: domande comm/comp senza menzione ma con competitor.
+        //    Con $gapGroups (ADR-014) l'AI le ha gia' raggruppate in articoli + domande in sospeso (gap_pending);
+        //    senza (chiamata fallita o non prevista) resta una riga per domanda.
+        $covered = fn(array $list) => json_encode($list, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if ($gapGroups !== null) {
+            foreach ($gapGroups['articles'] as $art) {
+                $qs = [];
+                foreach ($art['questions'] as $pid) {
+                    if (isset($gapByPrompt[$pid])) {
+                        $qs[] = ['id' => (int) $pid, 'text' => $gapByPrompt[$pid]['prompt']];
+                    }
+                }
+                if (!$qs) {
+                    continue;
+                }
+                $texts = array_column($qs, 'text');
+                $examples = array_slice($texts, 0, 3);
+                $more = count($texts) - count($examples);
+                $actions[] = [
+                    'type' => 'gap_article',
+                    'target_url' => null,
+                    'target_domain' => $suggested,
+                    'title' => $art['title'],
+                    'rationale' => $art['why'] . ' Copre ' . count($texts) . ' domand' . (count($texts) === 1 ? 'a' : 'e') . ': "' . implode('", "', $examples) . '"' . ($more > 0 ? " e altre {$more}" : '') . '.',
+                    'covered_prompts' => $covered($qs),
+                ];
+            }
+            foreach ($gapGroups['pending'] as $p) {
+                $pid = (int) $p['prompt_id'];
+                if (!isset($gapByPrompt[$pid])) {
+                    continue;
+                }
+                $actions[] = [
+                    'type' => 'gap_pending',
+                    'target_url' => null,
+                    'target_domain' => null,
+                    'title' => $gapByPrompt[$pid]['prompt'],
+                    'rationale' => 'Serve una prova dal cliente: ' . $p['needed'],
+                    'covered_prompts' => $covered([['id' => $pid, 'text' => $gapByPrompt[$pid]['prompt']]]),
+                ];
+            }
+        } else {
+            foreach ($gapByPrompt as $pid => $info) {
+                $names = array_slice(array_keys($info['competitors']), 0, 6);
+                $actions[] = [
+                    'type' => 'gap_article',
+                    'target_url' => null,
+                    'target_domain' => $suggested,
+                    'title' => 'Non citato: "' . $info['prompt'] . '"',
+                    'rationale' => 'Le AI citano ' . implode(', ', $names) . ' e non il soggetto. Serve un contenuto che posizioni il soggetto su questa domanda'
+                        . ($suggested ? ", su {$suggested} o testata equivalente." : '.'),
+                    'covered_prompts' => $covered([['id' => (int) $pid, 'text' => $info['prompt']]]),
+                ];
+            }
         }
         return $actions;
     }
 
     /**
-     * Persiste Source Map, competitor, piano d'azione e omonimi da confermare per un run.
+     * Domande commerciali/di settore in cui il soggetto non e' citato ma lo sono dei competitor (ADR-014: l'AI le
+     * raggruppa in articoli). prompt_id => ['prompt' => testo, 'competitors' => [nome => true], 'engines' => [label => true]]
      */
+    public function gapQuestions(array $responses, array $analyses, array $engineLabels): array
+    {
+        $gap = [];
+        foreach ($responses as $r) {
+            $a = $analyses[(int) $r['id']] ?? null;
+            if (!$a || !in_array($r['prompt_cluster'], ['comm', 'comp'], true) || (int) $a['brand_mentioned'] !== 0 || empty($a['competitors'])) {
+                continue;
+            }
+            $pid = (int) $r['prompt_id'];
+            $gap[$pid]['prompt'] = $r['prompt_text'];
+            foreach ($a['competitors'] as $name) {
+                $gap[$pid]['competitors'][$name] = true;
+            }
+            $gap[$pid]['engines'][$engineLabels[$r['engine']] ?? $r['engine']] = true;
+        }
+        return $gap;
+    }
+
+    /** Domande coperte da un intervento (colonna covered_prompts, JSON): [['id' => int, 'text' => string], ...]. */
+    public static function coveredPrompts(array $a): array
+    {
+        $raw = $a['covered_prompts'] ?? null;
+        $list = is_string($raw) ? json_decode($raw, true) : $raw;
+        $out = [];
+        foreach ((array) $list as $c) {
+            if (is_array($c) && isset($c['id'])) {
+                $out[] = ['id' => (int) $c['id'], 'text' => (string) ($c['text'] ?? '')];
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Chiave di un intervento tra un ricalcolo e l'altro (conserva stato e scheda): per gli articoli gap e le domande
+     * in sospeso l'insieme delle domande coperte (il titolo lo inventa l'AI e cambia), per gli altri tipo|url|titolo.
+     */
+    public static function actionKey(array $a): string
+    {
+        if (in_array($a['type'] ?? '', ['gap_article', 'gap_pending'], true)) {
+            $ids = array_column(self::coveredPrompts($a), 'id');
+            sort($ids);
+            return $a['type'] . '|' . implode(',', $ids);
+        }
+        return ($a['type'] ?? '') . '|' . ($a['target_url'] ?? '') . '|' . ($a['title'] ?? '');
+    }
+
     /** Nomi leggibili degli engine per i testi del piano ("ChatGPT, Gemini"), mai gli slug tecnici. */
     public const ENGINE_NAMES = ['openai' => 'ChatGPT', 'gemini' => 'Gemini', 'perplexity' => 'Perplexity', 'anthropic' => 'Claude'];
 
