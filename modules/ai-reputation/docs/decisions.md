@@ -218,3 +218,21 @@ incluso). Nel PDF non si stampa il nome del modello.
 **Credito unico**: una scheda costa solo `cost_action_brief` (default 1 credito), scalato dal controller a scheda
 salvata; l'addebito interno di AiService è disattivato per questa chiamata (`charge_credits => false`), quindi non
 c'è doppio addebito. Il costo API reale resta nei log AI.
+
+## ADR-014: Gli "articoli gap" li raggruppa l'AI a fine run; le domande senza fatti restano in sospeso
+
+**Date**: 2026-10-09 · **Status**: Accepted
+
+**Context**: una riga `gap_article` per ogni domanda scoperta (regola fissa) produceva 7 interventi quasi uguali sul
+run 4 e schede operative fotocopia. Due domande (hotel di lusso) non erano sostenute da nessun fatto confermato:
+un brief su quel tema avrebbe inventato competenze.
+
+**Decision**: a fine run, dopo il judge, `GapGroupingService` fa **una sola chiamata** (modello `brief_model`, effort
+`medium`, `charge_credits => false`: il costo, ~0,05 $, è incluso nella run) che raggruppa le domande scoperte in pochi
+articoli (di norma 2-4, tetto 6 nel codice) e mette **in sospeso** quelle che i fatti confermati non sostengono, con
+la prova che servirebbe dal cliente. Le domande in sospeso sono interventi di tipo `gap_pending` (visibili nel report
+e nel PDF, senza "Genera scheda"), non sparite: sono anche le domande da fare al cliente. Le domande coperte stanno in
+`ar_actions.covered_prompts`. Se la chiamata fallisce, il piano torna a una riga per domanda e la run si chiude
+comunque. Al ricalcolo del piano si conservano stato **e scheda**: per `gap_article`/`gap_pending` la chiave è
+l'insieme delle domande coperte (il titolo lo inventa l'AI), per gli altri tipi resta `type|url|titolo`.
+Nessuna impostazione nuova. Spec: `docs/superpowers/specs/2026-10-09-ai-reputation-raggruppamento-articoli-gap-design.md`.
