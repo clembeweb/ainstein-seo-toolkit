@@ -664,6 +664,12 @@ class RunController
             echo json_encode(['success' => false, 'error' => 'Nessuna pagina da contattare per questo intervento']);
             exit;
         }
+        if ($action['type'] === 'gap_pending') {
+            ob_end_clean();
+            http_response_code(422);
+            echo json_encode(['success' => false, 'error' => 'Domanda in sospeso: serve prima una prova dal cliente']);
+            exit;
+        }
         $force = !empty($_POST['force']);
         // Doppio clic: scheda appena generata → ritorna quella senza richiamare l'AI
         if (!$force && !empty($action['brief']) && !empty($action['brief_generated_at']) && strtotime($action['brief_generated_at']) > time() - 120) {

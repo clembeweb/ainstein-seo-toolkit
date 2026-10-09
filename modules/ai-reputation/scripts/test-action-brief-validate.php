@@ -38,6 +38,13 @@ $check('rimozione: pagine fuori target scartate', is_array($r) && $r['brief']['p
 $wrongKind = $good; $wrongKind['brief']['kind'] = 'removal';
 $check('kind incoerente → errore', is_string(S::validate($wrongKind, $content, $ok)));
 
+// Ordine delle domande nel dossier (ADR-014): prima quelle coperte dall'intervento, poi il match sul titolo
+$qs = [['id' => 1, 'text' => 'alfa'], ['id' => 2, 'text' => 'beta'], ['id' => 3, 'text' => 'gamma']];
+$o = S::orderQuestions($qs, 'Titolo AI qualsiasi', [3, 2]);
+$check('orderQuestions: domande coperte per prime', array_column($o, 'id') === [2, 3, 1]);
+$o = S::orderQuestions($qs, 'Non citato: "gamma"');
+$check('orderQuestions: senza ids resta il match sul titolo', array_column($o, 'id') === [3, 1, 2]);
+
 // --- Fix round 1 ---
 $norm = $good; $norm['suggested_outlets'] = ['https://www.wired.it/', 'WIRED.it', 'ilsole24ore.com/'];
 $r = S::validate($norm, $content, $ok);

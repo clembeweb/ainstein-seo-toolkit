@@ -142,12 +142,13 @@ class ActionBriefService
             }
             if ($hit) {
                 $q = &$questions[(int) $r['prompt_id']];
+                $q['id'] = (int) $r['prompt_id'];
                 $q['text'] = $r['prompt_text'];
                 $q['verdicts'][] = $r['engine'] . ': ' . $a['verdict'] . ($a['summary'] ? ' — ' . mb_strimwidth((string) $a['summary'], 0, 200, '…') : '');
                 unset($q);
             }
         }
-        $questions = self::orderQuestions(array_values($questions), (string) ($action['title'] ?? ''));
+        $questions = self::orderQuestions(array_values($questions), (string) ($action['title'] ?? ''), array_column(ReportBuilderService::coveredPrompts($action), 'id'));
         // Fatti del profilo: citabili, omonimi e fatti negativi noti in blocchi separati (le fonti-URL, categoria 'source', non sono fatti)
         $factRows = Database::fetchAll(
             "SELECT category, status, text, corrected_text, source_url FROM ar_profile_facts WHERE project_id = ? AND status IN ('confirmed','corrected') AND category <> 'source' ORDER BY category, sort_order, id",
@@ -244,17 +245,18 @@ class ActionBriefService
     }
 
     /**
-     * Domande collegate: prima quelle il cui testo compare nel titolo dell'intervento
-     * (per gap_article il titolo contiene la domanda tra virgolette), poi le altre; massimo 10.
+     * Domande collegate: prima quelle coperte dall'intervento (covered_prompts, ADR-014) o il cui testo compare nel
+     * titolo (per i gap non raggruppati il titolo contiene la domanda tra virgolette), poi le altre; massimo 10.
      */
-    public static function orderQuestions(array $questions, string $title): array
+    public static function orderQuestions(array $questions, string $title, array $coveredIds = []): array
     {
         $title = mb_strtolower($title);
+        $covered = array_flip(array_map('intval', $coveredIds));
         $first = [];
         $rest = [];
         foreach ($questions as $q) {
             $text = mb_strtolower(trim((string) ($q['text'] ?? '')));
-            if ($text !== '' && $title !== '' && str_contains($title, $text)) {
+            if (isset($covered[(int) ($q['id'] ?? 0)]) || ($text !== '' && $title !== '' && str_contains($title, $text))) {
                 $first[] = $q;
             } else {
                 $rest[] = $q;
