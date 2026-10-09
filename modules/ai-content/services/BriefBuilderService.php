@@ -816,11 +816,11 @@ Fornisci un'analisi strategica in JSON con questa struttura:
 PROMPT;
 
         try {
-            $result = $this->aiService->analyzeWithSystem(
+            // charge_credits=false: il wizard addebita brief_generation, evita il doppio addebito ai_analysis_*
+            $result = $this->aiService->complete(
                 $userId,
-                $systemPrompt,
-                $userPrompt,
-                '',
+                [['role' => 'user', 'content' => $userPrompt]],
+                ['system' => $systemPrompt, 'charge_credits' => false],
                 'ai-content'
             );
 

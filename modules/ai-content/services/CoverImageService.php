@@ -158,7 +158,7 @@ PROMPT;
             'n' => 1,
             'size' => '1792x1024',
             'quality' => 'standard',
-            'style' => 'natural',
+            // 'style' non è più accettato dall'API immagini OpenAI (400 unknown_parameter)
         ];
 
         $jsonData = json_encode($data, JSON_UNESCAPED_UNICODE);

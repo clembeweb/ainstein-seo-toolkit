@@ -57,7 +57,8 @@ class ArticleGeneratorService
         $prompt = $this->buildPrompt($brief, $targetWords);
 
         // Calculate max tokens (roughly 1.3 tokens per word + buffer for formatting)
-        $maxTokens = max(4096, (int) ($targetWords * 1.5) + 1000);
+        // ~2 token per parola in italiano + HTML, titolo e meta: 4096 troncava gli articoli da 1500+ parole
+        $maxTokens = min(16000, max(8192, (int) ($targetWords * 4) + 1500));
 
         // Try generation with retries
         $lastError = null;
@@ -385,6 +386,7 @@ PROMPT;
             ['role' => 'user', 'content' => $prompt],
         ], [
             'max_tokens' => $maxTokens,
+            'charge_credits' => false, // addebita il chiamante (article_generation), evita il doppio addebito ai_analysis_*
         ], 'ai-content');
 
         if (isset($result['error'])) {
@@ -622,7 +624,8 @@ PROMPT;
         $startTime = microtime(true);
 
         $prompt = $this->buildRegeneratePrompt($brief, $existingContent, $instructions, $targetWords);
-        $maxTokens = max(4096, (int) ($targetWords * 1.5) + 1000);
+        // ~2 token per parola in italiano + HTML, titolo e meta: 4096 troncava gli articoli da 1500+ parole
+        $maxTokens = min(16000, max(8192, (int) ($targetWords * 4) + 1500));
 
         $response = $this->callClaudeApi($prompt, $maxTokens);
 
