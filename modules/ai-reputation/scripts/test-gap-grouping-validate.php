@@ -53,4 +53,14 @@ $check('titolo troncato a 500', mb_strlen($r['articles'][0]['title']) === 500);
 // parseJson riusato: fence e testo intorno
 $check('parseJson con fence', \Modules\AiReputation\Services\ActionBriefService::parseJson("ecco:\n```json\n{\"articles\":[]}\n```") === ['articles' => []]);
 
+// Prompt: domande numerate nell'ordine di $gapByPrompt, competitor, fatti, omonimi, niente prompt_id reali
+$gap = [10 => ['prompt' => 'Chi sono i migliori a Roma?', 'competitors' => ['Tizio' => true, 'Caio' => true]], 11 => ['prompt' => 'Who are the best in Rome?', 'competitors' => []]];
+$blocks = ['citable' => ['[bio] Imprenditore immobiliare romano (fonte: profilo confermato dal cliente)'], 'homonyms' => ['Uno sciatore con lo stesso nome'], 'risks' => [], 'sources' => []];
+$p = G::userPrompt(['subject_name' => 'Mario Rossi', 'subject_type' => 'persona', 'city' => 'Roma', 'disambiguation_notes' => ''], $gap, $blocks);
+$check('prompt: domande numerate 1 e 2', str_contains($p, '1. "Chi sono i migliori a Roma?" → citano: Tizio, Caio') && str_contains($p, '2. "Who are the best in Rome?"'));
+$check('prompt: fatti e omonimi', str_contains($p, 'Imprenditore immobiliare romano') && str_contains($p, 'Uno sciatore'));
+$check('prompt: nessun prompt_id reale', !preg_match('/\b1[01]\b/', $p));
+$check('prompt: formato JSON richiesto', str_contains($p, '"articles"') && str_contains($p, '"pending"'));
+$check('system: solo JSON, italiano, niente costi', str_contains(G::systemPrompt(), 'JSON') && str_contains(G::systemPrompt(), 'italiano') && str_contains(G::systemPrompt(), 'costi'));
+
 exit($fail ? 1 : 0);

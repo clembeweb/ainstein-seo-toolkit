@@ -32,6 +32,88 @@ class GapGroupingService
     }
 
     /**
+     * Una chiamata per tutte le domande scoperte del run. $gapByPrompt: prompt_id => ['prompt' => testo, 'competitors' => [nome => true], ...].
+     * Ritorna ['articles' => [...], 'pending' => [...]] con prompt_id reali, oppure null se l'AI fallisce (il chiamante usa una riga per domanda).
+     * charge_credits=false: il costo (~0,05 $) e' incluso nella run, nessun credito a parte.
+     */
+    public function group(array $project, array $gapByPrompt, int $userId): ?array
+    {
+        if (!$gapByPrompt) {
+            return ['articles' => [], 'pending' => []];
+        }
+        $ids = array_map('intval', array_keys($gapByPrompt));
+        $factRows = Database::fetchAll(
+            "SELECT category, status, text, corrected_text, source_url FROM ar_profile_facts WHERE project_id = ? AND status IN ('confirmed','corrected') AND category <> 'source' ORDER BY category, sort_order, id",
+            [(int) $project['id']]
+        );
+        $blocks = ActionBriefService::factBlocks($factRows, false);
+        $options = ['max_tokens' => 4000, 'effort' => 'medium', 'timeout' => 120, 'system' => self::systemPrompt(), 'charge_credits' => false];
+        if ($this->model() !== 'global') {
+            $options['model'] = $this->model();
+        }
+        $log = Logger::channel(self::SLUG);
+        try {
+            $res = $this->ai->complete($userId, [['role' => 'user', 'content' => self::userPrompt($project, $gapByPrompt, $blocks)]], $options, self::SLUG);
+        } catch (\Throwable $e) {
+            Database::reconnect();
+            $log->warning('Raggruppamento gap fallito', ['project_id' => $project['id'], 'error' => $e->getMessage()]);
+            return null;
+        }
+        Database::reconnect();
+        if (!empty($res['error']) || empty($res['success'])) {
+            $log->warning('Raggruppamento gap fallito', ['project_id' => $project['id'], 'error' => (string) ($res['message'] ?? $res['error'] ?? 'Chiamata AI fallita')]);
+            return null;
+        }
+        $data = ActionBriefService::parseJson((string) $res['result']);
+        if ($data === null) {
+            $log->warning('Raggruppamento gap fallito', ['project_id' => $project['id'], 'error' => 'Risposta AI non in formato JSON']);
+            return null;
+        }
+        return self::validate($data, $ids);
+    }
+
+    public static function systemPrompt(): string
+    {
+        return "Sei un consulente senior di contenuti e reputazione digitale. Devi trasformare un elenco di domande in un piano editoriale essenziale.\n"
+            . "Regole assolute:\n"
+            . "- Rispondi SOLO con un oggetto JSON valido, senza testo prima o dopo, senza markdown.\n"
+            . "- Scrivi in italiano.\n"
+            . "- Usa solo i FATTI CONFERMATI DEL PROFILO: non attribuire al soggetto competenze, attività o risultati che non vi compaiono.\n"
+            . "- Non attribuire al soggetto i fatti degli omonimi.\n"
+            . "- Non citare costi, tariffe o prezzi di testate o servizi.\n"
+            . "- Non spiegare come sono stati raccolti i dati né come lavorano le AI.";
+    }
+
+    /** Dossier + compito. Le domande hanno un numero 1..N nell'ordine di $gapByPrompt (mai il prompt_id reale). */
+    public static function userPrompt(array $project, array $gapByPrompt, array $blocks): string
+    {
+        $lines = [];
+        $lines[] = "SOGGETTO: {$project['subject_name']} (" . ($project['subject_type'] ?? 'persona') . (!empty($project['city']) ? ", {$project['city']}" : '') . ')';
+        if (!empty($project['disambiguation_notes'])) {
+            $lines[] = 'NOTE DI DISAMBIGUAZIONE: ' . $project['disambiguation_notes'];
+        }
+        $lines[] = 'FATTI CONFERMATI DEL PROFILO (le uniche competenze e attività attribuibili al soggetto):';
+        $lines[] = !empty($blocks['citable']) ? '- ' . implode("\n- ", array_slice($blocks['citable'], 0, 40)) : '- (nessuno confermato)';
+        if (!empty($blocks['homonyms'])) {
+            $lines[] = 'NON È IL SOGGETTO (omonimi da non confondere): ' . implode('; ', array_slice($blocks['homonyms'], 0, 15));
+        }
+        $lines[] = 'DOMANDE A CUI LE AI RISPONDONO SENZA CITARE IL SOGGETTO (numero. "domanda" → chi citano al suo posto):';
+        $n = 0;
+        foreach ($gapByPrompt as $info) {
+            $n++;
+            $names = array_slice(array_keys((array) ($info['competitors'] ?? [])), 0, 6);
+            $lines[] = "{$n}. \"{$info['prompt']}\"" . ($names ? ' → citano: ' . implode(', ', $names) : '');
+        }
+        $lines[] = '';
+        $lines[] = 'COMPITO: raggruppa le domande per tema in pochi articoli (di norma 2-4, mai più di ' . self::MAX_ARTICLES . '). Lo stesso tema in lingue diverse va nello stesso articolo. Ogni domanda sta in un solo posto.' . "\n"
+            . 'Una domanda va in "pending" se i FATTI CONFERMATI non sostengono una competenza o un\'attività credibile del soggetto su quel tema: indica la prova che servirebbe dal cliente (es. un\'operazione documentata, un incarico, una pubblicazione).' . "\n"
+            . 'Per ogni articolo: titolo concreto (non la domanda ripetuta), perché serve in 1-2 frasi, numeri delle domande coperte.' . "\n"
+            . "Rispondi con questo JSON:\n"
+            . '{"articles":[{"title":"titolo","why":"1-2 frasi","questions":[1,2]}],"pending":[{"question":3,"needed":"quale prova serve"}]}';
+        return implode("\n", $lines);
+    }
+
+    /**
      * Normalizza l'output AI. Pura: testabile senza rete.
      * Nel prompt le domande hanno un numero 1..N; $ids[n-1] e' il prompt_id reale del numero n.
      * Regole: numero inventato o gia' usato → scartato (prima occorrenza vince); articolo senza titolo/perche'/domande
