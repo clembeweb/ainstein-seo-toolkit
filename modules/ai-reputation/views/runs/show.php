@@ -38,8 +38,8 @@ $riskClass = match ($metrics['risk_label']) {
     'Basso' => 'text-emerald-600 dark:text-emerald-400',
     default => 'text-slate-400',
 };
-$actionLabel = ['removal' => 'rimozione', 'counter_content' => 'contro-contenuto', 'gap_article' => 'articolo gap', 'correction' => 'correzione'];
-$actionClass = ['removal' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300', 'counter_content' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300', 'gap_article' => 'bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300', 'correction' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'];
+$actionLabel = ['removal' => 'rimozione', 'counter_content' => 'contro-contenuto', 'gap_article' => 'articolo gap', 'correction' => 'correzione', 'gap_pending' => 'da valutare'];
+$actionClass = ['removal' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300', 'counter_content' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300', 'gap_article' => 'bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300', 'correction' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300', 'gap_pending' => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'];
 $isActive = in_array($run['status'], ['pending', 'running'], true);
 $briefCost = $briefCost ?? 1;
 // Costo scheda per i confirm JS, formattato come nel partial: "1 credito", "1,5 crediti"
@@ -124,7 +124,8 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
     <?php
     // ---- dati per la parte centrale: interventi raggruppati, filtri della griglia ----
     $removals = array_values(array_filter($actions, fn($a) => $a['type'] === 'removal'));
-    $writes = array_values(array_filter($actions, fn($a) => $a['type'] !== 'removal'));
+    $pendings = array_values(array_filter($actions, fn($a) => $a['type'] === 'gap_pending'));
+    $writes = array_values(array_filter($actions, fn($a) => !in_array($a['type'], ['removal', 'gap_pending'], true)));
     $divergentIds = array_flip(array_map(fn($d) => (int) $d['prompt_id'], $metrics['divergent'] ?? []));
     $rowFlags = [];
     foreach ($grid as $pid => $row) {
@@ -153,11 +154,19 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
             </button>
             <div x-show="open" x-cloak class="mt-2 ml-1 pl-3 border-l-2 border-slate-200 dark:border-slate-700 text-xs space-y-1">
                 <p class="text-slate-600 dark:text-slate-300"><?= e((string) $a['rationale']) ?></p>
+                <?php $covered = \Modules\AiReputation\Services\ReportBuilderService::coveredPrompts($a); ?>
+                <?php if (count($covered) > 1): ?>
+                <div><span class="font-medium text-slate-500 dark:text-slate-400">Domande coperte:</span>
+                    <ul class="list-disc ml-4 mt-0.5 text-slate-600 dark:text-slate-300"><?php foreach ($covered as $c): ?><li><?= e($c['text']) ?></li><?php endforeach; ?></ul>
+                </div>
+                <?php endif; ?>
                 <?php foreach (array_slice($urls, 0, 8) as $u): ?>
                 <a href="<?= e($u) ?>" target="_blank" rel="noopener" class="block text-indigo-600 dark:text-indigo-400 hover:underline break-all"><?= e(mb_strimwidth($u, 0, 120, '…')) ?></a>
                 <?php endforeach; ?>
                 <?php if (count($urls) > 8): ?><p class="text-slate-400">+<?= count($urls) - 8 ?> pagine</p><?php endif; ?>
+                <?php if ($a['type'] !== 'gap_pending'): ?>
                 <?= \Core\View::partial('ai-reputation::partials/action-brief', ['a' => $a, 'basePath' => $basePath, 'run' => $run, 'csrf' => $csrf, 'canEdit' => $canEdit, 'briefCost' => $briefCost]) ?>
+                <?php endif; ?>
             </div>
         </li>
         <?php return (string) ob_get_clean();
@@ -180,6 +189,12 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
                     <?php foreach ($writes as $a): ?><?= $actionRow($a) ?><?php endforeach; ?>
                     <?php if (!$writes): ?><li class="px-5 py-3 text-sm text-slate-400">Nessuno</li><?php endif; ?>
                 </ul>
+                <?php if ($pendings): ?>
+                <p class="px-5 pt-4 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Da valutare: serve una prova dal cliente</p>
+                <ul class="divide-y divide-slate-100 dark:divide-slate-700/60">
+                    <?php foreach ($pendings as $a): ?><?= $actionRow($a) ?><?php endforeach; ?>
+                </ul>
+                <?php endif; ?>
             </div>
             <div>
                 <p class="px-5 pt-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Da far rimuovere o aggiornare</p>

@@ -539,7 +539,7 @@ class RunController
         $metrics = $builder->metrics($responses, $analyses, $engines, $project);
         $sources = $builder->sources($responses, $analyses);
         $competitors = $builder->competitors($analyses);
-        $actions = Database::fetchAll("SELECT * FROM ar_actions WHERE run_id = ? ORDER BY FIELD(type, 'removal', 'counter_content', 'gap_article', 'correction'), id", [$runId]);
+        $actions = Database::fetchAll("SELECT * FROM ar_actions WHERE run_id = ? ORDER BY FIELD(type, 'removal', 'counter_content', 'gap_article', 'correction', 'gap_pending'), id", [$runId]);
         $homonyms = Database::fetchAll("SELECT * FROM ar_profile_facts WHERE project_id = ? AND category = 'homonym' AND status = 'proposed' ORDER BY id", [$projectId]);
 
         return View::render('ai-reputation::runs/show', [
@@ -606,7 +606,7 @@ class RunController
         $responses = $this->run->responses($runId);
         $analyses = $this->analysis->byRun($runId);
         $metrics = (new ReportBuilderService())->metrics($responses, $analyses, $run['engines'], $project);
-        $actions = Database::fetchAll("SELECT * FROM ar_actions WHERE run_id = ? ORDER BY FIELD(type, 'removal', 'counter_content', 'gap_article', 'correction'), id", [$runId]);
+        $actions = Database::fetchAll("SELECT * FROM ar_actions WHERE run_id = ? ORDER BY FIELD(type, 'removal', 'counter_content', 'gap_article', 'correction', 'gap_pending'), id", [$runId]);
         try {
             $pdfService = new ActionPlanPdfService();
             $pdf = $pdfService->render($project, $run, $actions, $metrics);
