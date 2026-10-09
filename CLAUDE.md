@@ -388,14 +388,14 @@ Colori bordi modulo: amber(aic), emerald(sa), blue(st), purple(kr), cyan(il), ro
 
 ```bash
 # SSH Produzione (Contabo VPS — dal 2026-10-07; Hetzner dismesso)
-ssh -i ~/.ssh/ainstein_hetzner ainstein@184.174.32.213
+ssh -i ~/.ssh/ainstein_contabo ainstein@184.174.32.213
 cd /var/www/ainstein.it/public_html
 
 # Deploy
 git push origin main          # locale
 git pull origin main          # produzione (da SSH)
 # One-liner deploy da locale:
-ssh -i ~/.ssh/ainstein_hetzner ainstein@184.174.32.213 "cd /var/www/ainstein.it/public_html && git pull origin main"
+ssh -i ~/.ssh/ainstein_contabo ainstein@184.174.32.213 "cd /var/www/ainstein.it/public_html && git pull origin main"
 
 # Verifica sintassi PHP
 php -l path/to/file.php
@@ -408,8 +408,8 @@ mysql -u ainstein -p'Ainstein_DB_2026!Secure' ainstein_seo -e "SHOW TABLES LIKE 
 mysql -u root seo_toolkit -e "SHOW TABLES;"
 
 # Log produzione
-ssh -i ~/.ssh/ainstein_hetzner ainstein@184.174.32.213 "tail -f /var/log/ainstein/cron.log"
-ssh -i ~/.ssh/ainstein_hetzner ainstein@184.174.32.213 "tail -f /var/log/apache2/ainstein-error.log"
+ssh -i ~/.ssh/ainstein_contabo ainstein@184.174.32.213 "tail -f /var/log/ainstein/cron.log"
+ssh -i ~/.ssh/ainstein_contabo ainstein@184.174.32.213 "tail -f /var/log/apache2/ainstein-error.log"
 
 # Test locale
 # URL: http://localhost/seo-toolkit
@@ -436,7 +436,7 @@ ssh -i ~/.ssh/ainstein_hetzner ainstein@184.174.32.213 "tail -f /var/log/apache2
 | Server | Contabo Cloud VPS 4 (4 vCPU, 8 GB, 100 GB), Hub Europe, Ubuntu 24.04 |
 | IP | `184.174.32.213` |
 | Pannello | https://my.contabo.com (cliente 15508547) — reinstall/backup/upgrade |
-| SSH Key | `~/.ssh/ainstein_hetzner` |
+| SSH Key | `~/.ssh/ainstein_contabo` |
 | Utente | `ainstein` (sudo NOPASSWD) |
 | Web root | `/var/www/ainstein.it/public_html` |
 | DocumentRoot | `.../public_html/public` |
