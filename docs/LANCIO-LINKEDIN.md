@@ -8,7 +8,7 @@
 > landing nuova (2-3 h, direttamente nel codice, voce dei pensieri di Clemente, screenshot veri), poi il post.
 > Landing attuale bocciata: promette in generale, dice "7 moduli" e vende Google Ads (spento), non mostra il GEO Audit.
 > Produzione è al commit `d787ae3` (+ docs).
-> **Aperto per Clemente:** su https://ainstein.it/admin/modules premere "Disattiva" su AI Content Bulk Creator e AI Google Ads Tools (a Claude è bloccato).
+> Moduli Google Ads e Content Creator disattivati in produzione da Clemente il 2026-10-09 sera. Accesi: SEO Audit, AI Content, Keyword Research, SEO Tracking, AI Reputation (→ GEO Audit).
 > Regola: ogni sessione riparte da qui. Un modulo alla volta. Veloce, non perfetto.
 
 ## Il pensiero di Clemente (2026-10-09, testo originale, non toccare)
@@ -67,7 +67,7 @@ Per ciascuno: lo provo io da browser su un sito vero, riporto "cosa funziona" �
   - Non testati: Architettura Sito e Piano Editoriale (stesso motore, stesse correzioni applicate).
 - [ ] 5. SEO Position Tracking
 - [ ] Giro completo da utente nuovo: iscrizione → dashboard → prima operazione con 30 crediti → crediti finiti (deve portare ai prezzi, non a un errore)
-- [ ] Spegnere in produzione Google Ads Analyzer e Content Creator (script pronto, da lanciare dal terminale)
+- [x] Spegnere in produzione Google Ads Analyzer e Content Creator (fatto da Clemente, 2026-10-09)
 
 ### Punto 3. Landing (ESSENZIALE, alla fine)
 - [ ] Brief semplice per Claude Design, con il pensiero di Clemente come tono
@@ -84,7 +84,6 @@ Per ciascuno: lo provo io da browser su un sito vero, riporto "cosa funziona" �
 - [ ] Landing: togliere Content Creator, aggiungere GEO Audit, allineare ai 5 moduli accesi.
 - [ ] Tailwind caricato da CDN (`cdn.tailwindcss.com`) in produzione: warning in console, lento. Build locale del CSS.
 - [ ] Email in produzione (benvenuto, reset password) mai verificate: registrare un account vero e controllare.
-- [ ] Clemente: disattivare in prod AI Content Bulk Creator e AI Google Ads Tools (admin/modules).
 - [ ] Verifiche a mano con Clemente: pulsante "Avvia Scansione" + avanzamento live (SEO Audit); "Avanti" dopo il brief e step "Pubblica" senza WordPress (AI Content).
 
 ### Crediti (ragionamento da fare con i numeri veri)
