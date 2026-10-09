@@ -6,9 +6,9 @@
  * DATI TITOLARE: modificare qui una volta sola.
  */
 $legalOwner = [
-    'name'    => 'BeWeb Solution',                 // [DA VERIFICARE] ragione sociale esatta
-    'address' => '[DA COMPILARE: indirizzo sede]', // [DA COMPILARE]
-    'vat'     => '[DA COMPILARE: P.IVA]',          // [DA COMPILARE]
+    'name'    => 'Beweb Agency S.r.l.s.',
+    'address' => 'Via Tommaso Sorrentino 26, 80054 Gragnano (NA)',
+    'vat'     => '09334871218',
     'email'   => 'supporto@ainstein.it',
 ];
 $legalUpdated = '9 ottobre 2026';
