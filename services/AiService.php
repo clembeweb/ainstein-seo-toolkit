@@ -45,6 +45,9 @@ class AiService
     private string $provider;
     private string $model;
     private string $apiKey;
+    /** Tetto token di default: 4096 troncava JSON e articoli con i modelli attuali (il ragionamento conta nel tetto) */
+    private const DEFAULT_MAX_TOKENS = 16000;
+
     private bool $fallbackEnabled;
     private string $moduleSlug;
 
@@ -186,7 +189,7 @@ class AiService
         ];
 
         // Call API with fallback
-        $result = $this->executeWithFallback($userId, $messages, 4096, null, $cost);
+        $result = $this->executeWithFallback($userId, $messages, self::DEFAULT_MAX_TOKENS, null, $cost);
 
         if (isset($result['error'])) {
             return $result;
@@ -224,7 +227,7 @@ class AiService
             return ['error' => true, 'message' => 'API Key AI non configurata'];
         }
 
-        $maxTokens = $options['max_tokens'] ?? 4096;
+        $maxTokens = $options['max_tokens'] ?? self::DEFAULT_MAX_TOKENS;
         $model = $options['model'] ?? $this->model;
         $system = $options['system'] ?? null;
         $this->requestEffort = $options['effort'] ?? null;
@@ -320,6 +323,18 @@ class AiService
         // Attempt 1: Primary provider
         try {
             $result = $this->callProvider($currentProvider, $originalModel, $messages, $maxTokens, $system);
+
+            if (!empty($result['truncated'])) {
+                // Output tagliato dal tetto token: inutilizzabile (JSON/articolo incompleti). Niente fallback
+                // (ripeterebbe lo stesso taglio) e niente addebito: il chiamante riceve un errore chiaro.
+                $this->logCall($userId, $this->moduleSlug, $currentProvider, $originalModel, $requestPayload, $result,
+                    'error', "Risposta troncata al limite di {$maxTokens} token", null, $startTime, 0);
+                return [
+                    'error' => true,
+                    'message' => "Risposta AI troncata (limite di {$maxTokens} token raggiunto). Riduci i dati in input o riprova.",
+                    'truncated' => true,
+                ];
+            }
 
             $this->logCall(
                 $userId,
@@ -542,6 +557,7 @@ class AiService
             'content' => is_array($result) ? self::extractAnthropicText($result) : '',
             'tokens_input' => $result['usage']['input_tokens'] ?? 0,
             'tokens_output' => $result['usage']['output_tokens'] ?? 0,
+            'truncated' => is_array($result) && (($result['stop_reason'] ?? null) === 'max_tokens'),
             'raw_response' => $result,
         ];
     }
@@ -616,6 +632,7 @@ class AiService
             'content' => $result['choices'][0]['message']['content'] ?? '',
             'tokens_input' => $result['usage']['prompt_tokens'] ?? 0,
             'tokens_output' => $result['usage']['completion_tokens'] ?? 0,
+            'truncated' => (($result['choices'][0]['finish_reason'] ?? null) === 'length'),
             'raw_response' => $result,
         ];
     }
