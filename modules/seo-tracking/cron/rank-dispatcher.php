@@ -506,24 +506,48 @@ function getGscPosition(int $projectId, string $keyword): ?float
  */
 function runDispatcher(): void
 {
-    logRankDispatcher("=== RANK DISPATCHER START ===");
-
     // Verifica se il rank auto check e' abilitato (legge da modules.settings)
     $enabled = ModuleLoader::getSetting('seo-tracking', 'rank_auto_enabled', false);
+    $pendingCount = countPendingItems();
+
     if (!$enabled) {
         // Auto check spento: niente popolamento schedulato, ma i job manuali in coda vanno elaborati comunque
-        $pendingCount = countPendingItems();
         if ($pendingCount === 0) {
-            logRankDispatcher("Rank auto check disabilitato, coda vuota");
-            logRankDispatcher("=== RANK DISPATCHER END ===\n");
-            return;
+            return; // Niente da fare: esce in silenzio (il cron gira ogni minuto)
         }
+        logRankDispatcher("=== RANK DISPATCHER START ===");
         logRankDispatcher("Rank auto check disabilitato, ma ci sono {$pendingCount} item in coda (job manuali): processo");
     } else {
+        $scheduledDays = convertDaysPreset(ModuleLoader::getSetting('seo-tracking', 'rank_auto_days', 'mon_thu'));
+        $scheduledTime = ModuleLoader::getSetting('seo-tracking', 'rank_auto_time', '04:00');
+        $isDue = isScheduledDay($scheduledDays) && isScheduledTime($scheduledTime, getLastRunDate());
+
+        if (!$isDue && $pendingCount === 0) {
+            return; // Niente da fare: esce in silenzio (il cron gira ogni minuto)
+        }
+        logRankDispatcher("=== RANK DISPATCHER START ===");
         processScheduledPopulation();
     }
 
     processQueueBatch();
+}
+
+/**
+ * Lock su file: una sola istanza del dispatcher alla volta
+ * (il cron gira ogni minuto, un batch puo' durare fino a 4 minuti)
+ */
+function acquireDispatcherLock()
+{
+    $lockFile = BASE_PATH . '/storage/logs/rank_dispatcher.lock';
+    $dir = dirname($lockFile);
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+    }
+    $handle = fopen($lockFile, 'c');
+    if (!$handle || !flock($handle, LOCK_EX | LOCK_NB)) {
+        return null; // Un'altra istanza sta gia' lavorando
+    }
+    return $handle;
 }
 
 /**
@@ -765,7 +789,12 @@ function processQueueBatch(): void
     logRankDispatcher("=== RANK DISPATCHER END ===\n");
 }
 
-// Esegui
+// Esegui (una sola istanza alla volta)
+$dispatcherLock = acquireDispatcherLock();
+if ($dispatcherLock === null) {
+    exit(0); // Istanza gia' in corso: esce in silenzio
+}
+
 try {
     runDispatcher();
 } catch (\Exception $e) {
