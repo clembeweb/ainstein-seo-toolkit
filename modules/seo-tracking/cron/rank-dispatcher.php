@@ -28,6 +28,7 @@ require_once dirname(__DIR__, 3) . '/cron/bootstrap.php';
 
 use Core\Database;
 use Core\ModuleLoader;
+use Core\Credits;
 use Modules\SeoTracking\Models\Project;
 use Modules\SeoTracking\Models\Keyword;
 use Modules\SeoTracking\Models\RankCheck;
@@ -281,9 +282,10 @@ function populateRankQueue(): array
 function getNextPendingItem(): ?array
 {
     return Database::fetch(
-        "SELECT q.*, q.job_id, p.name as project_name, p.user_id
+        "SELECT q.*, q.job_id, p.name as project_name, p.user_id, j.type AS job_type
          FROM st_rank_queue q
          JOIN st_projects p ON q.project_id = p.id
+         LEFT JOIN st_rank_jobs j ON q.job_id = j.id
          WHERE q.status = 'pending'
          AND q.scheduled_at <= NOW()
          ORDER BY q.scheduled_at ASC, q.created_at ASC
@@ -509,11 +511,26 @@ function runDispatcher(): void
     // Verifica se il rank auto check e' abilitato (legge da modules.settings)
     $enabled = ModuleLoader::getSetting('seo-tracking', 'rank_auto_enabled', false);
     if (!$enabled) {
-        logRankDispatcher("Rank auto check disabilitato");
-        logRankDispatcher("=== RANK DISPATCHER END ===\n");
-        return;
+        // Auto check spento: niente popolamento schedulato, ma i job manuali in coda vanno elaborati comunque
+        $pendingCount = countPendingItems();
+        if ($pendingCount === 0) {
+            logRankDispatcher("Rank auto check disabilitato, coda vuota");
+            logRankDispatcher("=== RANK DISPATCHER END ===\n");
+            return;
+        }
+        logRankDispatcher("Rank auto check disabilitato, ma ci sono {$pendingCount} item in coda (job manuali): processo");
+    } else {
+        processScheduledPopulation();
     }
 
+    processQueueBatch();
+}
+
+/**
+ * Popolamento schedulato della coda (solo se auto check abilitato)
+ */
+function processScheduledPopulation(): void
+{
     // Leggi configurazione schedulazione da module settings
     $daysPreset = ModuleLoader::getSetting('seo-tracking', 'rank_auto_days', 'mon_thu');
     $scheduledDays = convertDaysPreset($daysPreset);
@@ -527,24 +544,20 @@ function runDispatcher(): void
     // Verifica se e' il giorno giusto
     if (!isScheduledDay($scheduledDays)) {
         logRankDispatcher("Oggi non e' un giorno schedulato (" . date('D') . ")");
-        // Processa comunque eventuali item rimasti in coda
+        // Eventuali item rimasti in coda vengono processati da processQueueBatch()
         $pendingCount = countPendingItems();
-        if ($pendingCount === 0) {
-            logRankDispatcher("=== RANK DISPATCHER END ===\n");
-            return;
+        if ($pendingCount > 0) {
+            logRankDispatcher("Ci sono {$pendingCount} item in coda, processo comunque");
         }
-        logRankDispatcher("Ci sono {$pendingCount} item in coda, processo comunque");
     } else {
         // E' un giorno schedulato, verifica orario
         if (!isScheduledTime($scheduledTime, $lastRun)) {
             logRankDispatcher("Non e' ancora l'orario schedulato ({$scheduledTime}) o gia' eseguito oggi");
-            // Processa comunque eventuali item rimasti in coda
+            // Eventuali item rimasti in coda vengono processati da processQueueBatch()
             $pendingCount = countPendingItems();
-            if ($pendingCount === 0) {
-                logRankDispatcher("=== RANK DISPATCHER END ===\n");
-                return;
+            if ($pendingCount > 0) {
+                logRankDispatcher("Ci sono {$pendingCount} item in coda, processo comunque");
             }
-            logRankDispatcher("Ci sono {$pendingCount} item in coda, processo comunque");
         } else {
             // E' il momento giusto per popolare la coda (se vuota)
             $pendingCount = countPendingItems();
@@ -571,7 +584,13 @@ function runDispatcher(): void
             }
         }
     }
+}
 
+/**
+ * Elabora un batch di keyword dalla coda (job manuali e automatici)
+ */
+function processQueueBatch(): void
+{
     // Processa batch di keyword dalla coda (VPS: batch processing)
     $batchSize = 10;
     $processedCount = 0;
@@ -600,7 +619,12 @@ function runDispatcher(): void
         $locationCode = $queueItem['location_code'] ?? 'IT';
         $device = $queueItem['device'] ?? 'mobile';
 
-        logRankDispatcher("Processo keyword [{$processedCount}]: {$keyword} (progetto: {$queueItem['project_name']})");
+        // Job manuale (pulsante "Posizioni"): si paga 1 credito/keyword come promesso nella conferma.
+        // Job automatico schedulato (cron): gratuito.
+        $isManualJob = ($queueItem['job_type'] ?? null) === 'manual';
+        $creditCost = $isManualJob ? Credits::getCost('rank_check', 'seo-tracking', 1) : 0.0;
+
+        logRankDispatcher("Processo keyword [{$processedCount}]: {$keyword} (progetto: {$queueItem['project_name']})" . ($isManualJob ? " [manuale, {$creditCost} cr]" : ''));
 
         // Marca come processing
         Database::update('st_rank_queue', [
@@ -654,9 +678,25 @@ function runDispatcher(): void
                 'gsc_position' => $gscPosition,
                 'position_diff' => $positionDiff,
                 'total_organic_results' => $result['total_organic_results'] ?? null,
-                'credits_used' => 0, // Automatico, gratuito
+                'credits_used' => $creditCost, // 0 se automatico, 1 se job manuale
                 'checked_at' => date('Y-m-d H:i:s'), // Usa timezone PHP (Europe/Rome)
             ]);
+
+            // Addebito crediti per job manuale (crediti verificati all'avvio del job dal controller)
+            if ($creditCost > 0) {
+                Credits::consume($userId, $creditCost, 'rank_check', 'seo-tracking', [
+                    'project_id' => $projectId,
+                    'job_id' => $jobId,
+                    'keyword' => $keyword,
+                    'rank_check_id' => $checkId,
+                ]);
+                if ($jobId) {
+                    Database::query(
+                        "UPDATE st_rank_jobs SET credits_used = credits_used + ? WHERE id = ?",
+                        [$creditCost, $jobId]
+                    );
+                }
+            }
 
             // Aggiorna last_position nella tabella keywords
             if ($result['found'] && $serpPosition !== null && $keywordId) {
