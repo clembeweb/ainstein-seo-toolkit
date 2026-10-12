@@ -1,6 +1,6 @@
 # AINSTEIN - Istruzioni Claude Code
 
-> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-10-07 (Produzione migrata su Contabo VPS)
+> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-10-12 (ordine dei file, cron rank ogni minuto)
 
 ---
 
@@ -149,6 +149,22 @@ Progetti condivisibili tra utenti con 3 ruoli: Owner, Editor, Viewer.
 **Cron**: `cron/admin-report.php` settimanale (Lunedi 8:00) — report piattaforma per admin
 
 ---
+
+## ORDINE DEI FILE (regola dal 2026-10-12)
+
+**Nella root del repo stanno solo**: `CLAUDE.md`, `README.md`, `composer.*`, `.env.example`, `.gitignore`, `.htaccess`, `run-crawl-cli.php`.
+Tutto il resto ha una casa. Se produci X → va in Y:
+
+| Se produci... | Va in... |
+|---|---|
+| Screenshot, HTML salvati, cookie/header di debug, script di prova | `_INBOX/` (poi si smista o si butta) |
+| Vecchie versioni, bozze superate da un finale | `_superati/AAAA-MM-GG-<cosa>/` |
+| Dump SQL | `storage/backups/` (ignorato da git) o fuori dal repo |
+| Chiavi SSH | `~/.ssh/`, MAI nel repo |
+| Documenti di stato e decisioni | `docs/` (lancio: `docs/LANCIO-LINKEDIN.md`) |
+| Docs business riservate | `business/` (fuori git) |
+
+`_INBOX/` e `_superati/` sono ignorati da git. La pulizia del 2026-10-12 (210 file dalla root) sta in `_superati/2026-10-12-pulizia-root/`.
 
 ## STRUTTURA PROGETTO
 

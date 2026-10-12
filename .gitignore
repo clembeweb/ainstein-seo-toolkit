@@ -80,3 +80,8 @@ qa-reviews/screenshots/
 
 # QA test screenshots
 qa-test-*.png
+
+# Ordine dei file (2026-10-12): niente file sciolti nella root
+/_superati/
+/_INBOX/
+/storage/images/covers/
