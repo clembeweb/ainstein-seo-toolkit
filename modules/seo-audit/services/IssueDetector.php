@@ -133,7 +133,7 @@ class IssueDetector
         $statusCode = (int) ($pageData['status_code'] ?? 0);
         if ($statusCode >= 400) {
             $from = trim((string) ($pageData['discovered_from'] ?? ''));
-            $element = "HTTP {$statusCode}" . ($from !== '' ? " — linkata da: {$from}" : '');
+            $element = "HTTP {$statusCode}" . ($from !== '' ? " — linkata da: {$from}" : " — URL trovato in sitemap o da crawl precedente");
             return $this->saveIssues($pageId, [$this->createIssue('broken_internal_link', $element)], $source);
         }
 
@@ -462,7 +462,7 @@ class IssueDetector
         ";
 
         // Query semplificata per ora
-        $allPages = Database::fetchAll("SELECT id, url, links_data FROM sa_pages WHERE project_id = ?", [$this->projectId]);
+        $allPages = Database::fetchAll("SELECT id, url, status_code, links_data FROM sa_pages WHERE project_id = ?", [$this->projectId]);
 
         $linkedUrls = [];
         foreach ($allPages as $page) {
@@ -473,6 +473,17 @@ class IssueDetector
         }
 
         foreach ($allPages as $page) {
+            // Solo pagine reali (2xx): una 404 "orfana" e' gia' segnalata come link rotto
+            $statusCode = (int) ($page['status_code'] ?? 0);
+            if ($statusCode !== 0 && ($statusCode < 200 || $statusCode >= 300)) {
+                continue;
+            }
+            // La homepage non puo' essere orfana (e' il punto di partenza)
+            $path = parse_url($page['url'], PHP_URL_PATH) ?? '/';
+            if ($path === '' || $path === '/') {
+                continue;
+            }
+
             $normalizedUrl = strtolower(rtrim($page['url'], '/'));
             if (!isset($linkedUrls[$normalizedUrl])) {
                 $this->issueModel->create([
