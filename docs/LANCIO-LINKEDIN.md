@@ -147,19 +147,19 @@ Note per la revisione: prima riga sotto i 150 caratteri (resta sopra il taglio "
 - [ ] ainstein.it stesso: SEO Audit dà score 47/100 (3 critici, 64 warning). Sistemare i critici.
 - [ ] Landing: togliere Content Creator, aggiungere GEO Audit, allineare ai 5 moduli accesi.
 - [ ] Tailwind caricato da CDN (`cdn.tailwindcss.com`) in produzione: warning in console, lento. Build locale del CSS.
-- [ ] Email in produzione (benvenuto, reset password) mai verificate: registrare un account vero e controllare.
-- [ ] Verifiche a mano con Clemente: pulsante "Avvia Scansione" + avanzamento live (SEO Audit); "Avanti" dopo il brief e step "Pubblica" senza WordPress (AI Content).
+- [x] Email in produzione: benvenuto arrivata subito (registrazione Luca Test, 2026-10-12). Reset password non provato.
+- [x] Verifiche a mano: "Avvia Scansione" + avanzamento live ok; "Avanti" dopo il brief ok; step "Pubblica" senza WordPress mostra "Configura sito" + "Torna alla dashboard" (tutto verificato 2026-10-12 con click veri).
 
 ### Crediti (ragionamento da fare con i numeri veri)
 - **Principio di Clemente (2026-10-12): gratis tutto ciò che non gli costa niente di vivo, con un limite d'uso.** Candidati: SEO Audit (crawl dal server, 0 $), volumi keyword via Keyword Planner (0 $), rank check via Serper entro i 2.500/mese gratis, sync GSC. A pagamento (crediti): tutto ciò che chiama Claude/OpenAI (brief, articoli, clustering, report AI, copertine). Serve un limite per il gratuito (es. pagine/scansione e scansioni/giorno per il piano Free, keyword tracciate per progetto) perché Serper e il server non sono infiniti. Il costo per pagina dell'audit si imposta da admin (`cost_crawl_per_page`): con 0 la scansione passa senza controlli (fix 4f0a492).
 - Costi API misurati: audit 100 pagine ≈ 0 $; articolo completo ≈ 0,25 $; keyword research ≈ 0,13 $; copertina 0,04 $.
-- In produzione il modulo AI Content ha ancora scraping 12 cr/URL e brief 5 (config dice 1 e 3). Decidere e allineare.
+- ~~In produzione il modulo AI Content ha ancora scraping 12 cr/URL e brief 5~~ → allineato da Clemente il 2026-10-12 a 1 e 3 (quello che le pagine promettono). Con 12/URL un utente nuovo non riusciva a fare nemmeno un articolo.
 - **Decisione Clemente 2026-10-12: 100 crediti gratis ai nuovi iscritti, non 30** (`config/app.php` → `free_credits`, commit del 2026-10-12). Da aggiornare anche su /pricing e landing ("30 crediti/mese"). Con audit a costo 0 e AI Content allineato (3+1/url+3+10+3), 100 crediti = ~4 articoli completi o ~30 ricerche keyword.
 - SEO Tracking: le pagine stimano i volumi a 0,5 cr/kw (0,3 da 10 kw) ma il server addebita 1 cr/kw; rank check 1 cr/kw (ora scalato davvero, fix 2026-10-12). Decidere la cifra e allineare stima e addebito insieme (rimandato da Clemente alla decisione finale sui crediti).
 
 ### UX da utente nuovo (non bloccanti)
 - Keyword Research: brief e seed si perdono dopo errore/reload; ricerca precedente in "Error" non riprendibile; gergo ("seed", "clustering", "intent"); docs dicono 5-10 seed, form max 5; stato "Collecting" in inglese.
-- AI Content: step "Pubblica" senza sito WordPress mostra solo "Indietro"; wizard a volte non aggiorna la pagina dopo il brief (verificare con click vero).
+- ~~AI Content: step "Pubblica" senza sito WordPress mostra solo "Indietro"; wizard non aggiorna dopo il brief~~ → verificato 2026-10-12: entrambi ok.
 - SEO Tracking: tab in inglese (Landscape, Overview, Pages, Tags), doppio filtro "Tutte le posizioni".
 - Dashboard utente: "Articoli da 3 crediti" (reali: 3+1/url+3+10+3), "Audit da 2 crediti" (gratis), manca la card AI Reputation Radar / GEO Audit.
 - AI Content wizard: "Indietro" dallo step Articolo mostra il pannello "Genera articolo" invece dell'articolo esistente (l'articolo c'è, basta ricaricare).
