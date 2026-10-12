@@ -79,6 +79,7 @@ Per ciascuno: lo provo io da browser su un sito vero, riporto "cosa funziona" �
 ### Punto 3. Landing (ESSENZIALE, alla fine)
 - [ ] Brief semplice per Claude Design, con il pensiero di Clemente come tono
 - [ ] Allineare i moduli mostrati a quelli accesi (oggi manca AI Reputation Radar, c'è Content Creator)
+- [ ] Pagina /pricing (2026-10-12): mostra l'header pubblico ("Accedi", "Prova gratis") anche a chi è già loggato, dice "tutti i 7 moduli" ed elenca Google Ads Analyzer e Content Creator (spenti). Allinearla insieme alla landing nuova. Da /pricing ora ci si arriva dal badge crediti e dal toast "Crediti insufficienti" (fix c380a5d).
 
 ### Punto 4. Post LinkedIn
 
