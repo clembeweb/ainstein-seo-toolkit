@@ -143,6 +143,7 @@ Note per la revisione: prima riga sotto i 150 caratteri (resta sopra il taglio "
 - [ ] Verifiche a mano con Clemente: pulsante "Avvia Scansione" + avanzamento live (SEO Audit); "Avanti" dopo il brief e step "Pubblica" senza WordPress (AI Content).
 
 ### Crediti (ragionamento da fare con i numeri veri)
+- **Principio di Clemente (2026-10-12): gratis tutto ciò che non gli costa niente di vivo, con un limite d'uso.** Candidati: SEO Audit (crawl dal server, 0 $), volumi keyword via Keyword Planner (0 $), rank check via Serper entro i 2.500/mese gratis, sync GSC. A pagamento (crediti): tutto ciò che chiama Claude/OpenAI (brief, articoli, clustering, report AI, copertine). Serve un limite per il gratuito (es. pagine/scansione e scansioni/giorno per il piano Free, keyword tracciate per progetto) perché Serper e il server non sono infiniti. Il costo per pagina dell'audit si imposta da admin (`cost_crawl_per_page`): con 0 la scansione passa senza controlli (fix 4f0a492).
 - Costi API misurati: audit 100 pagine ≈ 0 $; articolo completo ≈ 0,25 $; keyword research ≈ 0,13 $; copertina 0,04 $.
 - In produzione il modulo AI Content ha ancora scraping 12 cr/URL e brief 5 (config dice 1 e 3). Decidere e allineare.
 - 30 crediti iniziali: con i default attuali bastano per 1 audit + 1 articolo + 1 ricerca keyword.
