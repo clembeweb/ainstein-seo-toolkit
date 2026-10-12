@@ -22,6 +22,16 @@ class BriefBuilderService
 
     // Stop words to exclude from entity extraction (Italian + English)
     private array $stopWords = [
+        // Residui HTML / entità che sopravvivono allo scraping
+        'nbsp', 'amp', 'quot', 'apos', 'lt', 'gt', 'hellip', 'laquo', 'raquo', 'rsquo', 'lsquo', 'ndash', 'mdash',
+        // Italian: preposizioni articolate e forme comuni
+        'del', 'dello', 'della', 'dei', 'degli', 'delle', 'al', 'allo', 'alla', 'ai', 'agli', 'alle',
+        'dal', 'dallo', 'dalla', 'dai', 'dagli', 'dalle', 'nel', 'nello', 'nella', 'nei', 'negli', 'nelle',
+        'sul', 'sullo', 'sulla', 'sui', 'sugli', 'sulle', 'col', 'coi', 'tra', 'fra', 'ed', 'od', 'dell', 'all', 'nell', 'sull',
+        'può', 'puoi', 'possono', 'viene', 'vengono', 'stato', 'stata', 'essere', 'avere', 'fatto', 'fare',
+        'nostro', 'nostra', 'nostri', 'nostre', 'vostro', 'vostra', 'loro', 'suo', 'sua', 'suoi', 'sue', 'mio', 'mia',
+        'qui', 'qua', 'lì', 'là', 'oggi', 'ieri', 'domani', 'ora', 'adesso', 'poi', 'prima', 'dopo', 'inoltre',
+        'cookie', 'cookies', 'privacy', 'policy', 'menu', 'login', 'email', 'password', 'accedi', 'registrati',
         // Italian
         'il', 'lo', 'la', 'i', 'gli', 'le', 'un', 'uno', 'una', 'di', 'a', 'da', 'in', 'con', 'su', 'per',
         'tra', 'fra', 'che', 'chi', 'cui', 'non', 'come', 'dove', 'quando', 'perché', 'se', 'ma', 'però',
@@ -110,6 +120,22 @@ class BriefBuilderService
             $formattedPaa,
             $userId
         );
+
+        // Se l'AI ha indicato termini chiave e lunghezza, hanno la precedenza sulla conta statistica
+        $aiData = $aiAnalysis['analysis'] ?? [];
+        if (!empty($aiData['key_terms']) && is_array($aiData['key_terms'])) {
+            $aiTerms = array_values(array_unique(array_filter(array_map(
+                fn($t) => is_string($t) ? trim($t) : '',
+                $aiData['key_terms']
+            ))));
+            if (count($aiTerms) >= 5) {
+                $keyEntities['phrases'] = array_map(fn($t) => ['phrase' => $t, 'frequency' => 0], array_slice($aiTerms, 0, 15));
+            }
+        }
+        $aiWordCount = (int) ($aiData['recommended_word_count'] ?? 0);
+        if ($aiWordCount >= 600 && $aiWordCount <= 4000) {
+            $wordCountStats['recommended'] = $aiWordCount;
+        }
 
         return [
             // Core info
@@ -393,6 +419,9 @@ class BriefBuilderService
             return [];
         }
 
+        // Via tag, entità HTML (&nbsp; ecc.), numeri e simboli: prima si contava anche la spazzatura
+        $allText = $this->cleanTextForTerms($allText);
+
         // Tokenize
         $words = preg_split('/[\s\p{P}]+/u', strtolower($allText), -1, PREG_SPLIT_NO_EMPTY);
 
@@ -467,6 +496,22 @@ class BriefBuilderService
     /**
      * Extract frequent bigrams (2-word phrases)
      */
+    /**
+     * Pulisce il testo scrappato prima di contare termini e bigrammi:
+     * tag, entità HTML (&nbsp; &amp; ...), URL, email, numeri e caratteri non alfabetici.
+     */
+    private function cleanTextForTerms(string $text): string
+    {
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = strip_tags($text);
+        $text = str_replace("\u{00A0}", ' ', $text);                       // nbsp decodificato
+        $text = preg_replace('~https?://\S+|www\.\S+~iu', ' ', $text);       // URL
+        $text = preg_replace('~\S+@\S+~u', ' ', $text);                      // email
+        $text = preg_replace('~&[a-z]+;|&#\d+;~i', ' ', $text);              // entità residue
+        $text = preg_replace('~[^\p{L}\s\'’-]+~u', ' ', $text);              // tutto ciò che non è lettera
+        return preg_replace('~\s+~u', ' ', $text) ?? '';
+    }
+
     private function extractBigrams(string $text): array
     {
         $text = strtolower($text);
@@ -810,8 +855,11 @@ Fornisci un'analisi strategica in JSON con questa struttura:
   "winning_title_suggestions": ["Titolo vincente 1", "Titolo vincente 2", "Titolo vincente 3"],
   "recommended_h2_structure": ["H2 consigliato 1", "H2 consigliato 2", "H2 consigliato 3"],
   "key_differentiators": ["Cosa fare diversamente 1", "Cosa fare diversamente 2"],
-  "content_strategy": "Breve strategia (2-3 frasi) per superare i competitor"
+  "content_strategy": "Breve strategia (2-3 frasi) per superare i competitor",
+  "key_terms": ["12-15 termini o espressioni chiave da usare nell'articolo, in italiano, senza parole vuote"],
+  "recommended_word_count": 1800
 }
+Nota: "recommended_word_count" è un numero intero (600-4000) coerente con la content_strategy.
 ```
 PROMPT;
 

@@ -169,6 +169,7 @@ Note per la revisione: prima riga sotto i 150 caratteri (resta sopra il taglio "
 - Architettura Sito e Piano Editoriale (Keyword Research) non testati.
 
 ## Dopo il post (non prima)
+- **AI Content, brief "alla scheda" (richiesta Clemente 2026-10-12):** rifare il brief come il "Genera scheda" di AI Reputation: una sola chiamata AI con dossier in ingresso (SERP, testi fonti, PAA, conteggi), JSON a schema fisso validato (intent, 4 titoli, scaletta H2/H3, termini, lunghezza, gap, angoli, FAQ), effort alto. Oggi il brief è metà statistico (intent/entità contate dal codice) e metà AI. Stima 2-3 h + test perché l'articolo si appoggia al brief. Intanto fatta la pulizia (2026-10-12): entità senza spazzatura HTML, termini e lunghezza suggeriti dall'AI.
 - AI Optimizer e SEO On-Page: completare e accendere
 - Google Ads Analyzer: test OAuth e riaccensione
 - Email in produzione, onboarding, miglioramenti da feedback
