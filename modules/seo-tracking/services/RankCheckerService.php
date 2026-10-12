@@ -187,15 +187,12 @@ class RankCheckerService
                     $this->lastProvider = 'serper';
                     $serperResult['provider'] = 'Serper.dev';
 
-                    // Se trovato, ritorna subito
-                    if ($serperResult['found']) {
-                        return $serperResult;
+                    // Query riuscita: il verdetto di Serper (100 risultati) e' definitivo,
+                    // trovato o non trovato. I fallback servono solo se Serper fallisce davvero.
+                    if (!$serperResult['found']) {
+                        \Core\Logger::channel('api')->info('[RankChecker] Serper.dev: keyword non trovata nelle prime 100 posizioni', ['keyword' => $keyword]);
                     }
-
-                    // Non trovato ma query riuscita
-                    $primaryResult = $serperResult;
-                    \Core\Logger::channel('api')->warning('[RankChecker] Serper.dev: keyword non trovata, provo fallback', ['keyword' => $keyword]);
-                    break; // Query riuscita (anche se non trovato), non serve provare altra chiave
+                    return $serperResult;
                 } catch (\Exception $e) {
                     $lastError = $e->getMessage();
                     $isCreditsError = $this->isCreditsOrRateLimitError($e->getMessage());
@@ -246,15 +243,11 @@ class RankCheckerService
                         'cost' => $dataForSeoResult['cost'] ?? 0,
                     ];
 
-                    // Se trovato, ritorna subito
-                    if ($dfResult['found']) {
-                        return $dfResult;
+                    // Query riuscita: verdetto definitivo (100 risultati), trovato o non trovato
+                    if (!$dfResult['found']) {
+                        \Core\Logger::channel('api')->info('[RankChecker] DataForSEO: keyword non trovata nelle prime 100 posizioni', ['keyword' => $keyword]);
                     }
-
-                    if ($primaryResult === null) {
-                        $primaryResult = $dfResult;
-                    }
-                    \Core\Logger::channel('api')->warning('[RankChecker] DataForSEO: keyword non trovata nelle prime 100 posizioni, provo fallback', ['keyword' => $keyword]);
+                    return $dfResult;
                 } else {
                     $lastError = $dataForSeoResult['error'] ?? 'Unknown DataForSEO error';
                     \Core\Logger::channel('api')->error('[RankChecker] DataForSEO error', ['error' => $lastError]);
