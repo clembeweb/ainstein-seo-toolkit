@@ -1,12 +1,13 @@
 # Lancio Ainstein su LinkedIn
 
-> File di stato del lancio. Aggiornato: 2026-10-12 pomeriggio.
+> File di stato del lancio. Aggiornato: 2026-10-12 sera (tardi).
 >
-> **DOVE SIAMO:** giro di test CHIUSO (2026-10-12 sera): 4 moduli testati e sistemati + giro completo da utente nuovo fatto e sistemato (7 problemi risolti, tutti in produzione).
-> **PROSSIMO PASSO (deciso 2026-10-12 sera, dopo l'analisi di mercato):** 1) giro di test delle 7 funzioni "consigli dell'AI" che ci distinguono e non sono mai state provate: Architettura Sito, Piano Editoriale, Articoli Automatici, Meta Tags, Quick Wins, Page Analyzer, report settimanale AI (spento in prod: accenderlo) — mezza giornata, con Luca Test (serve ricarica crediti da admin) o con l'admin; 2) GEO Audit: rinomina, testi, chiavi Gemini in prod, test; 3) landing con Claude Design (brief 10 righe con la voce di Clemente + logo/colori/4 screenshot veri, una pagina desktop+mobile, poi io la porto in `public/landing4.php` con Tailwind compilato) + /pricing allineato; 4) il post. Materiale per landing e post: sezione "Punti di forza veri" qui sotto.
+> **DOVE SIAMO:** test delle 7 funzioni AI, fatta la prima. **Architettura Sito: FUNZIONA** (Stabia Boat Rental, 5 seed → 200 keyword, 8 pagine in 81 s, 5 crediti scalati, qualità da consulente; screenshot in `_INBOX/2026-10-12-screenshot-architettura-sito-stabia.jpg`). Problema trovato e risolto in prod (commit `39d23b8`): i risultati erano un vicolo cieco (solo "Invia a Content Creator", spento). Ora c'è il ponte **Architettura → Piano Editoriale**: bottone "Crea il piano editoriale", wizard precompilato (tema, target, zona, categorie dalle pagine), l'AI riceve le 8 pagine con la regola "ogni articolo sostiene una pagina con link interno". Etichette in italiano nell'Architettura. **Il ponte NON è ancora provato nel browser** (Chrome ha perso la sessione).
+> **PROSSIMO PASSO (domani):** 1) login admin in Chrome → `https://ainstein.it/keyword-research/project/9/architecture/15` → "Crea il piano editoriale" → provare il Piano Editoriale collegato (seconda delle 7 funzioni); poi Articoli Automatici, Meta Tags, Quick Wins, Page Analyzer, report settimanale AI (spento in prod: accenderlo). 2) GEO Audit. 3) Landing: **la fa Clemente con Claude Design** (brief qui sotto, sezione "Punto 3"), idea del 2026-10-12: landing corta con 5 schede + una pagina dedicata per ogni modulo; io poi la porto in `public/landing4.php`. 4) Post.
+> Da fare quando capita: intent in inglese anche in Research Guidata, Quick Check e Piano Editoriale (`views/research/results.php`, `views/quick-check/index.php`, `views/editorial/results.php`): usare `kr_intent_label()` / `krIntentLabel()`.
 > Decisioni di oggi: audit gratis (costo 0/pagina), 100 crediti ai nuovi iscritti, pulsante "Posizioni" a tutti con addebito, principio "gratis ciò che non costa" (sezione Crediti).
 > Landing attuale bocciata: promette in generale, dice "7 moduli" e vende Google Ads (spento), non mostra il GEO Audit.
-> Produzione è al commit `081f1b6` (+ docs).
+> Produzione è al commit `39d23b8` (+ docs).
 > Moduli Google Ads e Content Creator disattivati in produzione da Clemente il 2026-10-09 sera. Accesi: SEO Audit, AI Content, Keyword Research, SEO Tracking, AI Reputation (→ GEO Audit).
 > Regola: ogni sessione riparte da qui. Un modulo alla volta. Veloce, non perfetto.
 
