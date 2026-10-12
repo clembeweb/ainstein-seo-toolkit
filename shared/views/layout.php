@@ -93,11 +93,11 @@ $_accentShades = \Core\BrandingHelper::generateShades($_brandAccent);
       x-data="{
           darkMode: localStorage.getItem('darkMode') === 'true',
           sidebarOpen: false,
-          toast: { show: false, message: '', type: 'success' }
+          toast: { show: false, message: '', type: 'success', credits: false, timer: null }
       }"
       x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))"
       :class="{ 'dark': darkMode }"
-      @show-toast.window="toast = { show: true, message: $event.detail.message, type: $event.detail.type || 'success' }; setTimeout(() => toast.show = false, 4000)">
+      @show-toast.window="clearTimeout(toast.timer); const _m = String($event.detail.message || ''); const _c = /crediti insufficienti/i.test(_m); toast = { show: true, message: _m, type: $event.detail.type || 'success', credits: _c, timer: setTimeout(() => toast.show = false, _c ? 15000 : 4000) }">
 
     <?php if (isset($user) && $user): ?>
     <div class="min-h-full">
@@ -145,7 +145,8 @@ $_accentShades = \Core\BrandingHelper::generateShades($_brandAccent);
                             $_creditIconClass = 'text-amber-600';
                         }
                         ?>
-                        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg <?= $_creditBgClass ?>">
+                        <a href="<?= url('/pricing') ?>" title="Crediti disponibili. Clicca per vedere i piani e ricaricare"
+                           class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg hover:ring-2 hover:ring-blue-400 transition <?= $_creditBgClass ?>">
                             <?php if ($_userCredits < 10): ?>
                             <svg class="w-4 h-4 <?= $_creditIconClass ?>" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
@@ -156,7 +157,10 @@ $_accentShades = \Core\BrandingHelper::generateShades($_brandAccent);
                             </svg>
                             <?php endif; ?>
                             <span class="text-sm font-semibold <?= $_creditTextClass ?>"><?= number_format($_userCredits, 1) ?></span>
-                        </div>
+                            <?php if ($_userCredits < 10): ?>
+                            <span class="text-xs font-medium underline <?= $_creditTextClass ?>">Ricarica</span>
+                            <?php endif; ?>
+                        </a>
 
                         <!-- Dark mode toggle -->
                         <button @click="darkMode = !darkMode" class="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
@@ -376,8 +380,15 @@ $_accentShades = \Core\BrandingHelper::generateShades($_brandAccent);
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"/>
                     </svg>
                 </template>
-                <p class="text-sm font-medium" :class="toast.type === 'error' ? 'text-red-800 dark:text-red-200' : 'text-slate-900 dark:text-white'" x-text="toast.message"></p>
-                <button @click="toast.show = false" class="ml-auto text-slate-400 hover:text-slate-500">
+                <div class="min-w-0">
+                    <p class="text-sm font-medium" :class="toast.type === 'error' ? 'text-red-800 dark:text-red-200' : 'text-slate-900 dark:text-white'" x-text="toast.message"></p>
+                    <a x-show="toast.credits" href="<?= url('/pricing') ?>"
+                       class="mt-2 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold">
+                        Vedi piani e ricarica
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                    </a>
+                </div>
+                <button @click="toast.show = false" class="ml-auto self-start text-slate-400 hover:text-slate-500">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
