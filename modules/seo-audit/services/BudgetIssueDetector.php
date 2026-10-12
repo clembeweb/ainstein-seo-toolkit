@@ -62,6 +62,7 @@ class BudgetIssueDetector
         $statusCode = (int) ($pageData['status_code'] ?? 0);
         $url = $pageData['url'] ?? '';
         if ($statusCode === 0
+            || $statusCode >= 400 // pagina inesistente: nessun segnale di indicizzabilita' da valutare (il link rotto lo segnala IssueDetector)
             || ($pageData['status'] ?? '') === 'rate_limited'
             || preg_match('#/cdn-cgi/#i', $url)) {
             return 0;
@@ -454,7 +455,7 @@ class BudgetIssueDetector
         $duplicates = Database::fetchAll(
             "SELECT title, GROUP_CONCAT(url SEPARATOR '|||') as urls, COUNT(*) as cnt
              FROM sa_pages
-             WHERE project_id = ? AND title IS NOT NULL AND title != '' {$sessionFilter}
+             WHERE project_id = ? AND title IS NOT NULL AND title != '' AND (status_code IS NULL OR status_code < 300) {$sessionFilter}
              GROUP BY title
              HAVING cnt > 1
              ORDER BY cnt DESC",

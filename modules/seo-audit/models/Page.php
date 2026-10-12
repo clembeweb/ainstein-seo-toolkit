@@ -305,7 +305,7 @@ class Page
         $sql = "
             SELECT title, GROUP_CONCAT(url SEPARATOR '|||') as urls, COUNT(*) as count
             FROM {$this->table}
-            WHERE project_id = ? AND title IS NOT NULL AND title != ''
+            WHERE project_id = ? AND title IS NOT NULL AND title != '' AND (status_code IS NULL OR status_code < 300)
             GROUP BY title
             HAVING count > 1
             ORDER BY count DESC
@@ -329,7 +329,7 @@ class Page
         $sql = "
             SELECT meta_description, GROUP_CONCAT(url SEPARATOR '|||') as urls, COUNT(*) as count
             FROM {$this->table}
-            WHERE project_id = ? AND meta_description IS NOT NULL AND meta_description != ''
+            WHERE project_id = ? AND meta_description IS NOT NULL AND meta_description != '' AND (status_code IS NULL OR status_code < 300)
             GROUP BY meta_description
             HAVING count > 1
             ORDER BY count DESC

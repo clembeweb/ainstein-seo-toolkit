@@ -126,8 +126,18 @@ class IssueDetector
             return 0;
         }
 
-        $issues = $this->analyzePage($pageData);
         $source = ($pageData['source'] ?? 'crawl') === 'wordpress' ? 'wordpress' : 'crawler';
+
+        // Pagina 4xx/5xx: non esiste, meta/canonical/heading non contano.
+        // L'unico problema vero e' il link interno che ci porta (categoria Link).
+        $statusCode = (int) ($pageData['status_code'] ?? 0);
+        if ($statusCode >= 400) {
+            $from = trim((string) ($pageData['discovered_from'] ?? ''));
+            $element = "HTTP {$statusCode}" . ($from !== '' ? " — linkata da: {$from}" : '');
+            return $this->saveIssues($pageId, [$this->createIssue('broken_internal_link', $element)], $source);
+        }
+
+        $issues = $this->analyzePage($pageData);
         return $this->saveIssues($pageId, $issues, $source);
     }
 
