@@ -3,7 +3,7 @@
 > File di stato del lancio. Aggiornato: 2026-10-12 pomeriggio.
 >
 > **DOVE SIAMO:** giro di test CHIUSO (2026-10-12 sera): 4 moduli testati e sistemati + giro completo da utente nuovo fatto e sistemato (7 problemi risolti, tutti in produzione).
-> **PROSSIMO PASSO:** la landing nuova (2-3 h, direttamente nel codice, voce dei pensieri di Clemente, screenshot veri) + allineare /pricing. Poi il post.
+> **PROSSIMO PASSO (deciso 2026-10-12 sera, dopo l'analisi di mercato):** 1) giro di test delle 7 funzioni "consigli dell'AI" che ci distinguono e non sono mai state provate: Architettura Sito, Piano Editoriale, Articoli Automatici, Meta Tags, Quick Wins, Page Analyzer, report settimanale AI (spento in prod: accenderlo) — mezza giornata, con Luca Test (serve ricarica crediti da admin) o con l'admin; 2) GEO Audit: rinomina, testi, chiavi Gemini in prod, test; 3) landing con Claude Design (brief 10 righe con la voce di Clemente + logo/colori/4 screenshot veri, una pagina desktop+mobile, poi io la porto in `public/landing4.php` con Tailwind compilato) + /pricing allineato; 4) il post. Materiale per landing e post: sezione "Punti di forza veri" qui sotto.
 > Decisioni di oggi: audit gratis (costo 0/pagina), 100 crediti ai nuovi iscritti, pulsante "Posizioni" a tutti con addebito, principio "gratis ciò che non costa" (sezione Crediti).
 > Landing attuale bocciata: promette in generale, dice "7 moduli" e vende Google Ads (spento), non mostra il GEO Audit.
 > Produzione è al commit `081f1b6` (+ docs).
