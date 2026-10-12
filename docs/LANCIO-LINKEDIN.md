@@ -144,6 +144,7 @@ Note per la revisione: prima riga sotto i 150 caratteri (resta sopra il taglio "
 ## Segnato per dopo (raccolta completa del 2026-10-09)
 
 ### Prima del post (piccoli, ma visibili)
+- [ ] **GEO Audit (ex AI Reputation Radar), punto 2.2 della checklist: rinomina, testi/UI "cosa pensano di te le AI", test come gli altri moduli. È il gancio del post: va fatto PER PRIMO alla prossima sessione (deciso 2026-10-12 sera).**
 - [ ] ainstein.it stesso: SEO Audit dà score 47/100 (3 critici, 64 warning). Sistemare i critici.
 - [ ] Landing: togliere Content Creator, aggiungere GEO Audit, allineare ai 5 moduli accesi.
 - [ ] Tailwind caricato da CDN (`cdn.tailwindcss.com`) in produzione: warning in console, lento. Build locale del CSS.
