@@ -2,11 +2,11 @@
 
 > File di stato del lancio. Aggiornato: 2026-10-12 pomeriggio.
 >
-> **DOVE SIAMO:** testati e sistemati SEO Audit, AI Content Generator, Keyword Research, SEO Position Tracking (tutti online).
-> **PROSSIMO PASSO:** giro completo da utente nuovo (iscrizione → 30 crediti → prima operazione → crediti finiti),
-> SUBITO DOPO la landing nuova (2-3 h, direttamente nel codice, voce dei pensieri di Clemente, screenshot veri), poi il post.
+> **DOVE SIAMO:** giro di test CHIUSO (2026-10-12 sera): 4 moduli testati e sistemati + giro completo da utente nuovo fatto e sistemato (7 problemi risolti, tutti in produzione).
+> **PROSSIMO PASSO:** la landing nuova (2-3 h, direttamente nel codice, voce dei pensieri di Clemente, screenshot veri) + allineare /pricing. Poi il post.
+> Decisioni di oggi: audit gratis (costo 0/pagina), 100 crediti ai nuovi iscritti, pulsante "Posizioni" a tutti con addebito, principio "gratis ciò che non costa" (sezione Crediti).
 > Landing attuale bocciata: promette in generale, dice "7 moduli" e vende Google Ads (spento), non mostra il GEO Audit.
-> Produzione è al commit `9c8d2eb` (+ docs).
+> Produzione è al commit `081f1b6` (+ docs).
 > Moduli Google Ads e Content Creator disattivati in produzione da Clemente il 2026-10-09 sera. Accesi: SEO Audit, AI Content, Keyword Research, SEO Tracking, AI Reputation (→ GEO Audit).
 > Regola: ogni sessione riparte da qui. Un modulo alla volta. Veloce, non perfetto.
 
@@ -73,7 +73,15 @@ Per ciascuno: lo provo io da browser su un sito vero, riporto "cosa funziona" �
   - Costo reale: 0 $ (Serper gratis 2.500/mese: 1 chiamata se in top 10, fino a 10 se non trovata; Keyword Planner 0 $). Crediti: 1/kw volumi + 1/kw posizioni. Job di 5 keyword: parte entro 60 s, dura 65-75 s.
   - Da sapere: Google oscilla (stessa keyword 32 → non trovata → 22 in tre giri da 15 min); DataForSEO a 0 fondi e SerpAPI esaurito, i fallback oggi sono morti (decidere se ricaricare DataForSEO, per il lancio Serper basta).
   - Da sistemare (non bloccante): tab in inglese (Landscape, Overview, Pages, Tags); due filtri "Tutte le posizioni" affiancati; SSE in tempo reale esiste ma la pagina usa il cron (ok con partenza entro 60 s); `gsc_client_id`/`gsc_client_secret` spazzatura nei settings modulo in produzione (non usati, OAuth centralizzato); keyword non trovata non entra nello snapshot giornaliero del trend.
-- [ ] Giro completo da utente nuovo: iscrizione → dashboard → prima operazione con 30 crediti → crediti finiti (deve portare ai prezzi, non a un errore)
+- [x] Giro completo da utente nuovo — fatto 2026-10-12 (account "Luca Test" creato da Clemente, 30 crediti; progetto Stabia Boat Rental; audit → AI Content fino alla copertina → crediti a 0). Mail di benvenuto arrivata subito. Problemi trovati e risolti lo stesso giorno, tutti in produzione:
+  1. Crediti finiti non portavano ai prezzi → toast "Crediti insufficienti" con pulsante "Vedi piani e ricarica" (15 s), alert globale con lo stesso link, badge crediti nell'header cliccabile verso /pricing con "Ricarica" sotto i 10 (c380a5d, 4f0a492).
+  2. SEO Audit partiva col 10% dei crediti e a zero continuava gratis → serve il saldo per la stima intera (messaggio con le pagine analizzabili), a crediti esauriti si ferma con notifica; costo per pagina ora impostazione admin del modulo, default 0 = gratis (4f0a492, 1994d58).
+  3. "Guida 2025" nel 2026 → data di oggi iniettata nel system prompt di OGNI chiamata AI, in AiService (000dadd, 6d1991f).
+  4. Wizard AI Content perdeva la selezione fonti al reload e cancellava brief/articolo se "Rigenera" falliva → ripristino da localStorage, salvataggio a ogni click, flag ripristinati su errore (3a3ad1a).
+  5. Entità del brief con spazzatura ("nbsp nbsp") → testo ripulito prima della conta + stopword italiane; l'AI restituisce key_terms e recommended_word_count che hanno la precedenza (58991a2). Riscrittura "alla scheda" rimandata a dopo il post.
+  6. SEO Audit: critici "noindex + canonical" e titoli duplicati su pagine 404 → le 4xx/5xx generano solo "Link interno rotto"; duplicati e orfane solo su pagine 2xx, homepage mai orfana. Score Stabia 43 → 58 (ffdac16, c3f2cae).
+  7. Log di debug (token CSRF, risposte) in console nel wizard → rimossi; chiave SerpAPI letta dalle impostazioni globali, la copia nei settings del modulo AI Content è identica e si può cancellare da admin (081f1b6).
+  - Restano (non bloccanti, segnati sotto): wizard "Indietro" dallo step Articolo mostra "Genera articolo" invece dell'articolo; dashboard dice "Articoli da 3 crediti" (sono 20) e "Audit da 2 crediti" (è gratis); AI Reputation Radar manca dalle 4 card della dashboard; riga articolo in DB con credits_used 0 (cosmetico); SEO Tracking pagina keyword ha un toast proprio senza link ai piani.
 - [x] Spegnere in produzione Google Ads Analyzer e Content Creator (fatto da Clemente, 2026-10-09)
 
 ### Punto 3. Landing (ESSENZIALE, alla fine)
@@ -153,6 +161,8 @@ Note per la revisione: prima riga sotto i 150 caratteri (resta sopra il taglio "
 - Keyword Research: brief e seed si perdono dopo errore/reload; ricerca precedente in "Error" non riprendibile; gergo ("seed", "clustering", "intent"); docs dicono 5-10 seed, form max 5; stato "Collecting" in inglese.
 - AI Content: step "Pubblica" senza sito WordPress mostra solo "Indietro"; wizard a volte non aggiorna la pagina dopo il brief (verificare con click vero).
 - SEO Tracking: tab in inglese (Landscape, Overview, Pages, Tags), doppio filtro "Tutte le posizioni".
+- Dashboard utente: "Articoli da 3 crediti" (reali: 3+1/url+3+10+3), "Audit da 2 crediti" (gratis), manca la card AI Reputation Radar / GEO Audit.
+- AI Content wizard: "Indietro" dallo step Articolo mostra il pannello "Genera articolo" invece dell'articolo esistente (l'articolo c'è, basta ricaricare).
 - Modal "Attiva modulo" di Keyword Research: descrizioni in gergo, nessun "consigliato per iniziare".
 - SEO Audit: lo stesso canonical viene segnalato due volte (warning Indicizzabilità + notice Tecnico).
 - Console: una risorsa 404 nella pagina wizard AI Content (da individuare).
