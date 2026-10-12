@@ -711,10 +711,17 @@ window.crawlJob = function() {
                 this.eventSource = null;
                 this.stopTimer();
                 this.status = 'cancelled';
-                if (window.ainstein && window.ainstein.toast) {
-                    window.ainstein.toast('Scansione annullata.', 'warning');
+                let creditsMsg = null;
+                try { creditsMsg = JSON.parse(e.data).message || null; } catch (_) {}
+                if (creditsMsg) {
+                    // Fermata per crediti esauriti: alert con link ai piani, nessun reload automatico
+                    this.showError(creditsMsg);
+                } else {
+                    if (window.ainstein && window.ainstein.toast) {
+                        window.ainstein.toast('Scansione annullata.', 'warning');
+                    }
+                    setTimeout(() => location.reload(), 2000);
                 }
-                setTimeout(() => location.reload(), 2000);
             });
 
             // Server-sent error event (with data)

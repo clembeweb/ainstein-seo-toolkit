@@ -109,8 +109,18 @@ class CrawlController
         $crawlCost = Credits::getCost('crawl_per_page') ?? 0.2;
         $estimatedCost = $config['max_pages'] * $crawlCost;
 
-        if (!Credits::hasEnough($creditUserId, $estimatedCost * 0.1)) {
-            jsonResponse(['error' => true, 'message' => 'Crediti insufficienti']);
+        // Serve il saldo per la stima intera (con costo 0 la scansione e' gratuita e passa sempre)
+        if ($estimatedCost > 0 && !Credits::hasEnough($creditUserId, $estimatedCost)) {
+            $balance = Credits::getBalance($creditUserId);
+            $affordablePages = (int) floor($balance / $crawlCost);
+            $hint = $affordablePages > 0
+                ? " Con il tuo saldo puoi analizzare fino a {$affordablePages} pagine: riduci le pagine da analizzare."
+                : " Ricarica i crediti per avviare una scansione.";
+            jsonResponse([
+                'error' => true,
+                'message' => "Crediti insufficienti. Richiesti: " . rtrim(rtrim(number_format($estimatedCost, 1, '.', ''), '0'), '.')
+                    . ", Disponibili: " . rtrim(rtrim(number_format($balance, 1, '.', ''), '0'), '.') . "." . $hint,
+            ]);
             return;
         }
 
@@ -831,6 +841,37 @@ class CrawlController
                     // Non-blocking: notification failure should not affect the operation
                 }
 
+                break;
+            }
+
+            // Crediti esauriti durante la scansione: ci si ferma qui, niente pagine gratis
+            $pageCost = Credits::getCost('crawl_per_page') ?? 0.2;
+            if ($pageCost > 0 && !Credits::hasEnough((int) $job['user_id'], $pageCost)) {
+                $stopMsg = "Crediti esauriti: scansione fermata dopo {$completed} pagine. Ricarica i crediti per completarla.";
+                $this->sessionModel->requestStop((int) $job['session_id']);
+                $this->finalizeCrawl($id, (int) $job['user_id'], true);
+                $this->sessionModel->stop((int) $job['session_id']);
+                $this->projectModel->update($id, ['status' => 'stopped']);
+                $jobModel->cancel($jobId);
+                $jobModel->update($jobId, ['error_message' => $stopMsg]);
+
+                $this->sendEvent('cancelled', array_merge($jobModel->getJobResponse($jobId), [
+                    'message' => 'Crediti insufficienti. ' . $stopMsg,
+                ]));
+
+                try {
+                    Database::reconnect();
+                    \Services\NotificationService::send((int) $job['user_id'], 'operation_failed',
+                        "Scansione SEO fermata: crediti esauriti", [
+                        'icon' => 'exclamation-triangle',
+                        'color' => 'amber',
+                        'action_url' => url('/pricing'),
+                        'body' => $stopMsg,
+                        'data' => ['module' => 'seo-audit', 'project_id' => $id],
+                    ]);
+                } catch (\Exception $e) {
+                    // Non-blocking
+                }
                 break;
             }
 
