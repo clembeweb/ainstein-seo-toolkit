@@ -9,7 +9,7 @@ return [
     'debug' => env('APP_DEBUG', false),
 
     // Crediti free tier
-    'free_credits' => 30,
+    'free_credits' => 100,
 
     // Costi operazioni (crediti) - 4 livelli: Gratis(0), Base(1), Standard(3), Premium(10)
     'credit_costs' => [

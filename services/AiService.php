@@ -230,6 +230,8 @@ class AiService
         $maxTokens = $options['max_tokens'] ?? self::DEFAULT_MAX_TOKENS;
         $model = $options['model'] ?? $this->model;
         $system = $options['system'] ?? null;
+        // Il modello non sa che giorno e': senza questa riga scrive "Guida 2025" nel 2026
+        $system = self::withDateContext($system);
         $this->requestEffort = $options['effort'] ?? null;
         $this->requestTimeout = (int) ($options['timeout'] ?? 120);
         // charge_credits=false: il chiamante addebita da se' (nessun controllo ne' consumo qui)
@@ -460,6 +462,21 @@ class AiService
      * Body della richiesta Messages API (testabile senza rete).
      * $effort: low|medium|high|xhigh|max → output_config.effort (solo modelli Claude 4.5+/5.x, vedi modelSupportsEffort()); null = default del modello.
      */
+    /**
+     * Aggiunge al system prompt la data di oggi (in italiano), cosi' il modello usa l'anno giusto
+     * in titoli, "guida 20XX", riferimenti a novita' recenti. Vale per tutti i moduli e provider.
+     */
+    public static function withDateContext(?string $system): string
+    {
+        $giorni = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
+        $mesi = ['', 'gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+        $oggi = $giorni[(int) date('w')] . ' ' . date('j') . ' ' . $mesi[(int) date('n')] . ' ' . date('Y');
+        $dateLine = "Data di oggi: {$oggi}. L'anno corrente è " . date('Y') . ": usalo quando citi l'anno in titoli, guide o aggiornamenti (mai anni passati come se fossero attuali).";
+
+        $system = trim((string) $system);
+        return $system === '' ? $dateLine : $dateLine . "\n\n" . $system;
+    }
+
     public static function buildAnthropicPayload(string $model, array $messages, int $maxTokens, ?string $system, ?string $effort): array
     {
         $data = ['model' => $model, 'max_tokens' => $maxTokens, 'messages' => $messages];
