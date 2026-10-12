@@ -230,8 +230,6 @@ class AiService
         $maxTokens = $options['max_tokens'] ?? self::DEFAULT_MAX_TOKENS;
         $model = $options['model'] ?? $this->model;
         $system = $options['system'] ?? null;
-        // Il modello non sa che giorno e': senza questa riga scrive "Guida 2025" nel 2026
-        $system = self::withDateContext($system);
         $this->requestEffort = $options['effort'] ?? null;
         $this->requestTimeout = (int) ($options['timeout'] ?? 120);
         // charge_credits=false: il chiamante addebita da se' (nessun controllo ne' consumo qui)
@@ -305,6 +303,9 @@ class AiService
      */
     private function executeWithFallback(int $userId, array $messages, int $maxTokens, ?string $system, float $creditsUsed, ?string $modelOverride = null): array
     {
+        // Il modello non sa che giorno e': senza questa riga scrive "Guida 2025" nel 2026.
+        // Qui passano tutte le chiamate (complete, analyze, analyzeWithSystem), per entrambi i provider.
+        $system = self::withDateContext($system);
         $startTime = microtime(true);
         $originalProvider = $this->provider;
         $originalModel = $modelOverride ?? $this->model;
