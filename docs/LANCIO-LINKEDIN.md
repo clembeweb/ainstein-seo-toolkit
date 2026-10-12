@@ -1,13 +1,12 @@
 # Lancio Ainstein su LinkedIn
 
-> File di stato del lancio. Aggiornato: 2026-10-09 sera.
+> File di stato del lancio. Aggiornato: 2026-10-12 pomeriggio.
 >
-> **DOVE SIAMO:** testati e sistemati SEO Audit, AI Content Generator, Keyword Research (tutti online).
-> **PROSSIMO PASSO (lunedì 2026-10-12, deciso da Clemente):** prima si chiude il giro di test
-> (5. SEO Position Tracking da utente in produzione, poi giro completo da utente nuovo), SUBITO DOPO la
-> landing nuova (2-3 h, direttamente nel codice, voce dei pensieri di Clemente, screenshot veri), poi il post.
+> **DOVE SIAMO:** testati e sistemati SEO Audit, AI Content Generator, Keyword Research, SEO Position Tracking (tutti online).
+> **PROSSIMO PASSO:** giro completo da utente nuovo (iscrizione → 30 crediti → prima operazione → crediti finiti),
+> SUBITO DOPO la landing nuova (2-3 h, direttamente nel codice, voce dei pensieri di Clemente, screenshot veri), poi il post.
 > Landing attuale bocciata: promette in generale, dice "7 moduli" e vende Google Ads (spento), non mostra il GEO Audit.
-> Produzione è al commit `d787ae3` (+ docs).
+> Produzione è al commit `9c8d2eb` (+ docs).
 > Moduli Google Ads e Content Creator disattivati in produzione da Clemente il 2026-10-09 sera. Accesi: SEO Audit, AI Content, Keyword Research, SEO Tracking, AI Reputation (→ GEO Audit).
 > Regola: ogni sessione riparte da qui. Un modulo alla volta. Veloce, non perfetto.
 
@@ -69,7 +68,11 @@ Per ciascuno: lo provo io da browser su un sito vero, riporto "cosa funziona" �
   - Costo reale: clustering 0,13 $ (opus 5.5, 47 s), Keyword Planner 0 $. Crediti: 3 (prima 4-5 col doppio addebito).
   - Da sistemare (UX, non bloccante): dopo un errore o un reload il brief e le seed si perdono e la ricerca precedente resta "Error" non riprendibile; etichette in gergo ("seed keyword", "clustering", "intent") per chi non è SEO; docs dicono 5-10 seed, form max 5; stato "Collecting" in inglese nella lista.
   - Non testati: Architettura Sito e Piano Editoriale (stesso motore, stesse correzioni applicate).
-- [ ] 5. SEO Position Tracking
+- [x] 5. SEO Position Tracking — testato 2026-10-12 in PRODUZIONE (Chrome di Clemente, progetto "Stabia Boat Rental (test)" → tracking #6, 5 keyword). Aggiunta keyword, volumi via Keyword Planner (gratis), rank check via Serper fino a 100 risultati, Landscape e Storico coerenti. Decisione Clemente: pulsante "Posizioni" resta a tutti gli utenti, con addebito.
+  - Fix: i rank check manuali non scalavano crediti (il cron li trattava come automatici) → 1 cr/kw all'owner; cron usciva se "Auto Rank Check" era spento e i job manuali restavano in coda per sempre; cascata inutile DataForSEO+SerpAPI dopo un "non trovato" di Serper (DataForSEO risponde 402 = account senza fondi, SerpAPI 429 = ricerche finite) → ora Serper è definitivo; keyword verificata ma non in top 100 mostrava "-"/"Mai" come una mai verificata → ">100" + data; cron ogni minuto (era 5) con lock su file e log silenzioso quando non c'è nulla da fare.
+  - Costo reale: 0 $ (Serper gratis 2.500/mese: 1 chiamata se in top 10, fino a 10 se non trovata; Keyword Planner 0 $). Crediti: 1/kw volumi + 1/kw posizioni. Job di 5 keyword: parte entro 60 s, dura 65-75 s.
+  - Da sapere: Google oscilla (stessa keyword 32 → non trovata → 22 in tre giri da 15 min); DataForSEO a 0 fondi e SerpAPI esaurito, i fallback oggi sono morti (decidere se ricaricare DataForSEO, per il lancio Serper basta).
+  - Da sistemare (non bloccante): tab in inglese (Landscape, Overview, Pages, Tags); due filtri "Tutte le posizioni" affiancati; SSE in tempo reale esiste ma la pagina usa il cron (ok con partenza entro 60 s); `gsc_client_id`/`gsc_client_secret` spazzatura nei settings modulo in produzione (non usati, OAuth centralizzato); keyword non trovata non entra nello snapshot giornaliero del trend.
 - [ ] Giro completo da utente nuovo: iscrizione → dashboard → prima operazione con 30 crediti → crediti finiti (deve portare ai prezzi, non a un errore)
 - [x] Spegnere in produzione Google Ads Analyzer e Content Creator (fatto da Clemente, 2026-10-09)
 
@@ -142,15 +145,18 @@ Note per la revisione: prima riga sotto i 150 caratteri (resta sopra il taglio "
 - Costi API misurati: audit 100 pagine ≈ 0 $; articolo completo ≈ 0,25 $; keyword research ≈ 0,13 $; copertina 0,04 $.
 - In produzione il modulo AI Content ha ancora scraping 12 cr/URL e brief 5 (config dice 1 e 3). Decidere e allineare.
 - 30 crediti iniziali: con i default attuali bastano per 1 audit + 1 articolo + 1 ricerca keyword.
+- SEO Tracking: le pagine stimano i volumi a 0,5 cr/kw (0,3 da 10 kw) ma il server addebita 1 cr/kw; rank check 1 cr/kw (ora scalato davvero, fix 2026-10-12). Decidere la cifra e allineare stima e addebito insieme (rimandato da Clemente alla decisione finale sui crediti).
 
 ### UX da utente nuovo (non bloccanti)
 - Keyword Research: brief e seed si perdono dopo errore/reload; ricerca precedente in "Error" non riprendibile; gergo ("seed", "clustering", "intent"); docs dicono 5-10 seed, form max 5; stato "Collecting" in inglese.
 - AI Content: step "Pubblica" senza sito WordPress mostra solo "Indietro"; wizard a volte non aggiorna la pagina dopo il brief (verificare con click vero).
+- SEO Tracking: tab in inglese (Landscape, Overview, Pages, Tags), doppio filtro "Tutte le posizioni".
 - Modal "Attiva modulo" di Keyword Research: descrizioni in gergo, nessun "consigliato per iniziare".
 - SEO Audit: lo stesso canonical viene segnalato due volte (warning Indicizzabilità + notice Tecnico).
 - Console: una risorsa 404 nella pagina wizard AI Content (da individuare).
 
 ### Tecnico
+- SEO Tracking: ricaricare DataForSEO o toglierlo dalla cascata; SerpAPI esaurito. Snapshot giornaliero trend anche per "non trovata" (oggi la keyword sparita dal top 100 non si vede nel grafico).
 - Crawler: pagina pubblica del bot + IP fisso per le liste bianche degli hosting (come SemrushBot). SiteGround blocca Chrome 120/122/131 e i bot sconosciuti dal server; dopo molte richieste mette il captcha sull'IP.
 - Link interni automatici (AI Content): 0 inseriti perché il WordPress collegato (SiteGround) ha risposto con la sfida anti-bot. Riprovare dal server e gestire il 202.
 - AiService: quando il primario fallisce e scatta il fallback, il fallimento non viene loggato in ai_logs.

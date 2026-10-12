@@ -464,7 +464,7 @@ cron/admin-report.php                              # Weekly (0 8 * * 1)
 modules/ai-content/cron/dispatcher.php             # Every Min (* * * * *)
 modules/ads-analyzer/cron/auto-evaluate.php        # Every 5 Min (*/5 * * * *)
 modules/seo-audit/cron/crawl-dispatcher.php        # Every 5 Min (*/5 * * * *)
-modules/seo-tracking/cron/rank-dispatcher.php      # Every 5 Min (*/5 * * * *)
+modules/seo-tracking/cron/rank-dispatcher.php      # Every Min (* * * * *) — dal 2026-10-12, lock su file
 modules/seo-tracking/cron/gsc-sync-dispatcher.php  # Hourly (0 * * * *)
 modules/seo-tracking/cron/ai-report-dispatcher.php # Hourly (0 * * * *)
 modules/crawl-budget/cron/crawl-dispatcher.php     # Every 5 Min (*/5 * * * *)
