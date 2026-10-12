@@ -14,6 +14,18 @@
 
     <?= \Core\View::partial('components/orphaned-project-notice', ['project' => $project]) ?>
 
+    <?php if (!empty($prefill)): ?>
+    <!-- Partito dall'Architettura Sito -->
+    <div class="rounded-xl border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-900/20 p-4 flex items-start gap-3">
+        <svg class="w-5 h-5 text-violet-600 dark:text-violet-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div class="text-sm text-slate-700 dark:text-slate-300">
+            <span class="font-semibold text-slate-900 dark:text-white">Piano collegato all'Architettura Sito</span>
+            <?php if (!empty($prefill['architecture_date'])): ?>del <?= e(date('d/m/Y', strtotime($prefill['architecture_date']))) ?><?php endif; ?>:
+            tema, target, zona e categorie sono già compilati dalle <?= (int) $prefill['pages_count'] ?> pagine proposte. L'AI riceverà anche le pagine, così ogni articolo rimanda a una di esse con un link interno. Puoi modificare tutto prima di avviare.
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Draft Restored Toast -->
     <div x-show="draftRestored" x-transition class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-center gap-2">
         <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -333,11 +345,21 @@ function editorialWizard() {
         },
         categoryInput: '',
 
+        prefill: <?= json_encode($prefill ?: null, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
+
         init() {
             const key = 'kr_editorial_draft_' + this.projectId;
+            if (this.prefill) {
+                // Arrivo dall'Architettura Sito: il prefill vince sulla bozza salvata
+                this.brief.theme = this.prefill.theme || '';
+                this.brief.categories = Array.isArray(this.prefill.categories) ? this.prefill.categories.slice(0, 6) : [];
+                if (this.prefill.target) this.brief.target = this.prefill.target;
+                if (this.prefill.geography) this.brief.geography = this.prefill.geography;
+                this.brief.architecture_research_id = this.prefill.architecture_research_id || 0;
+            }
             try {
                 const saved = localStorage.getItem(key);
-                if (saved) {
+                if (saved && !this.prefill) {
                     const draft = JSON.parse(saved);
                     if (draft.theme) this.brief.theme = draft.theme;
                     if (Array.isArray(draft.categories) && draft.categories.length) this.brief.categories = draft.categories;
@@ -438,6 +460,7 @@ function editorialWizard() {
             formData.append('articles_per_month', this.brief.articles_per_month);
             formData.append('target', this.brief.target);
             formData.append('geography', this.brief.geography);
+            if (this.brief.architecture_research_id) formData.append('architecture_research_id', this.brief.architecture_research_id);
 
             try {
                 const resp = await fetch(`<?= url('/keyword-research/project/' . $project['id'] . '/editorial/start') ?>`, {

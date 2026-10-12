@@ -124,6 +124,19 @@ Fonti nel messaggio di sessione; prezzi indicativi, cambiano spesso.
 Non un modulo: **la catena intera, in italiano, allo stesso posto, a crediti**: descrivi il business → struttura e piano con i numeri veri di Google → articolo e pubblicazione → audit del sito → posizioni e click reali → cosa dicono di te le AI. Per un freelance SEO italiano oggi questa catena costa Semrush (139 $) + un writer (20-50 $) + un tool GEO (29-99 $). E il secondo argomento, quello del post: **l'ha costruita un SEO per usarla sui propri clienti**, non una software house per venderla.
 
 ## Punto 3. Landing (ESSENZIALE, alla fine)
+
+### Brief per Claude Design (scritto 2026-10-12 sera, canvas: https://claude.ai/artifact/NedS1Rk1t6GNjCtm6fAeFu)
+1. **Cos'è:** Ainstein, piattaforma SEO con l'AI dentro, costruita da un SEO (Clemente, 20 anni di SEO e Google Ads) per usarla sui propri clienti al posto di Semrush. Non da una software house per venderla.
+2. **Tono:** prima persona, onesto, diretto. "L'ho fatta da solo, con tutti i difetti. Se ti è utile, miglioriamola insieme." Niente copy da agenzia, niente "rivoluziona", niente superlativi.
+3. **Una promessa sola (la catena):** descrivi il tuo business in italiano → keyword con i volumi veri di Google → struttura del sito (pagine, URL, H1) → piano editoriale a mesi → articolo con un click → audit → posizioni e click reali → cosa dicono di te le AI. Tutto allo stesso posto, in italiano, a crediti.
+4. **5 moduli accesi, nell'ordine:** Keyword Research (il pezzo raro), GEO Audit ("cosa dicono di te ChatGPT e le altre AI, e cosa fare"), SEO Audit (gratis, senza installare nulla), AI Content (brief da consulente, copertina, WordPress), Position Tracking (posizioni + Search Console + Quick Wins).
+5. **Cosa NON dire:** "7 moduli", Google Ads, Content Creator, "nessun concorrente", "clustering AI", "scrive articoli SEO" come fosse nuovo, report settimanale AI (finché non è acceso e provato).
+6. **Prezzo:** 100 crediti all'iscrizione, senza carta. Audit gratis. Link a /pricing per il resto.
+7. **Brand:** logo Ainstein (orizzontale), blu #006e96, scuro #004d69, accento #00a3d9, font DM Sans. Niente gradient wash, niente emoji, icone Heroicons.
+8. **Struttura:** hero con la frase di Clemente e uno screenshot vero → la catena in 6 passi → i 5 moduli (screenshot vero + 2 righe oneste ciascuno, debolezze incluse dove servono) → "chi l'ha fatta e perché" (la storia, 6 righe) → CTA "Provalo, è gratis" + "Se ti sembra inutile, dimmelo".
+9. **Formato:** una pagina, desktop 1280 e mobile 390. Poi la porto in `public/landing4.php` con Tailwind compilato.
+10. **Screenshot:** per ora quelli di febbraio in `public/assets/images/screenshots/` (output-keyword-research = Architettura Sito vera). Da rifare freschi prima di pubblicare: Architettura Sito, GEO Audit, SEO Audit, articolo con copertina.
+
 - [ ] Brief semplice per Claude Design, con il pensiero di Clemente come tono
 - [ ] Allineare i moduli mostrati a quelli accesi (oggi manca AI Reputation Radar, c'è Content Creator)
 - [ ] Pagina /pricing (2026-10-12): mostra l'header pubblico ("Accedi", "Prova gratis") anche a chi è già loggato, dice "tutti i 7 moduli" ed elenca Google Ads Analyzer e Content Creator (spenti). Allinearla insieme alla landing nuova. Da /pricing ora ci si arriva dal badge crediti e dal toast "Crediti insufficienti" (fix c380a5d).

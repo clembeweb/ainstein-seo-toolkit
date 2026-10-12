@@ -62,7 +62,7 @@
                     <option value="ecommerce">E-commerce</option>
                     <option value="blog">Blog/Magazine</option>
                     <option value="saas">SaaS/Software</option>
-                    <option value="local">Attivita locale</option>
+                    <option value="local">Attività locale</option>
                     <option value="portfolio">Portfolio/Freelance</option>
                 </select>
             </div>
@@ -94,7 +94,7 @@
         <!-- Seed Keywords -->
         <div>
             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Seed Keywords <span class="text-red-500">*</span>
+                Keyword di partenza <span class="text-red-500">*</span>
             </label>
             <div class="space-y-2">
                 <div class="flex gap-2">

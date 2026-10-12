@@ -367,7 +367,7 @@ class ArchitectureController
             'ecommerce' => 'e-commerce',
             'blog' => 'blog/magazine',
             'saas' => 'SaaS/software',
-            'local' => 'attivita\' locale',
+            'local' => 'attività locale',
             'portfolio' => 'portfolio/freelance',
         ];
         $siteTypeLabel = $siteTypes[$brief['site_type'] ?? 'corporate'] ?? 'sito web';

@@ -15,6 +15,12 @@ const KR_COMP_COLORS = {
 };
 const KR_COMP_DEFAULT = 'text-slate-400';
 
+const KR_INTENT_LABELS = { informational: 'Informativo', transactional: 'Transazionale', commercial: 'Commerciale', navigational: 'Navigazionale' };
+function krIntentLabel(intent) {
+    const k = (intent || '').toLowerCase();
+    return KR_INTENT_LABELS[k] || (k ? k.charAt(0).toUpperCase() + k.slice(1) : 'N/D');
+}
+
 function krIntentClass(intent) {
     return KR_INTENT_COLORS[(intent || '').toLowerCase()] || KR_INTENT_DEFAULT;
 }

@@ -5,6 +5,13 @@ $clustersForTable = array_values(array_map(function($c, $i) {
     return $c;
 }, $clusters, array_keys($clusters)));
 
+if (!function_exists('kr_intent_label')) {
+    function kr_intent_label(?string $intent): string {
+        $map = ['informational' => 'Informativo', 'transactional' => 'Transazionale', 'commercial' => 'Commerciale', 'navigational' => 'Navigazionale'];
+        $k = strtolower(trim((string) $intent));
+        return $map[$k] ?? ($k !== '' ? ucfirst($k) : 'N/D');
+    }
+}
 // Raccogli intent unici per il filtro
 $uniqueIntents = array_unique(array_filter(array_map(fn($c) => strtolower($c['intent'] ?? ''), $clusters)));
 sort($uniqueIntents);
@@ -29,11 +36,11 @@ sort($uniqueIntents);
         </div>
         <div class="mt-4 sm:mt-0">
             <a href="<?= url('/keyword-research/project/' . $project['id'] . '/architecture') ?>"
-               class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors text-sm">
+               class="inline-flex items-center whitespace-nowrap px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors text-sm">
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
-                Nuova Analisi
+                Nuova analisi
             </a>
         </div>
     </div>
@@ -121,7 +128,7 @@ sort($uniqueIntents);
                         <td class="px-4 py-3">
                             <div class="font-medium text-slate-900 dark:text-white" x-text="c.name"></div>
                             <div class="text-xs text-slate-500 mt-0.5">
-                                Main: <span x-text="c.main_keyword"></span> (<span x-text="(c.main_volume || 0).toLocaleString()"></span>)
+                                Principale: <span x-text="c.main_keyword"></span> (<span x-text="(c.main_volume || 0).toLocaleString()"></span>)
                             </div>
                         </td>
                         <td class="px-4 py-3">
@@ -133,7 +140,7 @@ sort($uniqueIntents);
                         <td class="px-4 py-3 text-right font-medium text-slate-900 dark:text-white" x-text="(c.total_volume || 0).toLocaleString()"></td>
                         <td class="px-4 py-3 text-center text-slate-700 dark:text-slate-300" x-text="c.keywords_count"></td>
                         <td class="px-4 py-3 text-center">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" :class="krIntentClass(c.intent)" x-text="c.intent ? c.intent.charAt(0).toUpperCase() + c.intent.slice(1) : 'N/A'"></span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" :class="krIntentClass(c.intent)" x-text="krIntentLabel(c.intent)"></span>
                         </td>
                     </tr>
                     </template>
@@ -150,7 +157,7 @@ sort($uniqueIntents);
                     class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm py-1.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                 <option value="">Tutti gli intent</option>
                 <?php foreach ($uniqueIntents as $intent): ?>
-                <option value="<?= e($intent) ?>"><?= e(ucfirst($intent)) ?></option>
+                <option value="<?= e($intent) ?>"><?= e(kr_intent_label($intent)) ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
@@ -161,6 +168,29 @@ sort($uniqueIntents);
                     <?php $index = $i; include __DIR__ . '/../partials/cluster-card.php'; ?>
                 </div>
             <?php endforeach; ?>
+        </div>
+    </div>
+
+    <!-- Prossimo passo: Piano Editoriale dall'architettura -->
+    <div class="rounded-xl border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-900/20 p-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-start gap-3">
+                <svg class="w-6 h-6 text-violet-600 dark:text-violet-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Prossimo passo: il piano editoriale</h2>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                        Le <?= count($clusters) ?> pagine qui sopra sono la struttura del sito. Il piano editoriale aggiunge gli articoli del blog che le alimentano con link interni:
+                        l'AI riceve le pagine, il brief e le keyword di partenza già compilati.
+                    </p>
+                </div>
+            </div>
+            <a href="<?= url('/keyword-research/project/' . $project['id'] . '/editorial?from_architecture=' . $research['id']) ?>"
+               class="inline-flex items-center justify-center whitespace-nowrap px-5 py-2.5 rounded-lg bg-violet-600 text-white font-medium hover:bg-violet-700 transition-colors text-sm">
+                Crea il piano editoriale
+                <svg class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </a>
         </div>
     </div>
 

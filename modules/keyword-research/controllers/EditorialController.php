@@ -13,6 +13,7 @@ use Services\ApiLoggerService;
 use Modules\KeywordResearch\Models\Project;
 use Modules\KeywordResearch\Models\Research;
 use Modules\KeywordResearch\Models\EditorialItem;
+use Modules\KeywordResearch\Models\Cluster;
 use Modules\KeywordResearch\Services\KeywordInsightService;
 use Services\KeywordPlannerService;
 use Core\Logger;
@@ -55,13 +56,52 @@ class EditorialController
 
         $researches = $this->researchModel->findByProject($projectId, 'editorial');
 
+        // Ponte Architettura Sito -> Piano Editoriale: brief, categorie e pagine già compilati
+        $prefill = null;
+        $fromArchitecture = (int) ($_GET['from_architecture'] ?? 0);
+        if ($fromArchitecture > 0) {
+            $arch = $this->loadArchitectureForProject($fromArchitecture, $projectId);
+            if ($arch) {
+                $targetMap = ['B2B' => 'B2B', 'B2C' => 'B2C', 'Both' => 'Entrambi'];
+                $pageNames = array_values(array_filter(array_map(fn($p) => trim((string) ($p['name'] ?? '')), $arch['pages'])));
+                $prefill = [
+                    'architecture_research_id' => (int) $arch['research']['id'],
+                    'architecture_date' => $arch['research']['created_at'] ?? null,
+                    'pages_count' => count($arch['pages']),
+                    'theme' => $arch['brief']['business'] ?? '',
+                    'categories' => array_slice($pageNames, 0, 6),
+                    'target' => $targetMap[$arch['brief']['target'] ?? ''] ?? 'Entrambi',
+                    'geography' => $arch['brief']['geography'] ?? ($project['default_location'] ?? 'IT'),
+                ];
+            }
+        }
+
         return View::render('keyword-research::editorial/wizard', [
             'title' => 'Piano Editoriale - ' . $project['name'],
             'user' => $user,
             'project' => $project,
             'researches' => $researches,
+            'prefill' => $prefill,
             'modules' => ModuleLoader::getUserModules($user['id']),
         ]);
+    }
+
+    /**
+     * Carica un'architettura (research type=architecture) dello stesso progetto con le sue pagine.
+     * Ritorna null se non esiste, non è completata o appartiene a un altro progetto.
+     */
+    private function loadArchitectureForProject(int $researchId, int $projectId): ?array
+    {
+        $research = $this->researchModel->find($researchId);
+        if (!$research || (int) $research['project_id'] !== $projectId || ($research['type'] ?? '') !== 'architecture' || ($research['status'] ?? '') !== 'completed') {
+            return null;
+        }
+        $pages = (new Cluster())->findByResearch($researchId);
+        return [
+            'research' => $research,
+            'brief' => json_decode($research['brief'] ?? '{}', true) ?: [],
+            'pages' => $pages,
+        ];
     }
 
     /**
@@ -100,6 +140,12 @@ class EditorialController
             'target' => trim($_POST['target'] ?? 'B2C'),
             'geography' => trim($_POST['geography'] ?? $project['default_location']),
         ];
+
+        // Collegamento all'architettura di partenza (solo se dello stesso progetto)
+        $archId = (int) ($_POST['architecture_research_id'] ?? 0);
+        if ($archId > 0 && $this->loadArchitectureForProject($archId, $projectId)) {
+            $brief['architecture_research_id'] = $archId;
+        }
 
         if (empty($brief['theme'])) {
             echo json_encode(['success' => false, 'error' => 'Il tema del blog è obbligatorio.']);
@@ -837,6 +883,22 @@ class EditorialController
             ? "{$months} mesi"
             : "mesi {$monthStart}-{$monthEnd} (di {$months} totali)";
 
+        // Pagine del sito (se il piano parte da un'Architettura Sito)
+        $sitePagesBlock = '';
+        $sitePagesRule = '';
+        $archId = (int) ($brief['architecture_research_id'] ?? 0);
+        if ($archId > 0) {
+            $pages = (new Cluster())->findByResearch($archId);
+            if (!empty($pages)) {
+                $sitePagesBlock = "PAGINE DEL SITO (dall'Architettura Sito già progettata; gli articoli del blog devono alimentarle con link interni):\n";
+                foreach ($pages as $p) {
+                    $sitePagesBlock .= "- {$p['name']} | URL: {$p['suggested_url']} | keyword principale: {$p['main_keyword']} (vol: " . (int) ($p['total_volume'] ?? 0) . ")\n";
+                }
+                $sitePagesBlock .= "\n";
+                $sitePagesRule = "\n9. Ogni articolo deve sostenere una delle PAGINE DEL SITO elencate sopra: scegli keyword informazionali o long-tail che la pagina commerciale non copre, e indica nelle notes a quale pagina (URL) l'articolo rimanda con un link interno. Non proporre articoli che duplicano l'intent commerciale di una pagina del sito.";
+            }
+        }
+
         $prompt = "Crea un piano editoriale per un blog.
 
 TEMA DEL BLOG: {$theme}
@@ -847,7 +909,7 @@ ARTICOLI AL MESE: {$articlesPerMonth}
 TOTALE ARTICOLI DA GENERARE: " . (($monthEnd - $monthStart + 1) * $articlesPerMonth) . "
 CATEGORIE: " . implode(', ', $categories) . "
 
-DATI KEYWORD E COMPETITOR PER CATEGORIA:\n\n";
+{$sitePagesBlock}DATI KEYWORD E COMPETITOR PER CATEGORIA:\n\n";
 
         foreach ($categoriesData as $catName => $catData) {
             $prompt .= "## {$catName}\n";
@@ -906,7 +968,7 @@ DATI KEYWORD E COMPETITOR PER CATEGORIA:\n\n";
 5. Varia i tipi di contenuto per mantenere il blog interessante e diversificato
 6. Identifica gap nei contenuti dei competitor (cosa manca nelle SERP)
 7. Aggiungi note strategiche per ogni mese
-8. Non ripetere mai la stessa keyword principale in articoli diversi
+8. Non ripetere mai la stessa keyword principale in articoli diversi{$sitePagesRule}
 
 RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
 {

@@ -23,11 +23,11 @@ $intentColor = $intentColors[strtolower($cluster['intent'] ?? '')] ?? 'bg-slate-
                     <span class="text-xs font-bold text-slate-400 dark:text-slate-500">#<?= $index + 1 ?></span>
                     <h3 class="font-semibold text-slate-900 dark:text-white"><?= e($cluster['name']) ?></h3>
                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $intentColor ?>">
-                        <?= e(ucfirst($cluster['intent'] ?? 'N/A')) ?>
+                        <?= e(function_exists('kr_intent_label') ? kr_intent_label($cluster['intent'] ?? '') : ucfirst($cluster['intent'] ?? 'N/D')) ?>
                     </span>
                 </div>
                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                    Main: <span class="font-medium text-slate-700 dark:text-slate-300"><?= e($cluster['main_keyword']) ?></span>
+                    Principale: <span class="font-medium text-slate-700 dark:text-slate-300"><?= e($cluster['main_keyword']) ?></span>
                     <span class="text-slate-400 ml-1">(vol: <?= number_format($cluster['main_volume']) ?>)</span>
                 </p>
             </div>
@@ -40,7 +40,7 @@ $intentColor = $intentColors[strtolower($cluster['intent'] ?? '')] ?? 'bg-slate-
         <div class="mt-3 grid grid-cols-3 gap-3">
             <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg py-2 px-3 text-center">
                 <p class="text-lg font-bold text-slate-900 dark:text-white"><?= $cluster['keywords_count'] ?></p>
-                <p class="text-xs text-slate-500">Keywords</p>
+                <p class="text-xs text-slate-500">Keyword</p>
             </div>
             <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg py-2 px-3 text-center">
                 <p class="text-lg font-bold text-emerald-600 dark:text-emerald-400"><?= number_format($cluster['total_volume']) ?></p>
