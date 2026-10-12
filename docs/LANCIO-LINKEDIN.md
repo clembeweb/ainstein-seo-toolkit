@@ -108,7 +108,10 @@ Fonti nel messaggio di sessione; prezzi indicativi, cambiano spesso.
 
 ### 4. AI Content Generator — mercato pieno e a basso prezzo
 - Koala 9-49 $/mese, SEOwriting 19 $, NeuronWriter 23 $, Frase 49 $+, Surfer 49-179 $: SERP, brief, articolo, pubblicazione WordPress ce l'hanno tutti.
-- **Nostro:** stessa categoria; differenze: scegli tu le fonti, brief con strategia da consulente (Opus), copertina, link interni, e soprattutto **riceve il piano editoriale dal modulo 1**. Da solo non è un argomento di vendita. Non dire "scrive articoli SEO" come se fosse nuovo.
+- **Nostro (3 varianti, non una):**
+  - *Articoli Manuali*: stessa categoria dei concorrenti; differenze: scegli tu le fonti, brief con strategia da consulente (Opus), copertina, link interni dal pool del tuo sito, e **riceve il piano editoriale dal modulo 1**. Da solo non è un argomento di vendita. Non dire "scrive articoli SEO" come se fosse nuovo.
+  - *Articoli Automatici*: coda di keyword con data, il cron (ogni minuto) fa SERP → brief → articolo → copertina → pubblicazione su WordPress (bozza o pubblicato) senza nessuno davanti; il Piano Editoriale di Keyword Research ci entra con un click. Koala e SEOwriting hanno il bulk con auto-post, quindi non è unico; è però **l'anello che chiude la catena** (piano a 6 mesi → articoli che escono da soli). Mai testato nel giro: provarlo prima di citarlo.
+  - *SEO Meta Tags*: importa le pagine esistenti (sitemap, WordPress, CSV, a mano), le legge, l'AI scrive title e description nella lingua della pagina, anteprima/approvazione, **invio a WordPress dal tool** (plugin Ainstein, singolo o bulk). Sul mercato esistono plugin WP che lo fanno dentro WordPress (Rank Math Content AI a crediti, Bavarian Rank Engine, RankBotAI, Mass Meta Creator); da fuori WordPress con anteprima e approvazione è raro, e per chi gestisce più siti clienti è comodo. Argomento da "seconda riga", non da titolo. Mai testato nel giro.
 
 ### 5. SEO Position Tracking — commodity con un dettaglio raro
 - Wincher 41-49 €, SE Ranking 52-65 $, AccuRanker 116 $+, Nightwatch 32-79 $. Quasi tutti con GSC.
