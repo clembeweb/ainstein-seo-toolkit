@@ -699,6 +699,15 @@ function processQueueBatch(): void
             }
 
             // Aggiorna last_position nella tabella keywords
+            if ($keywordId && !($result['found'] && $serpPosition !== null)) {
+                // Non trovata nelle prime 100: la verifica c'e' stata, la posizione no.
+                // Azzera la posizione precedente e registra la data (la tabella mostra ">100").
+                Database::update('st_keywords', [
+                    'last_position' => null,
+                    'last_updated_at' => date('Y-m-d H:i:s'),
+                ], 'id = ?', [$keywordId]);
+            }
+
             if ($result['found'] && $serpPosition !== null && $keywordId) {
                 Database::update('st_keywords', [
                     'last_position' => $serpPosition,

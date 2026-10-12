@@ -545,12 +545,16 @@
                             <td class="px-4 py-3 text-right">
                                 <?php
                                 $pos = $kw['last_position'] ?? 0;
-                                $posClass = $pos <= 3 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' :
+                                // Verificata ma non trovata nelle prime 100: posizione vuota + data presente
+                                $notInTop100 = $pos <= 0 && !empty($kw['last_updated_at']);
+                                $slateClass = 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
+                                $posClass = $pos <= 0 ? ($notInTop100 ? $slateClass : 'text-slate-400 dark:text-slate-500') :
+                                           ($pos <= 3 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' :
                                            ($pos <= 10 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' :
-                                           ($pos <= 20 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'));
+                                           ($pos <= 20 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' : $slateClass)));
                                 ?>
-                                <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium <?= $posClass ?>">
-                                    <?= $pos > 0 ? number_format($pos, 1) : '-' ?>
+                                <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium <?= $posClass ?>"<?= $notInTop100 ? ' title="Verificata: non presente nelle prime 100 posizioni"' : '' ?>>
+                                    <?= $pos > 0 ? number_format($pos, 1) : ($notInTop100 ? '>100' : '-') ?>
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-right text-sm text-slate-900 dark:text-white">
