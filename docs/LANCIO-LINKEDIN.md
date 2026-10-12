@@ -84,7 +84,41 @@ Per ciascuno: lo provo io da browser su un sito vero, riporto "cosa funziona" �
   - Restano (non bloccanti, segnati sotto): wizard "Indietro" dallo step Articolo mostra "Genera articolo" invece dell'articolo; dashboard dice "Articoli da 3 crediti" (sono 20) e "Audit da 2 crediti" (è gratis); AI Reputation Radar manca dalle 4 card della dashboard; riga articolo in DB con credits_used 0 (cosmetico); SEO Tracking pagina keyword ha un toast proprio senza link ai piani.
 - [x] Spegnere in produzione Google Ads Analyzer e Content Creator (fatto da Clemente, 2026-10-09)
 
-### Punto 3. Landing (ESSENZIALE, alla fine)
+### Punti di forza veri (analisi di mercato 2026-10-12, prima della landing)
+
+Richiesta di Clemente: "prima verificherei bene cosa gli altri non hanno davvero". Fatto modulo per modulo,
+con ricerche sul mercato (Semrush, Ahrefs, SEOZoom, SE Ranking, Koala, SEOwriting, Nightwatch, Peec, Profound, Otterly...).
+Fonti nel messaggio di sessione; prezzi indicativi, cambiano spesso.
+
+### 1. Keyword Research — il pezzo davvero raro (intuizione di Clemente confermata, con una precisazione)
+- **Cosa non è raro:** il clustering AI delle keyword. Lo fanno Semrush (Keyword Strategy Builder: pillar/subpage da 5 seed, incluso nei piani da ~139 $/mese), Keyword Insights (58 $+), SE Ranking, SEOZoom (Editorial Assistant, 59 €+).
+- **Cosa non abbiamo trovato in nessun prodotto:** la catena **"descrizione del business in italiano → keyword con volumi veri di Google → architettura del sito (pagine, URL, H1 in ordine di priorità) → piano editoriale a mesi con gap SERP → articolo con un click"**. Sul mercato questa catena esiste solo come workflow di prompt o skill per Claude Code, non come strumento. Semrush dà pillar/subpage ma non parte da un brief, non filtra per pertinenza col business, non fa il calendario a mesi né scrive l'articolo nello stesso flusso.
+- **Dati:** usiamo Google Keyword Planner diretto (gratis, 0 $): i volumi che gli altri rivendono.
+- **Debolezze da non nascondere:** niente keyword difficulty né backlink/SERP features; max 5 seed; Architettura e Piano Editoriale mai testati nel giro; qualità dipendente dal modello (oggi Opus 5.5 ≈ 0,13 $ a ricerca).
+- **Per il post/landing:** NON "clustering AI" (commodity). SÌ: "descrivi il tuo business, ti restituisce struttura del sito e piano editoriale con i numeri veri di Google, e da lì scrivi l'articolo".
+
+### 2. GEO Audit (ex AI Reputation Radar) — mercato affollato e caro, noi diversi su una cosa
+- **Mercato 2026:** Semrush AI Toolkit 99 $/mese per dominio, Ahrefs Brand Radar 199 $/mese, Peec ~95 $, Profound 99-499 $, Otterly 29 $, Nightwatch add-on 99 $. Tutti misurano visibilità/menzioni ri-ponendo prompt alle AI.
+- **Cosa facciamo di diverso:** non solo "quanto ti citano" ma **"cosa dicono di te, quali rischi, e cosa fare"**: giudizio per domanda (judge), piano d'azione, scheda operativa per intervento, PDF. Orientato a reputazione e piccole realtà italiane, non a brand enterprise. Prezzo a crediti invece di 99 $/mese.
+- **Onestà:** "nessun concorrente" è falso; "l'unico che ti dice cosa fare, in italiano, senza abbonamento da 99 $" è vero. Attenzione: mai testato in questo giro, chiavi Gemini mancanti in produzione (vedi punto 2.2).
+
+### 3. SEO Audit — commodity, vale come porta d'ingresso
+- Screaming Frog gratis (500 URL), Sitebulb da 18 $, Semrush/SE Ranking nelle suite. Nessuno dei grandi ha un piano d'azione AI verificato dalle fonti, ma Sitebulb ha "Hints" prioritizzati.
+- **Nostro:** gratis, senza installare nulla, priorità in italiano semplice, piano d'azione AI (10 cr), collegato a tracking e contenuti. È il modulo con cui si entra, non quello con cui ci si distingue. Obbligo: ainstein.it stesso deve avere uno score decente (oggi 47).
+
+### 4. AI Content Generator — mercato pieno e a basso prezzo
+- Koala 9-49 $/mese, SEOwriting 19 $, NeuronWriter 23 $, Frase 49 $+, Surfer 49-179 $: SERP, brief, articolo, pubblicazione WordPress ce l'hanno tutti.
+- **Nostro:** stessa categoria; differenze: scegli tu le fonti, brief con strategia da consulente (Opus), copertina, link interni, e soprattutto **riceve il piano editoriale dal modulo 1**. Da solo non è un argomento di vendita. Non dire "scrive articoli SEO" come se fosse nuovo.
+
+### 5. SEO Position Tracking — commodity con un dettaglio raro
+- Wincher 41-49 €, SE Ranking 52-65 $, AccuRanker 116 $+, Nightwatch 32-79 $. Quasi tutti con GSC.
+- **Raro (nessuna fonte lo ha trovato):** il **report settimanale scritto dall'AI** (keyword in salita/discesa, anomalie, URL che cambiano). Ma in produzione i report AI sono SPENTI e mai testati. O si accendono e si provano prima del post, o non si cita.
+- Posizioni via Serper fino a 100 risultati: Google oscilla (visto: 32 → non trovata → 22 in 45 minuti), lo storico conta, il singolo check no.
+
+### Il punto di forza vero, trasversale
+Non un modulo: **la catena intera, in italiano, allo stesso posto, a crediti**: descrivi il business → struttura e piano con i numeri veri di Google → articolo e pubblicazione → audit del sito → posizioni e click reali → cosa dicono di te le AI. Per un freelance SEO italiano oggi questa catena costa Semrush (139 $) + un writer (20-50 $) + un tool GEO (29-99 $). E il secondo argomento, quello del post: **l'ha costruita un SEO per usarla sui propri clienti**, non una software house per venderla.
+
+## Punto 3. Landing (ESSENZIALE, alla fine)
 - [ ] Brief semplice per Claude Design, con il pensiero di Clemente come tono
 - [ ] Allineare i moduli mostrati a quelli accesi (oggi manca AI Reputation Radar, c'è Content Creator)
 - [ ] Pagina /pricing (2026-10-12): mostra l'header pubblico ("Accedi", "Prova gratis") anche a chi è già loggato, dice "tutti i 7 moduli" ed elenca Google Ads Analyzer e Content Creator (spenti). Allinearla insieme alla landing nuova. Da /pricing ora ci si arriva dal badge crediti e dal toast "Crediti insufficienti" (fix c380a5d).
