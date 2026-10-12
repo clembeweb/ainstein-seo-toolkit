@@ -31,12 +31,12 @@ class SerpApiService
             $keys = [
                 ['provider' => 'serper', 'key' => $apiKey ?? Settings::get('serper_api_key', '')],
                 ['provider' => 'serper', 'key' => Settings::get('serper_api_key_2', '')],
-                ['provider' => 'serpapi', 'key' => getModuleSetting('ai-content', 'serpapi_key', '')],
+                ['provider' => 'serpapi', 'key' => (Settings::get('serp_api_key', '') ?: getModuleSetting('ai-content', 'serpapi_key', ''))],
                 ['provider' => 'serpapi', 'key' => Settings::get('serp_api_key_2', '')],
             ];
         } else {
             $keys = [
-                ['provider' => 'serpapi', 'key' => $apiKey ?? getModuleSetting('ai-content', 'serpapi_key', '')],
+                ['provider' => 'serpapi', 'key' => $apiKey ?? (Settings::get('serp_api_key', '') ?: getModuleSetting('ai-content', 'serpapi_key', ''))],
                 ['provider' => 'serpapi', 'key' => Settings::get('serp_api_key_2', '')],
                 ['provider' => 'serper', 'key' => Settings::get('serper_api_key', '')],
                 ['provider' => 'serper', 'key' => Settings::get('serper_api_key_2', '')],

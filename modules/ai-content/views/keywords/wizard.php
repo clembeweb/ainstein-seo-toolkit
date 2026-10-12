@@ -978,11 +978,6 @@ function keywordWizard(initialData) {
             const body = JSON.stringify({ _csrf_token: '<?= csrf_token() ?>' });
 
             // DEBUG LOGGING
-            console.log('=== SERP REQUEST ===');
-            console.log('URL:', url);
-            console.log('Method: POST');
-            console.log('Body:', body);
-            console.log('CSRF Token:', '<?= csrf_token() ?>');
 
             try {
                 const response = await fetch(url, {
@@ -995,13 +990,8 @@ function keywordWizard(initialData) {
                 });
 
                 // DEBUG RESPONSE
-                console.log('=== SERP RESPONSE ===');
-                console.log('Status:', response.status);
-                console.log('OK:', response.ok);
-                console.log('StatusText:', response.statusText);
 
                 const text = await response.text();
-                console.log('Raw response:', text);
 
                 let data;
                 try {
@@ -1017,8 +1007,6 @@ function keywordWizard(initialData) {
                     this.serpExtracted = true;
                     this.serpResults = data.organic || [];
                     this.paaQuestions = data.paa || [];
-                    console.log('SERP Results:', this.serpResults);
-                    console.log('PAA Questions:', this.paaQuestions);
                     this.showToast('SERP estratta con successo', 'success');
                 } else {
                     console.error('SERP Error:', data.error);
