@@ -878,6 +878,22 @@ function keywordWizard(initialData) {
             status: 'draft'
         },
 
+        init() {
+            // Ricarico allo step 1: il server non conosce ancora le fonti scelte (le riceve solo con il brief).
+            // Le recupero dal salvataggio locale, così la selezione non si perde.
+            if (this.serpExtracted && !this.briefGenerated && this.selectedSources.length === 0) {
+                try {
+                    const saved = JSON.parse(localStorage.getItem('wizard_' + this.keywordId) || 'null');
+                    if (saved && Array.isArray(saved.selectedSources)) {
+                        const serpUrls = new Set(this.serpResults.map(r => r.url));
+                        this.selectedSources = saved.selectedSources.filter(s => serpUrls.has(s.url)).slice(0, 6);
+                        if (Array.isArray(saved.selectedPaa)) this.selectedPaa = saved.selectedPaa;
+                        if (Array.isArray(saved.customUrls)) this.customUrls = saved.customUrls;
+                    }
+                } catch (_) { /* localStorage non disponibile: si riparte da zero */ }
+            }
+        },
+
         // Computed
         get totalSources() {
             return this.selectedSources.length + this.customUrls.length;
@@ -899,6 +915,7 @@ function keywordWizard(initialData) {
                     position: result.position
                 });
             }
+            this.saveProgress();
         },
 
         isPaaSelected(question) {
@@ -1141,13 +1158,18 @@ function keywordWizard(initialData) {
         },
 
         async regenerateArticle() {
+            // Se la rigenerazione fallisce (es. crediti insufficienti) l'articolo esistente deve restare visibile
+            const hadArticle = this.articleGenerated;
             this.articleGenerated = false;
             await this.generateArticle();
+            if (!this.articleGenerated && hadArticle) this.articleGenerated = true;
         },
 
         async regenerateBrief() {
+            const hadBrief = this.briefGenerated;
             this.briefGenerated = false;
             await this.generateBrief();
+            if (!this.briefGenerated && hadBrief) this.briefGenerated = true;
         },
 
         async loadCategories() {
