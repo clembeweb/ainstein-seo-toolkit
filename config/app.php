@@ -18,7 +18,7 @@ return [
         'export_excel' => 0,
 
         // Scansione SEO Audit: 0.1 cr a pagina (100 pagine = 10 crediti)
-        'crawl_per_page' => 0.1,
+        'crawl_per_page' => 0,    // Decisione 2026-10-12: audit gratis (non costa API). Override da admin: cost_crawl_per_page nel modulo seo-audit
 
         // Base (1 cr) - operazioni singole leggere
         'scrape_url' => 1,

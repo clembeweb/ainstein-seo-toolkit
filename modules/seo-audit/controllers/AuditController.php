@@ -70,7 +70,7 @@ class AuditController
         // Crediti
         $creditBalance = Credits::getBalance($user['id']);
         $aiOverviewCost = Credits::getCost('ai_overview') ?? 15;
-        $crawlCost = Credits::getCost('crawl_per_page') ?? 0.2;
+        $crawlCost = Credits::getCost('crawl_per_page', 'seo-audit', 0.1);
 
         return View::render('seo-audit/audit/dashboard', [
             'title' => $project['name'] . ' - Dashboard',

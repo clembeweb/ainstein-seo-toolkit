@@ -106,7 +106,7 @@ class CrawlController
         $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
 
         // Verifica crediti
-        $crawlCost = Credits::getCost('crawl_per_page') ?? 0.2;
+        $crawlCost = Credits::getCost('crawl_per_page', 'seo-audit', 0.1);
         $estimatedCost = $config['max_pages'] * $crawlCost;
 
         // Serve il saldo per la stima intera (con costo 0 la scansione e' gratuita e passa sempre)
@@ -845,7 +845,7 @@ class CrawlController
             }
 
             // Crediti esauriti durante la scansione: ci si ferma qui, niente pagine gratis
-            $pageCost = Credits::getCost('crawl_per_page') ?? 0.2;
+            $pageCost = Credits::getCost('crawl_per_page', 'seo-audit', 0.1);
             if ($pageCost > 0 && !Credits::hasEnough((int) $job['user_id'], $pageCost)) {
                 $stopMsg = "Crediti esauriti: scansione fermata dopo {$completed} pagine. Ricarica i crediti per completarla.";
                 $this->sessionModel->requestStop((int) $job['session_id']);

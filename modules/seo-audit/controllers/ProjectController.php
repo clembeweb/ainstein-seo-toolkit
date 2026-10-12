@@ -37,7 +37,7 @@ class ProjectController
         $projects = $this->project->allWithStats($user['id']);
 
         // Calcola costi crediti per nuovo audit
-        $crawlCost = Credits::getCost('crawl_per_page') ?? 0.2;
+        $crawlCost = Credits::getCost('crawl_per_page', 'seo-audit', 0.1);
         $creditBalance = Credits::getBalance($user['id']);
 
         return View::render('seo-audit/projects/index', [
@@ -59,7 +59,7 @@ class ProjectController
     {
         $user = Auth::user();
         $creditBalance = Credits::getBalance($user['id']);
-        $crawlCost = Credits::getCost('crawl_per_page') ?? 0.2;
+        $crawlCost = Credits::getCost('crawl_per_page', 'seo-audit', 0.1);
 
         return View::render('seo-audit/projects/create', [
             'title' => 'Nuovo Audit SEO',
@@ -113,7 +113,7 @@ class ProjectController
         }
 
         // Verifica crediti minimi (stima 50 pagine)
-        $crawlCost = Credits::getCost('crawl_per_page') ?? 0.2;
+        $crawlCost = Credits::getCost('crawl_per_page', 'seo-audit', 0.1);
         $estimatedCost = 50 * $crawlCost;
         if (!Credits::hasEnough($user['id'], $estimatedCost)) {
             $errors[] = 'Crediti insufficienti per avviare un audit (minimo ' . $estimatedCost . ' crediti)';

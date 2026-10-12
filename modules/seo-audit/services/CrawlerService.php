@@ -615,7 +615,7 @@ class CrawlerService
         $this->rateLimitHits = 0;
 
         // Consuma crediti (fetchRaw non li consuma automaticamente)
-        $crawlCost = \Core\Credits::getCost('crawl_per_page') ?? 0.2;
+        $crawlCost = \Core\Credits::getCost('crawl_per_page', 'seo-audit', 0.1);
         if (\Core\Credits::hasEnough($this->userId, $crawlCost)) {
             \Core\Credits::consume($this->userId, $crawlCost, 'crawl_per_page', 'seo-audit', [
                 'url' => $url,
