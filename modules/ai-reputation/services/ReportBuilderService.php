@@ -285,10 +285,13 @@ class ReportBuilderService
                 }
             }
             foreach ($a['doubts'] ?? [] as $d) {
-                $key = mb_strtolower(mb_substr($d['doubt'], 0, 60));
-                $doubts[$key] ??= ['doubt' => $d['doubt'], 'fix' => $d['fix'], 'engines' => [], 'prompts' => []];
+                // Le AI ripetono gli stessi dubbi con parole diverse: si raggruppano per tema e si contano le risposte
+                $theme = self::doubtTheme($d['doubt']);
+                $key = $theme ?? 'x:' . mb_strtolower(mb_substr($d['doubt'], 0, 60));
+                $doubts[$key] ??= ['theme' => $theme ? self::DOUBT_THEMES[$theme][0] : null, 'doubt' => $d['doubt'], 'fix' => $d['fix'], 'engines' => [], 'prompts' => [], 'responses' => []];
                 $doubts[$key]['engines'][$engine] = true;
                 $doubts[$key]['prompts'][(int) $r['prompt_id']] = $r['prompt_text'];
+                $doubts[$key]['responses'][(int) $r['id']] = true;
             }
             // Negativa spiegata solo da dubbi (nessuna fonte negativa vera): la copre l'intervento "clarify"
             $onlyDoubts = empty($a['negative_urls']) && !empty($a['doubts']);
@@ -349,10 +352,16 @@ class ReportBuilderService
             $engines = [];
             $prompts = [];
             $list = [];
-            foreach (array_slice(array_values($doubts), 0, 6) as $i => $d) {
+            $sorted = array_values($doubts);
+            usort($sorted, fn($x, $y) => count($y['responses']) <=> count($x['responses']));
+            foreach ($sorted as $d) {
                 $engines += $d['engines'];
                 $prompts += $d['prompts'];
-                $list[] = ($i + 1) . ') ' . rtrim($d['doubt'], '. ') . ' → ' . rtrim($d['fix'], '. ') . '.';
+            }
+            foreach (array_slice($sorted, 0, 6) as $i => $d) {
+                $n = count($d['responses']);
+                $list[] = ($i + 1) . ') ' . ($d['theme'] ? $d['theme'] . ' (' . $n . ' rispost' . ($n === 1 ? 'a' : 'e') . '): ' : '')
+                    . rtrim($d['doubt'], '. ') . ' → ' . rtrim($d['fix'], '. ') . '.';
             }
             $qs = [];
             foreach ($prompts as $pid => $text) {
@@ -363,8 +372,8 @@ class ReportBuilderService
                 'target_url' => !empty($project['website']) ? $project['website'] : null,
                 'target_domain' => $ownDomain,
                 'title' => "Le AI hanno dubbi su {$subject}: cosa chiarire sul sito",
-                'rationale' => self::engineNames(array_keys($engines)) . ' ' . (count($engines) === 1 ? 'mette' : 'mettono') . ' in dubbio l\'affidabilità per informazioni che mancano o non tornano, non per fatti negativi. '
-                    . 'Chi chiede "' . reset($prompts) . '" riceve questi avvisi: ' . implode(' ', $list),
+                'rationale' => self::engineNames(array_keys($engines)) . ' ' . (count($engines) === 1 ? 'mette' : 'mettono') . ' in dubbio l\'affidabilità per informazioni che mancano o non tornano, non per fatti negativi'
+                    . ' (' . count($prompts) . ' domand' . (count($prompts) === 1 ? 'a' : 'e') . ', tra cui "' . reset($prompts) . '"). I dubbi più frequenti: ' . implode(' ', $list),
                 'covered_prompts' => json_encode($qs, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             ];
         }
@@ -518,6 +527,26 @@ class ReportBuilderService
 
     /** Nomi leggibili degli engine per i testi del piano ("ChatGPT, Gemini"), mai gli slug tecnici. */
     public const ENGINE_NAMES = ['openai' => 'ChatGPT', 'gemini' => 'Gemini', 'perplexity' => 'Perplexity', 'anthropic' => 'Claude'];
+
+    /** Temi dei dubbi delle AI: [etichetta, regex sul testo del dubbio]. L'ordine conta: vince il primo che combacia. */
+    public const DOUBT_THEMES = [
+        'company' => ['Dati societari', '/partita iva|p\.\s?iva|ragione sociale|camera di commercio|registro (delle )?imprese|\brea\b|sede legale|dati aziendali|societ[àa] (legale|registrata)/u'],
+        'reviews' => ['Recensioni verificabili', '/recension|review|5[.,]0|stelle|tripadvisor|google maps|valutazion|verifica indipendente/u'],
+        'payments' => ['Pagamenti, prezzi e rimborsi', '/pagament|contanti|caparra|acconto|deposit|cauzion|rimbors|franchigia|prezz|costi|extra|tariff/u'],
+        'licenses' => ['Licenze, assicurazione e sicurezza', '/licenz|patentat|patenti degli|patente nautica|assicura|polizza|autorizzazion|abilitazion|certificaz|sicurezz|salvagent|manutenzion/u'],
+        'identity' => ['Chi siete e come contattarvi', '/telefono|numero|whatsapp|indirizzo|punto d.incontro|operatore reale|chi gestisce|stesso operatore|siti (quasi )?identici/u'],
+    ];
+
+    public static function doubtTheme(string $doubt): ?string
+    {
+        $t = mb_strtolower($doubt);
+        foreach (self::DOUBT_THEMES as $key => [, $re]) {
+            if (preg_match($re, $t)) {
+                return $key;
+            }
+        }
+        return null;
+    }
 
     public static function engineNames(array $engines): string
     {

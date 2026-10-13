@@ -236,3 +236,35 @@ e nel PDF, senza "Genera scheda"), non sparite: sono anche le domande da fare al
 comunque. Al ricalcolo del piano si conservano stato **e scheda**: per `gap_article`/`gap_pending` la chiave è
 l'insieme delle domande coperte (il titolo lo inventa l'AI), per gli altri tipi resta `type|url|titolo`.
 Nessuna impostazione nuova. Spec: `docs/superpowers/specs/2026-10-09-ai-reputation-raggruppamento-articoli-gap-design.md`.
+
+## ADR-015: Dubbi delle AI separati dalle fonti negative; prezzo unico per risposta
+
+**Date**: 2026-10-13 · **Status**: Accepted
+
+**Context**: prima prova online del GEO Audit su un'azienda (Stabia Boat Rental, run 1). ChatGPT, a "Is Stabia Boat
+Rental legit?", segnala "red flags": stesso telefono su più siti quasi identici, numero legato a una web agency,
+ragione sociale e P.IVA non collegabili al marchio. Il judge metteva tra le "fonti negative" un concorrente
+(sorrentoboatrental.com), l'agenzia web di Clemente (bewebagency.com) e un registro imprese, e il piano proponeva di
+farle rimuovere. Il problema reale non si risolve rimuovendo nulla: si risolve pubblicando i fatti mancanti. Inoltre
+il run costava ~118 crediti (0,2 per risposta + 1 di `ai_analysis_medium` addebitato da AiService a ogni giudizio)
+contro i ~20 stimati, e il report mostrava il costo API all'utente (vietato, regola 5 del modulo).
+
+**Decision**:
+- Il judge ha un campo `doubts` (regola 6b): dubbi su affidabilità/identità/legittimità nati da informazioni mancanti
+  o incoerenti, ognuno con il rimedio concreto. `negative_urls` contiene solo pagine il cui contenuto è negativo sul
+  soggetto; concorrenti, directory, registri, fornitori e indizi non ci vanno. Colonna `ar_analyses.doubts`.
+- Nuovo tipo di intervento `clarify` ("Le AI hanno dubbi su X: cosa chiarire sul sito"), uno per run, in cima al
+  piano, sul sito del soggetto. La sua scheda (kind `clarify`) dà per ogni dubbio dove intervenire e il testo pronto,
+  più il JSON-LD da incollare e una checklist fuori dal sito; i dati mancanti restano segnaposto `[DA COMPLETARE]`.
+  Una risposta negativa spiegata solo da dubbi non genera più il contro-contenuto.
+- Aziende (`subject_type = company`): contro-contenuto e articoli gap vanno sul sito proprio, non sul dominio più
+  citato (per Stabia era clickandboat.com, un portale concorrente). Le persone restano sulle testate.
+- Crediti: un solo prezzo per risposta raccolta e analizzata (`cost_collect_response`, default 1); il judge chiama
+  AiService con `charge_credits => false`. "Rianalizza" costa `cost_reanalyze_response` (default 0,5) per risposta,
+  addebitato all'avvio. Stima e conferma prima di "Avvia run". Report e pannello mostrano i crediti; il costo API
+  solo agli admin.
+- `judge_model` e `judge_effort` diventano impostazioni del modulo (default invariati). `max_tokens` del judge 6000:
+  con i dubbi 2000 troncava.
+
+**Consequences**: run nuovi e vecchi non hanno gli stessi campi (i vecchi giudizi non hanno `doubts`: si rifanno con
+`scripts/rejudge.php`). Test offline `scripts/test-clarify.php`.

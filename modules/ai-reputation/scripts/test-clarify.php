@@ -74,5 +74,24 @@ $check('clarify: JSON-LD oggetto → testo', is_array($ok) && str_contains($ok['
 $check('clarify senza testi → errore', is_string(B::validate(['channel' => 'own_site', 'brief' => ['kind' => 'clarify', 'items' => []]], $action, [])));
 $check('clarify con kind content → errore', is_string(B::validate(['channel' => 'own_site', 'brief' => ['kind' => 'content', 'points' => ['a', 'b', 'c'], 'title' => 't']], $action, [])));
 
+// Temi dei dubbi (frasi vere dei judge sul run 1 di Stabia)
+$check('tema: dati societari', R::doubtTheme('Non risultano pubblici partita IVA, ragione sociale, assicurazione e indirizzo') === 'company');
+$check('tema: recensioni', R::doubtTheme('Il punteggio 5.0 su Google è mostrato solo dal sito') === 'reviews');
+$check('tema: pagamenti prima di licenze', R::doubtTheme('Il sito parla di noleggio senza cauzione ma non chiarisce la pre-autorizzazione sulla carta') === 'payments');
+$check('tema: licenze', R::doubtTheme('Non è verificabile che gli skipper siano patentati') === 'licenses');
+$check('tema: contatti', R::doubtTheme('Lo stesso numero di telefono compare su più siti quasi identici') === 'identity');
+$check('tema: nessuno', R::doubtTheme('Non esiste una pagina per le collaborazioni con hotel') === null);
+// Raggruppamento: tre dubbi sulla P.IVA in tre risposte = un tema da 3 risposte, primo nell'elenco
+$rs = [$mk(1, 16, 'Is Stabia Boat Rental legit?', 'rep'), $mk(2, 17, 'Stabia Boat Rental è affidabile?', 'rep'), $mk(3, 18, 'È una truffa?', 'rep')];
+$piva = fn(string $t) => ['doubt' => $t, 'fix' => 'Pubblicare P.IVA nel piè di pagina', 'evidence_urls' => []];
+$as = [
+    1 => $an(['doubts' => [$piva('Non trova la partita IVA'), ['doubt' => 'Stesso telefono su più siti', 'fix' => 'Spiegare il legame', 'evidence_urls' => []]]]),
+    2 => $an(['doubts' => [$piva('Ragione sociale non reperibile')]]),
+    3 => $an(['doubts' => [$piva('Manca la P.IVA sul sito')]]),
+];
+$cl = array_values(array_filter((new R())->actions($project, $rs, $as, $sources, $labels), fn($a) => $a['type'] === 'clarify'))[0];
+$check('raggruppo: tema più frequente per primo con il conteggio', str_contains($cl['rationale'], '1) Dati societari (3 risposte)'));
+$check('raggruppo: 3 domande coperte', count(R::coveredPrompts($cl)) === 3);
+
 echo $fail ? "\n{$fail} FALLITI\n" : "\nTutti i casi passano\n";
 exit($fail ? 1 : 0);
