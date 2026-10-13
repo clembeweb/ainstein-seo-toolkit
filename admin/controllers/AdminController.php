@@ -454,7 +454,8 @@ class AdminController
                 // Type coercion based on schema
                 switch ($schema['type'] ?? 'text') {
                     case 'number':
-                        $value = (int) $value;
+                        // float: i costi possono essere decimali (step 0.1), (int) li azzerava
+                        $value = is_numeric($value) ? $value + 0 : 0;
                         break;
                     case 'boolean':
                     case 'checkbox':
@@ -473,6 +474,13 @@ class AdminController
 
         // Save to database (via ModuleLoader to invalidate cache)
         ModuleLoader::updateModuleSettings($module['slug'], $currentSettings);
+
+        // Credits::getCost tiene i costi in cache 1 ora: svuoto quelli del modulo, cosi' il prezzo nuovo vale subito
+        foreach (array_keys($settingsSchema) as $key) {
+            if (str_starts_with($key, 'cost_')) {
+                \Core\Cache::delete('cost_' . substr($key, 5) . '_' . $module['slug']);
+            }
+        }
 
         $_SESSION['_flash']['success'] = 'Impostazioni modulo salvate';
         \Core\Router::redirect('/admin/modules/' . $id . '/settings');

@@ -31,7 +31,7 @@ return [
         'serp_extraction' => 3,
         'brief_generation' => 3,
         'cover_image_generation' => 3,
-        'meta_generate' => 3,
+        'meta_generate' => 2, // deciso 2026-10-13 (SEO Meta Tags: quello che la pagina promette)
         'clustering' => 3,
         'quick_wins' => 3,
         'weekly_digest' => 3,

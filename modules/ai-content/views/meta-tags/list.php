@@ -404,7 +404,7 @@ function metaTagsList() {
 
         async confirmCost(action, count, unitCost) {
             const total = count * unitCost;
-            const msg = `${action} ${count} ${count === 1 ? 'pagina' : 'pagine'}: ${this.fmtCredits(total)} crediti `
+            const msg = `${action} ${count} ${count === 1 ? 'pagina' : 'pagine'}: ${this.fmtCredits(total)} ${total === 1 ? 'credito' : 'crediti'} `
                 + `(${this.fmtCredits(unitCost)} a pagina). Ne hai ${this.fmtCredits(this.creditBalance)}.`
                 + (total > this.creditBalance ? ' Non bastano: ricarica o scegli meno pagine.' : '');
             if (total > this.creditBalance) {
