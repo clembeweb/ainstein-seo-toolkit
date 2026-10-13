@@ -18,6 +18,14 @@
 >    provare il Punto della situazione con dati veri, collegando anche GA4).
 > 3. **Impostazioni di ogni tool** (Admin > Moduli > impostazioni dei 5 moduli accesi): controllare valori, costi,
 >    modelli AI, voci di funzioni spente.
+> 3b. **Giro completo delle pagine admin** (Clemente lo ha chiesto il 2026-10-13 notte; l'ultimo giro è in
+>    `docs/2026-10-13-check-ui-ux-moduli-admin.md` §5, fatto PRIMA delle decisioni di oggi). Già sistemato: riquadro
+>    sviluppatore via, moduli accesi prima, modelli solo Claude 5.5, schede Jobs dei soli moduli accesi, campo "crediti in
+>    regalo all'iscrizione" ora usato davvero. Aperti: /admin/plans (Free spento ma in elenco; i piani non si assegnano agli
+>    utenti: `users` non ha `plan_id`, e "attivo il piano a mano" oggi vuol dire **aggiungere crediti a mano ogni mese** da
+>    /admin/users/{id} → serve un modo semplice per assegnare un piano o una ricarica mensile); /admin/finance (conta utenti
+>    per piano senza plan_id); /admin/settings "Costi operazioni" globali che confondono con quelli dei moduli; scheda
+>    Integrazioni con Google Ads API (modulo spento); impostazioni dei 4 moduli oltre al GEO (punto 3).
 > 4. **Check di tutte le sottosezioni (schede) dei 5 tool** (richiesta di Clemente: "sembrano cose messe a caso e non si
 >    capisce niente"): per ognuna dire se serve davvero, qual è la sua funzione e come integrarla nel flusso del tool;
 >    proporre cosa tenere, unire, togliere. Un tool alla volta.
