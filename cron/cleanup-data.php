@@ -392,6 +392,19 @@ function cleanupAlerts(array $config): int
 }
 
 // ============================================
+// 6b. public_ai_checks → DELETE controlli gratuiti anonimi > 30 giorni (home, controllo AI)
+// ============================================
+
+function cleanupPublicAiChecks(array $config): int
+{
+    if (!tableExists('public_ai_checks')) {
+        logMsg("  Tabella public_ai_checks non trovata, skip");
+        return 0;
+    }
+    return Database::execute("DELETE FROM public_ai_checks WHERE user_id IS NULL AND created_at < NOW() - INTERVAL 30 DAY");
+}
+
+// ============================================
 // 7. aic_process_jobs → DELETE completati > 30 giorni
 // ============================================
 
@@ -916,6 +929,7 @@ $sections = [
     ['st_gsc_data (> 16 mesi)',     'cleanupGscData',           [$config]],
     ['st_keyword_positions',         'cleanupKeywordPositions',  [$config]],
     ['st_alerts (letti > 90gg)',    'cleanupAlerts',            [$config]],
+    ['public_ai_checks (anonimi > 30gg)', 'cleanupPublicAiChecks', [$config]],
     ['aic_process_jobs (> 30gg)',   'cleanupProcessJobs',       [$config, $deleteBatchSize]],
     ['st_rank_queue (> 7gg)',       'cleanupRankQueue',         [$config, $deleteBatchSize]],
     ['ga_auto_eval_queue (> 30gg)', 'cleanupAutoEvalQueue',     [$config, $deleteBatchSize]],

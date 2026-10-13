@@ -9,22 +9,22 @@
         <div class="footer-grid">
             <div class="footer-col footer-brand">
                 <img src="<?= url('/assets/images/logo-ainstein-orizzontal.png') ?>" alt="Ainstein" height="24" style="filter:brightness(0) invert(1); opacity:0.9;">
-                <p>La piattaforma AI che automatizza il tuo marketing digitale. Dalla keyword alla pubblicazione.</p>
+                <p>Strumenti con l'intelligenza artificiale per farti trovare su Google e consigliare dalle AI. In italiano, senza essere esperti SEO.</p>
             </div>
             <div class="footer-col">
-                <h4>Prodotto</h4>
-                <a href="<?= url('/') ?>#funzionalita">AI Content Generator</a>
-                <a href="<?= url('/') ?>#funzionalita">Keyword Research</a>
-                <a href="<?= url('/') ?>#funzionalita">SEO Audit</a>
-                <a href="<?= url('/') ?>#funzionalita">Position Tracking</a>
-                <a href="<?= url('/') ?>#funzionalita">Google Ads Analyzer</a>
-                <a href="<?= url('/') ?>#funzionalita">Content Creator</a>
+                <h4>Strumenti AI</h4>
+                <a href="<?= url('/docs/ai-reputation') ?>">AI GEO Audit</a>
+                <a href="<?= url('/docs/seo-audit') ?>">AI Audit</a>
+                <a href="<?= url('/docs/keyword-research') ?>">AI Keywords</a>
+                <a href="<?= url('/docs/ai-content') ?>">AI Writer</a>
+                <a href="<?= url('/docs/seo-tracking') ?>">AI Rank</a>
             </div>
             <div class="footer-col">
                 <h4>Risorse</h4>
-                <a href="<?= url('/docs') ?>">Documentazione</a>
+                <a href="<?= url('/docs') ?>">Guide</a>
                 <a href="<?= url('/docs/faq') ?>">FAQ</a>
-                <a href="<?= url('/docs/credits') ?>">Sistema Crediti</a>
+                <a href="<?= url('/docs/credits') ?>">Come funzionano i crediti</a>
+                <a href="mailto:info@ainstein.it">Contatti</a>
                 <a href="<?= url('/pricing') ?>">Prezzi</a>
             </div>
             <div class="footer-col">
@@ -35,7 +35,7 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; <?= date('Y') ?> Ainstein. Tutti i diritti riservati.</p>
+            <p>&copy; <?= date('Y') ?> Ainstein · Beweb Agency S.r.l.s. Tutti i diritti riservati.</p>
         </div>
     </div>
 </footer>

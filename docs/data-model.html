@@ -215,6 +215,7 @@ erDiagram
     project_members ||--o{ project_member_modules : "has module access"
     users ||--o{ notifications : "riceve"
     users ||--o{ notification_preferences : "configura"
+    users ||--o{ public_ai_checks : "controllo AI gratuito"
     users ||--o{ email_unsubscribe_tokens : "unsubscribe"
     users ||--o{ aic_projects : "possiede"
     users ||--o{ sa_projects : "possiede"
@@ -289,6 +290,17 @@ erDiagram
         int user_id FK
         varchar type UK
         tinyint email_enabled
+        timestamp created_at
+    }
+    public_ai_checks {
+        int id PK
+        char token UK
+        varchar url
+        varchar host
+        longtext result
+        tinyint score
+        char ip_hash
+        int user_id FK
         timestamp created_at
     }
     email_templates {

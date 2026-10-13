@@ -13,14 +13,14 @@ $currentPage = $currentPage ?? '';
         </a>
 
         <div class="site-nav-links" id="navLinks">
-            <a href="<?= url('/') ?>#funzionalita" class="site-nav-link<?= $currentPage === 'home' ? ' active' : '' ?>">Funzionalita</a>
+            <a href="<?= url('/') ?>#strumenti" class="site-nav-link<?= $currentPage === 'home' ? ' active' : '' ?>">Strumenti AI</a>
             <a href="<?= url('/pricing') ?>" class="site-nav-link<?= $currentPage === 'pricing' ? ' active' : '' ?>">Prezzi</a>
-            <a href="<?= url('/docs') ?>" class="site-nav-link">Docs</a>
+            <a href="<?= url('/docs') ?>" class="site-nav-link">Guide</a>
         </div>
 
         <div class="site-nav-actions">
             <a href="<?= url('/login') ?>" class="site-nav-link">Accedi</a>
-            <a href="<?= url('/register') ?>" class="nav-cta-btn">Prova gratis</a>
+            <a href="<?= url('/register') ?>" class="nav-cta-btn">Inizia gratis</a>
         </div>
 
         <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
@@ -30,11 +30,11 @@ $currentPage = $currentPage ?? '';
 
     <!-- Mobile menu -->
     <div class="nav-mobile-menu" id="navMobile">
-        <a href="<?= url('/') ?>#funzionalita">Funzionalita</a>
+        <a href="<?= url('/') ?>#strumenti">Strumenti AI</a>
         <a href="<?= url('/pricing') ?>">Prezzi</a>
-        <a href="<?= url('/docs') ?>">Documentazione</a>
+        <a href="<?= url('/docs') ?>">Guide</a>
         <hr>
         <a href="<?= url('/login') ?>">Accedi</a>
-        <a href="<?= url('/register') ?>" class="nav-cta-btn" style="text-align:center;margin-top:8px;">Prova gratis</a>
+        <a href="<?= url('/register') ?>" class="nav-cta-btn" style="text-align:center;margin-top:8px;">Inizia gratis</a>
     </div>
 </nav>

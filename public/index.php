@@ -123,7 +123,7 @@ Router::get('/', function () {
     if (Auth::check()) {
         Router::redirect('/dashboard');
     }
-    require BASE_PATH . '/public/landing4.php';
+    require BASE_PATH . '/public/landing5.php';
     exit;
 });
 
