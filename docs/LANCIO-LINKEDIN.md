@@ -1,6 +1,30 @@
 # Lancio Ainstein su LinkedIn
 
-> File di stato del lancio. Aggiornato: 2026-10-13 pomeriggio (13:30).
+> File di stato del lancio. Aggiornato: 2026-10-13 notte.
+>
+> **PASSAGGIO DI CONSEGNE 2026-10-13 notte (RIPARTIRE DA QUI, una cosa alla volta):** fatto in questa sessione e online:
+> report d'acquisto GEO con numeri propri (79% conoscono / 2% consigliano), piano GEO meno prudente (ADR-018), hero +
+> "Scopri cosa puoi fare" del GEO, sottotitoli dei moduli, nessun piano Free (100 crediti una volta, piani con
+> "Contattami"), /pricing e /docs ai 5 moduli, tour riscritti + tour GEO, scheda **"Punto della situazione"** in AI Rank
+> (GA4 + GSC + AI, spec `docs/specs/seo-tracking-punto-situazione.md`), **landing nuova in stile Semrush** con controllo AI
+> gratuito (`public/landing5.php`, design e piano in `docs/plans/2026-10-13-landing-semrush*`), **ainstein.it 5/5** al
+> controllo (robots.txt, sitemap.xml, llms.txt, JSON-LD Organization, P.IVA nel footer).
+> **Da fare nella prossima sessione, in quest'ordine (richiesta di Clemente):**
+> 1. **Claude e Perplexity:** Clemente ha ricaricato il credito Anthropic e aggiunto la chiave Perplexity. Verificare che le
+>    chiamate AI tornino su Claude (`ai_logs`: niente più `fallback` openai con "credit balance is too low") e che il GEO
+>    Audit usi Perplexity come terzo motore.
+> 2. **Search Console collegata da Clemente:** verificare che la connessione abbia funzionato (st_gsc_connections in prod,
+>    sync, dati) e spiegargli cosa fa il tool con GSC (AI Rank: posizioni/clic, Quick Wins, Punto della situazione; poi
+>    provare il Punto della situazione con dati veri, collegando anche GA4).
+> 3. **Impostazioni di ogni tool** (Admin > Moduli > impostazioni dei 5 moduli accesi): controllare valori, costi,
+>    modelli AI, voci di funzioni spente.
+> 4. **Sidebar:** i nomi dei tool vanno a capo e lo stile sembra "troppo AI": proporre un ridisegno (una domanda alla volta).
+> 5. **App Google in Cloud Console** (promemoria di Clemente): spiegargli come pubblicarla (schermata di consenso OAuth da
+>    "Test" a "In produzione", verifica per gli scope sensibili analytics.readonly e webmasters.readonly).
+> 6. Poi: post LinkedIn (bozza con la voce di Clemente).
+> Note: il controllo AI gratuito su siti lenti dura fino a ~1 minuto (beweb.it 54 s); ainstein.it manca ancora del link alle
+> recensioni Google e di telefono/sameAs nei dati strutturati (non incidono sul voto). Proporre a fine sessione di spostare in
+> `_INBOX/_superati/` il vecchio `_INBOX/2026-10-13-prompt-claude-design-landing.md` (doppione) e il prompt Claude Design (scartato).
 >
 > **PASSAGGIO DI CONSEGNE 2026-10-13 sera (ripartire da qui):** fatto e online oggi: AI GEO Audit completo (dubbi delle AI con causa tecnica, audit d'acquisto/reputazione, judge Sonnet low, prezzo unico, controllo tecnico gratis, tabella domande con azioni multiple, cambio audit in pagina); conferme con la finestra dell'app in tutta la piattaforma; "Attiva su un progetto" in tutti i moduli; prezzi in pagina dai costi veri; dashboard utente con card GEO; pulizia admin; **nomi nuovi: AI Writer · AI Keywords · AI Audit · AI Rank · AI GEO Audit**; pagina docs `/docs/ai-reputation`. Run d'acquisto su Stabia (run 4, 44 risposte, 0,87 $) **finito ma non ancora letto**: Clemente ha detto "lo vediamo dopo".
 > **Aggiornamento 2026-10-13 notte:** FATTI 1) run 4 Stabia letto (ti consigliano 2% vs ti conoscono 79%, 2 risposte usano il suo sito senza nominarla) → report d'acquisto con numeri propri + piano meno prudente per le aziende (pending da 8 a 1), ADR-018; 2) AI GEO Audit: hero "Come funziona" + sezione "Scopri cosa puoi fare" online. 3) sottotitoli dei 5 moduli riscritti come promesse semplici + "Nuovo Progetto" anche in AI Audit (commit `bae2bfc`). 4) **decisione Clemente: nessun piano gratuito, 100 crediti in regalo all'iscrizione una volta sola** (commit `24ad9f9`: un solo valore da Admin > Impostazioni usato ovunque, piano Free spento in DB, /pricing e registrazione allineati). 5) /pricing con piani a "Contattami" (decisione Clemente: B, attivazione a mano, info@ainstein.it funziona), /docs indice e menu ai 5 moduli; 4 pagine docs (primi passi, panoramica, FAQ, crediti) in riscrittura; 6) tour guidati riscritti + tour AI GEO Audit (commit `36de377`). 7) **"Punto della situazione" FATTO e online** (decisione Clemente: dentro AI Rank, nome non "Recap", spunto dal Recap di Amevista; spec `docs/specs/seo-tracking-punto-situazione.md`, commit `0fe39f4`, `d8de9a9`): GA4 + Search Console dal vivo, confronto col periodo prima e con l'anno prima, commento AI in 5 paragrafi, 5 crediti. Testato su dati inventati (testo corretto); **manca il test con dati veri**: Clemente deve collegare GA4 + Search Console su un progetto AI Rank in produzione. Mancano anche docs utente + data-model + tour della scheda. **URGENTE 2026-10-13 sera: credito API Anthropic ESAURITO** (dalle 15:10 tutte le chiamate AI vanno in fallback su GPT-4o; ora il registro AI scrive il motivo). Poi landing e post. **Landing nuova in stile Semrush ONLINE** (2026-10-13 sera, decisioni Clemente: stile Semrush coi colori Ainstein, focus tool AI, niente storia personale, casella con controllo AI gratuito: highlight a tutti, dettagli dopo l'iscrizione; design `docs/plans/2026-10-13-landing-semrush-design.md`, piano `docs/plans/2026-10-13-landing-semrush.md`, file `public/landing5.php`, landing4 resta per tornare indietro). Il controllo gratuito: anti-SSRF (SafeScraper), 3/ora e 10/giorno per IP, 300/giorno totali, cache 6 h per sito; sito lento (beweb.it, 6 s a pagina) = 54 s. ainstein.it stesso prende 2/5: mancano robots.txt, sitemap, dati strutturati (da sistemare prima del post). **PROMEMORIA di Clemente: pubblicare l'app Google in Cloud Console** (schermata di consenso OAuth: da "Test" a "In produzione" + verifica per gli scope sensibili analytics.readonly e webmasters.readonly) — spiegargli come fare. Era: punto 5, /docs e /pricing ai 5 moduli (in /pricing restano "7 moduli", Google Ads/Content Creator, "Report AI settimanali", "crediti si rinnovano ogni mese"; da capire se Starter/Pro/Agency si possono davvero comprare: `users` non ha `plan_id`). Rimandato: riassunti del judge che nominano chi viene consigliato (vale dai run futuri).
