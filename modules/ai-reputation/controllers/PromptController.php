@@ -96,14 +96,32 @@ class PromptController
     /** POST /ai-reputation/project/{id}/audit-type - tipo di audit del progetto (acquisto, reputazione, entrambi) */
     public function auditType(int $id): void
     {
-        $this->requireEditable($id);
+        // Dalla pagina si cambia senza ricaricare (fetch, JSON con la nuova stima); il form resta come fallback
+        $wantsJson = !empty($_POST['ajax']) || str_contains((string) ($_SERVER['HTTP_ACCEPT'] ?? ''), 'application/json');
+        $project = $this->requireEditable($id);
         $type = $_POST['audit_type'] ?? '';
         if (!isset(Prompt::AUDIT_TYPES[$type])) {
+            if ($wantsJson) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'Tipo di audit non valido']);
+                exit;
+            }
             $_SESSION['_flash']['error'] = 'Tipo di audit non valido';
             Router::redirect("/ai-reputation/project/{$id}#prompts");
             return;
         }
         $this->project->update($id, ['audit_type' => $type]);
+        if ($wantsJson) {
+            $project['audit_type'] = $type;
+            $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, Auth::user()['id']);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'audit_type' => $type,
+                'estimate' => \Modules\AiReputation\Models\Run::estimate($project, $this->prompt->forAudit($id, $type), $creditUserId),
+            ]);
+            exit;
+        }
         $_SESSION['_flash']['success'] = 'Audit: ' . Prompt::AUDIT_TYPES[$type];
         Router::redirect("/ai-reputation/project/{$id}#prompts");
     }

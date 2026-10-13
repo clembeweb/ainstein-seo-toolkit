@@ -56,6 +56,22 @@ class Run
         return $base;
     }
 
+    /**
+     * Stima del prossimo run (domande, risposte, crediti, saldo): la stessa che controlla RunController::start().
+     * Usata dalla Overview e dal cambio di tipo di audit in pagina.
+     */
+    public static function estimate(array $project, array $prompts, int $creditUserId): array
+    {
+        $engines = array_values(array_filter($project['engines'] ?? [], fn($e) => \Modules\AiReputation\Services\EngineCollectorService::isConfigured($e)));
+        $responses = self::plannedTotal($prompts, $engines, max(1, (int) ($project['repeats'] ?? 1)));
+        return [
+            'prompts' => count($prompts),
+            'responses' => $responses,
+            'credits' => round($responses * \Core\Credits::getCost('collect_response', Project::SLUG, 1), 1),
+            'balance' => round((float) \Core\Credits::getBalance($creditUserId), 1),
+        ];
+    }
+
     /** Totale risposte previste per un run */
     public static function plannedTotal(array $prompts, array $engines, int $repeats): int
     {

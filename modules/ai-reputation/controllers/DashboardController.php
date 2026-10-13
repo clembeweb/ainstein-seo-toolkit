@@ -59,15 +59,8 @@ class DashboardController
         // Stima del prossimo run, mostrata prima di "Avvia run": stesso calcolo di RunController::start()
         $auditType = (string) ($project['audit_type'] ?? 'reputation');
         $activePrompts = $this->prompt->forAudit($id, $auditType);
-        $engines = array_values(array_filter($project['engines'], fn($e) => \Modules\AiReputation\Services\EngineCollectorService::isConfigured($e)));
-        $estResponses = Run::plannedTotal($activePrompts, $engines, max(1, (int) ($project['repeats'] ?? 1)));
         $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
-        $runEstimate = [
-            'prompts' => count($activePrompts),
-            'responses' => $estResponses,
-            'credits' => round($estResponses * Credits::getCost('collect_response', Project::SLUG, 1), 1),
-            'balance' => round((float) Credits::getBalance($creditUserId), 1),
-        ];
+        $runEstimate = Run::estimate($project, $activePrompts, $creditUserId);
 
         return View::render('ai-reputation::dashboard/index', [
             'title' => $project['name'] . ' - GEO Audit',
