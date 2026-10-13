@@ -35,7 +35,7 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; <?= date('Y') ?> Ainstein · Beweb Agency S.r.l.s. Tutti i diritti riservati.</p>
+            <p>&copy; <?= date('Y') ?> Ainstein è un servizio di Beweb Agency S.r.l.s. · Via Tommaso Sorrentino 26, 80054 Gragnano (NA) · P.IVA 09334871218 · <a href="mailto:info@ainstein.it" style="color:inherit">info@ainstein.it</a></p>
         </div>
     </div>
 </footer>

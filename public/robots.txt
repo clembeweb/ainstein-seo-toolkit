@@ -1,0 +1,21 @@
+# ainstein.it — pagine pubbliche aperte a motori e AI, area riservata esclusa
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /projects
+Disallow: /profile
+Disallow: /notifications
+Disallow: /check/
+Disallow: /check-ai
+Disallow: /api/
+Disallow: /ai-content/
+Disallow: /seo-audit/
+Disallow: /seo-tracking/
+Disallow: /keyword-research/
+Disallow: /ai-reputation/
+Disallow: /oauth/
+Disallow: /invite/
+Disallow: /email/
+
+Sitemap: https://ainstein.it/sitemap.xml

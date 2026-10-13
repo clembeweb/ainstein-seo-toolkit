@@ -1,0 +1,18 @@
+# Ainstein
+
+> Piattaforma italiana con 5 strumenti di intelligenza artificiale per farsi trovare su Google e consigliare dalle AI (ChatGPT, Gemini). Pensata anche per chi non è esperto SEO: piccole attività, blog, piccoli e-commerce, freelance e agenzie. Funziona a crediti: 100 crediti in regalo all'iscrizione.
+
+Ainstein è un servizio di Beweb Agency S.r.l.s., Via Tommaso Sorrentino 26, 80054 Gragnano (NA), P.IVA 09334871218. Contatti: info@ainstein.it.
+
+## Strumenti
+- [AI GEO Audit](https://ainstein.it/docs/ai-reputation): fa a ChatGPT e Gemini le domande dei clienti di un'attività e mostra se la consigliano, chi consigliano al posto suo e cosa pubblicare.
+- [AI Audit](https://ainstein.it/docs/seo-audit): controllo tecnico del sito come lo vede Google, gratuito.
+- [AI Keywords](https://ainstein.it/docs/keyword-research): ricerche con volumi reali, struttura del sito e piano editoriale.
+- [AI Writer](https://ainstein.it/docs/ai-content): articoli dal piano editoriale fino a WordPress, anche in automatico.
+- [AI Rank](https://ainstein.it/docs/seo-tracking): posizioni su Google, Quick Wins e "Punto della situazione" con Google Analytics e Search Console.
+
+## Pagine utili
+- [Prezzi](https://ainstein.it/pricing)
+- [Primi passi](https://ainstein.it/docs/getting-started)
+- [Come funzionano i crediti](https://ainstein.it/docs/credits)
+- [Domande frequenti](https://ainstein.it/docs/faq)

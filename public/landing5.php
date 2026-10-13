@@ -37,6 +37,35 @@ $C = ['geo' => '#6366f1', 'audit' => '#10b981', 'kw' => '#8b5cf6', 'writer' => '
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://ainstein.it/">
     <meta name="theme-color" content="#006e96">
+    <link rel="canonical" href="https://ainstein.it/">
+    <script type="application/ld+json"><?= json_encode([
+        '@context' => 'https://schema.org',
+        '@graph' => [
+            [
+                '@type' => 'Organization',
+                '@id' => 'https://ainstein.it/#org',
+                'name' => 'Ainstein',
+                'legalName' => 'Beweb Agency S.r.l.s.',
+                'vatID' => 'IT09334871218',
+                'url' => 'https://ainstein.it/',
+                'logo' => 'https://ainstein.it/assets/images/logo-ainstein-square.png',
+                'email' => 'info@ainstein.it',
+                'address' => ['@type' => 'PostalAddress', 'streetAddress' => 'Via Tommaso Sorrentino 26', 'postalCode' => '80054', 'addressLocality' => 'Gragnano', 'addressRegion' => 'NA', 'addressCountry' => 'IT'],
+                'contactPoint' => ['@type' => 'ContactPoint', 'contactType' => 'customer support', 'email' => 'info@ainstein.it', 'availableLanguage' => 'it'],
+            ],
+            ['@type' => 'WebSite', '@id' => 'https://ainstein.it/#site', 'url' => 'https://ainstein.it/', 'name' => 'Ainstein', 'inLanguage' => 'it-IT', 'publisher' => ['@id' => 'https://ainstein.it/#org']],
+            [
+                '@type' => 'SoftwareApplication',
+                'name' => 'Ainstein',
+                'applicationCategory' => 'BusinessApplication',
+                'operatingSystem' => 'Web',
+                'inLanguage' => 'it-IT',
+                'description' => '5 strumenti AI per farsi trovare su Google e consigliare da ChatGPT e Gemini: AI GEO Audit, AI Audit, AI Keywords, AI Writer, AI Rank.',
+                'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'EUR', 'description' => $bonus . ' crediti in regalo all’iscrizione'],
+                'publisher' => ['@id' => 'https://ainstein.it/#org'],
+            ],
+        ],
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet">
