@@ -14,35 +14,11 @@
                 Report generati con intelligenza artificiale
             </p>
         </div>
-        <div class="mt-4 sm:mt-0">
-            <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/reports/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
-                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Genera Report
-            </a>
-        </div>
     </div>
 
-    <!-- Credits Info -->
-    <div class="bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg p-4 text-white">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="h-10 w-10 rounded-lg bg-white/20 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                    </svg>
-                </div>
-                <div>
-                    <p class="font-medium">Crediti AI disponibili</p>
-                    <p class="text-sm text-white/80">Ogni report consuma crediti in base alla complessità</p>
-                </div>
-            </div>
-            <div class="text-right">
-                <p class="text-2xl font-bold"><?= number_format($credits ?? 0) ?></p>
-                <p class="text-sm text-white/80">crediti</p>
-            </div>
-        </div>
+    <!-- Stato funzione: generazione sospesa finché non viene rifatta (vedi docs/LANCIO-LINKEDIN.md, "Dopo il post") -->
+    <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4 text-sm text-slate-600 dark:text-slate-300">
+        Qui trovi i report AI già generati per questo progetto. Il report settimanale automatico è in lavorazione e per ora non viene generato.
     </div>
 
     <!-- Filters -->
@@ -71,10 +47,7 @@
                 </svg>
             </div>
             <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">Nessun report</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Genera il tuo primo report AI per ottenere insights dettagliati</p>
-            <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/reports/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
-                Genera Report
-            </a>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Per ora nessun report per questo progetto.</p>
         </div>
         <?php else: ?>
         <div class="divide-y divide-slate-200 dark:divide-slate-700">
