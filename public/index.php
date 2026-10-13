@@ -487,6 +487,7 @@ Router::get('/docs/{slug}', function (string $slug) {
         'seo-audit' => 'AI Audit',
         'seo-tracking' => 'AI Rank',
         'keyword-research' => 'AI Keywords',
+        'ai-reputation' => 'AI GEO Audit',
         'internal-links' => 'Internal Links',
         'ads-analyzer' => 'Google Ads Analyzer',
         'content-creator' => 'Content Creator',
