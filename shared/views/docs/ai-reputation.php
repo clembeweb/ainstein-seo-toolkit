@@ -166,9 +166,9 @@
 
     <!-- Navigation -->
     <div class="flex items-center justify-between pt-8 border-t border-slate-200 dark:border-slate-700">
-        <a href="<?= url('/docs/seo-tracking') ?>" class="inline-flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+        <a href="<?= url('/docs/keyword-research') ?>" class="inline-flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-            AI Rank
+            AI Keywords
         </a>
         <a href="<?= url('/docs/credits') ?>" class="inline-flex items-center gap-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
             Sistema Crediti

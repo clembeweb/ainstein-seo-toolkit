@@ -20,7 +20,7 @@
             </div>
             <div class="min-w-0">
                 <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI Writer</h3>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Genera articoli SEO ottimizzati con intelligenza artificiale</p>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Articoli per il tuo blog scritti partendo da ciò che si cerca su Google</p>
             </div>
             <svg class="w-5 h-5 text-slate-300 dark:text-slate-600 shrink-0 mt-0.5 group-hover:text-primary-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -52,7 +52,7 @@
             </div>
             <div class="min-w-0">
                 <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI Rank</h3>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Monitora posizioni keyword, traffico e revenue nel tempo</p>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Segui le posizioni del tuo sito su Google e scopri dove puoi salire</p>
             </div>
             <svg class="w-5 h-5 text-slate-300 dark:text-slate-600 shrink-0 mt-0.5 group-hover:text-primary-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -68,7 +68,7 @@
             </div>
             <div class="min-w-0">
                 <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI Keywords</h3>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Ricerca keyword con clustering AI e architettura sito</p>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Scopri cosa cerca la gente e trasformalo in pagine e articoli</p>
             </div>
             <svg class="w-5 h-5 text-slate-300 dark:text-slate-600 shrink-0 mt-0.5 group-hover:text-primary-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -91,54 +91,6 @@
             </svg>
         </a>
 
-        <!-- Internal Links -->
-        <a href="<?= url('/docs/internal-links') ?>" class="group flex items-start gap-4 p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
-            <div class="shrink-0 w-11 h-11 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
-                <svg class="w-6 h-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
-                </svg>
-            </div>
-            <div class="min-w-0">
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Internal Links</h3>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Analizza la struttura di link interni e ottimizza il link juice</p>
-            </div>
-            <svg class="w-5 h-5 text-slate-300 dark:text-slate-600 shrink-0 mt-0.5 group-hover:text-primary-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
-        </a>
-
-        <!-- Google Ads Analyzer -->
-        <a href="<?= url('/docs/ads-analyzer') ?>" class="group flex items-start gap-4 p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
-            <div class="shrink-0 w-11 h-11 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
-                <svg class="w-6 h-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
-                </svg>
-            </div>
-            <div class="min-w-0">
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Google Ads Analyzer</h3>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Analizza campagne Google Ads e identifica keyword negative</p>
-            </div>
-            <svg class="w-5 h-5 text-slate-300 dark:text-slate-600 shrink-0 mt-0.5 group-hover:text-primary-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
-        </a>
-
-        <!-- Content Creator -->
-        <a href="<?= url('/docs/content-creator') ?>" class="group flex items-start gap-4 p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
-            <div class="shrink-0 w-11 h-11 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
-                <svg class="w-6 h-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
-                </svg>
-            </div>
-            <div class="min-w-0">
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Content Creator</h3>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Genera contenuti HTML completi per pagine prodotto, categorie, servizi e articoli</p>
-            </div>
-            <svg class="w-5 h-5 text-slate-300 dark:text-slate-600 shrink-0 mt-0.5 group-hover:text-primary-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
-        </a>
     </div>
 </div>
 
