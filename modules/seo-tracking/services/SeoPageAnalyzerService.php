@@ -137,10 +137,11 @@ class SeoPageAnalyzerService
             );
 
             // 5. Chiama AI
-            $response = $this->aiService->analyze(
+            // charge_credits=false: AiService non addebita la sua voce variabile, addebito qui page_analysis
+            $response = $this->aiService->complete(
                 $userId,
-                $prompt,
-                '',
+                [['role' => 'user', 'content' => $prompt]],
+                ['charge_credits' => false],
                 'seo-tracking'
             );
 
@@ -157,6 +158,12 @@ class SeoPageAnalyzerService
             // 6. Parse risposta
             $analysisResult = $this->parseResponse($response['result']);
 
+            // Addebito solo ad analisi riuscita, la cifra mostrata in pagina
+            Credits::consume($userId, $creditCost, 'page_analysis', 'seo-tracking', [
+                'keyword' => $keyword,
+                'url' => $targetUrl,
+            ]);
+
             // 7. Salva analisi
             $analysisId = $this->saveAnalysis(
                 $projectId,
@@ -165,7 +172,7 @@ class SeoPageAnalyzerService
                 $currentPosition,
                 $analysisResult,
                 $competitorPages,
-                $response['credits_used'] ?? $creditCost
+                $creditCost
             );
 
             return [
@@ -178,7 +185,7 @@ class SeoPageAnalyzerService
                     'word_count' => $targetPageData['word_count'] ?? 0,
                 ],
                 'competitors_analyzed' => count($competitorPages),
-                'credits_used' => $response['credits_used'] ?? $creditCost,
+                'credits_used' => $creditCost,
             ];
 
         } catch (\Exception $e) {

@@ -244,10 +244,11 @@ class AiController
 
         $candidates = $this->quickWinsService->getCandidateKeywords($projectId);
         $creditCost = $this->quickWinsService->getCreditCost();
-        $userCredits = Credits::getBalance($user['id']);
+        $userCredits = Credits::getBalance(\Services\ProjectAccessService::getCreditUserId($project, $user['id']));
 
         return View::render('seo-tracking/ai/quick-wins', [
-            'title' => 'Quick Wins AI - ' . $project['name'],
+            'title' => 'Quick Wins - ' . $project['name'],
+            'pageAnalysisCost' => $this->pageAnalyzer->getCreditCost(),
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
@@ -318,7 +319,8 @@ class AiController
         $userCredits = Credits::getBalance($user['id']);
 
         return View::render('seo-tracking/ai/quick-wins', [
-            'title' => 'Quick Wins AI - ' . $group['name'],
+            'title' => 'Quick Wins - ' . $group['name'],
+            'pageAnalysisCost' => $this->pageAnalyzer->getCreditCost(),
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
@@ -426,9 +428,11 @@ class AiController
 
         try {
             // Esegui analisi
+            // Crediti al proprietario del progetto (progetti condivisi)
+            $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
             $result = $this->pageAnalyzer->analyze(
                 $projectId,
-                $user['id'],
+                $creditUserId,
                 $keyword,
                 $url,
                 $position,
@@ -581,6 +585,7 @@ class AiController
         $isConfigured = $this->pageAnalyzer->isConfigured();
 
         return View::render('seo-tracking/ai/page-analyzer', [
+            'title' => 'Analisi pagina - ' . $project['name'],
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,

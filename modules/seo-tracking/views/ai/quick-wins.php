@@ -18,30 +18,14 @@
                 </svg>
             </div>
             <div>
-                <h3 class="text-lg font-semibold text-amber-800 dark:text-amber-200">Cos'e Quick Wins?</h3>
+                <h3 class="text-lg font-semibold text-amber-800 dark:text-amber-200">Le keyword a un passo dalla prima pagina</h3>
                 <p class="mt-1 text-sm text-amber-700 dark:text-amber-300">
-                    Quick Wins identifica le keyword con <strong>alto potenziale di miglioramento</strong>:
-                    keyword in posizione 4-20 con buone impressioni che potrebbero facilmente salire in Top 3.
+                    L'elenco è <strong>gratis</strong>: sono le keyword dove sei già vicino alle prime posizioni, ordinate per quanto valgono.
+                    Per ognuna puoi chiedere l'<strong>analisi della pagina</strong>: l'AI la confronta con i primi 3 di Google e ti dice cosa cambiare.
                 </p>
                 <ul class="mt-3 text-sm text-amber-700 dark:text-amber-300 space-y-1">
-                    <li class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        Posizione attuale: 4-20
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        Impressioni minime: 100
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        L'AI analizza e suggerisce azioni concrete
-                    </li>
+                    <li>Con Search Console collegata: posizione 4-20, ordinate per click che puoi guadagnare</li>
+                    <li>Senza Search Console: posizioni tracciate 4-30 dell'ultimo mese, ordinate per volume di ricerca</li>
                 </ul>
             </div>
         </div>
@@ -58,7 +42,7 @@
                 </div>
                 <div>
                     <p class="text-3xl font-bold text-slate-900 dark:text-white"><?= count($candidates) ?></p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">Keyword eligibili</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Keyword a un passo</p>
                 </div>
             </div>
         </div>
@@ -71,8 +55,8 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="text-3xl font-bold text-slate-900 dark:text-white"><?= $creditCost ?></p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">Crediti richiesti</p>
+                    <p class="text-3xl font-bold text-slate-900 dark:text-white"><?= rtrim(rtrim(number_format((float) $pageAnalysisCost, 1, ',', ''), '0'), ',') ?></p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Crediti per analisi pagina</p>
                 </div>
             </div>
         </div>
@@ -92,73 +76,19 @@
         </div>
     </div>
 
-    <!-- Analyze Button -->
     <?php if (!$isConfigured): ?>
     <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-        <div class="flex items-center gap-3">
-            <svg class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            </svg>
-            <p class="text-sm text-red-700 dark:text-red-300">API AI non configurata. Contatta l'amministratore.</p>
-        </div>
+        <p class="text-sm text-red-700 dark:text-red-300">L'analisi delle pagine con l'AI non è configurata. Contatta l'amministratore. L'elenco qui sotto resta disponibile.</p>
     </div>
-    <?php elseif (count($candidates) === 0): ?>
+    <?php endif; ?>
+
+    <?php if (count($candidates) === 0): ?>
     <div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-8 text-center">
-        <div class="mx-auto h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mb-4">
-            <svg class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-        </div>
-        <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">Nessuna keyword eligibile</h3>
+        <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">Nessuna keyword a un passo, per ora</h3>
         <p class="text-sm text-slate-500 dark:text-slate-400">
-            Non ci sono keyword in posizione 4-20 con almeno 100 impressioni.<br>
-            Sincronizza i dati GSC o aggiungi piu keyword al tracking.
+            Qui compaiono le keyword in posizione 4-20 con dati di Search Console, oppure in posizione 4-30 nel tracking dell'ultimo mese.<br>
+            Collega Search Console o aggiungi al tracking le keyword per cui sei già vicino alla prima pagina.
         </p>
-    </div>
-    <?php elseif ($userCredits < $creditCost): ?>
-    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-        <div class="flex items-center gap-3">
-            <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            </svg>
-            <p class="text-sm text-amber-700 dark:text-amber-300">
-                Crediti insufficienti. Hai <?= $userCredits ?> crediti, ne servono <?= $creditCost ?>.
-            </p>
-        </div>
-    </div>
-    <?php else: ?>
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Pronto per l'analisi</h3>
-                <p class="text-sm text-slate-500 dark:text-slate-400">
-                    Verranno analizzate <?= count($candidates) ?> keyword per identificare le migliori opportunita
-                </p>
-            </div>
-            <button
-                @click="analyze()"
-                :disabled="loading"
-                class="inline-flex items-center px-6 py-3 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold shadow-lg hover:from-amber-600 hover:to-orange-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-                <template x-if="!loading">
-                    <span class="flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                        Analizza Quick Wins
-                    </span>
-                </template>
-                <template x-if="loading">
-                    <span class="flex items-center gap-2">
-                        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Analisi in corso...
-                    </span>
-                </template>
-            </button>
-        </div>
     </div>
     <?php endif; ?>
 
@@ -319,11 +249,11 @@
     </div>
 
     <!-- Candidate Keywords Preview -->
-    <?php if (count($candidates) > 0 && $isConfigured): ?>
+    <?php if (count($candidates) > 0): ?>
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Keyword Candidate</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Preview delle keyword che verranno analizzate</p>
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Keyword a un passo dalla prima pagina</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Clicca "Analizza pagina" per sapere cosa cambiare rispetto ai primi 3 di Google</p>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full">
@@ -331,14 +261,16 @@
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Keyword</th>
                         <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Posizione</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Volume</th>
                         <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Click</th>
                         <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Impressioni</th>
                         <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">CTR</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider" title="Click al mese in più stimati arrivando in top 3 (solo con Search Console)">Click in più</th>
                         <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Azioni</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                    <?php foreach (array_slice($candidates, 0, 10) as $kw): ?>
+                    <?php foreach ($candidates as $kw): ?>
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                         <td class="px-4 py-3">
                             <p class="text-sm font-medium text-slate-900 dark:text-white truncate max-w-xs"><?= e($kw['keyword']) ?></p>
@@ -352,23 +284,25 @@
                                 <?= number_format($pos, 1) ?>
                             </span>
                         </td>
-                        <td class="px-4 py-3 text-right text-sm text-slate-900 dark:text-white"><?= number_format($kw['clicks'] ?? 0) ?></td>
-                        <td class="px-4 py-3 text-right text-sm text-slate-500 dark:text-slate-400"><?= number_format($kw['impressions'] ?? 0) ?></td>
-                        <td class="px-4 py-3 text-right text-sm text-slate-500 dark:text-slate-400"><?= number_format(($kw['ctr'] ?? 0) * 100, 2) ?>%</td>
+                        <td class="px-4 py-3 text-right text-sm text-slate-500 dark:text-slate-400"><?= !empty($kw['search_volume']) ? number_format($kw['search_volume']) : '-' ?></td>
+                        <td class="px-4 py-3 text-right text-sm text-slate-900 dark:text-white"><?= $kw['data_source'] === 'gsc' ? number_format($kw['clicks'] ?? 0) : '-' ?></td>
+                        <td class="px-4 py-3 text-right text-sm text-slate-500 dark:text-slate-400"><?= $kw['data_source'] === 'gsc' ? number_format($kw['impressions'] ?? 0) : '-' ?></td>
+                        <td class="px-4 py-3 text-right text-sm text-slate-500 dark:text-slate-400"><?= $kw['data_source'] === 'gsc' ? number_format(($kw['ctr'] ?? 0) * 100, 2) . '%' : '-' ?></td>
+                        <td class="px-4 py-3 text-right text-sm font-medium text-emerald-600 dark:text-emerald-400"><?= $kw['potential_clicks'] !== null ? '+' . number_format($kw['potential_clicks']) : '-' ?></td>
                         <td class="px-4 py-3 text-center">
                             <?php if (!empty($kw['target_url'])): ?>
                             <button
                                 @click="analyzeKeywordPage('<?= e(addslashes($kw['keyword'])) ?>', '<?= e(addslashes($kw['target_url'])) ?>', <?= number_format($kw['position'] ?? 0, 1, '.', '') ?>)"
                                 :disabled="pageAnalysisLoading"
                                 class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium rounded-md bg-primary-100 text-primary-700 hover:bg-primary-200 dark:bg-primary-900/50 dark:text-primary-300 dark:hover:bg-primary-800/50 disabled:opacity-50 transition-colors"
-                                title="Analizza pagina con AI">
+                                title="Analizza la pagina con l'AI e confrontala con i primi 3 di Google">
                                 <svg class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                                 </svg>
-                                Analizza
+                                Analizza pagina (<?= rtrim(rtrim(number_format((float) $pageAnalysisCost, 1, ',', ''), '0'), ',') ?> cr)
                             </button>
                             <?php else: ?>
-                            <span class="text-xs text-slate-400" title="Nessun URL target">-</span>
+                            <span class="text-xs text-slate-400" title="Nessuna pagina associata: fai un controllo posizioni o imposta l'URL della keyword">Nessuna pagina</span>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -376,11 +310,6 @@
                 </tbody>
             </table>
         </div>
-        <?php if (count($candidates) > 10): ?>
-        <div class="px-4 py-3 bg-slate-50 dark:bg-slate-700/50 text-center text-sm text-slate-500 dark:text-slate-400">
-            ... e altre <?= count($candidates) - 10 ?> keyword
-        </div>
-        <?php endif; ?>
     </div>
     <?php endif; ?>
 
