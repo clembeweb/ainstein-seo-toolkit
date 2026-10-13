@@ -253,53 +253,75 @@ $guideOpen = $runsCompleted === 0;
             <button type="submit" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors">Aggiungi</button>
         </form>
 
-        <?php if (empty($prompts)): ?>
-        <div class="p-8 text-center text-sm text-slate-500 dark:text-slate-400">Nessuna domanda. Clicca "Domande base" per partire con 8 domande standard.</div>
+        <?php
+        // Solo le domande dell'audit scelto: quelle dell'altro tipo non entrano nel run e confondono (feedback Clemente 2026-10-13)
+        $shown = array_values(array_filter($prompts, fn($p) => in_array($p['audit_set'] ?? 'reputation', $auditSets, true)));
+        $hiddenCount = count($prompts) - count($shown);
+        $activeShown = count(array_filter($shown, fn($p) => (int) $p['is_active'] === 1));
+        $kindLabel = [
+            'nav' => ['Chi è', 'Domande per sapere chi è e dove si trova', 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'],
+            'rep' => ['Reputazione', 'È affidabile? Recensioni, problemi, notizie', 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300'],
+            'comm' => ['Ti sta valutando', 'Il cliente conosce già il nome e valuta prezzi, servizi, condizioni', 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'],
+            'comp' => ['Cerca il servizio', 'Il cliente cerca il servizio senza conoscerti: le AI citano te o i concorrenti?', 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300'],
+        ];
+        ?>
+        <?php if (empty($shown)): ?>
+        <div class="p-8 text-center text-sm text-slate-500 dark:text-slate-400">
+            Nessuna domanda per l'audit "<?= e(\Modules\AiReputation\Models\Prompt::AUDIT_TYPES[$auditType] ?? $auditType) ?>". Clicca "<?= in_array('purchase', $auditSets, true) ? 'Genera domande d\'acquisto' : 'Genera domande sulla reputazione' ?>" qui sopra.
+            <?php if ($hiddenCount > 0): ?><br><span class="text-xs">Ci sono <?= $hiddenCount ?> domande dell'altro tipo di audit: non entrano in questo run.</span><?php endif; ?>
+        </div>
         <?php else: ?>
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-slate-50 dark:bg-slate-700/50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cluster</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Domanda</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Attiva</th>
-                        <th class="px-4 py-3"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                    <?php foreach ($prompts as $p): ?>
-                    <?php
-                    $clusterClass = match ($p['cluster']) {
-                        'rep' => 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300',
-                        'comm' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
-                        'comp' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
-                        default => 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
-                    };
-                    ?>
-                    <?php $inAudit = in_array($p['audit_set'] ?? 'reputation', $auditSets, true); ?>
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 <?= (int) $p['is_active'] && $inAudit ? '' : 'opacity-50' ?>"<?= $inAudit ? '' : ' title="Non entra nel run: è dell&#039;altro tipo di audit"' ?>>
-                        <td class="px-4 py-3 whitespace-nowrap"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $clusterClass ?>"><?= strtoupper($p['cluster']) ?></span> <span class="text-xs text-slate-400"><?= ($p['audit_set'] ?? 'reputation') === 'purchase' ? 'acquisto' : 'reputazione' ?></span></td>
-                        <td class="px-4 py-3 text-sm text-slate-900 dark:text-white"><?php if ((int) ($p['is_leading'] ?? 0) === 1): ?><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-2 bg-slate-200 text-slate-700 dark:bg-slate-600 dark:text-slate-200" title="Nomina già un fatto negativo: nel report sta in un blocco a parte, fuori dal rischio">mirata</span><?php endif; ?><?= e($p['text']) ?></td>
-                        <td class="px-4 py-3">
-                            <form method="POST" action="<?= url($basePath . '/prompts/' . $p['id'] . '/toggle') ?>">
-                                <input type="hidden" name="_csrf_token" value="<?= $csrf ?>">
-                                <button type="submit" class="text-xs font-medium <?= (int) $p['is_active'] ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400' ?>" title="Attiva/disattiva">
-                                    <?= (int) $p['is_active'] ? 'Sì' : 'No' ?>
-                                </button>
-                            </form>
-                        </td>
-                        <td class="px-4 py-3 text-right">
-                            <form method="POST" action="<?= url($basePath . '/prompts/' . $p['id'] . '/delete') ?>" data-confirm="Eliminare questa domanda?" data-confirm-button="Elimina" data-confirm-destructive="1">
-                                <input type="hidden" name="_csrf_token" value="<?= $csrf ?>">
-                                <button type="submit" class="text-slate-400 hover:text-red-600" title="Elimina">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+        <div x-data="arPromptBulk(<?= e(json_encode(array_map(fn($p) => (string) $p['id'], $shown))) ?>)">
+            <div class="px-5 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                <span><strong class="text-slate-700 dark:text-slate-200"><?= $activeShown ?> domande attive</strong> su <?= count($shown) ?>: il run usa solo quelle attive. Per una prova veloce selezionane alcune e disattiva le altre.</span>
+                <?php if ($hiddenCount > 0): ?><span><?= $hiddenCount ?> domande dell'altro tipo di audit sono nascoste e non entrano nel run.</span><?php endif; ?>
+            </div>
+            <div x-show="selectedIds.length > 0" x-cloak class="px-5 py-2.5 flex flex-wrap items-center gap-2 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-800">
+                <span class="text-sm font-medium text-indigo-700 dark:text-indigo-300 mr-2"><span x-text="selectedIds.length"></span> selezionate</span>
+                <button type="button" @click="bulk('deactivate')" class="px-3 py-1.5 rounded-lg bg-slate-600 text-white text-sm font-medium hover:bg-slate-700">Disattiva</button>
+                <button type="button" @click="bulk('activate')" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700">Attiva</button>
+                <button type="button" @click="bulk('only')" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700" title="Attiva le selezionate e disattiva tutte le altre di questo audit">Usa solo queste</button>
+                <button type="button" @click="bulk('delete')" class="px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700">Elimina</button>
+                <button type="button" @click="selectedIds = []" class="px-3 py-1.5 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400">Annulla selezione</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-slate-50 dark:bg-slate-700/50">
+                        <tr>
+                            <th class="w-10 px-4 py-3"><input type="checkbox" @change="toggleAll($event)" :checked="selectedIds.length === allIds.length" class="rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500" title="Seleziona tutte"></th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tipo</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Domanda</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Attiva</th>
+                            <th class="px-4 py-3"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                        <?php foreach ($shown as $p): $k = $kindLabel[$p['cluster']] ?? $kindLabel['nav']; ?>
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 <?= (int) $p['is_active'] ? '' : 'opacity-50' ?>">
+                            <td class="px-4 py-3"><input type="checkbox" value="<?= (int) $p['id'] ?>" x-model="selectedIds" class="rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500"></td>
+                            <td class="px-4 py-3 whitespace-nowrap"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $k[2] ?>" title="<?= e($k[1]) ?>"><?= $k[0] ?></span></td>
+                            <td class="px-4 py-3 text-sm text-slate-900 dark:text-white"><?php if (($p['lang'] ?? 'it') === 'en'): ?><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-2 bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300" title="Domanda in inglese">EN</span><?php endif; ?><?php if ((int) ($p['is_leading'] ?? 0) === 1): ?><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-2 bg-slate-200 text-slate-700 dark:bg-slate-600 dark:text-slate-200" title="Nomina già un fatto negativo: nel report sta in un blocco a parte, fuori dal rischio">mirata</span><?php endif; ?><?= e($p['text']) ?></td>
+                            <td class="px-4 py-3">
+                                <form method="POST" action="<?= url($basePath . '/prompts/' . $p['id'] . '/toggle') ?>">
+                                    <input type="hidden" name="_csrf_token" value="<?= $csrf ?>">
+                                    <button type="submit" class="text-xs font-medium <?= (int) $p['is_active'] ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400' ?>" title="Attiva/disattiva">
+                                        <?= (int) $p['is_active'] ? 'Sì' : 'No' ?>
+                                    </button>
+                                </form>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <form method="POST" action="<?= url($basePath . '/prompts/' . $p['id'] . '/delete') ?>" data-confirm="Eliminare questa domanda?" data-confirm-button="Elimina" data-confirm-destructive="1">
+                                    <input type="hidden" name="_csrf_token" value="<?= $csrf ?>">
+                                    <button type="submit" class="text-slate-400 hover:text-red-600" title="Elimina">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
         <?php endif; ?>
     </div>
@@ -313,6 +335,31 @@ document.addEventListener('alpine:init', () => {
         labels: <?= json_encode($engineLabels) ?>,
     });
 });
+
+function arPromptBulk(ids) {
+    const base = '<?= url($basePath) ?>';
+    const csrf = '<?= $csrf ?>';
+    return {
+        selectedIds: [], allIds: ids,
+        toggleAll(ev) { this.selectedIds = ev.target.checked ? [...this.allIds] : []; },
+        async bulk(action) {
+            const n = this.selectedIds.length;
+            if (action === 'delete' && !(await window.arConfirm('Eliminare ' + n + ' domande? Quelle già usate in un run vengono solo disattivate, così i report passati restano intatti.', { buttonText: 'Elimina', destructive: true }))) return;
+            const fd = new FormData(); fd.append('_csrf_token', csrf); fd.append('action', action);
+            this.selectedIds.forEach(id => fd.append('ids[]', id));
+            try {
+                const resp = await fetch(base + '/prompts/bulk', { method: 'POST', body: fd });
+                if (!resp.ok) throw new Error('Errore server (' + resp.status + ')');
+                const data = await resp.json();
+                if (!data.success) throw new Error(data.error || 'Operazione non riuscita');
+                location.href = location.pathname + '#prompts';
+                location.reload();
+            } catch (e) {
+                if (window.ainstein && window.ainstein.alert) { window.ainstein.alert(e.message, 'error'); } else { alert(e.message); }
+            }
+        },
+    };
+}
 
 function arPromptGen() {
     const base = '<?= url($basePath) ?>';

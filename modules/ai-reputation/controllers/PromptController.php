@@ -4,6 +4,7 @@ namespace Modules\AiReputation\Controllers;
 
 use Core\Auth;
 use Core\Router;
+use Core\Database;
 use Modules\AiReputation\Models\Project;
 use Modules\AiReputation\Models\Prompt;
 
@@ -44,6 +45,52 @@ class PromptController
         $this->prompt->create($id, $text, $cluster, 'it', 'manual', null, $set === 'purchase' ? 'purchase' : 'reputation');
         $_SESSION['_flash']['success'] = 'Domanda aggiunta';
         Router::redirect("/ai-reputation/project/{$id}#prompts");
+    }
+
+    /**
+     * POST /ai-reputation/project/{id}/prompts/bulk (JSON) - azioni su più domande: activate | deactivate | delete | only
+     * ("only" = attiva le selezionate e disattiva le altre dello stesso audit). Sempre filtrato per project_id (IDOR).
+     */
+    public function bulk(int $id): void
+    {
+        header('Content-Type: application/json');
+        $user = Auth::user();
+        $project = $this->project->findAccessible($id, $user['id']);
+        if (!$project || ($project['access_role'] ?? 'owner') === 'viewer') {
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato o permessi insufficienti']);
+            exit;
+        }
+        $action = $_POST['action'] ?? '';
+        $ids = array_values(array_unique(array_filter(array_map('intval', (array) ($_POST['ids'] ?? [])))));
+        if (!$ids || !in_array($action, ['activate', 'deactivate', 'delete', 'only'], true)) {
+            echo json_encode(['success' => false, 'error' => 'Nessuna domanda selezionata']);
+            exit;
+        }
+        $in = implode(',', array_fill(0, count($ids), '?'));
+        $params = array_merge([$id], $ids);
+        if ($action === 'activate' || $action === 'deactivate') {
+            Database::execute("UPDATE ar_prompts SET is_active = ? WHERE project_id = ? AND id IN ({$in})", array_merge([$action === 'activate' ? 1 : 0], $params));
+        } elseif ($action === 'only') {
+            $sets = Prompt::auditSets((string) ($project['audit_type'] ?? 'reputation'));
+            $inSets = implode(',', array_fill(0, count($sets), '?'));
+            Database::execute("UPDATE ar_prompts SET is_active = 0 WHERE project_id = ? AND audit_set IN ({$inSets})", array_merge([$id], $sets));
+            Database::execute("UPDATE ar_prompts SET is_active = 1 WHERE project_id = ? AND id IN ({$in})", $params);
+        } else {
+            // Le domande usate in un run passato si disattivano (cancellarle riscriverebbe i report storici)
+            $used = array_map('intval', array_column(Database::fetchAll("SELECT DISTINCT prompt_id FROM ar_responses WHERE project_id = ? AND prompt_id IN ({$in})", $params), 'prompt_id'));
+            $free = array_values(array_diff($ids, $used));
+            if ($used) {
+                $inU = implode(',', array_fill(0, count($used), '?'));
+                Database::execute("UPDATE ar_prompts SET is_active = 0 WHERE project_id = ? AND id IN ({$inU})", array_merge([$id], $used));
+            }
+            if ($free) {
+                $inF = implode(',', array_fill(0, count($free), '?'));
+                Database::execute("DELETE FROM ar_prompts WHERE project_id = ? AND id IN ({$inF})", array_merge([$id], $free));
+            }
+            $_SESSION['_flash']['success'] = count($free) . ' domande eliminate' . ($used ? ', ' . count($used) . ' disattivate (usate in run passati)' : '');
+        }
+        echo json_encode(['success' => true]);
+        exit;
     }
 
     /** POST /ai-reputation/project/{id}/audit-type - tipo di audit del progetto (acquisto, reputazione, entrambi) */

@@ -77,6 +77,12 @@ Router::post('/ai-reputation/project/{id}/prompts', function ($id) {
     return (new PromptController())->store((int) $id);
 });
 
+Router::post('/ai-reputation/project/{id}/prompts/bulk', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new PromptController())->bulk((int) $id);
+});
+
 Router::post('/ai-reputation/project/{id}/audit-type', function ($id) {
     Middleware::auth();
     Middleware::csrf();
