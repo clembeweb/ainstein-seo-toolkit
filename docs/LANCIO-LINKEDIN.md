@@ -2,7 +2,18 @@
 
 > File di stato del lancio. Aggiornato: 2026-10-13 notte.
 >
-> **PASSAGGIO DI CONSEGNE 2026-10-13 notte (RIPARTIRE DA QUI, una cosa alla volta):** fatto in questa sessione e online:
+> **PASSAGGIO DI CONSEGNE 2026-10-13 tarda sera (RIPARTIRE DA QUI). Decisione Clemente: domani si continua, DOMANI SERA
+> (2026-10-14) SI PUBBLICA il post LinkedIn.** Fatto stasera, tutto online: Punto della situazione rivisto su Stabia con
+> dati veri (GA4 collegato da Clemente, report id 1 in prod, testo di Claude: credito Anthropic OK). Bug quota brand,
+> bottoni Analizza/Monitora per riga e sotto "Cosa fare adesso" ("Parti da qui"), GSC collegabile dal Punto, numeri
+> piccoli senza percentuali allarmistiche, canale "Assistenti AI" in italiano. Scoperte: GA4 ha già il canale
+> **"AI Assistant"** (Stabia: 8 visite su 84) → l'idea "Traffico dalle AI" (punto 9) si fa senza nuovi collegamenti;
+> Stabia non misura conversioni; storico GSC nella proprietà Dominio senza permessi; pagine doppie /capri e /capri/.
+> **Domani, in ordine:** 1) Clemente rifà il Punto di Stabia (5 cr) per vedere testo con la regola numeri piccoli e
+> "Parti da qui"; 2) decidere se il riquadro "Traffico dalle AI" entra prima del post (stima ~1 ora) o dopo;
+> 3) dove sta la scheda Punto in AI Rank; 4) Perplexity nel GEO Audit; 5) bozza del post e pubblicazione la sera.
+>
+> **PASSAGGIO DI CONSEGNE 2026-10-13 notte (precedente):** fatto in questa sessione e online:
 > report d'acquisto GEO con numeri propri (79% conoscono / 2% consigliano), piano GEO meno prudente (ADR-018), hero +
 > "Scopri cosa puoi fare" del GEO, sottotitoli dei moduli, nessun piano Free (100 crediti una volta, piani con
 > "Contattami"), /pricing e /docs ai 5 moduli, tour riscritti + tour GEO, scheda **"Punto della situazione"** in AI Rank

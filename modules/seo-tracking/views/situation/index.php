@@ -7,13 +7,16 @@ $fmtCr = fn(float $v) => rtrim(rtrim(number_format($v, 1, ',', '.'), '0'), ',') 
 $num = fn($v, int $dec = 0) => $v === null ? '–' : number_format((float) $v, $dec, ',', '.');
 $money = fn($v) => $v === null ? '–' : '€ ' . number_format((float) $v, 0, ',', '.');
 // Badge variazione: verde se sale, rosso se scende (per la posizione media è il contrario: più bassa = meglio)
-$delta = function ($pct, bool $inverse = false, string $label = 'vs prima'): string {
+// Con numeri piccoli (sotto SMALL_BASE sia ora sia prima) la variazione può essere casuale: grigia, con spiegazione al passaggio
+$delta = function ($pct, bool $inverse = false, string $label = 'vs prima', $now = null, $before = null): string {
     if ($pct === null) {
         return '<span class="text-xs text-slate-400">' . e($label) . ' –</span>';
     }
+    $small = $now !== null && max(abs((float) $now), abs((float) $before)) < \Modules\SeoTracking\Services\SituationService::SMALL_BASE;
     $good = $inverse ? $pct < 0 : $pct > 0;
-    $cls = $pct == 0 ? 'text-slate-500' : ($good ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400');
-    return '<span class="text-xs font-medium ' . $cls . '">' . ($pct > 0 ? '+' : '') . number_format((float) $pct, 1, ',', '.') . '% <span class="font-normal text-slate-400">' . e($label) . '</span></span>';
+    $cls = $pct == 0 || $small ? 'text-slate-500' : ($good ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400');
+    $title = $small ? ' title="Numeri piccoli (' . number_format((float) $before, 0, ',', '.') . ' → ' . number_format((float) $now, 0, ',', '.') . '): la variazione può essere casuale"' : '';
+    return '<span class="text-xs font-medium ' . $cls . '"' . $title . '>' . ($pct > 0 ? '+' : '') . number_format((float) $pct, 1, ',', '.') . '% <span class="font-normal text-slate-400">' . e($label) . '</span></span>';
 };
 $d = $report['data'] ?? [];
 // Nomi dei canali GA4 in italiano semplice
@@ -21,7 +24,7 @@ $channelName = fn(string $n) => [
     'Organic Search' => 'Google e motori di ricerca', 'Direct' => 'Diretto (scrivono l\'indirizzo)', 'Organic Social' => 'Social',
     'Paid Search' => 'Annunci sui motori', 'Paid Social' => 'Social a pagamento', 'Referral' => 'Altri siti (link)', 'Email' => 'Email',
     'Organic Shopping' => 'Shopping gratuito', 'Paid Shopping' => 'Shopping a pagamento', 'Organic Video' => 'Video', 'Paid Video' => 'Video a pagamento',
-    'Display' => 'Banner (display)', 'Cross-network' => 'Campagne Google (più reti)', 'Unassigned' => 'Non classificato', 'Affiliates' => 'Affiliati', 'SMS' => 'SMS',
+    'AI Assistant' => 'Assistenti AI (ChatGPT, Gemini…)', 'Display' => 'Banner (display)', 'Cross-network' => 'Campagne Google (più reti)', 'Unassigned' => 'Non classificato', 'Affiliates' => 'Affiliati', 'SMS' => 'SMS',
 ][$n] ?? $n;
 $ga4 = $d['ga4'] ?? null;
 $gsc = $d['gsc'] ?? null;
@@ -109,6 +112,58 @@ $kpiCard = function (string $ref, string $label, string $value, string $sub) {
         </p>
     </div>
 
+    <?php
+    // $kind: 'query' (riga = ricerca, con pagina in $r['page']) o 'page' (riga = pagina, con ricerca in $r['query']) → bottoni per riga
+    $rowActions = $canEdit && !empty($report);
+    $iconDoc = '<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>';
+    $iconEye = '<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>';
+    $iconCheck = '<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+    $btn = 'inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors';
+    // Bottoni "Analizza" e "Monitora" di una ricerca ($kind = 'query', pagina in $r['page']) o di una pagina ($kind = 'page', ricerca in $r['query'])
+    $actions = function (string $kind, array $r) use ($tracked, $analysisOk, $analysisCost, $rowActions, $base, $report, $fmtCr, $iconDoc, $iconEye, $iconCheck, $btn): string {
+        if (!$rowActions || !$kind) {
+            return '';
+        }
+        $kw = $kind === 'query' ? $r['key'] : ($r['query'] ?? null);
+        $pageUrl = $kind === 'query' ? ($r['page'] ?? null) : $r['key'];
+        $trackedId = $kind === 'query' ? ($tracked[mb_strtolower(trim($r['key']))] ?? 0) : 0;
+        ob_start(); ?>
+                            <span class="flex items-center gap-1 shrink-0">
+                                <?php if ($kw && $pageUrl && $analysisOk): ?>
+                                <button type="button" :disabled="busy" @click="analyzePage(<?= e(json_encode($kw)) ?>, <?= e(json_encode($pageUrl)) ?>, <?= (int) round((float) ($r['position_b'] ?? 0)) ?>)"
+                                        class="<?= $btn ?>" title="Analizza <?= e($pageUrl) ?> per la ricerca &quot;<?= e($kw) ?>&quot; (<?= e($fmtCr($analysisCost)) ?>)"><?= $iconDoc ?>Analizza</button>
+                                <?php endif; ?>
+                                <?php if ($kind === 'query' && $trackedId): ?>
+                                <a href="<?= url("{$base}/keywords/{$trackedId}") ?>" class="<?= $btn ?> text-emerald-600 dark:text-emerald-400" title="Già monitorata: vedi lo storico"><?= $iconCheck ?>Monitorata</a>
+                                <?php elseif ($kind === 'query'): ?>
+                                <form method="POST" action="<?= url("{$base}/situation/track") ?>" class="inline">
+                                    <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
+                                    <input type="hidden" name="keyword" value="<?= e($r['key']) ?>">
+                                    <input type="hidden" name="report" value="<?= (int) $report['id'] ?>">
+                                    <button type="submit" class="<?= $btn ?>" title="Aggiungi alle keyword monitorate (gratis): seguirai la posizione nel tempo"><?= $iconEye ?>Monitora</button>
+                                </form>
+                                <?php endif; ?>
+                            </span>
+        <?php return (string) ob_get_clean();
+    };
+    // Ricerche e pagine delle tabelle che l'AI cita nel testo (max 4): [kind, riga, etichetta]. Le pagine si riconoscono dal percorso.
+    $citedRows = function (string $text) use ($gsc): array {
+        $out = [];
+        $seen = [];
+        foreach (['query' => 'queries', 'page' => 'pages'] as $kind => $block) {
+            foreach (array_merge($gsc[$block]['losers'] ?? [], $gsc[$block]['gainers'] ?? []) as $r) {
+                $label = $kind === 'page' ? (parse_url($r['key'], PHP_URL_PATH) ?: '/') : $r['key'];
+                $needle = $kind === 'page' ? rtrim($label, '/') : $label;
+                if (mb_strlen($needle) < 4 || isset($seen[$kind . $needle]) || mb_stripos($text, $needle) === false) {
+                    continue;
+                }
+                $seen[$kind . $needle] = true;
+                $out[] = [$kind, $r, $label];
+            }
+        }
+        return array_slice($out, 0, 4);
+    };
+    ?>
     <!-- Commento AI -->
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 space-y-5">
         <?php foreach ($report['narrative'] as $par): ?>
@@ -116,6 +171,17 @@ $kpiCard = function (string $ref, string $label, string $value, string $sub) {
              @mouseenter="highlight(<?= e(json_encode($par['refs'] ?? [])) ?>)" @mouseleave="highlight([])">
             <h3 class="font-semibold text-slate-900 dark:text-white"><?= e($par['titolo']) ?></h3>
             <p class="mt-1 text-sm text-slate-700 dark:text-slate-300 leading-relaxed"><?= nl2br(e($par['testo'])) ?></p>
+            <?php if ($rowActions && stripos($par['titolo'], 'cosa fare') !== false && ($cited = $citedRows($par['testo']))): ?>
+            <div class="mt-3 space-y-2">
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Parti da qui</p>
+                <?php foreach ($cited as [$kind, $r, $label]): ?>
+                <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-50 dark:bg-slate-700/40 px-3 py-2">
+                    <span class="text-sm text-slate-800 dark:text-slate-200"><?= $kind === 'query' ? 'Ricerca' : 'Pagina' ?> <strong><?= e($label) ?></strong></span>
+                    <?= $actions($kind, $r) ?>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
         </div>
         <?php endforeach; ?>
         <?php if (!empty($d['caveats'])): ?>
@@ -128,15 +194,15 @@ $kpiCard = function (string $ref, string $label, string $value, string $sub) {
     <!-- Numeri -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <?php if ($ga4): $t = $ga4['totals']; ?>
-        <?= $kpiCard('ga4_sessions', 'Visite (tutto il sito)', $num($t['sessions']['b']), $delta($t['sessions']['vs_prev_pct']) . $delta($t['sessions']['vs_year_pct'], false, 'vs anno')) ?>
-        <?= $kpiCard('ga4_key_events', 'Conversioni', $num($t['key_events']['b']), $delta($t['key_events']['vs_prev_pct']) . $delta($t['key_events']['vs_year_pct'], false, 'vs anno')) ?>
+        <?= $kpiCard('ga4_sessions', 'Visite (tutto il sito)', $num($t['sessions']['b']), $delta($t['sessions']['vs_prev_pct'], false, 'vs prima', $t['sessions']['b'], $t['sessions']['a']) . $delta($t['sessions']['vs_year_pct'], false, 'vs anno', $t['sessions']['b'], $t['sessions']['y'])) ?>
+        <?= $kpiCard('ga4_key_events', 'Conversioni', $num($t['key_events']['b']), $delta($t['key_events']['vs_prev_pct'], false, 'vs prima', $t['key_events']['b'], $t['key_events']['a']) . $delta($t['key_events']['vs_year_pct'], false, 'vs anno', $t['key_events']['b'], $t['key_events']['y'])) ?>
         <?php if (!empty($ga4['has_revenue'])): ?>
         <?= $kpiCard('ga4_revenue', 'Ricavi', $money($t['revenue']['b']), $delta($t['revenue']['vs_prev_pct']) . $delta($t['revenue']['vs_year_pct'], false, 'vs anno')) ?>
         <?php endif; ?>
         <?php endif; ?>
         <?php if ($gsc): $g = $gsc['totals']; ?>
-        <?= $kpiCard('gsc_clicks', 'Clic da Google', $num($g['clicks']['b']), $delta($g['clicks']['vs_prev_pct']) . $delta($g['clicks']['vs_year_pct'], false, 'vs anno')) ?>
-        <?= $kpiCard('gsc_impressions', 'Volte che compari su Google', $num($g['impressions']['b']), $delta($g['impressions']['vs_prev_pct']) . $delta($g['impressions']['vs_year_pct'], false, 'vs anno')) ?>
+        <?= $kpiCard('gsc_clicks', 'Clic da Google', $num($g['clicks']['b']), $delta($g['clicks']['vs_prev_pct'], false, 'vs prima', $g['clicks']['b'], $g['clicks']['a']) . $delta($g['clicks']['vs_year_pct'], false, 'vs anno', $g['clicks']['b'], $g['clicks']['y'])) ?>
+        <?= $kpiCard('gsc_impressions', 'Volte che compari su Google', $num($g['impressions']['b']), $delta($g['impressions']['vs_prev_pct'], false, 'vs prima', $g['impressions']['b'], $g['impressions']['a']) . $delta($g['impressions']['vs_year_pct'], false, 'vs anno', $g['impressions']['b'], $g['impressions']['y'])) ?>
         <?= $kpiCard('gsc_position', 'Posizione media', $num($g['position']['b'], 1), '<span class="text-xs text-slate-400">prima ' . $num($g['position']['a'], 1) . ' · anno scorso ' . $num($g['position']['y'], 1) . '</span>') ?>
         <?= $kpiCard('gsc_brand', 'Clic che cercano il tuo nome', $gsc['brand']['quota_b_pct'] === null ? '–' : $num($gsc['brand']['quota_b_pct'], 1) . '%', '<span class="text-xs text-slate-400">prima ' . ($gsc['brand']['quota_a_pct'] === null ? '–' : $num($gsc['brand']['quota_a_pct'], 1) . '%') . '</span>') ?>
         <?php endif; ?>
@@ -161,8 +227,8 @@ $kpiCard = function (string $ref, string $label, string $value, string $sub) {
                         <td class="px-4 py-3 text-sm text-slate-900 dark:text-white"><?= e($channelName($c['name'])) ?></td>
                         <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300"><?= $num($c['sessions']['b']) ?></td>
                         <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300"><?= $c['share_b_pct'] === null ? '–' : $num($c['share_b_pct'], 1) . '%' ?></td>
-                        <td class="px-4 py-3"><?= $delta($c['sessions']['vs_prev_pct'], false, '') ?></td>
-                        <td class="px-4 py-3"><?= $delta($c['sessions']['vs_year_pct'], false, '') ?></td>
+                        <td class="px-4 py-3"><?= $delta($c['sessions']['vs_prev_pct'], false, '', $c['sessions']['b'], $c['sessions']['a']) ?></td>
+                        <td class="px-4 py-3"><?= $delta($c['sessions']['vs_year_pct'], false, '', $c['sessions']['b'], $c['sessions']['y']) ?></td>
                         <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300"><?= $num($c['key_events']['b']) ?></td>
                     </tr>
                     <?php endforeach; ?>
@@ -174,14 +240,8 @@ $kpiCard = function (string $ref, string $label, string $value, string $sub) {
 
     <?php
     // Tabelline "chi sale / chi scende"
-    // $kind: 'query' (riga = ricerca, con pagina in $r['page']) o 'page' (riga = pagina, con ricerca in $r['query']) → bottoni per riga
-    $rowActions = $canEdit && !empty($report);
-    $iconDoc = '<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>';
-    $iconEye = '<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>';
-    $iconCheck = '<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
-    $btn = 'inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors';
     $movers = function (string $ref, string $title, array $gainers, array $losers, string $keyField, string $valB, string $valA, string $unit, string $kind = '')
-        use ($num, $tracked, $analysisOk, $analysisCost, $rowActions, $base, $report, $fmtCr, $iconDoc, $iconEye, $iconCheck, $btn) {
+        use ($num, $analysisCost, $rowActions, $fmtCr, $actions) {
         ob_start(); ?>
         <div data-kpi="<?= $ref ?>" class="kpi-card bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden transition-shadow">
             <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-baseline justify-between gap-3">
@@ -196,9 +256,6 @@ $kpiCard = function (string $ref, string $label, string $value, string $sub) {
                     <p class="px-4 pt-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= $lbl ?></p>
                     <ul class="divide-y divide-slate-100 dark:divide-slate-700/60">
                         <?php foreach ($rows as $r):
-                            $kw = $kind === 'query' ? $r['key'] : ($r['query'] ?? null);
-                            $pageUrl = $kind === 'query' ? ($r['page'] ?? null) : ($kind === 'page' ? $r['key'] : null);
-                            $trackedId = $kind === 'query' ? ($tracked[mb_strtolower(trim($r['key']))] ?? 0) : 0;
                             $posInfo = $kind && (($r['position_a'] ?? null) !== null || ($r['position_b'] ?? null) !== null)
                                 ? ' · pos. ' . $num($r['position_a'], 1) . ' → ' . $num($r['position_b'], 1) : '';
                         ?>
@@ -212,24 +269,7 @@ $kpiCard = function (string $ref, string $label, string $value, string $sub) {
                             </div>
                             <div class="mt-0.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
                             <span class="text-xs text-slate-400"><?= $num($r[$valA]) ?> → <?= $num($r[$valB]) ?> <?= $unit ?><?= e($posInfo) ?></span>
-                            <?php if ($rowActions && $kind): ?>
-                            <span class="flex items-center gap-1 shrink-0">
-                                <?php if ($kw && $pageUrl && $analysisOk): ?>
-                                <button type="button" :disabled="busy" @click="analyzePage(<?= e(json_encode($kw)) ?>, <?= e(json_encode($pageUrl)) ?>, <?= (int) round((float) ($r['position_b'] ?? 0)) ?>)"
-                                        class="<?= $btn ?>" title="Analizza <?= e($pageUrl) ?> per la ricerca &quot;<?= e($kw) ?>&quot; (<?= e($fmtCr($analysisCost)) ?>)"><?= $iconDoc ?>Analizza</button>
-                                <?php endif; ?>
-                                <?php if ($kind === 'query' && $trackedId): ?>
-                                <a href="<?= url("{$base}/keywords/{$trackedId}") ?>" class="<?= $btn ?> text-emerald-600 dark:text-emerald-400" title="Già monitorata: vedi lo storico"><?= $iconCheck ?>Monitorata</a>
-                                <?php elseif ($kind === 'query'): ?>
-                                <form method="POST" action="<?= url("{$base}/situation/track") ?>" class="inline">
-                                    <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
-                                    <input type="hidden" name="keyword" value="<?= e($r['key']) ?>">
-                                    <input type="hidden" name="report" value="<?= (int) $report['id'] ?>">
-                                    <button type="submit" class="<?= $btn ?>" title="Aggiungi alle keyword monitorate (gratis): seguirai la posizione nel tempo"><?= $iconEye ?>Monitora</button>
-                                </form>
-                                <?php endif; ?>
-                            </span>
-                            <?php endif; ?>
+                            <?= $actions($kind, $r) ?>
                             </div>
                         </li>
                         <?php endforeach; ?>

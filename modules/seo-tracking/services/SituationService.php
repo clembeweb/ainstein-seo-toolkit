@@ -16,6 +16,8 @@ use Services\ApiLoggerService;
 class SituationService
 {
     public const SLUG = 'seo-tracking';
+    /** Sotto questa soglia (visite, clic, conversioni sia ora sia prima) le percentuali sono rumore: niente % né parole forti. */
+    public const SMALL_BASE = 50;
     public const PERIODS = [
         'last_28' => 'Ultimi 28 giorni',
         'last_90' => 'Ultimi 90 giorni',
@@ -418,6 +420,7 @@ class SituationService
             . "- Usa SOLO i numeri del JSON. Le variazioni sono già calcolate (variazione_vs_prima_pct, variazione_vs_anno_scorso_pct): non ricalcolarle. Un numero negativo è un calo, positivo una crescita. Per la posizione media un numero più basso è MEGLIO (1 = primo risultato). null = dato non disponibile. Numeri all'italiana (virgola per i decimali, punto per le migliaia).\n"
             . "- Spiega il PERCHÉ quando i dati lo mostrano: cerca le ricerche e le pagine che pesano di più sulla variazione (campo differenza_ora_meno_prima; posizione_prima → posizione_ora) e confrontale col totale. Esempio: se i clic calano di 1.900 e una sola ricerca ne perde 890 scendendo dalla posizione 2,9 alla 7,8, quella è la causa principale e va detto chiaramente, con le posizioni.\n"
             . "- Parole semplici, mai gergo: \"visite\" (non sessioni), \"conversioni\" (non eventi chiave), \"ricerche\" (non query), \"pagina\" (non landing page), \"traffico da Google\" (non organico), \"ricerche col tuo nome\" (non brand). Niente elenchi puntati, frasi brevi.\n"
+            . "- NUMERI PICCOLI: se un valore è sotto " . self::SMALL_BASE . " sia ora sia prima (visite, clic, conversioni di un canale, di una ricerca o di una pagina), NON scrivere la percentuale: scrivi i due numeri (\"8 visite invece di 24\", \"da 4 clic a 0\"). Niente parole forti come crollo, forte calo, boom, esplosione su numeri piccoli. Se quasi tutti i numeri del sito sono piccoli, dillo una volta nel primo paragrafo: con pochi numeri le differenze possono essere casuali, conta di più la direzione nel tempo. Le posizioni su Google (es. da 3,3 a 12,5) restano sempre importanti.\n"
             . "- Se has_revenue è false non parlare di ricavi.\n"
             . "- Le 3 azioni devono nascere dai problemi trovati nei dati (pagina X, ricerca Y), non consigli generici validi per tutti.\n"
             . "- Se una fonte manca o c'è un avviso in caveats, dillo in modo semplice nel paragrafo giusto, senza inventare.\n"

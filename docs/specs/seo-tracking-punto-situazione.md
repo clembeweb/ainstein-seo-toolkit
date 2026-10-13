@@ -32,6 +32,11 @@ Il Punto non si limita a raccontare: su ogni ricerca e pagina che sale o scende 
 - **Monitora** (gratis, solo ricerche): `POST situation/track` aggiunge la ricerca a `st_keywords` con `is_tracked=1`,
   `source='situation'`, paese = quello più usato dal progetto (IT se nessuno); se c'era già, la riattiva. Torna alla
   stessa pagina con un flash. Se è già monitorata la riga mostra "Monitorata" con il link allo storico.
+- **"Parti da qui"** sotto "Cosa fare adesso": le ricerche e pagine delle tabelle citate nel testo dell'AI (max 4, le
+  pagine si riconoscono dal percorso) con gli stessi bottoni.
+- **Numeri piccoli** (`SituationService::SMALL_BASE` = 50): sotto soglia sia ora sia prima la variazione è grigia con
+  spiegazione al passaggio del mouse, e il prompt vieta percentuali e parole forti ("8 visite invece di 24").
+- Canale GA4 "AI Assistant" → "Assistenti AI (ChatGPT, Gemini…)".
 - Nome del brand per la quota: dal nome del progetto senza note tra parentesi/quadre, senza coda dopo " - " o " | " e
   senza le parole test/prova/demo/copia (`brandRegex`, test in `scripts/test-situation.php`).
 
