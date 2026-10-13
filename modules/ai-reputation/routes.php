@@ -49,6 +49,12 @@ Router::post('/ai-reputation/project/{id}/settings', function ($id) {
     return (new ProjectController())->updateSettings((int) $id);
 });
 
+Router::post('/ai-reputation/project/{id}/subject', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new ProjectController())->updateSubject((int) $id);
+});
+
 Router::post('/ai-reputation/project/{id}/delete', function ($id) {
     Middleware::auth();
     Middleware::csrf();

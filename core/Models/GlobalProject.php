@@ -976,8 +976,10 @@ class GlobalProject
                         'user_id' => $userId,
                         'global_project_id' => $globalProjectId,
                         'name' => $name,
-                        'subject_name' => $name,
-                        'subject_type' => 'person',
+                        // "(test)", "(cliente)" ecc. sono note sul progetto, non il nome con cui le AI cercano il soggetto
+                        'subject_name' => trim((string) preg_replace('/\s*\([^)]*\)\s*$/u', '', $name)) ?: $name,
+                        // Default azienda (il caso più comune); si cambia dal riquadro "Chi stai monitorando?" o in Impostazioni
+                        'subject_type' => 'company',
                         'website' => $website,
                         'status' => 'active',
                     ]);

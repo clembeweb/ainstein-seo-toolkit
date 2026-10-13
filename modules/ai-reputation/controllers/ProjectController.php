@@ -54,6 +54,34 @@ class ProjectController
         ]);
     }
 
+    /**
+     * POST /ai-reputation/project/{id}/subject - nome e tipo del soggetto dal riquadro della Overview
+     * (prima del profilo: decidono come l'AI cerca e come vengono scritti piano e schede).
+     */
+    public function updateSubject(int $id): void
+    {
+        $user = Auth::user();
+        $project = $this->project->findAccessible($id, $user['id']);
+        if (!$project || ($project['access_role'] ?? 'owner') === 'viewer') {
+            $_SESSION['_flash']['error'] = 'Progetto non trovato o permessi insufficienti';
+            Router::redirect('/ai-reputation');
+            return;
+        }
+        $subjectName = trim($_POST['subject_name'] ?? '');
+        if ($subjectName === '') {
+            $_SESSION['_flash']['error'] = 'Scrivi il nome dell\'azienda o della persona';
+            Router::redirect("/ai-reputation/project/{$id}");
+            return;
+        }
+        $this->project->update($id, [
+            'subject_name' => mb_substr($subjectName, 0, 255),
+            'subject_type' => ($_POST['subject_type'] ?? 'company') === 'person' ? 'person' : 'company',
+            'city' => trim($_POST['city'] ?? '') ?: null,
+        ]);
+        $_SESSION['_flash']['success'] = 'Soggetto aggiornato';
+        Router::redirect("/ai-reputation/project/{$id}");
+    }
+
     public function updateSettings(int $id): void
     {
         $user = Auth::user();

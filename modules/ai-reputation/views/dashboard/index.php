@@ -37,6 +37,33 @@ $guideOpen = $runsCompleted === 0;
 ?>
 
 <div class="space-y-6">
+    <?php if (!$profileConfirmed && ($project['access_role'] ?? 'owner') !== 'viewer'): ?>
+    <!-- Chi stai monitorando: nome e tipo decidono come l'AI cerca il soggetto e come scrive piano e schede -->
+    <form method="POST" action="<?= url($basePath . '/subject') ?>" class="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800 p-5">
+        <input type="hidden" name="_csrf_token" value="<?= $csrf ?>">
+        <h2 class="text-base font-semibold text-slate-900 dark:text-white">Chi stai monitorando?</h2>
+        <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Scrivi il nome come lo cercherebbe un cliente: è quello che chiederemo alle AI. Controllalo prima di generare il profilo.</p>
+        <div class="flex flex-wrap items-end gap-3">
+            <label class="flex-1 min-w-[14rem]">
+                <span class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Nome</span>
+                <input type="text" name="subject_name" value="<?= e($project['subject_name']) ?>" required maxlength="255" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
+            </label>
+            <label class="w-44">
+                <span class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Città (facoltativa)</span>
+                <input type="text" name="city" value="<?= e($project['city'] ?? '') ?>" maxlength="120" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
+            </label>
+            <div class="flex rounded-lg border border-slate-300 dark:border-slate-600 overflow-hidden text-sm">
+                <?php foreach (['company' => 'Azienda o brand', 'person' => 'Persona'] as $val => $lbl): ?>
+                <label class="px-3 py-2 cursor-pointer has-[:checked]:bg-indigo-600 has-[:checked]:text-white bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+                    <input type="radio" name="subject_type" value="<?= $val ?>" class="sr-only" <?= $project['subject_type'] === $val ? 'checked' : '' ?>><?= $lbl ?>
+                </label>
+                <?php endforeach; ?>
+            </div>
+            <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">Salva</button>
+        </div>
+    </form>
+    <?php endif; ?>
+
     <!-- Come si usa -->
     <div x-data="{ open: <?= $guideOpen ? 'true' : 'false' ?> }" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <button type="button" @click="open = !open" class="w-full px-5 py-4 flex items-center justify-between gap-4 text-left">
