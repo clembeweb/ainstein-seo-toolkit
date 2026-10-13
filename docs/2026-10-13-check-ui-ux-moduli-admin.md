@@ -13,6 +13,15 @@
   presente solo in produzione. Aggiunta la migrazione `013_keyword_intent.sql` e applicata in locale.
 - 🟡 Testo stale nelle impostazioni admin del GEO Audit ("il judge paga i crediti AI standard"): corretto.
 
+## Fatto la sera stessa (online)
+- Prezzi in pagina dai costi veri: landing AI Content (20 ad articolo, copertina inclusa) e riquadro costi del
+  progetto (brief e copertina), landing Keyword Research (3/5/5 dalle impostazioni), dashboard utente (tutte le card).
+- Dashboard utente: card GEO Audit; i progetti con solo GEO Audit non risultano più "0 moduli attivi".
+- Admin: via il riquadro "Come creare un nuovo modulo"; moduli accesi prima; menu dei modelli AI solo Claude 5.5
+  (globale e per modulo); schede Jobs solo dei moduli accesi.
+- Restano: nomi unici dei moduli (decisione di Clemente), GEO Audit hero/sezione lunga/docs, sottotitoli, bottone
+  "Nuovo progetto" uniforme, piano Free (decisione), /docs e /pricing, tour.
+
 ## 1. Pagina iniziale dei moduli (la "dashboard" di ogni tool)
 
 | | AI Content | Keyword Research | SEO Audit | Position Tracking | GEO Audit |
