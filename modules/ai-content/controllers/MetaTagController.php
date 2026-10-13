@@ -28,14 +28,26 @@ class MetaTagController
     private Project $project;
     private MetaTag $metaTag;
     /** Costo crediti scraping: livello Base (1 cr) */
-    private const SCRAPE_CREDIT_COST = 1;
+    // Costi letti da Admin > Moduli > AI Content (cost_meta_scrape / cost_meta_generate), vedi scrapeCost()/generateCost()
     /** Costo crediti generazione AI: livello Standard (3 cr) */
-    private const GENERATE_CREDIT_COST = 3;
+
 
     public function __construct()
     {
         $this->project = new Project();
         $this->metaTag = new MetaTag();
+    }
+
+    /** Crediti per pagina letta (Admin > Moduli > AI Content > Costi). */
+    public static function scrapeCost(): float
+    {
+        return Credits::getCost('meta_scrape', 'ai-content', 1);
+    }
+
+    /** Crediti per meta tag generato (Admin > Moduli > AI Content > Costi). */
+    public static function generateCost(): float
+    {
+        return Credits::getCost('meta_generate', 'ai-content', 2);
     }
 
     /**
@@ -121,8 +133,12 @@ class MetaTagController
 
         $result = $this->metaTag->getPaginated($projectId, $page, $perPage, $filters);
         $stats = $this->metaTag->getStats($projectId);
+        $creditBalance = Credits::getBalance(\Services\ProjectAccessService::getCreditUserId($project, $user['id']));
 
         return View::render('ai-content/meta-tags/list', [
+            'creditBalance' => $creditBalance,
+            'scrapeCost' => self::scrapeCost(),
+            'generateCost' => self::generateCost(),
             'title' => 'Meta Tags - ' . $project['name'],
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
@@ -580,7 +596,7 @@ class MetaTagController
         $batchSize = min(50, max(1, $batchSize));
 
         // Verifica crediti (1 per URL come da spec)
-        $cost = $batchSize * 1;
+        $cost = $batchSize * self::scrapeCost();
         if (!Credits::hasEnough($creditUserId, $cost)) {
             echo json_encode([
                 'success' => false,
@@ -589,7 +605,11 @@ class MetaTagController
             return;
         }
 
-        $pending = $this->metaTag->getNextPending($projectId, $batchSize);
+        // Pagine scelte dall'utente (se ce ne sono), altrimenti le prossime in attesa
+        $selectedIds = array_filter(array_map('intval', (array) ($_POST['ids'] ?? [])));
+        $pending = !empty($selectedIds)
+            ? $this->metaTag->getByIdsAndStatus($projectId, $selectedIds, 'pending', $batchSize)
+            : $this->metaTag->getNextPending($projectId, $batchSize);
 
         if (empty($pending)) {
             echo json_encode([
@@ -683,7 +703,7 @@ class MetaTagController
         $batchSize = min(20, max(1, $batchSize)); // Max 20 per batch
 
         // Verifica crediti (2 per generazione come da spec)
-        $cost = $batchSize * 2;
+        $cost = $batchSize * self::generateCost();
         if (!Credits::hasEnough($creditUserId, $cost)) {
             echo json_encode([
                 'success' => false,
@@ -721,9 +741,8 @@ class MetaTagController
             try {
                 $prompt = $this->buildMetaTagPrompt($item);
 
-                $result = $ai->analyze($user['id'], $prompt, '', 'ai-content', [
-                    'skip_credits' => true, // Gestiamo i crediti manualmente
-                ]);
+                // complete() con charge_credits=false: addebita solo il controller (meta_generate)
+                $result = $ai->complete($user['id'], [['role' => 'user', 'content' => $prompt]], ['charge_credits' => false], 'ai-content');
 
                 Database::reconnect();
 
@@ -756,7 +775,7 @@ class MetaTagController
 
         // Consuma crediti solo per quelli effettivamente generati
         if ($generated > 0) {
-            Credits::consume($creditUserId, $generated * 2, 'meta_generate', 'ai-content', [
+            Credits::consume($creditUserId, $generated * self::generateCost(), 'meta_generate', 'ai-content', [
                 'project_id' => $projectId,
                 'generated' => $generated,
             ]);
@@ -1343,7 +1362,7 @@ PROMPT;
         $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
 
         // Verifica crediti
-        $totalCost = $pendingCount * self::SCRAPE_CREDIT_COST;
+        $totalCost = $pendingCount * self::scrapeCost();
         if (!Credits::hasEnough($creditUserId, $totalCost)) {
             echo json_encode([
                 'success' => false,
@@ -1423,6 +1442,8 @@ PROMPT;
         $sendEvent = function (string $event, array $data) {
             echo "event: {$event}\n";
             echo "data: " . json_encode($data) . "\n\n";
+            // Commento SSE da 8 KB: Apache + proxy_fcgi trattiene gli eventi piccoli fino alla fine
+            echo ':' . str_repeat(' ', 8192) . "\n\n";
             if (ob_get_level() > 0) {
                 ob_flush();
             }
@@ -1514,18 +1535,18 @@ PROMPT;
                 ]);
 
                 // Scala crediti
-                Credits::consume($creditUserId, self::SCRAPE_CREDIT_COST, 'meta_scrape', 'ai-content', [
+                Credits::consume($creditUserId, self::scrapeCost(), 'meta_scrape', 'ai-content', [
                     'project_id' => $projectId,
                     'meta_tag_id' => $item['id'],
                     'job_id' => $jobId,
                 ]);
 
                 $completed++;
-                $creditsUsed += self::SCRAPE_CREDIT_COST;
+                $creditsUsed += self::scrapeCost();
 
                 // Aggiorna job
                 $jobModel->incrementCompleted($jobId);
-                $jobModel->addCreditsUsed($jobId, self::SCRAPE_CREDIT_COST);
+                $jobModel->addCreditsUsed($jobId, self::scrapeCost());
 
                 // Invia evento item completato
                 $sendEvent('item_completed', [
@@ -1669,9 +1690,15 @@ PROMPT;
             return;
         }
 
-        // Conta URL scraped pronte per generazione
-        $stats = $this->metaTag->getStats($projectId);
-        $scrapedCount = $stats['scraped'];
+        // Conta URL scraped pronte per generazione (solo quelle scelte, se l'utente ne ha spuntate)
+        $selectedIds = array_filter(array_map('intval', (array) ($_POST['ids'] ?? [])));
+        if (!empty($selectedIds)) {
+            $selectedItems = $this->metaTag->getByIdsAndStatus($projectId, $selectedIds, 'scraped', 500);
+            $scrapedCount = count($selectedItems);
+        } else {
+            $stats = $this->metaTag->getStats($projectId);
+            $scrapedCount = $stats['scraped'];
+        }
 
         if ($scrapedCount === 0) {
             echo json_encode([
@@ -1692,7 +1719,7 @@ PROMPT;
         $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
 
         // Verifica crediti
-        $totalCost = $scrapedCount * self::GENERATE_CREDIT_COST;
+        $totalCost = $scrapedCount * self::generateCost();
         if (!Credits::hasEnough($creditUserId, $totalCost)) {
             echo json_encode([
                 'success' => false,
@@ -1702,8 +1729,8 @@ PROMPT;
         }
 
         // Recupera gli ID delle righe che verranno elaborate
-        $scrapedItems = $this->metaTag->getNextScraped($projectId, 500);
-        $itemIds = array_column($scrapedItems, 'id');
+        $scrapedItems = !empty($selectedIds) ? $selectedItems : $this->metaTag->getNextScraped($projectId, 500);
+        $itemIds = array_map('intval', array_column($scrapedItems, 'id'));
 
         // Crea il job
         $jobId = $jobModel->create([
@@ -1712,6 +1739,11 @@ PROMPT;
             'type' => ScrapeJob::TYPE_GENERATE,
             'items_requested' => $scrapedCount,
         ]);
+
+        // Lo stream lavora solo le pagine scelte: le ricordo in sessione per questo job
+        if (!empty($selectedIds)) {
+            $_SESSION['meta_generate_ids'][$jobId] = $itemIds;
+        }
 
         echo json_encode([
             'success' => true,
@@ -1756,6 +1788,9 @@ PROMPT;
             exit('Job non trovato');
         }
 
+        // Pagine scelte dall'utente per questo job (null = tutte le pronte)
+        $selectedIds = $_SESSION['meta_generate_ids'][$jobId] ?? null;
+
         // Chiudi sessione, poi abilita guardie timeout
         session_write_close();
 
@@ -1773,6 +1808,8 @@ PROMPT;
         $sendEvent = function (string $event, array $data) {
             echo "event: {$event}\n";
             echo "data: " . json_encode($data) . "\n\n";
+            // Commento SSE da 8 KB: Apache + proxy_fcgi trattiene gli eventi piccoli fino alla fine
+            echo ':' . str_repeat(' ', 8192) . "\n\n";
             if (ob_get_level() > 0) {
                 ob_flush();
             }
@@ -1807,8 +1844,10 @@ PROMPT;
                 break;
             }
 
-            // Prossimo item scraped
-            $scraped = $this->metaTag->getNextScraped($projectId, 1);
+            // Prossimo item scraped (tra quelli scelti, se c'è una selezione)
+            $scraped = is_array($selectedIds)
+                ? $this->metaTag->getByIdsAndStatus($projectId, $selectedIds, 'scraped', 1)
+                : $this->metaTag->getNextScraped($projectId, 1);
 
             if (empty($scraped)) {
                 $jobModel->complete($jobId);
@@ -1840,9 +1879,8 @@ PROMPT;
             try {
                 $prompt = $this->buildMetaTagPrompt($item);
 
-                $result = $ai->analyze($user['id'], $prompt, '', 'ai-content', [
-                    'skip_credits' => true,
-                ]);
+                // complete() con charge_credits=false: addebita solo il controller (meta_generate)
+                $result = $ai->complete($user['id'], [['role' => 'user', 'content' => $prompt]], ['charge_credits' => false], 'ai-content');
 
                 Database::reconnect();
 
@@ -1876,16 +1914,16 @@ PROMPT;
 
                 $this->metaTag->updateGeneratedData($item['id'], $parsed['title'], $parsed['description']);
 
-                Credits::consume($creditUserId, self::GENERATE_CREDIT_COST, 'meta_generate', 'ai-content', [
+                Credits::consume($creditUserId, self::generateCost(), 'meta_generate', 'ai-content', [
                     'project_id' => $projectId,
                     'meta_tag_id' => $item['id'],
                     'job_id' => $jobId,
                 ]);
 
                 $completed++;
-                $creditsUsed += self::GENERATE_CREDIT_COST;
+                $creditsUsed += self::generateCost();
                 $jobModel->incrementCompleted($jobId);
-                $jobModel->addCreditsUsed($jobId, self::GENERATE_CREDIT_COST);
+                $jobModel->addCreditsUsed($jobId, self::generateCost());
 
                 $sendEvent('item_completed', [
                     'id' => $item['id'],

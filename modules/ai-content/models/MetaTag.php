@@ -502,6 +502,27 @@ class MetaTag
     /**
      * Ottieni prossimi meta tag da generare (scrappati ma non generati)
      */
+    /**
+     * Righe con un certo stato tra quelle scelte dall'utente (solo del progetto: niente IDOR).
+     */
+    public function getByIdsAndStatus(int $projectId, array $ids, string $status, int $limit = 50): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        if (empty($ids)) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $limit = max(1, min(500, $limit));
+        $stmt = $this->db->prepare("
+            SELECT * FROM {$this->table}
+            WHERE project_id = ? AND status = ? AND id IN ({$placeholders})
+            ORDER BY created_at ASC
+            LIMIT {$limit}
+        ");
+        $stmt->execute(array_merge([$projectId, $status], $ids));
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
     public function getNextScraped(int $projectId, int $limit = 20): array
     {
         $stmt = $this->db->prepare("

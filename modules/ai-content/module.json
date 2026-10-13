@@ -171,6 +171,26 @@
             "admin_only": true,
             "group": "costs"
         },
+        "cost_meta_scrape": {
+            "type": "number",
+            "label": "Costo SEO Meta Tags: lettura pagina",
+            "description": "Crediti per ogni pagina letta prima di generare i meta tag",
+            "default": 1,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_meta_generate": {
+            "type": "number",
+            "label": "Costo SEO Meta Tags: generazione",
+            "description": "Crediti per ogni coppia title + description generata dall'AI",
+            "default": 2,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        },
         "cost_cover_image_generation": {
             "type": "number",
             "label": "Costo Generazione Copertina",

@@ -157,7 +157,7 @@
                                     <input type="checkbox" :value="sitemap.url" x-model="selectedSitemaps" class="mt-1 rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
                                     <div class="flex-1 min-w-0">
                                         <p class="text-sm font-medium text-slate-900 dark:text-white truncate" x-text="sitemap.url"></p>
-                                        <p class="text-xs text-slate-500 dark:text-slate-400" x-text="sitemap.type + (sitemap.count ? ' - ' + sitemap.count + ' URL' : '')"></p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400" x-text="(sitemap.source === 'robots.txt' ? 'Trovata in robots.txt' : 'Percorso standard') + (sitemap.url_count ? ' · ' + sitemap.url_count + ' pagine' : '')"></p>
                                     </div>
                                 </label>
                             </template>
@@ -184,6 +184,7 @@
                                 </svg>
                                 Importa URL
                             </button>
+                            <p x-show="!selectedSitemaps.length" class="mt-2 text-xs text-amber-600 dark:text-amber-400">Spunta almeno una sitemap per importare le pagine.</p>
                         </div>
                     </div>
                 </div>
@@ -346,6 +347,8 @@ function importWizard() {
 
                 if (data.success) {
                     this.sitemaps = data.sitemaps;
+                    // Già spuntate: di solito si importano tutte
+                    this.selectedSitemaps = data.sitemaps.map(s => s.url);
                 } else {
                     this.resultMessage = data.error;
                     this.resultSuccess = false;

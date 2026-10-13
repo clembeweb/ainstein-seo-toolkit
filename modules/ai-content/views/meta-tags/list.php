@@ -386,6 +386,38 @@ $sortFilters = array_filter([
 function metaTagsList() {
     return {
         selectedIds: [],
+        // Costi e saldo per la conferma prima di spendere crediti
+        scrapeCost: <?= json_encode((float) ($scrapeCost ?? 1)) ?>,
+        generateCost: <?= json_encode((float) ($generateCost ?? 2)) ?>,
+        creditBalance: <?= json_encode((float) ($creditBalance ?? 0)) ?>,
+        pendingTotal: <?= (int) ($stats['pending'] ?? 0) ?>,
+        scrapedTotal: <?= (int) ($stats['scraped'] ?? 0) ?>,
+        statusById: <?= json_encode(array_column(array_map(fn($i) => ['id' => (string) $i['id'], 'status' => $i['status']], $metaTags), 'status', 'id')) ?>,
+
+        selectedWithStatus(status) {
+            return this.selectedIds.filter(id => this.statusById[id] === status);
+        },
+
+        fmtCredits(n) {
+            return (Math.round(n * 10) / 10).toLocaleString('it-IT');
+        },
+
+        async confirmCost(action, count, unitCost) {
+            const total = count * unitCost;
+            const msg = `${action} ${count} ${count === 1 ? 'pagina' : 'pagine'}: ${this.fmtCredits(total)} crediti `
+                + `(${this.fmtCredits(unitCost)} a pagina). Ne hai ${this.fmtCredits(this.creditBalance)}.`
+                + (total > this.creditBalance ? ' Non bastano: ricarica o scegli meno pagine.' : '');
+            if (total > this.creditBalance) {
+                window.ainstein.alert(msg, 'error');
+                return false;
+            }
+            try {
+                await window.ainstein.confirm(msg, {buttonText: 'Avvia'});
+                return true;
+            } catch (e) {
+                return false;
+            }
+        },
         loading: false,
         showDeleteModal: false,
         deleteId: null,
@@ -418,6 +450,21 @@ function metaTagsList() {
         // =====================
 
         async startGenerate() {
+            // Solo le pagine spuntate (se ce ne sono tra quelle pronte), altrimenti tutte le pronte
+            const chosen = this.selectedWithStatus('scraped');
+            if (this.selectedIds.length > 0 && chosen.length === 0) {
+                window.ainstein.alert('Tra le pagine spuntate nessuna è pronta per la generazione: prima va fatto lo scrape.', 'error');
+                return;
+            }
+            const count = chosen.length || this.scrapedTotal;
+            if (count === 0) {
+                window.ainstein.alert('Nessuna pagina pronta: prima fai lo scrape.', 'error');
+                return;
+            }
+            if (!(await this.confirmCost('Generi i meta tag di', count, this.generateCost))) {
+                return;
+            }
+
             this.generating = true;
             this.genCompleted = 0;
             this.genFailed = 0;
@@ -430,11 +477,13 @@ function metaTagsList() {
             try {
                 const formData = new FormData();
                 formData.append('_csrf_token', '<?= csrf_token() ?>');
+                chosen.forEach(id => formData.append('ids[]', id));
 
                 const resp = await fetch('<?= url("/ai-content/projects/{$project['id']}/meta-tags/start-generate-job") ?>', {
                     method: 'POST',
                     body: formData
                 });
+                if (!resp.ok) { throw new Error('Errore server: ' + resp.status); }
                 const data = await resp.json();
 
                 if (!data.success) {
@@ -526,6 +575,9 @@ function metaTagsList() {
                         delete this.rowStates[id];
                     }
                 });
+
+                // Aggiorna contatori, bottoni e saldo crediti
+                setTimeout(() => location.reload(), 1500);
             });
 
             this.eventSource.addEventListener('cancelled', (e) => {
@@ -626,16 +678,33 @@ function metaTagsList() {
         },
 
         async runScrape() {
+            const chosen = this.selectedWithStatus('pending');
+            if (this.selectedIds.length > 0 && chosen.length === 0) {
+                window.ainstein.alert('Tra le pagine spuntate nessuna è in attesa di scrape.', 'error');
+                return;
+            }
+            // Senza selezione lavora a gruppi di 10, con selezione fino a 50 pagine scelte
+            const count = chosen.length ? Math.min(50, chosen.length) : Math.min(10, this.pendingTotal);
+            if (count === 0) {
+                window.ainstein.alert('Nessuna pagina in attesa di scrape.', 'error');
+                return;
+            }
+            if (!(await this.confirmCost('Leggi', count, this.scrapeCost))) {
+                return;
+            }
+
             this.loading = true;
             try {
                 const formData = new FormData();
                 formData.append('_csrf_token', '<?= csrf_token() ?>');
-                formData.append('batch_size', '10');
+                formData.append('batch_size', String(count));
+                chosen.slice(0, 50).forEach(id => formData.append('ids[]', id));
 
                 const response = await fetch('<?= url("/ai-content/projects/{$project['id']}/meta-tags/scrape") ?>', {
                     method: 'POST',
                     body: formData
                 });
+                if (!response.ok) { throw new Error('Errore server: ' + response.status); }
                 const data = await response.json();
                 if (data.success) {
                     window.ainstein.toast(data.message, 'success');

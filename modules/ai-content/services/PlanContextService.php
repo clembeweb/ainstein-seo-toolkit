@@ -96,6 +96,30 @@ class PlanContextService
                 }
             }
 
+            // Linko solo pagine che esistono davvero sul sito (l'Architettura propone pagine che spesso
+            // non sono ancora state create: prima l'articolo linkava URL in 404)
+            if (!empty($context['target_pages'])) {
+                $checked = self::checkUrls(array_column($context['target_pages'], 'url'));
+                $existing = [];
+                $context['missing_pages'] = [];
+                foreach ($context['target_pages'] as $page) {
+                    $final = $checked[$page['url']] ?? null;
+                    if ($final) {
+                        $existing[] = ['url' => $final, 'title' => $page['title']];
+                    } else {
+                        $context['missing_pages'][] = $page['url'];
+                    }
+                }
+                $context['target_pages'] = $existing;
+            }
+            // Nessuna pagina del piano esiste ancora: rimando alla homepage del cliente
+            if (empty($context['target_pages']) && $baseUrl !== '') {
+                $home = self::checkUrls([$baseUrl . '/'])[$baseUrl . '/'] ?? null;
+                if ($home) {
+                    $context['target_pages'][] = ['url' => $home, 'title' => 'Homepage di ' . ($context['client_name'] ?: 'del cliente')];
+                }
+            }
+
             return $context['client_name'] !== '' || $context['plan_title'] ? $context : null;
         } catch (\Throwable $e) {
             // Il contesto è un di più: se manca, l'articolo si scrive come prima
@@ -113,6 +137,80 @@ class PlanContextService
             $links[] = ['url' => $page['url'], 'title' => $page['title'], 'description' => 'Pagina del sito del cliente (dal piano editoriale)'];
         }
         return $links;
+    }
+
+    /**
+     * Verifica in parallelo che le URL rispondano 2xx (seguendo i redirect).
+     * @return array url => URL finale (dopo redirect) se esiste, null se no
+     */
+    public static function checkUrls(array $urls, int $timeout = 6): array
+    {
+        $urls = array_values(array_unique(array_filter($urls)));
+        $result = array_fill_keys($urls, null);
+        if (empty($urls) || !function_exists('curl_multi_init')) {
+            return $result;
+        }
+
+        $ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36';
+        $makeHandle = function (string $url, bool $headOnly) use ($ua, $timeout) {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_NOBODY => $headOnly,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_MAXREDIRS => 5,
+                CURLOPT_TIMEOUT => $timeout,
+                CURLOPT_CONNECTTIMEOUT => 4,
+                CURLOPT_USERAGENT => $ua,
+                CURLOPT_SSL_VERIFYPEER => true,
+            ]);
+            return $ch;
+        };
+
+        $run = function (array $list, bool $headOnly) use ($makeHandle): array {
+            $mh = curl_multi_init();
+            $handles = [];
+            foreach ($list as $url) {
+                $handles[$url] = $makeHandle($url, $headOnly);
+                curl_multi_add_handle($mh, $handles[$url]);
+            }
+            do {
+                $status = curl_multi_exec($mh, $active);
+                if ($active) {
+                    curl_multi_select($mh, 1.0);
+                }
+            } while ($active && $status === CURLM_OK);
+            $out = [];
+            foreach ($handles as $url => $ch) {
+                $out[$url] = [
+                    'code' => (int) curl_getinfo($ch, CURLINFO_HTTP_CODE),
+                    'final' => (string) curl_getinfo($ch, CURLINFO_EFFECTIVE_URL),
+                ];
+                curl_multi_remove_handle($mh, $ch);
+                curl_close($ch);
+            }
+            curl_multi_close($mh);
+            return $out;
+        };
+
+        $first = $run($urls, true);
+        $retry = [];
+        foreach ($first as $url => $r) {
+            if ($r['code'] >= 200 && $r['code'] < 300) {
+                $result[$url] = $r['final'] ?: $url;
+            } elseif (in_array($r['code'], [0, 403, 405], true)) {
+                $retry[] = $url; // alcuni server non gestiscono HEAD: riprovo con GET
+            }
+        }
+        if (!empty($retry)) {
+            foreach ($run($retry, false) as $url => $r) {
+                if ($r['code'] >= 200 && $r['code'] < 300) {
+                    $result[$url] = $r['final'] ?: $url;
+                }
+            }
+        }
+
+        return $result;
     }
 
     private static function baseUrl(string $domain): string

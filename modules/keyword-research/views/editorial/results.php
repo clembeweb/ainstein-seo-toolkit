@@ -117,6 +117,24 @@ $diffLabels = ['low' => 'Facile', 'medium' => 'Media', 'high' => 'Difficile'];
     </div>
     <?php endif; ?>
 
+    <?php if (!empty($missingPages)): ?>
+    <!-- Pagine dell'Architettura non ancora presenti sul sito -->
+    <div class="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-5">
+        <div class="flex items-start gap-3">
+            <svg class="w-6 h-6 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <div class="text-sm text-slate-700 dark:text-slate-300">
+                <p class="font-semibold text-slate-900 dark:text-white"><?= count($missingPages) ?> pagine dell'Architettura non esistono ancora sul sito</p>
+                <p class="mt-1">Gli articoli non le linkeranno finché non le crei (al loro posto useranno la homepage). Conviene crearle prima di far partire gli articoli:</p>
+                <ul class="mt-2 space-y-0.5">
+                    <?php foreach (array_slice($missingPages, 0, 10) as $mp): ?>
+                    <li><span class="font-medium"><?= e($mp['name']) ?></span> <span class="text-slate-500 dark:text-slate-400"><?= e(parse_url($mp['url'], PHP_URL_PATH) ?: '/') ?></span></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Cross-module CTA: Send to AI Content banner -->
     <?php if ($sentCount === 0 && !empty($aicProjects) && $totalArticles > 0): ?>
     <div class="relative overflow-hidden rounded-xl border border-amber-500/20 bg-gradient-to-r from-amber-950 via-slate-900 to-slate-900 p-5">

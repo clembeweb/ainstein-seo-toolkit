@@ -232,7 +232,8 @@ function processKeyword(array $queueItem, int $userId, ?int $creditUserId = null
                         $allInternalLinks
                     );
                 }
-                logDispatcher("    Contesto piano: cliente " . ($planContext['client_name'] ?? '-') . ", pagine da linkare " . count($planContext['target_pages'] ?? []));
+                logDispatcher("    Contesto piano: cliente " . ($planContext['client_name'] ?? '-') . ", pagine da linkare " . count($planContext['target_pages'] ?? [])
+                    . (!empty($planContext['missing_pages']) ? ", non esistono ancora: " . implode(', ', $planContext['missing_pages']) : ''));
             }
 
             if (!empty($allInternalLinks)) {

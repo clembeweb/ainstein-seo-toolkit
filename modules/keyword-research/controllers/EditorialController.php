@@ -709,8 +709,40 @@ class EditorialController
             );
         }
 
+        // Pagine dell'Architettura collegata che sul sito non esistono ancora (gli articoli non le linkeranno)
+        $missingPages = [];
+        $archId = (int) ($brief['architecture_research_id'] ?? 0);
+        if ($archId > 0 && !empty($project['global_project_id']) && class_exists(\Modules\AiContent\Services\PlanContextService::class)) {
+            try {
+                $domain = (string) (Database::fetch("SELECT domain FROM projects WHERE id = ?", [(int) $project['global_project_id']])['domain'] ?? '');
+                if ($domain !== '') {
+                    $base = rtrim(preg_match('#^https?://#i', $domain) ? $domain : 'https://' . $domain, '/');
+                    $missingPages = \Core\Cache::get('kr_arch_missing_' . $archId . '_' . md5($base), function () use ($archId, $base) {
+                        $pages = (new Cluster())->findByResearch($archId);
+                        $byUrl = [];
+                        foreach ($pages as $p) {
+                            $path = trim((string) ($p['suggested_url'] ?? ''));
+                            if ($path !== '') {
+                                $byUrl[$base . ($path === '/' ? '/' : '/' . ltrim($path, '/'))] = $p['name'];
+                            }
+                        }
+                        $missing = [];
+                        foreach (\Modules\AiContent\Services\PlanContextService::checkUrls(array_keys($byUrl)) as $url => $final) {
+                            if (!$final) {
+                                $missing[] = ['url' => $url, 'name' => $byUrl[$url]];
+                            }
+                        }
+                        return $missing;
+                    }, 6 * 3600);
+                }
+            } catch (\Throwable $e) {
+                $missingPages = [];
+            }
+        }
+
         return View::render('keyword-research::editorial/results', [
             'title' => 'Piano Editoriale - ' . $project['name'],
+            'missingPages' => $missingPages,
             'user' => $user,
             'project' => $project,
             'research' => $research,

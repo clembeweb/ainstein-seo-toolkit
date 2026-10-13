@@ -88,7 +88,7 @@
                 </div>
                 <div>
                     <h3 class="font-semibold text-slate-900 dark:text-white">Scrape Pagine</h3>
-                    <p class="text-sm text-slate-500 dark:text-slate-400"><?= $stats['pending'] ?> in attesa (1 cr/pag)</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400"><?= $stats['pending'] ?> in attesa (<?= rtrim(rtrim(number_format(\Modules\AiContent\Controllers\MetaTagController::scrapeCost(), 1, ',', ''), '0'), ',') ?> cr/pag)</p>
                 </div>
             </div>
         </button>
@@ -106,7 +106,7 @@
                 </div>
                 <div>
                     <h3 class="font-semibold text-slate-900 dark:text-white">Genera Meta Tag</h3>
-                    <p class="text-sm text-slate-500 dark:text-slate-400"><?= $stats['scraped'] ?> pronte (2 cr/pag)</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400"><?= $stats['scraped'] ?> pronte (<?= rtrim(rtrim(number_format(\Modules\AiContent\Controllers\MetaTagController::generateCost(), 1, ',', ''), '0'), ',') ?> cr/pag)</p>
                 </div>
             </div>
         </button>
