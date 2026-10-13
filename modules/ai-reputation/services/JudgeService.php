@@ -18,7 +18,7 @@ class JudgeService
     private AiService $ai;
     /** Effort del modello per il giudizio (low|medium|high; vuoto = default del modello). È una classificazione: low basta? Vedi scripts/rejudge.php */
     public ?string $effort;
-    /** Solo per le prove (scripts/rejudge.php --model=): il judge in produzione resta sul modello del modulo (riproducibilità) */
+    /** Modello del judge (impostazione judge_model; vuoto = modello del modulo). Cambiarlo rompe il confronto con i run precedenti (ADR-015) */
     public ?string $model = null;
 
     public function __construct()
@@ -26,11 +26,13 @@ class JudgeService
         $this->ai = new AiService(self::SLUG);
         $effort = (string) \Core\ModuleLoader::getSetting(self::SLUG, 'judge_effort', '');
         $this->effort = in_array($effort, ['low', 'medium', 'high'], true) ? $effort : null;
+        $model = (string) \Core\ModuleLoader::getSetting(self::SLUG, 'judge_model', '');
+        $this->model = $model !== '' && $model !== 'global' ? $model : null;
     }
 
     public function model(): string
     {
-        return $this->ai->getProvider() . '/' . $this->ai->getModel();
+        return $this->ai->getProvider() . '/' . ($this->model ?? $this->ai->getModel());
     }
 
     /**

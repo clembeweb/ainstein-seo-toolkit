@@ -101,6 +101,19 @@
                 {"value": "global", "label": "Usa il modello del modulo/globale"}
             ]
         },
+        "judge_model": {
+            "type": "select",
+            "label": "Modello del judge",
+            "description": "Modello che giudica ogni risposta (una chiamata per risposta: è la voce di costo principale del run). Cambiarlo rende i run nuovi non confrontabili con i vecchi.",
+            "default": "",
+            "admin_only": true,
+            "group": "ai_config",
+            "options": [
+                {"value": "", "label": "Modello del modulo (ora Opus 5.5)"},
+                {"value": "claude-sonnet-5-5", "label": "Claude Sonnet 5.5"},
+                {"value": "claude-haiku-5-5", "label": "Claude Haiku 5.5 (economico)"}
+            ]
+        },
         "judge_effort": {
             "type": "select",
             "label": "Effort del judge",
