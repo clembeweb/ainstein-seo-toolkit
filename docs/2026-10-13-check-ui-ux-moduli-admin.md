@@ -33,8 +33,8 @@
 | Nome in dashboard utente / docs / prezzi | AI Content / AI Content Generator | Keyword Research | SEO Audit | Position Tracking / SEO Tracking | AI Reputation Radar (!) / assente / assente |
 | Bottone principale | Nuovo Progetto | Nuovo Progetto | **Nuovo Audit** | Nuovo Progetto | Nuovo Progetto |
 | "Attiva su un progetto" | ✅ (oggi) | ✅ | ✅ | ✅ | ✅ |
-| Hero "Come funziona" (3 step + CTA) | ✅ | ✅ | ✅ | ✅ | **❌** |
-| Sezione lunga "Scopri cosa puoi fare" | ✅ | ✅ | ✅ | ✅ | **❌** |
+| Hero "Come funziona" (3 step + CTA) | ✅ | ✅ | ✅ | ✅ | ✅ (2026-10-13) |
+| Sezione lunga "Scopri cosa puoi fare" | ✅ | ✅ | ✅ | ✅ | ✅ (2026-10-13) |
 | Tour guidato | ✅ (stale) | ✅ | ✅ (stale) | ✅ (stale) | **❌** |
 | Costi dichiarati in pagina | 19 cr/articolo | 3 / 10 / 10 / Gratis | nessuno | nessuno | nessuno |
 | Docs utente (/docs) | ✅ | ✅ | ✅ | ✅ | **❌** |
