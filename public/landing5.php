@@ -30,10 +30,10 @@ $C = ['geo' => '#6366f1', 'audit' => '#10b981', 'kw' => '#8b5cf6', 'writer' => '
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ainstein · Fatti trovare su Google e consigliare dalle AI</title>
-    <meta name="description" content="5 strumenti AI in italiano: scopri se ChatGPT e Gemini consigliano la tua attività, controlla il sito, trova cosa cerca la gente, scrivi gli articoli e segui le posizioni. Controllo gratuito in 30 secondi.">
+    <meta name="description" content="5 strumenti AI in italiano: scopri se ChatGPT e Gemini consigliano la tua attività, controlla il sito, trova cosa cerca la gente, scrivi gli articoli e segui le posizioni. Controllo gratuito in meno di un minuto.">
     <link rel="icon" type="image/svg+xml" href="<?= url('/favicon.svg') ?>">
     <meta property="og:title" content="Ainstein · Fatti trovare su Google e consigliare dalle AI">
-    <meta property="og:description" content="Le AI riescono a leggere il tuo sito? Scoprilo gratis in 30 secondi. Poi 5 strumenti AI per farti trovare e consigliare.">
+    <meta property="og:description" content="Le AI riescono a leggere il tuo sito? Scoprilo gratis in meno di un minuto. Poi 5 strumenti AI per farti trovare e consigliare.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://ainstein.it/">
     <meta name="theme-color" content="#006e96">
@@ -189,7 +189,7 @@ $C = ['geo' => '#6366f1', 'audit' => '#10b981', 'kw' => '#8b5cf6', 'writer' => '
             <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
             <button class="btn btn-blue" type="submit">Controlla gratis</button>
         </form>
-        <p class="micro">Le AI riescono a leggere il tuo sito? Lo scopri in 30 secondi, gratis, senza registrarti.</p>
+        <p class="micro">Le AI riescono a leggere il tuo sito? Lo scopri in meno di un minuto, gratis, senza registrarti.</p>
 
         <div class="progress" id="progress" aria-live="polite">
             <div class="track"><div class="fill" id="progressFill"></div></div>
@@ -383,7 +383,7 @@ $C = ['geo' => '#6366f1', 'audit' => '#10b981', 'kw' => '#8b5cf6', 'writer' => '
     <div class="wrap">
         <div class="final">
             <h2>Le AI riescono a leggere il tuo sito?</h2>
-            <p style="opacity:.8;margin-top:10px">Scoprilo adesso. Gratis, in 30 secondi.</p>
+            <p style="opacity:.8;margin-top:10px">Scoprilo adesso. Gratis, in meno di un minuto.</p>
             <form class="check js-check" novalidate>
                 <input type="text" name="url" placeholder="Scrivi il tuo sito" aria-label="Il tuo sito" autocomplete="url" inputmode="url">
                 <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">

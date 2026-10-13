@@ -131,7 +131,7 @@ Router::get('/', function () {
 // Design: docs/plans/2026-10-13-landing-semrush-design.md
 Router::post('/check-ai', function () {
     ignore_user_abort(true);
-    set_time_limit(90);
+    set_time_limit(150);
     ob_start();
     header('Content-Type: application/json');
     $out = function (array $data, int $code = 200): void {

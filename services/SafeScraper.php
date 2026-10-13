@@ -19,7 +19,9 @@ class SafeScraper extends ScraperService
             ? ($options['headers'] ?? [])
             : array_merge(['User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
                 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Accept-Language: it-IT,it;q=0.9,en;q=0.8'], $options['headers'] ?? []);
-        $timeout = min((int) ($options['timeout'] ?? 15), 20);
+        // Controllo pubblico: attese corte. Le richieste coi lettori AI (api_mode) che restano appese oltre 6 s
+        // contano come bloccate, che è anche quello che vede il crawler vero (beweb.it: 93 s con 15 s per richiesta).
+        $timeout = ($options['api_mode'] ?? false) ? 6 : min((int) ($options['timeout'] ?? 10), 10);
 
         for ($hop = 0; $hop <= self::MAX_REDIRECTS; $hop++) {
             $target = self::resolveTarget($url);
@@ -33,7 +35,7 @@ class SafeScraper extends ScraperService
                 CURLOPT_RETURNTRANSFER => false,
                 CURLOPT_FOLLOWLOCATION => false,
                 CURLOPT_TIMEOUT => $timeout,
-                CURLOPT_CONNECTTIMEOUT => 8,
+                CURLOPT_CONNECTTIMEOUT => 5,
                 CURLOPT_HTTPHEADER => $headers,
                 CURLOPT_ENCODING => '',
                 CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
