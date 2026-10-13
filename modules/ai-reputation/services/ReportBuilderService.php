@@ -445,7 +445,7 @@ class ReportBuilderService
                 'target_domain' => $contentDomain,
                 'title' => "Pagina autorevole che risponda a \"{$subject} è affidabile?\"",
                 'rationale' => 'Le AI rispondono in negativo o con dubbi a ' . $nq . ' domand' . ($nq === 1 ? 'a' : 'e') . ' sulla reputazione' . ($nq === 1 ? ': "' : ', tra cui: "')
-                    . implode('", "', $examples) . '"' . ($more > 0 ? " e altre {$more}" : '') . '. '
+                    . implode('", "', $examples) . '"' . ($more === 1 ? " e un'altra" : ($more > 1 ? " e altre {$more}" : '')) . '. '
                     . ($isCompany
                         ? 'Una sola pagina ben fatta le copre tutte: chi siete, dati societari, dove operate, recensioni e referenze verificabili'
                             . ($ownDomain ? ", pubblicata sul vostro sito ({$ownDomain})." : '.')
@@ -487,7 +487,7 @@ class ReportBuilderService
                     'target_url' => null,
                     'target_domain' => $contentDomain,
                     'title' => $art['title'],
-                    'rationale' => $art['why'] . ' Copre ' . count($texts) . ' domand' . (count($texts) === 1 ? 'a' : 'e') . ': "' . implode('", "', $examples) . '"' . ($more > 0 ? " e altre {$more}" : '') . '.',
+                    'rationale' => $art['why'] . ' Copre ' . count($texts) . ' domand' . (count($texts) === 1 ? 'a' : 'e') . ': "' . implode('", "', $examples) . '"' . ($more === 1 ? " e un'altra" : ($more > 1 ? " e altre {$more}" : '')) . '.',
                     'covered_prompts' => $covered($qs),
                 ];
             }
