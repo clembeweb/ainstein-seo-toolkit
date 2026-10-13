@@ -8,8 +8,10 @@ use Core\Database;
 use Core\ModuleLoader;
 use Core\Router;
 use Core\View;
+use Modules\SeoTracking\Models\Keyword;
 use Modules\SeoTracking\Models\Project;
 use Modules\SeoTracking\Services\Ga4Service;
+use Modules\SeoTracking\Services\SeoPageAnalyzerService;
 use Modules\SeoTracking\Services\SituationService;
 use Services\GoogleOAuthService;
 use Services\ProjectAccessService;
@@ -59,6 +61,14 @@ class SituationController
             $report['data'] = json_decode((string) $report['data'], true) ?: [];
             $report['narrative'] = json_decode((string) $report['narrative'], true) ?: [];
         }
+        // Per i bottoni per riga: ricerche già monitorate e costo dell'Analisi pagina
+        $tracked = [];
+        foreach ((new Keyword())->getTrackedByProject($id) as $k) {
+            $tracked[mb_strtolower(trim($k['keyword']))] = (int) $k['id'];
+        }
+        $analyzer = new SeoPageAnalyzerService();
+        $balance = Credits::getBalance(ProjectAccessService::getCreditUserId($project, $user['id']));
+        $analysisCost = $analyzer->getCreditCost();
         return View::render('seo-tracking/situation/index', [
             'title' => 'Punto della situazione - ' . $project['name'],
             'user' => $user,
@@ -70,9 +80,47 @@ class SituationController
             'report' => $report,
             'periods' => SituationService::PERIODS,
             'cost' => SituationService::cost(),
-            'balance' => Credits::getBalance(ProjectAccessService::getCreditUserId($project, $user['id'])),
+            'balance' => $balance,
             'googleConfigured' => (new GoogleOAuthService())->isConfigured(),
+            'tracked' => $tracked,
+            'analysisCost' => $analysisCost,
+            'analysisOk' => $analyzer->isConfigured() && $balance >= $analysisCost,
         ]);
+    }
+
+    /** POST /seo-tracking/project/{id}/situation/track - "Monitora questa ricerca": la aggiunge alle keyword seguite (gratis) */
+    public function track(int $id): void
+    {
+        $this->loadProject($id, true);
+        $kw = trim(preg_replace('/\s+/u', ' ', (string) ($_POST['keyword'] ?? '')));
+        $reportId = (int) ($_POST['report'] ?? 0);
+        $back = "/seo-tracking/project/{$id}/situation" . ($reportId ? "?report={$reportId}" : '');
+        if ($kw === '' || mb_strlen($kw) > 255) {
+            $_SESSION['_flash']['error'] = 'Ricerca non valida.';
+            Router::redirect($back);
+            exit;
+        }
+        $model = new Keyword();
+        $existing = $model->findByKeyword($id, $kw);
+        if ($existing) {
+            if (!(int) $existing['is_tracked']) {
+                $model->update((int) $existing['id'], ['is_tracked' => 1]);
+            }
+            $_SESSION['_flash']['success'] = "\"{$kw}\" era già tra le keyword: ora è monitorata.";
+        } else {
+            // Stesso paese delle keyword già seguite dal progetto (IT se non ce ne sono)
+            $loc = Database::fetch("SELECT location_code FROM st_keywords WHERE project_id = ? GROUP BY location_code ORDER BY COUNT(*) DESC LIMIT 1", [$id]);
+            $model->create([
+                'project_id' => $id,
+                'keyword' => $kw,
+                'location_code' => $loc['location_code'] ?? 'IT',
+                'is_tracked' => 1,
+                'source' => 'situation',
+            ]);
+            $_SESSION['_flash']['success'] = "\"{$kw}\" aggiunta alle keyword monitorate: la posizione arriva con la prossima verifica.";
+        }
+        Router::redirect($back);
+        exit;
     }
 
     /** POST /seo-tracking/project/{id}/situation/generate - AJAX lungo (GR 15/17/23) */

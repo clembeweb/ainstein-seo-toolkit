@@ -172,20 +172,63 @@ $kpiCard = function (string $ref, string $label, string $value, string $sub) {
 
     <?php
     // Tabelline "chi sale / chi scende"
-    $movers = function (string $ref, string $title, array $gainers, array $losers, string $keyField, string $valB, string $valA, string $unit) use ($num) {
+    // $kind: 'query' (riga = ricerca, con pagina in $r['page']) o 'page' (riga = pagina, con ricerca in $r['query']) → bottoni per riga
+    $rowActions = $canEdit && !empty($report);
+    $iconDoc = '<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>';
+    $iconEye = '<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>';
+    $iconCheck = '<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+    $btn = 'inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors';
+    $movers = function (string $ref, string $title, array $gainers, array $losers, string $keyField, string $valB, string $valA, string $unit, string $kind = '')
+        use ($num, $tracked, $analysisOk, $analysisCost, $rowActions, $base, $report, $fmtCr, $iconDoc, $iconEye, $iconCheck, $btn) {
         ob_start(); ?>
         <div data-kpi="<?= $ref ?>" class="kpi-card bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden transition-shadow">
-            <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700"><h3 class="font-semibold text-slate-900 dark:text-white"><?= e($title) ?></h3></div>
+            <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-baseline justify-between gap-3">
+                <h3 class="font-semibold text-slate-900 dark:text-white"><?= e($title) ?></h3>
+                <?php if ($rowActions && $kind): ?>
+                <span class="text-xs text-slate-400 whitespace-nowrap">Analizza: <?= e($fmtCr($analysisCost)) ?><?= $kind === 'query' ? ' · Monitora: gratis' : '' ?></span>
+                <?php endif; ?>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 md:divide-x divide-slate-200 dark:divide-slate-700">
                 <?php foreach ([['Crescono', $gainers, 'text-emerald-600 dark:text-emerald-400'], ['Calano', $losers, 'text-red-600 dark:text-red-400']] as [$lbl, $rows, $cls]): ?>
                 <div>
                     <p class="px-4 pt-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= $lbl ?></p>
                     <ul class="divide-y divide-slate-100 dark:divide-slate-700/60">
-                        <?php foreach ($rows as $r): ?>
-                        <li class="px-4 py-2 flex items-center gap-3 text-sm">
-                            <span class="flex-1 min-w-0 truncate text-slate-800 dark:text-slate-200" title="<?= e($r[$keyField]) ?>"><?= e($r[$keyField]) ?></span>
-                            <span class="text-xs text-slate-400 whitespace-nowrap"><?= $num($r[$valA]) ?> → <?= $num($r[$valB]) ?> <?= $unit ?></span>
-                            <span class="text-xs font-medium whitespace-nowrap <?= $cls ?>"><?= ($r['diff'] > 0 ? '+' : '') . $num($r['diff']) ?></span>
+                        <?php foreach ($rows as $r):
+                            $kw = $kind === 'query' ? $r['key'] : ($r['query'] ?? null);
+                            $pageUrl = $kind === 'query' ? ($r['page'] ?? null) : ($kind === 'page' ? $r['key'] : null);
+                            $trackedId = $kind === 'query' ? ($tracked[mb_strtolower(trim($r['key']))] ?? 0) : 0;
+                            $posInfo = $kind && (($r['position_a'] ?? null) !== null || ($r['position_b'] ?? null) !== null)
+                                ? ' · pos. ' . $num($r['position_a'], 1) . ' → ' . $num($r['position_b'], 1) : '';
+                        ?>
+                        <?php // Le pagine si leggono meglio senza dominio: "/positano/" invece dell'URL intero (intero nel title)
+                            $label = $kind === 'page' ? ((parse_url($r[$keyField], PHP_URL_PATH) ?: '/') . (parse_url($r[$keyField], PHP_URL_QUERY) ? '?…' : '')) : $r[$keyField];
+                        ?>
+                        <li class="px-4 py-2 text-sm">
+                            <div class="flex items-center gap-3">
+                                <span class="flex-1 min-w-0 truncate text-slate-800 dark:text-slate-200" title="<?= e($r[$keyField]) ?>"><?= e($label) ?></span>
+                                <span class="text-xs font-medium whitespace-nowrap <?= $cls ?>"><?= ($r['diff'] > 0 ? '+' : '') . $num($r['diff']) ?></span>
+                            </div>
+                            <div class="mt-0.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                            <span class="text-xs text-slate-400"><?= $num($r[$valA]) ?> → <?= $num($r[$valB]) ?> <?= $unit ?><?= e($posInfo) ?></span>
+                            <?php if ($rowActions && $kind): ?>
+                            <span class="flex items-center gap-1 shrink-0">
+                                <?php if ($kw && $pageUrl && $analysisOk): ?>
+                                <button type="button" :disabled="busy" @click="analyzePage(<?= e(json_encode($kw)) ?>, <?= e(json_encode($pageUrl)) ?>, <?= (int) round((float) ($r['position_b'] ?? 0)) ?>)"
+                                        class="<?= $btn ?>" title="Analizza <?= e($pageUrl) ?> per la ricerca &quot;<?= e($kw) ?>&quot; (<?= e($fmtCr($analysisCost)) ?>)"><?= $iconDoc ?>Analizza</button>
+                                <?php endif; ?>
+                                <?php if ($kind === 'query' && $trackedId): ?>
+                                <a href="<?= url("{$base}/keywords/{$trackedId}") ?>" class="<?= $btn ?> text-emerald-600 dark:text-emerald-400" title="Già monitorata: vedi lo storico"><?= $iconCheck ?>Monitorata</a>
+                                <?php elseif ($kind === 'query'): ?>
+                                <form method="POST" action="<?= url("{$base}/situation/track") ?>" class="inline">
+                                    <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
+                                    <input type="hidden" name="keyword" value="<?= e($r['key']) ?>">
+                                    <input type="hidden" name="report" value="<?= (int) $report['id'] ?>">
+                                    <button type="submit" class="<?= $btn ?>" title="Aggiungi alle keyword monitorate (gratis): seguirai la posizione nel tempo"><?= $iconEye ?>Monitora</button>
+                                </form>
+                                <?php endif; ?>
+                            </span>
+                            <?php endif; ?>
+                            </div>
                         </li>
                         <?php endforeach; ?>
                         <?php if (!$rows): ?><li class="px-4 py-2 text-sm text-slate-400">Nessuna</li><?php endif; ?>
@@ -199,8 +242,8 @@ $kpiCard = function (string $ref, string $label, string $value, string $sub) {
     ?>
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <?php if ($gsc): ?>
-        <?= $movers('gsc_queries', 'Ricerche su Google (clic)', $gsc['queries']['gainers'], $gsc['queries']['losers'], 'key', 'clicks_b', 'clicks_a', 'clic') ?>
-        <?= $movers('gsc_pages', 'Pagine su Google (clic)', $gsc['pages']['gainers'], $gsc['pages']['losers'], 'key', 'clicks_b', 'clicks_a', 'clic') ?>
+        <?= $movers('gsc_queries', 'Ricerche su Google (clic)', $gsc['queries']['gainers'], $gsc['queries']['losers'], 'key', 'clicks_b', 'clicks_a', 'clic', 'query') ?>
+        <?= $movers('gsc_pages', 'Pagine su Google (clic)', $gsc['pages']['gainers'], $gsc['pages']['losers'], 'key', 'clicks_b', 'clicks_a', 'clic', 'page') ?>
         <?php endif; ?>
         <?php if ($ga4): ?>
         <?= $movers('organic_pages', 'Pagine di arrivo da Google (visite)', $ga4['organic_pages']['gainers'], $ga4['organic_pages']['losers'], 'page', 'sessions_b', 'sessions_a', 'visite') ?>
@@ -231,7 +274,33 @@ $kpiCard = function (string $ref, string $label, string $value, string $sub) {
 function situationApp() {
     return {
         loading: false,
+        busy: false,
         error: '',
+        // "Analizza" su una riga: stessa Analisi pagina della scheda dedicata, poi si apre lì il risultato
+        async analyzePage(keyword, url, position) {
+            const ok = await window.ainstein.ask(`Analizzo ${url} per la ricerca "${keyword}": <?= e($fmtCr($analysisCost)) ?>. Ci vuole circa un minuto.`, { buttonText: 'Analizza' });
+            if (!ok) return;
+            this.busy = true;
+            this.error = '';
+            try {
+                const body = new FormData();
+                body.append('_csrf_token', '<?= csrf_token() ?>');
+                body.append('keyword', keyword);
+                body.append('url', url);
+                body.append('position', position || '');
+                const resp = await fetch('<?= url("{$base}/analyze-page") ?>', { method: 'POST', body });
+                let data = null;
+                try { data = await resp.json(); } catch (e) { data = null; }
+                if (!resp.ok || !data || data.error) {
+                    throw new Error((data && data.error) || `Errore server (${resp.status})`);
+                }
+                window.location.href = '<?= url("{$base}/page-analyzer") ?>?analysis=' + data.analysis_id;
+            } catch (e) {
+                this.error = e.message;
+                this.busy = false;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        },
         highlight(refs) {
             document.querySelectorAll('.kpi-card').forEach(el => el.classList.toggle('kpi-on', refs.includes(el.dataset.kpi)));
         },

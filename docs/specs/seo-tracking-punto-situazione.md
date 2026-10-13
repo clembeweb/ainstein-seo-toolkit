@@ -21,6 +21,19 @@ in italiano semplice: 1) punto della situazione, 2) da dove arriva il traffico, 
 - **GSC** (`searchAnalytics/query`, token della connessione AI Rank): totali clic/impressioni/CTR/posizione B, A, Y;
   quota brand (regex dal nome del progetto, modificabile); query e pagine che guadagnano/perdono più clic B vs A (top 8).
 - Se GA4 o GSC mancano, il punto si fa con quello che c'è e l'AI lo dice (caveat).
+- **Coppie ricerca↔pagina** (dal 2026-10-13): una chiamata GSC in più per periodo (`query`+`page`, 1000 righe) dà a ogni
+  ricerca che sale/scende la pagina che Google mostra (`page`) e a ogni pagina la ricerca principale (`query`). Se fallisce,
+  il report resta valido: mancano solo i bottoni per riga.
+
+## Azioni per riga (dal 2026-10-13)
+Il Punto non si limita a raccontare: su ogni ricerca e pagina che sale o scende ci sono due bottoni.
+- **Analizza** (costo dell'Analisi pagina, `page_analysis`): stessa `POST analyze-page` della scheda "Analisi pagina",
+  conferma con il costo, poi apre il risultato in `page-analyzer?analysis=ID` (la scheda legge il parametro e apre la finestra).
+- **Monitora** (gratis, solo ricerche): `POST situation/track` aggiunge la ricerca a `st_keywords` con `is_tracked=1`,
+  `source='situation'`, paese = quello più usato dal progetto (IT se nessuno); se c'era già, la riattiva. Torna alla
+  stessa pagina con un flash. Se è già monitorata la riga mostra "Monitorata" con il link allo storico.
+- Nome del brand per la quota: dal nome del progetto senza note tra parentesi/quadre, senza coda dopo " - " o " | " e
+  senza le parole test/prova/demo/copia (`brandRegex`, test in `scripts/test-situation.php`).
 
 ## AI
 `AiService('seo-tracking')` (GR #1), modello del modulo, una chiamata, output JSON

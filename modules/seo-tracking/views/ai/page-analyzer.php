@@ -1,5 +1,5 @@
 <?php $currentPage = 'page-analyzer'; ?>
-<div class="space-y-6" x-data="pageAnalyzerApp()">
+<div class="space-y-6" x-data="pageAnalyzerApp()" x-init="init()">
     <!-- Header + Navigation -->
     <?php include __DIR__ . '/../partials/project-nav.php'; ?>
 
@@ -615,6 +615,12 @@ function pageAnalyzerApp() {
         analysisData: null,
         error: null,
         projectId: <?= $project['id'] ?>,
+
+        // Arrivo dal Punto della situazione: ?analysis=ID apre subito quell'analisi
+        init() {
+            const id = parseInt(new URLSearchParams(window.location.search).get('analysis') || '0', 10);
+            if (id > 0) this.loadAnalysis(id);
+        },
 
         async analyzeKeyword(keyword, url, position) {
             this.analyzing = true;

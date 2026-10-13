@@ -259,6 +259,14 @@ class SituationService
             }
         }
 
+        $queries = $this->movers($q, $range, 'query');
+        $pages = $this->movers($q, $range, 'page');
+        try {
+            $this->pairQueriesPages($q, $range, $queries, $pages);
+        } catch (\Throwable $e) {
+            // Senza le coppie il report resta valido: mancano solo i bottoni per riga
+        }
+
         return [
             'property' => $site,
             'totals' => [
@@ -268,9 +276,37 @@ class SituationService
                 'position' => ['b' => $totals['b']['position'], 'a' => $totals['a']['position'], 'y' => $totals['y']['position']],
             ],
             'brand' => $brand,
-            'queries' => $this->movers($q, $range, 'query'),
-            'pages' => $this->movers($q, $range, 'page'),
+            'queries' => $queries,
+            'pages' => $pages,
         ];
+    }
+
+    /**
+     * A ogni ricerca che sale/scende aggiunge la pagina che Google mostra (`page`), a ogni pagina la ricerca principale (`query`):
+     * servono ai bottoni "Analizza pagina" e "Monitora" del Punto. Una sola chiamata GSC (query+pagina) per periodo, prima B poi A.
+     */
+    private function pairQueriesPages(callable $q, callable $range, array &$queries, array &$pages): void
+    {
+        $pageOfQuery = [];
+        $queryOfPage = [];
+        foreach (['b', 'a'] as $k) {
+            foreach ($q($range($k) + ['dimensions' => ['query', 'page'], 'rowLimit' => 1000]) as $r) {
+                [$query, $page] = [$r['keys'][0] ?? '', $r['keys'][1] ?? ''];
+                // Le righe arrivano ordinate per clic: la prima coppia vista è la principale
+                $pageOfQuery[$query] ??= $page;
+                $queryOfPage[$page] ??= $query;
+            }
+        }
+        foreach (['gainers', 'losers'] as $side) {
+            foreach ($queries[$side] as &$row) {
+                $row['page'] = $pageOfQuery[$row['key']] ?? null;
+            }
+            unset($row);
+            foreach ($pages[$side] as &$row) {
+                $row['query'] = $queryOfPage[$row['key']] ?? null;
+            }
+            unset($row);
+        }
     }
 
     /** Chi guadagna e chi perde più clic tra A e B per una dimensione GSC. */

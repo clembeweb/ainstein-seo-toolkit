@@ -157,6 +157,12 @@ Router::post('/seo-tracking/project/{id}/situation/generate', function ($id) {
     return (new SituationController())->generate((int) $id);
 });
 
+Router::post('/seo-tracking/project/{id}/situation/track', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new SituationController())->track((int) $id);
+});
+
 Router::get('/seo-tracking/project/{id}/ga4/connect', function ($id) {
     Middleware::auth();
     return (new SituationController())->ga4Connect((int) $id);
