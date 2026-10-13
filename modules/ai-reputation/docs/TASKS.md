@@ -12,7 +12,12 @@ il $). Judge in produzione su **Sonnet 5.5 effort low** (`judge_model`/`judge_ef
 Opus, 0,016 $ a risposta. Run 1 di Stabia rigiudicato e piano rifatto: 1 clarify (recensioni 16, dati societari 8,
 licenze 7, contatti 3, rimborsi 3) + 3 articoli sul sito di Stabia, nessuna rimozione; scheda clarify generata
 (azione 8) e PDF ok. Strumenti: `scripts/rejudge.php` (prove e confronto col giudizio salvato), `scripts/test-clarify.php`.
-**Prossimo passo:** Clemente legge il report di Stabia (`https://ainstein.it/ai-reputation/project/1/runs/1`) e il PDF;
+**Diagnosi tecnica (ADR-016) fatta e online la sera stessa:** scheda "Controllo tecnico" (gratis) + diagnosi a fine run;
+su Stabia: crawler tutti ok, P.IVA/ragione sociale/via assenti ovunque, 2 telefoni → il clarify del run 1 ora dice la
+causa di ogni dubbio e la scheda parte dal LocalBusiness esistente. Riquadro "Chi stai monitorando?" e nome senza "(test)".
+**Prossimo passo (deciso):** verifica "prima/dopo": rilanciare solo le domande coperte da un intervento e mostrare il
+confronto (es. dubbi su dati societari 8 → 0). Poi i punti -2 (domande d'acquisto) e -1.
+**Vecchio prossimo passo:** Clemente legge il report di Stabia (`https://ainstein.it/ai-reputation/project/1/runs/1`) e il PDF;
 poi la modalità "controllo tecnico GEO" (punto -1 sotto) e, prima del lancio, la valutazione del Recap SEO GA4+GSC
 (in `docs/LANCIO-LINKEDIN.md`).
 
@@ -43,8 +48,11 @@ Già fatto: guida "Come si usa" in 4 passi nell'Overview (commit 1e9804d).
 -2. **Segnalato da Clemente (2026-10-13), dopo la messa online:** mancano domande "di percorso" come "come fare un tour in
    barca privata per Capri da Castellammare" (o da Sorrento): domande d'acquisto con luogo di partenza e destinazione, quelle
    che i clienti fanno davvero alle AI. Capire perché il generatore di domande (`PromptEngineService`) non le produce e
-   correggerlo.
--1. **Idea di Clemente (2026-10-13): controllo tecnico GEO**, come modalità a parte del tool: dati strutturati (schema.org
+   correggerlo. Causa trovata: il prompt di `PromptEngineService` è pensato per la reputazione di una persona (30% rep,
+   20% nav, 25% comm col nome, solo 25% comp = ~10 domande su 40 senza nome) e le domande comp sono del tipo "i migliori X
+   a Y", mai "come faccio X da A a B". Per un'azienda serve il contrario: maggioranza di domande di bisogno/acquisto senza
+   nome, con luoghi e servizi presi dal profilo (partenze, destinazioni, servizi), anche in inglese se ha clienti stranieri.
+-1. **FATTO (ADR-016) — Idea di Clemente (2026-10-13): controllo tecnico GEO**, come modalità a parte del tool: dati strutturati (schema.org
    Organization/LocalBusiness/Person, coerenza con i dati veri), `llms.txt`, robots.txt e accesso dei crawler AI (GPTBot,
    ClaudeBot, PerplexityBot, Google-Extended), sitemap, pagine leggibili senza JavaScript, pagina Chi siamo/Contatti con dati
    societari. Probabilmente gratis o quasi (è crawl, niente AI): porta d'ingresso al GEO Audit a pagamento. Verificare online
