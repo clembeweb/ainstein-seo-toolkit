@@ -7,6 +7,7 @@ $moduleIcons = [
     'keyword-research' => 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z',
     'ads-analyzer' => 'M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z',
     'internal-links' => 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1',
+    'ai-reputation' => 'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z',
     'content-creator' => 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z',
 ];
 $defaultIcon = 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z';
@@ -18,6 +19,7 @@ $moduleColors = [
     'keyword-research' => ['bg' => 'bg-purple-100 dark:bg-purple-900/30', 'text' => 'text-purple-600 dark:text-purple-400', 'border' => 'border-purple-200 dark:border-purple-700', 'borderL' => 'border-l-purple-400', 'hover' => 'hover:border-purple-300 dark:hover:border-purple-600', 'ring' => 'hover:ring-purple-200 dark:hover:ring-purple-800'],
     'ads-analyzer' => ['bg' => 'bg-rose-100 dark:bg-rose-900/30', 'text' => 'text-rose-600 dark:text-rose-400', 'border' => 'border-rose-200 dark:border-rose-700', 'borderL' => 'border-l-rose-400', 'hover' => 'hover:border-rose-300 dark:hover:border-rose-600', 'ring' => 'hover:ring-rose-200 dark:hover:ring-rose-800'],
     'internal-links' => ['bg' => 'bg-cyan-100 dark:bg-cyan-900/30', 'text' => 'text-cyan-600 dark:text-cyan-400', 'border' => 'border-cyan-200 dark:border-cyan-700', 'borderL' => 'border-l-cyan-400', 'hover' => 'hover:border-cyan-300 dark:hover:border-cyan-600', 'ring' => 'hover:ring-cyan-200 dark:hover:ring-cyan-800'],
+    'ai-reputation' => ['bg' => 'bg-indigo-100 dark:bg-indigo-900/30', 'text' => 'text-indigo-600 dark:text-indigo-400', 'border' => 'border-indigo-200 dark:border-indigo-700'],
     'content-creator' => ['bg' => 'bg-indigo-100 dark:bg-indigo-900/30', 'text' => 'text-indigo-600 dark:text-indigo-400', 'border' => 'border-indigo-200 dark:border-indigo-700', 'borderL' => 'border-l-indigo-400', 'hover' => 'hover:border-indigo-300 dark:hover:border-indigo-600', 'ring' => 'hover:ring-indigo-200 dark:hover:ring-indigo-800'],
 ];
 $defaultColor = ['bg' => 'bg-slate-100 dark:bg-slate-700', 'text' => 'text-slate-600 dark:text-slate-400', 'border' => 'border-slate-200 dark:border-slate-700', 'borderL' => 'border-l-slate-400', 'hover' => 'hover:border-slate-300 dark:hover:border-slate-600', 'ring' => 'hover:ring-slate-200 dark:hover:ring-slate-800'];
@@ -30,12 +32,19 @@ $moduleNames = [
     'ads-analyzer' => 'Google Ads',
     'internal-links' => 'Internal Links',
     'content-creator' => 'Content Creator',
+    'ai-reputation' => 'GEO Audit',
 ];
 
 // === Helpers ===
 $_hour = (int) date('H');
 $_greeting = $_hour < 12 ? 'Buongiorno' : ($_hour < 18 ? 'Buon pomeriggio' : 'Buonasera');
 $_moduleSlugs = array_column($modules ?? [], 'slug');
+// Prezzi dai costi veri (Credits::getCost / impostazioni modulo), mai scritti a mano
+$_fmt = fn(float $n) => rtrim(rtrim(number_format($n, 1, ',', ''), '0'), ',');
+$_cr = fn(float $n, string $suffix = '') => $n <= 0 ? 'gratis' : $_fmt($n) . ' credit' . ($n == 1 ? 'o' : 'i') . $suffix;
+$_krCost = fn(string $key, float $default) => (float) (\Core\ModuleLoader::getSetting('keyword-research', $key) ?? $default);
+$_aic = fn(string $op, float $default) => (float) \Core\Credits::getCost($op, 'ai-content', $default);
+$_articleCost = $_aic('serp_extraction', 3) + $_aic('content_scrape', 1) + $_aic('brief_generation', 3) + $_aic('article_generation', 10) + $_aic('cover_image_generation', 3);
 
 // === Module capability blocks ===
 $moduleBlocks = [
@@ -46,9 +55,9 @@ $moduleBlocks = [
         'color' => 'purple',
         'iconPath' => $moduleIcons['keyword-research'],
         'capabilities' => [
-            ['text' => 'Ricerca guidata con AI', 'cost' => 'da 2 crediti'],
-            ['text' => 'Architettura sito completa', 'cost' => 'da 5 crediti'],
-            ['text' => 'Piano editoriale', 'cost' => 'da 5 crediti'],
+            ['text' => 'Ricerca guidata con AI', 'cost' => $_cr($_krCost('cost_kr_ai_clustering', 3))],
+            ['text' => 'Architettura sito completa', 'cost' => $_cr($_krCost('cost_kr_ai_architecture', 5))],
+            ['text' => 'Piano editoriale', 'cost' => $_cr($_krCost('cost_kr_editorial_plan', 5))],
             ['text' => 'Quick check keyword', 'cost' => 'gratis'],
         ],
     ],
@@ -59,8 +68,8 @@ $moduleBlocks = [
         'color' => 'amber',
         'iconPath' => $moduleIcons['ai-content'],
         'capabilities' => [
-            ['text' => 'Articoli SEO completi', 'cost' => 'da 3 crediti'],
-            ['text' => 'Meta tag ottimizzati', 'cost' => 'da 1 credito'],
+            ['text' => 'Articolo SEO completo con copertina', 'cost' => $_cr($_articleCost, ' ad articolo')],
+            ['text' => 'Meta tag ottimizzati', 'cost' => $_cr($_aic('meta_generate', 2), ' a pagina')],
             ['text' => 'Pubblicazione WordPress', 'cost' => 'automatica'],
         ],
     ],
@@ -71,7 +80,7 @@ $moduleBlocks = [
         'color' => 'emerald',
         'iconPath' => $moduleIcons['seo-audit'],
         'capabilities' => [
-            ['text' => 'Audit tecnico completo', 'cost' => 'da 2 crediti'],
+            ['text' => 'Audit tecnico completo', 'cost' => $_cr((float) \Core\Credits::getCost('crawl_per_page', 'seo-audit', 0), ' a pagina')],
             ['text' => 'Piano d\'azione prioritizzato', 'cost' => 'incluso'],
             ['text' => 'Report esportabile', 'cost' => 'incluso'],
         ],
@@ -83,9 +92,21 @@ $moduleBlocks = [
         'color' => 'blue',
         'iconPath' => $moduleIcons['seo-tracking'],
         'capabilities' => [
-            ['text' => 'Tracking keyword giornaliero', 'cost' => '1 cr/check'],
+            ['text' => 'Posizioni delle keyword', 'cost' => $_cr((float) \Core\Credits::getCost('rank_check', 'seo-tracking', 1), ' a keyword')],
             ['text' => 'Dati reali da Search Console', 'cost' => 'gratis'],
-            ['text' => 'Report AI settimanale', 'cost' => '1 credito'],
+            ['text' => 'Quick Wins e analisi pagina', 'cost' => $_cr((float) \Core\Credits::getCost('page_analysis', 'seo-tracking', 2), ' a pagina')],
+        ],
+    ],
+    'ai-reputation' => [
+        'slug' => 'ai-reputation',
+        'name' => 'GEO Audit',
+        'tagline' => 'Cosa dicono ChatGPT, Gemini e le altre AI di te',
+        'color' => 'indigo',
+        'iconPath' => $moduleIcons['ai-reputation'],
+        'capabilities' => [
+            ['text' => 'Controllo tecnico: le AI leggono il tuo sito?', 'cost' => 'gratis'],
+            ['text' => 'Audit d’acquisto o di reputazione', 'cost' => $_cr((float) \Core\Credits::getCost('collect_response', 'ai-reputation', 1), ' a risposta')],
+            ['text' => 'Piano con testi pronti e schede', 'cost' => $_cr((float) \Core\Credits::getCost('action_brief', 'ai-reputation', 1), ' a scheda')],
         ],
     ],
     'ads-analyzer' => [

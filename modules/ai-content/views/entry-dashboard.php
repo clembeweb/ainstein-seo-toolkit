@@ -1,7 +1,10 @@
 <?php
 // Credit badge helper per costi dinamici
 include_once BASE_PATH . '/shared/views/components/credit-badge.php';
-$manualCost = ($creditCosts['serp'] ?? 3) + 3 + ($creditCosts['brief'] ?? 3) + ($creditCosts['article'] ?? 10);
+// Prezzo di un articolo con i costi veri (SERP + 1 URL letta + brief + articolo + copertina): mai numeri scritti a mano
+$manualCost = \Core\Credits::getCost('serp_extraction', 'ai-content', 3) + \Core\Credits::getCost('content_scrape', 'ai-content', 1)
+    + \Core\Credits::getCost('brief_generation', 'ai-content', 3) + \Core\Credits::getCost('article_generation', 'ai-content', 10)
+    + \Core\Credits::getCost('cover_image_generation', 'ai-content', 3);
 $metaCost = 1 + ($creditCosts['brief'] ?? 3);
 
 // Onboarding tour

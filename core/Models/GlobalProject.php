@@ -422,6 +422,25 @@ class GlobalProject
             }
         } catch (\Exception $e) {}
 
+        // GEO Audit (mancava: i progetti con solo questo modulo risultavano "0 moduli attivi", trovato 2026-10-13)
+        try {
+            $rows = Database::fetchAll(
+                "SELECT global_project_id, COUNT(*) as cnt, MAX(created_at) as last_at
+                 FROM ar_projects WHERE global_project_id IN ($placeholders)
+                 GROUP BY global_project_id",
+                $projectIds
+            );
+            foreach ($rows as $row) {
+                $gpId = (int) $row['global_project_id'];
+                if (!isset($indexed[$gpId])) continue;
+                $indexed[$gpId]['modules_data']['ai-reputation'] = [
+                    'projects_count' => (int) ($row['cnt'] ?? 0),
+                ];
+                $indexed[$gpId]['active_modules'][] = 'ai-reputation';
+                $this->updateLastActivity($indexed[$gpId], $row['last_at']);
+            }
+        } catch (\Exception $e) {}
+
         // Ads Analyzer
         try {
             $rows = Database::fetchAll(

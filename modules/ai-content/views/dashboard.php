@@ -284,8 +284,16 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
                     <p class="text-xs text-purple-200">Scraping URL</p>
                 </div>
                 <div class="text-center">
+                    <p class="text-2xl font-bold"><?= number_format($creditCosts['brief'] ?? 3, 0) ?></p>
+                    <p class="text-xs text-purple-200">Brief AI</p>
+                </div>
+                <div class="text-center">
                     <p class="text-2xl font-bold"><?= number_format($creditCosts['article'] ?? 10, 0) ?></p>
-                    <p class="text-xs text-purple-200">Generazione AI</p>
+                    <p class="text-xs text-purple-200">Articolo AI</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-2xl font-bold"><?= number_format($creditCosts['cover'] ?? 3, 0) ?></p>
+                    <p class="text-xs text-purple-200">Copertina</p>
                 </div>
                 <div class="text-center">
                     <p class="text-2xl font-bold">0</p>

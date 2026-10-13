@@ -86,6 +86,7 @@ class DashboardController
             'scrape' => Credits::getCost('content_scrape', 'ai-content'),
             'brief' => Credits::getCost('brief_generation', 'ai-content'),
             'article' => Credits::getCost('article_generation', 'ai-content'),
+            'cover' => Credits::getCost('cover_image_generation', 'ai-content'),
         ];
 
         return View::render('ai-content/dashboard', [

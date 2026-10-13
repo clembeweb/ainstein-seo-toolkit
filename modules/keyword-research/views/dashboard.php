@@ -32,6 +32,10 @@ endif;
 ]) ?>
 </div>
 
+<?php
+// Prezzi delle modalità: dalle impostazioni del modulo (gli stessi che addebitano i controller), mai scritti a mano
+$krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (\Core\ModuleLoader::getSetting('keyword-research', $key) ?? $default), 1, ',', ''), '0'), ',') . ' cr';
+?>
 <div class="space-y-8">
     <!-- Header -->
     <div data-tour="kr-header" class="sm:flex sm:items-center sm:justify-between gap-4">
@@ -56,7 +60,7 @@ endif;
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>',
             'gradient' => 'from-emerald-500 to-teal-600',
             'url' => url('/keyword-research/projects?type=research'),
-            'cost' => '3 cr',
+            'cost' => $krCost('cost_kr_ai_clustering', 3),
             'costColor' => 'amber',
             'dataTour' => 'kr-guided',
         ]) ?>
@@ -67,7 +71,7 @@ endif;
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>',
             'gradient' => 'from-blue-500 to-indigo-600',
             'url' => url('/keyword-research/projects?type=architecture'),
-            'cost' => '10 cr',
+            'cost' => $krCost('cost_kr_ai_architecture', 5),
             'costColor' => 'purple',
             'dataTour' => 'kr-architecture',
         ]) ?>
@@ -78,7 +82,7 @@ endif;
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>',
             'gradient' => 'from-violet-500 to-purple-600',
             'url' => url('/keyword-research/projects?type=editorial'),
-            'cost' => '10 cr',
+            'cost' => $krCost('cost_kr_editorial_plan', 5),
             'costColor' => 'purple',
             'dataTour' => 'kr-editorial',
         ]) ?>
