@@ -204,7 +204,7 @@ class AlertService
         $alertsHtml .= '</table>';
 
         $dashboardUrl = url('/seo-tracking/project/' . $projectId . '/alerts');
-        $subject = "[SEO Tracking] {$project['name']} - " . count($alerts) . " nuovi alert";
+        $subject = "[AI Rank] {$project['name']} - " . count($alerts) . " nuovi alert";
 
         $data = [
             'project_name' => $project['name'],

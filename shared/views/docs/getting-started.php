@@ -57,7 +57,7 @@
         </p>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <!-- AI Content Generator -->
+            <!-- AI Writer -->
             <a href="<?= url('/docs/ai-content') ?>" class="group flex items-start gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
                 <div class="shrink-0 w-10 h-10 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
                     <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -65,12 +65,12 @@
                     </svg>
                 </div>
                 <div class="min-w-0">
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI Content Generator</h3>
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI Writer</h3>
                     <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Genera articoli SEO completi con analisi SERP, brief strategico e immagini di copertina.</p>
                 </div>
             </a>
 
-            <!-- SEO Audit -->
+            <!-- AI Audit -->
             <a href="<?= url('/docs/seo-audit') ?>" class="group flex items-start gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
                 <div class="shrink-0 w-10 h-10 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
                     <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -78,12 +78,12 @@
                     </svg>
                 </div>
                 <div class="min-w-0">
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">SEO Audit</h3>
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI Audit</h3>
                     <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Analisi tecnica completa con 50+ controlli, punteggio di salute e piano d'azione AI.</p>
                 </div>
             </a>
 
-            <!-- SEO Tracking -->
+            <!-- AI Rank -->
             <a href="<?= url('/docs/seo-tracking') ?>" class="group flex items-start gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
                 <div class="shrink-0 w-10 h-10 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
                     <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -91,12 +91,12 @@
                     </svg>
                 </div>
                 <div class="min-w-0">
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">SEO Tracking</h3>
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI Rank</h3>
                     <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Monitora posizioni keyword, traffico organico e revenue con integrazione Google Search Console.</p>
                 </div>
             </a>
 
-            <!-- Keyword Research -->
+            <!-- AI Keywords -->
             <a href="<?= url('/docs/keyword-research') ?>" class="group flex items-start gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
                 <div class="shrink-0 w-10 h-10 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
                     <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -104,7 +104,7 @@
                     </svg>
                 </div>
                 <div class="min-w-0">
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Keyword Research</h3>
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI Keywords</h3>
                     <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Ricerca keyword con clustering AI, architettura sito e quick check gratuito.</p>
                 </div>
             </a>
@@ -188,7 +188,7 @@
                 </div>
                 <div>
                     <h3 class="text-sm font-semibold text-slate-900 dark:text-white">2. Attiva i moduli</h3>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Dalla dashboard del progetto, attiva i moduli che ti servono con un click. Per moduli come AI Content o Keyword Research, potrai scegliere il tipo di progetto (es. articoli manuali, piano editoriale).</p>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Dalla dashboard del progetto, attiva i moduli che ti servono con un click. Per moduli come AI Writer o AI Keywords, potrai scegliere il tipo di progetto (es. articoli manuali, piano editoriale).</p>
                 </div>
             </div>
 

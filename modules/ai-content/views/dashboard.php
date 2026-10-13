@@ -30,7 +30,7 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
     <!-- Header (global view) -->
     <div class="sm:flex sm:items-center sm:justify-between" data-tour="aic-header">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AI SEO Content Generator</h1>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AI Writer</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Genera articoli SEO-ottimizzati con intelligenza artificiale</p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-3" data-tour="aic-quickactions">
@@ -187,10 +187,10 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
                     </svg>
                 </div>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Nessun articolo generato</p>
-                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Aggiungi una keyword oppure importa un piano editoriale da Keyword Research</p>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Aggiungi una keyword oppure importa un piano editoriale da AI Keywords</p>
                 <a href="<?= url('/keyword-research') ?>" class="inline-flex items-center gap-1 mt-3 text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 transition-colors">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
-                    Vai a Keyword Research
+                    Vai a AI Keywords
                 </a>
             </div>
             <?php else: ?>

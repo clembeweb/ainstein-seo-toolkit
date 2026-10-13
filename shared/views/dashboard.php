@@ -25,14 +25,14 @@ $moduleColors = [
 $defaultColor = ['bg' => 'bg-slate-100 dark:bg-slate-700', 'text' => 'text-slate-600 dark:text-slate-400', 'border' => 'border-slate-200 dark:border-slate-700', 'borderL' => 'border-l-slate-400', 'hover' => 'hover:border-slate-300 dark:hover:border-slate-600', 'ring' => 'hover:ring-slate-200 dark:hover:ring-slate-800'];
 
 $moduleNames = [
-    'ai-content' => 'AI Content',
-    'seo-audit' => 'SEO Audit',
-    'seo-tracking' => 'Position Tracking',
-    'keyword-research' => 'Keyword Research',
+    'ai-content' => 'AI Writer',
+    'seo-audit' => 'AI Audit',
+    'seo-tracking' => 'AI Rank',
+    'keyword-research' => 'AI Keywords',
     'ads-analyzer' => 'Google Ads',
     'internal-links' => 'Internal Links',
     'content-creator' => 'Content Creator',
-    'ai-reputation' => 'GEO Audit',
+    'ai-reputation' => 'AI GEO Audit',
 ];
 
 // === Helpers ===
@@ -50,7 +50,7 @@ $_articleCost = $_aic('serp_extraction', 3) + $_aic('content_scrape', 1) + $_aic
 $moduleBlocks = [
     'keyword-research' => [
         'slug' => 'keyword-research',
-        'name' => 'Keyword Research',
+        'name' => 'AI Keywords',
         'tagline' => 'Trova le keyword giuste per il tuo business',
         'color' => 'purple',
         'iconPath' => $moduleIcons['keyword-research'],
@@ -63,7 +63,7 @@ $moduleBlocks = [
     ],
     'ai-content' => [
         'slug' => 'ai-content',
-        'name' => 'AI Content Generator',
+        'name' => 'AI Writer',
         'tagline' => 'Scrivi e pubblica articoli SEO ottimizzati',
         'color' => 'amber',
         'iconPath' => $moduleIcons['ai-content'],
@@ -75,7 +75,7 @@ $moduleBlocks = [
     ],
     'seo-audit' => [
         'slug' => 'seo-audit',
-        'name' => 'SEO Audit',
+        'name' => 'AI Audit',
         'tagline' => 'Scopri cosa migliorare nel tuo sito',
         'color' => 'emerald',
         'iconPath' => $moduleIcons['seo-audit'],
@@ -87,7 +87,7 @@ $moduleBlocks = [
     ],
     'seo-tracking' => [
         'slug' => 'seo-tracking',
-        'name' => 'SEO Tracking',
+        'name' => 'AI Rank',
         'tagline' => 'Monitora le posizioni su Google ogni giorno',
         'color' => 'blue',
         'iconPath' => $moduleIcons['seo-tracking'],
@@ -99,7 +99,7 @@ $moduleBlocks = [
     ],
     'ai-reputation' => [
         'slug' => 'ai-reputation',
-        'name' => 'GEO Audit',
+        'name' => 'AI GEO Audit',
         'tagline' => 'Cosa dicono ChatGPT, Gemini e le altre AI di te',
         'color' => 'indigo',
         'iconPath' => $moduleIcons['ai-reputation'],

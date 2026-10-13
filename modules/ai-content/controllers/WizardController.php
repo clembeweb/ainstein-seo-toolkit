@@ -18,7 +18,7 @@ use Core\Logger;
 /**
  * WizardController
  *
- * Handles the wizard flow for AI Content generation
+ * Handles the wizard flow for AI Writer generation
  */
 class WizardController
 {

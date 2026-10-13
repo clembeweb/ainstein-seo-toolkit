@@ -16,7 +16,7 @@ use Core\Middleware;
 /**
  * KeywordController
  *
- * Handles keyword management for AI Content module
+ * Handles keyword management for AI Writer module
  */
 class KeywordController
 {
@@ -304,7 +304,7 @@ class KeywordController
         } else {
             // Lista globale utente (fallback)
             $keywordsData = $this->keyword->allByUser($user['id'], $page, 20, $filters);
-            $title = 'Keywords - AI Content';
+            $title = 'Keywords - AI Writer';
         }
 
         return View::render('ai-content/keywords/index', [

@@ -12,7 +12,7 @@ use Services\KeywordPlannerService;
 class QuickCheckController
 {
     /**
-     * Carica la lista progetti SEO Tracking dell'utente (per "Invia a SEO Tracking")
+     * Carica la lista progetti AI Rank dell'utente (per "Invia a AI Rank")
      */
     private function getStProjects(int $userId): array
     {
@@ -33,7 +33,7 @@ class QuickCheckController
         $user = Auth::user();
 
         return View::render('keyword-research::quick-check/index', [
-            'title' => 'Quick Check - Keyword Research',
+            'title' => 'Quick Check - AI Keywords',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'keyword' => '',
@@ -52,7 +52,7 @@ class QuickCheckController
         if (empty($keyword)) {
             $_SESSION['_flash']['error'] = 'Inserisci una keyword da cercare.';
             return View::render('keyword-research::quick-check/index', [
-                'title' => 'Quick Check - Keyword Research',
+                'title' => 'Quick Check - AI Keywords',
                 'user' => $user,
                 'modules' => ModuleLoader::getUserModules($user['id']),
                 'keyword' => '',
@@ -105,7 +105,7 @@ class QuickCheckController
             if (!$service->isConfigured()) {
                 $_SESSION['_flash']['error'] = 'Nessun servizio keyword configurato. Contatta l\'amministratore.';
                 return View::render('keyword-research::quick-check/index', [
-                    'title' => 'Quick Check - Keyword Research',
+                    'title' => 'Quick Check - AI Keywords',
                     'user' => $user,
                     'modules' => ModuleLoader::getUserModules($user['id']),
                     'keyword' => $keyword,
@@ -158,7 +158,7 @@ class QuickCheckController
     }
 
     /**
-     * POST: Invia keyword selezionate a un progetto SEO Tracking
+     * POST: Invia keyword selezionate a un progetto AI Rank
      */
     public function sendToTracking(): void
     {
@@ -178,7 +178,7 @@ class QuickCheckController
 
         // Verifica che il modulo seo-tracking sia attivo
         if (!ModuleLoader::isModuleActive('seo-tracking')) {
-            echo json_encode(['success' => false, 'error' => 'Modulo SEO Tracking non attivo.']);
+            echo json_encode(['success' => false, 'error' => 'Modulo AI Rank non attivo.']);
             return;
         }
 
@@ -237,7 +237,7 @@ class QuickCheckController
     }
 
     /**
-     * GET: Ritorna i nomi dei gruppi di un progetto SEO Tracking (per autocomplete)
+     * GET: Ritorna i nomi dei gruppi di un progetto AI Rank (per autocomplete)
      */
     public function projectGroups(): void
     {

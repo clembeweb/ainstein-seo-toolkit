@@ -15,7 +15,7 @@ use Modules\AiContent\Models\Project;
 /**
  * ArticleController
  *
- * Handles article management for AI Content module
+ * Handles article management for AI Writer module
  */
 class ArticleController
 {
@@ -64,7 +64,7 @@ class ArticleController
         } else {
             $articlesData = $this->article->allByUser($user['id'], $page, 20, $status, $filters);
             $stats = $this->article->getStats($user['id']);
-            $title = 'Articoli - AI Content';
+            $title = 'Articoli - AI Writer';
         }
 
         $wpSites = $this->wpSite->getActiveSites($user['id']);
@@ -125,7 +125,7 @@ class ArticleController
         $accessRole = $project['access_role'] ?? $article['access_role'] ?? 'owner';
 
         return View::render('ai-content/articles/show', [
-            'title' => ($article['title'] ?: 'Articolo #' . $id) . ' - AI Content',
+            'title' => ($article['title'] ?: 'Articolo #' . $id) . ' - AI Writer',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'article' => $article,

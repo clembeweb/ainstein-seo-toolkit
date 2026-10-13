@@ -13,7 +13,7 @@ use Modules\SeoAudit\Services\BudgetScoreCalculator;
 /**
  * BudgetResultsController
  *
- * Gestisce la sezione "Crawl Budget" nel SEO Audit.
+ * Gestisce la sezione "Crawl Budget" nell'AI Audit.
  * Mostra punteggio budget, redirect, pagine spreco e indicizzabilita.
  */
 class BudgetResultsController

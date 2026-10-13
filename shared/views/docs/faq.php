@@ -40,7 +40,7 @@
                 </button>
                 <div x-show="open === 1" x-cloak x-collapse>
                     <div class="px-5 pb-4 text-sm text-slate-600 dark:text-slate-400">
-                        Ainstein è una piattaforma SEO completa potenziata dall'intelligenza artificiale. Offre 7 moduli integrati che coprono ogni aspetto della strategia SEO: dalla generazione di contenuti ottimizzati (AI Content Generator) all'audit tecnico del sito (SEO Audit), dal monitoraggio delle posizioni (SEO Tracking) alla ricerca keyword (Keyword Research), dall'analisi dei link interni (Internal Links), all'ottimizzazione delle campagne Google Ads (Ads Analyzer), fino alla creazione di contenuti HTML per pagine esistenti (Content Creator).
+                        Ainstein è una piattaforma SEO completa potenziata dall'intelligenza artificiale. Offre 7 moduli integrati che coprono ogni aspetto della strategia SEO: dalla generazione di contenuti ottimizzati (AI Writer) all'audit tecnico del sito (AI Audit), dal monitoraggio delle posizioni (AI Rank) alla ricerca keyword (AI Keywords), dall'analisi dei link interni (Internal Links), all'ottimizzazione delle campagne Google Ads (Ads Analyzer), fino alla creazione di contenuti HTML per pagine esistenti (Content Creator).
                     </div>
                 </div>
             </div>
@@ -76,7 +76,7 @@
                 </button>
                 <div x-show="open === 3" x-cloak x-collapse>
                     <div class="px-5 pb-4 text-sm text-slate-600 dark:text-slate-400">
-                        L'interfaccia di Ainstein è interamente in italiano. Tuttavia, la generazione di contenuti tramite AI Content Generator supporta qualsiasi lingua: puoi configurare la lingua desiderata nelle impostazioni del progetto. L'analisi SEO e il monitoraggio funzionano indipendentemente dalla lingua del sito analizzato.
+                        L'interfaccia di Ainstein è interamente in italiano. Tuttavia, la generazione di contenuti tramite AI Writer supporta qualsiasi lingua: puoi configurare la lingua desiderata nelle impostazioni del progetto. L'analisi SEO e il monitoraggio funzionano indipendentemente dalla lingua del sito analizzato.
                     </div>
                 </div>
             </div>
@@ -167,13 +167,13 @@
         </div>
     </section>
 
-    <!-- Categoria: AI Content -->
+    <!-- Categoria: AI Writer -->
     <section class="mb-10">
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
             </svg>
-            AI Content Generator
+            AI Writer
         </h2>
 
         <div class="space-y-3">
@@ -247,7 +247,7 @@
             <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
                 <button @click="open === 15 ? open = null : open = 15"
                         class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <span class="text-sm font-medium text-slate-900 dark:text-white">Qual è la differenza tra Content Creator e AI Content Generator?</span>
+                    <span class="text-sm font-medium text-slate-900 dark:text-white">Qual è la differenza tra Content Creator e AI Writer?</span>
                     <svg class="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 transition-transform duration-200"
                          :class="{ 'rotate-180': open === 15 }"
                          fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -256,7 +256,7 @@
                 </button>
                 <div x-show="open === 15" x-cloak x-collapse>
                     <div class="px-5 pb-4 text-sm text-slate-600 dark:text-slate-400">
-                        Content Creator genera il body HTML di pagine esistenti (prodotti, categorie, servizi), mentre AI Content Generator crea articoli blog completi da zero con analisi SERP, brief strategico e immagine di copertina.
+                        Content Creator genera il body HTML di pagine esistenti (prodotti, categorie, servizi), mentre AI Writer crea articoli blog completi da zero con analisi SERP, brief strategico e immagine di copertina.
                     </div>
                 </div>
             </div>
@@ -283,7 +283,7 @@
             <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
                 <button @click="open === 17 ? open = null : open = 17"
                         class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <span class="text-sm font-medium text-slate-900 dark:text-white">Posso importare keyword da Keyword Research?</span>
+                    <span class="text-sm font-medium text-slate-900 dark:text-white">Posso importare keyword da AI Keywords?</span>
                     <svg class="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 transition-transform duration-200"
                          :class="{ 'rotate-180': open === 17 }"
                          fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -292,7 +292,7 @@
                 </button>
                 <div x-show="open === 17" x-cloak x-collapse>
                     <div class="px-5 pb-4 text-sm text-slate-600 dark:text-slate-400">
-                        Sì, se hai usato la modalità "Architettura Sito" nel modulo Keyword Research, puoi inviare i risultati direttamente al Content Creator. Le keyword principali, secondarie e l'intent vengono trasferiti automaticamente.
+                        Sì, se hai usato la modalità "Architettura Sito" nel modulo AI Keywords, puoi inviare i risultati direttamente al Content Creator. Le keyword principali, secondarie e l'intent vengono trasferiti automaticamente.
                     </div>
                 </div>
             </div>
@@ -317,13 +317,13 @@
         </div>
     </section>
 
-    <!-- Categoria: SEO Tracking -->
+    <!-- Categoria: AI Rank -->
     <section class="mb-10">
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
             </svg>
-            SEO Tracking
+            AI Rank
         </h2>
 
         <div class="space-y-3">

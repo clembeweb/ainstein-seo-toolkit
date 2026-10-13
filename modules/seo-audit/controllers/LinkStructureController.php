@@ -11,7 +11,7 @@ use Modules\SeoAudit\Services\LinkStructureService;
 /**
  * LinkStructureController
  *
- * Gestisce la sezione "Struttura Link" nel SEO Audit
+ * Gestisce la sezione "Struttura Link" nell'AI Audit
  * Analizza link interni usando dati già disponibili dal crawl
  */
 class LinkStructureController

@@ -9,7 +9,7 @@ use Core\Database;
  * Calcola Visibility Score, Estimated Traffic e metriche di distribuzione
  * basate su curva CTR standard (AWR 2024).
  *
- * Usato dalla dashboard e tabella keyword del modulo SEO Tracking.
+ * Usato dalla dashboard e tabella keyword del modulo AI Rank.
  */
 class VisibilityService
 {

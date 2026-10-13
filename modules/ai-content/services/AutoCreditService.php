@@ -17,7 +17,7 @@ class AutoCreditService
 {
     /**
      * Utente a cui addebitare: il proprietario del progetto globale se c'è,
-     * altrimenti il proprietario del progetto AI Content.
+     * altrimenti il proprietario del progetto AI Writer.
      */
     public static function creditUserId(int $aicProjectId, int $fallbackUserId): int
     {

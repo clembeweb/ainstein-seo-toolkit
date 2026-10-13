@@ -42,6 +42,8 @@ Pubblicare un post su LinkedIn che presenta Ainstein (https://ainstein.it) con i
 Clemente lo usa per i suoi clienti al posto di SEMrush. Il feedback farà il resto.
 
 ## Decisioni prese (2026-10-09)
+- **2026-10-13 sera — nomi unici dei moduli (decisione Clemente):** **AI Keywords** (keyword-research), **AI Writer** (ai-content), **AI Audit** (seo-audit), **AI Rank** (seo-tracking), **AI GEO Audit** (ai-reputation). Da usare ovunque: menu (DB `modules.name`), titoli, dashboard, docs, prezzi, tour, post.
+
 
 | Modulo | Lancio | Motivo |
 |---|---|---|

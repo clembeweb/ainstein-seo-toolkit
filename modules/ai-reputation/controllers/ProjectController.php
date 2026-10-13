@@ -9,7 +9,7 @@ use Core\ModuleLoader;
 use Modules\AiReputation\Models\Project;
 
 /**
- * ProjectController - lista, impostazioni, eliminazione progetti AI Reputation Radar
+ * ProjectController - lista, impostazioni, eliminazione progetti AI GEO Audit
  */
 class ProjectController
 {
@@ -26,7 +26,7 @@ class ProjectController
         $projects = $this->project->allWithStats($user['id']);
 
         return View::render('ai-reputation::projects/index', [
-            'title' => 'GEO Audit',
+            'title' => 'AI GEO Audit',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'projects' => $projects,

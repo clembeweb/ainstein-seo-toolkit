@@ -175,7 +175,7 @@
                 </div>
                 <h3 class="font-medium text-slate-900 dark:text-white text-sm">Pool link condiviso</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Pool di link interni condiviso con il modulo AI Content per suggerimenti di linking automatici.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Pool di link interni condiviso con il modulo AI Writer per suggerimenti di linking automatici.</p>
         </div>
         <!-- Statistiche -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -402,7 +402,7 @@
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
         </svg>
-        Keyword Research
+        AI Keywords
     </a>
     <a href="<?= url('/docs/ads-analyzer') ?>" class="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
         Google Ads Analyzer

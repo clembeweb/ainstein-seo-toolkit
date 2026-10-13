@@ -22,7 +22,7 @@ class JobsController
     private array $modules = [
         'ai-content' => [
             'table' => 'aic_process_jobs',
-            'label' => 'AI Content',
+            'label' => 'AI Writer',
             'project_table' => 'aic_projects',
             'items_col' => 'keywords_requested',
             'completed_col' => 'keywords_completed',
@@ -31,7 +31,7 @@ class JobsController
         ],
         'ai-content-meta' => [
             'table' => 'aic_scrape_jobs',
-            'label' => 'AI Content (Meta)',
+            'label' => 'AI Writer (Meta)',
             'project_table' => 'aic_projects',
             'items_col' => 'items_requested',
             'completed_col' => 'items_completed',
@@ -40,7 +40,7 @@ class JobsController
         ],
         'seo-tracking' => [
             'table' => 'st_rank_jobs',
-            'label' => 'SEO Tracking',
+            'label' => 'AI Rank',
             'project_table' => 'st_projects',
             'items_col' => 'keywords_requested',
             'completed_col' => 'keywords_completed',
@@ -58,7 +58,7 @@ class JobsController
         ],
         'seo-audit' => [
             'table' => 'sa_crawl_jobs',
-            'label' => 'SEO Audit',
+            'label' => 'AI Audit',
             'project_table' => 'sa_projects',
             'items_col' => 'items_total',
             'completed_col' => 'items_completed',

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * SEO Audit Module - Routes
+ * AI Audit Module - Routes
  *
  * Modulo per audit SEO completo con Piano d'Azione AI
  */

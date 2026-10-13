@@ -66,7 +66,7 @@ class DashboardController
         $enginesMissing = array_values(array_diff($project['engines'], $enginesReady));
 
         return View::render('ai-reputation::dashboard/index', [
-            'title' => $project['name'] . ' - GEO Audit',
+            'title' => $project['name'] . ' - AI GEO Audit',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,

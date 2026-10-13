@@ -1,6 +1,6 @@
 <?php
 /**
- * AI Content Dispatcher (CRON Scheduler)
+ * AI Writer Dispatcher (CRON Scheduler)
  *
  * Elabora direttamente le keyword senza usare exec/popen
  * (compatibile con hosting condiviso come SiteGround)

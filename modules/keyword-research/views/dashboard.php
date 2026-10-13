@@ -25,7 +25,7 @@ endif;
     'steps' => [
         ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>', 'title' => 'Keyword seed', 'subtitle' => 'Espansione AI'],
         ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>', 'title' => 'Cluster semantici', 'subtitle' => 'Raggruppamento per intent'],
-        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>', 'title' => 'Piano editoriale', 'subtitle' => 'Export in AI Content'],
+        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>', 'title' => 'Piano editoriale', 'subtitle' => 'Export in AI Writer'],
     ],
     'ctaText' => 'Nuova Ricerca',
     'ctaUrl' => url('/projects/create'),
@@ -40,7 +40,7 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
     <!-- Header -->
     <div data-tour="kr-header" class="sm:flex sm:items-center sm:justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Keyword Research</h1>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AI Keywords</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Ricerca keyword potenziata da AI con clustering semantico e architettura sito</p>
         </div>
         <div class="mt-4 sm:mt-0 flex flex-wrap items-center gap-3">
@@ -78,7 +78,7 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
 
         <?= \Core\View::partial('components/dashboard-mode-card', [
             'title' => 'Piano Editoriale',
-            'description' => 'Piano editoriale mensile basato su keyword e analisi competitor. Esporta direttamente in AI Content.',
+            'description' => 'Piano editoriale mensile basato su keyword e analisi competitor. Esporta direttamente in AI Writer.',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>',
             'gradient' => 'from-violet-500 to-purple-600',
             'url' => url('/keyword-research/projects?type=editorial'),
@@ -194,7 +194,7 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
         <div>
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-                Keyword Research
+                AI Keywords
             </span>
             <h2 class="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white mt-4">Trova le keyword giuste e trasformale in un piano editoriale</h2>
             <p class="text-lg text-slate-600 dark:text-slate-300 mt-4 leading-relaxed">Dalla ricerca seed alla strategia contenuti completa: scopri keyword ad alto potenziale, organizzale in cluster tematici e genera un piano editoriale pronto per la produzione — tutto guidato dall'AI.</p>
@@ -327,7 +327,7 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
                 </svg>
             </div>
             <h4 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Genera il Piano Editoriale</h4>
-            <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Trasforma i cluster in un piano editoriale completo: titoli articolo, priorità, difficoltà stimata, volume di ricerca. Esporta direttamente in AI Content per la generazione automatica degli articoli.</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Trasforma i cluster in un piano editoriale completo: titoli articolo, priorità, difficoltà stimata, volume di ricerca. Esporta direttamente in AI Writer per la generazione automatica degli articoli.</p>
         </div>
     </div>
 </div>
@@ -473,14 +473,14 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
         </div>
     </div>
 
-    <!-- Feature 3: Piano Editoriale → AI Content (text LEFT, visual RIGHT, white bg) -->
+    <!-- Feature 3: Piano Editoriale → AI Writer (text LEFT, visual RIGHT, white bg) -->
     <div class="py-16 bg-white dark:bg-slate-900">
         <div class="max-w-6xl mx-auto px-4">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 <div>
                     <h3 class="text-2xl font-bold text-slate-900 dark:text-white">Dal piano editoriale alla produzione in un click</h3>
                     <p class="mt-4 text-slate-600 dark:text-slate-300 leading-relaxed">
-                        Il Piano Editoriale non resta un foglio Excel. Esporta le keyword selezionate direttamente nel modulo AI Content: per ogni keyword verrà creato automaticamente il processo completo di analisi SERP, brief e generazione articolo. Esempio: <strong class="text-purple-600 dark:text-purple-400">selezioni 10 keyword dal piano → 10 articoli in coda di produzione</strong>.
+                        Il Piano Editoriale non resta un foglio Excel. Esporta le keyword selezionate direttamente nel modulo AI Writer: per ogni keyword verrà creato automaticamente il processo completo di analisi SERP, brief e generazione articolo. Esempio: <strong class="text-purple-600 dark:text-purple-400">selezioni 10 keyword dal piano → 10 articoli in coda di produzione</strong>.
                     </p>
                     <a href="<?= url('/keyword-research/projects?type=editorial') ?>" class="inline-flex items-center mt-6 text-purple-600 dark:text-purple-400 font-medium hover:text-purple-700 dark:hover:text-purple-300 transition-colors">
                         Crea un piano editoriale
@@ -529,10 +529,10 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
                         <!-- Export button -->
                         <div class="px-4 py-3 bg-purple-50 dark:bg-purple-900/20 border-t border-purple-200 dark:border-purple-800/30">
                             <div class="flex items-center justify-between">
-                                <span class="text-xs text-purple-600 dark:text-purple-300">3 keyword selezionate → AI Content</span>
+                                <span class="text-xs text-purple-600 dark:text-purple-300">3 keyword selezionate → AI Writer</span>
                                 <div class="inline-flex items-center px-3 py-1.5 rounded-lg bg-purple-500 text-white text-xs font-medium">
                                     <svg class="w-3.5 h-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-                                    Esporta in AI Content
+                                    Esporta in AI Writer
                                 </div>
                             </div>
                         </div>
@@ -545,7 +545,7 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
     <!-- Cosa puoi fare -->
     <div class="mt-20">
         <div class="text-center mb-12">
-            <h3 class="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">Cosa puoi fare con Keyword Research</h3>
+            <h3 class="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">Cosa puoi fare con AI Keywords</h3>
             <p class="mt-3 text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">Dalla ricerca di nicchia all'export automatico verso la produzione contenuti</p>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -607,7 +607,7 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
                     </svg>
                 </div>
                 <h4 class="font-semibold text-slate-900 dark:text-white mb-2">Export automatico</h4>
-                <p class="text-sm text-slate-500 dark:text-slate-400">Passa le keyword selezionate direttamente al modulo AI Content per la generazione automatica degli articoli.</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Passa le keyword selezionate direttamente al modulo AI Writer per la generazione automatica degli articoli.</p>
             </div>
         </div>
     </div>
@@ -639,19 +639,19 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
                     </svg>
                 </button>
                 <div x-show="openFaq === 2" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-cloak class="px-6 pb-4">
-                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed"><strong>Research Guidata</strong>: parti da keyword seed, espansione automatica e clustering AI. Ideale per scoprire keyword e organizzarle. <strong>Architettura Sito</strong>: genera una struttura di pagine con URL e H1 basati sui volumi di ricerca. Perfetto per nuovi siti. <strong>Piano Editoriale</strong>: crea un calendario contenuti con priorità e keyword assegnate, esportabile in AI Content. <strong>Quick Check</strong>: verifica rapida di volume, CPC e competizione per una singola keyword.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed"><strong>Research Guidata</strong>: parti da keyword seed, espansione automatica e clustering AI. Ideale per scoprire keyword e organizzarle. <strong>Architettura Sito</strong>: genera una struttura di pagine con URL e H1 basati sui volumi di ricerca. Perfetto per nuovi siti. <strong>Piano Editoriale</strong>: crea un calendario contenuti con priorità e keyword assegnate, esportabile in AI Writer. <strong>Quick Check</strong>: verifica rapida di volume, CPC e competizione per una singola keyword.</p>
                 </div>
             </div>
             <!-- FAQ 3 -->
             <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <button @click="openFaq === 3 ? openFaq = null : openFaq = 3" class="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <span class="font-medium text-slate-900 dark:text-white">Posso esportare le keyword in AI Content?</span>
+                    <span class="font-medium text-slate-900 dark:text-white">Posso esportare le keyword in AI Writer?</span>
                     <svg class="w-5 h-5 text-slate-400 transition-transform duration-200" :class="openFaq === 3 && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
                 <div x-show="openFaq === 3" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-cloak class="px-6 pb-4">
-                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Sì, dal <strong>Piano Editoriale</strong> puoi selezionare le keyword e inviarle direttamente al modulo AI Content. Per ogni keyword verrà creato automaticamente il processo di analisi SERP, generazione brief e scrittura articolo.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Sì, dal <strong>Piano Editoriale</strong> puoi selezionare le keyword e inviarle direttamente al modulo AI Writer. Per ogni keyword verrà creato automaticamente il processo di analisi SERP, generazione brief e scrittura articolo.</p>
                 </div>
             </div>
             <!-- FAQ 4 -->

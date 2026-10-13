@@ -1,4 +1,4 @@
-<!-- SEO Tracking -->
+<!-- AI Rank -->
 <div class="space-y-12">
 
     <!-- H1 -->
@@ -9,7 +9,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
                 </svg>
             </div>
-            <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">SEO Tracking</h1>
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">AI Rank</h1>
         </div>
         <p class="text-sm text-slate-500 dark:text-slate-400">Monitoraggio posizioni keyword multi-country, traffico stimato, visibility % e report AI</p>
     </div>
@@ -391,10 +391,10 @@
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
-            SEO Audit
+            AI Audit
         </a>
         <a href="<?= url('/docs/keyword-research') ?>" class="inline-flex items-center gap-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
-            Keyword Research
+            AI Keywords
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>

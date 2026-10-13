@@ -1,6 +1,6 @@
 <?php
 /**
- * AI Content Queue Processor (CRON Worker)
+ * AI Writer Queue Processor (CRON Worker)
  *
  * Processes pending items from aic_queue for AUTO projects.
  *

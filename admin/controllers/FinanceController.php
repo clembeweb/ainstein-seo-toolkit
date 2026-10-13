@@ -42,10 +42,10 @@ class FinanceController
 
         // Module names map
         $moduleNames = [
-            'ai-content' => 'AI Content',
-            'seo-audit' => 'SEO Audit',
-            'seo-tracking' => 'SEO Tracking',
-            'keyword-research' => 'Keyword Research',
+            'ai-content' => 'AI Writer',
+            'seo-audit' => 'AI Audit',
+            'seo-tracking' => 'AI Rank',
+            'keyword-research' => 'AI Keywords',
             'ads-analyzer' => 'Ads Analyzer',
             'internal-links' => 'Internal Links',
             'content-creator' => 'Content Creator',

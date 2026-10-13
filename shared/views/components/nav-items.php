@@ -325,7 +325,7 @@ if ($_navGlobalProjectId && isset($user['id'])) {
                     <?php endif; ?>
                 </div>
             <?php elseif ($module['slug'] === 'seo-audit'): ?>
-                <!-- SEO Audit Module with Accordion -->
+                <!-- AI Audit Module with Accordion -->
                 <div x-data="{ expanded: <?= $seoAuditProjectId ? 'true' : 'false' ?> }">
                     <!-- Module Link -->
                     <div class="flex items-center">
@@ -421,7 +421,7 @@ if ($_navGlobalProjectId && isset($user['id'])) {
                     <?php endif; ?>
                 </div>
             <?php elseif ($module['slug'] === 'seo-tracking'): ?>
-                <!-- SEO Tracking Module with Accordion -->
+                <!-- AI Rank Module with Accordion -->
                 <div x-data="{ expanded: <?= $seoTrackingProjectId ? 'true' : 'false' ?> }">
                     <!-- Module Link -->
                     <div class="flex items-center">
@@ -514,7 +514,7 @@ if ($_navGlobalProjectId && isset($user['id'])) {
                     <?php endif; ?>
                 </div>
             <?php elseif ($module['slug'] === 'ai-content'): ?>
-                <!-- AI Content Module with Accordion -->
+                <!-- AI Writer Module with Accordion -->
                 <?php $aiContentExpanded = (bool) $aiContentProjectId; ?>
                 <div x-data="{ expanded: <?= $aiContentExpanded ? 'true' : 'false' ?> }">
                     <!-- Module Link -->
@@ -583,7 +583,7 @@ if ($_navGlobalProjectId && isset($user['id'])) {
                     </div>
                 </div>
             <?php elseif ($module['slug'] === 'keyword-research'): ?>
-                <!-- Keyword Research Module with Accordion -->
+                <!-- AI Keywords Module with Accordion -->
                 <?php $krExpanded = $krProjectId || str_starts_with($currentPath, '/keyword-research/quick-check'); ?>
                 <div x-data="{ expanded: <?= $krExpanded ? 'true' : 'false' ?> }">
                     <!-- Module Link -->
@@ -698,7 +698,7 @@ if ($_navGlobalProjectId && isset($user['id'])) {
                     <?php endif; ?>
                 </div>
             <?php elseif ($module['slug'] === 'ai-reputation'): ?>
-                <!-- AI Reputation Radar Module with Accordion -->
+                <!-- AI GEO Audit Module with Accordion -->
                 <div x-data="{ expanded: <?= $arProjectId ? 'true' : 'false' ?> }">
                     <div class="flex items-center">
                         <a href="<?= url('/ai-reputation') ?>"

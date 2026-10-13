@@ -13,7 +13,7 @@ use Modules\SeoAudit\Models\Issue;
 /**
  * ProjectController
  *
- * Gestisce operazioni CRUD per i progetti SEO Audit
+ * Gestisce operazioni CRUD per i progetti AI Audit
  */
 class ProjectController
 {
@@ -41,7 +41,7 @@ class ProjectController
         $creditBalance = Credits::getBalance($user['id']);
 
         return View::render('seo-audit/projects/index', [
-            'title' => 'SEO Audit - Progetti',
+            'title' => 'AI Audit - Progetti',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'projects' => $projects,

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * AI Keyword Research Module - Routes
+ * AI Keywords Module - Routes
  */
 
 use Core\Router;

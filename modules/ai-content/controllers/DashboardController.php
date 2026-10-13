@@ -15,7 +15,7 @@ use Modules\AiContent\Models\WpSite;
 /**
  * DashboardController
  *
- * Handles dashboard display for AI Content module
+ * Handles dashboard display for AI Writer module
  */
 class DashboardController
 {
@@ -78,7 +78,7 @@ class DashboardController
             $linkedWpSite = $wpSiteModel->find($project['wp_site_id']);
         }
 
-        $title = $project ? $project['name'] : 'AI SEO Content Generator';
+        $title = $project ? $project['name'] : 'AI Writer';
 
         // Costi crediti dinamici
         $creditCosts = [

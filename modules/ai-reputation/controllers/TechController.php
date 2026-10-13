@@ -11,7 +11,7 @@ use Modules\AiReputation\Models\Project;
 use Modules\AiReputation\Services\GeoTechService;
 
 /**
- * TechController - "Controllo tecnico" del GEO Audit: le AI entrano nel sito, lo leggono, capiscono chi sei?
+ * TechController - "Controllo tecnico" dell'AI GEO Audit: le AI entrano nel sito, lo leggono, capiscono chi sei?
  * Gratis (nessuna chiamata AI). Spec: docs/superpowers/specs/2026-10-13-ai-reputation-diagnosi-tecnica-design.md
  */
 class TechController

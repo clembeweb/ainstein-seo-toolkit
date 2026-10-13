@@ -5,7 +5,7 @@ namespace Modules\AiContent\Models;
 use Core\Database;
 
 /**
- * Project Model for AI Content Module
+ * Project Model for AI Writer Module
  * Manages aic_projects table
  */
 class Project

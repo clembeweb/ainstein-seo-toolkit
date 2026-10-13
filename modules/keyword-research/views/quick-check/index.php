@@ -2,7 +2,7 @@
     <!-- Header -->
     <div>
         <nav class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2">
-            <a href="<?= url('/keyword-research') ?>" class="hover:text-slate-700 dark:hover:text-slate-300">Keyword Research</a>
+            <a href="<?= url('/keyword-research') ?>" class="hover:text-slate-700 dark:hover:text-slate-300">AI Keywords</a>
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             <span class="text-slate-900 dark:text-white">Quick Check</span>
         </nav>
@@ -430,7 +430,7 @@
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                 </svg>
-                Invia a SEO Tracking
+                Invia a AI Rank
             </button>
             <?php endif; ?>
             <button @click="selectedKeywords = []"
@@ -439,7 +439,7 @@
             </button>
         </div>
 
-        <!-- Modal: Invia a SEO Tracking -->
+        <!-- Modal: Invia a AI Rank -->
         <?php if (!empty($stProjects)): ?>
         <div x-show="showSendModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" aria-modal="true">
             <div class="flex items-center justify-center min-h-screen px-4">
@@ -457,7 +457,7 @@
                      class="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full p-6">
 
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Invia a SEO Tracking</h3>
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Invia a AI Rank</h3>
                         <button @click="showSendModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -706,7 +706,7 @@
                 }
             },
 
-            // Send to SEO Tracking
+            // Send to AI Rank
             async loadProjectGroups() {
                 this.stProjectGroups = [];
                 this.stGroupName = '';

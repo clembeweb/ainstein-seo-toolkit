@@ -801,7 +801,7 @@ class EditorialController
     }
 
     /**
-     * Invia articoli selezionati a AI Content
+     * Invia articoli selezionati a AI Writer
      */
     public function sendToContent(int $projectId, int $researchId): void
     {
@@ -823,7 +823,7 @@ class EditorialController
         }
 
         if (!ModuleLoader::isModuleActive('ai-content')) {
-            echo json_encode(['success' => false, 'error' => 'Modulo AI Content non attivo.']);
+            echo json_encode(['success' => false, 'error' => 'Modulo AI Writer non attivo.']);
             return;
         }
 
@@ -832,7 +832,7 @@ class EditorialController
         $aicProjectId = (int) ($_POST['aic_project_id'] ?? 0);
 
         if (empty($itemIds) || !$aicProjectId) {
-            echo json_encode(['success' => false, 'error' => 'Seleziona almeno un articolo e un progetto AI Content.']);
+            echo json_encode(['success' => false, 'error' => 'Seleziona almeno un articolo e un progetto AI Writer.']);
             return;
         }
 
@@ -843,7 +843,7 @@ class EditorialController
         );
 
         if (!$aicProject) {
-            echo json_encode(['success' => false, 'error' => 'Progetto AI Content non trovato.']);
+            echo json_encode(['success' => false, 'error' => 'Progetto AI Writer non trovato.']);
             return;
         }
 
@@ -928,7 +928,7 @@ class EditorialController
             'success' => true,
             'added' => $added,
             'skipped' => $skipped,
-            'message' => "{$added} articoli messi in coda negli Articoli Automatici, con le date dei mesi del piano. Li trovi nella Coda del progetto AI Content." . ($skipped > 0 ? " {$skipped} saltati (duplicati o già inviati)." : ''),
+            'message' => "{$added} articoli messi in coda negli Articoli Automatici, con le date dei mesi del piano. Li trovi nella Coda del progetto AI Writer." . ($skipped > 0 ? " {$skipped} saltati (duplicati o già inviati)." : ''),
         ]);
     }
 

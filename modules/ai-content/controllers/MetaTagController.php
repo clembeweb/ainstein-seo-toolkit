@@ -28,7 +28,7 @@ class MetaTagController
     private Project $project;
     private MetaTag $metaTag;
     /** Costo crediti scraping: livello Base (1 cr) */
-    // Costi letti da Admin > Moduli > AI Content (cost_meta_scrape / cost_meta_generate), vedi scrapeCost()/generateCost()
+    // Costi letti da Admin > Moduli > AI Writer (cost_meta_scrape / cost_meta_generate), vedi scrapeCost()/generateCost()
     /** Costo crediti generazione AI: livello Standard (3 cr) */
 
 
@@ -38,13 +38,13 @@ class MetaTagController
         $this->metaTag = new MetaTag();
     }
 
-    /** Crediti per pagina letta (Admin > Moduli > AI Content > Costi). */
+    /** Crediti per pagina letta (Admin > Moduli > AI Writer > Costi). */
     public static function scrapeCost(): float
     {
         return Credits::getCost('meta_scrape', 'ai-content', 1);
     }
 
-    /** Crediti per meta tag generato (Admin > Moduli > AI Content > Costi). */
+    /** Crediti per meta tag generato (Admin > Moduli > AI Writer > Costi). */
     public static function generateCost(): float
     {
         return Credits::getCost('meta_generate', 'ai-content', 2);

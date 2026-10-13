@@ -60,17 +60,17 @@ Metodo di risposta a Clemente: un blocco per messaggio (cosa funziona → "proce
 
 | Modulo | Slug | Prefisso DB | Stato |
 |--------|------|-------------|-------|
-| AI Content Generator | `ai-content` | `aic_` | Completo (reference pattern) |
-| SEO Audit | `seo-audit` | `sa_` | Completo (+ Crawl Budget integrato) |
+| AI Writer (ex AI Content Generator) | `ai-content` | `aic_` | Completo (reference pattern) |
+| AI Audit (ex SEO Audit) | `seo-audit` | `sa_` | Completo (+ Crawl Budget integrato) |
 | Google Ads Analyzer | `ads-analyzer` | `ga_` | Completo (Google Ads API v25) |
-| SEO Tracking | `seo-tracking` | `st_` | Completo |
-| AI Keyword Research | `keyword-research` | `kr_` | Completo |
+| AI Rank (ex SEO Tracking) | `seo-tracking` | `st_` | Completo |
+| AI Keywords (ex Keyword Research) | `keyword-research` | `kr_` | Completo |
 | Content Creator | `content-creator` | `cc_` | Completo (4 CMS connectors + image generation) |
 | Internal Links | `internal-links` | `il_` | Standby (redesign: crawl-first) |
 | Crawl Budget Optimizer | `crawl-budget` | `cb_` | Legacy (mergiato in SEO Audit) |
 | AI Optimizer | `ai-optimizer` | `ao_` | In sviluppo |
 | SEO On-Page | `seo-onpage` | `so_` | In sviluppo |
-| AI Reputation Radar | `ai-reputation` | `ar_` | Nuovo (2026-10-05) — stato in `modules/ai-reputation/docs/TASKS.md` |
+| AI GEO Audit (ex AI Reputation Radar) | `ai-reputation` | `ar_` | Nuovo (2026-10-05) — stato in `modules/ai-reputation/docs/TASKS.md` |
 
 ---
 

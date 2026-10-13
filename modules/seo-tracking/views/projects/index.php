@@ -36,7 +36,7 @@ endif;
     <!-- Header -->
     <div class="sm:flex sm:items-center sm:justify-between" data-tour="st-header">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">SEO Position Tracking</h1>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AI Rank</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Monitora posizioni, traffico e revenue dei tuoi siti web</p>
         </div>
         <div class="mt-4 sm:mt-0 flex flex-wrap items-center gap-3">
@@ -222,7 +222,7 @@ endif;
         <div>
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-                SEO Tracking
+                AI Rank
             </span>
             <h2 class="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white mt-4">Monitora le posizioni su Google e scopri come cambia la tua visibilita</h2>
             <p class="text-lg text-slate-600 dark:text-slate-300 mt-4 leading-relaxed">Ainstein monitora le posizioni delle tue keyword su Google, le aggiorna automaticamente e, collegando Search Console, incrocia i dati per mostrarti click reali, impressioni e CTR per ogni keyword. Report settimanali AI con insight su trend, anomalie e opportunita.</p>
@@ -591,7 +591,7 @@ endif;
 <!-- Cosa puoi fare -->
 <div class="mt-20">
     <div class="text-center mb-12">
-        <h3 class="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">Cosa puoi fare con SEO Tracking</h3>
+        <h3 class="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">Cosa puoi fare con AI Rank</h3>
             <p class="mt-3 text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">Dal monitoraggio posizioni ai report automatici con insight AI</p>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

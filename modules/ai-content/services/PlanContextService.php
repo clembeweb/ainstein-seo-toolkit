@@ -7,7 +7,7 @@ use Core\Database;
 /**
  * Contesto "cliente + piano editoriale" per gli Articoli Automatici.
  *
- * Una keyword arrivata in coda dal Piano Editoriale (Keyword Research) ritrova qui la sua riga
+ * Una keyword arrivata in coda dal Piano Editoriale (AI Keywords) ritrova qui la sua riga
  * del piano: idea di titolo, perché l'articolo serve, gap SERP e la pagina del sito da linkare
  * (dall'Architettura Sito). Nessun campo nuovo in aic_queue: il collegamento passa per
  * progetto globale + keyword + sent_to_content.

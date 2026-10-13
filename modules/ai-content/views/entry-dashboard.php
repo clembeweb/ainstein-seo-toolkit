@@ -44,7 +44,7 @@ endif;
     <!-- Header -->
     <div class="sm:flex sm:items-center sm:justify-between" data-tour="aic-header">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AI Content Generator</h1>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AI Writer</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Genera articoli SEO e contenuti automatici ottimizzati con intelligenza artificiale</p>
         </div>
         <div class="mt-4 sm:mt-0 flex items-center gap-3" data-tour="aic-quickactions">
@@ -257,7 +257,7 @@ endif;
                 <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                 </svg>
-                AI Content Generator
+                AI Writer
             </span>
 
             <h2 class="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white leading-tight">
@@ -360,7 +360,7 @@ endif;
                 </svg>
             </div>
             <h4 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Aggiungi le keyword</h4>
-            <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Inserisci le keyword da posizionare manualmente, via CSV, o importale direttamente da Keyword Research. Il sistema le organizza per progetto.</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Inserisci le keyword da posizionare manualmente, via CSV, o importale direttamente da AI Keywords. Il sistema le organizza per progetto.</p>
         </div>
 
         <!-- Step 2: Studio SERP + Brief AI -->
@@ -686,7 +686,7 @@ endif;
     <!-- ═══════════ COSA PUOI FARE ═══════════ -->
     <div class="mt-20">
         <div class="text-center mb-12">
-            <h3 class="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">Cosa puoi fare con AI Content</h3>
+            <h3 class="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">Cosa puoi fare con AI Writer</h3>
             <p class="mt-3 text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">Dalla creazione di articoli blog alla gestione di interi cluster tematici</p>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -826,7 +826,7 @@ endif;
                     </svg>
                 </button>
                 <div x-show="openFaq === 5" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-cloak class="px-6 pb-4">
-                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Sì, dal modulo <strong>Keyword Research</strong> puoi esportare le keyword del Piano Editoriale direttamente in AI Content. Le keyword vengono importate con volume di ricerca, difficoltà e priorità, pronte per la generazione degli articoli.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Sì, dal modulo <strong>AI Keywords</strong> puoi esportare le keyword del Piano Editoriale direttamente in AI Writer. Le keyword vengono importate con volume di ricerca, difficoltà e priorità, pronte per la generazione degli articoli.</p>
                 </div>
             </div>
 

@@ -1,5 +1,5 @@
 <script>
-// Keyword Research - Table Helpers (shared)
+// AI Keywords - Table Helpers (shared)
 const KR_INTENT_COLORS = {
     informational: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
     transactional: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300',

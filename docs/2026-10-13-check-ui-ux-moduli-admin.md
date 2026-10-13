@@ -19,7 +19,9 @@
 - Dashboard utente: card GEO Audit; i progetti con solo GEO Audit non risultano più "0 moduli attivi".
 - Admin: via il riquadro "Come creare un nuovo modulo"; moduli accesi prima; menu dei modelli AI solo Claude 5.5
   (globale e per modulo); schede Jobs solo dei moduli accesi.
-- Restano: nomi unici dei moduli (decisione di Clemente), GEO Audit hero/sezione lunga/docs, sottotitoli, bottone
+- **Nomi unici (decisione Clemente 2026-10-13 sera): AI Writer · AI Keywords · AI Audit · AI Rank · AI GEO Audit**, applicati
+  in 94 file (menu dal DB, titoli, dashboard, docs utente, tour, admin) e nel DB di locale e produzione.
+- Restano: GEO Audit hero/sezione lunga/docs, sottotitoli, bottone
   "Nuovo progetto" uniforme, piano Free (decisione), /docs e /pricing, tour.
 
 ## 1. Pagina iniziale dei moduli (la "dashboard" di ogni tool)

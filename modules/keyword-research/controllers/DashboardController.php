@@ -32,7 +32,7 @@ class DashboardController
         ];
 
         return View::render('keyword-research::dashboard', [
-            'title' => 'Keyword Research',
+            'title' => 'AI Keywords',
             'user' => $user,
             'recentProjects' => $recentProjects,
             'stats' => $stats,

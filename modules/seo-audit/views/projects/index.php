@@ -36,7 +36,7 @@ endif;
     <!-- Header -->
     <div class="sm:flex sm:items-center sm:justify-between" data-tour="sa-header">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">SEO Audit</h1>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AI Audit</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Audit SEO completo dei tuoi siti web</p>
         </div>
         <div class="mt-4 sm:mt-0 flex flex-wrap items-center gap-3">
@@ -208,7 +208,7 @@ endif;
         <div>
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-                SEO Audit
+                AI Audit
             </span>
             <h2 class="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white mt-4">Scansiona il tuo sito, scopri cosa migliorare e ricevi un piano d'azione concreto</h2>
             <p class="text-lg text-slate-600 dark:text-slate-300 mt-4 leading-relaxed">Ainstein scansiona le pagine del tuo sito e analizza struttura tecnica, performance, contenuti, meta tags e accessibilita. Non si limita a trovare i problemi: li ordina per impatto reale sulla SEO e genera un piano d'azione con task concreti, pronti da eseguire.</p>
@@ -543,7 +543,7 @@ endif;
 <!-- Cosa puoi fare -->
 <div class="mt-20">
     <div class="text-center mb-12">
-        <h3 class="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">Cosa puoi fare con SEO Audit</h3>
+        <h3 class="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">Cosa puoi fare con AI Audit</h3>
             <p class="mt-3 text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">Dall'analisi completa al piano d'azione personalizzato</p>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

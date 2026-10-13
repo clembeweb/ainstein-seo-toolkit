@@ -409,7 +409,7 @@ class RunController
         if (!$wasCompleted) {
             try {
                 Database::reconnect();
-                \Services\NotificationService::send($user['id'], 'operation_completed', "GEO Audit: analisi completata per {$subject}", [
+                \Services\NotificationService::send($user['id'], 'operation_completed', "AI GEO Audit: analisi completata per {$subject}", [
                     'icon' => 'check-circle',
                     'color' => 'indigo',
                     'action_url' => "/ai-reputation/project/{$projectId}/runs/{$runId}",

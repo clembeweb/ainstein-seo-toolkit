@@ -53,7 +53,7 @@ return [
     // AI CONTENT GENERATOR
     // ============================================================
     'ai-content' => [
-        'name' => 'AI Content Generator',
+        'name' => 'AI Writer',
         'steps' => [
             [
                 'title' => 'Genera contenuti SEO con AI',
@@ -102,7 +102,7 @@ return [
     // SEO AUDIT
     // ============================================================
     'seo-audit' => [
-        'name' => 'SEO Audit',
+        'name' => 'AI Audit',
         'steps' => [
             [
                 'title' => 'Analizza il tuo sito',
@@ -151,7 +151,7 @@ return [
     // SEO TRACKING
     // ============================================================
     'seo-tracking' => [
-        'name' => 'SEO Tracking',
+        'name' => 'AI Rank',
         'steps' => [
             [
                 'title' => 'Monitora le tue posizioni',
@@ -200,7 +200,7 @@ return [
     // KEYWORD RESEARCH
     // ============================================================
     'keyword-research' => [
-        'name' => 'Keyword Research',
+        'name' => 'AI Keywords',
         'steps' => [
             [
                 'title' => 'Ricerca keyword intelligente',
@@ -230,7 +230,7 @@ return [
                 'title' => 'Piano Editoriale',
                 'description' => 'Genera un piano editoriale mensile basato su keyword reali e analisi competitor SERP. L\'AI suggerisce articoli distribuiti per categoria e mese.',
                 'icon' => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
-                'tip' => 'Costa 5 crediti. Esporta direttamente in AI Content!',
+                'tip' => 'Costa 5 crediti. Esporta direttamente in AI Writer!',
                 'selector' => '[data-tour="kr-editorial"]',
                 'position' => 'left',
             ],

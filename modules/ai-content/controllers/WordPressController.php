@@ -63,7 +63,7 @@ class WordPressController
         $sites = $this->wpSite->allByUser($user['id']);
 
         return View::render('ai-content/wordpress/index', [
-            'title' => 'Siti WordPress - AI Content',
+            'title' => 'Siti WordPress - AI Writer',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'sites' => $sites,

@@ -21,28 +21,28 @@ class GlobalProject
     private const MODULE_CONFIG = [
         'ai-content' => [
             'table' => 'aic_projects',
-            'label' => 'AI Content Generator',
+            'label' => 'AI Writer',
             'color' => 'amber',
             'icon' => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
             'route_prefix' => '/ai-content/projects',
         ],
         'seo-audit' => [
             'table' => 'sa_projects',
-            'label' => 'SEO Audit',
+            'label' => 'AI Audit',
             'color' => 'emerald',
             'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
             'route_prefix' => '/seo-audit/project',
         ],
         'seo-tracking' => [
             'table' => 'st_projects',
-            'label' => 'SEO Tracking',
+            'label' => 'AI Rank',
             'color' => 'blue',
             'icon' => 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
             'route_prefix' => '/seo-tracking/project',
         ],
         'keyword-research' => [
             'table' => 'kr_projects',
-            'label' => 'Keyword Research',
+            'label' => 'AI Keywords',
             'color' => 'purple',
             'icon' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z',
             'route_prefix' => '/keyword-research/project',
@@ -78,7 +78,7 @@ class GlobalProject
         ],
         'ai-reputation' => [
             'table' => 'ar_projects',
-            'label' => 'GEO Audit',
+            'label' => 'AI GEO Audit',
             'color' => 'indigo',
             'icon' => 'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z',
             'route_prefix' => '/ai-reputation/project',
@@ -331,7 +331,7 @@ class GlobalProject
 
         // --- Batch query per ogni modulo ---
 
-        // SEO Audit
+        // AI Audit
         try {
             $rows = Database::fetchAll(
                 "SELECT global_project_id, id, health_score, issues_count, status, completed_at
@@ -352,7 +352,7 @@ class GlobalProject
             }
         } catch (\Exception $e) {}
 
-        // SEO Tracking
+        // AI Rank
         try {
             $rows = Database::fetchAll(
                 "SELECT p.global_project_id, p.id, p.gsc_connected,
@@ -375,7 +375,7 @@ class GlobalProject
             }
         } catch (\Exception $e) {}
 
-        // AI Content
+        // AI Writer
         try {
             $rows = Database::fetchAll(
                 "SELECT ap.global_project_id, ap.id,
@@ -403,7 +403,7 @@ class GlobalProject
             }
         } catch (\Exception $e) {}
 
-        // Keyword Research
+        // AI Keywords
         try {
             $rows = Database::fetchAll(
                 "SELECT global_project_id, COUNT(*) as cnt, MAX(created_at) as last_at
@@ -422,7 +422,7 @@ class GlobalProject
             }
         } catch (\Exception $e) {}
 
-        // GEO Audit (mancava: i progetti con solo questo modulo risultavano "0 moduli attivi", trovato 2026-10-13)
+        // AI GEO Audit (mancava: i progetti con solo questo modulo risultavano "0 moduli attivi", trovato 2026-10-13)
         try {
             $rows = Database::fetchAll(
                 "SELECT global_project_id, COUNT(*) as cnt, MAX(created_at) as last_at
@@ -583,12 +583,12 @@ class GlobalProject
         $md = $project['modules_data'];
         $gpId = $project['id'];
 
-        // 1. SEO Audit — problemi
+        // 1. AI Audit — problemi
         $sa = $md['seo-audit'] ?? null;
         if ($sa && ($sa['issues_count'] ?? 0) > 0 && ($sa['status'] ?? '') === 'completed') {
             $n = $sa['issues_count'];
             return [
-                'text' => $n . ' problem' . ($n > 1 ? 'i' : 'a') . ' trovat' . ($n > 1 ? 'i' : 'o') . ' nel SEO Audit',
+                'text' => $n . ' problem' . ($n > 1 ? 'i' : 'a') . ' trovat' . ($n > 1 ? 'i' : 'o') . ' nell\'AI Audit',
                 'cta' => 'Vedi piano',
                 'url' => '/seo-audit/project/' . $sa['module_project_id'] . '/action-plan',
                 'slug' => 'seo-audit',
@@ -596,7 +596,7 @@ class GlobalProject
             ];
         }
 
-        // 2. AI Content — articoli pronti
+        // 2. AI Writer — articoli pronti
         $aic = $md['ai-content'] ?? null;
         if ($aic && ($aic['articles_ready'] ?? 0) > 0) {
             $n = $aic['articles_ready'];
@@ -609,7 +609,7 @@ class GlobalProject
             ];
         }
 
-        // 3. SEO Tracking — GSC non collegato
+        // 3. AI Rank — GSC non collegato
         $st = $md['seo-tracking'] ?? null;
         if ($st && ($st['keywords_count'] ?? 0) > 0 && !($st['gsc_connected'] ?? false)) {
             return [
@@ -627,10 +627,10 @@ class GlobalProject
         $missing = array_diff($allSlugs, $activeSlugs);
         if (!empty($missing)) {
             $suggestions = [
-                'seo-audit' => 'Attiva SEO Audit per analizzare il sito',
-                'seo-tracking' => 'Attiva SEO Tracking per monitorare le posizioni',
-                'ai-content' => 'Attiva AI Content per generare articoli',
-                'keyword-research' => 'Attiva Keyword Research per trovare opportunità',
+                'seo-audit' => 'Attiva AI Audit per analizzare il sito',
+                'seo-tracking' => 'Attiva AI Rank per monitorare le posizioni',
+                'ai-content' => 'Attiva AI Writer per generare articoli',
+                'keyword-research' => 'Attiva AI Keywords per trovare opportunità',
             ];
             foreach ($suggestions as $slug => $text) {
                 if (in_array($slug, $missing)) {

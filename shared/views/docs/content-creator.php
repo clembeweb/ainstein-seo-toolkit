@@ -24,7 +24,7 @@
         </h2>
         <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
             <p class="text-slate-700 dark:text-slate-300 leading-relaxed">
-                Content Creator genera contenuti HTML completi per il corpo delle pagine del tuo sito web. A differenza dell'AI Content Generator (che crea articoli SEO e meta tag), questo modulo si concentra sulla produzione di <strong class="text-slate-900 dark:text-white">contenuti strutturati per pagine di prodotto, categorie, servizi, articoli e landing page</strong>. Supporta 5 tipologie di contenuto, lo scraping opzionale della pagina esistente come contesto, keyword primarie e secondarie, e l'integrazione diretta con i principali CMS per la pubblicazione automatica.
+                Content Creator genera contenuti HTML completi per il corpo delle pagine del tuo sito web. A differenza dell'AI Writer (che crea articoli SEO e meta tag), questo modulo si concentra sulla produzione di <strong class="text-slate-900 dark:text-white">contenuti strutturati per pagine di prodotto, categorie, servizi, articoli e landing page</strong>. Supporta 5 tipologie di contenuto, lo scraping opzionale della pagina esistente come contesto, keyword primarie e secondarie, e l'integrazione diretta con i principali CMS per la pubblicazione automatica.
             </p>
         </div>
     </section>
@@ -55,7 +55,7 @@
                 <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">2</div>
                 <div>
                     <h3 class="font-medium text-slate-900 dark:text-white">Importa gli URL delle pagine</h3>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Importa le pagine da CSV, Sitemap, CMS, inserimento manuale, oppure direttamente dal modulo Keyword Research.</p>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Importa le pagine da CSV, Sitemap, CMS, inserimento manuale, oppure direttamente dal modulo AI Keywords.</p>
                 </div>
                 <svg class="w-5 h-5 shrink-0 text-slate-300 dark:text-slate-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -506,22 +506,22 @@
         </div>
     </section>
 
-    <!-- Integrazione con Keyword Research -->
+    <!-- Integrazione con AI Keywords -->
     <section>
         <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
             <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
-            Integrazione con Keyword Research
+            Integrazione con AI Keywords
         </h2>
         <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
             <p class="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-                Il modulo <strong class="text-slate-900 dark:text-white">AI Keyword Research</strong> puo inviare i risultati dell'architettura sito direttamente a Content Creator. Questo permette un workflow integrato:
+                Il modulo <strong class="text-slate-900 dark:text-white">AI Keywords</strong> puo inviare i risultati dell'architettura sito direttamente a Content Creator. Questo permette un workflow integrato:
             </p>
             <div class="space-y-3">
                 <div class="flex items-start gap-3">
                     <div class="shrink-0 w-6 h-6 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 flex items-center justify-center text-xs font-bold">1</div>
-                    <p class="text-sm text-slate-600 dark:text-slate-400">Esegui una ricerca in modalita <strong class="text-slate-700 dark:text-slate-300">Architettura Sito</strong> nel modulo Keyword Research.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-400">Esegui una ricerca in modalita <strong class="text-slate-700 dark:text-slate-300">Architettura Sito</strong> nel modulo AI Keywords.</p>
                 </div>
                 <div class="flex items-start gap-3">
                     <div class="shrink-0 w-6 h-6 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 flex items-center justify-center text-xs font-bold">2</div>
@@ -698,8 +698,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Sfrutta l'integrazione con Keyword Research</h3>
-                    <p class="mt-1 text-sm text-blue-800 dark:text-blue-300/80">Per nuovi siti o sezioni, usa prima il modulo Keyword Research in modalita Architettura Sito. L'AI ti suggerira le pagine da creare, che potrai inviare direttamente a Content Creator per la generazione automatica dei contenuti.</p>
+                    <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Sfrutta l'integrazione con AI Keywords</h3>
+                    <p class="mt-1 text-sm text-blue-800 dark:text-blue-300/80">Per nuovi siti o sezioni, usa prima il modulo AI Keywords in modalita Architettura Sito. L'AI ti suggerira le pagine da creare, che potrai inviare direttamente a Content Creator per la generazione automatica dei contenuti.</p>
                 </div>
             </div>
 
@@ -737,7 +737,7 @@
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
-            Keyword Research
+            AI Keywords
         </a>
         <a href="<?= url('/docs/internal-links') ?>" class="inline-flex items-center gap-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
             Internal Links

@@ -463,7 +463,7 @@ $categoryColors = [
         </div>
     </div>
 
-    <!-- Cross-module CTA: Position Tracking -->
+    <!-- Cross-module CTA: AI Rank -->
     <?php if ($project['status'] === 'completed'): ?>
     <div class="flex items-center justify-between bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 px-5 py-4">
         <div class="flex items-center gap-3">
@@ -472,11 +472,11 @@ $categoryColors = [
             </div>
             <div>
                 <p class="text-sm font-medium text-slate-900 dark:text-white">Vuoi monitorare le posizioni per le keyword del tuo sito?</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Usa Position Tracking per seguire le posizioni su Google e i click reali da Search Console</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Usa AI Rank per seguire le posizioni su Google e i click reali da Search Console</p>
             </div>
         </div>
         <a href="<?= url('/seo-tracking') ?>" class="flex-shrink-0 inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">
-            Vai a Position Tracking
+            Vai a AI Rank
         </a>
     </div>
     <?php endif; ?>

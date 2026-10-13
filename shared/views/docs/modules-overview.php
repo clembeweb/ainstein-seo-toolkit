@@ -47,7 +47,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                    <!-- AI Content Generator -->
+                    <!-- AI Writer -->
                     <tr class="bg-white dark:bg-slate-800">
                         <td class="px-5 py-3 font-medium text-slate-900 dark:text-white whitespace-nowrap">
                             <div class="flex items-center gap-2">
@@ -56,7 +56,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                 </div>
-                                AI Content
+                                AI Writer
                             </div>
                         </td>
                         <td class="px-5 py-3 text-slate-600 dark:text-slate-400">Genera articoli SEO completi con AI, inclusi brief strategico, analisi SERP e cover image</td>
@@ -65,7 +65,7 @@
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">~19 cr/articolo</span>
                         </td>
                     </tr>
-                    <!-- SEO Audit -->
+                    <!-- AI Audit -->
                     <tr class="bg-white dark:bg-slate-800">
                         <td class="px-5 py-3 font-medium text-slate-900 dark:text-white whitespace-nowrap">
                             <div class="flex items-center gap-2">
@@ -74,7 +74,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                                     </svg>
                                 </div>
-                                SEO Audit
+                                AI Audit
                             </div>
                         </td>
                         <td class="px-5 py-3 text-slate-600 dark:text-slate-400">Scansiona il sito per individuare problemi tecnici SEO e genera un action plan AI</td>
@@ -83,7 +83,7 @@
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">1 cr/10 pagine</span>
                         </td>
                     </tr>
-                    <!-- SEO Tracking -->
+                    <!-- AI Rank -->
                     <tr class="bg-white dark:bg-slate-800">
                         <td class="px-5 py-3 font-medium text-slate-900 dark:text-white whitespace-nowrap">
                             <div class="flex items-center gap-2">
@@ -92,7 +92,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                                     </svg>
                                 </div>
-                                SEO Tracking
+                                AI Rank
                             </div>
                         </td>
                         <td class="px-5 py-3 text-slate-600 dark:text-slate-400">Monitora le posizioni delle keyword su Google, integra Search Console e genera report AI</td>
@@ -101,7 +101,7 @@
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">1 cr/keyword</span>
                         </td>
                     </tr>
-                    <!-- Keyword Research -->
+                    <!-- AI Keywords -->
                     <tr class="bg-white dark:bg-slate-800">
                         <td class="px-5 py-3 font-medium text-slate-900 dark:text-white whitespace-nowrap">
                             <div class="flex items-center gap-2">
@@ -110,7 +110,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
                                     </svg>
                                 </div>
-                                Keyword Research
+                                AI Keywords
                             </div>
                         </td>
                         <td class="px-5 py-3 text-slate-600 dark:text-slate-400">Ricerca keyword con AI, architettura informativa del sito e piano editoriale strategico</td>
@@ -152,7 +152,7 @@
         </h2>
         <div class="space-y-4">
 
-            <!-- AI Content Generator -->
+            <!-- AI Writer -->
             <div class="rounded-xl border border-amber-200 dark:border-amber-800/50 bg-white dark:bg-slate-800 overflow-hidden">
                 <div class="px-5 py-4 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800/50 flex items-center justify-between">
                     <div class="flex items-center gap-3">
@@ -161,7 +161,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                             </svg>
                         </div>
-                        <h3 class="font-semibold text-amber-900 dark:text-amber-200">AI Content Generator</h3>
+                        <h3 class="font-semibold text-amber-900 dark:text-amber-200">AI Writer</h3>
                     </div>
                     <a href="<?= url('/docs/ai-content') ?>" class="text-xs font-medium text-amber-600 dark:text-amber-400 hover:underline">Guida completa &rarr;</a>
                 </div>
@@ -179,7 +179,7 @@
                 </div>
             </div>
 
-            <!-- SEO Audit -->
+            <!-- AI Audit -->
             <div class="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-white dark:bg-slate-800 overflow-hidden">
                 <div class="px-5 py-4 bg-emerald-50 dark:bg-emerald-900/20 border-b border-emerald-200 dark:border-emerald-800/50 flex items-center justify-between">
                     <div class="flex items-center gap-3">
@@ -188,7 +188,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                             </svg>
                         </div>
-                        <h3 class="font-semibold text-emerald-900 dark:text-emerald-200">SEO Audit</h3>
+                        <h3 class="font-semibold text-emerald-900 dark:text-emerald-200">AI Audit</h3>
                     </div>
                     <a href="<?= url('/docs/seo-audit') ?>" class="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline">Guida completa &rarr;</a>
                 </div>
@@ -205,7 +205,7 @@
                 </div>
             </div>
 
-            <!-- SEO Tracking -->
+            <!-- AI Rank -->
             <div class="rounded-xl border border-blue-200 dark:border-blue-800/50 bg-white dark:bg-slate-800 overflow-hidden">
                 <div class="px-5 py-4 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800/50 flex items-center justify-between">
                     <div class="flex items-center gap-3">
@@ -214,7 +214,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                             </svg>
                         </div>
-                        <h3 class="font-semibold text-blue-900 dark:text-blue-200">SEO Tracking</h3>
+                        <h3 class="font-semibold text-blue-900 dark:text-blue-200">AI Rank</h3>
                     </div>
                     <a href="<?= url('/docs/seo-tracking') ?>" class="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">Guida completa &rarr;</a>
                 </div>
@@ -231,7 +231,7 @@
                 </div>
             </div>
 
-            <!-- Keyword Research -->
+            <!-- AI Keywords -->
             <div class="rounded-xl border border-purple-200 dark:border-purple-800/50 bg-white dark:bg-slate-800 overflow-hidden">
                 <div class="px-5 py-4 bg-purple-50 dark:bg-purple-900/20 border-b border-purple-200 dark:border-purple-800/50 flex items-center justify-between">
                     <div class="flex items-center gap-3">
@@ -240,7 +240,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
                             </svg>
                         </div>
-                        <h3 class="font-semibold text-purple-900 dark:text-purple-200">Keyword Research</h3>
+                        <h3 class="font-semibold text-purple-900 dark:text-purple-200">AI Keywords</h3>
                     </div>
                     <a href="<?= url('/docs/keyword-research') ?>" class="text-xs font-medium text-purple-600 dark:text-purple-400 hover:underline">Guida completa &rarr;</a>
                 </div>
@@ -277,7 +277,7 @@
                     <div class="flex flex-wrap gap-2">
                         <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50">Valutazione AI</span>
                         <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50">Negative Keywords</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50">Keyword Research</span>
+                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50">AI Keywords</span>
                         <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50">Export CSV</span>
                     </div>
                 </div>
@@ -300,28 +300,28 @@
                 <div class="flex items-start gap-3">
                     <span class="shrink-0 w-7 h-7 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center">1</span>
                     <div>
-                        <p class="text-sm font-medium text-slate-900 dark:text-white">Keyword Research</p>
+                        <p class="text-sm font-medium text-slate-900 dark:text-white">AI Keywords</p>
                         <p class="text-sm text-slate-600 dark:text-slate-400">Individua le keyword strategiche per il tuo settore</p>
                     </div>
                 </div>
                 <div class="flex items-start gap-3">
                     <span class="shrink-0 w-7 h-7 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center">2</span>
                     <div>
-                        <p class="text-sm font-medium text-slate-900 dark:text-white">AI Content Generator</p>
+                        <p class="text-sm font-medium text-slate-900 dark:text-white">AI Writer</p>
                         <p class="text-sm text-slate-600 dark:text-slate-400">Crea contenuti ottimizzati per le keyword trovate</p>
                     </div>
                 </div>
                 <div class="flex items-start gap-3">
                     <span class="shrink-0 w-7 h-7 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center justify-center">3</span>
                     <div>
-                        <p class="text-sm font-medium text-slate-900 dark:text-white">SEO Audit</p>
+                        <p class="text-sm font-medium text-slate-900 dark:text-white">AI Audit</p>
                         <p class="text-sm text-slate-600 dark:text-slate-400">Verifica che il sito sia tecnicamente ottimizzato</p>
                     </div>
                 </div>
                 <div class="flex items-start gap-3">
                     <span class="shrink-0 w-7 h-7 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center">4</span>
                     <div>
-                        <p class="text-sm font-medium text-slate-900 dark:text-white">SEO Tracking</p>
+                        <p class="text-sm font-medium text-slate-900 dark:text-white">AI Rank</p>
                         <p class="text-sm text-slate-600 dark:text-slate-400">Monitora i risultati nel tempo e adatta la strategia</p>
                     </div>
                 </div>
@@ -372,7 +372,7 @@
             Primi Passi
         </a>
         <a href="<?= url('/docs/ai-content') ?>" class="inline-flex items-center gap-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
-            AI Content Generator
+            AI Writer
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>

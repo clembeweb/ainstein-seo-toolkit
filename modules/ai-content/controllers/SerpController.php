@@ -14,7 +14,7 @@ use Modules\AiContent\Services\SerpApiService;
 /**
  * SerpController
  *
- * Handles SERP extraction for AI Content module
+ * Handles SERP extraction for AI Writer module
  */
 class SerpController
 {
@@ -128,7 +128,7 @@ class SerpController
         }
 
         return View::render('ai-content/keywords/serp-results', [
-            'title' => 'SERP: ' . $keyword['keyword'] . ' - AI Content',
+            'title' => 'SERP: ' . $keyword['keyword'] . ' - AI Writer',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'keyword' => $keyword

@@ -4,7 +4,7 @@
     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
     </svg>
-    <span class="text-slate-900 dark:text-white font-medium">AI Keyword Research</span>
+    <span class="text-slate-900 dark:text-white font-medium">AI Keywords</span>
 </nav>
 
 <!-- H1 -->
@@ -14,7 +14,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
         </svg>
     </div>
-    <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">AI Keyword Research</h1>
+    <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">AI Keywords</h1>
 </div>
 
 <!-- Cos'e -->
@@ -292,7 +292,7 @@
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
         </svg>
-        SEO Tracking
+        AI Rank
     </a>
     <a href="<?= url('/docs/internal-links') ?>" class="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
         Internal Links

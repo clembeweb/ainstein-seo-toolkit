@@ -1,6 +1,6 @@
 <?php
 /**
- * Storico Scansioni - SEO Audit
+ * Storico Scansioni - AI Audit
  */
 $currentPage = 'history';
 ?>

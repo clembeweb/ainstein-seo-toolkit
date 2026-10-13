@@ -1,7 +1,7 @@
 <?php
 
 /**
- * AI SEO Content Generator - Routes
+ * AI Writer - Routes
  *
  * Modulo per generazione articoli SEO con AI
  */

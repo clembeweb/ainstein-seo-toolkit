@@ -1,7 +1,7 @@
 <?php
 
 /**
- * AI Reputation Radar - Routes
+ * AI GEO Audit - Routes
  *
  * Pattern: /ai-reputation/project/{id}/...
  */

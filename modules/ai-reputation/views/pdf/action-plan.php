@@ -43,7 +43,7 @@ $sectionTitle = fn(string $text, string $margin) => '<div style="font-size:10pt;
 ?>
 <div style="font-family:dejavusans,sans-serif;color:#0f172a;">
     <div style="border-bottom:1.5pt solid #4f46e5;padding-bottom:8pt;margin-bottom:12pt;">
-        <div style="font-size:9pt;color:#4f46e5;font-weight:bold;letter-spacing:1pt;">GEO AUDIT · PIANO DEGLI INTERVENTI</div>
+        <div style="font-size:9pt;color:#4f46e5;font-weight:bold;letter-spacing:1pt;">AI GEO AUDIT · PIANO DEGLI INTERVENTI</div>
         <div style="font-size:18pt;font-weight:bold;margin-top:2pt;"><?= $h($project['subject_name']) ?></div>
         <div style="font-size:9.5pt;color:#475569;margin-top:3pt;">
             <?= ['purchase' => 'Audit d’acquisto', 'reputation' => 'Audit reputazione', 'both' => 'Audit acquisto + reputazione'][$run['audit_type'] ?? 'reputation'] ?? 'Audit' ?> · run #<?= (int) $run['id'] ?> del <?= date('d/m/Y', strtotime((string) $run['created_at'])) ?>

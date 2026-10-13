@@ -1,7 +1,7 @@
 <div class="space-y-6">
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">GEO Audit</h1>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AI GEO Audit</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Cosa dicono ChatGPT, Gemini e le altre AI di una persona o di un'azienda: fonti, rischi, piano d'azione</p>
         </div>
         <div class="mt-4 sm:mt-0 flex flex-wrap items-center gap-3">
@@ -20,7 +20,7 @@
         </div>
         <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">Nessun soggetto monitorato</h3>
         <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
-            Crea un progetto con il nome della persona o dell'azienda, poi attiva il modulo GEO Audit dalla dashboard del progetto.
+            Crea un progetto con il nome della persona o dell'azienda, poi attiva il modulo AI GEO Audit dalla dashboard del progetto.
         </p>
         <a href="<?= url('/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors">
             <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>

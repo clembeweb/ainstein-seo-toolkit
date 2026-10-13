@@ -1,6 +1,6 @@
 <?php
 /**
- * Import URLs Page - SEO Audit
+ * Import URLs Page - AI Audit
  * 3 tabs: Manuale, CSV, WordPress (se connettore attivo)
  * (Spider integrato in dashboard crawl-control.php)
  */

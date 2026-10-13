@@ -1,7 +1,7 @@
 <?php
 
 /**
- * SEO Tracking Module - Helper Functions
+ * AI Rank Module - Helper Functions
  */
 
 namespace Modules\SeoTracking;

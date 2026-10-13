@@ -16,7 +16,7 @@ $canEdit = ($access_role ?? 'owner') !== 'viewer';
         <ol class="flex items-center space-x-2 text-sm">
             <li>
                 <a href="<?= url('/ai-content') ?>" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
-                    AI Content
+                    AI Writer
                 </a>
             </li>
             <?php if (!empty($article['project_id']) && !empty($project)): ?>

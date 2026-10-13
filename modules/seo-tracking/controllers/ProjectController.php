@@ -14,7 +14,7 @@ use Core\Logger;
 
 /**
  * ProjectController
- * Gestisce CRUD progetti SEO Tracking
+ * Gestisce CRUD progetti AI Rank
  */
 class ProjectController
 {
@@ -38,7 +38,7 @@ class ProjectController
         $projects = $this->project->allWithStats($user['id']);
 
         return View::render('seo-tracking/projects/index', [
-            'title' => 'SEO Position Tracking',
+            'title' => 'AI Rank',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'projects' => $projects,
@@ -53,7 +53,7 @@ class ProjectController
         $user = Auth::user();
 
         return View::render('seo-tracking/projects/create', [
-            'title' => 'Nuovo Progetto - SEO Tracking',
+            'title' => 'Nuovo Progetto - AI Rank',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
         ]);

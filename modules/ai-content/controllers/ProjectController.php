@@ -12,7 +12,7 @@ use Modules\AiContent\Models\WpSite;
 
 /**
  * ProjectController
- * Gestisce CRUD progetti AI Content
+ * Gestisce CRUD progetti AI Writer
  */
 class ProjectController
 {
@@ -34,7 +34,7 @@ class ProjectController
         $recentProjects = $this->project->getRecentProjects($user['id'], 6);
 
         return View::render('ai-content/entry-dashboard', [
-            'title' => 'AI Content Generator',
+            'title' => 'AI Writer',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'stats' => $stats,
@@ -68,7 +68,7 @@ class ProjectController
         }
 
         return View::render('ai-content/projects/index', [
-            'title' => 'AI Content Generator',
+            'title' => 'AI Writer',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'projectsByType' => $projectsByType,
@@ -90,7 +90,7 @@ class ProjectController
         $user = Auth::user();
 
         return View::render('ai-content/projects/create', [
-            'title' => 'Nuovo Progetto - AI Content',
+            'title' => 'Nuovo Progetto - AI Writer',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
         ]);

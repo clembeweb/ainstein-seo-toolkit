@@ -1,6 +1,6 @@
 <?php
 /**
- * Header + tab di navigazione progetto - AI Reputation Radar
+ * Header + tab di navigazione progetto - AI GEO Audit
  * Variabili: $project, $currentPage
  */
 $projectId = $project['id'];
@@ -59,7 +59,7 @@ $tabs = [
 </div>
 
 <script>
-// Conferme del GEO Audit: delega alla finestra dell'app (window.ainstein.ask, in global-modals.php)
+// Conferme dell'AI GEO Audit: delega alla finestra dell'app (window.ainstein.ask, in global-modals.php)
 window.arConfirm = (message, options = {}) => window.ainstein.ask(message, options);
 </script>
 

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * SEO Position Tracking Module - Routes
+ * AI Rank Module - Routes
  *
  * Pattern: /seo-tracking/project/{id}/...
  * Allineato con seo-audit e internal-links

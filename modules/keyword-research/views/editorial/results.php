@@ -47,7 +47,7 @@ $diffLabels = ['low' => 'Facile', 'medium' => 'Media', 'high' => 'Difficile'];
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
             <nav class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2">
-                <a href="<?= url('/keyword-research') ?>" class="hover:text-slate-700 dark:hover:text-slate-300">Keyword Research</a>
+                <a href="<?= url('/keyword-research') ?>" class="hover:text-slate-700 dark:hover:text-slate-300">AI Keywords</a>
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 <a href="<?= url('/keyword-research/project/' . $project['id'] . '/editorial') ?>" class="hover:text-slate-700 dark:hover:text-slate-300"><?= e($project['name']) ?></a>
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
@@ -135,7 +135,7 @@ $diffLabels = ['low' => 'Facile', 'medium' => 'Media', 'high' => 'Difficile'];
     </div>
     <?php endif; ?>
 
-    <!-- Cross-module CTA: Send to AI Content banner -->
+    <!-- Cross-module CTA: Send to AI Writer banner -->
     <?php if ($sentCount === 0 && !empty($aicProjects) && $totalArticles > 0): ?>
     <div class="relative overflow-hidden rounded-xl border border-amber-500/20 bg-gradient-to-r from-amber-950 via-slate-900 to-slate-900 p-5">
         <div class="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 rounded-full -translate-y-1/2 translate-x-1/3"></div>
@@ -146,7 +146,7 @@ $diffLabels = ['low' => 'Facile', 'medium' => 'Media', 'high' => 'Difficile'];
                 </div>
                 <div>
                     <h3 class="text-base font-semibold text-white">Piano pronto! Trasformalo in articoli</h3>
-                    <p class="text-sm text-slate-300 mt-0.5">Seleziona gli articoli e inviali ad AI Content (Articoli Automatici). Ainstein scriverà un articolo completo per ogni keyword.</p>
+                    <p class="text-sm text-slate-300 mt-0.5">Seleziona gli articoli e inviali ad AI Writer (Articoli Automatici). Ainstein scriverà un articolo completo per ogni keyword.</p>
                 </div>
             </div>
             <div class="flex-shrink-0">
@@ -167,7 +167,7 @@ $diffLabels = ['low' => 'Facile', 'medium' => 'Media', 'high' => 'Difficile'];
                 <div>
                     <h3 class="text-base font-semibold text-slate-900 dark:text-white">Prossimo passo: scrivere gli articoli</h3>
                     <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                        Per trasformare questi <?= $totalArticles ?> articoli in testi veri serve AI Content (Articoli Automatici) su questo progetto.
+                        Per trasformare questi <?= $totalArticles ?> articoli in testi veri serve AI Writer (Articoli Automatici) su questo progetto.
                         Lo attivi con un click e torni qui, dove potrai selezionare gli articoli e inviarli.
                     </p>
                 </div>
@@ -179,19 +179,19 @@ $diffLabels = ['low' => 'Facile', 'medium' => 'Media', 'high' => 'Difficile'];
                 <input type="hidden" name="type" value="auto">
                 <input type="hidden" name="return_to" value="<?= e('/keyword-research/project/' . (int) $project['id'] . '/editorial/' . (int) $research['id']) ?>">
                 <button type="submit" class="inline-flex items-center justify-center whitespace-nowrap px-5 py-2.5 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors text-sm">
-                    Attiva AI Content
+                    Attiva AI Writer
                     <svg class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </button>
             </form>
             <?php else: ?>
-            <a href="<?= url('/ai-content') ?>" class="inline-flex items-center justify-center whitespace-nowrap px-5 py-2.5 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors text-sm">Vai ad AI Content</a>
+            <a href="<?= url('/ai-content') ?>" class="inline-flex items-center justify-center whitespace-nowrap px-5 py-2.5 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors text-sm">Vai ad AI Writer</a>
             <?php endif; ?>
         </div>
     </div>
     <?php endif; ?>
 
     <?php if (!empty($aicProjects)): ?>
-    <!-- Send to AI Content Bar -->
+    <!-- Send to AI Writer Bar -->
     <div x-show="selectedItems.length > 0"
          x-transition
          class="sticky top-4 z-10 bg-violet-600 text-white rounded-xl shadow-lg p-4 flex items-center justify-between">
@@ -212,7 +212,7 @@ $diffLabels = ['low' => 'Facile', 'medium' => 'Media', 'high' => 'Difficile'];
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                 </svg>
                 <svg x-show="sending" class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                Invia a AI Content
+                Invia a AI Writer
             </button>
         </div>
     </div>

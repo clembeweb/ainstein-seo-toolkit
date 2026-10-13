@@ -32,7 +32,7 @@ class ProjectController
         $typeConfig = $type ? Project::typeConfig($type) : null;
 
         return View::render('keyword-research::projects/index', [
-            'title' => $type ? 'Progetti ' . $typeConfig['label'] : 'Tutti i Progetti - Keyword Research',
+            'title' => $type ? 'Progetti ' . $typeConfig['label'] : 'Tutti i Progetti - AI Keywords',
             'user' => $user,
             'projects' => $projects,
             'currentType' => $type,
