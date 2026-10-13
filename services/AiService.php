@@ -382,7 +382,8 @@ class AiService
                             $requestPayload,
                             $result,
                             'fallback',
-                            null,
+                            // Il motivo del passaggio al fallback (es. credito Anthropic esaurito): prima non restava traccia
+                            'Primary: ' . mb_substr($primaryError, 0, 400),
                             $originalProvider,
                             $startTime,
                             $creditsUsed

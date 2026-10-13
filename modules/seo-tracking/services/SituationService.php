@@ -342,12 +342,31 @@ class SituationService
         return self::parseNarrative((string) $res['result']);
     }
 
+    /**
+     * Dati per l'AI con nomi che non si possono leggere al contrario (b/a/y → ora/prima/anno_scorso).
+     * Con le sigle GPT-4o invertiva le posizioni e i segni (test 2026-10-13). Pura: testabile.
+     */
+    public static function forAi(array $data): array
+    {
+        $map = ['b' => 'ora', 'a' => 'prima', 'y' => 'anno_scorso', 'vs_prev_pct' => 'variazione_vs_prima_pct',
+            'vs_year_pct' => 'variazione_vs_anno_scorso_pct', 'diff' => 'differenza_ora_meno_prima', 'gainers' => 'crescono', 'losers' => 'calano'];
+        $out = [];
+        foreach ($data as $k => $v) {
+            $nk = $k;
+            if (is_string($k)) {
+                $nk = $map[$k] ?? preg_replace(['/_b$/', '/_a$/', '/^quota_b_pct$/', '/^quota_a_pct$/'], ['_ora', '_prima', 'quota_ora_pct', 'quota_prima_pct'], $k);
+            }
+            $out[$nk] = is_array($v) ? self::forAi($v) : $v;
+        }
+        return $out;
+    }
+
     public static function prompt(array $project, array $data): string
     {
-        $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $json = json_encode(self::forAi($data), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         return "Sito: {$project['name']} ({$project['domain']}). Periodo analizzato: {$data['period']['label']} "
-            . "(dal {$data['period']['b'][0]} al {$data['period']['b'][1]}), confrontato con il periodo precedente di pari durata (a) "
-            . "e con lo stesso periodo dell'anno prima (y).\n\n"
+            . "(dal {$data['period']['b'][0]} al {$data['period']['b'][1]}), confrontato con il periodo precedente di pari durata (\"prima\") "
+            . "e con lo stesso periodo dell'anno prima (\"anno_scorso\").\n\n"
             . "Scrivi il PUNTO DELLA SITUAZIONE in 5 paragrafi, in quest'ordine e con questi titoli:\n"
             . "1. \"Il punto\": com'è andato il periodo in 2-3 frasi, con i numeri principali.\n"
             . "2. \"Da dove arriva il traffico\": i canali (organico, diretto, social, a pagamento, referral...), il loro peso e cosa è cambiato.\n"
@@ -355,8 +374,8 @@ class SituationService
             . "4. \"Criticità\": i problemi veri che emergono dai numeri (cali, dipendenza da un canale o dal brand, pagine che perdono). Se non ce ne sono, dillo.\n"
             . "5. \"Cosa fare adesso\": esattamente 3 azioni concrete, scritte di seguito nel testo (prima..., poi..., infine...).\n\n"
             . "Regole:\n"
-            . "- Usa SOLO i numeri del JSON. Le variazioni sono già calcolate (vs_prev_pct, vs_year_pct): non ricalcolarle. null = dato non disponibile. Numeri all'italiana (virgola per i decimali, punto per le migliaia).\n"
-            . "- Spiega il PERCHÉ quando i dati lo mostrano: cerca le ricerche e le pagine che pesano di più sulla variazione (campo diff) e confrontale col totale. Esempio: se i clic calano di 1.900 e una sola ricerca ne perde 890 scendendo dalla posizione 2,9 alla 7,8, quella è la causa principale e va detto chiaramente, con le posizioni.\n"
+            . "- Usa SOLO i numeri del JSON. Le variazioni sono già calcolate (variazione_vs_prima_pct, variazione_vs_anno_scorso_pct): non ricalcolarle. Un numero negativo è un calo, positivo una crescita. Per la posizione media un numero più basso è MEGLIO (1 = primo risultato). null = dato non disponibile. Numeri all'italiana (virgola per i decimali, punto per le migliaia).\n"
+            . "- Spiega il PERCHÉ quando i dati lo mostrano: cerca le ricerche e le pagine che pesano di più sulla variazione (campo differenza_ora_meno_prima; posizione_prima → posizione_ora) e confrontale col totale. Esempio: se i clic calano di 1.900 e una sola ricerca ne perde 890 scendendo dalla posizione 2,9 alla 7,8, quella è la causa principale e va detto chiaramente, con le posizioni.\n"
             . "- Parole semplici, mai gergo: \"visite\" (non sessioni), \"conversioni\" (non eventi chiave), \"ricerche\" (non query), \"pagina\" (non landing page), \"traffico da Google\" (non organico), \"ricerche col tuo nome\" (non brand). Niente elenchi puntati, frasi brevi.\n"
             . "- Se has_revenue è false non parlare di ricavi.\n"
             . "- Le 3 azioni devono nascere dai problemi trovati nei dati (pagina X, ricerca Y), non consigli generici validi per tutti.\n"
