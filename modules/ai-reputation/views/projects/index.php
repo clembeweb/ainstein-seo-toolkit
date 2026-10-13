@@ -85,3 +85,5 @@ $arCost = rtrim(rtrim(number_format((float) \Core\Credits::getCost('collect_resp
     </div>
     <?php endif; ?>
 </div>
+
+<?= \Core\View::partial('ai-reputation::partials/landing-educativa') ?>
