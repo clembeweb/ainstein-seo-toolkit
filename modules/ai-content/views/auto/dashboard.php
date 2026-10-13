@@ -477,7 +477,7 @@ async function cancelProcess() {
     if (!currentJobId) return;
 
     try {
-        await window.ainstein.confirm('Sei sicuro di voler annullare l\'elaborazione?', {destructive: true});
+        await window.ainstein.confirm('Vuoi fermare l\'elaborazione in corso? Le keyword non ancora scritte restano in coda.', {destructive: true, buttonText: 'Ferma elaborazione'});
     } catch (e) { return; }
 
     try {

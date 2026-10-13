@@ -36,6 +36,7 @@ use Modules\AiContent\Models\WpSite;
 use Modules\AiContent\Services\SerpApiService;
 use Modules\AiContent\Services\BriefBuilderService;
 use Modules\AiContent\Services\AutoCreditService;
+use Modules\AiContent\Services\PlanContextService;
 use Modules\AiContent\Services\ArticleGeneratorService;
 use Services\ScraperService;
 
@@ -91,7 +92,7 @@ function isRetryableSerpError(string $errorMessage): bool
 /**
  * Elabora una singola keyword
  */
-function processKeyword(array $queueItem, int $userId, ?int $creditUserId = null): array
+function processKeyword(array $queueItem, int $userId, ?int $creditUserId = null, array $config = []): array
 {
     $creditUserId = $creditUserId ?? $userId;
     $keyword = $queueItem['keyword'];
@@ -213,10 +214,25 @@ function processKeyword(array $queueItem, int $userId, ?int $creditUserId = null
                             logDispatcher("    WP link interni: " . count($wpPosts) . " articoli da " . $wpSite['name']);
                         }
                     }
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     logDispatcher("    WP link fetch fallito: " . $e->getMessage());
                     \Core\Database::reconnect();
                 }
+            }
+
+            // Cliente e piano editoriale: pagine del sito da linkare per prime
+            $planContext = PlanContextService::forQueueItem((int) $projectId, $keyword);
+            if ($planContext) {
+                $brief['client_context'] = $planContext;
+                $planLinks = PlanContextService::asInternalLinks($planContext);
+                if (!empty($planLinks)) {
+                    $existing = array_column($allInternalLinks, 'url');
+                    $allInternalLinks = array_merge(
+                        array_values(array_filter($planLinks, fn($l) => !in_array($l['url'], $existing, true))),
+                        $allInternalLinks
+                    );
+                }
+                logDispatcher("    Contesto piano: cliente " . ($planContext['client_name'] ?? '-') . ", pagine da linkare " . count($planContext['target_pages'] ?? []));
             }
 
             if (!empty($allInternalLinks)) {
@@ -293,6 +309,32 @@ function processKeyword(array $queueItem, int $userId, ?int $creditUserId = null
         ]);
         logDispatcher("      Article content updated");
         AutoCreditService::chargeArticle($creditUserId, $keyword, (int) $articleId);
+
+        // Copertina (come "Processa Ora"): solo se attiva e se restano i crediti per pagarla
+        if ((int) ($config['generate_cover'] ?? 1) === 1 && Credits::hasEnough($creditUserId, AutoCreditService::coverCost())) {
+            try {
+                logDispatcher("      Copertina...");
+                $coverService = new \Modules\AiContent\Services\CoverImageService();
+                $coverResult = $coverService->generate(
+                    (int) $articleId,
+                    $articleResult['title'],
+                    $keyword,
+                    mb_substr(strip_tags($articleResult['content']), 0, 500),
+                    $userId
+                );
+                Database::reconnect();
+                if (!empty($coverResult['success'])) {
+                    (new Article())->updateCoverImage((int) $articleId, $coverResult['path']);
+                    AutoCreditService::chargeCover($creditUserId, $keyword, (int) $articleId);
+                    logDispatcher("      Copertina creata");
+                } else {
+                    logDispatcher("      Copertina non creata: " . ($coverResult['error'] ?? 'errore'), 'WARN');
+                }
+            } catch (\Throwable $e) {
+                Database::reconnect();
+                logDispatcher("      Copertina non creata: " . $e->getMessage(), 'WARN');
+            }
+        }
 
         $result['success'] = true;
         $result['keyword_id'] = $keywordId;
@@ -464,7 +506,7 @@ function runDispatcher(): void
         $queue->updateStatus($queueId, 'processing');
 
         // Elabora keyword (usa sources_count dal queue item)
-        $result = processKeyword($queueItem, $userId, $creditUserId);
+        $result = processKeyword($queueItem, $userId, $creditUserId, $config);
 
         // Force reconnect after long AI processing
         // Recreate models with fresh connection

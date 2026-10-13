@@ -957,8 +957,21 @@ class AutoController
                 // Add internal links pool if available
                 $internalLinksPool = new \Modules\AiContent\Models\InternalLinksPool();
                 $internalLinks = $internalLinksPool->getActiveByProject($id, 50);
+
+                // Cliente e piano editoriale: pagine del sito da linkare per prime
+                $planContext = \Modules\AiContent\Services\PlanContextService::forQueueItem((int) $id, $keyword);
+                if ($planContext) {
+                    $brief['client_context'] = $planContext;
+                    $planLinks = \Modules\AiContent\Services\PlanContextService::asInternalLinks($planContext);
+                    $existing = array_column($internalLinks ?: [], 'url');
+                    $internalLinks = array_merge(
+                        array_values(array_filter($planLinks, fn($l) => !in_array($l['url'], $existing, true))),
+                        $internalLinks ?: []
+                    );
+                }
+
                 if (!empty($internalLinks)) {
-                    $brief['internal_links_pool'] = $internalLinks;
+                    $brief['internal_links_pool'] = array_slice($internalLinks, 0, 80);
                 }
 
                 $targetWords = $brief['recommended_word_count'] ?? 1500;
@@ -1129,6 +1142,9 @@ class AutoController
     {
         echo "event: {$event}\n";
         echo "data: " . json_encode($data) . "\n\n";
+        // Commento SSE da 8 KB (il browser lo ignora): Apache + proxy_fcgi trattiene l'output finché
+        // non riempie il buffer, e con pochi eventi il pannello restava su "Avvio..." fino alla fine
+        echo ':' . str_repeat(' ', 8192) . "\n\n";
 
         if (ob_get_level()) {
             ob_flush();

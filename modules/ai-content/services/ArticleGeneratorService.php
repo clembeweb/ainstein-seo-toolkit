@@ -132,6 +132,9 @@ class ArticleGeneratorService
         // Build internal links section if available
         $internalLinksSection = $this->buildInternalLinksSection($brief['internal_links_pool'] ?? []);
 
+        // Cliente e piano editoriale (Articoli Automatici arrivati dal Piano Editoriale)
+        $clientSection = $this->buildClientSection($brief['client_context'] ?? null);
+
         $prompt = <<<PROMPT
 Sei un esperto SEO copywriter. Il tuo obiettivo è creare un articolo che sia MIGLIORE di tutte le fonti analizzate, combinando il meglio di ognuna.
 
@@ -142,7 +145,7 @@ Sei un esperto SEO copywriter. Il tuo obiettivo è creare un articolo che sia MI
 {$intent}
 
 {$briefText}
-
+{$clientSection}
 ## FONTI ANALIZZATE (TOP SERP)
 {$sourcesSummary}
 
@@ -279,6 +282,55 @@ PROMPT;
      * Build internal links section for the prompt
      * SEO-optimized instructions for natural, strategic internal linking
      */
+    /**
+     * Sezione prompt "per chi scrivi": cliente, riga del piano editoriale, pagine da linkare.
+     * Vuota se l'articolo non arriva da un piano/progetto con cliente.
+     */
+    private function buildClientSection(?array $ctx): string
+    {
+        if (empty($ctx) || (empty($ctx['client_name']) && empty($ctx['plan_title']))) {
+            return '';
+        }
+
+        $name = trim((string) ($ctx['client_name'] ?? ''));
+        $url = trim((string) ($ctx['client_url'] ?? ''));
+
+        $s = "\n## CLIENTE E PIANO EDITORIALE (PRIORITA' ALTA)\n\n";
+        if ($name !== '') {
+            $s .= "Stai scrivendo per il blog di: **{$name}**" . ($url !== '' ? " ({$url})" : '') . ".\n";
+        }
+        if (!empty($ctx['plan_title'])) {
+            $s .= "- Idea di titolo dal piano editoriale: \"{$ctx['plan_title']}\" (puoi migliorarla, ma resta su questo angolo e tieni la keyword)\n";
+        }
+        if (!empty($ctx['content_type'])) {
+            $s .= "- Tipo di contenuto: {$ctx['content_type']}\n";
+        }
+        if (!empty($ctx['notes'])) {
+            $s .= "- Perche' serve questo articolo e cosa deve coprire: {$ctx['notes']}\n";
+        }
+        if (!empty($ctx['serp_gap'])) {
+            $s .= "- Cosa manca nei risultati attuali di Google (coprilo): {$ctx['serp_gap']}\n";
+        }
+        if (!empty($ctx['secondary_keywords'])) {
+            $s .= "- Keyword secondarie da usare: " . implode(', ', array_slice($ctx['secondary_keywords'], 0, 6)) . "\n";
+        }
+
+        $s .= "\n### REGOLE PER IL CLIENTE (OBBLIGATORIE)\n";
+        if (!empty($ctx['target_pages'])) {
+            $s .= "1. LINK OBBLIGATORI: inserisci almeno un link verso OGNUNA di queste pagine del sito del cliente, con anchor text naturale e nel punto in cui il lettore e' pronto a fare il passo successivo. Sono pertinenti per definizione: valgono anche se le regole sui link interni dicono di non inserire link non pertinenti.\n";
+            foreach ($ctx['target_pages'] as $page) {
+                $s .= "   - {$page['url']} ({$page['title']})\n";
+            }
+        }
+        if ($name !== '') {
+            $s .= "2. Scrivi per conto di {$name}: quando il lettore deve prenotare, comprare, noleggiare o chiedere un preventivo, indirizzalo a {$name}, MAI a piattaforme di prenotazione, marketplace, portali o concorrenti. Puoi citare altre realta' solo come informazione neutra, mai come consiglio su dove comprare.\n";
+            $s .= "3. Non inventare servizi, prezzi, orari o dati specifici di {$name}: se servono, parla in termini generali o di fascia indicativa del mercato.\n";
+        }
+        $s .= "\n";
+
+        return $s;
+    }
+
     private function buildInternalLinksSection(array $internalLinks): string
     {
         if (empty($internalLinks)) {
