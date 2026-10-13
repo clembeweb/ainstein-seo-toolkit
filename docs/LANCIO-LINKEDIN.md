@@ -37,6 +37,15 @@
 > 7. **App Google in Cloud Console** (promemoria di Clemente): spiegargli come pubblicarla (schermata di consenso OAuth da
 >    "Test" a "In produzione", verifica per gli scope sensibili analytics.readonly e webmasters.readonly).
 > 8. Poi: post LinkedIn (bozza con la voce di Clemente).
+> 9. **IDEA di Clemente (2026-10-13, da ragionarci): "Traffico dalle AI" in AI Rank con GA4.** Nessun tool dice quanto
+>    traffico ti portano davvero le AI: simulano domande (come il nostro GEO Audit). Con GA4 collegato si possono leggere
+>    le visite da chatgpt.com, perplexity.ai, gemini.google.com, copilot, claude.ai ecc. (sessionSource) e mostrarle in
+>    modo semplice: quante visite, su quali pagine, se convertono, trend. Si lega al GEO Audit (simulato vs reale).
+>    Prima capire se serve davvero e dove sta (probabile: dentro il Punto della situazione).
+>    Spunto dalla prova del 2026-10-13 sul Punto della situazione con dati veri di Stabia (solo GSC, senza AI, 0 crediti):
+>    "noleggio barche castellammare di stabia" da pos. 3,3 a 12,5 (4 clic → 0), homepage −17 clic; quota brand 0% è un
+>    BUG (la regex prende "(test)" dal nome progetto e non riconosce "stabia boat rental"); GSC collegata ma
+>    `last_sync_at` NULL (il Punto legge dal vivo, quindi funziona lo stesso).
 > Note: il controllo AI gratuito su siti lenti dura fino a ~1 minuto (beweb.it 54 s); ainstein.it manca ancora del link alle
 > recensioni Google e di telefono/sameAs nei dati strutturati (non incidono sul voto). I vecchi prompt per Claude Design (landing scartata) sono in
 > `_superati/2026-10-13-prompt-claude-design/`; in `_INBOX/2026-10-13-per-claude-design/` restano logo e screenshot.
