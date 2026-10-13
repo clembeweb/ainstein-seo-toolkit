@@ -66,6 +66,67 @@ class SafeScraper extends ScraperService
         return ['error' => true, 'message' => 'Troppi redirect'];
     }
 
+    /**
+     * Più richieste in parallelo (curl_multi), stesse regole di fetchRaw. $batch: chiave => [url, opzioni].
+     * Un redirect non si segue qui: quella richiesta viene rifatta con fetchRaw, che lo segue verificandolo.
+     */
+    public function fetchMany(array $batch): array
+    {
+        $mh = curl_multi_init();
+        $handles = $bodies = $out = [];
+        foreach ($batch as $key => [$url, $options]) {
+            $target = self::resolveTarget($url);
+            if ($target === null) {
+                $out[$key] = ['error' => true, 'message' => 'Indirizzo non raggiungibile da un controllo pubblico'];
+                continue;
+            }
+            [$host, $port, $ip] = $target;
+            $bodies[$key] = '';
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => false,
+                CURLOPT_FOLLOWLOCATION => false,
+                CURLOPT_TIMEOUT => ($options['api_mode'] ?? false) ? 6 : 10,
+                CURLOPT_CONNECTTIMEOUT => 5,
+                CURLOPT_HTTPHEADER => $options['headers'] ?? [],
+                CURLOPT_ENCODING => '',
+                CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+                CURLOPT_RESOLVE => ["{$host}:{$port}:" . (str_contains($ip, ':') ? "[{$ip}]" : $ip)],
+                CURLOPT_WRITEFUNCTION => function ($ch, $chunk) use (&$bodies, $key) {
+                    if (strlen($bodies[$key]) + strlen($chunk) > self::MAX_BYTES) {
+                        return 0;
+                    }
+                    $bodies[$key] .= $chunk;
+                    return strlen($chunk);
+                },
+            ]);
+            curl_multi_add_handle($mh, $ch);
+            $handles[$key] = $ch;
+        }
+        do {
+            $status = curl_multi_exec($mh, $running);
+            if ($running) {
+                curl_multi_select($mh, 1.0);
+            }
+        } while ($running && $status === CURLM_OK);
+        foreach ($handles as $key => $ch) {
+            $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $next = (string) curl_getinfo($ch, CURLINFO_REDIRECT_URL);
+            $errno = curl_errno($ch);
+            curl_multi_remove_handle($mh, $ch);
+            curl_close($ch);
+            if ($code >= 300 && $code < 400 && $next !== '') {
+                $out[$key] = $this->fetchRaw($batch[$key][0], $batch[$key][1]);
+            } elseif ($code === 0 || ($errno && $bodies[$key] === '')) {
+                $out[$key] = ['error' => true, 'message' => 'Errore fetch'];
+            } else {
+                $out[$key] = ['success' => true, 'body' => $bodies[$key], 'http_code' => $code, 'final_url' => $batch[$key][0]];
+            }
+        }
+        curl_multi_close($mh);
+        return $out;
+    }
+
     /** [host, porta, ip pubblico] oppure null se l'URL non è http/https o l'host risolve anche a un IP interno. */
     public static function resolveTarget(string $url): ?array
     {

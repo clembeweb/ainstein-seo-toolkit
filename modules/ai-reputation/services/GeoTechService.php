@@ -69,11 +69,24 @@ class GeoTechService
 
         // 3. Crawler AI: robots.txt + richiesta vera
         $result['bots'] = [];
+        // Se lo scraper sa fare richieste in parallelo (SafeScraper del controllo pubblico), le 7 richieste dei
+        // crawler partono insieme: su un sito lento (6 s a pagina) si risparmiano ~35 s. Altrimenti una per volta.
+        $pre = [];
+        if ($result['home']['ok'] && method_exists($this->scraper, 'fetchMany')) {
+            $batch = [];
+            foreach (self::BOTS as $key => $bot) {
+                if ($bot['ua'] !== null) {
+                    $batch[$key] = [$result['home']['final_url'], self::botOptions($bot['ua'])];
+                }
+            }
+            $pre = $this->scraper->fetchMany($batch);
+        }
         foreach (self::BOTS as $key => $bot) {
             $rule = $robotsTxt !== null ? self::robotsVerdict($robotsTxt, $bot['token']) : 'no_robots';
             $row = ['robots' => $rule, 'http_code' => null, 'verdict' => null];
             if ($bot['ua'] !== null && $result['home']['ok']) {
-                $r = $this->get($result['home']['final_url'], $bot['ua']);
+                $r = isset($pre[$key]) ? (!empty($pre[$key]['error']) ? ['http_code' => 0, 'body' => '', 'final_url' => $result['home']['final_url']] : $pre[$key])
+                    : $this->get($result['home']['final_url'], $bot['ua']);
                 $row['http_code'] = $r['http_code'] ?? 0;
                 $serverBlocked = !self::isOk($r);
                 $row['verdict'] = $serverBlocked ? 'blocked_server' : ($rule === 'blocked' ? 'blocked_robots' : 'ok');
@@ -478,14 +491,15 @@ class GeoTechService
 
     // ---------------------------------------------------------------- HTTP
 
+    /** Opzioni di richiesta "come il crawler": solo user-agent e Accept, niente header da browser (Sec-Fetch-*). */
+    private static function botOptions(string $ua): array
+    {
+        return ['timeout' => 15, 'api_mode' => true, 'headers' => ['User-Agent: ' . $ua, 'Accept: text/html,application/xhtml+xml,*/*;q=0.8']];
+    }
+
     private function get(string $url, ?string $ua): array
     {
-        $opts = ['timeout' => 15];
-        if ($ua !== null) {
-            // Un crawler non manda gli header da browser (Sec-Fetch-*): solo user-agent e Accept
-            $opts['api_mode'] = true;
-            $opts['headers'] = ['User-Agent: ' . $ua, 'Accept: text/html,application/xhtml+xml,*/*;q=0.8'];
-        }
+        $opts = $ua !== null ? self::botOptions($ua) : ['timeout' => 15];
         $r = $this->scraper->fetchRaw($url, $opts);
         return !empty($r['error']) ? ['http_code' => 0, 'body' => '', 'final_url' => $url] : $r;
     }
