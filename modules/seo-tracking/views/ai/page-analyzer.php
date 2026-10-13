@@ -631,7 +631,7 @@ function pageAnalyzerApp() {
                 formData.append('position', position || '');
                 formData.append('_csrf_token', '<?= csrf_token() ?>');
 
-                const response = await fetch(`/seo-toolkit/seo-tracking/project/${this.projectId}/analyze-page`, {
+                const response = await fetch(`<?= url('/seo-tracking/project') ?>/${this.projectId}/analyze-page`, {
                     method: 'POST',
                     body: formData
                 });
@@ -660,7 +660,7 @@ function pageAnalyzerApp() {
             this.error = null;
 
             try {
-                const response = await fetch(`/seo-toolkit/seo-tracking/project/${this.projectId}/page-analysis/${analysisId}`);
+                const response = await fetch(`<?= url('/seo-tracking/project') ?>/${this.projectId}/page-analysis/${analysisId}`);
                 const data = await response.json();
 
                 if (!response.ok || data.error) {
