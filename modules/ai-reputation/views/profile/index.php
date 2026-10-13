@@ -24,6 +24,17 @@ $hasFacts = $counts['total'] > 0;
         </div>
         <?php if ($canEdit): ?>
         <div class="flex items-center gap-2">
+            <?php $toConfirm = (new \Modules\AiReputation\Models\ProfileFact())->countProposedNonHomonym((int) $project['id']); ?>
+            <?php if ($toConfirm > 0): ?>
+            <form method="POST" action="<?= url('/ai-reputation/project/' . (int) $project['id'] . '/profile/confirm-all') ?>"
+                  onsubmit="return confirm('Confermi come vere tutte le <?= $toConfirm ?> righe da confermare? Sono la verità con cui verranno giudicate le risposte delle AI: leggile prima. Gli omonimi restano da decidere uno per uno.')">
+                <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
+                <button type="submit" class="inline-flex items-center px-4 py-2 rounded-lg border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-medium hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors whitespace-nowrap">
+                    <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    Conferma tutte (<?= $toConfirm ?>)
+                </button>
+            </form>
+            <?php endif; ?>
             <button type="button" @click="generate()" :disabled="busy" class="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 disabled:opacity-60 transition-colors whitespace-nowrap">
                 <svg x-show="!busy" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
                 <svg x-show="busy" x-cloak class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>

@@ -158,6 +158,13 @@ Router::post('/ai-reputation/project/{id}/profile/facts', function ($id) {
     return (new ProfileController())->store((int) $id);
 });
 
+// Conferma tutte le righe da confermare (omonimi esclusi)
+Router::post('/ai-reputation/project/{id}/profile/confirm-all', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new ProfileController())->confirmAll((int) $id);
+});
+
 // decision: confirm | reject | correct | delete | homonym-yes (e' lui) | homonym-no (e' un altro)
 Router::post('/ai-reputation/project/{id}/profile/facts/{factId}/{decision}', function ($id, $factId, $decision) {
     Middleware::auth();

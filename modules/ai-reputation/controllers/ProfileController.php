@@ -103,6 +103,20 @@ class ProfileController
      * POST /ai-reputation/project/{id}/profile/facts/{factId}/{decision}
      * decision: confirm | reject | correct | delete | homonym-yes (è lui) | homonym-no (è un altro)
      */
+    /**
+     * POST /ai-reputation/project/{id}/profile/confirm-all
+     * Conferma tutte le righe da confermare (omonimi esclusi).
+     */
+    public function confirmAll(int $id): void
+    {
+        $this->requireEditable($id);
+        $n = $this->facts->confirmAllProposed($id);
+        $_SESSION['_flash']['success'] = $n > 0
+            ? "Confermate {$n} righe. Se ci sono omonimi, vanno decisi uno per uno."
+            : 'Nessuna riga da confermare';
+        Router::redirect("/ai-reputation/project/{$id}/profile");
+    }
+
     public function decide(int $id, int $factId, string $decision): void
     {
         $project = $this->requireEditable($id);

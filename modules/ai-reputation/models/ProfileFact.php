@@ -119,6 +119,30 @@ class ProfileFact
         return Database::delete('ar_profile_facts', 'id = ? AND project_id = ?', [$id, $projectId]) > 0;
     }
 
+    /**
+     * Conferma in un colpo tutte le righe ancora da confermare, tranne gli omonimi
+     * (quelli si decidono uno per uno con "È lui / È un altro": cambiano le note per il judge).
+     */
+    public function confirmAllProposed(int $projectId): int
+    {
+        return Database::update(
+            'ar_profile_facts',
+            ['status' => 'confirmed'],
+            "project_id = ? AND status = 'proposed' AND category <> 'homonym'",
+            [$projectId]
+        );
+    }
+
+    /** Righe ancora da confermare, omonimi esclusi (per il bottone "Conferma tutte") */
+    public function countProposedNonHomonym(int $projectId): int
+    {
+        $row = Database::fetch(
+            "SELECT COUNT(*) n FROM ar_profile_facts WHERE project_id = ? AND status = 'proposed' AND category <> 'homonym'",
+            [$projectId]
+        );
+        return (int) ($row['n'] ?? 0);
+    }
+
     /** Cancella le righe AI ancora da confermare (prima di rigenerare il profilo) */
     public function deleteProposedAi(int $projectId): int
     {
