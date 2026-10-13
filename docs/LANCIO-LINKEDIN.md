@@ -18,10 +18,17 @@
 >    provare il Punto della situazione con dati veri, collegando anche GA4).
 > 3. **Impostazioni di ogni tool** (Admin > Moduli > impostazioni dei 5 moduli accesi): controllare valori, costi,
 >    modelli AI, voci di funzioni spente.
-> 4. **Sidebar:** i nomi dei tool vanno a capo e lo stile sembra "troppo AI": proporre un ridisegno (una domanda alla volta).
-> 5. **App Google in Cloud Console** (promemoria di Clemente): spiegargli come pubblicarla (schermata di consenso OAuth da
+> 4. **Check di tutte le sottosezioni (schede) dei 5 tool** (richiesta di Clemente: "sembrano cose messe a caso e non si
+>    capisce niente"): per ognuna dire se serve davvero, qual è la sua funzione e come integrarla nel flusso del tool;
+>    proporre cosa tenere, unire, togliere. Un tool alla volta.
+> 5. **AI Rank multilingua** ("c'era il multi lingua, ora non c'è più?"): verificato il 2026-10-13, **c'è ancora** — si
+>    sceglie il paese quando si aggiunge una keyword (20 paesi in prod, tabella st_locations), ma la barra dei paesi con le
+>    schede compare solo se il progetto ha keyword in almeno 2 paesi (`views/partials/country-bar.php`: `count < 2 → return`).
+>    In prod tutte le keyword sono IT, quindi non si vede: è un problema di scoperta. Proporre come renderlo visibile.
+> 6. **Sidebar:** i nomi dei tool vanno a capo e lo stile sembra "troppo AI": proporre un ridisegno (una domanda alla volta).
+> 7. **App Google in Cloud Console** (promemoria di Clemente): spiegargli come pubblicarla (schermata di consenso OAuth da
 >    "Test" a "In produzione", verifica per gli scope sensibili analytics.readonly e webmasters.readonly).
-> 6. Poi: post LinkedIn (bozza con la voce di Clemente).
+> 8. Poi: post LinkedIn (bozza con la voce di Clemente).
 > Note: il controllo AI gratuito su siti lenti dura fino a ~1 minuto (beweb.it 54 s); ainstein.it manca ancora del link alle
 > recensioni Google e di telefono/sameAs nei dati strutturati (non incidono sul voto). Proporre a fine sessione di spostare in
 > `_INBOX/_superati/` il vecchio `_INBOX/2026-10-13-prompt-claude-design-landing.md` (doppione) e il prompt Claude Design (scartato).
