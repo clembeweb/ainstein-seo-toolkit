@@ -388,6 +388,18 @@ function runDispatcher(): void
         // Verifica job già in corso
         $processJob = new ProcessJob();
         $activeJob = $processJob->getActiveForProject($projectId);
+
+        // Job cron (1 keyword) rimasto "in corso" da oltre 20 minuti: processo morto, lo chiudo
+        // altrimenti il progetto verrebbe saltato per sempre
+        if ($activeJob && ($activeJob['type'] ?? '') === 'cron') {
+            $jobTs = strtotime($activeJob['started_at'] ?? $activeJob['created_at'] ?? 'now') ?: time();
+            if (time() - $jobTs > 20 * 60) {
+                $processJob->markError((int) $activeJob['id'], 'Job interrotto: nessun avanzamento da oltre 20 minuti');
+                logDispatcher("  Job {$activeJob['id']} bloccato da oltre 20 minuti: chiuso", 'WARN');
+                $activeJob = null;
+            }
+        }
+
         if ($activeJob) {
             logDispatcher("  Job già in corso (ID: {$activeJob['id']}), skip");
             continue;
@@ -479,6 +491,8 @@ function runDispatcher(): void
             if (isRetryableSerpError($result['error'])) {
                 // Errore SERP temporaneo (crediti esauriti) → rimetti pending per retry
                 $queue->updateStatus($queueId, 'pending');
+                // Chiudo il job: se resta "running" il dispatcher salterebbe il progetto per sempre
+                $processJob->markError($jobId, 'SERP non disponibile, keyword rimessa in coda');
                 logDispatcher("  RETRY: {$result['error']} — keyword rimessa in coda", 'WARN');
                 logDispatcher("Provider SERP esauriti, interrompo dispatcher", 'WARN');
                 break; // Inutile processare altre keyword se SERP è down
