@@ -1037,6 +1037,7 @@ erDiagram
     st_projects ||--o{ st_keywords : "keyword"
     st_projects ||--|| st_gsc_connections : "GSC"
     st_projects ||--|| st_ga4_connections : "GA4"
+    st_projects ||--o{ st_situation_reports : "punto della situazione"
     st_projects ||--o{ st_gsc_data : "dati GSC"
     st_projects ||--o{ st_ga4_data : "dati GA4"
     st_projects ||--o{ st_alerts : "alert"
@@ -1108,7 +1109,8 @@ erDiagram
                 <div><strong class="text-slate-900 dark:text-white">st_ga4_data</strong> (BIGINT): project_id(FK), date, landing_page, source_medium, country, device, sessions, users, new_users, engagement metrics, e-commerce metrics (purchases, revenue)</div>
                 <div><strong class="text-slate-900 dark:text-white">st_ga4_daily</strong>: project_id(FK), date(UK), traffic + engagement + e-commerce aggregati giornalieri</div>
                 <div><strong class="text-slate-900 dark:text-white">st_gsc_connections</strong>: project_id(FK UK), OAuth tokens, property_url, property_type, is_active, last_sync_at</div>
-                <div><strong class="text-slate-900 dark:text-white">st_ga4_connections</strong>: project_id(FK UK), service_account_json, property_id, property_name, is_active</div>
+                <div><strong class="text-slate-900 dark:text-white">st_ga4_connections</strong>: project_id(FK UK), OAuth tokens (GoogleOAuthService, dal 2026-10-13), property_id, property_name, is_active, last_error</div>
+                <div><strong class="text-slate-900 dark:text-white">st_situation_reports</strong> (2026-10-13): project_id(FK CASCADE), user_id, period_key, b_start, b_end, data(JSON: ga4/gsc/caveats), narrative(JSON paragrafi + refs), credits_used, created_at. Scheda "Punto della situazione".</div>
                 <div><strong class="text-slate-900 dark:text-white">st_alerts</strong>: project_id(FK), alert_type(9 valori), severity, title, message, keyword_id(FK), previous/current_value, change_percent, ai_analysis, ai_suggestion, status(new/read/actioned/dismissed)</div>
                 <div><strong class="text-slate-900 dark:text-white">st_alert_settings</strong>: project_id(FK UK), position/traffic/revenue/anomaly alert config, email_enabled, email_frequency</div>
                 <div><strong class="text-slate-900 dark:text-white">st_ai_reports</strong>: project_id(FK), report_type(6 valori), date_from/to, title, summary, content(LONGTEXT), metrics_snapshot(JSON), credits_used, email config, is_scheduled</div>

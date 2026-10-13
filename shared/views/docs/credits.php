@@ -39,6 +39,7 @@ $_crAuditReport = (float) \Core\ModuleLoader::getSetting('seo-audit', 'cost_unif
 $_crRank = \Core\Credits::getCost('rank_check', 'seo-tracking', 1);
 $_crGscFull = \Core\Credits::getCost('gsc_full_sync', 'seo-tracking', 10);
 $_crPage = \Core\Credits::getCost('page_analysis', 'seo-tracking', 3);
+$_crSituation = \Core\Credits::getCost('situation_report', 'seo-tracking', 5);
 
 // AI GEO Audit
 $_crGeoResponse = \Core\Credits::getCost('collect_response', 'ai-reputation', 1);
@@ -91,6 +92,7 @@ $_crTables = [
             ['Importazione completa da Google Search Console', $_crGscFull, ''],
             ['Elenco Quick Wins', 0, ''],
             ['Analisi di una pagina', $_crPage, ''],
+            ['Punto della situazione (Google Analytics + Search Console + AI)', $_crSituation, ''],
         ],
         'note' => null,
     ],
