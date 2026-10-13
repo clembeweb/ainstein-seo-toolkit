@@ -43,8 +43,8 @@
 >    modo semplice: quante visite, su quali pagine, se convertono, trend. Si lega al GEO Audit (simulato vs reale).
 >    Prima capire se serve davvero e dove sta (probabile: dentro il Punto della situazione).
 >    Spunto dalla prova del 2026-10-13 sul Punto della situazione con dati veri di Stabia (solo GSC, senza AI, 0 crediti):
->    "noleggio barche castellammare di stabia" da pos. 3,3 a 12,5 (4 clic → 0), homepage −17 clic; quota brand 0% è un
->    BUG (la regex prende "(test)" dal nome progetto e non riconosce "stabia boat rental"); GSC collegata ma
+>    "noleggio barche castellammare di stabia" da pos. 3,3 a 12,5 (4 clic → 0), homepage −17 clic; quota brand 0% era un
+>    BUG (la regex prendeva "(test)" dal nome progetto): CORRETTO e online (`eb93a34`), ora 72,7% (prima 69,6%); GSC collegata ma
 >    `last_sync_at` NULL (il Punto legge dal vivo, quindi funziona lo stesso).
 > Note: il controllo AI gratuito su siti lenti dura fino a ~1 minuto (beweb.it 54 s); ainstein.it manca ancora del link alle
 > recensioni Google e di telefono/sameAs nei dati strutturati (non incidono sul voto). I vecchi prompt per Claude Design (landing scartata) sono in
