@@ -553,7 +553,8 @@ class EditorialController
                 }
 
                 $prompt = $this->buildAiPrompt($chunkBrief, $categoriesData);
-                $maxTokens = max(4096, min(16000, $chunkMonths * $articlesPerMonth * 350));
+                // ~1000 token/articolo: con i modelli 5.x il ragionamento conta in max_tokens (350/articolo troncava a 12 articoli)
+                $maxTokens = max(8000, min(32000, $chunkMonths * $articlesPerMonth * 1000));
 
                 set_time_limit(300);
                 $aiStart2 = microtime(true);
