@@ -1,4 +1,17 @@
 <?php
+// Tour guidato (config/onboarding.php)
+$onboardingConfig = require BASE_PATH . '/config/onboarding.php';
+$onboardingModuleSlug = 'ai-reputation';
+$showTour = !\Core\OnboardingService::isModuleCompleted($user['id'] ?? 0, $onboardingModuleSlug);
+if ($showTour && isset($onboardingConfig[$onboardingModuleSlug])) {
+    echo \Core\View::partial('components/onboarding-spotlight', [
+        'onboardingSteps' => $onboardingConfig[$onboardingModuleSlug]['steps'],
+        'onboardingModuleName' => $onboardingConfig[$onboardingModuleSlug]['name'],
+        'onboardingModuleSlug' => $onboardingModuleSlug,
+    ]);
+}
+?>
+<?php
 // Prezzo in pagina dalle impostazioni del modulo (lo stesso che addebita RunController), mai scritto a mano
 $arCost = rtrim(rtrim(number_format((float) \Core\Credits::getCost('collect_response', 'ai-reputation', 1), 1, ',', ''), '0'), ',');
 ?>
@@ -21,14 +34,14 @@ $arCost = rtrim(rtrim(number_format((float) \Core\Credits::getCost('collect_resp
 </div>
 
 <div class="space-y-6">
-    <div class="sm:flex sm:items-center sm:justify-between">
+    <div class="sm:flex sm:items-center sm:justify-between" data-tour="ar-header">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AI GEO Audit</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Scopri se ChatGPT e Gemini consigliano la tua attività, chi consigliano al posto tuo e cosa pubblicare</p>
         </div>
         <div class="mt-4 sm:mt-0 flex flex-wrap items-center gap-3">
             <?= \Core\View::partial('components/module-activate-existing', ['moduleSlug' => 'ai-reputation', 'userId' => (int) ($user['id'] ?? 0), 'color' => 'indigo']) ?>
-            <a href="<?= url('/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors">
+            <a href="<?= url('/projects/create') ?>" data-tour="ar-newproject" class="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Nuovo Progetto
             </a>

@@ -24,7 +24,7 @@ if (!function_exists('navLink')) {
 // Onboarding: moduli completati per icona "?" tour
 $onbCompletedModules = [];
 $onbModuleSlugs = array_intersect(
-    ['ai-content', 'seo-audit', 'seo-tracking', 'keyword-research', 'internal-links', 'ads-analyzer', 'content-creator'],
+    ['ai-content', 'seo-audit', 'seo-tracking', 'keyword-research', 'ai-reputation', 'internal-links', 'ads-analyzer', 'content-creator'],
     array_column($modules ?? [], 'slug')
 );
 if (isset($user['id']) && class_exists('\\Core\\OnboardingService')) {
@@ -708,6 +708,7 @@ if ($_navGlobalProjectId && isset($user['id'])) {
                             </svg>
                             <span class="flex-1"><?= e($module['name']) ?></span>
                         </a>
+                        <?= navTourButton('ai-reputation', $onbCompletedModules) ?>
                         <?php if ($arProjectId): ?>
                         <button @click="expanded = !expanded" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
                             <svg class="w-4 h-4 transition-transform" :class="expanded && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
