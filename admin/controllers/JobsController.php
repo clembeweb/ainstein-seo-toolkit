@@ -87,9 +87,17 @@ class JobsController
      */
     public function index(): string
     {
-        $activeTab = $_GET['tab'] ?? 'ai-content';
+        // Schede solo per i moduli accesi (i job dei moduli spenti restano consultabili via ?tab=slug)
+        $activeSlugs = array_column(ModuleLoader::getActiveModules(), 'slug');
+        $tabModules = array_filter(
+            $this->modules,
+            fn($cfg, $key) => in_array($key === 'ai-content-meta' ? 'ai-content' : $key, $activeSlugs, true),
+            ARRAY_FILTER_USE_BOTH
+        );
+        $defaultTab = (string) (array_key_first($tabModules) ?? 'ai-content');
+        $activeTab = $_GET['tab'] ?? $defaultTab;
         if (!isset($this->modules[$activeTab])) {
-            $activeTab = 'ai-content';
+            $activeTab = $defaultTab;
         }
 
         $filters = [
@@ -120,7 +128,7 @@ class JobsController
             'title' => 'Jobs Monitor',
             'user' => Auth::user(),
             'modules' => ModuleLoader::getActiveModules(),
-            'tabModules' => $this->modules,
+            'tabModules' => $tabModules + [$activeTab => $this->modules[$activeTab]],
             'activeTab' => $activeTab,
             'jobs' => $jobs,
             'stats' => $stats,

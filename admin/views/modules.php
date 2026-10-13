@@ -86,15 +86,4 @@
         <?php endforeach; ?>
     </div>
     <?php endif; ?>
-
-    <!-- Help Card -->
-    <div class="bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-        <h4 class="text-sm font-semibold text-slate-900 dark:text-white mb-2">Come creare un nuovo modulo</h4>
-        <ol class="text-sm text-slate-600 dark:text-slate-400 space-y-2 list-decimal list-inside">
-            <li>Copia la cartella <code class="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">modules/_template</code></li>
-            <li>Rinominala con lo slug del modulo (es: <code class="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">keyword-research</code>)</li>
-            <li>Modifica <code class="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">module.json</code> e <code class="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">routes.php</code></li>
-            <li>Registra il modulo nel database con una query INSERT</li>
-        </ol>
-    </div>
 </div>

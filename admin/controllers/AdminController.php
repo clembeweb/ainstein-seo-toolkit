@@ -351,7 +351,7 @@ class AdminController
 
     public function modules(): string
     {
-        $modules = Database::fetchAll("SELECT * FROM modules ORDER BY name");
+        $modules = Database::fetchAll("SELECT * FROM modules ORDER BY is_active DESC, name"); // accesi prima
 
         return View::render('admin/modules', [
             'title' => 'Gestione Moduli',

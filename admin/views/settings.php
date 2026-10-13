@@ -141,6 +141,7 @@ $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
                             <select name="ai_model" id="ai_model"
                                     class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                                 <?php foreach ($allModels[$currentProvider]['models'] as $modelId => $modelInfo): ?>
+                                    <?php if ($currentProvider === 'anthropic' && !str_ends_with($modelId, '-5-5') && $modelId !== $currentModel) continue; // solo la famiglia Claude 5.5: i modelli vecchi restano nel codice per i fallback ?>
                                     <option value="<?= e($modelId) ?>" <?= $currentModel === $modelId ? 'selected' : '' ?>>
                                         <?= e($modelInfo['name']) ?> (in: $<?= $modelInfo['input_cost'] ?>/1K, out: $<?= $modelInfo['output_cost'] ?>/1K)
                                     </option>

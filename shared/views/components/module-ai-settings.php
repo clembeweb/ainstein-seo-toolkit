@@ -26,6 +26,10 @@ $modelsJson = [];
 foreach ($allModels as $providerKey => $providerData) {
     $modelsJson[$providerKey] = [];
     foreach ($providerData['models'] as $modelId => $modelInfo) {
+        // Solo la famiglia Claude 5.5 nel menu (i modelli vecchi restano nel codice per i fallback e per chi li ha già scelti)
+        if ($providerKey === 'anthropic' && !str_ends_with((string) $modelId, '-5-5') && $modelId !== $currentModel) {
+            continue;
+        }
         $modelsJson[$providerKey][$modelId] = $modelInfo['name'] . ' (in: $' . $modelInfo['input_cost'] . '/1K, out: $' . $modelInfo['output_cost'] . '/1K)';
     }
 }
