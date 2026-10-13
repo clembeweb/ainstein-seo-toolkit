@@ -1,9 +1,12 @@
 # TASKS — AI Reputation Radar
 
 > Stato del lavoro. Aggiornare a ogni sessione: fatto, in corso, prossimo passo.
-> Ultimo aggiornamento: 2026-10-09 (sera: ADR-014 raggruppamento articoli gap)
+> Ultimo aggiornamento: 2026-10-13 (GEO Audit: rinomina, prima prova online su Stabia Boat Rental)
 
 ## Dove siamo
+**2026-10-13 — Rinominato "GEO Audit"** (nome visibile: menu, titoli, scheda progetto, notifica, PDF, admin; slug/route/tabelle invariati `ai-reputation`/`ar_`; nome DB del modulo cambiato da Admin). **Prima prova online** su ainstein.it: progetto globale 17 "Stabia Boat Rental (test)" → ar_project 1 (azienda, Castellammare di Stabia, sito stabiaboatrental.com), profilo 20 righe dal solo sito ufficiale (manca la key Perplexity in produzione: Gemini c'è e risponde), 40 domande generate dall'AI, run 1 da 104 risposte (ChatGPT + Gemini; Perplexity saltato). Aggiunti: bottone "Conferma tutte" nel profilo (omonimi esclusi), padding SSE nel run (la pagina restava a 0 risposte: Apache tratteneva gli eventi), guida "Come si usa" aggiornata.
+Note dalla prova: alla creazione il soggetto eredita il nome del progetto globale ("(test)" compreso) e il tipo "Persona" anche per un'azienda: si corregge in Impostazioni, va reso più evidente; "Avvia run" parte senza mostrare quante risposte e quanti crediti.
+
 **MVP completo e funzionante in locale.** Flusso: progetto da Global Projects → Profilo (onboarding + conferma
 righe) → domande (base / AI / manuali) → "Avvia run" (raccolta + judge + report in un solo stream SSE) → report.
 Engine: ChatGPT (API) + Gemini + Perplexity peso 0,3 (Claude pronto, spento). ChatGPT ripete 3 volte le domande rep.
