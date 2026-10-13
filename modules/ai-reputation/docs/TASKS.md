@@ -19,6 +19,8 @@ Demo per Gabriele: **in locale** (decisione di Clemente). Prima della call riavv
 lanciare run in diretta.
 
 ## Prossimo passo (uno solo)
+**2026-10-13:** chiudere la prima prova online: run 1 di `https://ainstein.it/ai-reputation/project/1` (Stabia Boat Rental, lanciato 12:56, 104 risposte) → leggere il report, provare "Genera scheda" ed "Esporta PDF", poi deploy di `48840f1` + `e82a270` (già su origin/main). Dettagli e ordine in `docs/LANCIO-LINKEDIN.md` (blocco GEO Audit).
+Dopo la prova (passo già previsto prima):
 Revisione del prompt della scheda sul canale (oggi spinge quasi sempre verso le testate esterne; il blog del soggetto riceve solo `own_site_note`): per Marcaccini servono anche schede "blog" per il team interno, da regalare come assaggio (il resto a pagamento). Fuori scope dell'ADR-014, da fare ora che il piano è pulito. Brainstorming prima del codice.
 Passo precedente (ancora valido): prova online del Radar con un progetto di test (Overview → "Come si usa"), incluse "Genera scheda" ed "Esporta PDF". Su ainstein.it mancano ancora le key Gemini e Perplexity in `/admin/settings` (le incolla Clemente). I dati del run 4 restano solo in locale.
 Già provato il 2026-10-09 in locale (progetto fittizio "TEST E2E schede", Studio Bianchi Consulenze): 3 schede Opus 5.5 corrette, "Genera scheda" dal browser ok (1 credito), PDF ok; in produzione: deploy + migrazione applicati, pagine dei moduli 200, test CLI verdi.
