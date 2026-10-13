@@ -35,6 +35,7 @@ use Modules\AiContent\Models\Article;
 use Modules\AiContent\Models\WpSite;
 use Modules\AiContent\Services\SerpApiService;
 use Modules\AiContent\Services\BriefBuilderService;
+use Modules\AiContent\Services\AutoCreditService;
 use Modules\AiContent\Services\ArticleGeneratorService;
 use Services\ScraperService;
 
@@ -90,8 +91,9 @@ function isRetryableSerpError(string $errorMessage): bool
 /**
  * Elabora una singola keyword
  */
-function processKeyword(array $queueItem, int $userId): array
+function processKeyword(array $queueItem, int $userId, ?int $creditUserId = null): array
 {
+    $creditUserId = $creditUserId ?? $userId;
     $keyword = $queueItem['keyword'];
     $queueId = $queueItem['id'];
     $projectId = $queueItem['project_id'];
@@ -135,6 +137,7 @@ function processKeyword(array $queueItem, int $userId): array
         if (empty($scrapedSources)) {
             throw new \Exception('Impossibile estrarre contenuto dalle fonti');
         }
+        AutoCreditService::chargeScraping($creditUserId, count($scrapedSources), $keyword);
 
         // Step 3: Brief generation
         logDispatcher("    [3/5] Generazione brief...");
@@ -153,6 +156,7 @@ function processKeyword(array $queueItem, int $userId): array
             $userId
         );
         Database::reconnect();
+        AutoCreditService::chargeBrief($creditUserId, $keyword);
 
         // Step 4: Article generation
         logDispatcher("    [4/5] Generazione articolo...");
@@ -288,6 +292,7 @@ function processKeyword(array $queueItem, int $userId): array
             'model_used' => $articleResult['model_used'] ?? null
         ]);
         logDispatcher("      Article content updated");
+        AutoCreditService::chargeArticle($creditUserId, $keyword, (int) $articleId);
 
         $result['success'] = true;
         $result['keyword_id'] = $keywordId;
@@ -414,9 +419,25 @@ function runDispatcher(): void
             continue;
         }
 
-        // Verifica crediti
-        if (!Credits::hasEnough($userId, 10)) {
-            logDispatcher("  Crediti insufficienti, skip");
+        // Verifica crediti (stessi importi del wizard manuale, addebitati al proprietario del progetto)
+        $creditUserId = AutoCreditService::creditUserId($projectId, $userId);
+        $neededCredits = AutoCreditService::estimate((int) ($queueItem['sources_count'] ?? 3));
+        if (!Credits::hasEnough($creditUserId, $neededCredits)) {
+            $msg = AutoCreditService::insufficientMessage($creditUserId, $neededCredits);
+            // In errore (non pending): altrimenti riproverebbe e notificherebbe ogni minuto
+            $queue->updateStatus((int) $queueItem['id'], 'error', $msg);
+            logDispatcher("  Crediti insufficienti per \"{$queueItem['keyword']}\": {$msg}", 'WARN');
+            try {
+                \Services\NotificationService::send($creditUserId, 'operation_failed', 'Articolo automatico non scritto: crediti insufficienti', [
+                    'icon' => 'exclamation-triangle',
+                    'color' => 'amber',
+                    'action_url' => '/ai-content/projects/' . $projectId . '/auto/queue',
+                    'body' => "La keyword \"{$queueItem['keyword']}\" non è stata elaborata. {$msg}",
+                    'data' => ['module' => 'ai-content', 'project_id' => $projectId],
+                ]);
+            } catch (\Exception $e) {
+                logDispatcher("  Notifica non inviata: " . $e->getMessage(), 'WARN');
+            }
             continue;
         }
 
@@ -443,7 +464,7 @@ function runDispatcher(): void
         $queue->updateStatus($queueId, 'processing');
 
         // Elabora keyword (usa sources_count dal queue item)
-        $result = processKeyword($queueItem, $userId);
+        $result = processKeyword($queueItem, $userId, $creditUserId);
 
         // Force reconnect after long AI processing
         // Recreate models with fresh connection

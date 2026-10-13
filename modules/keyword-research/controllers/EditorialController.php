@@ -819,6 +819,24 @@ class EditorialController
         $lang = $project['default_language'] ?? 'it';
         $locationName = self::LOCATION_NAMES[$brief['geography'] ?? 'IT'] ?? 'Italy';
 
+        // L'automazione deve esistere, altrimenti il cron non lavora mai la coda di questo progetto
+        $autoConfig = new \Modules\AiContent\Models\AutoConfig();
+        if (!$autoConfig->findByProject($aicProjectId)) {
+            $autoConfig->create($aicProjectId);
+        }
+
+        // Data di uscita di ogni articolo: mese del piano (mese 1 = mese dopo la creazione, come nella pagina)
+        // e posizione nel mese (con 4 articoli: giorni 1, 8, 15, 22), alle 9:00. Date passate = subito.
+        [$planStartMonth, $planStartYear] = self::planStartMonth(strtotime($research['created_at'] ?? 'now') ?: time());
+        $perMonth = max(1, (int) ($brief['articles_per_month'] ?? 4));
+        $positionInMonth = [];
+        $monthCounters = [];
+        foreach ($this->editorialModel->findByResearch($researchId) as $planItem) {
+            $m = (int) $planItem['month_number'];
+            $monthCounters[$m] = ($monthCounters[$m] ?? -1) + 1;
+            $positionInMonth[(int) $planItem['id']] = $monthCounters[$m];
+        }
+
         $added = 0;
         $skipped = 0;
         $sentIds = [];
@@ -846,6 +864,14 @@ class EditorialController
                 continue;
             }
 
+            $monthIndex = max(1, (int) $item['month_number']) - 1;
+            $realMonth = (($planStartMonth - 1 + $monthIndex) % 12) + 1;
+            $realYear = $planStartYear + intdiv($planStartMonth - 1 + $monthIndex, 12);
+            $pos = $positionInMonth[(int) $item['id']] ?? 0;
+            $day = min(28, 1 + intdiv($pos * 28, $perMonth));
+            $scheduledTs = mktime(9, 0, 0, $realMonth, $day, $realYear);
+            $scheduledAt = date('Y-m-d H:i:s', max($scheduledTs, time()));
+
             Database::insert('aic_queue', [
                 'user_id' => $user['id'],
                 'project_id' => $aicProjectId,
@@ -853,7 +879,7 @@ class EditorialController
                 'language' => $lang,
                 'location' => $locationName,
                 'sources_count' => 3,
-                'scheduled_at' => date('Y-m-d H:i:s'),
+                'scheduled_at' => $scheduledAt,
                 'status' => 'pending',
                 'created_at' => date('Y-m-d H:i:s'),
             ]);
@@ -870,7 +896,7 @@ class EditorialController
             'success' => true,
             'added' => $added,
             'skipped' => $skipped,
-            'message' => "{$added} articoli aggiunti alla coda AI Content." . ($skipped > 0 ? " {$skipped} saltati (duplicati o già inviati)." : ''),
+            'message' => "{$added} articoli messi in coda negli Articoli Automatici, con le date dei mesi del piano. Li trovi nella Coda del progetto AI Content." . ($skipped > 0 ? " {$skipped} saltati (duplicati o già inviati)." : ''),
         ]);
     }
 

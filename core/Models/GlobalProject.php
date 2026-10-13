@@ -865,7 +865,19 @@ class GlobalProject
                         $insertData['wp_site_id'] = $wpSiteId;
                     }
 
-                    return Database::insert('aic_projects', $insertData);
+                    $aicProjectId = Database::insert('aic_projects', $insertData);
+
+                    // Articoli Automatici: la config va creata subito, altrimenti il cron ignora il progetto
+                    // finche' qualcuno non apre la dashboard automazione
+                    if ($aicProjectId && ($insertData['type'] ?? '') === 'auto') {
+                        try {
+                            (new \Modules\AiContent\Models\AutoConfig())->create((int) $aicProjectId);
+                        } catch (\Throwable $e) {
+                            // Non blocca l'attivazione: la dashboard la crea comunque al primo accesso
+                        }
+                    }
+
+                    return $aicProjectId;
 
                 case 'seo-audit':
                     // Normalizza dominio: aggiungi https:// se manca schema

@@ -814,6 +814,24 @@ class AutoController
             $keyword = $queueItem['keyword'];
             $queueId = $queueItem['id'];
 
+            // Crediti: stessi importi del wizard, addebitati al proprietario del progetto
+            $creditUserId = \Modules\AiContent\Services\AutoCreditService::creditUserId($id, $userId);
+            $neededCredits = \Modules\AiContent\Services\AutoCreditService::estimate((int) ($queueItem['sources_count'] ?? 3));
+            if (!\Core\Credits::hasEnough($creditUserId, $neededCredits)) {
+                $msg = \Modules\AiContent\Services\AutoCreditService::insufficientMessage($creditUserId, $neededCredits);
+                $this->queue->updateStatus($queueId, 'error', $msg);
+                $keywordsFailed++;
+                $this->processJob->incrementFailed($jobId);
+                $this->sendSseEvent('keyword_error', [
+                    'keyword' => $keyword,
+                    'error' => $msg,
+                    'completed' => $keywordsCompleted,
+                    'failed' => $keywordsFailed,
+                    'total' => $maxKeywords
+                ]);
+                break; // senza crediti e' inutile proseguire con le altre keyword
+            }
+
             // Update status to processing
             $this->queue->updateStatus($queueId, 'processing');
             $this->processJob->updateProgress($jobId, [
@@ -883,6 +901,7 @@ class AutoController
 
                 // Reconnect DB
                 \Core\Database::reconnect();
+                \Modules\AiContent\Services\AutoCreditService::chargeScraping($creditUserId, count($scrapedSources), $keyword);
 
                 // Step 3: Generate brief
                 $this->processJob->updateProgress($jobId, ['current_step' => 'brief']);
@@ -911,6 +930,7 @@ class AutoController
 
                 // Reconnect DB
                 \Core\Database::reconnect();
+                \Modules\AiContent\Services\AutoCreditService::chargeBrief($creditUserId, $keyword);
 
                 // Step 4: Generate article
                 $this->processJob->updateProgress($jobId, ['current_step' => 'article']);
@@ -993,9 +1013,10 @@ class AutoController
 
                 // Link queue item
                 $this->queue->linkGenerated($queueId, $keywordId, $articleId);
+                \Modules\AiContent\Services\AutoCreditService::chargeArticle($creditUserId, $keyword, (int) $articleId);
 
-                // Step 5b: Generate cover image (optional)
-                if ($generateCover) {
+                // Step 5b: Generate cover image (optional, solo se restano i crediti per pagarla)
+                if ($generateCover && \Core\Credits::hasEnough($creditUserId, \Modules\AiContent\Services\AutoCreditService::coverCost())) {
                     $this->processJob->updateProgress($jobId, ['current_step' => 'cover']);
                     $this->sendSseEvent('progress', [
                         'keyword' => $keyword,
@@ -1020,6 +1041,7 @@ class AutoController
 
                         if ($coverResult['success']) {
                             $articleModel->updateCoverImage($articleId, $coverResult['path']);
+                            \Modules\AiContent\Services\AutoCreditService::chargeCover($creditUserId, $keyword, (int) $articleId);
                         }
                     } catch (\Exception $e) {
                         // Non blocca: l'immagine è opzionale
