@@ -87,7 +87,7 @@
             $intentColor = $intentColors[strtolower($main['intent'])] ?? 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
             ?>
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $intentColor ?>">
-                <?= e(ucfirst($main['intent'])) ?>
+                <?php include_once __DIR__ . '/../partials/intent-label.php'; ?><?= e(kr_intent_label($main['intent'])) ?>
             </span>
             <?php endif; ?>
         </div>
@@ -373,7 +373,7 @@
                         <td class="px-4 py-3 text-right text-slate-700 dark:text-slate-300" x-text="parseFloat(kw.high_bid) > 0 ? parseFloat(kw.high_bid).toFixed(2) + ' EUR' : '-'"></td>
                         <td class="px-4 py-3 text-center">
                             <template x-if="kw.intent">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" :class="krIntentClass(kw.intent)" x-text="kw.intent.charAt(0).toUpperCase() + kw.intent.slice(1)"></span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" :class="krIntentClass(kw.intent)" x-text="krIntentLabel(kw.intent)"></span>
                             </template>
                             <template x-if="!kw.intent">
                                 <span class="text-slate-400">-</span>

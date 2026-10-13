@@ -258,7 +258,7 @@ $diffLabels = ['low' => 'Facile', 'medium' => 'Media', 'high' => 'Difficile'];
                         </td>
                         <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400"><?= e(ucfirst($item['content_type'] ?? '')) ?></td>
                         <td class="px-4 py-3 text-center">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $intColor ?>"><?= e(ucfirst($item['intent'] ?? '')) ?></span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $intColor ?>"><?php include_once __DIR__ . '/../partials/intent-label.php'; ?><?= e(kr_intent_label($item['intent'] ?? '')) ?></span>
                         </td>
                         <td class="px-4 py-3 text-center">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $difColor ?>"><?= $difLabel ?></span>

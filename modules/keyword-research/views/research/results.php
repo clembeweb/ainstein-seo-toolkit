@@ -4,6 +4,7 @@ $uniqueIntents = array_unique(array_filter(array_map(fn($c) => strtolower($c['in
 sort($uniqueIntents);
 ?>
 <?php include __DIR__ . '/../partials/table-helpers.php'; ?>
+<?php include_once __DIR__ . '/../partials/intent-label.php'; ?>
 
 <div class="space-y-6">
     <!-- Header -->
@@ -87,14 +88,14 @@ sort($uniqueIntents);
                 <h2 class="text-lg font-semibold text-slate-900 dark:text-white">
                     <span x-show="!intentFilter"><?= count($clusters) ?> Cluster identificati</span>
                     <span x-show="intentFilter" x-cloak>
-                        Cluster <span x-text="intentFilter.charAt(0).toUpperCase() + intentFilter.slice(1)"></span>
+                        Cluster <span x-text="krIntentLabel(intentFilter)"></span>
                     </span>
                 </h2>
                 <select x-model="intentFilter"
                         class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm py-1.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                     <option value="">Tutti gli intent</option>
                     <?php foreach ($uniqueIntents as $intent): ?>
-                    <option value="<?= e($intent) ?>"><?= e(ucfirst($intent)) ?></option>
+                    <option value="<?= e($intent) ?>"><?= e(kr_intent_label($intent)) ?></option>
                     <?php endforeach; ?>
                 </select>
                 <input type="text" x-model="searchQuery" placeholder="Cerca cluster o keyword..."
@@ -161,7 +162,7 @@ sort($uniqueIntents);
                                     <td class="px-4 py-3 text-right text-sm font-medium text-emerald-600 dark:text-emerald-400" x-text="cluster.total_volume.toLocaleString()"></td>
                                     <td class="px-4 py-3 text-right text-sm text-slate-700 dark:text-slate-300" x-text="cluster.main_volume.toLocaleString()"></td>
                                     <td class="px-4 py-3 text-center">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" :class="intentBadgeClass(cluster.intent)" x-text="cluster.intent ? cluster.intent.charAt(0).toUpperCase() + cluster.intent.slice(1) : '-'"></span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" :class="intentBadgeClass(cluster.intent)" x-text="cluster.intent ? krIntentLabel(cluster.intent) : '-'"></span>
                                     </td>
                                 </tr>
                             </template>

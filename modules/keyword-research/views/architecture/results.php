@@ -5,13 +5,7 @@ $clustersForTable = array_values(array_map(function($c, $i) {
     return $c;
 }, $clusters, array_keys($clusters)));
 
-if (!function_exists('kr_intent_label')) {
-    function kr_intent_label(?string $intent): string {
-        $map = ['informational' => 'Informativo', 'transactional' => 'Transazionale', 'commercial' => 'Commerciale', 'navigational' => 'Navigazionale'];
-        $k = strtolower(trim((string) $intent));
-        return $map[$k] ?? ($k !== '' ? ucfirst($k) : 'N/D');
-    }
-}
+include_once __DIR__ . '/../partials/intent-label.php';
 // Raccogli intent unici per il filtro
 $uniqueIntents = array_unique(array_filter(array_map(fn($c) => strtolower($c['intent'] ?? ''), $clusters)));
 sort($uniqueIntents);

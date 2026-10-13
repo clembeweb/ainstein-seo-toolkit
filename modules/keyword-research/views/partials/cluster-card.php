@@ -23,7 +23,7 @@ $intentColor = $intentColors[strtolower($cluster['intent'] ?? '')] ?? 'bg-slate-
                     <span class="text-xs font-bold text-slate-400 dark:text-slate-500">#<?= $index + 1 ?></span>
                     <h3 class="font-semibold text-slate-900 dark:text-white"><?= e($cluster['name']) ?></h3>
                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $intentColor ?>">
-                        <?= e(function_exists('kr_intent_label') ? kr_intent_label($cluster['intent'] ?? '') : ucfirst($cluster['intent'] ?? 'N/D')) ?>
+                        <?php include_once __DIR__ . '/intent-label.php'; ?><?= e(kr_intent_label($cluster['intent'] ?? '')) ?>
                     </span>
                 </div>
                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -117,7 +117,7 @@ $intentColor = $intentColors[strtolower($cluster['intent'] ?? '')] ?? 'bg-slate-
                         <td class="px-4 py-3 text-right text-slate-500 text-xs" x-text="parseFloat(kw.high_bid) > 0 ? parseFloat(kw.high_bid).toFixed(2) : '-'"></td>
                         <td class="px-4 py-3 text-center">
                             <template x-if="kw.intent">
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs" :class="krIntentClass(kw.intent)" x-text="kw.intent.charAt(0).toUpperCase() + kw.intent.slice(1)"></span>
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs" :class="krIntentClass(kw.intent)" x-text="krIntentLabel(kw.intent)"></span>
                             </template>
                         </td>
                     </tr>

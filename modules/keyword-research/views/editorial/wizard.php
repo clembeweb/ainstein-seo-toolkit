@@ -21,7 +21,7 @@
         <div class="text-sm text-slate-700 dark:text-slate-300">
             <span class="font-semibold text-slate-900 dark:text-white">Piano collegato all'Architettura Sito</span>
             <?php if (!empty($prefill['architecture_date'])): ?>del <?= e(date('d/m/Y', strtotime($prefill['architecture_date']))) ?><?php endif; ?>:
-            tema, target, zona e categorie sono già compilati dalle <?= (int) $prefill['pages_count'] ?> pagine proposte. L'AI riceverà anche le pagine, così ogni articolo rimanda a una di esse con un link interno. Puoi modificare tutto prima di avviare.
+            tema, target e zona sono già compilati, e le categorie sono le keyword principali delle <?= (int) $prefill['pages_count'] ?> pagine proposte (max 6). L'AI riceverà anche le pagine, così ogni articolo rimanda a una di esse con un link interno. Puoi modificare tutto prima di avviare.
         </div>
     </div>
     <?php endif; ?>

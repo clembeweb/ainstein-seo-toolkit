@@ -63,7 +63,15 @@ class EditorialController
             $arch = $this->loadArchitectureForProject($fromArchitecture, $projectId);
             if ($arch) {
                 $targetMap = ['B2B' => 'B2B', 'B2C' => 'B2C', 'Both' => 'Entrambi'];
-                $pageNames = array_values(array_filter(array_map(fn($p) => trim((string) ($p['name'] ?? '')), $arch['pages'])));
+                // Categorie = keyword principale di ogni pagina: diventano i seed per Keyword Planner e SERP,
+                // quindi servono keyword vere, non i nomi lunghi delle pagine (es. "... (Homepage)")
+                $pageNames = [];
+                foreach ($arch['pages'] as $p) {
+                    $kw = trim((string) ($p['main_keyword'] ?? '')) ?: trim((string) ($p['name'] ?? ''));
+                    if ($kw !== '' && !in_array(mb_strtolower($kw), array_map('mb_strtolower', $pageNames), true)) {
+                        $pageNames[] = $kw;
+                    }
+                }
                 $prefill = [
                     'architecture_research_id' => (int) $arch['research']['id'],
                     'architecture_date' => $arch['research']['created_at'] ?? null,
