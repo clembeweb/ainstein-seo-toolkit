@@ -4,6 +4,7 @@ namespace Core;
 
 use Monolog\Logger as MonologLogger;
 use Monolog\Handler\RotatingFileHandler;
+use Monolog\Handler\WhatFailureGroupHandler;
 use Monolog\Formatter\LineFormatter;
 
 class Logger
@@ -34,10 +35,14 @@ class Logger
     {
         $logger = new MonologLogger($name);
 
+        // 0664: i file li crea a volte PHP-FPM (www-data), a volte il cron (ainstein, gruppo www-data):
+        // con 0644 il secondo non poteva scrivere e il logger lanciava eccezioni a meta' operazione
         $handler = new RotatingFileHandler(
             self::getLogDir() . "/{$name}.log",
             14, // 14 days retention
-            MonologLogger::DEBUG
+            MonologLogger::DEBUG,
+            true,
+            0664
         );
 
         $formatter = new LineFormatter(
@@ -48,7 +53,8 @@ class Logger
         );
 
         $handler->setFormatter($formatter);
-        $logger->pushHandler($handler);
+        // Un log che non si riesce a scrivere non deve mai far fallire l'operazione che sta loggando
+        $logger->pushHandler(new WhatFailureGroupHandler([$handler]));
 
         return $logger;
     }
