@@ -4,6 +4,16 @@ namespace Core;
 
 class Credits
 {
+    /**
+     * Crediti in regalo all'iscrizione, una volta sola (decisione Clemente 2026-10-13: nessun piano gratuito,
+     * nessuna ricarica mensile). Si cambia da Admin > Impostazioni; default in config/app.php.
+     */
+    public static function signupBonus(): int
+    {
+        $config = require __DIR__ . '/../config/app.php';
+        return max(0, (int) Settings::get('free_credits', $config['free_credits'] ?? 100));
+    }
+
     public static function getBalance(int $userId): float
     {
         $user = Database::fetch("SELECT credits FROM users WHERE id = ?", [$userId]);

@@ -135,17 +135,17 @@ class Auth
             'password' => password_hash($data['password'], PASSWORD_DEFAULT),
             'name' => $data['name'] ?? '',
             'role' => 'user',
-            'credits' => $config['free_credits'] ?? 30,
+            'credits' => Credits::signupBonus(),
             'is_active' => true,
         ]);
 
         // Log transazione crediti iniziali
         Database::insert('credit_transactions', [
             'user_id' => $userId,
-            'amount' => $config['free_credits'] ?? 30,
+            'amount' => Credits::signupBonus(),
             'type' => 'bonus',
             'description' => 'Crediti benvenuto',
-            'balance_after' => $config['free_credits'] ?? 30,
+            'balance_after' => Credits::signupBonus(),
         ]);
 
         return $userId;
@@ -198,7 +198,7 @@ class Auth
 
         // 3. Nuovo utente - registra
         $config = require __DIR__ . '/../config/app.php';
-        $freeCredits = $config['free_credits'] ?? 30;
+        $freeCredits = Credits::signupBonus();
 
         $userId = Database::insert('users', [
             'email' => $email,

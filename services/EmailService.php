@@ -316,7 +316,7 @@ class EmailService
     private static function getSampleData(string $slug): array
     {
         $samples = [
-            'welcome' => ['user_name' => 'Mario Rossi', 'user_email' => 'mario@example.com', 'free_credits' => 30, 'login_url' => '#'],
+            'welcome' => ['user_name' => 'Mario Rossi', 'user_email' => 'mario@example.com', 'free_credits' => \Core\Credits::signupBonus(), 'login_url' => '#'],
             'password-reset' => ['user_email' => 'mario@example.com', 'reset_url' => '#'],
             'password-changed' => ['user_name' => 'Mario Rossi', 'user_email' => 'mario@example.com', 'changed_at' => date('d/m/Y H:i')],
             'email-changed' => ['user_name' => 'Mario Rossi', 'user_email' => 'vecchia@example.com', 'new_email' => 'nuova@example.com'],

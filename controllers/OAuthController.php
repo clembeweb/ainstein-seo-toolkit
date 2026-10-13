@@ -185,7 +185,7 @@ class OAuthController
                 \Services\EmailService::sendWelcome(
                     $user['email'],
                     $user['name'] ?? 'Utente',
-                    $config['free_credits'] ?? 30,
+                    \Core\Credits::signupBonus(),
                     $user['id']
                 );
             } catch (\Exception $e) {

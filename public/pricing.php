@@ -9,7 +9,7 @@ $currentPage = 'pricing';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prezzi - Ainstein | Piani per automatizzare il tuo marketing</title>
-    <meta name="description" content="Piani trasparenti a crediti. Tutti i moduli inclusi in ogni piano. Prova gratis 7 giorni, nessuna carta richiesta.">
+    <meta name="description" content="Piani trasparenti a crediti. Tutti i moduli inclusi in ogni piano. <?= \Core\Credits::signupBonus() ?> crediti in regalo all'iscrizione, nessuna carta richiesta.">
     <link rel="icon" type="image/svg+xml" href="<?= url('/favicon.svg') ?>">
     <meta name="theme-color" content="#f59e0b">
 
@@ -340,7 +340,7 @@ $currentPage = 'pricing';
                 <?php endforeach; ?>
             </ul>
             <a href="<?= url('/register') ?>" class="p-btn <?= $isFeatured ? 'p-btn-primary' : 'p-btn-outline' ?>">
-                <?= (float)$plan['price_monthly'] === 0.0 ? 'Inizia gratis' : 'Prova gratis 7 giorni' ?>
+                Inizia con <?= \Core\Credits::signupBonus() ?> crediti in regalo
             </a>
         </div>
         <?php endforeach; ?>
@@ -517,10 +517,10 @@ $currentPage = 'pricing';
             </div>
             <div class="faq-item reveal reveal-d1">
                 <button class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open');">
-                    C'e un periodo di prova gratuito?
+                    Posso provarlo gratis?
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
-                <div class="faq-a">Si. Il piano Free ti da 30 crediti al mese per sempre, senza carta di credito. Puoi provare tutti i moduli e vedere i risultati prima di scegliere un piano a pagamento.</div>
+                <div class="faq-a">Sì. Quando ti iscrivi ricevi <?= \Core\Credits::signupBonus() ?> crediti in regalo, una volta sola, senza carta di credito. Con quelli provi i moduli e vedi i risultati prima di scegliere un piano.</div>
             </div>
             <div class="faq-item reveal reveal-d2">
                 <button class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open');">

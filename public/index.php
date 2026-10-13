@@ -291,7 +291,7 @@ Router::post('/register', function () {
     // Email di benvenuto (non bloccante - errori loggati silenziosamente)
     try {
         $config = require BASE_PATH . '/config/app.php';
-        \Services\EmailService::sendWelcome($email, $name, $config['free_credits'] ?? 30, $userId);
+        \Services\EmailService::sendWelcome($email, $name, \Core\Credits::signupBonus(), $userId);
     } catch (\Exception $e) {
         // Non bloccare la registrazione se l'email fallisce
         error_log('Welcome email failed: ' . $e->getMessage());

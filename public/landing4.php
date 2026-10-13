@@ -1476,7 +1476,7 @@ $currentPage = 'home';
 <!-- ====== CTA FINALE ====== -->
 <section class="section-pad cta-final">
     <h2 class="reveal">Inizia ad automatizzare il tuo SEO</h2>
-    <p class="reveal reveal-d1">30 crediti gratuiti alla registrazione. Nessuna carta di credito richiesta.</p>
+    <p class="reveal reveal-d1"><?= \Core\Credits::signupBonus() ?> crediti in regalo all'iscrizione. Nessuna carta di credito richiesta.</p>
     <div class="reveal reveal-d2">
         <a href="<?= url('/register') ?>" class="btn-cta-large">
             Crea account gratis
