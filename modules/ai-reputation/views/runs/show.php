@@ -92,6 +92,60 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
     </div>
     <?php endif; ?>
 
+    <?php if (!empty($purchase)): ?>
+    <!-- KPI audit d'acquisto: ti conoscono / ti consigliano / ti leggono senza nominarti / chi al posto tuo -->
+    <?php
+    $shareClass = $metrics['share'] < 10 ? 'text-red-600 dark:text-red-400' : ($metrics['share'] < 30 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400');
+    $topCompetitors = array_slice($competitors, 0, 3);
+    ?>
+    <?php if (!empty($known) && $known['share'] - $metrics['share'] >= 20): ?>
+    <div class="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 px-5 py-4 text-sm text-amber-900 dark:text-amber-100">
+        <strong>Le AI sanno chi è <?= e($project['subject_name']) ?>, ma non lo consigliano.</strong>
+        Quando la domanda fa il suo nome lo citano nel <?= (int) $known['share'] ?>% delle risposte; quando un cliente cerca il servizio senza nominarlo, nel <?= (int) $metrics['share'] ?>%.
+    </div>
+    <?php endif; ?>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+            <p class="text-sm text-slate-500 dark:text-slate-400">Ti consigliano</p>
+            <p class="text-2xl font-bold <?= $shareClass ?>"><?= (int) $metrics['share'] ?>%</p>
+            <p class="text-xs text-slate-400">nominato in <?= (int) $metrics['mentioned_n'] ?> risposte su <?= (int) $metrics['judged'] ?> a domande di chi cerca il servizio</p>
+        </div>
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+            <p class="text-sm text-slate-500 dark:text-slate-400">Ti conoscono</p>
+            <?php if (!empty($known)): ?>
+            <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= (int) $known['share'] ?>%</p>
+            <p class="text-xs text-slate-400">quando la domanda fa il tuo nome · <a href="<?= url("{$basePath}/runs/{$known['run_id']}") ?>" class="text-indigo-600 dark:text-indigo-400 hover:underline">audit reputazione #<?= (int) $known['run_id'] ?></a></p>
+            <?php else: ?>
+            <p class="text-2xl font-bold text-slate-400">–</p>
+            <p class="text-xs text-slate-400">per il confronto lancia anche un audit reputazione dalla Overview</p>
+            <?php endif; ?>
+        </div>
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+            <p class="text-sm text-slate-500 dark:text-slate-400">Usano il tuo sito senza nominarti</p>
+            <?php if (!empty($purchase['own_domain'])): ?>
+            <p class="text-2xl font-bold <?= $purchase['source_unnamed'] > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-900 dark:text-white' ?>"><?= (int) $purchase['source_unnamed'] ?> <span class="text-sm font-normal text-slate-400">risposte</span></p>
+            <p class="text-xs text-slate-400"><?= $purchase['source_unnamed'] > 0 ? 'leggono ' . e($purchase['own_domain']) . ', prendono le informazioni e consigliano altri' : 'nessuna AI ha usato ' . e($purchase['own_domain']) . ' come fonte' ?></p>
+            <?php else: ?>
+            <p class="text-2xl font-bold text-slate-400">–</p>
+            <p class="text-xs text-slate-400">aggiungi il sito del soggetto nelle impostazioni del progetto</p>
+            <?php endif; ?>
+        </div>
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+            <p class="text-sm text-slate-500 dark:text-slate-400">Al tuo posto consigliano</p>
+            <?php if ($topCompetitors): ?>
+            <ul class="mt-1 space-y-0.5">
+                <?php foreach ($topCompetitors as $c): ?>
+                <li class="text-sm font-medium text-slate-900 dark:text-white truncate"><?= e($c['name']) ?> <span class="text-xs font-normal text-slate-400"><?= (int) $c['count'] ?></span></li>
+                <?php endforeach; ?>
+            </ul>
+            <p class="text-xs text-slate-400 mt-1">tutti nella scheda "Chi citano al posto suo"</p>
+            <?php else: ?>
+            <p class="text-2xl font-bold text-slate-400">–</p>
+            <p class="text-xs text-slate-400">nessun concorrente nominato</p>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php else: ?>
     <!-- KPI -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
@@ -126,6 +180,7 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
             <?php endif; ?>
         </div>
     </div>
+    <?php endif; ?>
 
     <?php
     // ---- dati per la parte centrale: interventi raggruppati, filtri della griglia ----
@@ -136,15 +191,23 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
     $rowFlags = [];
     foreach ($grid as $pid => $row) {
         $neg = false;
+        $cit = false;
         foreach ($row['cells'] as $cells) {
             foreach ($cells as $r) {
                 if (!empty($r['analysis']) && (int) $r['analysis']['negative'] === 1) {
                     $neg = true;
                 }
+                if (!empty($r['analysis']) && (int) $r['analysis']['brand_mentioned'] === 1) {
+                    $cit = true;
+                }
             }
         }
-        $rowFlags[$pid] = ['neg' => $neg, 'div' => isset($divergentIds[(int) $pid])];
+        $rowFlags[$pid] = ['neg' => $neg, 'div' => isset($divergentIds[(int) $pid]), 'cit' => $cit,
+            'src' => in_array((int) $pid, $purchase['source_unnamed_prompts'] ?? [], true)];
     }
+    $unnamedIds = array_flip($purchase['source_unnamed_responses'] ?? []);
+    $isPurchase = !empty($purchase);
+    $showRemovals = !$isPurchase || $removals;
     $countRep = count(array_filter($grid, fn($r) => $r['prompt']['cluster'] === 'rep'));
     $countNeg = count(array_filter($rowFlags, fn($f) => $f['neg']));
     $countDiv = count($divergentIds);
@@ -183,12 +246,12 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700" x-data="{ allRem: false }">
         <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex flex-wrap items-baseline justify-between gap-2">
             <h3 class="text-base font-semibold text-slate-900 dark:text-white">Interventi suggeriti</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400"><?= count($writes) ?> contenuti da pubblicare · <?= count($removals) ?> siti da contattare · clicca una riga per i dettagli</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400"><?= count($writes) ?> contenuti da pubblicare<?= $showRemovals ? ' · ' . count($removals) . ' siti da contattare' : '' ?> · clicca una riga per i dettagli</p>
         </div>
         <?php if (empty($actions)): ?>
         <div class="p-6 text-center text-sm text-slate-500 dark:text-slate-400"><?= $hasAnalyses ? 'Nessun intervento necessario: nessun contenuto negativo e soggetto citato dove conta.' : 'Compaiono dopo l\'analisi.' ?></div>
         <?php else: ?>
-        <div class="grid grid-cols-1 lg:grid-cols-2 lg:divide-x divide-slate-200 dark:divide-slate-700">
+        <div class="grid grid-cols-1 <?= $showRemovals ? 'lg:grid-cols-2 lg:divide-x divide-slate-200 dark:divide-slate-700' : '' ?>">
             <div>
                 <p class="px-5 pt-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Da pubblicare</p>
                 <ul class="divide-y divide-slate-100 dark:divide-slate-700/60">
@@ -202,6 +265,7 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
                 </ul>
                 <?php endif; ?>
             </div>
+            <?php if ($showRemovals): ?>
             <div>
                 <p class="px-5 pt-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Da far rimuovere o aggiornare</p>
                 <ul class="divide-y divide-slate-100 dark:divide-slate-700/60">
@@ -214,12 +278,13 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
                 <button type="button" @click="allRem = !allRem" class="px-5 py-2.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline" x-text="allRem ? 'Mostra meno' : 'Mostra tutti i <?= count($removals) ?> siti'"></button>
                 <?php endif; ?>
             </div>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
     </div>
 
     <!-- Dettaglio in schede: niente scroll infinito -->
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700" x-data="{ tab: 'answers', filter: 'rep' }">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700" x-data="{ tab: 'answers', filter: '<?= $isPurchase ? 'all' : 'rep' ?>' }">
         <div class="border-b border-slate-200 dark:border-slate-700 px-3 flex flex-wrap gap-1">
             <?php
             $tabs = ['answers' => 'Risposte delle AI', 'sources' => 'Fonti (' . count($sources) . ')'];
@@ -236,7 +301,10 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
         <!-- Scheda: risposte -->
         <div x-show="tab === 'answers'">
             <div class="px-5 py-3 flex flex-wrap items-center gap-2 border-b border-slate-100 dark:border-slate-700/60">
-                <?php foreach (['rep' => "Reputazione ({$countRep})", 'div' => "Le AI non concordano ({$countDiv})", 'neg' => "Con risposte negative ({$countNeg})", 'all' => 'Tutte (' . count($grid) . ')'] as $k => $label): ?>
+                <?php $filters = $isPurchase
+                    ? ['all' => 'Tutte (' . count($grid) . ')', 'cit' => 'Ti nominano (' . count(array_filter($rowFlags, fn($f) => $f['cit'])) . ')', 'src' => 'Usano il tuo sito (' . count(array_filter($rowFlags, fn($f) => $f['src'])) . ')']
+                    : ['rep' => "Reputazione ({$countRep})", 'div' => "Le AI non concordano ({$countDiv})", 'neg' => "Con risposte negative ({$countNeg})", 'all' => 'Tutte (' . count($grid) . ')']; ?>
+                <?php foreach ($filters as $k => $label): ?>
                 <button type="button" @click="filter = '<?= $k ?>'" class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors" :class="filter === '<?= $k ?>' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300'"><?= e($label) ?></button>
                 <?php endforeach; ?>
                 <?php if ($hasAnalyses && ($ld['total'] ?? 0) > 0): ?>
@@ -257,7 +325,7 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
                         <?php foreach ($grid as $pid => $row): ?>
                         <?php $f = $rowFlags[$pid]; $cl = $row['prompt']['cluster']; ?>
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 align-top"
-                            x-show="filter === 'all' || (filter === 'rep' && <?= $cl === 'rep' ? 'true' : 'false' ?>) || (filter === 'div' && <?= $f['div'] ? 'true' : 'false' ?>) || (filter === 'neg' && <?= $f['neg'] ? 'true' : 'false' ?>)">
+                            x-show="filter === 'all' || (filter === 'rep' && <?= $cl === 'rep' ? 'true' : 'false' ?>) || (filter === 'div' && <?= $f['div'] ? 'true' : 'false' ?>) || (filter === 'neg' && <?= $f['neg'] ? 'true' : 'false' ?>) || (filter === 'cit' && <?= $f['cit'] ? 'true' : 'false' ?>) || (filter === 'src' && <?= $f['src'] ? 'true' : 'false' ?>)">
                             <td class="px-4 py-3 text-sm text-slate-900 dark:text-white">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-1 <?= $clusterClass($cl) ?>"><?= strtoupper($cl) ?></span>
                                 <?php if (!empty($row['prompt']['leading'])): ?><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-1 bg-slate-200 text-slate-700 dark:bg-slate-600 dark:text-slate-200" title="Nomina già un fatto negativo: esclusa dal rischio">mirata</span><?php endif; ?>
@@ -276,6 +344,7 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
                                     <?php else: ?>
                                     <?php [$label, $cls] = $verdictChip($r['analysis'], $r['mentioned']); ?>
                                     <button type="button" @click="open(<?= (int) $r['id'] ?>)" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium hover:ring-2 hover:ring-indigo-300 <?= $cls ?>" title="<?= e((string) ($r['analysis']['summary'] ?? '')) ?>"><?= e($label) ?></button>
+                                    <?php if (isset($unnamedIds[(int) $r['id']])): ?><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300" title="Ha usato il tuo sito come fonte senza nominarti">usa il tuo sito</span><?php endif; ?>
                                     <?php endif; ?>
                                 <?php endforeach; ?>
                                 </div>

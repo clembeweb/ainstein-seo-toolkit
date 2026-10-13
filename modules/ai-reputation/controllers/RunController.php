@@ -570,6 +570,7 @@ class RunController
         $metrics = $builder->metrics($responses, $analyses, $engines, $project);
         $sources = $builder->sources($responses, $analyses);
         $competitors = $builder->competitors($analyses);
+        [$purchase, $known] = $this->purchaseNumbers($builder, $project, $run, $responses, $analyses);
         $actions = Database::fetchAll("SELECT * FROM ar_actions WHERE run_id = ? ORDER BY FIELD(type, 'correction', 'clarify', 'removal', 'counter_content', 'gap_article', 'gap_pending'), id", [$runId]);
         $homonyms = Database::fetchAll("SELECT * FROM ar_profile_facts WHERE project_id = ? AND category = 'homonym' AND status = 'proposed' ORDER BY id", [$projectId]);
 
@@ -585,6 +586,8 @@ class RunController
             'metrics' => $metrics,
             'sources' => array_slice($sources, 0, 20),
             'competitors' => array_slice($competitors, 0, 12),
+            'purchase' => $purchase,
+            'known' => $known,
             'actions' => $actions,
             'briefCost' => Credits::getCost('action_brief', Project::SLUG, 1),
             'homonyms' => $homonyms,
@@ -621,6 +624,28 @@ class RunController
     }
 
     /**
+     * Audit d'acquisto: numeri propri + confronto con l'ultimo audit reputazione analizzato dello
+     * stesso progetto ("le AI ti conoscono X% / ti consigliano Y%"). Per gli altri run: [null, null].
+     */
+    private function purchaseNumbers(ReportBuilderService $builder, array $project, array $run, array $responses, array $analyses): array
+    {
+        if (($run['audit_type'] ?? 'reputation') !== 'purchase' || empty($analyses)) {
+            return [null, null];
+        }
+        $purchase = $builder->purchaseMetrics($responses, $analyses, $project);
+        $known = null;
+        $rep = Database::fetch("SELECT * FROM ar_runs WHERE project_id = ? AND audit_type = 'reputation' AND analyses_done > 0 ORDER BY id DESC LIMIT 1", [(int) $project['id']]);
+        if ($rep) {
+            $repEngines = json_decode((string) $rep['engines'], true) ?: [];
+            $repMetrics = $builder->metrics($this->run->responses((int) $rep['id']), $this->analysis->byRun((int) $rep['id']), $repEngines, $project);
+            if ($repMetrics['judged'] > 0) {
+                $known = ['run_id' => (int) $rep['id'], 'share' => $repMetrics['share'], 'mentioned_n' => $repMetrics['mentioned_n'], 'judged' => $repMetrics['judged']];
+            }
+        }
+        return [$purchase, $known];
+    }
+
+    /**
      * GET /ai-reputation/project/{id}/runs/{runId}/export/plan.pdf - PDF del piano d'azione del run
      * (interventi come nel report, con la scheda operativa se generata).
      */
@@ -636,7 +661,11 @@ class RunController
         }
         $responses = $this->run->responses($runId);
         $analyses = $this->analysis->byRun($runId);
-        $metrics = (new ReportBuilderService())->metrics($responses, $analyses, $run['engines'], $project);
+        $builder = new ReportBuilderService();
+        $metrics = $builder->metrics($responses, $analyses, $run['engines'], $project);
+        [$purchase, $known] = $this->purchaseNumbers($builder, $project, $run, $responses, $analyses);
+        $metrics['purchase'] = $purchase;
+        $metrics['known'] = $known;
         $actions = Database::fetchAll("SELECT * FROM ar_actions WHERE run_id = ? ORDER BY FIELD(type, 'correction', 'clarify', 'removal', 'counter_content', 'gap_article', 'gap_pending'), id", [$runId]);
         try {
             $pdfService = new ActionPlanPdfService();

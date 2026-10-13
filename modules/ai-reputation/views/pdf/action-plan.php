@@ -50,7 +50,7 @@ $sectionTitle = fn(string $text, string $margin) => '<div style="font-size:10pt;
             <?php if (($run['audit_type'] ?? 'reputation') !== 'purchase'): ?>
             · Rischio reputazione: <span style="color:<?= $riskColor ?>;font-weight:bold;"><?= $h($metrics['risk_label'] ?? '–') ?><?= isset($metrics['risk']) ? ' ' . (int) $metrics['risk'] . '%' : '' ?></span>
             <?php else: ?>
-            · Le AI ti citano nel <?= (int) ($metrics['share'] ?? 0) ?>% delle risposte
+            · Le AI ti consigliano nel <?= (int) ($metrics['share'] ?? 0) ?>% delle risposte<?php if (!empty($metrics['known'])): ?> (ti conoscono nel <?= (int) $metrics['known']['share'] ?>%)<?php endif; ?><?php if (!empty($metrics['purchase']['source_unnamed'])): ?> · in <?= (int) $metrics['purchase']['source_unnamed'] ?> usano il tuo sito senza nominarti<?php endif; ?>
             <?php endif; ?>
             · <?= count($contents) ?> contenut<?= count($contents) === 1 ? 'o' : 'i' ?> da pubblicare · <?= count($removals) ?> sit<?= count($removals) === 1 ? 'o' : 'i' ?> da contattare
         </div>

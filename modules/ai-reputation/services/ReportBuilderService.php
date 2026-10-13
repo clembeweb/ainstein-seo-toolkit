@@ -189,6 +189,36 @@ class ReportBuilderService
     }
 
     /**
+     * Numeri dell'audit d'acquisto (domande in cui il cliente non fa il nome del soggetto):
+     * risposte che usano il sito del soggetto come fonte senza nominarlo. Le AI lo leggono,
+     * prendono le informazioni e consigliano altri.
+     */
+    public function purchaseMetrics(array $responses, array $analyses, array $project): array
+    {
+        $ownDomain = !empty($project['website']) ? EngineCollectorService::domainOf($project['website']) : null;
+        $unnamed = [];
+        foreach ($responses as $r) {
+            $a = $analyses[(int) $r['id']] ?? null;
+            if ($r['status'] !== 'ok' || !$a || !$ownDomain || (int) $a['brand_mentioned'] === 1) {
+                continue;
+            }
+            foreach ($a['cited_domains'] as $d) {
+                $d = strtolower(preg_replace('/^www\./', '', (string) $d));
+                if ($d === $ownDomain || str_ends_with($d, '.' . $ownDomain)) {
+                    $unnamed[(int) $r['id']] = (int) $r['prompt_id'];
+                    break;
+                }
+            }
+        }
+        return [
+            'own_domain' => $ownDomain,
+            'source_unnamed' => count($unnamed),
+            'source_unnamed_responses' => array_keys($unnamed),
+            'source_unnamed_prompts' => array_values(array_unique($unnamed)),
+        ];
+    }
+
+    /**
      * Source Map del run: domini citati con conteggi, stato (ok / negativa / rumore), pagine ed engine.
      */
     public function sources(array $responses, array $analyses): array
