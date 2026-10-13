@@ -22,8 +22,8 @@ foreach ($categories as $i => $cat) {
 
 // Mesi italiani
 $mesiIt = ['', 'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
-$startMonth = (int) date('n');
-$startYear = (int) date('Y');
+// Mese 1 = mese successivo alla creazione del piano (stesso calcolo del prompt AI)
+[$startMonth, $startYear] = \Modules\KeywordResearch\Controllers\EditorialController::planStartMonth(strtotime($research['created_at'] ?? 'now') ?: time());
 
 // Intent badge colors
 $intentColors = [
@@ -128,7 +128,7 @@ $diffLabels = ['low' => 'Facile', 'medium' => 'Media', 'high' => 'Difficile'];
                 </div>
                 <div>
                     <h3 class="text-base font-semibold text-white">Piano pronto! Trasformalo in articoli</h3>
-                    <p class="text-sm text-slate-300 mt-0.5">Seleziona gli articoli e inviali ad AI Content Generator. Ainstein scrivera articoli completi per ogni keyword.</p>
+                    <p class="text-sm text-slate-300 mt-0.5">Seleziona gli articoli e inviali ad AI Content (Articoli Automatici). Ainstein scriverà un articolo completo per ogni keyword.</p>
                 </div>
             </div>
             <div class="flex-shrink-0">
@@ -136,6 +136,38 @@ $diffLabels = ['low' => 'Facile', 'medium' => 'Media', 'high' => 'Difficile'];
                     Seleziona gli articoli nella tabella sotto
                 </span>
             </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <?php if (empty($aicProjects) && $totalArticles > 0): ?>
+    <!-- Nessun progetto Articoli Automatici: attivalo su questo progetto e torna qui -->
+    <div class="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-5">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-start gap-3">
+                <svg class="w-6 h-6 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                <div>
+                    <h3 class="text-base font-semibold text-slate-900 dark:text-white">Prossimo passo: scrivere gli articoli</h3>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                        Per trasformare questi <?= $totalArticles ?> articoli in testi veri serve AI Content (Articoli Automatici) su questo progetto.
+                        Lo attivi con un click e torni qui, dove potrai selezionare gli articoli e inviarli.
+                    </p>
+                </div>
+            </div>
+            <?php if (!empty($project['global_project_id']) && ($project['access_role'] ?? 'owner') === 'owner'): ?>
+            <form method="POST" action="<?= url('/projects/' . (int) $project['global_project_id'] . '/activate-module') ?>" class="flex-shrink-0">
+                <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
+                <input type="hidden" name="module" value="ai-content">
+                <input type="hidden" name="type" value="auto">
+                <input type="hidden" name="return_to" value="<?= e('/keyword-research/project/' . (int) $project['id'] . '/editorial/' . (int) $research['id']) ?>">
+                <button type="submit" class="inline-flex items-center justify-center whitespace-nowrap px-5 py-2.5 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors text-sm">
+                    Attiva AI Content
+                    <svg class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </form>
+            <?php else: ?>
+            <a href="<?= url('/ai-content') ?>" class="inline-flex items-center justify-center whitespace-nowrap px-5 py-2.5 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors text-sm">Vai ad AI Content</a>
+            <?php endif; ?>
         </div>
     </div>
     <?php endif; ?>
@@ -151,7 +183,7 @@ $diffLabels = ['low' => 'Facile', 'medium' => 'Media', 'high' => 'Difficile'];
         </div>
         <div class="flex items-center gap-3">
             <select x-model="aicProjectId" class="rounded-lg border-0 bg-violet-500 text-white text-sm py-1.5 px-3 focus:ring-2 focus:ring-white">
-                <option value="">Seleziona progetto AI Content</option>
+                <option value="">Seleziona progetto Articoli Automatici</option>
                 <?php foreach ($aicProjects as $aicP): ?>
                 <option value="<?= $aicP['id'] ?>"><?= e($aicP['name']) ?></option>
                 <?php endforeach; ?>

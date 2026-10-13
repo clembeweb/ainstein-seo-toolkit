@@ -547,6 +547,7 @@ class EditorialController
                 $chunkBrief = $brief;
                 $chunkBrief['months'] = $chunkMonths;
                 $chunkBrief['_month_start'] = $chunk['start'];
+                $chunkBrief['_start_ts'] = strtotime($research['created_at'] ?? 'now') ?: time();
                 $chunkBrief['_month_end'] = $chunk['end'];
                 if (!empty($usedKeywords)) {
                     $chunkBrief['_used_keywords'] = $usedKeywords;
@@ -701,8 +702,9 @@ class EditorialController
         // Progetti ai-content per integrazione
         $aicProjects = [];
         if (ModuleLoader::isModuleActive('ai-content')) {
+            // Solo "Articoli Automatici": la coda aic_queue la lavora il cron solo per i progetti type='auto'
             $aicProjects = Database::fetchAll(
-                "SELECT id, name FROM aic_projects WHERE user_id = ? ORDER BY name",
+                "SELECT id, name FROM aic_projects WHERE user_id = ? AND type = 'auto' ORDER BY name",
                 [$user['id']]
             );
         }
@@ -873,6 +875,29 @@ class EditorialController
     }
 
     /**
+     * Mese/anno di partenza del piano: il mese successivo alla data di creazione.
+     * Usato sia dal prompt AI sia dalla pagina risultati, cosi' i mesi coincidono.
+     */
+    public static function planStartMonth(int $createdTs): array
+    {
+        $month = (int) date('n', $createdTs) + 1;
+        $year = (int) date('Y', $createdTs);
+        if ($month > 12) {
+            $month = 1;
+            $year++;
+        }
+        return [$month, $year];
+    }
+
+    public static function planMonthLabel(int $startMonth, int $startYear, int $monthNum): string
+    {
+        $mesi = ['', 'gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+        $real = (($startMonth - 1 + $monthNum - 1) % 12) + 1;
+        $year = $startYear + intdiv($startMonth - 1 + $monthNum - 1, 12);
+        return $mesi[$real] . ' ' . $year;
+    }
+
+    /**
      * Costruisce il prompt AI per il piano editoriale
      */
     private function buildAiPrompt(array $brief, array $categoriesData): string
@@ -891,6 +916,14 @@ class EditorialController
         $periodLabel = ($monthStart === 1 && $monthEnd === $months)
             ? "{$months} mesi"
             : "mesi {$monthStart}-{$monthEnd} (di {$months} totali)";
+
+        // Calendario reale: il mese 1 e' il mese successivo alla creazione del piano (come nella pagina risultati)
+        [$calStartMonth, $calStartYear] = self::planStartMonth((int) ($brief['_start_ts'] ?? time()));
+        $calendarLines = [];
+        for ($m = $monthStart; $m <= $monthEnd; $m++) {
+            $calendarLines[] = "mese {$m} = " . self::planMonthLabel($calStartMonth, $calStartYear, $m);
+        }
+        $calendarText = implode(', ', $calendarLines);
 
         // Pagine del sito (se il piano parte da un'Architettura Sito)
         $sitePagesBlock = '';
@@ -914,6 +947,7 @@ TEMA DEL BLOG: {$theme}
 TARGET: {$target}
 GEOGRAFIA: {$geography}
 PERIODO: {$periodLabel}
+CALENDARIO (usa questi mesi reali per stagionalita' e note, non altri): {$calendarText}
 ARTICOLI AL MESE: {$articlesPerMonth}
 TOTALE ARTICOLI DA GENERARE: " . (($monthEnd - $monthStart + 1) * $articlesPerMonth) . "
 CATEGORIE: " . implode(', ', $categories) . "

@@ -399,6 +399,14 @@ class GlobalProjectController
 
         if ($moduleProjectId) {
             $_SESSION['_flash']['success'] = $moduleConfig[$moduleSlug]['label'] . ' attivato con successo!';
+
+            // Ritorno alla pagina di partenza (es. piano editoriale): solo percorsi interni, mai URL esterni
+            $returnTo = trim((string) ($_POST['return_to'] ?? ''));
+            if ($returnTo !== '' && $returnTo[0] === '/' && !str_starts_with($returnTo, '//') && !str_contains($returnTo, '\\') && !preg_match('/[\r\n]/', $returnTo)) {
+                Router::redirect($returnTo);
+                return;
+            }
+
             $routePrefix = $moduleConfig[$moduleSlug]['route_prefix'];
             $routeUrl = $routePrefix . '/' . $moduleProjectId;
             if (!empty($moduleConfig[$moduleSlug]['type_in_route']) && !empty($type)) {
