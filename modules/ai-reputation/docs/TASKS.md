@@ -15,6 +15,10 @@ licenze 7, contatti 3, rimborsi 3) + 3 articoli sul sito di Stabia, nessuna rimo
 **Diagnosi tecnica (ADR-016) fatta e online la sera stessa:** scheda "Controllo tecnico" (gratis) + diagnosi a fine run;
 su Stabia: crawler tutti ok, P.IVA/ragione sociale/via assenti ovunque, 2 telefoni → il clarify del run 1 ora dice la
 causa di ogni dubbio e la scheda parte dal LocalBusiness esistente. Riquadro "Chi stai monitorando?" e nome senza "(test)".
+**Audit d'acquisto (ADR-017) online:** tipo di audit per progetto (Acquisto / Reputazione / Entrambi); su Stabia
+generate 30 domande d'acquisto (22 di bisogno senza nome, 8 in inglese, 8 col nome) — non ancora lanciate: Stabia è
+ancora su "Reputazione"; per provarlo: Overview → "Acquisto" → Avvia run (~60 risposte, 60 crediti, ~2,5 $).
+Conferme del modulo con la finestra dell'app.
 **Prossimo passo (deciso):** verifica "prima/dopo": rilanciare solo le domande coperte da un intervento e mostrare il
 confronto (es. dubbi su dati societari 8 → 0). Poi i punti -2 (domande d'acquisto) e -1.
 **Vecchio prossimo passo:** Clemente legge il report di Stabia (`https://ainstein.it/ai-reputation/project/1/runs/1`) e il PDF;
@@ -45,7 +49,7 @@ Produzione dal 2026-10-07 su Contabo VPS `184.174.32.213` (Hetzner perso: accoun
 Già fatto: guida "Come si usa" in 4 passi nell'Overview (commit 1e9804d).
 
 ## Dopo (in ordine)
--2. **Segnalato da Clemente (2026-10-13), dopo la messa online:** mancano domande "di percorso" come "come fare un tour in
+-2. **FATTO la sera stessa (ADR-017: audit d'acquisto) — Segnalato da Clemente (2026-10-13):** mancano domande "di percorso" come "come fare un tour in
    barca privata per Capri da Castellammare" (o da Sorrento): domande d'acquisto con luogo di partenza e destinazione, quelle
    che i clienti fanno davvero alle AI. Capire perché il generatore di domande (`PromptEngineService`) non le produce e
    correggerlo. Causa trovata: il prompt di `PromptEngineService` è pensato per la reputazione di una persona (30% rep,
