@@ -177,6 +177,8 @@ class RunController
         $sendEvent = function (string $event, array $data) {
             echo "event: {$event}\n";
             echo "data: " . json_encode($data, JSON_UNESCAPED_UNICODE) . "\n\n";
+            // Commento SSE da 8 KB: Apache + proxy_fcgi trattiene gli eventi piccoli (la pagina restava a 0)
+            echo ':' . str_repeat(' ', 8192) . "\n\n";
             if (ob_get_level()) ob_flush();
             flush();
         };
