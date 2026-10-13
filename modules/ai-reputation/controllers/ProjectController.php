@@ -26,7 +26,7 @@ class ProjectController
         $projects = $this->project->allWithStats($user['id']);
 
         return View::render('ai-reputation::projects/index', [
-            'title' => 'AI Reputation Radar',
+            'title' => 'GEO Audit',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'projects' => $projects,

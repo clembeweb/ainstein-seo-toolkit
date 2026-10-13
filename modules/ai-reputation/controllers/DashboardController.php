@@ -54,7 +54,7 @@ class DashboardController
         $lastCompletedRun = array_values(array_filter($runs, fn($r) => $r['status'] === 'completed'))[0] ?? null;
 
         return View::render('ai-reputation::dashboard/index', [
-            'title' => $project['name'] . ' - AI Reputation Radar',
+            'title' => $project['name'] . ' - GEO Audit',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,

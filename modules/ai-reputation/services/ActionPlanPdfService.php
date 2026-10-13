@@ -57,7 +57,7 @@ class ActionPlanPdfService
         ]);
         $mpdf->SetTitle('Piano interventi - ' . $project['subject_name']);
         $mpdf->SetAuthor('Ainstein');
-        $mpdf->SetHTMLFooter('<div style="font-size:8.5pt;color:#64748b;text-align:center;border-top:0.5pt solid #e2e8f0;padding-top:4pt;">Ainstein · AI Reputation Radar · pagina {PAGENO} di {nbpg}</div>');
+        $mpdf->SetHTMLFooter('<div style="font-size:8.5pt;color:#64748b;text-align:center;border-top:0.5pt solid #e2e8f0;padding-top:4pt;">Ainstein · GEO Audit · pagina {PAGENO} di {nbpg}</div>');
         $mpdf->WriteHTML($this->html($project, $run, $actions, $metrics));
         return $mpdf->Output('', Destination::STRING_RETURN);
     }

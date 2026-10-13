@@ -213,7 +213,7 @@ $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
                                     </button>
                                 </div>
                                 <p class="mt-1 text-xs text-slate-500">
-                                    Usata per la generazione immagini in Content Creator e come engine in AI Reputation Radar.
+                                    Usata per la generazione immagini in Content Creator e come engine in GEO Audit.
                                     <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-purple-600 dark:text-purple-400 hover:underline">Ottieni API Key</a>
                                 </p>
                             </div>
@@ -235,7 +235,7 @@ $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
                                     </button>
                                 </div>
                                 <p class="mt-1 text-xs text-slate-500">
-                                    Usata come engine (Sonar) in AI Reputation Radar.
+                                    Usata come engine (Sonar) in GEO Audit.
                                     <a href="https://www.perplexity.ai/settings/api" target="_blank" class="text-purple-600 dark:text-purple-400 hover:underline">Ottieni API Key</a>
                                 </p>
                             </div>
