@@ -268,3 +268,13 @@ contro i ~20 stimati, e il report mostrava il costo API all'utente (vietato, reg
 
 **Consequences**: run nuovi e vecchi non hanno gli stessi campi (i vecchi giudizi non hanno `doubts`: si rifanno con
 `scripts/rejudge.php`). Test offline `scripts/test-clarify.php`.
+
+**Addendum (stesso giorno) — modello del judge**: misurato sul run 1 di Stabia (97 risposte, `scripts/rejudge.php 1 all --dry`)
+contro i giudizi salvati di Opus 5.5: Haiku 5.5 low → negativa sì/no 95/97, 0,002 $ a risposta, ma dubbi rumorosi
+(giubbotti per bambini, pagina B2B); **Sonnet 5.5 low → negativa sì/no 97/97, citato 97/97, 0,016 $ a risposta**,
+dubbi concreti; Opus 5.5 col prompt nuovo ~0,07 $ a risposta. Il verdetto fine (neutro/positivo) cambia in 19 casi su
+97 con entrambi: è il confine più soggettivo e non pesa sul rischio. Scelta: **judge su Sonnet 5.5, effort low**
+(`judge_model`, `judge_effort`, impostati in produzione). Costo di un run ≈ 0,03 $ raccolta + 0,016 $ judge a risposta:
+con 1 credito a risposta resta margine anche sul piano Agency. Il run 1 è stato rigiudicato con Sonnet; i run vecchi
+(Marcaccini, in locale) restano su Opus. I dubbi si raggruppano per tema (`DOUBT_THEMES`: dati societari, recensioni,
+pagamenti, licenze/sicurezza, contatti) e si ordinano per numero di risposte.

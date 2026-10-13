@@ -1,9 +1,21 @@
 # TASKS — AI Reputation Radar
 
 > Stato del lavoro. Aggiornare a ogni sessione: fatto, in corso, prossimo passo.
-> Ultimo aggiornamento: 2026-10-13 (GEO Audit: rinomina, prima prova online su Stabia Boat Rental)
+> Ultimo aggiornamento: 2026-10-13 pomeriggio (GEO Audit: dubbi delle AI, prezzo unico, judge Sonnet)
 
 ## Dove siamo
+**2026-10-13 pomeriggio — GEO Audit rifatto dopo la prova su Stabia (ADR-015), online.** Judge con "dubbi delle AI"
+(regola 6b) separati dalle fonti negative; nuovo intervento `clarify` in cima al piano con scheda "testi pronti +
+JSON-LD + checklist"; aziende: contenuti sul sito proprio; prezzo unico 1 credito/risposta (judge senza addebito a
+parte), Rianalizza 0,5/risposta, stima e conferma prima di "Avvia run"; crediti al posto del costo API (admin vede
+il $). Judge in produzione su **Sonnet 5.5 effort low** (`judge_model`/`judge_effort`): negativa sì/no 97/97 contro
+Opus, 0,016 $ a risposta. Run 1 di Stabia rigiudicato e piano rifatto: 1 clarify (recensioni 16, dati societari 8,
+licenze 7, contatti 3, rimborsi 3) + 3 articoli sul sito di Stabia, nessuna rimozione; scheda clarify generata
+(azione 8) e PDF ok. Strumenti: `scripts/rejudge.php` (prove e confronto col giudizio salvato), `scripts/test-clarify.php`.
+**Prossimo passo:** Clemente legge il report di Stabia (`https://ainstein.it/ai-reputation/project/1/runs/1`) e il PDF;
+poi la modalità "controllo tecnico GEO" (punto -1 sotto) e, prima del lancio, la valutazione del Recap SEO GA4+GSC
+(in `docs/LANCIO-LINKEDIN.md`).
+
 **2026-10-13 — Rinominato "GEO Audit"** (nome visibile: menu, titoli, scheda progetto, notifica, PDF, admin; slug/route/tabelle invariati `ai-reputation`/`ar_`; nome DB del modulo cambiato da Admin). **Prima prova online** su ainstein.it: progetto globale 17 "Stabia Boat Rental (test)" → ar_project 1 (azienda, Castellammare di Stabia, sito stabiaboatrental.com), profilo 20 righe dal solo sito ufficiale (manca la key Perplexity in produzione: Gemini c'è e risponde), 40 domande generate dall'AI, run 1 da 104 risposte (ChatGPT + Gemini; Perplexity saltato). Aggiunti: bottone "Conferma tutte" nel profilo (omonimi esclusi), padding SSE nel run (la pagina restava a 0 risposte: Apache tratteneva gli eventi), guida "Come si usa" aggiornata.
 Note dalla prova: alla creazione il soggetto eredita il nome del progetto globale ("(test)" compreso) e il tipo "Persona" anche per un'azienda: si corregge in Impostazioni, va reso più evidente; "Avvia run" parte senza mostrare quante risposte e quanti crediti.
 
