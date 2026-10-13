@@ -46,7 +46,7 @@
         "costs": {
             "label": "Costi Operazioni",
             "icon": "currency-euro",
-            "description": "Crediti per ogni risposta raccolta. Judge, onboarding e prompt engine pagano i crediti AI standard (ai_analysis_*).",
+            "description": "Prezzo unico per risposta raccolta e analizzata (il judge non addebita a parte), rianalisi e schede operative. Onboarding e generazione domande pagano i crediti AI standard.",
             "order": 99,
             "collapsed": true
         }

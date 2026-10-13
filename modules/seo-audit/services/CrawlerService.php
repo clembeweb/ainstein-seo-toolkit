@@ -730,18 +730,28 @@ class CrawlerService
     private function extractSchemaTypes(string $html): array
     {
         $types = [];
+        // "@type" può essere una stringa o un elenco (es. ["Organization","LocalBusiness"]): si appiattisce,
+        // altrimenti array_unique sotto produce "Array to string conversion" (log di produzione 2026-10-13)
+        $add = function ($t) use (&$types): void {
+            foreach ((array) $t as $x) {
+                if (is_string($x) && $x !== '') {
+                    $types[] = $x;
+                }
+            }
+        };
 
         // JSON-LD
         preg_match_all('/<script[^>]+type=["\']application\/ld\+json["\'][^>]*>(.*?)<\/script>/is', $html, $jsonLdMatches);
         foreach ($jsonLdMatches[1] as $jsonLd) {
             $decoded = json_decode($jsonLd, true);
-            if (isset($decoded['@type'])) {
-                $types[] = $decoded['@type'];
-            } elseif (isset($decoded['@graph'])) {
-                foreach ($decoded['@graph'] as $item) {
-                    if (isset($item['@type'])) {
-                        $types[] = $item['@type'];
-                    }
+            if (!is_array($decoded)) {
+                continue;
+            }
+            // Un singolo nodo, un @graph, oppure un elenco di nodi
+            $nodes = isset($decoded['@type']) ? [$decoded] : (isset($decoded['@graph']) && is_array($decoded['@graph']) ? $decoded['@graph'] : (array_is_list($decoded) ? $decoded : []));
+            foreach ($nodes as $item) {
+                if (is_array($item) && isset($item['@type'])) {
+                    $add($item['@type']);
                 }
             }
         }
