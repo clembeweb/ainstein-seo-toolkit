@@ -41,6 +41,10 @@
         "page_analysis": {
             "cost": 3,
             "description": "Analisi SEO pagina con competitor (Standard)"
+        },
+        "situation_report": {
+            "cost": 5,
+            "description": "Punto della situazione: GA4 + Search Console commentati dall'AI"
         }
     },
     "settings_groups": {
@@ -297,6 +301,16 @@
             "label": "Rilevamento Anomalie",
             "description": "Crediti per rilevamento anomalie AI (Standard)",
             "default": 3,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        },
+        "cost_situation_report": {
+            "type": "number",
+            "label": "Punto della situazione",
+            "description": "Crediti per un punto della situazione (GA4 + Search Console + commento AI)",
+            "default": 5,
             "min": 0,
             "step": 0.1,
             "admin_only": true,

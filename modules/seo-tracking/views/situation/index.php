@@ -1,0 +1,263 @@
+<?php
+$currentPage = 'situation';
+$pid = (int) $project['id'];
+$base = "/seo-tracking/project/{$pid}";
+$canEdit = ($project['access_role'] ?? 'owner') !== 'viewer';
+$fmtCr = fn(float $v) => rtrim(rtrim(number_format($v, 1, ',', '.'), '0'), ',') . ' credit' . ($v == 1 ? 'o' : 'i');
+$num = fn($v, int $dec = 0) => $v === null ? '–' : number_format((float) $v, $dec, ',', '.');
+$money = fn($v) => $v === null ? '–' : '€ ' . number_format((float) $v, 0, ',', '.');
+// Badge variazione: verde se sale, rosso se scende (per la posizione media è il contrario: più bassa = meglio)
+$delta = function ($pct, bool $inverse = false, string $label = 'vs prima'): string {
+    if ($pct === null) {
+        return '<span class="text-xs text-slate-400">' . e($label) . ' –</span>';
+    }
+    $good = $inverse ? $pct < 0 : $pct > 0;
+    $cls = $pct == 0 ? 'text-slate-500' : ($good ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400');
+    return '<span class="text-xs font-medium ' . $cls . '">' . ($pct > 0 ? '+' : '') . number_format((float) $pct, 1, ',', '.') . '% <span class="font-normal text-slate-400">' . e($label) . '</span></span>';
+};
+$d = $report['data'] ?? [];
+// Nomi dei canali GA4 in italiano semplice
+$channelName = fn(string $n) => [
+    'Organic Search' => 'Google e motori di ricerca', 'Direct' => 'Diretto (scrivono l\'indirizzo)', 'Organic Social' => 'Social',
+    'Paid Search' => 'Annunci sui motori', 'Paid Social' => 'Social a pagamento', 'Referral' => 'Altri siti (link)', 'Email' => 'Email',
+    'Organic Shopping' => 'Shopping gratuito', 'Paid Shopping' => 'Shopping a pagamento', 'Organic Video' => 'Video', 'Paid Video' => 'Video a pagamento',
+    'Display' => 'Banner (display)', 'Cross-network' => 'Campagne Google (più reti)', 'Unassigned' => 'Non classificato', 'Affiliates' => 'Affiliati', 'SMS' => 'SMS',
+][$n] ?? $n;
+$ga4 = $d['ga4'] ?? null;
+$gsc = $d['gsc'] ?? null;
+$kpiCard = function (string $ref, string $label, string $value, string $sub) {
+    return '<div data-kpi="' . $ref . '" class="kpi-card bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 transition-shadow">'
+        . '<p class="text-sm text-slate-500 dark:text-slate-400">' . e($label) . '</p>'
+        . '<p class="text-2xl font-bold text-slate-900 dark:text-white">' . $value . '</p>'
+        . '<div class="mt-1 flex flex-wrap gap-x-3">' . $sub . '</div></div>';
+};
+?>
+<div class="space-y-6" x-data="situationApp()">
+    <?php include __DIR__ . '/../partials/project-nav.php'; ?>
+
+    <!-- Intro + collegamenti -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-5">
+            <h2 class="text-lg font-semibold text-blue-900 dark:text-blue-100">Il punto della situazione del tuo sito</h2>
+            <p class="mt-1 text-sm text-blue-800 dark:text-blue-200">
+                Leggo Google Analytics e Search Console, confronto il periodo con quello precedente e con l'anno prima, e l'AI ti spiega
+                in parole semplici da dove arriva il traffico, cosa cresce, cosa cala, le criticità e le 3 cose da fare adesso.
+            </p>
+            <?php if ($canEdit): ?>
+            <form class="mt-4 flex flex-wrap items-center gap-3" @submit.prevent="generate($event)">
+                <select name="period" class="rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm py-2">
+                    <?php foreach ($periods as $k => $label): ?>
+                    <option value="<?= e($k) ?>"><?= e($label) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="submit" :disabled="loading" class="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-60 transition-colors">
+                    <svg x-show="loading" class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
+                    <span x-text="loading ? 'Leggo i dati e scrivo il commento…' : 'Fai il punto'"></span>
+                </button>
+                <span class="text-xs text-blue-700 dark:text-blue-300"><?= $fmtCr($cost) ?> · ne hai <?= $num($balance, 1) ?></span>
+            </form>
+            <p x-show="error" x-cloak x-text="error" class="mt-3 text-sm text-red-600 dark:text-red-400"></p>
+            <?php endif; ?>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
+            <div>
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Google Analytics 4</p>
+                <?php if (!empty($ga4Conn['property_id'])): ?>
+                <p class="mt-1 text-sm text-slate-900 dark:text-white">Collegato: <?= e($ga4Conn['property_name'] ?: $ga4Conn['property_id']) ?></p>
+                <?php if ($canEdit): ?>
+                <form method="POST" action="<?= url("{$base}/ga4/disconnect") ?>" data-confirm="Scollegare Google Analytics da questo progetto?" data-confirm-button="Scollega" data-confirm-destructive="1" class="mt-1">
+                    <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
+                    <button type="submit" class="text-xs text-slate-500 hover:text-red-600">Scollega</button>
+                </form>
+                <?php endif; ?>
+                <?php elseif (!empty($ga4Conn)): ?>
+                <a href="<?= url("{$base}/ga4/select-property") ?>" class="mt-1 inline-block text-sm text-blue-600 dark:text-blue-400 hover:underline">Scegli la proprietà</a>
+                <?php elseif ($canEdit && $googleConfigured): ?>
+                <a href="<?= url("{$base}/ga4/connect") ?>" class="mt-2 inline-flex items-center px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700">Collega Google Analytics</a>
+                <?php else: ?>
+                <p class="mt-1 text-sm text-slate-500">Non collegato</p>
+                <?php endif; ?>
+            </div>
+            <div>
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Search Console</p>
+                <?php if (!empty($gscConn['property_url'])): ?>
+                <p class="mt-1 text-sm text-slate-900 dark:text-white break-all">Collegata: <?= e($gscConn['property_url']) ?></p>
+                <?php else: ?>
+                <a href="<?= url("{$base}/settings") ?>" class="mt-1 inline-block text-sm text-blue-600 dark:text-blue-400 hover:underline">Collegala dalle impostazioni del progetto</a>
+                <?php endif; ?>
+            </div>
+            <p class="text-xs text-slate-400">Basta una delle due: con entrambe il punto è completo.</p>
+        </div>
+    </div>
+
+    <?php if (!$report): ?>
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-10 text-center text-sm text-slate-500 dark:text-slate-400">
+        Ancora nessun punto della situazione. Collega almeno una fonte, scegli il periodo e clicca "Fai il punto".
+    </div>
+    <?php else: ?>
+
+    <!-- Testata del report -->
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">
+            <?= e($d['period']['label'] ?? '') ?> · dal <?= date('d/m/Y', strtotime($d['period']['b'][0])) ?> al <?= date('d/m/Y', strtotime($d['period']['b'][1])) ?>
+        </h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+            Confronto con <?= date('d/m', strtotime($d['period']['a'][0])) ?>–<?= date('d/m/Y', strtotime($d['period']['a'][1])) ?> ("vs prima") e con lo stesso periodo dell'anno scorso ("vs anno") · fatto il <?= date('d/m/Y H:i', strtotime($report['created_at'])) ?>
+        </p>
+    </div>
+
+    <!-- Commento AI -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 space-y-5">
+        <?php foreach ($report['narrative'] as $par): ?>
+        <div class="rounded-lg -mx-2 px-2 py-1 hover:bg-blue-50/60 dark:hover:bg-blue-900/10 transition-colors"
+             @mouseenter="highlight(<?= e(json_encode($par['refs'] ?? [])) ?>)" @mouseleave="highlight([])">
+            <h3 class="font-semibold text-slate-900 dark:text-white"><?= e($par['titolo']) ?></h3>
+            <p class="mt-1 text-sm text-slate-700 dark:text-slate-300 leading-relaxed"><?= nl2br(e($par['testo'])) ?></p>
+        </div>
+        <?php endforeach; ?>
+        <?php if (!empty($d['caveats'])): ?>
+        <div class="text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded-lg px-3 py-2">
+            <?php foreach ($d['caveats'] as $c): ?><p><?= e($c) ?></p><?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Numeri -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <?php if ($ga4): $t = $ga4['totals']; ?>
+        <?= $kpiCard('ga4_sessions', 'Visite (tutto il sito)', $num($t['sessions']['b']), $delta($t['sessions']['vs_prev_pct']) . $delta($t['sessions']['vs_year_pct'], false, 'vs anno')) ?>
+        <?= $kpiCard('ga4_key_events', 'Conversioni', $num($t['key_events']['b']), $delta($t['key_events']['vs_prev_pct']) . $delta($t['key_events']['vs_year_pct'], false, 'vs anno')) ?>
+        <?php if (!empty($ga4['has_revenue'])): ?>
+        <?= $kpiCard('ga4_revenue', 'Ricavi', $money($t['revenue']['b']), $delta($t['revenue']['vs_prev_pct']) . $delta($t['revenue']['vs_year_pct'], false, 'vs anno')) ?>
+        <?php endif; ?>
+        <?php endif; ?>
+        <?php if ($gsc): $g = $gsc['totals']; ?>
+        <?= $kpiCard('gsc_clicks', 'Clic da Google', $num($g['clicks']['b']), $delta($g['clicks']['vs_prev_pct']) . $delta($g['clicks']['vs_year_pct'], false, 'vs anno')) ?>
+        <?= $kpiCard('gsc_impressions', 'Volte che compari su Google', $num($g['impressions']['b']), $delta($g['impressions']['vs_prev_pct']) . $delta($g['impressions']['vs_year_pct'], false, 'vs anno')) ?>
+        <?= $kpiCard('gsc_position', 'Posizione media', $num($g['position']['b'], 1), '<span class="text-xs text-slate-400">prima ' . $num($g['position']['a'], 1) . ' · anno scorso ' . $num($g['position']['y'], 1) . '</span>') ?>
+        <?= $kpiCard('gsc_brand', 'Clic che cercano il tuo nome', $gsc['brand']['quota_b_pct'] === null ? '–' : $num($gsc['brand']['quota_b_pct'], 1) . '%', '<span class="text-xs text-slate-400">prima ' . ($gsc['brand']['quota_a_pct'] === null ? '–' : $num($gsc['brand']['quota_a_pct'], 1) . '%') . '</span>') ?>
+        <?php endif; ?>
+    </div>
+
+    <?php if ($ga4 && !empty($ga4['channels'])): ?>
+    <!-- Sorgenti di traffico -->
+    <div data-kpi="channels" class="kpi-card bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden transition-shadow">
+        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700"><h3 class="font-semibold text-slate-900 dark:text-white">Da dove arriva il traffico</h3></div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-slate-50 dark:bg-slate-700/50">
+                    <tr>
+                        <?php foreach (['Canale', 'Visite', 'Peso', 'vs prima', 'vs anno', 'Conversioni'] as $h): ?>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= $h ?></th>
+                        <?php endforeach; ?>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                    <?php foreach (array_slice($ga4['channels'], 0, 10) as $c): ?>
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <td class="px-4 py-3 text-sm text-slate-900 dark:text-white"><?= e($channelName($c['name'])) ?></td>
+                        <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300"><?= $num($c['sessions']['b']) ?></td>
+                        <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300"><?= $c['share_b_pct'] === null ? '–' : $num($c['share_b_pct'], 1) . '%' ?></td>
+                        <td class="px-4 py-3"><?= $delta($c['sessions']['vs_prev_pct'], false, '') ?></td>
+                        <td class="px-4 py-3"><?= $delta($c['sessions']['vs_year_pct'], false, '') ?></td>
+                        <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300"><?= $num($c['key_events']['b']) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <?php
+    // Tabelline "chi sale / chi scende"
+    $movers = function (string $ref, string $title, array $gainers, array $losers, string $keyField, string $valB, string $valA, string $unit) use ($num) {
+        ob_start(); ?>
+        <div data-kpi="<?= $ref ?>" class="kpi-card bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden transition-shadow">
+            <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700"><h3 class="font-semibold text-slate-900 dark:text-white"><?= e($title) ?></h3></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 md:divide-x divide-slate-200 dark:divide-slate-700">
+                <?php foreach ([['Crescono', $gainers, 'text-emerald-600 dark:text-emerald-400'], ['Calano', $losers, 'text-red-600 dark:text-red-400']] as [$lbl, $rows, $cls]): ?>
+                <div>
+                    <p class="px-4 pt-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"><?= $lbl ?></p>
+                    <ul class="divide-y divide-slate-100 dark:divide-slate-700/60">
+                        <?php foreach ($rows as $r): ?>
+                        <li class="px-4 py-2 flex items-center gap-3 text-sm">
+                            <span class="flex-1 min-w-0 truncate text-slate-800 dark:text-slate-200" title="<?= e($r[$keyField]) ?>"><?= e($r[$keyField]) ?></span>
+                            <span class="text-xs text-slate-400 whitespace-nowrap"><?= $num($r[$valA]) ?> → <?= $num($r[$valB]) ?> <?= $unit ?></span>
+                            <span class="text-xs font-medium whitespace-nowrap <?= $cls ?>"><?= ($r['diff'] > 0 ? '+' : '') . $num($r['diff']) ?></span>
+                        </li>
+                        <?php endforeach; ?>
+                        <?php if (!$rows): ?><li class="px-4 py-2 text-sm text-slate-400">Nessuna</li><?php endif; ?>
+                    </ul>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php return (string) ob_get_clean();
+    };
+    ?>
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <?php if ($gsc): ?>
+        <?= $movers('gsc_queries', 'Ricerche su Google (clic)', $gsc['queries']['gainers'], $gsc['queries']['losers'], 'key', 'clicks_b', 'clicks_a', 'clic') ?>
+        <?= $movers('gsc_pages', 'Pagine su Google (clic)', $gsc['pages']['gainers'], $gsc['pages']['losers'], 'key', 'clicks_b', 'clicks_a', 'clic') ?>
+        <?php endif; ?>
+        <?php if ($ga4): ?>
+        <?= $movers('organic_pages', 'Pagine di arrivo da Google (visite)', $ga4['organic_pages']['gainers'], $ga4['organic_pages']['losers'], 'page', 'sessions_b', 'sessions_a', 'visite') ?>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
+
+    <?php if (count($reports) > 1 || ($reports && !$report)): ?>
+    <!-- Storico -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700"><h3 class="font-semibold text-slate-900 dark:text-white">Punti precedenti</h3></div>
+        <ul class="divide-y divide-slate-100 dark:divide-slate-700/60">
+            <?php foreach ($reports as $r): ?>
+            <li class="px-4 py-2.5 flex items-center justify-between text-sm <?= $report && (int) $report['id'] === (int) $r['id'] ? 'bg-blue-50/60 dark:bg-blue-900/10' : '' ?>">
+                <a href="<?= url("{$base}/situation?report={$r['id']}") ?>" class="text-blue-600 dark:text-blue-400 hover:underline">
+                    <?= e($periods[$r['period_key']] ?? $r['period_key']) ?> · <?= date('d/m/Y', strtotime($r['b_start'])) ?>–<?= date('d/m/Y', strtotime($r['b_end'])) ?>
+                </a>
+                <span class="text-xs text-slate-400"><?= date('d/m/Y H:i', strtotime($r['created_at'])) ?></span>
+            </li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+    <?php endif; ?>
+</div>
+
+<style>.kpi-card.kpi-on { box-shadow: 0 0 0 2px rgb(59 130 246); }</style>
+<script>
+function situationApp() {
+    return {
+        loading: false,
+        error: '',
+        highlight(refs) {
+            document.querySelectorAll('.kpi-card').forEach(el => el.classList.toggle('kpi-on', refs.includes(el.dataset.kpi)));
+        },
+        async generate(ev) {
+            const form = ev.target;
+            const label = form.period.options[form.period.selectedIndex].text;
+            const ok = await window.ainstein.ask(`Faccio il punto della situazione (${label}): <?= e($fmtCr($cost)) ?>.`, { buttonText: 'Fai il punto' });
+            if (!ok) return;
+            this.loading = true;
+            this.error = '';
+            try {
+                const body = new FormData();
+                body.append('_csrf_token', '<?= csrf_token() ?>');
+                body.append('period', form.period.value);
+                const resp = await fetch('<?= url("{$base}/situation/generate") ?>', { method: 'POST', body });
+                let data = null;
+                try { data = await resp.json(); } catch (e) { data = null; }
+                if (!resp.ok || !data || !data.success) {
+                    throw new Error((data && data.message) || `Errore server (${resp.status})`);
+                }
+                window.location.href = '<?= url("{$base}/situation") ?>?report=' + data.report_id;
+            } catch (e) {
+                this.error = e.message;
+                this.loading = false;
+            }
+        },
+    };
+}
+</script>

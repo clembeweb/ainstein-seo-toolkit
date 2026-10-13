@@ -19,6 +19,7 @@ use Modules\SeoTracking\Controllers\GscController;
 use Modules\SeoTracking\Controllers\AlertController;
 use Modules\SeoTracking\Controllers\ReportController;
 use Modules\SeoTracking\Controllers\AiController;
+use Modules\SeoTracking\Controllers\SituationController;
 use Modules\SeoTracking\Controllers\ExportController;
 use Modules\SeoTracking\Controllers\ApiController;
 use Modules\SeoTracking\Controllers\CompareController;
@@ -138,6 +139,50 @@ Router::post('/seo-tracking/project/{id}/gsc/disconnect', function ($id) {
     Middleware::auth();
     Middleware::csrf();
     return (new GscController())->disconnect((int) $id);
+});
+
+// =============================================
+// PUNTO DELLA SITUAZIONE (GA4 + Search Console + AI)
+// Spec: docs/specs/seo-tracking-punto-situazione.md
+// =============================================
+
+Router::get('/seo-tracking/project/{id}/situation', function ($id) {
+    Middleware::auth();
+    return (new SituationController())->index((int) $id);
+});
+
+Router::post('/seo-tracking/project/{id}/situation/generate', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new SituationController())->generate((int) $id);
+});
+
+Router::get('/seo-tracking/project/{id}/ga4/connect', function ($id) {
+    Middleware::auth();
+    return (new SituationController())->ga4Connect((int) $id);
+});
+
+// Ritorno dal callback OAuth centralizzato (/oauth/google/callback, type=ga4)
+Router::get('/seo-tracking/ga4/connected', function () {
+    Middleware::auth();
+    return (new SituationController())->ga4Connected();
+});
+
+Router::get('/seo-tracking/project/{id}/ga4/select-property', function ($id) {
+    Middleware::auth();
+    return (new SituationController())->ga4SelectProperty((int) $id);
+});
+
+Router::post('/seo-tracking/project/{id}/ga4/select-property', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new SituationController())->ga4SaveProperty((int) $id);
+});
+
+Router::post('/seo-tracking/project/{id}/ga4/disconnect', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new SituationController())->ga4Disconnect((int) $id);
 });
 
 // =============================================
