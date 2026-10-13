@@ -45,6 +45,13 @@ Già fatto: guida "Come si usa" in 4 passi nell'Overview (commit 1e9804d).
    ClaudeBot, PerplexityBot, Google-Extended), sitemap, pagine leggibili senza JavaScript, pagina Chi siamo/Contatti con dati
    societari. Probabilmente gratis o quasi (è crawl, niente AI): porta d'ingresso al GEO Audit a pagamento. Verificare online
    cosa fanno i concorrenti prima di costruire.
+   **Verifica online fatta (2026-10-13):** il controllo tecnico da solo è merce comune (attori Apify "GEO audit" con
+   punteggio 0-100, estensione Chrome GEO Checker, toolkit open source Auriti geo-optimizer). llms.txt: quasi nessun crawler
+   AI lo legge (Google dice che non serve): va controllato ma con peso basso e detto onestamente. Limite dichiarato dei
+   concorrenti: leggono robots.txt ma non provano a entrare come GPTBot, quindi non vedono i blocchi di CDN/firewall
+   (Cloudflare, SiteGround). Nostri punti diversi: (1) richieste vere con lo user-agent di ogni crawler AI (blocco reale,
+   non solo robots.txt); (2) dati strutturati confrontati col profilo confermato e coi dubbi del run (P.IVA, indirizzo,
+   telefono); (3) collegato al piano e alla scheda "clarify"; (4) gratis, in italiano.
 0. Fase C: PDF per il cliente finale (sintesi, meno dettaglio operativo), stesso motore `ActionPlanPdfService`.
 1. Decidere se accendere Claude come quarto engine per la demo (~4 $ e ~50 min a run).
 2. Domanda aperta a Clemente: Andrea Marcaccini che rapporto ha con Federico? (se coinvolto nelle stesse
