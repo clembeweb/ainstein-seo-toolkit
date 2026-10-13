@@ -278,7 +278,7 @@
             <svg class="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            Il crawling costa 1 credito per pagina analizzata. L'analisi via WordPress e gratuita. Il Piano d'Azione AI costa 10 crediti per generazione. Tutte le altre funzionalita (dashboard, issues, link, storico, export) sono gratuite.
+            <?php $_saCrawl = (float) \Core\Credits::getCost('crawl_per_page', 'seo-audit', 0.1); ?><?= $_saCrawl > 0 ? 'La scansione costa ' . rtrim(rtrim(number_format($_saCrawl, 1, ',', ''), '0'), ',') . ' crediti per pagina analizzata.' : 'La scansione delle pagine è gratis.' ?> L'analisi via WordPress e gratuita. Il Piano d'Azione AI costa 10 crediti per generazione. Tutte le altre funzionalita (dashboard, issues, link, storico, export) sono gratuite.
         </p>
     </section>
 

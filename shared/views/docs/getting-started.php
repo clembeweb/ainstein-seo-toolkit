@@ -7,11 +7,12 @@
     <span class="text-slate-900 dark:text-white font-medium">Primi Passi</span>
 </nav>
 
+<?php $_gsBonus = \Core\Credits::signupBonus(); ?>
 <!-- Header -->
 <div class="mb-10">
     <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-4">Primi Passi con Ainstein</h1>
     <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
-        Ainstein è una piattaforma SEO completa potenziata dall'intelligenza artificiale. Grazie ai suoi 7 moduli integrati, puoi analizzare, monitorare e ottimizzare ogni aspetto della tua strategia SEO, dalla ricerca keyword alla generazione di contenuti, dall'audit tecnico al tracciamento delle posizioni.
+        Ainstein ti aiuta a farti trovare su Google e nelle risposte delle AI come ChatGPT e Gemini. Ha 5 moduli: scrivere articoli, trovare le parole che cercano i clienti, controllare il sito, seguire le posizioni su Google e vedere cosa dicono le AI della tua attività. Non serve essere esperti di SEO: ogni modulo ti guida passo per passo.
     </p>
 </div>
 
@@ -25,7 +26,7 @@
     </div>
     <div class="ml-14">
         <p class="text-slate-600 dark:text-slate-400 mb-4">
-            Per iniziare a usare Ainstein, registra il tuo account gratuito. Riceverai immediatamente <strong class="text-slate-900 dark:text-white">30 crediti omaggio</strong> per esplorare tutte le funzionalità della piattaforma.
+            La registrazione è gratuita e non chiede la carta di credito. All'iscrizione ricevi <strong class="text-slate-900 dark:text-white"><?= $_gsBonus ?> crediti in regalo</strong>, una volta sola, per provare i moduli.
         </p>
         <div class="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl p-5">
             <div class="flex items-start gap-3">
@@ -35,7 +36,7 @@
                 <div>
                     <p class="text-sm font-medium text-primary-800 dark:text-primary-300 mb-1">Registrazione rapida</p>
                     <p class="text-sm text-primary-700 dark:text-primary-400">
-                        Vai alla pagina <a href="<?= url('/register') ?>" class="underline font-medium hover:text-primary-900 dark:hover:text-primary-200">Registrazione</a>, inserisci il tuo nome, email e password. La verifica è immediata e potrai iniziare a lavorare subito.
+                        Vai alla pagina <a href="<?= url('/register') ?>" class="underline font-medium hover:text-primary-900 dark:hover:text-primary-200">Registrazione</a> e inserisci nome, email e password. Puoi iniziare a lavorare subito.
                     </p>
                 </div>
             </div>
@@ -53,102 +54,38 @@
     </div>
     <div class="ml-14">
         <p class="text-slate-600 dark:text-slate-400 mb-6">
-            Ainstein offre 7 moduli specializzati, ognuno progettato per un aspetto diverso della SEO. Puoi usarli singolarmente o combinarli per una strategia completa.
+            Ainstein ha 5 moduli. Ognuno fa una cosa precisa. Puoi usarne uno solo o combinarli.
         </p>
 
+        <?php
+        $_gsModules = [
+            ['ai-content', 'AI Writer', 'Scrive articoli per il blog partendo da una parola chiave: guarda cosa c\'è già su Google, prepara una scaletta e scrive il testo. Fa anche title e description delle pagine.', 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'],
+            ['keyword-research', 'AI Keywords', 'Trova le parole che i clienti scrivono su Google, le raggruppa per argomento e ti aiuta a decidere quali pagine e articoli creare.', 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'],
+            ['seo-audit', 'AI Audit', 'Controlla il sito pagina per pagina e trova i problemi tecnici (titoli mancanti, link rotti, pagine lente). Ti dice cosa sistemare prima.', 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
+            ['seo-tracking', 'AI Rank', 'Segue nel tempo la posizione delle tue parole chiave su Google e legge i dati di Google Search Console.', 'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z'],
+            ['ai-reputation', 'AI GEO Audit', 'Fa a ChatGPT e Gemini le domande dei tuoi clienti e ti mostra se consigliano te o i concorrenti, quali siti usano come fonte e cosa fare per farti citare.', 'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z'],
+        ];
+        ?>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <!-- AI Writer -->
-            <a href="<?= url('/docs/ai-content') ?>" class="group flex items-start gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
+            <?php foreach ($_gsModules as [$_slug, $_name, $_desc, $_icon]): ?>
+            <a href="<?= url('/docs/' . $_slug) ?>" class="group flex items-start gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
                 <div class="shrink-0 w-10 h-10 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
                     <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $_icon ?>"/>
                     </svg>
                 </div>
                 <div class="min-w-0">
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI Writer</h3>
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Genera articoli SEO completi con analisi SERP, brief strategico e immagini di copertina.</p>
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors"><?= $_name ?></h3>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400"><?= htmlspecialchars($_desc) ?></p>
                 </div>
             </a>
-
-            <!-- AI Audit -->
-            <a href="<?= url('/docs/seo-audit') ?>" class="group flex items-start gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
-                <div class="shrink-0 w-10 h-10 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
-                    <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-                <div class="min-w-0">
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI Audit</h3>
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Analisi tecnica completa con 50+ controlli, punteggio di salute e piano d'azione AI.</p>
-                </div>
-            </a>
-
-            <!-- AI Rank -->
-            <a href="<?= url('/docs/seo-tracking') ?>" class="group flex items-start gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
-                <div class="shrink-0 w-10 h-10 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
-                    <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
-                    </svg>
-                </div>
-                <div class="min-w-0">
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI Rank</h3>
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Monitora posizioni keyword, traffico organico e revenue con integrazione Google Search Console.</p>
-                </div>
-            </a>
-
-            <!-- AI Keywords -->
-            <a href="<?= url('/docs/keyword-research') ?>" class="group flex items-start gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
-                <div class="shrink-0 w-10 h-10 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
-                    <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                </div>
-                <div class="min-w-0">
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI Keywords</h3>
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Ricerca keyword con clustering AI, architettura sito e quick check gratuito.</p>
-                </div>
-            </a>
-
-            <!-- Internal Links -->
-            <a href="<?= url('/docs/internal-links') ?>" class="group flex items-start gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
-                <div class="shrink-0 w-10 h-10 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
-                    <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
-                    </svg>
-                </div>
-                <div class="min-w-0">
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Internal Links</h3>
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Analizza e ottimizza la struttura dei link interni del tuo sito.</p>
-                </div>
-            </a>
-
-            <!-- Google Ads Analyzer -->
-            <a href="<?= url('/docs/ads-analyzer') ?>" class="group flex items-start gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
-                <div class="shrink-0 w-10 h-10 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
-                    <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
-                    </svg>
-                </div>
-                <div class="min-w-0">
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Google Ads Analyzer</h3>
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Analizza le tue campagne Google Ads e identifica keyword negative e ottimizzazioni.</p>
-                </div>
-            </a>
-
-            <!-- Content Creator -->
-            <a href="<?= url('/docs/content-creator') ?>" class="group flex items-start gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
-                <div class="shrink-0 w-10 h-10 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
-                    <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
-                    </svg>
-                </div>
-                <div class="min-w-0">
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Content Creator</h3>
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Genera contenuti HTML completi per pagine prodotto, categorie, servizi e articoli con integrazione CMS.</p>
-                </div>
-            </a>
+            <?php endforeach; ?>
         </div>
+
+        <?php $_gsCrawlGratis = \Core\Credits::getCost('crawl_per_page', 'seo-audit', 0.1) <= 0; ?>
+        <p class="mt-4 text-sm text-slate-600 dark:text-slate-400">
+            Non sai da dove partire? Inizia dall'<strong class="text-slate-900 dark:text-white">AI Audit</strong> (la scansione del sito) e dal <strong class="text-slate-900 dark:text-white">Controllo tecnico</strong> dell'AI GEO Audit: <?= $_gsCrawlGratis ? 'sono gratuiti' : 'il Controllo tecnico è gratuito' ?> e ti dicono subito cosa non va.
+        </p>
     </div>
 </section>
 
@@ -232,7 +169,7 @@
     </div>
     <div class="ml-14">
         <p class="text-slate-600 dark:text-slate-400 mb-4">
-            Ainstein utilizza un sistema a crediti per le operazioni AI. Ogni operazione ha un costo in crediti, che viene sempre mostrato prima dell'esecuzione. Il tuo saldo attuale è visibile nella barra superiore dell'applicazione.
+            Ainstein funziona a crediti. Le operazioni che usano l'AI o servizi esterni costano un certo numero di crediti, e il costo lo vedi prima di partire. Il tuo saldo è sempre in alto, nella barra superiore.
         </p>
         <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-5">
             <div class="flex items-start gap-3">
@@ -240,9 +177,9 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 <div>
-                    <p class="text-sm font-medium text-amber-800 dark:text-amber-300 mb-1">30 crediti omaggio alla registrazione</p>
+                    <p class="text-sm font-medium text-amber-800 dark:text-amber-300 mb-1"><?= $_gsBonus ?> crediti in regalo all'iscrizione</p>
                     <p class="text-sm text-amber-700 dark:text-amber-400">
-                        Alla registrazione ricevi 30 crediti gratuiti, sufficienti per provare tutti i moduli. Per informazioni dettagliate sui costi di ogni operazione, consulta la pagina <a href="<?= url('/docs/credits') ?>" class="underline font-medium hover:text-amber-900 dark:hover:text-amber-200">Sistema Crediti</a>.
+                        I crediti di benvenuto arrivano una volta sola: non c'è un piano gratuito e non c'è una ricarica mensile gratuita. Quando finiscono puoi attivare un piano scrivendo a <a href="mailto:info@ainstein.it" class="underline font-medium hover:text-amber-900 dark:hover:text-amber-200">info@ainstein.it</a>: per ora non c'è il pagamento online, il piano lo attiviamo noi a mano. Costi di ogni operazione e piani sono nella pagina <a href="<?= url('/docs/credits') ?>" class="underline font-medium hover:text-amber-900 dark:hover:text-amber-200">Sistema Crediti</a>.
                     </p>
                 </div>
             </div>
@@ -260,7 +197,7 @@
     </div>
     <div class="ml-14">
         <p class="text-slate-600 dark:text-slate-400 mb-6">
-            Ainstein ti permette di <strong class="text-slate-900 dark:text-white">condividere i tuoi progetti</strong> con altri utenti, ideale per team di lavoro e agenzie che collaborano sui clienti.
+            Puoi <strong class="text-slate-900 dark:text-white">condividere un progetto</strong> con altre persone: un collega, un collaboratore o il tuo cliente.
         </p>
 
         <!-- Ruoli -->
@@ -273,7 +210,7 @@
                     </svg>
                     <span class="font-semibold text-slate-900 dark:text-white">Proprietario</span>
                 </div>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Gestisce tutto: impostazioni, moduli, membri e crediti. E il creatore del progetto.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Gestisce tutto: impostazioni, moduli, membri e crediti. È chi ha creato il progetto.</p>
             </div>
             <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="flex items-center gap-2 mb-2">
@@ -282,7 +219,7 @@
                     </svg>
                     <span class="font-semibold text-slate-900 dark:text-white">Editor</span>
                 </div>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Puo modificare contenuti, lanciare analisi e lavorare sui moduli a cui ha accesso.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Può modificare contenuti, lanciare analisi e lavorare sui moduli a cui ha accesso.</p>
             </div>
             <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="flex items-center gap-2 mb-2">
@@ -292,7 +229,7 @@
                     </svg>
                     <span class="font-semibold text-slate-900 dark:text-white">Visualizzatore</span>
                 </div>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Accesso in sola lettura: puo consultare dati e report senza effettuare modifiche.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Sola lettura: può consultare dati e report, ma non modificare nulla.</p>
             </div>
         </div>
 
@@ -305,15 +242,15 @@
             </div>
             <div class="flex items-start gap-3 p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
                 <div class="shrink-0 w-7 h-7 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-xs font-bold text-primary-600 dark:text-primary-400">2</div>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Inserisci l'<strong class="text-slate-900 dark:text-white">email</strong> dell'utente, scegli il <strong class="text-slate-900 dark:text-white">ruolo</strong> (Editor o Visualizzatore) e seleziona i <strong class="text-slate-900 dark:text-white">moduli</strong> a cui avra accesso.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Inserisci l'<strong class="text-slate-900 dark:text-white">email</strong> dell'utente, scegli il <strong class="text-slate-900 dark:text-white">ruolo</strong> (Editor o Visualizzatore) e seleziona i <strong class="text-slate-900 dark:text-white">moduli</strong> a cui avrà accesso.</p>
             </div>
             <div class="flex items-start gap-3 p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
                 <div class="shrink-0 w-7 h-7 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-xs font-bold text-primary-600 dark:text-primary-400">3</div>
-                <p class="text-sm text-slate-600 dark:text-slate-400">L'utente ricevera una <strong class="text-slate-900 dark:text-white">notifica</strong>: se e gia registrato su Ainstein, la vedra nell'applicazione. Se non e registrato, ricevera un'<strong class="text-slate-900 dark:text-white">email di invito</strong> con un link per accettare.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400">L'utente riceve una <strong class="text-slate-900 dark:text-white">notifica</strong>: se è già registrato su Ainstein, la vede nell'applicazione. Se non è registrato, riceve un'<strong class="text-slate-900 dark:text-white">email di invito</strong> con un link per accettare.</p>
             </div>
             <div class="flex items-start gap-3 p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
                 <div class="shrink-0 w-7 h-7 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-xs font-bold text-primary-600 dark:text-primary-400">4</div>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Dopo l'accettazione, il progetto condiviso apparira nella pagina <strong class="text-slate-900 dark:text-white">Progetti</strong> del collaboratore e nelle <strong class="text-slate-900 dark:text-white">dashboard di ogni modulo</strong> a cui ha accesso, contrassegnato come "condiviso".</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Dopo l'accettazione, il progetto condiviso compare nella pagina <strong class="text-slate-900 dark:text-white">Progetti</strong> del collaboratore e nelle <strong class="text-slate-900 dark:text-white">dashboard di ogni modulo</strong> a cui ha accesso, contrassegnato come "condiviso".</p>
             </div>
         </div>
 
@@ -326,7 +263,7 @@
                 <div>
                     <p class="text-sm font-medium text-primary-800 dark:text-primary-300 mb-1">Informazioni sui crediti</p>
                     <p class="text-sm text-primary-700 dark:text-primary-400">
-                        I crediti per tutte le operazioni (analisi AI, rank check, audit, ecc.) sono <strong>sempre a carico del proprietario</strong> del progetto, indipendentemente da chi le esegue. I collaboratori non consumano i propri crediti quando lavorano su un progetto condiviso.
+                        I crediti di tutte le operazioni sono <strong>sempre a carico del proprietario</strong> del progetto, chiunque le lanci. I collaboratori non usano i propri crediti quando lavorano su un progetto condiviso.
                     </p>
                 </div>
             </div>
@@ -344,7 +281,7 @@
     </div>
     <div class="ml-14">
         <p class="text-slate-600 dark:text-slate-400 mb-6">
-            Hai bisogno di aiuto? Siamo qui per te. Ecco come puoi contattarci o trovare risposte:
+            Hai un dubbio? Ecco dove trovare risposte o come scriverci:
         </p>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -360,14 +297,14 @@
             </a>
 
             <!-- Email -->
-            <a href="mailto:supporto@ainstein.it" class="group p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all text-center">
+            <a href="mailto:info@ainstein.it" class="group p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all text-center">
                 <div class="w-10 h-10 mx-auto rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center group-hover:bg-primary-50 dark:group-hover:bg-primary-900/30 transition-colors mb-3">
                     <svg class="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-primary-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                     </svg>
                 </div>
                 <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Email</h3>
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">supporto@ainstein.it</p>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">info@ainstein.it</p>
             </a>
 
             <!-- Documentazione -->
@@ -387,7 +324,7 @@
 <!-- CTA -->
 <div class="mt-12 p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-primary-500 to-accent-500 text-center">
     <h2 class="text-2xl font-bold text-white mb-2">Pronto per iniziare?</h2>
-    <p class="text-primary-100 mb-6">Registrati gratuitamente e ricevi 30 crediti omaggio.</p>
+    <p class="text-primary-100 mb-6">La registrazione è gratuita e ricevi <?= $_gsBonus ?> crediti in regalo per provare i moduli.</p>
     <a href="<?= url('/register') ?>" class="inline-flex items-center gap-2 px-6 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-primary-50 transition-colors shadow-lg">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>

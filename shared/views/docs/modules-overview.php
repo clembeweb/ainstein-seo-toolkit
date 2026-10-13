@@ -1,3 +1,60 @@
+<?php
+// Costi letti dalle impostazioni vere (Admin > Moduli), mai scritti a mano
+$_moFmt = fn(float $n): string => rtrim(rtrim(number_format($n, 1, ',', ''), '0'), ',');
+$_moArticle = \Core\Credits::getCost('serp_extraction', 'ai-content', 3)
+    + \Core\Credits::getCost('content_scrape', 'ai-content', 1)
+    + \Core\Credits::getCost('brief_generation', 'ai-content', 3)
+    + \Core\Credits::getCost('article_generation', 'ai-content', 10)
+    + \Core\Credits::getCost('cover_image_generation', 'ai-content', 3);
+$_moCrawl = \Core\Credits::getCost('crawl_per_page', 'seo-audit', 0.1);
+$_moRank = \Core\Credits::getCost('rank_check', 'seo-tracking', 1);
+$_moKr = [
+    (float) \Core\ModuleLoader::getSetting('keyword-research', 'cost_kr_ai_clustering', 3),
+    (float) \Core\ModuleLoader::getSetting('keyword-research', 'cost_kr_ai_architecture', 5),
+    (float) \Core\ModuleLoader::getSetting('keyword-research', 'cost_kr_editorial_plan', 5),
+];
+$_moKrMin = min($_moKr);
+$_moKrMax = max($_moKr);
+$_moGeo = \Core\Credits::getCost('collect_response', 'ai-reputation', 1);
+
+$_moRows = [
+    [
+        'name' => 'AI Writer', 'color' => 'amber',
+        'icon' => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
+        'what' => 'Scrive articoli per il blog e i meta tag (title e description) delle pagine',
+        'when' => 'Devi pubblicare articoli ma non hai tempo di scriverli da zero',
+        'cost' => '~' . $_moFmt($_moArticle) . ' cr/articolo',
+    ],
+    [
+        'name' => 'AI Audit', 'color' => 'emerald',
+        'icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+        'what' => 'Scansiona il sito e trova i problemi tecnici che frenano Google',
+        'when' => 'Vuoi sapere se il sito ha errori e cosa sistemare per primo',
+        'cost' => $_moCrawl <= 0 ? 'Scansione gratis' : $_moFmt($_moCrawl) . ' cr/pagina',
+    ],
+    [
+        'name' => 'AI Rank', 'color' => 'blue',
+        'icon' => 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
+        'what' => 'Segue la posizione delle tue parole chiave su Google e legge Search Console',
+        'when' => 'Vuoi vedere se stai salendo o scendendo su Google nel tempo',
+        'cost' => $_moFmt($_moRank) . ' cr/keyword',
+    ],
+    [
+        'name' => 'AI Keywords', 'color' => 'purple',
+        'icon' => 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z',
+        'what' => 'Trova le parole che cercano i clienti, le raggruppa e propone pagine e piano editoriale',
+        'when' => 'Non sai di cosa scrivere o quali pagine servono al sito',
+        'cost' => ($_moKrMin == $_moKrMax ? $_moFmt($_moKrMin) : $_moFmt($_moKrMin) . '-' . $_moFmt($_moKrMax)) . ' cr/ricerca',
+    ],
+    [
+        'name' => 'AI GEO Audit', 'color' => 'indigo',
+        'icon' => 'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z',
+        'what' => 'Chiede a ChatGPT e Gemini quello che chiedono i tuoi clienti e ti dice se consigliano te o altri',
+        'when' => 'Vuoi sapere cosa dicono le AI della tua attività e come farti citare',
+        'cost' => $_moFmt($_moGeo) . ' cr/risposta',
+    ],
+];
+?>
 <div class="space-y-12">
 
     <!-- Header -->
@@ -10,7 +67,7 @@
             </div>
             <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">Panoramica Moduli</h1>
         </div>
-        <p class="text-sm text-slate-500 dark:text-slate-400">Confronto rapido tra i moduli della piattaforma: cosa fanno, quando usarli e quanto costano</p>
+        <p class="text-sm text-slate-500 dark:text-slate-400">I 5 moduli di Ainstein a confronto: cosa fanno, quando usarli e quanto costano</p>
     </div>
 
     <!-- Intro -->
@@ -23,7 +80,7 @@
         </h2>
         <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
             <p class="text-slate-700 dark:text-slate-300 leading-relaxed">
-                Ainstein offre 5 strumenti specializzati che coprono l'intero workflow SEO: dalla ricerca keyword alla creazione contenuti, dal monitoraggio posizioni all'analisi tecnica del sito, fino all'ottimizzazione delle campagne Google Ads. Ogni modulo funziona in modo indipendente, ma insieme formano un ecosistema completo.
+                Ainstein ha 5 moduli. Servono a farti trovare da chi cerca quello che offri: su Google e nelle risposte di ChatGPT e Gemini. Ogni modulo funziona da solo, ma insieme coprono tutto il lavoro: capire cosa cercano i clienti, scrivere i contenuti, sistemare il sito e controllare i risultati. Vanno bene anche per una piccola attività, un blog o un piccolo negozio online.
             </p>
         </div>
     </section>
@@ -43,103 +100,35 @@
                         <th class="text-left px-5 py-3 font-semibold text-slate-700 dark:text-slate-300">Modulo</th>
                         <th class="text-left px-5 py-3 font-semibold text-slate-700 dark:text-slate-300">Cosa fa</th>
                         <th class="text-left px-5 py-3 font-semibold text-slate-700 dark:text-slate-300">Quando usarlo</th>
-                        <th class="text-center px-5 py-3 font-semibold text-slate-700 dark:text-slate-300">Costo medio</th>
+                        <th class="text-center px-5 py-3 font-semibold text-slate-700 dark:text-slate-300">Costo indicativo</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                    <!-- AI Writer -->
+                    <?php foreach ($_moRows as $_r): $_c = $_r['color']; ?>
                     <tr class="bg-white dark:bg-slate-800">
                         <td class="px-5 py-3 font-medium text-slate-900 dark:text-white whitespace-nowrap">
                             <div class="flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
-                                    <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                <div class="w-7 h-7 rounded-lg bg-<?= $_c ?>-50 dark:bg-<?= $_c ?>-900/30 flex items-center justify-center shrink-0">
+                                    <svg class="w-4 h-4 text-<?= $_c ?>-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $_r['icon'] ?>"/>
                                     </svg>
                                 </div>
-                                AI Writer
+                                <?= $_r['name'] ?>
                             </div>
                         </td>
-                        <td class="px-5 py-3 text-slate-600 dark:text-slate-400">Genera articoli SEO completi con AI, inclusi brief strategico, analisi SERP e cover image</td>
-                        <td class="px-5 py-3 text-slate-600 dark:text-slate-400">Devi creare contenuti ottimizzati per il blog o pagine del sito</td>
+                        <td class="px-5 py-3 text-slate-600 dark:text-slate-400"><?= htmlspecialchars($_r['what']) ?></td>
+                        <td class="px-5 py-3 text-slate-600 dark:text-slate-400"><?= htmlspecialchars($_r['when']) ?></td>
                         <td class="px-5 py-3 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">~19 cr/articolo</span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-<?= $_c ?>-100 text-<?= $_c ?>-700 dark:bg-<?= $_c ?>-900/40 dark:text-<?= $_c ?>-300 whitespace-nowrap"><?= htmlspecialchars($_r['cost']) ?></span>
                         </td>
                     </tr>
-                    <!-- AI Audit -->
-                    <tr class="bg-white dark:bg-slate-800">
-                        <td class="px-5 py-3 font-medium text-slate-900 dark:text-white whitespace-nowrap">
-                            <div class="flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-                                    <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                                    </svg>
-                                </div>
-                                AI Audit
-                            </div>
-                        </td>
-                        <td class="px-5 py-3 text-slate-600 dark:text-slate-400">Scansiona il sito per individuare problemi tecnici SEO e genera un action plan AI</td>
-                        <td class="px-5 py-3 text-slate-600 dark:text-slate-400">Vuoi verificare lo stato di salute tecnica del sito e ottenere priorita di intervento</td>
-                        <td class="px-5 py-3 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">1 cr/10 pagine</span>
-                        </td>
-                    </tr>
-                    <!-- AI Rank -->
-                    <tr class="bg-white dark:bg-slate-800">
-                        <td class="px-5 py-3 font-medium text-slate-900 dark:text-white whitespace-nowrap">
-                            <div class="flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                                    <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                                    </svg>
-                                </div>
-                                AI Rank
-                            </div>
-                        </td>
-                        <td class="px-5 py-3 text-slate-600 dark:text-slate-400">Monitora le posizioni delle keyword su Google, integra Search Console e genera report AI</td>
-                        <td class="px-5 py-3 text-slate-600 dark:text-slate-400">Vuoi tracciare il posizionamento nel tempo e individuare trend positivi o negativi</td>
-                        <td class="px-5 py-3 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">1 cr/keyword</span>
-                        </td>
-                    </tr>
-                    <!-- AI Keywords -->
-                    <tr class="bg-white dark:bg-slate-800">
-                        <td class="px-5 py-3 font-medium text-slate-900 dark:text-white whitespace-nowrap">
-                            <div class="flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center shrink-0">
-                                    <svg class="w-4 h-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-                                    </svg>
-                                </div>
-                                AI Keywords
-                            </div>
-                        </td>
-                        <td class="px-5 py-3 text-slate-600 dark:text-slate-400">Ricerca keyword con AI, architettura informativa del sito e piano editoriale strategico</td>
-                        <td class="px-5 py-3 text-slate-600 dark:text-slate-400">Devi trovare le keyword giuste, pianificare i contenuti o strutturare le categorie del sito</td>
-                        <td class="px-5 py-3 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">2-5 cr/ricerca</span>
-                        </td>
-                    </tr>
-                    <!-- Ads Analyzer -->
-                    <tr class="bg-white dark:bg-slate-800">
-                        <td class="px-5 py-3 font-medium text-slate-900 dark:text-white whitespace-nowrap">
-                            <div class="flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center shrink-0">
-                                    <svg class="w-4 h-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
-                                    </svg>
-                                </div>
-                                Ads Analyzer
-                            </div>
-                        </td>
-                        <td class="px-5 py-3 text-slate-600 dark:text-slate-400">Analizza campagne Google Ads con AI, suggerisce negative keywords e ottimizzazioni</td>
-                        <td class="px-5 py-3 text-slate-600 dark:text-slate-400">Vuoi migliorare le performance delle campagne Google Ads e ridurre sprechi di budget</td>
-                        <td class="px-5 py-3 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">7 cr/valutazione</span>
-                        </td>
-                    </tr>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
+        <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">
+            Sono i costi attuali. Prima di ogni operazione a pagamento Ainstein ti mostra quanti crediti servono. Il dettaglio completo è nella pagina <a href="<?= url('/docs/credits') ?>" class="underline hover:no-underline">Sistema Crediti</a>.
+        </p>
     </section>
 
     <!-- Dettaglio per modulo -->
@@ -150,139 +139,59 @@
             </svg>
             Dettaglio moduli
         </h2>
+        <?php
+        $_moDetails = [
+            [
+                'slug' => 'ai-content', 'name' => 'AI Writer', 'color' => 'amber', 'icon' => $_moRows[0]['icon'],
+                'text' => 'Gli dai una parola chiave e lui fa il resto: guarda i primi risultati su Google, legge le pagine dei concorrenti, prepara una scaletta (che puoi modificare) e scrive l\'articolo. Se vuoi crea anche l\'immagine di copertina e pubblica su WordPress. Scrive anche title e description per le pagine che hai già, e può programmare articoli in automatico.',
+                'tags' => ['Articoli', 'Scaletta modificabile', 'Meta tag', 'Copertina', 'WordPress', 'Articoli programmati'],
+            ],
+            [
+                'slug' => 'seo-audit', 'name' => 'AI Audit', 'color' => 'emerald', 'icon' => $_moRows[1]['icon'],
+                'text' => 'Visita il sito come fa Google e controlla ogni pagina: titoli e descrizioni mancanti, link rotti, immagini senza testo alternativo, pagine lente o che Google non può indicizzare. Ti dà un punteggio di salute e una lista di problemi ordinata per gravità. Il Piano d\'Azione AI trasforma i problemi in interventi concreti, pagina per pagina.',
+                'tags' => ['Scansione del sito', 'Punteggio di salute', 'Problemi per gravità', 'Piano d\'Azione AI', 'Storico scansioni'],
+            ],
+            [
+                'slug' => 'seo-tracking', 'name' => 'AI Rank', 'color' => 'blue', 'icon' => $_moRows[2]['icon'],
+                'text' => 'Controlla in che posizione sei su Google per le parole chiave che ti interessano e ti mostra come cambia nel tempo. Collegando Google Search Console vedi anche clic e visualizzazioni reali. I Quick Wins ti indicano le parole chiave vicine alla prima pagina, dove basta poco per salire; l\'analisi pagina ti dice cosa migliorare in una pagina precisa.',
+                'tags' => ['Posizioni su Google', 'Search Console', 'Quick Wins', 'Analisi pagina', 'Gruppi di keyword', 'Avvisi'],
+            ],
+            [
+                'slug' => 'keyword-research', 'name' => 'AI Keywords', 'color' => 'purple', 'icon' => $_moRows[3]['icon'],
+                'text' => 'Ti aiuta a capire cosa cercano davvero i clienti. Con la Ricerca guidata parti da poche parole e ottieni gruppi di keyword con i volumi di ricerca. L\'Architettura sito ti propone quali pagine creare. Il Piano editoriale ti dice quali articoli scrivere e in che ordine. Il Quick Check verifica una singola parola chiave, gratis.',
+                'tags' => ['Ricerca guidata', 'Architettura sito', 'Piano editoriale', 'Quick Check gratuito'],
+            ],
+            [
+                'slug' => 'ai-reputation', 'name' => 'AI GEO Audit', 'color' => 'indigo', 'icon' => $_moRows[4]['icon'],
+                'text' => 'Sempre più persone chiedono a ChatGPT e Gemini "a chi mi rivolgo per...". Questo modulo fa alle AI le domande che farebbero i tuoi clienti e ti mostra se consigliano te, chi consigliano al posto tuo e quali siti usano come fonte. Poi ti dà un piano: articoli da pubblicare, dati da chiarire sul sito, correzioni tecniche. Puoi fare l\'audit d\'acquisto (chi cerca il tuo servizio) e quello di reputazione (cosa dicono di te). Il Controllo tecnico è gratuito e il piano si esporta in PDF.',
+                'tags' => ['Audit d\'acquisto', 'Audit di reputazione', 'Fonti citate', 'Piano d\'azione', 'Controllo tecnico gratuito', 'PDF'],
+            ],
+        ];
+        ?>
         <div class="space-y-4">
-
-            <!-- AI Writer -->
-            <div class="rounded-xl border border-amber-200 dark:border-amber-800/50 bg-white dark:bg-slate-800 overflow-hidden">
-                <div class="px-5 py-4 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800/50 flex items-center justify-between">
+            <?php foreach ($_moDetails as $_d): $_c = $_d['color']; ?>
+            <div class="rounded-xl border border-<?= $_c ?>-200 dark:border-<?= $_c ?>-800/50 bg-white dark:bg-slate-800 overflow-hidden">
+                <div class="px-5 py-4 bg-<?= $_c ?>-50 dark:bg-<?= $_c ?>-900/20 border-b border-<?= $_c ?>-200 dark:border-<?= $_c ?>-800/50 flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center">
-                            <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        <div class="w-9 h-9 rounded-lg bg-<?= $_c ?>-100 dark:bg-<?= $_c ?>-900/40 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-<?= $_c ?>-600 dark:text-<?= $_c ?>-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $_d['icon'] ?>"/>
                             </svg>
                         </div>
-                        <h3 class="font-semibold text-amber-900 dark:text-amber-200">AI Writer</h3>
+                        <h3 class="font-semibold text-<?= $_c ?>-900 dark:text-<?= $_c ?>-200"><?= $_d['name'] ?></h3>
                     </div>
-                    <a href="<?= url('/docs/ai-content') ?>" class="text-xs font-medium text-amber-600 dark:text-amber-400 hover:underline">Guida completa &rarr;</a>
+                    <a href="<?= url('/docs/' . $_d['slug']) ?>" class="text-xs font-medium text-<?= $_c ?>-600 dark:text-<?= $_c ?>-400 hover:underline">Guida completa &rarr;</a>
                 </div>
                 <div class="px-5 py-4 space-y-3">
-                    <p class="text-sm text-slate-700 dark:text-slate-300">
-                        Genera articoli SEO completi in pochi minuti. Il workflow guidato include: analisi SERP della keyword, brief strategico AI, generazione articolo ottimizzato e cover image con DALL-E 3. Supporta anche la generazione di meta tag (title e description) per pagine esistenti.
-                    </p>
+                    <p class="text-sm text-slate-700 dark:text-slate-300"><?= htmlspecialchars($_d['text']) ?></p>
                     <div class="flex flex-wrap gap-2">
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">Brief AI</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">Articoli SEO</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">Meta Tag</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">Cover Image</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">Scheduling</span>
+                        <?php foreach ($_d['tags'] as $_t): ?>
+                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-<?= $_c ?>-50 dark:bg-<?= $_c ?>-900/20 text-<?= $_c ?>-700 dark:text-<?= $_c ?>-300 border border-<?= $_c ?>-200 dark:border-<?= $_c ?>-800/50"><?= htmlspecialchars($_t) ?></span>
+                        <?php endforeach; ?>
                     </div>
                 </div>
             </div>
-
-            <!-- AI Audit -->
-            <div class="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-white dark:bg-slate-800 overflow-hidden">
-                <div class="px-5 py-4 bg-emerald-50 dark:bg-emerald-900/20 border-b border-emerald-200 dark:border-emerald-800/50 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
-                            <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                            </svg>
-                        </div>
-                        <h3 class="font-semibold text-emerald-900 dark:text-emerald-200">AI Audit</h3>
-                    </div>
-                    <a href="<?= url('/docs/seo-audit') ?>" class="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline">Guida completa &rarr;</a>
-                </div>
-                <div class="px-5 py-4 space-y-3">
-                    <p class="text-sm text-slate-700 dark:text-slate-300">
-                        Scansiona il tuo sito come farebbe Googlebot, analizzando ogni pagina per problemi tecnici SEO: meta tag mancanti, link rotti, immagini senza alt, velocita di caricamento, struttura heading e molto altro. L'Action Plan AI trasforma i risultati in una lista di interventi prioritizzati.
-                    </p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">Crawl sito</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">Analisi tecnica</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">Action Plan AI</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">Report PDF</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- AI Rank -->
-            <div class="rounded-xl border border-blue-200 dark:border-blue-800/50 bg-white dark:bg-slate-800 overflow-hidden">
-                <div class="px-5 py-4 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800/50 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
-                            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                            </svg>
-                        </div>
-                        <h3 class="font-semibold text-blue-900 dark:text-blue-200">AI Rank</h3>
-                    </div>
-                    <a href="<?= url('/docs/seo-tracking') ?>" class="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">Guida completa &rarr;</a>
-                </div>
-                <div class="px-5 py-4 space-y-3">
-                    <p class="text-sm text-slate-700 dark:text-slate-300">
-                        Monitora le posizioni delle tue keyword su Google nel tempo, con grafici storici e confronto competitori. Integra Google Search Console per dati reali di impressioni e click. I report AI settimanali sintetizzano trend e suggeriscono azioni.
-                    </p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">Rank tracking</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">Search Console</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">Report AI</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">Volumi ricerca</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- AI Keywords -->
-            <div class="rounded-xl border border-purple-200 dark:border-purple-800/50 bg-white dark:bg-slate-800 overflow-hidden">
-                <div class="px-5 py-4 bg-purple-50 dark:bg-purple-900/20 border-b border-purple-200 dark:border-purple-800/50 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-lg bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center">
-                            <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-                            </svg>
-                        </div>
-                        <h3 class="font-semibold text-purple-900 dark:text-purple-200">AI Keywords</h3>
-                    </div>
-                    <a href="<?= url('/docs/keyword-research') ?>" class="text-xs font-medium text-purple-600 dark:text-purple-400 hover:underline">Guida completa &rarr;</a>
-                </div>
-                <div class="px-5 py-4 space-y-3">
-                    <p class="text-sm text-slate-700 dark:text-slate-300">
-                        Trova le keyword giuste con 4 modalita: Research Guidata per esplorare un topic, Architettura Sito per strutturare le categorie, Piano Editoriale per pianificare i contenuti nel tempo, e Quick Check per verifiche rapide gratuite.
-                    </p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50">Research Guidata</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50">Architettura Sito</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50">Piano Editoriale</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50">Quick Check</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Ads Analyzer -->
-            <div class="rounded-xl border border-rose-200 dark:border-rose-800/50 bg-white dark:bg-slate-800 overflow-hidden">
-                <div class="px-5 py-4 bg-rose-50 dark:bg-rose-900/20 border-b border-rose-200 dark:border-rose-800/50 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-lg bg-rose-100 dark:bg-rose-900/40 flex items-center justify-center">
-                            <svg class="w-5 h-5 text-rose-600 dark:text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
-                            </svg>
-                        </div>
-                        <h3 class="font-semibold text-rose-900 dark:text-rose-200">Google Ads Analyzer</h3>
-                    </div>
-                    <a href="<?= url('/docs/ads-analyzer') ?>" class="text-xs font-medium text-rose-600 dark:text-rose-400 hover:underline">Guida completa &rarr;</a>
-                </div>
-                <div class="px-5 py-4 space-y-3">
-                    <p class="text-sm text-slate-700 dark:text-slate-300">
-                        Importa le campagne Google Ads (CSV o manuale), ottieni una valutazione AI dettagliata con punteggio per ogni metrica, suggerimenti di negative keywords e un export pronto per Google Ads Editor. Ideale per ottimizzare budget e ridurre sprechi.
-                    </p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50">Valutazione AI</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50">Negative Keywords</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50">AI Keywords</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50">Export CSV</span>
-                    </div>
-                </div>
-            </div>
-
+            <?php endforeach; ?>
         </div>
     </section>
 
@@ -292,39 +201,29 @@
             <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
             </svg>
-            Workflow consigliato
+            Un percorso possibile
         </h2>
         <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-            <p class="text-slate-700 dark:text-slate-300 text-sm mb-4">Per ottenere i migliori risultati, ti consigliamo di seguire questo flusso:</p>
+            <p class="text-slate-700 dark:text-slate-300 text-sm mb-4">Non devi usarli tutti. Se vuoi un ordine da seguire, questo funziona:</p>
+            <?php
+            $_moSteps = [
+                ['emerald', 'AI Audit', 'Controlla che il sito non abbia errori tecnici gravi'],
+                ['purple', 'AI Keywords', 'Scopri cosa cercano i tuoi clienti'],
+                ['amber', 'AI Writer', 'Scrivi i contenuti per quelle ricerche'],
+                ['blue', 'AI Rank', 'Guarda nel tempo se stai salendo su Google'],
+                ['indigo', 'AI GEO Audit', 'Verifica se ChatGPT e Gemini ti consigliano e cosa fare per farti citare'],
+            ];
+            ?>
             <div class="space-y-4">
+                <?php foreach ($_moSteps as $_i => [$_c, $_n, $_t]): ?>
                 <div class="flex items-start gap-3">
-                    <span class="shrink-0 w-7 h-7 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center">1</span>
+                    <span class="shrink-0 w-7 h-7 rounded-full bg-<?= $_c ?>-500 text-white text-xs font-bold flex items-center justify-center"><?= $_i + 1 ?></span>
                     <div>
-                        <p class="text-sm font-medium text-slate-900 dark:text-white">AI Keywords</p>
-                        <p class="text-sm text-slate-600 dark:text-slate-400">Individua le keyword strategiche per il tuo settore</p>
+                        <p class="text-sm font-medium text-slate-900 dark:text-white"><?= $_n ?></p>
+                        <p class="text-sm text-slate-600 dark:text-slate-400"><?= htmlspecialchars($_t) ?></p>
                     </div>
                 </div>
-                <div class="flex items-start gap-3">
-                    <span class="shrink-0 w-7 h-7 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center">2</span>
-                    <div>
-                        <p class="text-sm font-medium text-slate-900 dark:text-white">AI Writer</p>
-                        <p class="text-sm text-slate-600 dark:text-slate-400">Crea contenuti ottimizzati per le keyword trovate</p>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3">
-                    <span class="shrink-0 w-7 h-7 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center justify-center">3</span>
-                    <div>
-                        <p class="text-sm font-medium text-slate-900 dark:text-white">AI Audit</p>
-                        <p class="text-sm text-slate-600 dark:text-slate-400">Verifica che il sito sia tecnicamente ottimizzato</p>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3">
-                    <span class="shrink-0 w-7 h-7 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center">4</span>
-                    <div>
-                        <p class="text-sm font-medium text-slate-900 dark:text-white">AI Rank</p>
-                        <p class="text-sm text-slate-600 dark:text-slate-400">Monitora i risultati nel tempo e adatta la strategia</p>
-                    </div>
-                </div>
+                <?php endforeach; ?>
             </div>
         </div>
     </section>
@@ -346,7 +245,7 @@
                 </div>
                 <div>
                     <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Inizia con un progetto</h3>
-                    <p class="mt-1 text-sm text-blue-800 dark:text-blue-300/80">Ogni modulo lavora all'interno di un progetto (un sito web). Crea il tuo primo progetto dalla dashboard per accedere a tutti gli strumenti.</p>
+                    <p class="mt-1 text-sm text-blue-800 dark:text-blue-300/80">Ogni modulo lavora dentro un progetto, cioè un sito. Crea il primo progetto da "Progetti" e attiva lì i moduli che ti servono.</p>
                 </div>
             </div>
             <div class="flex items-start gap-4 p-5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50">
@@ -356,8 +255,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="font-medium text-amber-900 dark:text-amber-200 text-sm">Gestisci i crediti</h3>
-                    <p class="mt-1 text-sm text-amber-800 dark:text-amber-300/80">Le operazioni AI consumano crediti. Controlla il costo prima di ogni operazione e monitora il tuo saldo nella barra superiore. <a href="<?= url('/docs/credits') ?>" class="underline hover:no-underline">Scopri di piu sul sistema crediti</a>.</p>
+                    <h3 class="font-medium text-amber-900 dark:text-amber-200 text-sm">Tieni d'occhio i crediti</h3>
+                    <p class="mt-1 text-sm text-amber-800 dark:text-amber-300/80">Le operazioni con l'AI consumano crediti. Il costo lo vedi prima di partire e il saldo è sempre nella barra in alto. <a href="<?= url('/docs/credits') ?>" class="underline hover:no-underline">Come funzionano i crediti</a>.</p>
                 </div>
             </div>
         </div>
