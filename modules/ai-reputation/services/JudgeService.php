@@ -18,6 +18,8 @@ class JudgeService
     private AiService $ai;
     /** Effort del modello per il giudizio (low|medium|high; vuoto = default del modello). È una classificazione: low basta? Vedi scripts/rejudge.php */
     public ?string $effort;
+    /** Solo per le prove (scripts/rejudge.php --model=): il judge in produzione resta sul modello del modulo (riproducibilità) */
+    public ?string $model = null;
 
     public function __construct()
     {
@@ -45,10 +47,11 @@ class JudgeService
             ['role' => 'user', 'content' => $user],
         ], [
             'system' => $system,
-            'max_tokens' => 2000,
+            // Il ragionamento del modello conta nel limite: con i dubbi (regola 6b) 2000 troncava (prova Stabia 2026-10-13)
+            'max_tokens' => 6000,
             // L'analisi è inclusa nel prezzo per risposta (collect_response, addebitato dal RunController)
             'charge_credits' => false,
-        ] + ($this->effort ? ['effort' => $this->effort] : []), self::SLUG);
+        ] + ($this->effort ? ['effort' => $this->effort] : []) + ($this->model ? ['model' => $this->model] : []), self::SLUG);
 
         Database::reconnect();
 

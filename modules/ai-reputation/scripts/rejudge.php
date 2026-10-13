@@ -1,7 +1,7 @@
 <?php
 // Rifà il giudizio di alcune risposte di un run (per provare il judge su casi veri senza rifare tutto il run).
 // Una chiamata AI per risposta, nessun credito addebitato. Con --dry non salva nulla.
-// Uso: php modules/ai-reputation/scripts/rejudge.php <runId> <responseId,responseId,...|rep|negative> [--dry] [--effort=low|medium|high]
+// Uso: php modules/ai-reputation/scripts/rejudge.php <runId> <responseId,responseId,...|rep|negative> [--dry] [--effort=low|medium|high] [--model=claude-sonnet-5-5]
 //   rep      = tutte le risposte alle domande sulla reputazione
 //   negative = tutte le risposte oggi giudicate negative
 // Dopo un salvataggio: php modules/ai-reputation/scripts/rebuild-plan.php <runId> per rifare il piano.
@@ -18,9 +18,13 @@ $runId = (int) ($argv[1] ?? 0);
 $which = (string) ($argv[2] ?? '');
 $dry = in_array('--dry', $argv, true);
 $effort = null;
+$model = null;
 foreach ($argv as $a) {
     if (str_starts_with($a, '--effort=')) {
         $effort = substr($a, 9);
+    }
+    if (str_starts_with($a, '--model=')) {
+        $model = substr($a, 8);
     }
 }
 if ($runId <= 0 || $which === '') {
@@ -52,10 +56,13 @@ $judge = new JudgeService();
 if ($effort !== null) {
     $judge->effort = $effort ?: null;
 }
+if ($model) {
+    $judge->model = $model;
+}
 $analysis = new Analysis();
 $logFrom = Database::fetchColumn("SELECT COALESCE(MAX(id), 0) FROM ai_logs");
 $t = microtime(true);
-printf("Run %d: %d risposte, effort %s%s\n\n", $runId, count($items), $judge->effort ?? 'default', $dry ? ', PROVA (non salva)' : '');
+printf("Run %d: %d risposte, modello %s, effort %s%s\n\n", $runId, count($items), $judge->model ?? $judge->model(), $judge->effort ?? 'default', $dry ? ', PROVA (non salva)' : '');
 foreach ($items as $item) {
     $item['citations'] = json_decode((string) $item['citations'], true) ?: [];
     $item['sources_read'] = json_decode((string) $item['sources_read'], true) ?: [];
