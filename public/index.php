@@ -127,6 +127,55 @@ Router::get('/', function () {
     exit;
 });
 
+// Controllo AI gratuito della home: highlight a tutti (JSON), dettagli su /check/{token} dopo l'iscrizione.
+// Design: docs/plans/2026-10-13-landing-semrush-design.md
+Router::post('/check-ai', function () {
+    ignore_user_abort(true);
+    set_time_limit(90);
+    ob_start();
+    header('Content-Type: application/json');
+    $out = function (array $data, int $code = 200): void {
+        ob_end_clean();
+        http_response_code($code);
+        echo json_encode($data, JSON_UNESCAPED_UNICODE);
+        exit;
+    };
+    Middleware::csrf();
+    if (trim((string) ($_POST['website'] ?? '')) !== '') {
+        $out(['error' => 'Richiesta non valida'], 400); // campo trappola compilato: bot
+    }
+    session_write_close();
+    try {
+        $res = (new \Services\PublicAiCheckService())->run((string) ($_POST['url'] ?? ''), (string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'));
+    } catch (\Throwable $e) {
+        error_log('check-ai: ' . $e->getMessage());
+        $out(['error' => 'Il controllo non è riuscito, riprova tra poco.'], 500);
+    }
+    if (isset($res['error'])) {
+        $out(['error' => $res['error'], 'limit' => !empty($res['limit'])], !empty($res['limit']) ? 429 : 422);
+    }
+    $out($res + ['details_url' => url('/check/' . $res['token'])]);
+});
+
+Router::get('/check/{token}', function ($token) {
+    Middleware::auth();
+    $user = Auth::user();
+    $check = \Services\PublicAiCheckService::forUser((string) $token, (int) $user['id']);
+    if (!$check) {
+        $_SESSION['_flash']['error'] = 'Controllo non trovato.';
+        Router::redirect('/dashboard');
+    }
+    $_SESSION['_intended_url'] = null;
+    return View::render('check/result', [
+        'title' => 'Le AI leggono ' . $check['row']['host'] . '?',
+        'user' => $user,
+        'modules' => ModuleLoader::getUserModules($user['id']),
+        'check' => $check,
+        'bots' => \Modules\AiReputation\Services\GeoTechService::BOTS,
+        'answerBots' => \Modules\AiReputation\Services\GeoTechService::ANSWER_BOTS,
+    ]);
+});
+
 Router::get('/pricing', function () {
     require BASE_PATH . '/public/pricing.php';
     exit;
@@ -244,6 +293,10 @@ Router::post('/login', function () {
 
 Router::get('/register', function () {
     Middleware::guest();
+    // Arrivo dal controllo AI gratuito della home: dopo l'iscrizione si apre la sua analisi completa
+    if (!empty($_GET['check']) && preg_match('/^[a-f0-9]{32}$/', (string) $_GET['check'])) {
+        $_SESSION['_intended_url'] = '/check/' . $_GET['check'];
+    }
     return View::render('auth/register', ['title' => 'Registrazione'], null);
 });
 
@@ -305,6 +358,13 @@ Router::post('/register', function () {
         unset($_SESSION['invite_token']);
         Router::redirect('/invite/accept?token=' . urlencode($token));
         return '';
+    }
+
+    // Arrivo dal controllo AI gratuito della home (o da una pagina protetta): torna lì
+    $intended = $_SESSION['_intended_url'] ?? null;
+    unset($_SESSION['_intended_url']);
+    if ($intended && preg_match('#/check/[a-f0-9]{32}$#', $intended, $m)) {
+        Router::redirect($m[0]);
     }
 
     Router::redirect('/dashboard');

@@ -89,11 +89,19 @@ class PublicAiCheckService
     }
 
     /** Titoli dei temi "dubbi delle AI" detti come frase, per esito (i titoli interni sono troppo secchi per il pubblico). */
-    private const THEME_TITLES = [
+    public const THEME_TITLES = [
         'company' => ['bad' => 'Partita IVA e ragione sociale non trovate', 'warn' => 'Partita IVA solo nel testo, non nei dati per le AI', 'ok' => 'Dati societari presenti'],
         'reviews' => ['bad' => 'Nessun collegamento alle recensioni (Google, TripAdvisor…)', 'warn' => 'Manca il collegamento alle recensioni Google', 'ok' => 'Recensioni collegate al sito'],
         'identity' => ['bad' => 'Contatti e indirizzo poco chiari per le AI', 'warn' => 'Contatti presenti ma non coerenti', 'ok' => 'Contatti e indirizzo chiari'],
     ];
+
+    /** Titolo leggibile di un finding (i temi "dubbi delle AI" diventano frasi). */
+    public static function title(array $f): string
+    {
+        $area = (string) ($f['area'] ?? '');
+        $theme = str_starts_with($area, 'theme:') ? substr($area, 6) : null;
+        return $theme !== null ? (self::THEME_TITLES[$theme][(string) ($f['level'] ?? '')] ?? (string) $f['title']) : (string) $f['title'];
+    }
 
     /** Solo esito e titolo (mai i dettagli), senza le note informative, al massimo 6. */
     public static function highlights(array $findings): array
@@ -104,9 +112,7 @@ class PublicAiCheckService
             if ($level === 'info') {
                 continue;
             }
-            $theme = str_starts_with((string) ($f['area'] ?? ''), 'theme:') ? substr($f['area'], 6) : null;
-            $title = $theme !== null ? (self::THEME_TITLES[$theme][$level] ?? (string) $f['title']) : (string) $f['title'];
-            $out[] = ['level' => $level, 'title' => $title];
+            $out[] = ['level' => $level, 'title' => self::title($f)];
         }
         return array_slice($out, 0, 6);
     }
