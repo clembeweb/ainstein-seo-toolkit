@@ -37,7 +37,7 @@ endif;
     <div class="sm:flex sm:items-center sm:justify-between" data-tour="sa-header">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AI Audit</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Audit SEO completo dei tuoi siti web</p>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Controlla il tuo sito come lo vede Google: errori, pagine nascoste e cosa sistemare per primo</p>
         </div>
         <div class="mt-4 sm:mt-0 flex flex-wrap items-center gap-3">
             <?= \Core\View::partial('components/module-activate-existing', ['moduleSlug' => 'seo-audit', 'userId' => (int) ($user['id'] ?? 0), 'color' => 'primary']) ?>
@@ -45,7 +45,7 @@ endif;
                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
-                Nuovo Audit
+                Nuovo Progetto
             </a>
         </div>
     </div>

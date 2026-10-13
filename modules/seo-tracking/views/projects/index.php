@@ -37,7 +37,7 @@ endif;
     <div class="sm:flex sm:items-center sm:justify-between" data-tour="st-header">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AI Rank</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Monitora posizioni, traffico e revenue dei tuoi siti web</p>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Segui le posizioni del tuo sito su Google e scopri le ricerche su cui puoi salire</p>
         </div>
         <div class="mt-4 sm:mt-0 flex flex-wrap items-center gap-3">
             <?= \Core\View::partial('components/module-activate-existing', ['moduleSlug' => 'seo-tracking', 'userId' => (int) ($user['id'] ?? 0), 'color' => 'primary']) ?>

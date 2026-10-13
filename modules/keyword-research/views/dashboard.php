@@ -41,7 +41,7 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
     <div data-tour="kr-header" class="sm:flex sm:items-center sm:justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AI Keywords</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Ricerca keyword potenziata da AI con clustering semantico e architettura sito</p>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Scopri cosa cerca la gente nel tuo settore e trasformalo in pagine e articoli da scrivere</p>
         </div>
         <div class="mt-4 sm:mt-0 flex flex-wrap items-center gap-3">
             <?= \Core\View::partial('components/module-activate-existing', ['moduleSlug' => 'keyword-research', 'userId' => (int) ($user['id'] ?? 0), 'color' => 'primary']) ?>

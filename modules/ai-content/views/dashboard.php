@@ -31,7 +31,7 @@ $baseUrl = isset($project) && $project ? '/ai-content/projects/' . $project['id'
     <div class="sm:flex sm:items-center sm:justify-between" data-tour="aic-header">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AI Writer</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Genera articoli SEO-ottimizzati con intelligenza artificiale</p>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Articoli per il tuo blog scritti partendo da ciò che si cerca su Google, con copertina e meta tag</p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-3" data-tour="aic-quickactions">
             <a href="<?= url($baseUrl . '/keywords') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">

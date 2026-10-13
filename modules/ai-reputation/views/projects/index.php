@@ -24,7 +24,7 @@ $arCost = rtrim(rtrim(number_format((float) \Core\Credits::getCost('collect_resp
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AI GEO Audit</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Cosa dicono ChatGPT, Gemini e le altre AI di una persona o di un'azienda: fonti, rischi, piano d'azione</p>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Scopri se ChatGPT e Gemini consigliano la tua attività, chi consigliano al posto tuo e cosa pubblicare</p>
         </div>
         <div class="mt-4 sm:mt-0 flex flex-wrap items-center gap-3">
             <?= \Core\View::partial('components/module-activate-existing', ['moduleSlug' => 'ai-reputation', 'userId' => (int) ($user['id'] ?? 0), 'color' => 'indigo']) ?>

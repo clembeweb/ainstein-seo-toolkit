@@ -114,7 +114,7 @@ return [
             ],
             [
                 'title' => 'Crea un nuovo audit',
-                'description' => 'Clicca su "Nuovo Audit" per iniziare. Scegli tra 3 preset: Veloce (100 pagine), Bilanciato (500 pagine) o Completo (2000 pagine).',
+                'description' => 'Clicca su "Nuovo Progetto" per iniziare. Scegli tra 3 preset: Veloce (100 pagine), Bilanciato (500 pagine) o Completo (2000 pagine).',
                 'icon' => 'M12 4.5v15m7.5-7.5h-15',
                 'tip' => 'Inizia con il preset Veloce per un\'analisi rapida',
                 'selector' => '[data-tour="sa-newaudit"]',
