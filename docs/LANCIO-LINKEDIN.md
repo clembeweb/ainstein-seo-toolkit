@@ -48,8 +48,11 @@
 >    `last_sync_at` NULL (il Punto legge dal vivo, quindi funziona lo stesso).
 >    **Fatto il 2026-10-13 sera (commit `41d6a4e`, online):** su ogni ricerca/pagina che sale o scende ci sono i bottoni
 >    "Analizza" (Analisi pagina, 2 cr, risultato in page-analyzer?analysis=ID) e "Monitora" (gratis, aggiunge la keyword).
->    Restano: 3) collegare GA4 e GSC dallo stesso posto + capire se lo storico di Stabia sta nella proprietà www;
->    4) prova vera con GA4 collegato da Clemente (5 cr) e da lì il riquadro "traffico dalle AI"; dove mettere la scheda.
+>    Fatto anche 3) (commit `1057db6`): Search Console si collega dal Punto e si torna lì. **Storico Stabia:** l'account di
+>    Clemente vede `https://stabiaboatrental.com/` (owner, dati solo da metà luglio 2026) e `sc-domain:stabiaboatrental.com`
+>    (**siteUnverifiedUser**, senza permessi): lo storico completo sta lì → Clemente deve farsi aggiungere come proprietario
+>    della proprietà Dominio, poi ricollegare GSC scegliendo quella. Resta 4) prova vera con GA4 collegato da Clemente
+>    (5 cr) e da lì il riquadro "traffico dalle AI"; dove mettere la scheda.
 > Note: il controllo AI gratuito su siti lenti dura fino a ~1 minuto (beweb.it 54 s); ainstein.it manca ancora del link alle
 > recensioni Google e di telefono/sameAs nei dati strutturati (non incidono sul voto). I vecchi prompt per Claude Design (landing scartata) sono in
 > `_superati/2026-10-13-prompt-claude-design/`; in `_INBOX/2026-10-13-per-claude-design/` restano logo e screenshot.
