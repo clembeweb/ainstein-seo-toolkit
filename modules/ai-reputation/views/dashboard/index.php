@@ -10,7 +10,7 @@ $guideSteps = [
     [
         'done' => $profileConfirmed,
         'title' => 'Crea e conferma il profilo',
-        'text' => 'Vai su Profilo e clicca "Genera il profilo": l\'AI cerca chi è ' . $project['subject_name'] . ' e propone delle righe. Confermale una per una (✅ vero · ✏️ correggi · ❌ falso). È la "verità" con cui verranno giudicate le risposte delle AI.',
+        'text' => 'Vai su Profilo e clicca "Genera il profilo": l\'AI cerca chi è ' . $project['subject_name'] . ' e propone delle righe. Leggile e confermale (✅ vero · ✏️ correggi · ❌ falso), una per una o con "Conferma tutte". È la "verità" con cui verranno giudicate le risposte delle AI.',
         'link' => $basePath . '/profile', 'cta' => 'Apri il profilo',
     ],
     [
