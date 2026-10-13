@@ -105,8 +105,15 @@ class GapGroupingService
             $lines[] = "{$n}. \"{$info['prompt']}\"" . ($names ? ' → citano: ' . implode(', ', $names) : '');
         }
         $lines[] = '';
+        // Azienda: in sospeso solo cio' che non offre. Le deduzioni ovvie dai fatti (zona, capienza, occasioni) non
+        // sono invenzioni; senza questa regola il piano chiedeva "prove" anche per "barca vicino a Pompei" a un
+        // noleggio di Castellammare (run d'acquisto Stabia, 2026-10-13).
+        $pendingRule = ($project['subject_type'] ?? 'person') === 'company'
+            ? 'Una domanda va in "pending" SOLO se, secondo i FATTI CONFERMATI, il soggetto non offre quel servizio o prodotto: indica cosa manca nell\'offerta o quale conferma serve dal cliente.' . "\n"
+                . 'Sono deduzioni lecite, non invenzioni: la vicinanza geografica (un\'attività in una città serve chi soggiorna nei luoghi vicini), la capienza (se accoglie fino a N persone, vanno bene i gruppi più piccoli), le occasioni (anniversario, gita aziendale, viaggio di nozze) quando il servizio confermato le consente. Se manca solo un dato (prezzo esatto, disponibilità di una data) l\'articolo si scrive lo stesso, senza inventare il dato e invitando a chiedere un preventivo.'
+            : 'Una domanda va in "pending" se i FATTI CONFERMATI non sostengono una competenza o un\'attività credibile del soggetto su quel tema: indica la prova che servirebbe dal cliente (es. un\'operazione documentata, un incarico, una pubblicazione).';
         $lines[] = 'COMPITO: raggruppa le domande per tema in pochi articoli (di norma 2-4, mai più di ' . self::MAX_ARTICLES . '). Lo stesso tema in lingue diverse va nello stesso articolo. Ogni domanda sta in un solo posto.' . "\n"
-            . 'Una domanda va in "pending" se i FATTI CONFERMATI non sostengono una competenza o un\'attività credibile del soggetto su quel tema: indica la prova che servirebbe dal cliente (es. un\'operazione documentata, un incarico, una pubblicazione).' . "\n"
+            . $pendingRule . "\n"
             . 'Per ogni articolo: titolo concreto (non la domanda ripetuta), perché serve in 1-2 frasi, numeri delle domande coperte.' . "\n"
             . "Rispondi con questo JSON:\n"
             . '{"articles":[{"title":"titolo","why":"1-2 frasi","questions":[1,2]}],"pending":[{"question":3,"needed":"quale prova serve"}]}';

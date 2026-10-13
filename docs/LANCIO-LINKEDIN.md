@@ -39,6 +39,15 @@
 
 Questo testo è la voce del post LinkedIn e del brief per la landing. Tono: onesto, diretto, niente marketing gonfiato. Il post è pubblicità per Clemente prima che per il prodotto: "l'ho fatto da solo, miglioriamolo insieme". Prima riga = gancio ("Dopo 2 anni ho detto BASTA!").
 
+## Note per comunicazione e landing
+
+- **2026-10-13 (Clemente): non è solo per professionisti SEO, anzi.** Lo scopo è farlo usare anche a chi
+  non è esperto SEO ma ha un blog o un piccolo e-commerce. Post e landing devono dirlo chiaro: linguaggio
+  semplice, esempi da piccolo sito, niente gergo da addetti ai lavori.
+- **2026-10-13 — gancio dal GEO Audit su Stabia:** le AI conoscono Stabia Boat Rental (citata nel 79% delle
+  risposte quando la domanda fa il suo nome), ma a chi cerca "barca per Capri" la consigliano nel 2%. In 2
+  risposte usano il suo sito come fonte e consigliano altri. "Le AI sanno chi sei, ma ai clienti consigliano altri."
+
 ## Obiettivo
 
 Pubblicare un post su LinkedIn che presenta Ainstein (https://ainstein.it) con i soli moduli affidabili.

@@ -313,3 +313,20 @@ di bisogno senza nome, con luoghi di partenza/arrivo, servizi e clienti dal prof
 inglese se ci sono clienti stranieri; niente reputazione); "+ Domande base" solo per la reputazione. Nuovi progetti:
 tipo Azienda e audit Acquisto. Report e PDF dicono il tipo; nell'audit d'acquisto il rischio reputazione è "non
 misurato". I progetti esistenti restano "reputation". Conferme del modulo con la finestra dell'app (`arConfirm`).
+
+## ADR-018: Report d'acquisto con numeri propri; per le aziende "in sospeso" solo ciò che non offrono
+
+**Date**: 2026-10-13 · **Status**: Accepted (lettura run 4 Stabia con Clemente)
+
+**Context**: run 4 Stabia (acquisto, 44 risposte): citata in 1 su 44 contro il 79% del run reputazione, ma il report
+mostrava i riquadri della reputazione (rischio "–", negative 0/44) e il filtro "Reputazione" vuoto; 2 risposte Gemini
+usavano stabiaboatrental.com come fonte senza nominarla e non si vedeva. Il raggruppamento gap metteva in sospeso 8
+domande su 11 chiedendo "prove" anche dove bastavano i fatti confermati (Pompei è vicino a Castellammare; gruppi fino a 12).
+
+**Decision**: nel run d'acquisto i KPI diventano Ti consigliano / Ti conoscono (ultimo audit reputazione analizzato
+dello stesso progetto) / Usano il tuo sito senza nominarti (`ReportBuilderService::purchaseMetrics`, dominio di
+`ar_projects.website` in `cited_domains` con `brand_mentioned = 0`) / Al tuo posto consigliano; avviso se conoscono
+≥ 20 punti più di quanto consigliano; filtri "Ti nominano" e "Usano il tuo sito"; stessi numeri nel PDF. Nessuna
+chiamata AI. In `GapGroupingService` per le aziende "pending" solo se il servizio non è offerto; deduzioni lecite: zona
+vicina, capienza, occasioni; dato mancante (prezzo, disponibilità) → articolo senza inventarlo, con invito al preventivo.
+Le persone restano con la regola delle prove (operazione documentata, incarico, pubblicazione).
