@@ -256,7 +256,16 @@ class MetaTagController
             $result = $sitemapService->previewMultiple($sitemapUrls, $filter, 2000);
 
             if (empty($result['urls'])) {
-                echo json_encode(['success' => false, 'error' => 'Nessuna URL trovata nelle sitemap']);
+                // Mostra il motivo vero (es. "HTTP 403": il sito blocca la lettura) invece di un generico "nessuna URL"
+                $reasons = array_slice(array_unique($sitemapService->getErrors()), 0, 2);
+                $msg = 'Nessuna URL trovata nelle sitemap';
+                if (!empty($reasons)) {
+                    $msg .= ' (' . implode('; ', $reasons) . ')';
+                    if (preg_grep('/HTTP 40[13]/', $reasons)) {
+                        $msg .= '. Il sito blocca la lettura automatica: prova con l\'import da WordPress o da CSV.';
+                    }
+                }
+                echo json_encode(['success' => false, 'error' => $msg]);
                 return;
             }
 
