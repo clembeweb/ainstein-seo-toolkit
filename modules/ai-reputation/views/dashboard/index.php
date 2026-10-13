@@ -103,12 +103,13 @@ $guideOpen = $runsCompleted === 0;
     <!-- KPI -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
-            <p class="text-sm text-slate-500 dark:text-slate-400">Domande attive</p>
-            <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= $promptsActive ?> <span class="text-sm font-normal text-slate-400">/ <?= count($prompts) ?></span></p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Domande nel run <span class="text-xs">(audit <span x-text="$store.arAudit.label().toLowerCase()"></span>)</span></p>
+            <p class="text-2xl font-bold text-slate-900 dark:text-white"><span x-text="$store.arAudit.activeCount()"></span> <span class="text-sm font-normal text-slate-400">attive su <span x-text="$store.arAudit.shownCount()"></span></span></p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
-            <p class="text-sm text-slate-500 dark:text-slate-400">Engine</p>
-            <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400"><?= count($project['engines']) ?></p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">AI interrogate</p>
+            <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400"><?= count($enginesReady) ?><?php if (count($enginesReady) < count($project['engines'])): ?> <span class="text-sm font-normal text-slate-400">su <?= count($project['engines']) ?></span><?php endif; ?></p>
+            <p class="text-xs text-slate-400"><?= e(implode(', ', array_map(fn($e) => $engineLabels[$e] ?? $e, $enginesReady))) ?><?php if ($enginesMissing): ?> · senza chiave: <?= e(implode(', ', array_map(fn($e) => $engineLabels[$e] ?? $e, $enginesMissing))) ?><?php endif; ?></p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Run completati</p>

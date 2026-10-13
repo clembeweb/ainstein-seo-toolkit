@@ -61,6 +61,9 @@ class DashboardController
         $activePrompts = $this->prompt->forAudit($id, $auditType);
         $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
         $runEstimate = Run::estimate($project, $activePrompts, $creditUserId);
+        // AI davvero interrogate: quelle scelte nel progetto che hanno la chiave API (le altre vengono saltate nel run)
+        $enginesReady = array_values(array_filter($project['engines'], fn($e) => \Modules\AiReputation\Services\EngineCollectorService::isConfigured($e)));
+        $enginesMissing = array_values(array_diff($project['engines'], $enginesReady));
 
         return View::render('ai-reputation::dashboard/index', [
             'title' => $project['name'] . ' - GEO Audit',
@@ -76,6 +79,8 @@ class DashboardController
             'costTotal' => $costTotal,
             'creditsTotal' => $creditsTotal,
             'runEstimate' => $runEstimate,
+            'enginesReady' => $enginesReady,
+            'enginesMissing' => $enginesMissing,
             'auditType' => $auditType,
             'auditSets' => Prompt::auditSets($auditType),
             'lastRun' => $lastRun,
