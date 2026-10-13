@@ -1,3 +1,25 @@
+<?php
+// Prezzo in pagina dalle impostazioni del modulo (lo stesso che addebita RunController), mai scritto a mano
+$arCost = rtrim(rtrim(number_format((float) \Core\Credits::getCost('collect_response', 'ai-reputation', 1), 1, ',', ''), '0'), ',');
+?>
+<!-- Hero Value Block -->
+<div class="mb-6">
+<?= \Core\View::partial('components/dashboard-hero-banner', [
+    'title' => 'Scopri se ChatGPT e Gemini consigliano la tua attività',
+    'description' => 'Sempre più clienti chiedono alle AI dove comprare, chi chiamare, cosa prenotare. AI GEO Audit fa a ChatGPT e Gemini le domande dei tuoi clienti e ti dice se ti nominano, chi consigliano al posto tuo e cosa pubblicare per entrare nelle risposte. Non serve essere esperti SEO. Costo: ' . $arCost . ' credit' . ($arCost === '1' ? 'o' : 'i') . ' a risposta, con la stima prima di partire.',
+    'color' => 'indigo',
+    'badge' => 'Come funziona',
+    'storageKey' => 'ainstein_hero_ai_reputation',
+    'steps' => [
+        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>', 'title' => 'Chi sei', 'subtitle' => 'Il profilo letto dal tuo sito, lo confermi tu'],
+        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>', 'title' => 'Le domande dei clienti', 'subtitle' => 'Poste a ChatGPT e Gemini'],
+        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>', 'title' => 'Cosa fare', 'subtitle' => 'Articoli e correzioni pronti'],
+    ],
+    'ctaText' => 'Inizia con il tuo sito',
+    'ctaUrl' => url('/projects/create'),
+]) ?>
+</div>
+
 <div class="space-y-6">
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>

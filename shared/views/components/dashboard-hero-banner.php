@@ -6,7 +6,7 @@
  * Params:
  * @param string $title       - Banner title
  * @param string $description - Banner description
- * @param string $color       - Module color: emerald|blue|purple|amber|rose|cyan|orange
+ * @param string $color       - Module color: emerald|blue|purple|amber|rose|cyan|indigo|orange
  * @param array  $steps       - Array of ['icon' => 'svg path', 'title' => '...', 'subtitle' => '...']
  * @param string $ctaText     - (optional) CTA button text
  * @param string $ctaUrl      - (optional) CTA button URL
@@ -28,6 +28,7 @@ $colorMap = [
     'purple'  => ['from' => 'from-purple-950',   'badge' => 'bg-purple-500/20 text-purple-300', 'icon' => 'bg-purple-500/20 text-purple-400', 'btn' => 'bg-purple-500 hover:bg-purple-600', 'sub' => 'text-purple-400'],
     'rose'    => ['from' => 'from-rose-950',     'badge' => 'bg-rose-500/20 text-rose-300',     'icon' => 'bg-rose-500/20 text-rose-400',     'btn' => 'bg-rose-500 hover:bg-rose-600',     'sub' => 'text-rose-400'],
     'cyan'    => ['from' => 'from-cyan-950',     'badge' => 'bg-cyan-500/20 text-cyan-300',     'icon' => 'bg-cyan-500/20 text-cyan-400',     'btn' => 'bg-cyan-500 hover:bg-cyan-600',     'sub' => 'text-cyan-400'],
+    'indigo'  => ['from' => 'from-indigo-950',   'badge' => 'bg-indigo-500/20 text-indigo-300', 'icon' => 'bg-indigo-500/20 text-indigo-400', 'btn' => 'bg-indigo-500 hover:bg-indigo-600', 'sub' => 'text-indigo-400'],
     'orange'  => ['from' => 'from-orange-950',   'badge' => 'bg-orange-500/20 text-orange-300', 'icon' => 'bg-orange-500/20 text-orange-400', 'btn' => 'bg-orange-500 hover:bg-orange-600', 'sub' => 'text-orange-400'],
 ];
 
