@@ -34,9 +34,18 @@ endif;
 
 <div class="space-y-8">
     <!-- Header -->
-    <div data-tour="kr-header">
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Keyword Research</h1>
-        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Ricerca keyword potenziata da AI con clustering semantico e architettura sito</p>
+    <div data-tour="kr-header" class="sm:flex sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Keyword Research</h1>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Ricerca keyword potenziata da AI con clustering semantico e architettura sito</p>
+        </div>
+        <div class="mt-4 sm:mt-0 flex flex-wrap items-center gap-3">
+            <?= \Core\View::partial('components/module-activate-existing', ['moduleSlug' => 'keyword-research', 'userId' => (int) ($user['id'] ?? 0), 'color' => 'primary']) ?>
+            <a href="<?= url('/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors whitespace-nowrap">
+                <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Nuovo Progetto
+            </a>
+        </div>
     </div>
 
     <!-- 4 Mode Cards -->

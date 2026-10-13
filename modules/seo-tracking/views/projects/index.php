@@ -39,7 +39,8 @@ endif;
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">SEO Position Tracking</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Monitora posizioni, traffico e revenue dei tuoi siti web</p>
         </div>
-        <div class="mt-4 sm:mt-0">
+        <div class="mt-4 sm:mt-0 flex flex-wrap items-center gap-3">
+            <?= \Core\View::partial('components/module-activate-existing', ['moduleSlug' => 'seo-tracking', 'userId' => (int) ($user['id'] ?? 0), 'color' => 'primary']) ?>
             <a href="<?= url('/projects/create') ?>" data-tour="st-newproject" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
