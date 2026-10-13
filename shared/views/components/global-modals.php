@@ -211,3 +211,27 @@
         };
     }
 </script>
+
+<script>
+    // Conferma con la finestra dell'app al posto di confirm() del browser (richiesta di Clemente, 2026-10-13).
+    // window.ainstein.ask(msg, {buttonText, destructive}) → Promise<bool>
+    // <form data-confirm="Testo" data-confirm-button="Elimina" data-confirm-destructive="1"> → chiede prima di inviare
+    window.ainstein = window.ainstein || {};
+    window.ainstein.ask = async (message, options = {}) => {
+        if (typeof window.ainstein.confirm === 'function') {
+            try { await window.ainstein.confirm(message, options); return true; } catch (e) { return false; }
+        }
+        return window.confirm(message);
+    };
+    document.addEventListener('submit', async (ev) => {
+        const form = ev.target;
+        if (!(form instanceof HTMLFormElement) || !form.dataset.confirm || form.dataset.confirmed === '1') return;
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+        const ok = await window.ainstein.ask(form.dataset.confirm, {
+            buttonText: form.dataset.confirmButton || 'Conferma',
+            destructive: form.dataset.confirmDestructive === '1',
+        });
+        if (ok) { form.dataset.confirmed = '1'; form.submit(); }
+    }, true);
+</script>

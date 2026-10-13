@@ -119,7 +119,7 @@
                 L'eliminazione del progetto non cancella i dati dei moduli collegati, che diventeranno progetti standalone.
             </p>
             <form method="POST" action="<?= url('/projects/' . $project['id'] . '/delete') ?>"
-                  x-data @submit.prevent="if(confirm('Sei sicuro di voler eliminare questo progetto? I moduli collegati non verranno eliminati.')) $el.submit()">
+                  data-confirm="Sei sicuro di voler eliminare questo progetto? I moduli collegati non verranno eliminati." data-confirm-button="Elimina" data-confirm-destructive="1">
                 <?= csrf_field() ?>
                 <button type="submit" class="mt-3 inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors">
                     <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

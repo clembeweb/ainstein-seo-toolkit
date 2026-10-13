@@ -253,7 +253,7 @@ $moduleColorMap = [
                                     </button>
 
                                     <form method="POST" action="<?= url('/projects/' . $project['id'] . '/sharing/remove/' . $member['user_id']) ?>"
-                                          x-data @submit.prevent="if(confirm('Sei sicuro di voler rimuovere questo membro dal progetto?')) $el.submit()">
+                                          data-confirm="Sei sicuro di voler rimuovere questo membro dal progetto?" data-confirm-button="Rimuovi" data-confirm-destructive="1">
                                         <?= csrf_field() ?>
                                         <button type="submit"
                                                 class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors">
@@ -343,7 +343,7 @@ $moduleColorMap = [
                             </td>
                             <td class="px-4 py-3 text-right">
                                 <form method="POST" action="<?= url('/projects/' . $project['id'] . '/sharing/cancel-invite/' . $invite['id']) ?>"
-                                      x-data @submit.prevent="if(confirm('Sei sicuro di voler annullare questo invito?')) $el.submit()">
+                                      data-confirm="Sei sicuro di voler annullare questo invito?" data-confirm-button="Annulla invito" data-confirm-destructive="1">
                                     <?= csrf_field() ?>
                                     <button type="submit"
                                             class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors">

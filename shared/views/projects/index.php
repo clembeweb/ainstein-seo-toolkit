@@ -345,7 +345,7 @@
                                 </button>
                                 <!-- Delete button -->
                                 <form method="POST" action="<?= url('/wp-sites/delete') ?>"
-                                      onsubmit="return confirm('Eliminare il sito <?= htmlspecialchars(addslashes($wpSite['name'] ?: $wpDomain)) ?>? Gli articoli già pubblicati non saranno modificati, ma la configurazione auto-publish perderà il riferimento.')">
+                                      data-confirm="Eliminare il sito <?= htmlspecialchars(($wpSite['name'] ?: $wpDomain)) ?>? Gli articoli già pubblicati non saranno modificati, ma la configurazione auto-publish perderà il riferimento." data-confirm-button="Elimina" data-confirm-destructive="1">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="site_id" value="<?= (int) $wpSite['id'] ?>">
                                     <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Elimina sito">

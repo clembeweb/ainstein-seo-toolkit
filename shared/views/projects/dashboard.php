@@ -860,8 +860,8 @@ endif;
                 this.saving[siteId] = false;
             },
 
-            confirmUnlink(siteId, siteName) {
-                if (confirm('Scollegare "' + siteName + '" da questo progetto? Il sito non verr\u00e0 eliminato.')) {
+            async confirmUnlink(siteId, siteName) {
+                if (await window.ainstein.ask('Scollegare "' + siteName + '" da questo progetto? Il sito non verr\u00e0 eliminato.', { buttonText: 'Scollega', destructive: true })) {
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = '<?= url('/projects/' . $project['id'] . '/wp-sites/unlink') ?>';

@@ -814,7 +814,7 @@ window.crawlJob = function() {
          * The SSE stream will receive a 'cancelled' event from the server.
          */
         async cancelCrawl() {
-            if (!confirm('Vuoi annullare il crawl in corso?')) return;
+            if (!(await window.ainstein.ask('Vuoi annullare il crawl in corso?', { buttonText: 'Annulla il crawl', destructive: true }))) return;
 
             this.status = 'cancelling';
 

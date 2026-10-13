@@ -18,7 +18,7 @@ function formatBytes(int $bytes): string {
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Gestione Cache & Log</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Filesystem cache (Symfony Cache) e log applicativi (Monolog)</p>
         </div>
-        <form method="POST" action="<?= url('/admin/cache/clear') ?>" onsubmit="return confirm('Svuotare tutta la cache? Le prossime richieste saranno piu lente.')">
+        <form method="POST" action="<?= url('/admin/cache/clear') ?>" data-confirm="Svuotare tutta la cache? Le prossime richieste saranno più lente." data-confirm-button="Svuota">
             <?= csrf_field() ?>
             <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
