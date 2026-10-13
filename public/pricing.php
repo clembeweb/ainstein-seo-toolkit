@@ -116,7 +116,7 @@ $currentPage = 'pricing';
             box-shadow: 0 0 0 1px var(--amber), 0 16px 48px rgba(245,158,11,0.1);
         }
         .pricing-card.featured::before {
-            content: 'Piu scelto'; position: absolute; top: -12px; left: 50%;
+            content: 'Consigliato'; position: absolute; top: -12px; left: 50%;
             transform: translateX(-50%); padding: 4px 16px; border-radius: 50px;
             background: var(--amber); color: var(--amber-dark);
             font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
@@ -247,7 +247,8 @@ $currentPage = 'pricing';
 <!-- ====== PRICING HERO ====== -->
 <section class="pricing-hero">
     <h1 class="section-title reveal">Piani e prezzi</h1>
-    <p class="section-desc mx-auto reveal reveal-d1">Scegli il piano giusto per automatizzare il tuo marketing digitale. Tutti i moduli inclusi in ogni piano.</p>
+    <p class="section-desc mx-auto reveal reveal-d1">Ti iscrivi e ricevi <strong><?= \Core\Credits::signupBonus() ?> crediti in regalo</strong>, una volta sola, senza carta di credito. Quando ti servono più crediti scegli un piano e scrivimi: per ora lo attivo io a mano.</p>
+    <p class="reveal reveal-d1" style="margin-top:24px;"><a href="<?= url('/register') ?>" class="p-btn p-btn-primary" style="display:inline-flex;width:auto;padding-inline:28px;">Inizia con <?= \Core\Credits::signupBonus() ?> crediti in regalo</a></p>
 
     <div class="pricing-toggle reveal reveal-d2">
         <span class="pricing-toggle-label active" id="toggleMonthly">Mensile</span>
@@ -261,36 +262,25 @@ $currentPage = 'pricing';
 <section style="padding: 40px 0 80px;">
     <?php
     $planFeatures = [
-        'free' => [
-            ['text' => '30 crediti/mese', 'ok' => true],
-            ['text' => 'Tutti i 7 moduli', 'ok' => true],
-            ['text' => 'Quick Check gratuiti', 'ok' => true],
-            ['text' => 'Documentazione', 'ok' => true],
-            ['text' => 'WordPress sync', 'ok' => false],
-            ['text' => 'Google Search Console', 'ok' => false],
-        ],
         'starter' => [
             ['text' => '150 crediti/mese', 'ok' => true],
-            ['text' => 'Tutti i 7 moduli', 'ok' => true],
-            ['text' => 'WordPress sync', 'ok' => true],
+            ['text' => 'Tutti i 5 moduli', 'ok' => true],
+            ['text' => 'Pubblicazione su WordPress', 'ok' => true],
             ['text' => 'Google Search Console', 'ok' => true],
-            ['text' => 'Report AI settimanali', 'ok' => true],
             ['text' => 'Supporto email', 'ok' => true],
         ],
         'pro' => [
             ['text' => '500 crediti/mese', 'ok' => true],
-            ['text' => 'Tutti i 7 moduli', 'ok' => true],
-            ['text' => 'WordPress sync', 'ok' => true],
+            ['text' => 'Tutti i 5 moduli', 'ok' => true],
+            ['text' => 'Pubblicazione su WordPress', 'ok' => true],
             ['text' => 'Google Search Console', 'ok' => true],
-            ['text' => 'Report AI settimanali', 'ok' => true],
             ['text' => 'Supporto prioritario', 'ok' => true],
         ],
         'agency' => [
             ['text' => '1.500 crediti/mese', 'ok' => true],
-            ['text' => 'Tutti i 7 moduli', 'ok' => true],
-            ['text' => 'WordPress sync', 'ok' => true],
+            ['text' => 'Tutti i 5 moduli', 'ok' => true],
+            ['text' => 'Pubblicazione su WordPress', 'ok' => true],
             ['text' => 'Google Search Console', 'ok' => true],
-            ['text' => 'Report AI settimanali', 'ok' => true],
             ['text' => 'Supporto prioritario', 'ok' => true],
         ],
     ];
@@ -339,8 +329,8 @@ $currentPage = 'pricing';
                 </li>
                 <?php endforeach; ?>
             </ul>
-            <a href="<?= url('/register') ?>" class="p-btn <?= $isFeatured ? 'p-btn-primary' : 'p-btn-outline' ?>">
-                Inizia con <?= \Core\Credits::signupBonus() ?> crediti in regalo
+            <a href="mailto:info@ainstein.it?subject=<?= rawurlencode('Piano ' . $plan['name'] . ' Ainstein') ?>" class="p-btn <?= $isFeatured ? 'p-btn-primary' : 'p-btn-outline' ?>">
+                Contattami
             </a>
         </div>
         <?php endforeach; ?>
@@ -351,7 +341,7 @@ $currentPage = 'pricing';
 <section class="section-pad compare-section">
     <div class="section-inner text-center">
         <h2 class="section-title reveal">Confronta i piani nel dettaglio</h2>
-        <p class="section-desc mx-auto reveal reveal-d1">Tutti i piani includono tutti i moduli. La differenza e solo nei crediti e nelle integrazioni.</p>
+        <p class="section-desc mx-auto reveal reveal-d1">Tutti i piani includono tutti i moduli. La differenza è solo nei crediti e nel supporto.</p>
 
         <div class="reveal reveal-d2" style="overflow-x:auto; margin-top:48px;">
             <table class="compare-table">
@@ -367,7 +357,7 @@ $currentPage = 'pricing';
                 </thead>
                 <tbody>
                     <!-- Limiti -->
-                    <tr class="category-row"><td colspan="5">Limiti</td></tr>
+                    <tr class="category-row"><td colspan="<?= count($plans) + 1 ?>">Limiti</td></tr>
                     <tr>
                         <td>Crediti mensili</td>
                         <?php foreach ($plans as $plan):
@@ -388,9 +378,9 @@ $currentPage = 'pricing';
                     </tr>
 
                     <!-- Moduli -->
-                    <tr class="category-row"><td colspan="5">Moduli AI</td></tr>
+                    <tr class="category-row"><td colspan="<?= count($plans) + 1 ?>">Moduli AI</td></tr>
                     <?php
-                    $moduleNames = ['AI Content Generator', 'Keyword Research', 'SEO Audit', 'Position Tracking', 'Google Ads Analyzer', 'Content Creator'];
+                    $moduleNames = ['AI Writer', 'AI Keywords', 'AI Audit', 'AI Rank', 'AI GEO Audit'];
                     foreach ($moduleNames as $mod):
                     ?>
                     <tr>
@@ -406,9 +396,9 @@ $currentPage = 'pricing';
                     <?php endforeach; ?>
 
                     <!-- Integrazioni -->
-                    <tr class="category-row"><td colspan="5">Integrazioni</td></tr>
+                    <tr class="category-row"><td colspan="<?= count($plans) + 1 ?>">Integrazioni</td></tr>
                     <tr>
-                        <td>WordPress sync</td>
+                        <td>Pubblicazione su WordPress</td>
                         <?php foreach ($plans as $i => $plan):
                             $isFeatured = ($plan['features'] ?? false) && isset(json_decode($plan['features'], true)['recommended']);
                             $available = (float)$plan['price_monthly'] > 0;
@@ -438,7 +428,7 @@ $currentPage = 'pricing';
                         <?php endforeach; ?>
                     </tr>
                     <tr>
-                        <td>Cron automatici</td>
+                        <td>Articoli automatici programmati</td>
                         <?php foreach ($plans as $plan):
                             $isFeatured = ($plan['features'] ?? false) && isset(json_decode($plan['features'], true)['recommended']);
                             $available = (float)$plan['price_monthly'] > 0;
@@ -454,7 +444,7 @@ $currentPage = 'pricing';
                     </tr>
 
                     <!-- Supporto -->
-                    <tr class="category-row"><td colspan="5">Supporto</td></tr>
+                    <tr class="category-row"><td colspan="<?= count($plans) + 1 ?>">Supporto</td></tr>
                     <tr>
                         <td>Documentazione</td>
                         <?php foreach ($plans as $plan):
@@ -470,21 +460,6 @@ $currentPage = 'pricing';
                         <?php foreach ($plans as $plan):
                             $isFeatured = ($plan['features'] ?? false) && isset(json_decode($plan['features'], true)['recommended']);
                             $available = (float)$plan['price_monthly'] >= 49;
-                        ?>
-                        <td class="<?= $isFeatured ? 'featured' : '' ?>">
-                            <?php if ($available): ?>
-                            <svg class="check-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                            <?php else: ?>
-                            <svg class="dash-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
-                            <?php endif; ?>
-                        </td>
-                        <?php endforeach; ?>
-                    </tr>
-                    <tr>
-                        <td>Report AI settimanali</td>
-                        <?php foreach ($plans as $plan):
-                            $isFeatured = ($plan['features'] ?? false) && isset(json_decode($plan['features'], true)['recommended']);
-                            $available = (float)$plan['price_monthly'] > 0;
                         ?>
                         <td class="<?= $isFeatured ? 'featured' : '' ?>">
                             <?php if ($available): ?>
@@ -513,7 +488,7 @@ $currentPage = 'pricing';
                     Come funzionano i crediti?
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
-                <div class="faq-a">Ogni operazione in Ainstein consuma un certo numero di crediti. Ad esempio, generare un articolo SEO costa 10 crediti, un audit SEO costa 10 crediti, monitorare una keyword costa 1 credito per check. I crediti si rinnovano ogni mese con il tuo piano.</div>
+                <div class="faq-a">Ogni operazione che usa l'AI o servizi esterni consuma crediti, e il costo è indicato nella pagina prima di partire. Ad esempio nell'AI GEO Audit ogni risposta delle AI costa <?= rtrim(rtrim(number_format(\Core\Credits::getCost('collect_response', 'ai-reputation', 1), 1, ',', ''), '0'), ',') ?> credito, mentre la scansione dell'AI Audit è gratis. Con un piano i crediti si rinnovano ogni mese.</div>
             </div>
             <div class="faq-item reveal reveal-d1">
                 <button class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open');">
@@ -524,31 +499,31 @@ $currentPage = 'pricing';
             </div>
             <div class="faq-item reveal reveal-d2">
                 <button class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open');">
-                    Posso cambiare piano in qualsiasi momento?
+                    Posso cambiare piano?
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
-                <div class="faq-a">Assolutamente si. Puoi fare upgrade o downgrade del tuo piano in qualsiasi momento. Il cambio e immediato e i crediti vengono ricalcolati proporzionalmente.</div>
+                <div class="faq-a">Sì, in qualsiasi momento: scrivimi e lo cambio io.</div>
             </div>
             <div class="faq-item reveal">
                 <button class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open');">
-                    Cosa succede se finisco i crediti prima della fine del mese?
+                    Cosa succede se finisco i crediti?
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
-                <div class="faq-a">Puoi acquistare pacchetti di crediti aggiuntivi oppure fare upgrade al piano superiore. Le funzionalita gratuite come Quick Check continuano a funzionare anche a crediti esauriti.</div>
+                <div class="faq-a">Scrivimi: aggiungo crediti o attivo un piano. Le funzioni gratuite, come la scansione dell'AI Audit e il controllo tecnico dell'AI GEO Audit, continuano a funzionare anche a crediti finiti.</div>
             </div>
             <div class="faq-item reveal reveal-d1">
                 <button class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open');">
-                    Posso cancellare in qualsiasi momento?
+                    Posso disdire in qualsiasi momento?
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
-                <div class="faq-a">Si, puoi cancellare il tuo abbonamento in qualsiasi momento. Non ci sono vincoli ne penali. I tuoi dati restano accessibili fino alla fine del periodo pagato.</div>
+                <div class="faq-a">Sì, senza vincoli né penali. I tuoi dati restano accessibili fino alla fine del periodo pagato.</div>
             </div>
             <div class="faq-item reveal reveal-d2">
                 <button class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open');">
-                    Quali metodi di pagamento accettate?
+                    Come si paga?
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
-                <div class="faq-a">Accettiamo tutte le principali carte di credito e debito (Visa, Mastercard, American Express) tramite Stripe. I pagamenti sono sicuri e crittografati.</div>
+                <div class="faq-a">Per ora il pagamento online non è attivo: quando mi scrivi ti spiego come pagare e attivo il piano a mano.</div>
             </div>
         </div>
     </div>
@@ -556,11 +531,11 @@ $currentPage = 'pricing';
 
 <!-- ====== CTA FINALE ====== -->
 <section class="section-pad cta-final">
-    <h2 class="reveal">Hai bisogno di un piano personalizzato?</h2>
-    <p class="reveal reveal-d1">Contattaci per un piano su misura per le esigenze del tuo team o della tua agenzia.</p>
+    <h2 class="reveal">Ti servono più crediti o un piano su misura?</h2>
+    <p class="reveal reveal-d1">Scrivimi e troviamo la soluzione giusta per te, per il tuo team o per la tua agenzia.</p>
     <div class="reveal reveal-d2">
         <a href="mailto:info@ainstein.it" class="cta-btn">
-            Contattaci
+            Contattami
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
         </a>
     </div>

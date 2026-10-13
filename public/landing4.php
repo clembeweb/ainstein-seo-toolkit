@@ -658,7 +658,7 @@ $currentPage = 'home';
             box-shadow: 0 0 0 1px var(--amber), 0 16px 48px rgba(245,158,11,0.1);
         }
         .pricing-card.featured::before {
-            content: 'Piu scelto'; position: absolute; top: -12px; left: 50%;
+            content: 'Consigliato'; position: absolute; top: -12px; left: 50%;
             transform: translateX(-50%); padding: 4px 16px; border-radius: 50px;
             background: var(--amber); color: var(--amber-dark);
             font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
@@ -1407,9 +1407,9 @@ $currentPage = 'home';
             <?php
             $planFeatures = [
                 'free' => ['30 crediti/mese', 'Tutti i moduli', 'Quick Check gratuiti', 'Documentazione completa'],
-                'starter' => ['150 crediti/mese', 'Tutti i moduli', 'WordPress sync', 'Google Search Console', 'Report AI settimanali'],
-                'pro' => ['500 crediti/mese', 'Tutti i moduli', 'WordPress sync', 'Google Search Console', 'Report AI settimanali', 'Supporto prioritario'],
-                'agency' => ['1.500 crediti/mese', 'Tutti i moduli', 'WordPress sync', 'Google Search Console', 'Report AI settimanali', 'Supporto prioritario'],
+                'starter' => ['150 crediti/mese', 'Tutti i 5 moduli', 'Pubblicazione su WordPress', 'Google Search Console', 'Supporto email'],
+                'pro' => ['500 crediti/mese', 'Tutti i 5 moduli', 'Pubblicazione su WordPress', 'Google Search Console', 'Supporto prioritario'],
+                'agency' => ['1.500 crediti/mese', 'Tutti i 5 moduli', 'Pubblicazione su WordPress', 'Google Search Console', 'Supporto prioritario'],
             ];
             ?>
             <?php foreach ($plans as $plan):
@@ -1452,8 +1452,8 @@ $currentPage = 'home';
                     </li>
                     <?php endforeach; ?>
                 </ul>
-                <a href="<?= url('/register') ?>" class="p-btn <?= $isFeatured ? 'p-btn-primary' : 'p-btn-outline' ?>">
-                    <?= (float)$plan['price_monthly'] === 0.0 ? 'Inizia gratis' : 'Prova gratis 7 giorni' ?>
+                <a href="mailto:info@ainstein.it?subject=<?= rawurlencode('Piano ' . $plan['name'] . ' Ainstein') ?>" class="p-btn <?= $isFeatured ? 'p-btn-primary' : 'p-btn-outline' ?>">
+                    Contattami
                 </a>
             </div>
             <?php endforeach; ?>
