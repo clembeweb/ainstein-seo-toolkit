@@ -1,7 +1,7 @@
 <?php
 /** Scheda operativa nel PDF. Variabili dal padre: $a (con brief_data, outlets), $h, $channelLabels. */
 $b = $a['brief_data'] ?? null;
-if (!is_array($b) || !in_array($b['kind'] ?? '', ['content', 'removal'], true)) {
+if (!is_array($b) || !in_array($b['kind'] ?? '', ['content', 'removal', 'clarify'], true)) {
     echo '<div style="margin-top:6pt;font-size:9pt;color:#94a3b8;border-top:0.5pt dashed #e2e8f0;padding-top:4pt;">Scheda operativa non generata</div>';
     return;
 }
@@ -22,7 +22,17 @@ $generatedAt = strtotime((string) ($a['brief_generated_at'] ?? ''));
 ?>
 <div style="margin-top:6pt;border-top:0.5pt dashed #c7d2fe;padding-top:5pt;font-size:9.5pt;color:#1e293b;">
     <div style="font-size:9pt;font-weight:bold;color:#4f46e5;margin-bottom:3pt;">SCHEDA OPERATIVA</div>
-    <?php if ($b['kind'] === 'content'): ?>
+    <?php if ($b['kind'] === 'clarify'): ?>
+    <?php if (!empty($a['channel_rationale'])): ?><div style="color:#475569;margin-bottom:3pt;"><?= $h($a['channel_rationale']) ?></div><?php endif; ?>
+    <?php foreach ((array) ($b['items'] ?? []) as $it): ?>
+    <div style="margin-bottom:4pt;">
+        <div><?= $label('Dubbio') ?><?= $h($it['doubt'] ?? '') ?><?php if (!empty($it['where'])): ?> · <?= $label('Dove') ?><?= $h($it['where']) ?><?php endif; ?></div>
+        <div style="margin-top:1pt;padding:3pt 5pt;background:#f8fafc;border:0.5pt solid #e2e8f0;"><?= nl2br($h($it['text'] ?? '')) ?></div>
+    </div>
+    <?php endforeach; ?>
+    <?php if (!empty($b['schema_jsonld'])): ?><div><?= $label('Dati strutturati da incollare nel sito') ?><div style="margin-top:1pt;padding:3pt 5pt;background:#f8fafc;border:0.5pt solid #e2e8f0;font-family:monospace;font-size:7.5pt;"><?= nl2br($h($b['schema_jsonld'])) ?></div></div><?php endif; ?>
+    <?php if (!empty($b['checklist'])): ?><div><?= $label('Fuori dal sito') ?><?= $ul((array) $b['checklist']) ?></div><?php endif; ?>
+    <?php elseif ($b['kind'] === 'content'): ?>
     <div><?= $label('Dove') ?><?= $h($channelLabels[$a['channel'] ?? ''] ?? ($a['channel'] ?? '')) ?><?php if ($outlets): ?> — testate: <?= $h(implode(', ', $outlets)) ?><?php endif; ?></div>
     <?php if (!empty($a['channel_rationale'])): ?><div style="color:#475569;margin-bottom:3pt;"><?= $h($a['channel_rationale']) ?></div><?php endif; ?>
     <div><?= $label('Titolo proposto') ?><?= $h($b['title'] ?? '') ?></div>

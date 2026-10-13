@@ -260,9 +260,14 @@ class ReportBuilderService
             }
         }
 
+        $isCompany = ($project['subject_type'] ?? 'person') === 'company';
+        // Azienda: i contenuti vanno sul suo sito (blog, pagine), non sul portale o concorrente più citato
+        $contentDomain = $isCompany && $ownDomain ? $ownDomain : $suggested;
+
         // 1. removal: ogni URL negativo citato
         $seenUrl = [];
         $repNegative = [];
+        $doubts = [];
         foreach ($responses as $r) {
             $a = $analyses[(int) $r['id']] ?? null;
             if (!$a) {
@@ -279,7 +284,15 @@ class ReportBuilderService
                     }
                 }
             }
-            if ($r['prompt_cluster'] === 'rep' && ((int) $a['negative'] === 1 || $a['is_homonym'] === 'uncertain')) {
+            foreach ($a['doubts'] ?? [] as $d) {
+                $key = mb_strtolower(mb_substr($d['doubt'], 0, 60));
+                $doubts[$key] ??= ['doubt' => $d['doubt'], 'fix' => $d['fix'], 'engines' => [], 'prompts' => []];
+                $doubts[$key]['engines'][$engine] = true;
+                $doubts[$key]['prompts'][(int) $r['prompt_id']] = $r['prompt_text'];
+            }
+            // Negativa spiegata solo da dubbi (nessuna fonte negativa vera): la copre l'intervento "clarify"
+            $onlyDoubts = empty($a['negative_urls']) && !empty($a['doubts']);
+            if ($r['prompt_cluster'] === 'rep' && (((int) $a['negative'] === 1 && !$onlyDoubts) || $a['is_homonym'] === 'uncertain')) {
                 $repNegative[$r['prompt_id']]['prompt'] = $r['prompt_text'];
                 $repNegative[$r['prompt_id']]['engines'][$engine] = true;
                 $repNegative[$r['prompt_id']]['homonym'] = ($repNegative[$r['prompt_id']]['homonym'] ?? false) || $a['is_homonym'] === 'uncertain';
@@ -330,6 +343,31 @@ class ReportBuilderService
                     . 'Valutare rimozione, deindicizzazione o aggiornamento delle pagine con il sito.',
             ];
         }
+        // 1b. clarify: UNA azione con i dubbi delle AI (identità, dati societari, contatti) e come scioglierli sul sito
+        if ($doubts) {
+            $subject = $project['subject_name'];
+            $engines = [];
+            $prompts = [];
+            $list = [];
+            foreach (array_slice(array_values($doubts), 0, 6) as $i => $d) {
+                $engines += $d['engines'];
+                $prompts += $d['prompts'];
+                $list[] = ($i + 1) . ') ' . rtrim($d['doubt'], '. ') . ' → ' . rtrim($d['fix'], '. ') . '.';
+            }
+            $qs = [];
+            foreach ($prompts as $pid => $text) {
+                $qs[] = ['id' => (int) $pid, 'text' => $text];
+            }
+            $actions[] = [
+                'type' => 'clarify',
+                'target_url' => !empty($project['website']) ? $project['website'] : null,
+                'target_domain' => $ownDomain,
+                'title' => "Le AI hanno dubbi su {$subject}: cosa chiarire sul sito",
+                'rationale' => self::engineNames(array_keys($engines)) . ' ' . (count($engines) === 1 ? 'mette' : 'mettono') . ' in dubbio l\'affidabilità per informazioni che mancano o non tornano, non per fatti negativi. '
+                    . 'Chi chiede "' . reset($prompts) . '" riceve questi avvisi: ' . implode(' ', $list),
+                'covered_prompts' => json_encode($qs, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            ];
+        }
         // 2. counter_content: UNA azione per tutte le domande rep negative (+ una di disambiguazione se serve).
         //    Una pagina autorevole ben fatta risponde a tutte: dieci azioni quasi uguali gonfiano il piano.
         if ($repNegative) {
@@ -344,15 +382,19 @@ class ReportBuilderService
             }
             $examples = array_slice($prompts, 0, 3);
             $more = count($prompts) - count($examples);
+            $nq = count($prompts);
             $actions[] = [
                 'type' => 'counter_content',
                 'target_url' => null,
-                'target_domain' => $suggested,
+                'target_domain' => $contentDomain,
                 'title' => "Pagina autorevole che risponda a \"{$subject} è affidabile?\"",
-                'rationale' => 'Le AI rispondono in negativo o con dubbi a ' . count($prompts) . ' domande reputazionali, tra cui: "'
+                'rationale' => 'Le AI rispondono in negativo o con dubbi a ' . $nq . ' domand' . ($nq === 1 ? 'a' : 'e') . ' sulla reputazione' . ($nq === 1 ? ': "' : ', tra cui: "')
                     . implode('", "', $examples) . '"' . ($more > 0 ? " e altre {$more}" : '') . '. '
-                    . 'Una sola pagina ben fatta le copre tutte: chi è, cosa fa oggi, i fatti passati con esito e contesto, referenze verificabili'
-                    . ($suggested ? ", pubblicata su una testata che le AI già citano ({$suggested})." : '.')
+                    . ($isCompany
+                        ? 'Una sola pagina ben fatta le copre tutte: chi siete, dati societari, dove operate, recensioni e referenze verificabili'
+                            . ($ownDomain ? ", pubblicata sul vostro sito ({$ownDomain})." : '.')
+                        : 'Una sola pagina ben fatta le copre tutte: chi è, cosa fa oggi, i fatti passati con esito e contesto, referenze verificabili'
+                            . ($suggested ? ", pubblicata su una testata che le AI già citano ({$suggested})." : '.'))
                     . ' AI coinvolte: ' . self::engineNames(array_keys($engines)) . '.',
             ];
             if ($homonym) {
@@ -387,7 +429,7 @@ class ReportBuilderService
                 $actions[] = [
                     'type' => 'gap_article',
                     'target_url' => null,
-                    'target_domain' => $suggested,
+                    'target_domain' => $contentDomain,
                     'title' => $art['title'],
                     'rationale' => $art['why'] . ' Copre ' . count($texts) . ' domand' . (count($texts) === 1 ? 'a' : 'e') . ': "' . implode('", "', $examples) . '"' . ($more > 0 ? " e altre {$more}" : '') . '.',
                     'covered_prompts' => $covered($qs),
@@ -413,10 +455,10 @@ class ReportBuilderService
                 $actions[] = [
                     'type' => 'gap_article',
                     'target_url' => null,
-                    'target_domain' => $suggested,
+                    'target_domain' => $contentDomain,
                     'title' => 'Non citato: "' . $info['prompt'] . '"',
                     'rationale' => 'Le AI citano ' . implode(', ', $names) . ' e non il soggetto. Serve un contenuto che posizioni il soggetto su questa domanda'
-                        . ($suggested ? ", su {$suggested} o testata equivalente." : '.'),
+                        . ($isCompany && $ownDomain ? ", sul vostro sito ({$ownDomain})." : ($suggested ? ", su {$suggested} o testata equivalente." : '.')),
                     'covered_prompts' => $covered([['id' => (int) $pid, 'text' => $info['prompt']]]),
                 ];
             }

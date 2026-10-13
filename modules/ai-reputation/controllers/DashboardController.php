@@ -10,6 +10,8 @@ use Core\ModuleLoader;
 use Modules\AiReputation\Models\Project;
 use Modules\AiReputation\Models\Prompt;
 use Modules\AiReputation\Models\ProfileFact;
+use Modules\AiReputation\Models\Run;
+use Core\Credits;
 
 /**
  * DashboardController - overview del progetto (prompt, run, costi)
@@ -52,6 +54,18 @@ class DashboardController
         $factCounts = (new ProfileFact())->counts($id);
         $profileConfirmed = ($factCounts['confirmed'] + $factCounts['corrected']) > 0;
         $lastCompletedRun = array_values(array_filter($runs, fn($r) => $r['status'] === 'completed'))[0] ?? null;
+        $creditsTotal = (float) Database::fetchColumn("SELECT COALESCE(SUM(credits_used), 0) FROM ar_runs WHERE project_id = ?", [$id]);
+
+        // Stima del prossimo run, mostrata prima di "Avvia run": stesso calcolo di RunController::start()
+        $activePrompts = array_values(array_filter($prompts, fn($p) => (int) $p['is_active'] === 1));
+        $engines = array_values(array_filter($project['engines'], fn($e) => \Modules\AiReputation\Services\EngineCollectorService::isConfigured($e)));
+        $estResponses = Run::plannedTotal($activePrompts, $engines, max(1, (int) ($project['repeats'] ?? 1)));
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+        $runEstimate = [
+            'responses' => $estResponses,
+            'credits' => round($estResponses * Credits::getCost('collect_response', Project::SLUG, 1), 1),
+            'balance' => round((float) Credits::getBalance($creditUserId), 1),
+        ];
 
         return View::render('ai-reputation::dashboard/index', [
             'title' => $project['name'] . ' - GEO Audit',
@@ -65,6 +79,8 @@ class DashboardController
             'runs' => $runs,
             'runsCompleted' => $runsCompleted,
             'costTotal' => $costTotal,
+            'creditsTotal' => $creditsTotal,
+            'runEstimate' => $runEstimate,
             'lastRun' => $lastRun,
             'profileConfirmed' => $profileConfirmed,
             'lastCompletedRun' => $lastCompletedRun,

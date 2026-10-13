@@ -27,7 +27,23 @@ $btn = fn(string $label, bool $primary) => '<button type="button" @click="genera
     <p class="text-xs text-slate-400">Scheda operativa non ancora generata.</p>
     <?php endif; ?>
 <?php else: ?>
-    <?php if ($brief['kind'] === 'content'): ?>
+    <?php if ($brief['kind'] === 'clarify'): ?>
+    <?php if ($a['channel_rationale']): ?><p class="text-xs text-slate-600 dark:text-slate-300 mb-2"><?= e($a['channel_rationale']) ?></p><?php endif; ?>
+    <div class="text-xs space-y-2 text-slate-700 dark:text-slate-200">
+        <?php foreach ($brief['items'] as $it): ?>
+        <div>
+            <p><span class="font-medium">Dubbio:</span> <?= e($it['doubt']) ?><?php if ($it['where']): ?> · <span class="font-medium">Dove:</span> <?= e($it['where']) ?><?php endif; ?></p>
+            <p class="mt-0.5 p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 whitespace-pre-line"><?= e($it['text']) ?></p>
+        </div>
+        <?php endforeach; ?>
+        <?php if ($brief['schema_jsonld']): ?>
+        <div><span class="font-medium">Dati strutturati da incollare nel sito:</span>
+            <pre class="mt-0.5 p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 overflow-x-auto text-[11px]"><?= e($brief['schema_jsonld']) ?></pre>
+        </div>
+        <?php endif; ?>
+        <?php if ($brief['checklist']): ?><div><span class="font-medium">Fuori dal sito:</span><ul class="list-disc ml-4 mt-0.5"><?php foreach ($brief['checklist'] as $c): ?><li><?= e($c) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
+    </div>
+    <?php elseif ($brief['kind'] === 'content'): ?>
     <div class="flex flex-wrap items-center gap-2 mb-1">
         <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Dove:</span>
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $channelClass[$a['channel']] ?? '' ?>"><?= e($channelLabel[$a['channel']] ?? $a['channel']) ?></span>

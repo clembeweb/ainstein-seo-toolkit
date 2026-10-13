@@ -11,7 +11,7 @@ use Mpdf\Output\Destination;
  */
 class ActionPlanPdfService
 {
-    public const TYPE_LABELS = ['removal' => 'Rimozione', 'counter_content' => 'Contro-contenuto', 'gap_article' => 'Articolo gap', 'correction' => 'Correzione', 'gap_pending' => 'Da valutare'];
+    public const TYPE_LABELS = ['clarify' => 'Da chiarire', 'removal' => 'Rimozione', 'counter_content' => 'Contro-contenuto', 'gap_article' => 'Articolo gap', 'correction' => 'Correzione', 'gap_pending' => 'Da valutare'];
     public const STATUS_LABELS = ['proposed' => 'Proposto', 'accepted' => 'Accettato', 'done' => 'Fatto', 'dismissed' => 'Scartato'];
     public const CHANNEL_LABELS = ['own_site' => 'Sito proprietario', 'external' => 'Siti esterni', 'both' => 'Sito proprietario + siti esterni'];
 

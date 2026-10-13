@@ -200,7 +200,11 @@ class ActionBriefService
             $lines[] = 'COMPETITOR CITATI AL POSTO DEL SOGGETTO: ' . implode(', ', array_map(fn($c) => "{$c['name']} ({$c['mentions_count']})", $competitors));
         }
         $lines[] = '';
-        $lines[] = $action['type'] === 'removal' ? self::removalInstructions() : self::contentInstructions();
+        $lines[] = match ($action['type']) {
+            'removal' => self::removalInstructions(),
+            'clarify' => self::clarifyInstructions(),
+            default => self::contentInstructions(),
+        };
         return ['prompt' => implode("\n", $lines), 'ok_domains' => $okDomains, 'allowed_sources' => $allowedSources];
     }
 
@@ -289,6 +293,17 @@ class ActionBriefService
             . '"own_site_note":"cosa pubblicare sul sito ufficiale se channel è own_site o both, altrimenti stringa vuota"}}';
     }
 
+    private static function clarifyInstructions(): string
+    {
+        return "COMPITO: le AI dubitano del soggetto perché sul web mancano o non tornano alcune informazioni (vedi motivazione). Per ogni dubbio scrivi cosa pubblicare sul sito ufficiale per scioglierlo, con il testo pronto.\n"
+            . "Usa solo i dati del dossier e del profilo confermato. Se un dato serve ma non c'è (es. partita IVA, ragione sociale, indirizzo), metti il segnaposto [DA COMPLETARE: cosa] e non inventarlo.\n"
+            . "Rispondi con questo JSON:\n"
+            . '{"channel":"own_site","channel_rationale":"1-2 frasi","suggested_outlets":[],'
+            . '"brief":{"kind":"clarify","items":[{"doubt":"il dubbio","where":"dove sul sito (es. piè di pagina, pagina Contatti, Chi siamo)","text":"testo pronto da pubblicare, breve, in italiano"}],'
+            . '"schema_jsonld":"blocco JSON-LD schema.org (LocalBusiness o Organization, con legalName, vatID, address, telephone, sameAs se noti) pronto da incollare, con i segnaposto per i dati mancanti; stringa vuota se non serve",'
+            . '"checklist":["altre verifiche fuori dal sito: es. scheda Google Business coerente, stessi dati sui portali"]}}';
+    }
+
     private static function removalInstructions(): string
     {
         return "COMPITO: prepara la traccia della richiesta al sito per le PAGINE DELL'INTERVENTO.\n"
@@ -331,11 +346,15 @@ class ActionBriefService
         if (!is_array($brief)) {
             return 'Manca il campo brief';
         }
+        $isClarify = ($action['type'] ?? '') === 'clarify';
         $kind = $brief['kind'] ?? null;
-        if ($kind !== ($isRemoval ? 'removal' : 'content')) {
+        if ($kind !== ($isRemoval ? 'removal' : ($isClarify ? 'clarify' : 'content'))) {
             return 'Tipo di scheda incoerente con l\'intervento';
         }
         $channel = $data['channel'] ?? null;
+        if ($isClarify) {
+            $channel = 'own_site'; // i dubbi si sciolgono sul sito del soggetto
+        }
         if ($isRemoval) {
             $channel = null;
         } elseif (!in_array($channel, self::CHANNELS, true)) {
@@ -355,6 +374,26 @@ class ActionBriefService
         $clean = ['channel' => $channel, 'channel_rationale' => trim((string) ($data['channel_rationale'] ?? '')), 'suggested_outlets' => $isRemoval ? [] : $outlets];
         $str = fn($v) => trim((string) (is_scalar($v) ? $v : ''));
         $list = fn($v) => array_values(array_filter(array_map($str, is_array($v) ? $v : []), fn($x) => $x !== ''));
+        if ($isClarify) {
+            $items = [];
+            foreach ((array) ($brief['items'] ?? []) as $it) {
+                if (is_array($it) && $str($it['doubt'] ?? '') !== '' && $str($it['text'] ?? '') !== '') {
+                    $items[] = ['doubt' => $str($it['doubt']), 'where' => $str($it['where'] ?? ''), 'text' => $str($it['text'])];
+                }
+            }
+            if (!$items) {
+                return 'Scheda senza testi da pubblicare';
+            }
+            $clean['brief'] = [
+                'kind' => 'clarify',
+                'items' => array_slice($items, 0, 8),
+                'schema_jsonld' => is_array($brief['schema_jsonld'] ?? null)
+                    ? (string) json_encode($brief['schema_jsonld'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                    : $str($brief['schema_jsonld'] ?? ''),
+                'checklist' => $list($brief['checklist'] ?? []),
+            ];
+            return $clean;
+        }
         if (!$isRemoval) {
             $points = $list($brief['points'] ?? []);
             if (count($points) < 3) {

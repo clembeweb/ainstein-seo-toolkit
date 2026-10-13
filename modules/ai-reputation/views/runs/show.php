@@ -38,8 +38,8 @@ $riskClass = match ($metrics['risk_label']) {
     'Basso' => 'text-emerald-600 dark:text-emerald-400',
     default => 'text-slate-400',
 };
-$actionLabel = ['removal' => 'rimozione', 'counter_content' => 'contro-contenuto', 'gap_article' => 'articolo gap', 'correction' => 'correzione', 'gap_pending' => 'da valutare'];
-$actionClass = ['removal' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300', 'counter_content' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300', 'gap_article' => 'bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300', 'correction' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300', 'gap_pending' => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'];
+$actionLabel = ['clarify' => 'da chiarire', 'removal' => 'rimozione', 'counter_content' => 'contro-contenuto', 'gap_article' => 'articolo gap', 'correction' => 'correzione', 'gap_pending' => 'da valutare'];
+$actionClass = ['clarify' => 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300', 'removal' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300', 'counter_content' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300', 'gap_article' => 'bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300', 'correction' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300', 'gap_pending' => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'];
 $isActive = in_array($run['status'], ['pending', 'running'], true);
 $briefCost = $briefCost ?? 1;
 // Costo scheda per i confirm JS, formattato come nel partial: "1 credito", "1,5 crediti"
@@ -53,8 +53,9 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
             <a href="<?= url($basePath) ?>" class="text-sm text-slate-500 hover:text-indigo-600 dark:text-slate-400">← Overview</a>
             <h2 class="text-lg font-semibold text-slate-900 dark:text-white mt-1">Report run #<?= (int) $run['id'] ?> · <?= date('d/m/Y H:i', strtotime($run['created_at'])) ?></h2>
             <p class="text-sm text-slate-500 dark:text-slate-400">
-                <?= (int) $run['prompts_total'] ?> domande · <?= count($engines) ?> engine · <?= (int) $run['responses_total'] ?> risposte · <?= $statusLabel ?>
-                <?php if ($hasAnalyses): ?> · <?= $metrics['judged'] ?> analizzate<?php endif; ?>
+                <?= (int) $run['prompts_total'] ?> domande · <?= count($engines) ?> AI · <?= (int) $run['responses_done'] ?> risposte<?= (int) $run['responses_error'] > 0 ? ' (' . (int) $run['responses_error'] . ' non arrivate)' : '' ?> · <?= $statusLabel ?>
+                <?php if ($hasAnalyses): ?> · <?= (int) $run['analyses_done'] ?> analizzate<?php endif; ?>
+                · <?= rtrim(rtrim(number_format((float) $run['credits_used'], 1, ',', '.'), '0'), ',') ?> crediti<?php if (\Core\Auth::isAdmin()): ?> <span class="text-slate-400" title="Visibile solo agli admin">(API <?= number_format((float) $run['cost_total'], 2, ',', '.') ?> $)</span><?php endif; ?>
             </p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
@@ -114,7 +115,7 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Divergenza tra engine</p>
             <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= $hasAnalyses ? count($metrics['divergent']) : '–' ?> <?php if ($hasAnalyses): ?><span class="text-sm font-normal text-slate-400">domande</span><?php endif; ?></p>
-            <p class="text-xs text-slate-400"><?= $hasAnalyses ? ($metrics['divergent'] ? 'le AI non sono d\'accordo' : 'le AI concordano') : 'dopo l\'analisi' ?> · costo API <?= number_format((float) $run['cost_total'], 3) ?> $</p>
+            <p class="text-xs text-slate-400"><?= $hasAnalyses ? ($metrics['divergent'] ? 'le AI non sono d\'accordo' : 'le AI concordano') : 'dopo l\'analisi' ?></p>
             <?php if (!empty($metrics['stability'])): ?>
             <p class="text-xs text-slate-400" title="Domande poste più volte allo stesso engine: in quante l'esito è stato sempre lo stesso">stabilità ripetizioni: <?= (int) $metrics['stability']['stable'] ?> su <?= (int) $metrics['stability']['cells'] ?></p>
             <?php endif; ?>
@@ -405,7 +406,7 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
                             <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Come ha cercato</p>
                             <ul class="space-y-0.5 text-slate-600 dark:text-slate-300"><template x-for="q in current.queries" :key="q"><li x-text="'· ' + q"></li></template></ul>
                         </div>
-                        <p class="text-xs text-slate-400" x-text="(current.latency_ms/1000).toFixed(1) + ' s · ' + (current.search_count ?? '?') + ' ricerche · ' + Number(current.cost).toFixed(4) + ' $'"></p>
+                        <p class="text-xs text-slate-400" x-text="(current.latency_ms/1000).toFixed(1) + ' s · ' + (current.search_count ?? '?') + ' ricerche'<?= \Core\Auth::isAdmin() ? " + ' · ' + Number(current.cost).toFixed(4) + ' \$'" : '' ?>"></p>
                     </div>
                 </template>
             </div>
@@ -453,7 +454,7 @@ function arReport() {
         async analyze(reset) {
             try {
                 if (reset) {
-                    if (!confirm('Rifare tutti i giudizi di questo run? Costa una chiamata AI per risposta.')) return;
+                    if (!confirm(<?= json_encode('Rifare tutti i giudizi di questo run? ' . (int) $run['responses_done'] . ' risposte: ' . rtrim(rtrim(number_format((int) $run['responses_done'] * \Core\Credits::getCost('reanalyze_response', 'ai-reputation', 0.5), 1, ',', ''), '0'), ',') . ' crediti.', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>)) return;
                     const fd = new FormData(); fd.append('_csrf_token', csrf);
                     const resp = await fetch(base + '/runs/' + runId + '/reanalyze', { method: 'POST', body: fd });
                     if (!resp.ok) throw new Error('Errore server (' + resp.status + ')');

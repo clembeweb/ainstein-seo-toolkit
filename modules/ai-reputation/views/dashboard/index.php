@@ -88,8 +88,8 @@ $guideOpen = $runsCompleted === 0;
             <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= $runsCompleted ?></p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
-            <p class="text-sm text-slate-500 dark:text-slate-400">Costo API totale</p>
-            <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($costTotal, 2) ?> <span class="text-sm font-normal text-slate-400">$</span></p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Crediti usati</p>
+            <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= rtrim(rtrim(number_format($creditsTotal, 1, ',', '.'), '0'), ',') ?><?php if (\Core\Auth::isAdmin()): ?> <span class="text-sm font-normal text-slate-400" title="Visibile solo agli admin">(<?= number_format($costTotal, 2, ',', '.') ?> $ API)</span><?php endif; ?></p>
         </div>
     </div>
 
@@ -106,6 +106,7 @@ $guideOpen = $runsCompleted === 0;
                     <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg>
                     Avvia run
                 </button>
+                <span x-show="!running" class="text-xs text-slate-400 whitespace-nowrap"><?= (int) $runEstimate['responses'] ?> risposte · <?= rtrim(rtrim(number_format($runEstimate['credits'], 1, ',', '.'), '0'), ',') ?> crediti</span>
                 <button type="button" x-show="running" x-cloak @click="cancel()" class="inline-flex items-center px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700 font-medium transition-colors whitespace-nowrap">Annulla</button>
             </div>
             <?php endif; ?>
@@ -138,7 +139,7 @@ $guideOpen = $runsCompleted === 0;
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Data</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stato</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Risposte</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Costo</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Crediti</th>
                         <th class="px-4 py-3"></th>
                     </tr>
                 </thead>
@@ -160,7 +161,7 @@ $guideOpen = $runsCompleted === 0;
                         <td class="px-4 py-3 text-sm text-slate-900 dark:text-white"><?= date('d/m/Y H:i', strtotime($run['created_at'])) ?></td>
                         <td class="px-4 py-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $statusClass ?>"><?= $statusLabel ?></span></td>
                         <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300"><?= (int) $run['responses_done'] ?> / <?= (int) $run['responses_total'] ?><?= (int) $run['responses_error'] > 0 ? ' <span class="text-red-500">(' . (int) $run['responses_error'] . ' errori)</span>' : '' ?></td>
-                        <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300"><?= number_format((float) $run['cost_total'], 3) ?> $</td>
+                        <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300"><?= rtrim(rtrim(number_format((float) $run['credits_used'], 1, ',', '.'), '0'), ',') ?><?php if (\Core\Auth::isAdmin()): ?> <span class="text-xs text-slate-400" title="Visibile solo agli admin">(<?= number_format((float) $run['cost_total'], 2, ',', '.') ?> $)</span><?php endif; ?></td>
                         <td class="px-4 py-3 text-right">
                             <a href="<?= url($basePath . '/runs/' . $run['id']) ?>" class="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">Report</a>
                         </td>
@@ -297,6 +298,13 @@ function arRunner() {
             if (window.ainstein && typeof window.ainstein.alert === 'function') { window.ainstein.alert(msg, type); } else { alert(msg); }
         },
         async start() {
+            const est = <?= json_encode($runEstimate) ?>;
+            const fmt = n => String(Math.round(n * 10) / 10).replace('.', ',');
+            if (est.credits > est.balance) {
+                this.notify('Crediti insufficienti: il run costa ' + fmt(est.credits) + ' crediti, ne hai ' + fmt(est.balance) + '. Disattiva qualche domanda o ricarica.', 'error');
+                return;
+            }
+            if (!confirm('Il run pone le domande attive alle AI: ' + est.responses + ' risposte da raccogliere e analizzare, ' + fmt(est.credits) + ' crediti (ne hai ' + fmt(est.balance) + '). Dura qualche minuto. Avviare?')) return;
             const s = this.$store.arRun;
             s.message = ''; s.reportUrl = ''; s.log = []; s.done = 0; s.percent = 0;
             try {
@@ -332,7 +340,7 @@ function arRunner() {
             };
             this.es.addEventListener('item_completed', e => onItem(e, false));
             this.es.addEventListener('item_error', e => onItem(e, true));
-            this.es.addEventListener('completed', e => { const d = JSON.parse(e.data); this.finish('Run completato: ' + d.done + ' risposte, ' + d.analyses + ' analizzate, ' + d.actions + ' azioni proposte' + (d.errors ? ', ' + d.errors + ' errori' : '') + ' · ' + Number(d.cost_total).toFixed(3) + ' $', d.report_url); });
+            this.es.addEventListener('completed', e => { const d = JSON.parse(e.data); this.finish('Run completato: ' + d.done + ' risposte, ' + d.analyses + ' analizzate, ' + d.actions + ' azioni proposte' + (d.errors ? ', ' + d.errors + ' errori' : ''), d.report_url); });
             this.es.addEventListener('cancelled', () => this.finish('Run annullato', ''));
             this.es.onerror = () => { if (this.es) { this.es.close(); this.es = null; } this.startPolling(); };
         },

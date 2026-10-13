@@ -81,9 +81,9 @@ class RunController
         $repeats = max(1, (int) ($project['repeats'] ?? 1));
         $total = Run::plannedTotal($prompts, $engines, $repeats);
         $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
-        $unitCost = Credits::getCost('collect_response', Project::SLUG, 0.2);
-        $judgeCost = Credits::getCost('ai_analysis_medium', null, 1);
-        $needed = $total * ($unitCost + $judgeCost);
+        // Un solo prezzo per risposta: raccolta + analisi (il judge chiama AiService con charge_credits=false)
+        $unitCost = Credits::getCost('collect_response', Project::SLUG, 1);
+        $needed = $total * $unitCost;
         if (!Credits::hasEnough($creditUserId, $needed)) {
             echo json_encode(['success' => false, 'error' => 'Crediti insufficienti. Necessari: ' . $needed . ', disponibili: ' . Credits::getBalance($creditUserId)]);
             exit;
@@ -136,8 +136,20 @@ class RunController
             echo json_encode(['success' => false, 'error' => 'Il run è ancora in corso']);
             exit;
         }
+        // Rifare i giudizi costa (una chiamata AI per risposta): addebito unico all'avvio, al proprietario
+        $toJudge = (int) $run['responses_done'];
+        $cost = round($toJudge * Credits::getCost('reanalyze_response', Project::SLUG, 0.5), 2);
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+        if ($cost > 0) {
+            if (!Credits::hasEnough($creditUserId, $cost)) {
+                echo json_encode(['success' => false, 'error' => 'Crediti insufficienti. Necessari: ' . $cost . ', disponibili: ' . Credits::getBalance($creditUserId)]);
+                exit;
+            }
+            Credits::consume($creditUserId, $cost, 'reanalyze_response', Project::SLUG, ['project_id' => $projectId, 'run_id' => $runId, 'responses' => $toJudge]);
+            Database::execute("UPDATE ar_runs SET credits_used = credits_used + ? WHERE id = ?", [$cost, $runId]);
+        }
         $this->analysis->deleteByRun($runId);
-        echo json_encode(['success' => true, 'run_id' => $runId, 'to_judge' => (int) $run['responses_done']]);
+        echo json_encode(['success' => true, 'run_id' => $runId, 'to_judge' => $toJudge]);
         exit;
     }
 
@@ -244,7 +256,7 @@ class RunController
         $pendingTotal = (int) Database::fetchColumn("SELECT COUNT(*) FROM ar_responses WHERE run_id = ? AND status = 'pending'", [$runId]);
         if ($pendingTotal > 0) {
             $sendEvent('phase', ['phase' => 'collect', 'total' => $pendingTotal, 'label' => 'Raccolta risposte']);
-            $unitCost = Credits::getCost('collect_response', Project::SLUG, 0.2);
+            $unitCost = Credits::getCost('collect_response', Project::SLUG, 1);
             $collector = new EngineCollectorService();
 
             while (true) {
@@ -543,7 +555,7 @@ class RunController
         $metrics = $builder->metrics($responses, $analyses, $engines, $project);
         $sources = $builder->sources($responses, $analyses);
         $competitors = $builder->competitors($analyses);
-        $actions = Database::fetchAll("SELECT * FROM ar_actions WHERE run_id = ? ORDER BY FIELD(type, 'removal', 'counter_content', 'gap_article', 'correction', 'gap_pending'), id", [$runId]);
+        $actions = Database::fetchAll("SELECT * FROM ar_actions WHERE run_id = ? ORDER BY FIELD(type, 'clarify', 'removal', 'counter_content', 'gap_article', 'correction', 'gap_pending'), id", [$runId]);
         $homonyms = Database::fetchAll("SELECT * FROM ar_profile_facts WHERE project_id = ? AND category = 'homonym' AND status = 'proposed' ORDER BY id", [$projectId]);
 
         return View::render('ai-reputation::runs/show', [
@@ -610,7 +622,7 @@ class RunController
         $responses = $this->run->responses($runId);
         $analyses = $this->analysis->byRun($runId);
         $metrics = (new ReportBuilderService())->metrics($responses, $analyses, $run['engines'], $project);
-        $actions = Database::fetchAll("SELECT * FROM ar_actions WHERE run_id = ? ORDER BY FIELD(type, 'removal', 'counter_content', 'gap_article', 'correction', 'gap_pending'), id", [$runId]);
+        $actions = Database::fetchAll("SELECT * FROM ar_actions WHERE run_id = ? ORDER BY FIELD(type, 'clarify', 'removal', 'counter_content', 'gap_article', 'correction', 'gap_pending'), id", [$runId]);
         try {
             $pdfService = new ActionPlanPdfService();
             $pdf = $pdfService->render($project, $run, $actions, $metrics);

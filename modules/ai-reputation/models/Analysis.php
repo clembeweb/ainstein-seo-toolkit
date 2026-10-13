@@ -30,6 +30,7 @@ class Analysis
             'negative' => $a['negative'],
             'negative_reasons' => $enc($a['negative_reasons']),
             'negative_urls' => $enc($a['negative_urls']),
+            'doubts' => $enc($a['doubts'] ?? []),
             'cited_domains' => $enc($a['cited_domains']),
             'citations_noise' => $enc($a['citations_noise']),
             'contradicts_profile' => (int) ($a['contradicts_profile'] ?? 0),
@@ -45,7 +46,7 @@ class Analysis
         $rows = Database::fetchAll("SELECT * FROM ar_analyses WHERE run_id = ?", [$runId]);
         $out = [];
         foreach ($rows as $r) {
-            foreach (['claims', 'competitors', 'negative_reasons', 'negative_urls', 'cited_domains', 'citations_noise'] as $k) {
+            foreach (['claims', 'competitors', 'negative_reasons', 'negative_urls', 'doubts', 'cited_domains', 'citations_noise'] as $k) {
                 $r[$k] = json_decode((string) $r[$k], true) ?: [];
             }
             unset($r['raw']);

@@ -2,7 +2,7 @@
 $h = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
 $riskColor = match ($metrics['risk_label'] ?? '') { 'Alto' => '#dc2626', 'Medio' => '#d97706', 'Basso' => '#059669', default => '#64748b' };
 $badge = fn(string $text, string $bg, string $fg) => '<span style="display:inline-block;padding:1pt 6pt;border-radius:8pt;font-size:8pt;font-weight:bold;background:' . $bg . ';color:' . $fg . ';">' . $h($text) . '</span>';
-$typeColors = ['removal' => ['#fee2e2', '#b91c1c'], 'gap_pending' => ['#f1f5f9', '#475569']];
+$typeColors = ['clarify' => ['#ffedd5', '#c2410c'], 'removal' => ['#fee2e2', '#b91c1c'], 'gap_pending' => ['#f1f5f9', '#475569']];
 $typeBadge = fn(string $type) => $badge($typeLabels[$type] ?? $type, $typeColors[$type][0] ?? '#e0e7ff', $typeColors[$type][1] ?? '#3730a3');
 $statusBadge = fn(string $status) => $badge($statusLabels[$status] ?? $status, '#f1f5f9', '#334155');
 // $heading: titolo di sezione stampato nello stesso blocco del primo riquadro, così non resta mai da solo in fondo alla pagina

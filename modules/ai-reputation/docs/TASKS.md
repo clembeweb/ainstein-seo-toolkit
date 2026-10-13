@@ -28,6 +28,11 @@ Produzione dal 2026-10-07 su Contabo VPS `184.174.32.213` (Hetzner perso: accoun
 Già fatto: guida "Come si usa" in 4 passi nell'Overview (commit 1e9804d).
 
 ## Dopo (in ordine)
+-1. **Idea di Clemente (2026-10-13): controllo tecnico GEO**, come modalità a parte del tool: dati strutturati (schema.org
+   Organization/LocalBusiness/Person, coerenza con i dati veri), `llms.txt`, robots.txt e accesso dei crawler AI (GPTBot,
+   ClaudeBot, PerplexityBot, Google-Extended), sitemap, pagine leggibili senza JavaScript, pagina Chi siamo/Contatti con dati
+   societari. Probabilmente gratis o quasi (è crawl, niente AI): porta d'ingresso al GEO Audit a pagamento. Verificare online
+   cosa fanno i concorrenti prima di costruire.
 0. Fase C: PDF per il cliente finale (sintesi, meno dettaglio operativo), stesso motore `ActionPlanPdfService`.
 1. Decidere se accendere Claude come quarto engine per la demo (~4 $ e ~50 min a run).
 2. Domanda aperta a Clemente: Andrea Marcaccini che rapporto ha con Federico? (se coinvolto nelle stesse

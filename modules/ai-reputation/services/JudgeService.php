@@ -16,10 +16,14 @@ class JudgeService
 {
     private const SLUG = 'ai-reputation';
     private AiService $ai;
+    /** Effort del modello per il giudizio (low|medium|high; vuoto = default del modello). È una classificazione: low basta? Vedi scripts/rejudge.php */
+    public ?string $effort;
 
     public function __construct()
     {
         $this->ai = new AiService(self::SLUG);
+        $effort = (string) \Core\ModuleLoader::getSetting(self::SLUG, 'judge_effort', '');
+        $this->effort = in_array($effort, ['low', 'medium', 'high'], true) ? $effort : null;
     }
 
     public function model(): string
@@ -42,7 +46,9 @@ class JudgeService
         ], [
             'system' => $system,
             'max_tokens' => 2000,
-        ], self::SLUG);
+            // L'analisi è inclusa nel prezzo per risposta (collect_response, addebitato dal RunController)
+            'charge_credits' => false,
+        ] + ($this->effort ? ['effort' => $this->effort] : []), self::SLUG);
 
         Database::reconnect();
 
@@ -72,7 +78,8 @@ Regole:
 3. "is_homonym": "no" se la risposta parla chiaramente del soggetto; "yes" SOLO se il soggetto stesso ha dichiarato quell'omonimo nelle note di disambiguazione; "uncertain" se la risposta o una fonte attribuisce al nome fatti incompatibili col profilo (altra professione, altra città, altra epoca) e non puoi stabilire se sia la stessa persona. NON dedurre mai "yes" o "no" dal solo nome. Un omonimo ha lo STESSO nome e cognome del soggetto: persone con nome diverso e stesso cognome (es. parenti) NON sono omonimi, metti "no" e riportale in "claims". In "homonym_note" spiega in una frase cosa non torna (null se "no").
 4. "sentiment": da -2 (molto negativo) a 2 (molto positivo), 0 neutro, riferito a come la risposta presenta il soggetto. Se non è menzionato: 0.
 5. "verdict": "not_mentioned" se brand_mentioned è false; altrimenti "negative" se la risposta contiene fatti o giudizi negativi sul soggetto (procedimenti, truffe, sequestri, recensioni negative, dubbi espliciti sull'affidabilità attribuiti a lui); "positive" se lo presenta favorevolmente senza riserve; "mixed" se positivo e negativo insieme; "neutro" → usa "neutral" se descrittivo senza giudizio o se il motore dice di non poter giudicare.
-6. "negative": true se il verdetto è "negative" o "mixed" con un fatto negativo concreto. "negative_reasons": elenco breve dei motivi. "negative_urls": gli URL delle fonti citate che sostengono o riportano i fatti negativi (sequestri, confische, inchieste, arresti, condanne, truffe, usura, mafia, recensioni negative). OBBLIGATORIO: se "negative" è true e tra le fonti citate ce n'è una il cui titolo o URL riguarda quei fatti, DEVE stare in "negative_urls". Una fonte negativa non può mai finire in "citations_noise" se la risposta la usa per parlare del soggetto.
+6. "negative": true se il verdetto è "negative" o "mixed" con un fatto negativo concreto o un dubbio esplicito sull'affidabilità. "negative_reasons": elenco breve dei motivi. "negative_urls": SOLO gli URL di pagine il cui CONTENUTO riporta fatti o giudizi negativi SUL SOGGETTO (sequestri, confische, inchieste, arresti, condanne, truffe, usura, mafia, recensioni o articoli negativi su di lui). OBBLIGATORIO: se "negative" è true e tra le fonti citate ce n'è una così, DEVE stare in "negative_urls". Una fonte negativa non può mai finire in "citations_noise" se la risposta la usa per parlare del soggetto. NON sono fonti negative (non metterle in "negative_urls"): siti di concorrenti, directory, registri imprese, siti di fornitori o agenzie, il sito del soggetto, e qualunque pagina che il motore usa solo come indizio per un dubbio (vanno in "doubts").
+6b. "doubts": i dubbi sull'affidabilità, l'identità o la legittimità del soggetto che il motore solleva per MANCANZA o INCOERENZA di informazioni pubbliche, non per fatti negativi documentati (es. "non trovo la ragione sociale o la partita IVA", "lo stesso telefono compare su più siti quasi identici", "nessun indirizzo verificabile", "recensioni solo sul suo sito", "non è chiaro chi gestisce le prenotazioni"). Per ciascuno: {"doubt":"il dubbio in una frase, in italiano","fix":"cosa deve pubblicare o correggere il soggetto per scioglierlo, concreto (dove e quale dato)","evidence_urls":["URL citati che il motore usa come indizio"]}. Massimo 4. [] se non ci sono dubbi di questo tipo.
 7. Fonti: per ogni URL citato decidi se la pagina PARLA DEL SOGGETTO ("citations_about_subject") oppure è rumore ("citations_noise"). Rumore è SOLO una pagina chiaramente estranea: argomento diverso senza legame col soggetto, un omonimo dichiarato, una pagina indice generica. NON è rumore: il sito del soggetto, i suoi profili, articoli che lo citano o lo intervistano, e qualunque pagina che il motore usa per raccontare fatti del soggetto (anche cronaca giudiziaria il cui titolo non contiene il nome: se la risposta la usa per parlare di lui, parla di lui). Nel dubbio, "about_subject".
 8b. "contradicts_profile": true se la risposta afferma qualcosa in contrasto con il PROFILO CONFERMATO (es. dice "nessun procedimento giudiziario" quando il profilo confermato riporta una confisca; attribuisce un'attività che il profilo non ha). In "contradiction_note" una frase su cosa contraddice. false se non c'è profilo confermato o non ci sono contrasti. OMETTERE NON È CONTRADDIRE: una risposta che non parla di un fatto (es. descrive solo l'attività) ha "contradicts_profile": false. Serve un'affermazione esplicita contraria (es. "non risultano procedimenti", "nessuna controversia").
 2b. Se il motore chiede chiarimenti ma nomina il soggetto (anche tra le opzioni), "brand_mentioned" è true.
@@ -81,7 +88,7 @@ Regole:
 10. "summary": una frase in italiano, max 160 caratteri, che dice cosa risponde il motore sul soggetto. Lingua: italiano.
 
 Formato esatto:
-{"outcome":"answered","brand_mentioned":true,"mention_position":1,"is_homonym":"no","homonym_note":null,"sentiment":0,"verdict":"neutral","summary":"...","negative":false,"contradicts_profile":false,"contradiction_note":null,"negative_reasons":[],"negative_urls":[],"citations_about_subject":[],"citations_noise":[],"competitors":[],"claims":[]}
+{"outcome":"answered","brand_mentioned":true,"mention_position":1,"is_homonym":"no","homonym_note":null,"sentiment":0,"verdict":"neutral","summary":"...","negative":false,"contradicts_profile":false,"contradiction_note":null,"negative_reasons":[],"negative_urls":[],"doubts":[],"citations_about_subject":[],"citations_noise":[],"competitors":[],"claims":[]}
 TXT;
     }
 
@@ -192,6 +199,28 @@ TXT;
         $u = rtrim($u, '/?&#');
         $slash = strpos($u, '/');
         return $slash === false ? strtolower($u) : strtolower(substr($u, 0, $slash)) . substr($u, $slash);
+    }
+
+    /** Dubbi del motore (regola 6b): testo e rimedio obbligatori, indizi solo tra gli URL citati. */
+    private static function doubts(array $raw, array $citedUrls): array
+    {
+        $out = [];
+        foreach (array_slice($raw, 0, 4) as $x) {
+            if (!is_array($x)) {
+                continue;
+            }
+            $doubt = trim((string) (is_scalar($x['doubt'] ?? null) ? $x['doubt'] : ''));
+            $fix = trim((string) (is_scalar($x['fix'] ?? null) ? $x['fix'] : ''));
+            if ($doubt === '' || $fix === '') {
+                continue;
+            }
+            $out[] = [
+                'doubt' => mb_substr($doubt, 0, 300),
+                'fix' => mb_substr($fix, 0, 500),
+                'evidence_urls' => self::matchUrls($citedUrls, (array) ($x['evidence_urls'] ?? [])),
+            ];
+        }
+        return $out;
     }
 
     /** URL citati (forma originale) che corrispondono a quelli indicati dal judge */
@@ -328,6 +357,7 @@ TXT;
                 (array) ($d['negative_reasons'] ?? [])
             ))),
             'negative_urls' => $negativeUrls,
+            'doubts' => self::doubts((array) ($d['doubts'] ?? []), $citedUrls),
             'cited_domains' => array_keys($domains),
             'citations_noise' => $noise,
             'contradicts_profile' => !empty($d['contradicts_profile']) ? 1 : 0,
