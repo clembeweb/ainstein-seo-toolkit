@@ -83,8 +83,10 @@ $kpiCard = function (string $ref, string $label, string $value, string $sub) {
                 <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Search Console</p>
                 <?php if (!empty($gscConn['property_url'])): ?>
                 <p class="mt-1 text-sm text-slate-900 dark:text-white break-all">Collegata: <?= e($gscConn['property_url']) ?></p>
+                <?php elseif ($canEdit && $googleConfigured): ?>
+                <a href="<?= url("{$base}/gsc/connect?back=situation") ?>" class="mt-2 inline-flex items-center px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700">Collega Search Console</a>
                 <?php else: ?>
-                <a href="<?= url("{$base}/settings") ?>" class="mt-1 inline-block text-sm text-blue-600 dark:text-blue-400 hover:underline">Collegala dalle impostazioni del progetto</a>
+                <p class="mt-1 text-sm text-slate-500">Non collegata</p>
                 <?php endif; ?>
             </div>
             <p class="text-xs text-slate-400">Basta una delle due: con entrambe il punto è completo.</p>

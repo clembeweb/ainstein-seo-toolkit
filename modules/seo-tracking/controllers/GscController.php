@@ -61,9 +61,20 @@ class GscController
             return;
         }
 
+        // Da dove si parte (es. scheda "Punto della situazione"): a fine collegamento si torna lì
+        $_SESSION['gsc_back'] = ($_GET['back'] ?? '') === 'situation' ? 'situation' : null;
+
         $authUrl = $oauth->getAuthUrl('seo-tracking', $id);
         header('Location: ' . $authUrl);
         exit;
+    }
+
+    /** Pagina a cui tornare dopo il collegamento: Punto della situazione se si è partiti da lì, altrimenti impostazioni */
+    private function backPath(int $id): string
+    {
+        $back = $_SESSION['gsc_back'] ?? null;
+        unset($_SESSION['gsc_back']);
+        return '/seo-tracking/project/' . $id . ($back === 'situation' ? '/situation' : '/settings');
     }
 
     /**
@@ -203,7 +214,7 @@ class GscController
         $this->triggerBackgroundSync($id, 'gsc', 30);
 
         $_SESSION['_flash']['success'] = 'Google Search Console connesso! Sincronizzazione in corso...';
-        Router::redirect('/seo-tracking/project/' . $id . '/settings');
+        Router::redirect($this->backPath($id));
     }
 
     /**
