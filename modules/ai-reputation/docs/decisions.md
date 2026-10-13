@@ -298,3 +298,18 @@ risposta bloccato genera l'intervento `correction` ("tecnico") in cima; la sched
 dossier. Per le persone niente P.IVA/via/recensioni. Spec:
 `docs/superpowers/specs/2026-10-13-ai-reputation-diagnosi-tecnica-design.md`. Test: `scripts/test-geo-tech.php`.
 Prossimo passo deciso: verifica "prima/dopo" (rilancio delle sole domande coinvolte da un intervento).
+
+## ADR-017: Due audit nello stesso progetto: Acquisto e Reputazione
+
+**Date**: 2026-10-13 · **Status**: Accepted (idea di Clemente)
+
+**Context**: sul run 1 di Stabia mancavano le domande che i clienti fanno davvero ("tour in barca privata per Capri da
+Castellammare"): il generatore era nato per la reputazione di una persona (30% rep, solo ~10 domande su 40 senza nome).
+
+**Decision**: `ar_projects.audit_type` (purchase | reputation | both), `ar_prompts.audit_set` (purchase | reputation),
+`ar_runs.audit_type`. Il run usa solo le domande attive dei set del tipo scelto (`Prompt::forAudit`); si passa da un
+tipo all'altro senza perdere domande. "Genera domande" scrive il set del tipo: per l'acquisto 30 domande (~75% comp
+di bisogno senza nome, con luoghi di partenza/arrivo, servizi e clienti dal profilo; ~25% comm col nome; fino al 40% in
+inglese se ci sono clienti stranieri; niente reputazione); "+ Domande base" solo per la reputazione. Nuovi progetti:
+tipo Azienda e audit Acquisto. Report e PDF dicono il tipo; nell'audit d'acquisto il rischio reputazione è "non
+misurato". I progetti esistenti restano "reputation". Conferme del modulo con la finestra dell'app (`arConfirm`).

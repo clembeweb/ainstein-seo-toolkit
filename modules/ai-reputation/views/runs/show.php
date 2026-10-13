@@ -51,7 +51,7 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
     <div class="flex flex-wrap items-start justify-between gap-4">
         <div>
             <a href="<?= url($basePath) ?>" class="text-sm text-slate-500 hover:text-indigo-600 dark:text-slate-400">← Overview</a>
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-white mt-1">Report run #<?= (int) $run['id'] ?> · <?= date('d/m/Y H:i', strtotime($run['created_at'])) ?></h2>
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white mt-1"><?= ['purchase' => 'Audit d’acquisto', 'reputation' => 'Audit reputazione', 'both' => 'Audit acquisto + reputazione'][$run['audit_type'] ?? 'reputation'] ?? 'Report' ?> · run #<?= (int) $run['id'] ?> · <?= date('d/m/Y H:i', strtotime($run['created_at'])) ?></h2>
             <p class="text-sm text-slate-500 dark:text-slate-400">
                 <?= (int) $run['prompts_total'] ?> domande · <?= count($engines) ?> AI · <?= (int) $run['responses_done'] ?> risposte<?= (int) $run['responses_error'] > 0 ? ' (' . (int) $run['responses_error'] . ' non arrivate)' : '' ?> · <?= $statusLabel ?>
                 <?php if ($hasAnalyses): ?> · <?= (int) $run['analyses_done'] ?> analizzate<?php endif; ?>
@@ -101,8 +101,13 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Rischio reputazione</p>
+            <?php if (($run['audit_type'] ?? 'reputation') === 'purchase'): ?>
+            <p class="text-2xl font-bold text-slate-400">–</p>
+            <p class="text-xs text-slate-400">non misurato: è un audit d'acquisto. Per il rischio scegli "Reputazione" o "Entrambi" nella Overview.</p>
+            <?php else: ?>
             <p class="text-2xl font-bold <?= $riskClass ?>"><?= $hasAnalyses ? $metrics['risk_label'] : '–' ?> <?php if ($hasAnalyses): ?><span class="text-sm font-normal text-slate-400"><?= $metrics['risk'] ?>%</span><?php endif; ?></p>
             <p class="text-xs text-slate-400"><?= $hasAnalyses ? e($metrics['risk_basis']) . ' sono negative · ' . $metrics['negative_domains'] . ' fonti negative' : 'dopo l\'analisi' ?></p>
+            <?php endif; ?>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Risposte negative (domande neutre)</p>
@@ -430,7 +435,7 @@ function arReport() {
             const box = document.getElementById('brief-' + actionId);
             if (!box || this.generatingBrief[actionId]) return;
             const costLabel = <?= json_encode($briefCostLabel, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>;
-            if (!confirm(regenerate ? 'Rigenerare la scheda? Sovrascrive quella attuale e costa ' + costLabel + '.' : 'Generare la scheda operativa? Costa ' + costLabel + ' e richiede 20-40 secondi.')) return;
+            if (!(await window.arConfirm(regenerate ? 'Rigenerare la scheda? Sovrascrive quella attuale e costa ' + costLabel + '.' : 'Generare la scheda operativa? Costa ' + costLabel + ' e richiede 20-40 secondi.', { buttonText: regenerate ? 'Rigenera' : 'Genera' }))) return;
             this.generatingBrief[actionId] = true;
             const btn = ev.currentTarget; const oldHtml = btn.innerHTML;
             btn.disabled = true; btn.innerHTML = '<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg> Genero la scheda…';
@@ -454,7 +459,7 @@ function arReport() {
         async analyze(reset) {
             try {
                 if (reset) {
-                    if (!confirm(<?= json_encode('Rifare tutti i giudizi di questo run? ' . (int) $run['responses_done'] . ' risposte: ' . rtrim(rtrim(number_format((int) $run['responses_done'] * \Core\Credits::getCost('reanalyze_response', 'ai-reputation', 0.5), 1, ',', ''), '0'), ',') . ' crediti.', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>)) return;
+                    if (!(await window.arConfirm(<?= json_encode('Rifare tutti i giudizi di questo run? ' . (int) $run['responses_done'] . ' risposte: ' . rtrim(rtrim(number_format((int) $run['responses_done'] * \Core\Credits::getCost('reanalyze_response', 'ai-reputation', 0.5), 1, ',', ''), '0'), ',') . ' crediti.', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>, { buttonText: 'Rianalizza' }))) return;
                     const fd = new FormData(); fd.append('_csrf_token', csrf);
                     const resp = await fetch(base + '/runs/' + runId + '/reanalyze', { method: 'POST', body: fd });
                     if (!resp.ok) throw new Error('Errore server (' + resp.status + ')');

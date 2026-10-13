@@ -75,7 +75,7 @@ $canEdit = ($project['access_role'] ?? 'owner') !== 'viewer';
             <h2 class="text-base font-semibold text-red-700 dark:text-red-400">Elimina progetto</h2>
             <p class="text-sm text-slate-500 dark:text-slate-400">Cancella domande, run, risposte e analisi. Non si torna indietro.</p>
         </div>
-        <form method="POST" action="<?= url($basePath . '/delete') ?>" onsubmit="return confirm('Eliminare definitivamente il progetto e tutti i suoi dati?')">
+        <form method="POST" action="<?= url($basePath . '/delete') ?>" data-confirm="Eliminare definitivamente il progetto e tutti i suoi dati?" data-confirm-button="Elimina" data-confirm-destructive="1">
             <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
             <button type="submit" class="inline-flex items-center px-4 py-2 rounded-lg border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30 font-medium transition-colors">Elimina</button>
         </form>

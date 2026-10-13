@@ -46,8 +46,12 @@ $sectionTitle = fn(string $text, string $margin) => '<div style="font-size:10pt;
         <div style="font-size:9pt;color:#4f46e5;font-weight:bold;letter-spacing:1pt;">GEO AUDIT · PIANO DEGLI INTERVENTI</div>
         <div style="font-size:18pt;font-weight:bold;margin-top:2pt;"><?= $h($project['subject_name']) ?></div>
         <div style="font-size:9.5pt;color:#475569;margin-top:3pt;">
-            Run #<?= (int) $run['id'] ?> del <?= date('d/m/Y', strtotime((string) $run['created_at'])) ?>
+            <?= ['purchase' => 'Audit d’acquisto', 'reputation' => 'Audit reputazione', 'both' => 'Audit acquisto + reputazione'][$run['audit_type'] ?? 'reputation'] ?? 'Audit' ?> · run #<?= (int) $run['id'] ?> del <?= date('d/m/Y', strtotime((string) $run['created_at'])) ?>
+            <?php if (($run['audit_type'] ?? 'reputation') !== 'purchase'): ?>
             · Rischio reputazione: <span style="color:<?= $riskColor ?>;font-weight:bold;"><?= $h($metrics['risk_label'] ?? '–') ?><?= isset($metrics['risk']) ? ' ' . (int) $metrics['risk'] . '%' : '' ?></span>
+            <?php else: ?>
+            · Le AI ti citano nel <?= (int) ($metrics['share'] ?? 0) ?>% delle risposte
+            <?php endif; ?>
             · <?= count($contents) ?> contenut<?= count($contents) === 1 ? 'o' : 'i' ?> da pubblicare · <?= count($removals) ?> sit<?= count($removals) === 1 ? 'o' : 'i' ?> da contattare
         </div>
     </div>

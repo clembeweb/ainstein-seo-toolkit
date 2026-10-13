@@ -68,10 +68,11 @@ class Run
         return $n;
     }
 
-    public function create(int $projectId, int $userId, array $prompts, array $engines, int $repeats = 1): int
+    public function create(int $projectId, int $userId, array $prompts, array $engines, int $repeats = 1, string $auditType = 'reputation'): int
     {
         $runId = Database::insert('ar_runs', [
             'project_id' => $projectId,
+            'audit_type' => in_array($auditType, ['purchase', 'reputation', 'both'], true) ? $auditType : 'reputation',
             'user_id' => $userId,
             'status' => self::STATUS_PENDING,
             'engines' => json_encode(array_values($engines)),

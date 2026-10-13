@@ -58,6 +58,29 @@ $tabs = [
     </div>
 </div>
 
+<script>
+// Conferme del GEO Audit con la finestra dell'app (window.ainstein.confirm), non con l'avviso del browser.
+// arConfirm(msg, {buttonText, destructive}) → Promise<bool>. I form con data-confirm="..." chiedono prima di inviare.
+window.arConfirm = window.arConfirm || async function (message, options = {}) {
+    if (window.ainstein && typeof window.ainstein.confirm === 'function') {
+        try { await window.ainstein.confirm(message, options); return true; } catch (e) { return false; }
+    }
+    return window.confirm(message);
+};
+if (!window.arConfirmForms) {
+    window.arConfirmForms = true;
+    document.addEventListener('submit', async (ev) => {
+        const form = ev.target;
+        if (!(form instanceof HTMLFormElement) || !form.dataset.confirm || form.dataset.confirmed === '1') return;
+        ev.preventDefault();
+        if (await window.arConfirm(form.dataset.confirm, { buttonText: form.dataset.confirmButton || 'Conferma', destructive: form.dataset.confirmDestructive === '1' })) {
+            form.dataset.confirmed = '1';
+            form.submit();
+        }
+    }, true);
+}
+</script>
+
 <?php if (!empty($project['global_project_id']) === false): ?>
 <?= \Core\View::partial('components/orphaned-project-notice', ['moduleSlug' => 'ai-reputation']) ?>
 <?php endif; ?>

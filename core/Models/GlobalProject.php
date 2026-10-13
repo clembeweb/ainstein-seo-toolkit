@@ -980,6 +980,8 @@ class GlobalProject
                         'subject_name' => trim((string) preg_replace('/\s*\([^)]*\)\s*$/u', '', $name)) ?: $name,
                         // Default azienda (il caso più comune); si cambia dal riquadro "Chi stai monitorando?" o in Impostazioni
                         'subject_type' => 'company',
+                        // Per le aziende il primo audit utile è quello d'acquisto; la reputazione si aggiunge dalla Overview
+                        'audit_type' => 'purchase',
                         'website' => $website,
                         'status' => 'active',
                     ]);

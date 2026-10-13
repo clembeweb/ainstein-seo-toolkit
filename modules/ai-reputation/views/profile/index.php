@@ -27,7 +27,7 @@ $hasFacts = $counts['total'] > 0;
             <?php $toConfirm = (new \Modules\AiReputation\Models\ProfileFact())->countProposedNonHomonym((int) $project['id']); ?>
             <?php if ($toConfirm > 0): ?>
             <form method="POST" action="<?= url('/ai-reputation/project/' . (int) $project['id'] . '/profile/confirm-all') ?>"
-                  onsubmit="return confirm('Confermi come vere tutte le <?= $toConfirm ?> righe da confermare? Sono la verità con cui verranno giudicate le risposte delle AI: leggile prima. Gli omonimi restano da decidere uno per uno.')">
+                  data-confirm="Confermi come vere tutte le <?= $toConfirm ?> righe da confermare? Sono la verità con cui verranno giudicate le risposte delle AI: leggile prima. Gli omonimi restano da decidere uno per uno." data-confirm-button="Conferma tutte">
                 <input type="hidden" name="_csrf_token" value="<?= csrf_token() ?>">
                 <button type="submit" class="inline-flex items-center px-4 py-2 rounded-lg border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-medium hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors whitespace-nowrap">
                     <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
@@ -99,7 +99,7 @@ $hasFacts = $counts['total'] > 0;
                         <form method="POST" action="<?= url("{$basePath}/profile/facts/{$f['id']}/reject") ?>"><input type="hidden" name="_csrf_token" value="<?= $csrf ?>"><button type="submit" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30" title="Falso: errore da monitorare"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></form>
                         <?php endif; ?>
                     <?php endif; ?>
-                    <form method="POST" action="<?= url("{$basePath}/profile/facts/{$f['id']}/delete") ?>" onsubmit="return confirm('Eliminare la riga?')"><input type="hidden" name="_csrf_token" value="<?= $csrf ?>"><button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" title="Elimina"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg></button></form>
+                    <form method="POST" action="<?= url("{$basePath}/profile/facts/{$f['id']}/delete") ?>" data-confirm="Eliminare la riga?" data-confirm-button="Elimina" data-confirm-destructive="1"><input type="hidden" name="_csrf_token" value="<?= $csrf ?>"><button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" title="Elimina"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg></button></form>
                 </div>
                 <?php endif; ?>
             </li>
@@ -127,7 +127,7 @@ function arProfile() {
     return {
         busy: false, message: '', error: false,
         async generate() {
-            if (<?= $hasFacts ? 'true' : 'false' ?> && !confirm('Rigenerare la bozza? Le righe AI ancora da confermare vengono sostituite; quelle confermate, corrette o rifiutate restano.')) return;
+            if (<?= $hasFacts ? 'true' : 'false' ?> && !(await window.arConfirm('Rigenerare la bozza? Le righe AI ancora da confermare vengono sostituite; quelle confermate, corrette o rifiutate restano.', { buttonText: 'Rigenera' }))) return;
             this.busy = true; this.message = ''; this.error = false;
             try {
                 const fd = new FormData(); fd.append('_csrf_token', csrf);

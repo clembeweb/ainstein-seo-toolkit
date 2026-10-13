@@ -55,9 +55,11 @@ class RunController
             exit;
         }
 
-        $prompts = $this->prompt->allByProject($projectId, true);
+        // Solo le domande del tipo di audit scelto (acquisto, reputazione o entrambi)
+        $auditType = (string) ($project['audit_type'] ?? 'reputation');
+        $prompts = $this->prompt->forAudit($projectId, $auditType);
         if (empty($prompts)) {
-            echo json_encode(['success' => false, 'error' => 'Nessuna domanda attiva: aggiungine almeno una']);
+            echo json_encode(['success' => false, 'error' => 'Nessuna domanda attiva per l\'audit "' . (Prompt::AUDIT_TYPES[$auditType] ?? $auditType) . '": generale con "Genera domande con AI" o aggiungine una']);
             exit;
         }
         $maxPrompts = (int) ModuleLoader::getSetting(Project::SLUG, 'max_prompts_per_run', 60);
@@ -98,7 +100,7 @@ class RunController
                 echo json_encode(['success' => false, 'error' => 'C\'è già un run in corso per questo progetto']);
                 exit;
             }
-            $runId = $this->run->create($projectId, $user['id'], $prompts, $engines, $repeats);
+            $runId = $this->run->create($projectId, $user['id'], $prompts, $engines, $repeats, $auditType);
             Database::commit();
         } catch (\Throwable $e) {
             if (Database::inTransaction()) {

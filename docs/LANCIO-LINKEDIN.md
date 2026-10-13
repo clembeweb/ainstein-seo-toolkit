@@ -209,6 +209,8 @@ Note per la revisione: prima riga sotto i 150 caratteri (resta sopra il taglio "
 
 ### Prima del post (piccoli, ma visibili)
 - [x] **GEO Audit (ex AI Reputation Radar), punto 2.2:** fatto 2026-10-13 (rinomina, prova su Stabia, dubbi delle AI, prezzo unico, diagnosi tecnica: ADR-015/016 del modulo).
+- [ ] **Dashboard di ogni modulo: "Attiva su un progetto esistente" accanto a "Crea progetto"** (Clemente 2026-10-13, prima del post): oggi "Nuovo progetto" porta sempre a `/projects/create`; serve anche un selettore dei progetti globali dell'utente che attiva il modulo lì (stesso flusso di POST `/projects/{id}/activate-module`, col modal dei tipi per i moduli tipizzati).
+- [ ] **Conferme con la finestra dell'app, non con l'avviso del browser** (Clemente 2026-10-13, prima del post: "così lato UI/UX non si può vedere"). Esiste già `window.ainstein.confirm(msg, {buttonText, destructive})` in `shared/views/components/global-modals.php`. GEO Audit FATTO (helper `arConfirm` + `data-confirm` sui form, in `modules/ai-reputation/views/partials/project-nav.php`). Restano ~66 file con `confirm(` nativo negli altri moduli e in shared: stesso schema.
 - [ ] **Tour guidato da rivedere per TUTTI i moduli** (segnato da Clemente 2026-10-13): `core/OnboardingService.php` + `shared/views/components/onboarding-spotlight.php`. Allinearlo ai moduli accesi e ai flussi di oggi (es. GEO Audit: "Chi stai monitorando?", Controllo tecnico, prezzo prima di "Avvia run").
 - [ ] ainstein.it stesso: SEO Audit dà score 47/100 (3 critici, 64 warning). Sistemare i critici.
 - [ ] Landing: togliere Content Creator, aggiungere GEO Audit, allineare ai 5 moduli accesi.

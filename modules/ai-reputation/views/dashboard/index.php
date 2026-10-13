@@ -16,7 +16,7 @@ $guideSteps = [
     [
         'done' => $promptsActive > 0,
         'title' => 'Prepara le domande',
-        'text' => 'Qui sotto, in "Domande monitorate": "Genera domande con AI" (consigliato, scrive 40 domande dal profilo confermato), "+ Domande base" per 8 domande standard, oppure aggiungile a mano.',
+        'text' => 'Qui sotto, in "Domande monitorate", scegli che audit vuoi fare: Acquisto (quando un cliente cerca il servizio, le AI citano te o i concorrenti?), Reputazione (cosa dicono di te) o Entrambi. Poi "Genera domande": l’AI le scrive dal profilo e dal sito. Puoi anche aggiungerle a mano.',
         'link' => $basePath . '#prompts', 'cta' => 'Vai alle domande',
     ],
     [
@@ -207,19 +207,34 @@ $guideOpen = $runsCompleted === 0;
                 <h2 class="text-base font-semibold text-slate-900 dark:text-white">Domande monitorate</h2>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Le domande che la gente fa alle AI su <?= e($project['subject_name']) ?>. Generale dal <a href="<?= url($basePath . '/profile') ?>" class="text-indigo-600 dark:text-indigo-400 hover:underline">profilo confermato</a>, aggiungile a mano, o parti dalle 8 base.</p>
             </div>
-            <div class="flex items-center gap-2" x-data="arPromptGen()">
-                <button type="button" @click="generate()" :disabled="busy" class="inline-flex items-center px-3 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60 text-sm font-medium transition-colors whitespace-nowrap" title="Il prompt engine scrive 40 domande dal profilo confermato">
-                    <svg x-show="busy" x-cloak class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
-                    <span x-text="busy ? 'Genero…' : 'Genera domande con AI'"></span>
+            <div class="flex flex-wrap items-center justify-end gap-2" x-data="arPromptGen()">
+                <?php foreach ($auditSets as $set): $genLabel = $set === 'purchase' ? 'Genera domande d&#039;acquisto' : 'Genera domande sulla reputazione'; ?>
+                <button type="button" @click="generate('<?= $set ?>')" :disabled="busy" class="inline-flex items-center px-3 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60 text-sm font-medium transition-colors whitespace-nowrap" title="<?= $set === 'purchase' ? 'Scrive 30 domande che un cliente fa alle AI quando cerca il servizio, dal profilo e dal sito' : 'Scrive 40 domande sulla reputazione dal profilo confermato' ?>">
+                    <svg x-show="busy === '<?= $set ?>'" x-cloak class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
+                    <span x-show="busy !== '<?= $set ?>'"><?= $genLabel ?></span><span x-show="busy === '<?= $set ?>'" x-cloak>Genero…</span>
                 </button>
+                <?php endforeach; ?>
+                <?php if (in_array('reputation', $auditSets, true)): ?>
                 <form method="POST" action="<?= url($basePath . '/prompts/seed') ?>">
                     <input type="hidden" name="_csrf_token" value="<?= $csrf ?>">
                     <button type="submit" class="inline-flex items-center px-3 py-2 rounded-lg border border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-900/30 text-sm font-medium transition-colors whitespace-nowrap">
                         + Domande base
                     </button>
                 </form>
+                <?php endif; ?>
             </div>
         </div>
+
+        <form method="POST" action="<?= url($basePath . '/audit-type') ?>" class="px-5 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 flex flex-wrap items-center gap-3">
+            <input type="hidden" name="_csrf_token" value="<?= $csrf ?>">
+            <span class="text-sm font-medium text-slate-700 dark:text-slate-200">Che audit vuoi fare?</span>
+            <div class="flex rounded-lg border border-slate-300 dark:border-slate-600 overflow-hidden text-sm">
+                <?php foreach (['purchase' => ['Acquisto', 'Quando un cliente cerca il servizio, le AI citano te o i concorrenti?'], 'reputation' => ['Reputazione', 'Cosa dicono le AI di te: affidabilità, rischi, dubbi'], 'both' => ['Entrambi', 'Le due serie di domande nello stesso run']] as $val => [$lbl, $hint]): ?>
+                <button type="submit" name="audit_type" value="<?= $val ?>" title="<?= e($hint) ?>" class="px-3 py-1.5 <?= $auditType === $val ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600' ?>"><?= $lbl ?></button>
+                <?php endforeach; ?>
+            </div>
+            <span class="text-xs text-slate-500 dark:text-slate-400"><?= $auditType === 'purchase' ? 'Domande di chi cerca il servizio, quasi tutte senza il tuo nome.' : ($auditType === 'reputation' ? 'Domande su di te: affidabilità, recensioni, notizie.' : 'Acquisto e reputazione insieme: il run costa di più.') ?> Il run usa solo le domande di questo audit.</span>
+        </form>
 
         <form method="POST" action="<?= url($basePath . '/prompts') ?>" class="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-3">
             <input type="hidden" name="_csrf_token" value="<?= $csrf ?>">
@@ -228,7 +243,13 @@ $guideOpen = $runsCompleted === 0;
                 <option value="<?= $key ?>"><?= e($label) ?></option>
                 <?php endforeach; ?>
             </select>
-            <input type="text" name="text" required minlength="5" placeholder="Es. <?= e($project['subject_name']) ?> è affidabile?" class="flex-1 rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
+            <?php if ($auditType === 'both'): ?>
+            <select name="audit_set" class="rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
+                <option value="purchase">Audit acquisto</option>
+                <option value="reputation">Audit reputazione</option>
+            </select>
+            <?php endif; ?>
+            <input type="text" name="text" required minlength="5" placeholder="Es. <?= $auditType === 'reputation' ? e($project['subject_name']) . ' è affidabile?' : 'Dove posso … vicino a …?' ?>" class="flex-1 rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
             <button type="submit" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors">Aggiungi</button>
         </form>
 
@@ -255,8 +276,9 @@ $guideOpen = $runsCompleted === 0;
                         default => 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
                     };
                     ?>
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 <?= (int) $p['is_active'] ? '' : 'opacity-50' ?>">
-                        <td class="px-4 py-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $clusterClass ?>"><?= strtoupper($p['cluster']) ?></span></td>
+                    <?php $inAudit = in_array($p['audit_set'] ?? 'reputation', $auditSets, true); ?>
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 <?= (int) $p['is_active'] && $inAudit ? '' : 'opacity-50' ?>"<?= $inAudit ? '' : ' title="Non entra nel run: è dell&#039;altro tipo di audit"' ?>>
+                        <td class="px-4 py-3 whitespace-nowrap"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $clusterClass ?>"><?= strtoupper($p['cluster']) ?></span> <span class="text-xs text-slate-400"><?= ($p['audit_set'] ?? 'reputation') === 'purchase' ? 'acquisto' : 'reputazione' ?></span></td>
                         <td class="px-4 py-3 text-sm text-slate-900 dark:text-white"><?php if ((int) ($p['is_leading'] ?? 0) === 1): ?><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-2 bg-slate-200 text-slate-700 dark:bg-slate-600 dark:text-slate-200" title="Nomina già un fatto negativo: nel report sta in un blocco a parte, fuori dal rischio">mirata</span><?php endif; ?><?= e($p['text']) ?></td>
                         <td class="px-4 py-3">
                             <form method="POST" action="<?= url($basePath . '/prompts/' . $p['id'] . '/toggle') ?>">
@@ -267,7 +289,7 @@ $guideOpen = $runsCompleted === 0;
                             </form>
                         </td>
                         <td class="px-4 py-3 text-right">
-                            <form method="POST" action="<?= url($basePath . '/prompts/' . $p['id'] . '/delete') ?>" onsubmit="return confirm('Eliminare questa domanda?')">
+                            <form method="POST" action="<?= url($basePath . '/prompts/' . $p['id'] . '/delete') ?>" data-confirm="Eliminare questa domanda?" data-confirm-button="Elimina" data-confirm-destructive="1">
                                 <input type="hidden" name="_csrf_token" value="<?= $csrf ?>">
                                 <button type="submit" class="text-slate-400 hover:text-red-600" title="Elimina">
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
@@ -297,10 +319,10 @@ function arPromptGen() {
     const csrf = '<?= $csrf ?>';
     return {
         busy: false,
-        async generate() {
-            this.busy = true;
+        async generate(set) {
+            this.busy = set;
             try {
-                const fd = new FormData(); fd.append('_csrf_token', csrf); fd.append('target', '40');
+                const fd = new FormData(); fd.append('_csrf_token', csrf); fd.append('set', set); fd.append('target', set === 'purchase' ? '30' : '40');
                 const resp = await fetch(base + '/prompts/generate', { method: 'POST', body: fd });
                 if (!resp.ok) throw new Error('Errore server (' + resp.status + ')');
                 const data = await resp.json();
@@ -327,11 +349,15 @@ function arRunner() {
         async start() {
             const est = <?= json_encode($runEstimate) ?>;
             const fmt = n => String(Math.round(n * 10) / 10).replace('.', ',');
+            if (est.responses === 0) {
+                this.notify('Nessuna domanda per questo tipo di audit: generale con il bottone "Genera domande" qui sotto.', 'error');
+                return;
+            }
             if (est.credits > est.balance) {
                 this.notify('Crediti insufficienti: il run costa ' + fmt(est.credits) + ' crediti, ne hai ' + fmt(est.balance) + '. Disattiva qualche domanda o ricarica.', 'error');
                 return;
             }
-            if (!confirm('Il run pone le domande attive alle AI: ' + est.responses + ' risposte da raccogliere e analizzare, ' + fmt(est.credits) + ' crediti (ne hai ' + fmt(est.balance) + '). Dura qualche minuto. Avviare?')) return;
+            if (!(await window.arConfirm('Il run pone ' + est.prompts + ' domande alle AI: ' + est.responses + ' risposte da raccogliere e analizzare. Costa ' + fmt(est.credits) + ' crediti (ne hai ' + fmt(est.balance) + ') e dura qualche minuto: lascia la pagina aperta per seguire l’avanzamento.', { buttonText: 'Avvia il run' }))) return;
             const s = this.$store.arRun;
             s.message = ''; s.reportUrl = ''; s.log = []; s.done = 0; s.percent = 0;
             try {

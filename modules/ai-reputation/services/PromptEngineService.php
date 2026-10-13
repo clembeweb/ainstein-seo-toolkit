@@ -16,8 +16,12 @@ class PromptEngineService
     private const SLUG = 'ai-reputation';
 
     /** @return array ['success' => bool, 'added' => int, 'skipped' => int, 'error' => ?string] */
-    public function generate(int $creditUserId, array $project, int $target = 40): array
+    /**
+     * $set: 'reputation' (cosa dicono di te) oppure 'purchase' (domande d'acquisto: il cliente cerca il servizio).
+     */
+    public function generate(int $creditUserId, array $project, int $target = 40, string $set = 'reputation'): array
     {
+        $set = $set === 'purchase' ? 'purchase' : 'reputation';
         $facts = new ProfileFact();
         $truth = $facts->truth((int) $project['id']);
         $rejected = $facts->rejected((int) $project['id']);
@@ -26,8 +30,8 @@ class PromptEngineService
 
         $ai = new AiService(self::SLUG);
         $result = $ai->complete($creditUserId, [
-            ['role' => 'user', 'content' => $this->userPrompt($project, $truth, $rejected, $existing, $target)],
-        ], ['system' => $this->systemPrompt(), 'max_tokens' => 6000], self::SLUG);
+            ['role' => 'user', 'content' => $this->userPrompt($project, $truth, $rejected, $existing, $target, $set)],
+        ], ['system' => $set === 'purchase' ? self::purchaseSystemPrompt() : $this->systemPrompt(), 'max_tokens' => 8000], self::SLUG);
         Database::reconnect();
 
         if (!empty($result['error']) || empty($result['result'])) {
@@ -55,7 +59,10 @@ class PromptEngineService
             $seen[] = $key;
             $cluster = in_array($p['cluster'] ?? '', array_keys(Prompt::CLUSTERS), true) ? $p['cluster'] : 'nav';
             $lang = in_array($p['lang'] ?? 'it', ['it', 'en'], true) ? $p['lang'] : 'it';
-            $id = $prompts->create((int) $project['id'], $text, $cluster, $lang, 'ai', !empty($p['leading']));
+            if ($set === 'purchase' && !in_array($cluster, ['comm', 'comp'], true)) {
+                $cluster = 'comp'; // le domande d'acquisto sono di bisogno (comp) o sul soggetto da cliente (comm)
+            }
+            $id = $prompts->create((int) $project['id'], $text, $cluster, $lang, 'ai', $set === 'reputation' && !empty($p['leading']), $set);
             $persona = preg_replace('/[^a-z_]/', '', mb_strtolower((string) ($p['persona'] ?? 'neutro'))) ?: 'neutro';
             Database::update('ar_prompts', ['persona' => mb_substr($persona, 0, 50)], 'id = ?', [$id]);
             $added++;
@@ -91,7 +98,35 @@ Formato:
 TXT;
     }
 
-    private function userPrompt(array $project, array $truth, array $rejected, array $existing, int $target): string
+    /**
+     * Domande d'acquisto (idea di Clemente 2026-10-13, caso Stabia: "tour privato in barca a Capri da Castellammare").
+     * Misurano se le AI citano il soggetto quando un cliente cerca il servizio senza conoscerlo.
+     */
+    public static function purchaseSystemPrompt(): string
+    {
+        return <<<'TXT'
+Sei il "prompt engine" di un sistema che misura se ChatGPT, Gemini e le altre AI citano un'attività quando un potenziale cliente cerca il servizio. Scrivi le domande che clienti reali farebbero a un assistente AI per decidere cosa comprare, prenotare o a chi rivolgersi.
+Rispondi SOLO con JSON valido, senza markdown.
+
+Cluster (campo "cluster"):
+- comp: domande di bisogno SENZA il nome del soggetto (circa 75%). Chi chiede non conosce ancora il soggetto: vuole un servizio, un prodotto, una soluzione, un consiglio.
+- comm: domande CON il nome del soggetto, da cliente che lo sta valutando: prezzi, cosa include, come prenotare, tempi, condizioni, confronto con un'alternativa (circa 25%).
+
+Regole:
+1. Parti da servizi, prodotti, luoghi, tipi di cliente e occasioni presenti nel profilo e nel sito. Usa i luoghi veri: di partenza e di arrivo, zone servite, città vicine da cui arrivano i clienti.
+2. Varia l'intento: "come faccio a…", "dove posso…", "quanto costa…", "qual è il migliore per…", "conviene… o…?", "cosa mi consigli per…", "si può… da X a Y?". Includi domande pratiche con origine e destinazione (es. "come fare un tour in barca privata per Capri partendo da Castellammare di Stabia").
+3. Varia il cliente (campo "persona", una parola): famiglia, coppia, gruppo, turista, azienda, principiante, esperto, budget, lusso…, e le occasioni (stagione, evento, festa, ultimo minuto).
+4. Lingua (campo "lang"): "it" o "en". Se il profilo o il sito indicano clienti stranieri o turisti, fino al 40% in inglese, scritte come le scriverebbe uno straniero (anche con i nomi inglesi dei luoghi, es. "Amalfi Coast").
+5. Le domande comp non nominano mai il soggetto né i suoi marchi. Non inventare servizi che il profilo non sostiene.
+6. Domande naturali e brevi, come in chat. Niente duplicati o parafrasi. Non ripetere le domande già esistenti.
+7. Niente domande sulla reputazione (affidabilità, truffe, recensioni negative): sono un altro audit.
+
+Formato:
+{"prompts":[{"cluster":"comp","lang":"it","persona":"famiglia","text":"..."}, ...]}
+TXT;
+    }
+
+    private function userPrompt(array $project, array $truth, array $rejected, array $existing, int $target, string $set = 'reputation'): string
     {
         $subject = $project['subject_name'];
         $type = ($project['subject_type'] ?? 'person') === 'company' ? 'azienda' : 'persona';
@@ -112,7 +147,7 @@ TXT;
         } else {
             $lines[] = "\nPROFILO: non ancora confermato. Usa nome, tipo, città e sito; tieni le domande comp generiche sul settore che deduci.";
         }
-        if ($rejected) {
+        if ($rejected && $set === 'reputation') {
             $lines[] = "\nCOSE CHE LE AI DICONO MA NON SONO VERE / NON SONO LUI (fai 1-2 domande rep per verificarle):";
             foreach ($rejected as $t) {
                 $lines[] = "- {$t}";
@@ -127,7 +162,9 @@ TXT;
                 $lines[] = "- {$t}";
             }
         }
-        $lines[] = "\nGenera {$target} domande nuove.";
+        $lines[] = $set === 'purchase'
+            ? "\nGenera {$target} domande d'acquisto nuove (circa 75% comp senza nome, 25% comm col nome)."
+            : "\nGenera {$target} domande nuove.";
         return implode("\n", $lines);
     }
 

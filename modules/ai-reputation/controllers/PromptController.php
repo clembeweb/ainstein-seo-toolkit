@@ -40,8 +40,24 @@ class PromptController
             return;
         }
 
-        $this->prompt->create($id, $text, $cluster);
+        $set = $_POST['audit_set'] ?? (($project['audit_type'] ?? 'reputation') === 'reputation' ? 'reputation' : 'purchase');
+        $this->prompt->create($id, $text, $cluster, 'it', 'manual', null, $set === 'purchase' ? 'purchase' : 'reputation');
         $_SESSION['_flash']['success'] = 'Domanda aggiunta';
+        Router::redirect("/ai-reputation/project/{$id}#prompts");
+    }
+
+    /** POST /ai-reputation/project/{id}/audit-type - tipo di audit del progetto (acquisto, reputazione, entrambi) */
+    public function auditType(int $id): void
+    {
+        $this->requireEditable($id);
+        $type = $_POST['audit_type'] ?? '';
+        if (!isset(Prompt::AUDIT_TYPES[$type])) {
+            $_SESSION['_flash']['error'] = 'Tipo di audit non valido';
+            Router::redirect("/ai-reputation/project/{$id}#prompts");
+            return;
+        }
+        $this->project->update($id, ['audit_type' => $type]);
+        $_SESSION['_flash']['success'] = 'Audit: ' . Prompt::AUDIT_TYPES[$type];
         Router::redirect("/ai-reputation/project/{$id}#prompts");
     }
 
@@ -95,11 +111,14 @@ class PromptController
             exit;
         }
         $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
-        $target = max(10, min(60, (int) ($_POST['target'] ?? 40)));
+        // Tipo di domande: quello chiesto dal bottone, altrimenti quello dell'audit del progetto ("both" → acquisto)
+        $set = $_POST['set'] ?? (($project['audit_type'] ?? 'reputation') === 'reputation' ? 'reputation' : 'purchase');
+        $set = $set === 'purchase' ? 'purchase' : 'reputation';
+        $target = max(10, min(60, (int) ($_POST['target'] ?? ($set === 'purchase' ? 30 : 40))));
         session_write_close();
 
         try {
-            $result = (new \Modules\AiReputation\Services\PromptEngineService())->generate($creditUserId, $project, $target);
+            $result = (new \Modules\AiReputation\Services\PromptEngineService())->generate($creditUserId, $project, $target, $set);
         } catch (\Throwable $e) {
             $result = ['success' => false, 'error' => 'Errore interno: ' . $e->getMessage()];
         }

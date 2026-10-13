@@ -77,7 +77,7 @@ class ProjectController
             'subject_name' => mb_substr($subjectName, 0, 255),
             'subject_type' => ($_POST['subject_type'] ?? 'company') === 'person' ? 'person' : 'company',
             'city' => trim($_POST['city'] ?? '') ?: null,
-        ]);
+        ] + (isset(\Modules\AiReputation\Models\Prompt::AUDIT_TYPES[$_POST['audit_type'] ?? '']) ? ['audit_type' => $_POST['audit_type']] : []));
         $_SESSION['_flash']['success'] = 'Soggetto aggiornato';
         Router::redirect("/ai-reputation/project/{$id}");
     }

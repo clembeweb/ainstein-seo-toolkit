@@ -11,6 +11,19 @@ class Prompt
 {
     protected string $table = 'ar_prompts';
 
+    /** Tipi di audit (idea di Clemente 2026-10-13): un progetto può farne uno o entrambi */
+    public const AUDIT_TYPES = [
+        'purchase' => 'Acquisto',
+        'reputation' => 'Reputazione',
+        'both' => 'Acquisto + Reputazione',
+    ];
+
+    /** Insiemi di domande inclusi in un tipo di audit */
+    public static function auditSets(string $auditType): array
+    {
+        return $auditType === 'both' ? ['purchase', 'reputation'] : [$auditType === 'purchase' ? 'purchase' : 'reputation'];
+    }
+
     public const CLUSTERS = [
         'nav' => 'Navigazionale (chi è)',
         'rep' => 'Reputazionale (è affidabile?)',
@@ -72,12 +85,23 @@ class Prompt
         return Database::fetchAll($sql, [$projectId]);
     }
 
+    /** Domande attive che entrano nel run del tipo di audit scelto */
+    public function forAudit(int $projectId, string $auditType): array
+    {
+        $sets = self::auditSets($auditType);
+        $in = implode(',', array_fill(0, count($sets), '?'));
+        return Database::fetchAll(
+            "SELECT * FROM {$this->table} WHERE project_id = ? AND is_active = 1 AND audit_set IN ({$in}) ORDER BY FIELD(cluster, 'nav', 'rep', 'comm', 'comp'), sort_order, id",
+            array_merge([$projectId], $sets)
+        );
+    }
+
     public function countActive(int $projectId): int
     {
         return Database::count($this->table, 'project_id = ? AND is_active = 1', [$projectId]);
     }
 
-    public function create(int $projectId, string $text, string $cluster = 'nav', string $lang = 'it', string $origin = 'manual', ?bool $leading = null): int
+    public function create(int $projectId, string $text, string $cluster = 'nav', string $lang = 'it', string $origin = 'manual', ?bool $leading = null, string $auditSet = 'reputation'): int
     {
         if (!isset(self::CLUSTERS[$cluster])) {
             $cluster = 'nav';
@@ -86,6 +110,7 @@ class Prompt
         return Database::insert($this->table, [
             'project_id' => $projectId,
             'cluster' => $cluster,
+            'audit_set' => $auditSet === 'purchase' ? 'purchase' : 'reputation',
             'lang' => $lang,
             'persona' => 'neutro',
             'is_leading' => ($leading || self::isLeadingText($text)) ? 1 : 0,
