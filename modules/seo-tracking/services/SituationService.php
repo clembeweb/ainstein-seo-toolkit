@@ -87,11 +87,16 @@ class SituationService
         return ['b' => $b, 'a' => $a, 'y' => $y, 'vs_prev_pct' => self::pct($b, $a), 'vs_year_pct' => self::pct($b, $y)];
     }
 
-    /** Regex del brand dal nome e dal dominio del progetto ("Stabia Boat Rental" → stabia ?boat ?rental|stabiaboatrental). Pura. */
+    /**
+     * Regex del brand dal nome e dal dominio del progetto ("Stabia Boat Rental" → stabia ?boat ?rental|stabiaboatrental). Pura.
+     * Note nel nome non sono brand: "(test)", "[old]", "- sito nuovo", "| prova" e le parole test/prova/demo/copia si scartano.
+     */
     public static function brandRegex(string $name, string $domain): string
     {
         $parts = [];
-        $words = array_values(array_filter(preg_split('/[^\p{L}\p{N}]+/u', mb_strtolower($name)) ?: [], fn($w) => mb_strlen($w) >= 3));
+        $name = preg_replace(['/\([^)]*\)|\[[^\]]*\]/u', '/\s[-–—|]\s.*$/u'], ' ', mb_strtolower($name));
+        $words = array_values(array_filter(preg_split('/[^\p{L}\p{N}]+/u', $name) ?: [],
+            fn($w) => mb_strlen($w) >= 3 && !in_array($w, ['test', 'prova', 'demo', 'copia'], true)));
         if ($words) {
             $parts[] = implode(' ?', array_map(fn($w) => preg_quote($w, '/'), array_slice($words, 0, 4)));
         }

@@ -35,6 +35,9 @@ $check('pct', S::pct(120.0, 100.0), 20.0);
 $check('pct su zero', S::pct(5.0, 0.0), null);
 $check('brand regex', S::brandRegex('Stabia Boat Rental', 'www.stabiaboatrental.com'), 'stabia ?boat ?rental|stabiaboatrental');
 $check('brand regex con trattino', S::brandRegex('Ainstein', 'https://ainstein.it'), 'ainstein');
+$check('brand regex: "(test)" non è brand', S::brandRegex('Stabia Boat Rental (test)', 'www.stabiaboatrental.com'), 'stabia ?boat ?rental|stabiaboatrental');
+$check('brand regex: nota dopo il trattino', S::brandRegex('Rossi Arredamenti - sito nuovo', 'rossiarredamenti.it'), 'rossi ?arredamenti|rossiarredamenti');
+$check('brand regex: parola prova', S::brandRegex('Prova Beweb', 'beweb.it'), 'beweb');
 
 $par = S::parseNarrative("```json\n{\"paragrafi\":[{\"titolo\":\"Il punto\",\"testo\":\"Va bene.\",\"refs\":[\"gsc_clicks\",\"inventato\"]}]}\n```");
 $check('parse: refs in whitelist', $par[0]['refs'], ['gsc_clicks']);
