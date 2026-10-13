@@ -368,6 +368,19 @@ class RunController
             }
         }
 
+        // ---------- DIAGNOSI TECNICA: la causa dei dubbi delle AI (crawler, dati strutturati, fatti sul sito) ----------
+        if (!empty($project['website']) && ProjectController::isPublicWebUrl((string) $project['website'])) {
+            $sendEvent('progress', ['run_id' => $runId, 'engine' => 'Sito', 'prompt' => 'Controllo tecnico del sito…']);
+            try {
+                $geoTech = new \Modules\AiReputation\Services\GeoTechService();
+                $techResult = $geoTech->check((string) $project['website']);
+                Database::reconnect();
+                $geoTech->save($projectId, $runId, $techResult);
+            } catch (\Throwable $e) {
+                error_log('[ai-reputation] diagnosi tecnica run ' . $runId . ': ' . $e->getMessage()); // non blocca il report
+            }
+        }
+
         // ---------- REPORT: fonti, competitor, azioni, omonimi ----------
         Database::reconnect();
         $responses = $this->run->responses($runId);
@@ -555,7 +568,7 @@ class RunController
         $metrics = $builder->metrics($responses, $analyses, $engines, $project);
         $sources = $builder->sources($responses, $analyses);
         $competitors = $builder->competitors($analyses);
-        $actions = Database::fetchAll("SELECT * FROM ar_actions WHERE run_id = ? ORDER BY FIELD(type, 'clarify', 'removal', 'counter_content', 'gap_article', 'correction', 'gap_pending'), id", [$runId]);
+        $actions = Database::fetchAll("SELECT * FROM ar_actions WHERE run_id = ? ORDER BY FIELD(type, 'correction', 'clarify', 'removal', 'counter_content', 'gap_article', 'gap_pending'), id", [$runId]);
         $homonyms = Database::fetchAll("SELECT * FROM ar_profile_facts WHERE project_id = ? AND category = 'homonym' AND status = 'proposed' ORDER BY id", [$projectId]);
 
         return View::render('ai-reputation::runs/show', [
@@ -622,7 +635,7 @@ class RunController
         $responses = $this->run->responses($runId);
         $analyses = $this->analysis->byRun($runId);
         $metrics = (new ReportBuilderService())->metrics($responses, $analyses, $run['engines'], $project);
-        $actions = Database::fetchAll("SELECT * FROM ar_actions WHERE run_id = ? ORDER BY FIELD(type, 'clarify', 'removal', 'counter_content', 'gap_article', 'correction', 'gap_pending'), id", [$runId]);
+        $actions = Database::fetchAll("SELECT * FROM ar_actions WHERE run_id = ? ORDER BY FIELD(type, 'correction', 'clarify', 'removal', 'counter_content', 'gap_article', 'gap_pending'), id", [$runId]);
         try {
             $pdfService = new ActionPlanPdfService();
             $pdf = $pdfService->render($project, $run, $actions, $metrics);
@@ -684,6 +697,12 @@ class RunController
             ob_end_clean();
             http_response_code(422);
             echo json_encode(['success' => false, 'error' => 'Domanda in sospeso: serve prima una prova dal cliente']);
+            exit;
+        }
+        if ($action['type'] === 'correction') {
+            ob_end_clean();
+            http_response_code(422);
+            echo json_encode(['success' => false, 'error' => 'Intervento tecnico: le istruzioni sono già nella descrizione']);
             exit;
         }
         $force = !empty($_POST['force']);

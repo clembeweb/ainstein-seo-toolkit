@@ -183,6 +183,21 @@ class ActionBriefService
         if ($blocks['risks']) {
             $lines[] = 'FATTI NEGATIVI NOTI (contesto: non citarli nei contenuti; usali solo come base per le richieste di rimozione): ' . implode('; ', array_slice($blocks['risks'], 0, 15));
         }
+        if ($action['type'] === 'clarify' && ($tech = GeoTechService::latest((int) $project['id'], (int) $action['run_id'])) && empty($tech['error'])) {
+            // La scheda deve partire da quello che il sito ha già (es. "aggiungi vatID al LocalBusiness esistente")
+            $s = $tech['schema'] ?? [];
+            $f = $tech['facts'] ?? [];
+            $lines[] = 'DIAGNOSI TECNICA DEL SITO (cosa c\'è oggi, controllata da noi):';
+            $lines[] = '- dati strutturati JSON-LD: ' . (!empty($s['types']) ? implode(', ', $s['types']) . ' con ' . implode(', ', array_keys(array_filter([
+                'name' => $s['name'] ?? null, 'legalName' => $s['legal_name'] ?? null, 'vatID' => $s['vat'] ?? null,
+                'streetAddress' => $s['street'] ?? null, 'addressLocality' => $s['locality'] ?? null, 'telephone' => $s['telephone'] ?? null,
+                'sameAs' => $s['same_as'] ?? [],
+            ]))) : 'assenti');
+            $lines[] = '- partita IVA nel testo delle pagine: ' . (!empty($f['vat']) ? implode(', ', $f['vat']) : 'non trovata');
+            $lines[] = '- via nel testo: ' . (!empty($f['street']) ? implode('; ', array_slice($f['street'], 0, 2)) : 'non trovata');
+            $lines[] = '- telefoni sul sito: ' . (!empty($f['phones']) ? implode(', ', $f['phones']) : 'nessuno');
+            $lines[] = '- link a piattaforme esterne: ' . (!empty($f['review_links']) ? implode(', ', array_slice($f['review_links'], 0, 6)) : 'nessuno');
+        }
         $lines[] = "INTERVENTO: tipo={$action['type']}; titolo=\"{$action['title']}\"; motivazione=\"{$action['rationale']}\"" . ($pageDomain ? "; sito={$pageDomain}" : '');
         if ($pages) {
             $lines[] = "PAGINE DELL'INTERVENTO:\n- " . implode("\n- ", array_slice($pages, 0, 15));

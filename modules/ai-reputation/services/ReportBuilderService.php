@@ -246,7 +246,7 @@ class ReportBuilderService
     /**
      * Piano d'azione (regole deterministiche, design §3.6 + ADR-007). Ritorna righe pronte per ar_actions.
      */
-    public function actions(array $project, array $responses, array $analyses, array $sources, array $engineLabels, ?array $gapGroups = null): array
+    public function actions(array $project, array $responses, array $analyses, array $sources, array $engineLabels, ?array $gapGroups = null, ?array $tech = null): array
     {
         $actions = [];
         $ownDomain = !empty($project['website']) ? EngineCollectorService::domainOf($project['website']) : null;
@@ -288,7 +288,7 @@ class ReportBuilderService
                 // Le AI ripetono gli stessi dubbi con parole diverse: si raggruppano per tema e si contano le risposte
                 $theme = self::doubtTheme($d['doubt']);
                 $key = $theme ?? 'x:' . mb_strtolower(mb_substr($d['doubt'], 0, 60));
-                $doubts[$key] ??= ['theme' => $theme ? self::DOUBT_THEMES[$theme][0] : null, 'doubt' => $d['doubt'], 'fix' => $d['fix'], 'engines' => [], 'prompts' => [], 'responses' => []];
+                $doubts[$key] ??= ['key' => $theme, 'theme' => $theme ? self::DOUBT_THEMES[$theme][0] : null, 'doubt' => $d['doubt'], 'fix' => $d['fix'], 'engines' => [], 'prompts' => [], 'responses' => []];
                 $doubts[$key]['engines'][$engine] = true;
                 $doubts[$key]['prompts'][(int) $r['prompt_id']] = $r['prompt_text'];
                 $doubts[$key]['responses'][(int) $r['id']] = true;
@@ -346,12 +346,27 @@ class ReportBuilderService
                     . 'Valutare rimozione, deindicizzazione o aggiornamento delle pagine con il sito.',
             ];
         }
+        // 0. correction: i crawler che servono a essere citati non entrano nel sito (diagnosi tecnica)
+        if ($tech) {
+            foreach (GeoTechService::findings($tech, $project['subject_type'] ?? 'company') as $f) {
+                if ($f['area'] === 'access' && $f['level'] === 'bad') {
+                    $actions[] = [
+                        'type' => 'correction',
+                        'target_url' => !empty($project['website']) ? $project['website'] : null,
+                        'target_domain' => $ownDomain,
+                        'title' => 'Sblocca i crawler delle AI: oggi non leggono il sito',
+                        'rationale' => $f['detail'],
+                    ];
+                }
+            }
+        }
         // 1b. clarify: UNA azione con i dubbi delle AI (identità, dati societari, contatti) e come scioglierli sul sito
         if ($doubts) {
             $subject = $project['subject_name'];
             $engines = [];
             $prompts = [];
             $list = [];
+            $techNotes = $tech ? GeoTechService::themeNotes($tech, $project['subject_type'] ?? 'company') : [];
             $sorted = array_values($doubts);
             usort($sorted, fn($x, $y) => count($y['responses']) <=> count($x['responses']));
             foreach ($sorted as $d) {
@@ -361,7 +376,9 @@ class ReportBuilderService
             foreach (array_slice($sorted, 0, 6) as $i => $d) {
                 $n = count($d['responses']);
                 $list[] = ($i + 1) . ') ' . ($d['theme'] ? $d['theme'] . ' (' . $n . ' rispost' . ($n === 1 ? 'a' : 'e') . '): ' : '')
-                    . rtrim($d['doubt'], '. ') . ' → ' . rtrim($d['fix'], '. ') . '.';
+                    . rtrim($d['doubt'], '. ') . ' → ' . rtrim($d['fix'], '. ') . '.'
+                    // Diagnosi tecnica: la causa del dubbio (il dato manca, non è nei dati strutturati, ecc.)
+                    . (isset($techNotes[$d['key']]) ? ' [Sul sito oggi: ' . rtrim($techNotes[$d['key']]['text'], '. ') . '.]' : '');
             }
             $qs = [];
             foreach ($prompts as $pid => $text) {
@@ -628,7 +645,8 @@ class ReportBuilderService
         // ADR-014: le domande scoperte le raggruppa l'AI (una chiamata); se fallisce, actions() mette una riga per domanda
         $gapByPrompt = $this->gapQuestions($responses, $analyses, $engineLabels);
         $gapGroups = $gapByPrompt ? (new GapGroupingService())->group($project, $gapByPrompt, (int) $project['user_id']) : null;
-        $actions = $this->actions($project, $responses, $analyses, $sources, $engineLabels, $gapGroups);
+        $tech = GeoTechService::latest($projectId, $runId);
+        $actions = $this->actions($project, $responses, $analyses, $sources, $engineLabels, $gapGroups, $tech);
 
         // Fonti e competitor del progetto: ricalcolati da tutti i run (idempotente: rianalizzare non raddoppia)
         $this->rebuildProjectAggregates($projectId);

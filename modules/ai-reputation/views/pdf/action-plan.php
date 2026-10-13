@@ -2,7 +2,7 @@
 $h = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
 $riskColor = match ($metrics['risk_label'] ?? '') { 'Alto' => '#dc2626', 'Medio' => '#d97706', 'Basso' => '#059669', default => '#64748b' };
 $badge = fn(string $text, string $bg, string $fg) => '<span style="display:inline-block;padding:1pt 6pt;border-radius:8pt;font-size:8pt;font-weight:bold;background:' . $bg . ';color:' . $fg . ';">' . $h($text) . '</span>';
-$typeColors = ['clarify' => ['#ffedd5', '#c2410c'], 'removal' => ['#fee2e2', '#b91c1c'], 'gap_pending' => ['#f1f5f9', '#475569']];
+$typeColors = ['correction' => ['#fef3c7', '#b45309'], 'clarify' => ['#ffedd5', '#c2410c'], 'removal' => ['#fee2e2', '#b91c1c'], 'gap_pending' => ['#f1f5f9', '#475569']];
 $typeBadge = fn(string $type) => $badge($typeLabels[$type] ?? $type, $typeColors[$type][0] ?? '#e0e7ff', $typeColors[$type][1] ?? '#3730a3');
 $statusBadge = fn(string $status) => $badge($statusLabels[$status] ?? $status, '#f1f5f9', '#334155');
 // $heading: titolo di sezione stampato nello stesso blocco del primo riquadro, così non resta mai da solo in fondo alla pagina
@@ -27,7 +27,7 @@ $renderAction = function (array $a, ?string $heading = null) use ($h, $typeBadge
             <?php endforeach; ?>
         </div>
         <?php endif; ?>
-        <?php if ($a['type'] === 'gap_pending'): ?>
+        <?php if (in_array($a['type'], ['gap_pending', 'correction'], true)): ?>
         <?php elseif (empty($a['brief_data'])): ?>
         <div style="margin-top:6pt;font-size:9pt;color:#94a3b8;border-top:0.5pt dashed #e2e8f0;padding-top:4pt;">Scheda operativa non generata</div>
         <?php else: ?>

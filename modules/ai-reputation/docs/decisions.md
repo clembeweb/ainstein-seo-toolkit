@@ -278,3 +278,23 @@ dubbi concreti; Opus 5.5 col prompt nuovo ~0,07 $ a risposta. Il verdetto fine (
 con 1 credito a risposta resta margine anche sul piano Agency. Il run 1 è stato rigiudicato con Sonnet; i run vecchi
 (Marcaccini, in locale) restano su Opus. I dubbi si raggruppano per tema (`DOUBT_THEMES`: dati societari, recensioni,
 pagamenti, licenze/sicurezza, contatti) e si ordinano per numero di risposte.
+
+## ADR-016: Diagnosi tecnica collegata ai dubbi delle AI (non una checklist a parte)
+
+**Date**: 2026-10-13 · **Status**: Accepted
+
+**Context**: Clemente chiede un controllo tecnico GEO (dati strutturati, llms.txt, crawler AI). Verifica online: da solo
+è merce comune (attori Apify, estensioni Chrome, toolkit open source) e i concorrenti leggono solo robots.txt, quindi
+non vedono i blocchi di server e CDN. llms.txt: quasi nessun crawler AI lo legge.
+
+**Decision**: `GeoTechService` (nessuna chiamata AI, gratis) entra nella home con lo user-agent vero di 7 crawler
+(OAI-SearchBot, ChatGPT-User, GPTBot, PerplexityBot, Claude-SearchBot, ClaudeBot, Bingbot; Google-Extended solo
+robots.txt), distingue crawler di risposta (servono a essere citati) e di addestramento (bloccarli è una scelta),
+dice "non verificabile" se non entra nemmeno il browser; legge JSON-LD, P.IVA, via, telefoni e link esterni di home,
+Chi siamo, Contatti; sitemap e llms.txt (peso basso, detto onestamente). Gira a fine run prima del piano
+(`ar_tech_checks.run_id`) e da sola nella scheda "Controllo tecnico". Il piano la usa: nell'intervento `clarify` ogni
+tema ha "[Sul sito oggi: …]" (la causa del dubbio: il dato manca / è nel testo ma non nel JSON-LD / c'è); un crawler di
+risposta bloccato genera l'intervento `correction` ("tecnico") in cima; la scheda clarify riceve la diagnosi nel
+dossier. Per le persone niente P.IVA/via/recensioni. Spec:
+`docs/superpowers/specs/2026-10-13-ai-reputation-diagnosi-tecnica-design.md`. Test: `scripts/test-geo-tech.php`.
+Prossimo passo deciso: verifica "prima/dopo" (rilancio delle sole domande coinvolte da un intervento).

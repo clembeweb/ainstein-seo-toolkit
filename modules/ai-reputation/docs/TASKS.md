@@ -40,6 +40,10 @@ Produzione dal 2026-10-07 su Contabo VPS `184.174.32.213` (Hetzner perso: accoun
 Già fatto: guida "Come si usa" in 4 passi nell'Overview (commit 1e9804d).
 
 ## Dopo (in ordine)
+-2. **Segnalato da Clemente (2026-10-13), dopo la messa online:** mancano domande "di percorso" come "come fare un tour in
+   barca privata per Capri da Castellammare" (o da Sorrento): domande d'acquisto con luogo di partenza e destinazione, quelle
+   che i clienti fanno davvero alle AI. Capire perché il generatore di domande (`PromptEngineService`) non le produce e
+   correggerlo.
 -1. **Idea di Clemente (2026-10-13): controllo tecnico GEO**, come modalità a parte del tool: dati strutturati (schema.org
    Organization/LocalBusiness/Person, coerenza con i dati veri), `llms.txt`, robots.txt e accesso dei crawler AI (GPTBot,
    ClaudeBot, PerplexityBot, Google-Extended), sitemap, pagine leggibili senza JavaScript, pagina Chi siamo/Contatti con dati

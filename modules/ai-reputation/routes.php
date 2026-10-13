@@ -14,6 +14,7 @@ use Modules\AiReputation\Controllers\DashboardController;
 use Modules\AiReputation\Controllers\PromptController;
 use Modules\AiReputation\Controllers\RunController;
 use Modules\AiReputation\Controllers\ProfileController;
+use Modules\AiReputation\Controllers\TechController;
 
 if (!ModuleLoader::isModuleActive('ai-reputation')) {
     return;
@@ -145,6 +146,17 @@ Router::get('/ai-reputation/project/{id}/runs/{runId}', function ($id, $runId) {
 // =============================================
 // PROFILO (onboarding agent + conferma righe, ADR-003/ADR-008)
 // =============================================
+
+Router::get('/ai-reputation/project/{id}/tech', function ($id) {
+    Middleware::auth();
+    return (new TechController())->index((int) $id);
+});
+
+Router::post('/ai-reputation/project/{id}/tech/run', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new TechController())->run((int) $id);
+});
 
 Router::get('/ai-reputation/project/{id}/profile', function ($id) {
     Middleware::auth();

@@ -38,7 +38,7 @@ $riskClass = match ($metrics['risk_label']) {
     'Basso' => 'text-emerald-600 dark:text-emerald-400',
     default => 'text-slate-400',
 };
-$actionLabel = ['clarify' => 'da chiarire', 'removal' => 'rimozione', 'counter_content' => 'contro-contenuto', 'gap_article' => 'articolo gap', 'correction' => 'correzione', 'gap_pending' => 'da valutare'];
+$actionLabel = ['clarify' => 'da chiarire', 'removal' => 'rimozione', 'counter_content' => 'contro-contenuto', 'gap_article' => 'articolo gap', 'correction' => 'tecnico', 'gap_pending' => 'da valutare'];
 $actionClass = ['clarify' => 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300', 'removal' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300', 'counter_content' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300', 'gap_article' => 'bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300', 'correction' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300', 'gap_pending' => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'];
 $isActive = in_array($run['status'], ['pending', 'running'], true);
 $briefCost = $briefCost ?? 1;
@@ -165,7 +165,7 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
                 <a href="<?= e($u) ?>" target="_blank" rel="noopener" class="block text-indigo-600 dark:text-indigo-400 hover:underline break-all"><?= e(mb_strimwidth($u, 0, 120, '…')) ?></a>
                 <?php endforeach; ?>
                 <?php if (count($urls) > 8): ?><p class="text-slate-400">+<?= count($urls) - 8 ?> pagine</p><?php endif; ?>
-                <?php if ($a['type'] !== 'gap_pending'): ?>
+                <?php if (!in_array($a['type'], ['gap_pending', 'correction'], true)): ?>
                 <?= \Core\View::partial('ai-reputation::partials/action-brief', ['a' => $a, 'basePath' => $basePath, 'run' => $run, 'csrf' => $csrf, 'canEdit' => $canEdit, 'briefCost' => $briefCost]) ?>
                 <?php endif; ?>
             </div>
