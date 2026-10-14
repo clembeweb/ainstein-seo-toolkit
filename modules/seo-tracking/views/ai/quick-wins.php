@@ -254,6 +254,10 @@
         <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Keyword a un passo dalla prima pagina</h3>
             <p class="text-sm text-slate-500 dark:text-slate-400">Clicca "Analizza pagina" per sapere cosa cambiare rispetto ai primi 3 di Google</p>
+            <?php $qwSource = $candidates[0]['data_source'] ?? null; ?>
+            <?php if ($qwSource): ?>
+            <p class="mt-1 text-xs text-slate-400"><?= $qwSource === 'gsc' ? 'Posizioni: media di Search Console (ultimi 28 giorni)' : 'Posizioni: ultima verifica su Google delle keyword monitorate' ?></p>
+            <?php endif; ?>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full">

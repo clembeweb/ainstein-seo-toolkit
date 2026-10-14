@@ -37,7 +37,7 @@
         <!-- Visibility Score -->
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Visibility Score</span>
+                <span class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Visibilità</span>
                 <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
                     <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -62,7 +62,7 @@
         <!-- Estimated Traffic -->
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Est. Traffic</span>
+                <span class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Traffico stimato</span>
                 <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
                     <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
@@ -86,7 +86,7 @@
         <!-- Average Position -->
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Posizione Media</span>
+                <span class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider" title="Media delle ultime verifiche di posizione su Google delle keyword monitorate (non la media di Search Console)">Posizione media <span class="normal-case font-normal">· verificata su Google</span></span>
                 <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
                     <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
@@ -143,7 +143,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Stacked Bar Chart (2/3 width) -->
         <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Distribuzione Rankings</h2>
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Distribuzione posizioni</h2>
             <div class="h-72">
                 <canvas id="distributionChart"></canvas>
             </div>
@@ -159,7 +159,7 @@
 
         <!-- Keywords Mini-Grid (1/3 width) -->
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Keywords per Posizione</h2>
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Keyword per posizione</h2>
             <div class="space-y-3">
                 <?php
                 $bucketLabels = [

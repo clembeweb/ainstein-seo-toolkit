@@ -215,7 +215,7 @@ $kpiCard = function (string $ref, string $label, string $value, string $sub) {
         <?php if ($gsc): $g = $gsc['totals']; ?>
         <?= $kpiCard('gsc_clicks', 'Clic da Google', $num($g['clicks']['b']), $delta($g['clicks']['vs_prev_pct'], false, 'vs prima', $g['clicks']['b'], $g['clicks']['a']) . $delta($g['clicks']['vs_year_pct'], false, 'vs anno', $g['clicks']['b'], $g['clicks']['y'])) ?>
         <?= $kpiCard('gsc_impressions', 'Volte che compari su Google', $num($g['impressions']['b']), $delta($g['impressions']['vs_prev_pct'], false, 'vs prima', $g['impressions']['b'], $g['impressions']['a']) . $delta($g['impressions']['vs_year_pct'], false, 'vs anno', $g['impressions']['b'], $g['impressions']['y'])) ?>
-        <?= $kpiCard('gsc_position', 'Posizione media', $num($g['position']['b'], 1), '<span class="text-xs text-slate-400">prima ' . $num($g['position']['a'], 1) . ' · anno scorso ' . $num($g['position']['y'], 1) . '</span>') ?>
+        <?= $kpiCard('gsc_position', 'Posizione media su Search Console', $num($g['position']['b'], 1), '<span class="text-xs text-slate-400">prima ' . $num($g['position']['a'], 1) . ' · anno scorso ' . $num($g['position']['y'], 1) . '</span>') ?>
         <?= $kpiCard('gsc_brand', 'Clic che cercano il tuo nome', $gsc['brand']['quota_b_pct'] === null ? '–' : $num($gsc['brand']['quota_b_pct'], 1) . '%', '<span class="text-xs text-slate-400">prima ' . ($gsc['brand']['quota_a_pct'] === null ? '–' : $num($gsc['brand']['quota_a_pct'], 1) . '%') . '</span>') ?>
         <?php endif; ?>
     </div>

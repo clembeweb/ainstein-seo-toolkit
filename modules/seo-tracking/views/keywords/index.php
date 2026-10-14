@@ -157,10 +157,10 @@
             </select>
             <select name="intent" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm">
                 <option value="">Tutti gli intenti</option>
-                <option value="informational" <?= ($filters['intent'] ?? '') === 'informational' ? 'selected' : '' ?>>Informational</option>
-                <option value="navigational" <?= ($filters['intent'] ?? '') === 'navigational' ? 'selected' : '' ?>>Navigational</option>
-                <option value="commercial" <?= ($filters['intent'] ?? '') === 'commercial' ? 'selected' : '' ?>>Commercial</option>
-                <option value="transactional" <?= ($filters['intent'] ?? '') === 'transactional' ? 'selected' : '' ?>>Transactional</option>
+                <option value="informational" <?= ($filters['intent'] ?? '') === 'informational' ? 'selected' : '' ?>>Informativo</option>
+                <option value="navigational" <?= ($filters['intent'] ?? '') === 'navigational' ? 'selected' : '' ?>>Navigazionale</option>
+                <option value="commercial" <?= ($filters['intent'] ?? '') === 'commercial' ? 'selected' : '' ?>>Commerciale</option>
+                <option value="transactional" <?= ($filters['intent'] ?? '') === 'transactional' ? 'selected' : '' ?>>Transazionale</option>
             </select>
             <select name="position_range" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm">
                 <option value="">Tutte le posizioni</option>
@@ -343,10 +343,10 @@
     <?php if (!empty($visibilityTrend)): ?>
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6" x-data="{ chartTab: 'visibility' }">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Trend</h2>
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Andamento</h2>
             <div class="flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-                <button @click="chartTab = 'visibility'; updateTrendChart('visibility')" :class="chartTab === 'visibility' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'" class="px-3 py-1.5 text-xs font-medium transition-colors">Visibility %</button>
-                <button @click="chartTab = 'traffic'; updateTrendChart('traffic')" :class="chartTab === 'traffic' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'" class="px-3 py-1.5 text-xs font-medium transition-colors border-l border-slate-200 dark:border-slate-700">Est. Traffic</button>
+                <button @click="chartTab = 'visibility'; updateTrendChart('visibility')" :class="chartTab === 'visibility' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'" class="px-3 py-1.5 text-xs font-medium transition-colors">Visibilità %</button>
+                <button @click="chartTab = 'traffic'; updateTrendChart('traffic')" :class="chartTab === 'traffic' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'" class="px-3 py-1.5 text-xs font-medium transition-colors border-l border-slate-200 dark:border-slate-700">Traffico stimato</button>
                 <button @click="chartTab = 'position'; updateTrendChart('position')" :class="chartTab === 'position' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'" class="px-3 py-1.5 text-xs font-medium transition-colors border-l border-slate-200 dark:border-slate-700">Pos. Media</button>
             </div>
         </div>
@@ -425,13 +425,13 @@
                             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Stato</th>
                             <?php else: ?>
                             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase" title="Location">Loc</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Posizione</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase" title="Ultima verifica della posizione su Google (non la media di Search Console)">Posizione</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Volume</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">CPC</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Comp.</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase" title="Intento di ricerca">Intento</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Visibility %</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Est. Traffic</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Visibilità %</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Traffico stimato</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase" title="Stagionalit&agrave;">Stagion.</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Aggiornato</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Azioni</th>
@@ -610,10 +610,10 @@
                                     $intentBadges = [];
                                     foreach ($intents as $i) {
                                         $badge = match($i) {
-                                            'informational' => ['I', 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300', 'Informational'],
-                                            'navigational' => ['N', 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300', 'Navigational'],
-                                            'commercial' => ['C', 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300', 'Commercial'],
-                                            'transactional' => ['T', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300', 'Transactional'],
+                                            'informational' => ['I', 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300', 'Informativo'],
+                                            'navigational' => ['N', 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300', 'Navigazionale'],
+                                            'commercial' => ['C', 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300', 'Commerciale'],
+                                            'transactional' => ['T', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300', 'Transazionale'],
                                             default => null
                                         };
                                         if ($badge) $intentBadges[] = $badge;

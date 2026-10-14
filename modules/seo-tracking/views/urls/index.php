@@ -13,8 +13,8 @@ $currentPage = 'urls';
     <!-- Page Title -->
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
-            <h2 class="text-xl font-semibold text-slate-900 dark:text-white">URLs Posizionate</h2>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Pagine del sito con keyword posizionate in SERP</p>
+            <h2 class="text-xl font-semibold text-slate-900 dark:text-white">Pagine posizionate</h2>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Le pagine del sito e le keyword monitorate per cui compaiono su Google</p>
         </div>
         <div>
             <a href="<?= url("/seo-tracking/project/{$project['id']}/keywords") ?>"
@@ -22,7 +22,7 @@ $currentPage = 'urls';
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
                 </svg>
-                Gestisci Keywords
+                Gestisci keyword
             </a>
         </div>
     </div>
@@ -31,7 +31,7 @@ $currentPage = 'urls';
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
         <form method="get" class="flex flex-wrap gap-4 items-end">
             <div class="flex-1 min-w-[200px]">
-                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Cerca URL</label>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Cerca pagina</label>
                 <input type="text" name="search" value="<?= e($filters['search'] ?? '') ?>" placeholder="Filtra per URL..."
                        class="w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
             </div>
@@ -46,12 +46,12 @@ $currentPage = 'urls';
                        class="w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
             </div>
             <div class="w-32">
-                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Min Keywords</label>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Keyword minime</label>
                 <input type="number" name="min_keywords" value="<?= e($filters['min_keywords'] ?? '') ?>" min="1" placeholder="1"
                        class="w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
             </div>
             <div class="w-32">
-                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Max Posizione</label>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Posizione massima</label>
                 <select name="max_position" class="w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
                     <option value="">Tutte</option>
                     <option value="3" <?= ($filters['max_position'] ?? 0) == 3 ? 'selected' : '' ?>>Top 3</option>
@@ -77,19 +77,19 @@ $currentPage = 'urls';
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
-            <p class="text-sm text-slate-500 dark:text-slate-400">URLs Totali</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Pagine totali</p>
             <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1"><?= number_format($stats['total_urls'] ?? 0) ?></p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-blue-200 dark:border-blue-800 p-4">
-            <p class="text-sm text-blue-600 dark:text-blue-400">Keywords Totali</p>
+            <p class="text-sm text-blue-600 dark:text-blue-400">Keyword totali</p>
             <p class="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1"><?= number_format($stats['total_keywords'] ?? 0) ?></p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-amber-200 dark:border-amber-800 p-4">
-            <p class="text-sm text-amber-600 dark:text-amber-400">Posizione Media</p>
+            <p class="text-sm text-amber-600 dark:text-amber-400">Posizione media</p>
             <p class="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1"><?= isset($stats['avg_position']) && $stats['avg_position'] > 0 ? number_format($stats['avg_position'], 1) : '-' ?></p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-emerald-200 dark:border-emerald-800 p-4">
-            <p class="text-sm text-emerald-600 dark:text-emerald-400">Miglior Posizione</p>
+            <p class="text-sm text-emerald-600 dark:text-emerald-400">Posizione migliore</p>
             <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1"><?= isset($stats['best_position']) && $stats['best_position'] > 0 ? number_format($stats['best_position'], 1) : '-' ?></p>
         </div>
     </div>
@@ -101,7 +101,7 @@ $currentPage = 'urls';
             <svg class="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
             </svg>
-            <p class="mt-4 text-slate-500 dark:text-slate-400">Nessuna URL trovata</p>
+            <p class="mt-4 text-slate-500 dark:text-slate-400">Nessuna pagina trovata</p>
             <p class="mt-2 text-sm text-slate-400 dark:text-slate-500">
                 <?php if (!empty($filters['search']) || !empty($filters['date_from']) || !empty($filters['date_to']) || !empty($filters['min_keywords']) || !empty($filters['max_position'])): ?>
                 Prova a modificare i filtri di ricerca
@@ -111,7 +111,7 @@ $currentPage = 'urls';
             </p>
             <a href="<?= url("/seo-tracking/project/{$project['id']}/keywords") ?>"
                class="mt-4 inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors">
-                Vai alle Keywords
+                Vai alle keyword
             </a>
         </div>
         <?php else: ?>
@@ -199,8 +199,8 @@ $currentPage = 'urls';
                                     <tr>
                                         <th class="px-3 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Keyword</th>
                                         <th class="px-3 py-2 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Posizione</th>
-                                        <th class="px-3 py-2 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Location</th>
-                                        <th class="px-3 py-2 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Device</th>
+                                        <th class="px-3 py-2 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Paese</th>
+                                        <th class="px-3 py-2 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Dispositivo</th>
                                         <th class="px-3 py-2 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Data</th>
                                     </tr>
                                 </thead>

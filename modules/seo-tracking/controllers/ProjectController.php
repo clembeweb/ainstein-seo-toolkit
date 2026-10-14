@@ -134,6 +134,8 @@ class ProjectController
             'project' => $project,
             'gscConnection' => $project['gsc_connection'] ?? null,
             'gscRedirectUri' => $gscRedirectUri,
+            'ga4Conn' => (new \Modules\SeoTracking\Services\Ga4Service())->getConnection($id),
+            'googleConfigured' => (new \Services\GoogleOAuthService())->isConfigured(),
         ]);
     }
 
@@ -192,14 +194,15 @@ class ProjectController
         }
 
         try {
-            $this->project->update($id, [
-                'name' => $name,
-                'domain' => Project::normalizeDomain($domain),
-                'notification_emails' => !empty($emails) ? json_encode($emails) : null,
-            ], $user['id']);
+            $fields = ['name' => $name, 'domain' => Project::normalizeDomain($domain)];
+            // Le email notifiche si salvano solo se il campo è nel form (oggi nascosto insieme agli alert)
+            if (array_key_exists('notification_emails', $_POST)) {
+                $fields['notification_emails'] = !empty($emails) ? json_encode($emails) : null;
+            }
+            $this->project->update($id, $fields, $user['id']);
 
-            // Aggiorna alert settings
-            $this->alertSettings->upsert($id, [
+            // Aggiorna alert settings solo se il form li mostra (oggi nascosti: non si azzerano le scelte salvate)
+            if (array_key_exists('position_threshold', $_POST)) $this->alertSettings->upsert($id, [
                 'position_alert_enabled' => isset($_POST['position_alert_enabled']) ? 1 : 0,
                 'position_threshold' => (int) ($_POST['position_threshold'] ?? 5),
                 'position_alert_keywords' => $_POST['position_alert_keywords'] ?? 'tracked',

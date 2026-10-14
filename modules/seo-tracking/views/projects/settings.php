@@ -1,3 +1,4 @@
+<?php $alertsReady = false; // si riaccende quando gli alert vengono inviati davvero ?>
 <div class="max-w-4xl mx-auto space-y-6">
     <!-- Header -->
     <div class="sm:flex sm:items-center sm:justify-between">
@@ -52,23 +53,69 @@
                             <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            Sync automatico ogni giorno alle 04:00
+                            <?php
+                            $syncDays = ['daily' => 'ogni giorno', 'mon_thu' => 'lunedì e giovedì', 'mon_wed_fri' => 'lunedì, mercoledì e venerdì', 'weekly' => 'ogni lunedì'];
+                            $syncFreq = \Core\ModuleLoader::getSetting('seo-tracking', 'gsc_sync_frequency', 'daily');
+                            $syncOn = (bool) \Core\ModuleLoader::getSetting('seo-tracking', 'gsc_sync_enabled', false);
+                            ?>
+                            <?= $syncOn
+                                ? 'Copia automatica dei dati ' . e($syncDays[$syncFreq] ?? 'ogni giorno') . ' alle ' . e(\Core\ModuleLoader::getSetting('seo-tracking', 'gsc_sync_time', '05:00')) . ' (solo progetti con keyword monitorate)'
+                                : 'Copia automatica dei dati spenta: Punto della situazione e Quick Wins leggono comunque Search Console dal vivo' ?>
                         </div>
+                        <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/gsc') ?>" class="block text-sm text-primary-600 dark:text-primary-400 hover:underline">Vedi i dati copiati da Search Console</a>
                         <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/gsc/disconnect') ?>" method="POST">
                             <?= csrf_field() ?>
                             <button type="submit" class="w-full px-4 py-2 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm">
-                                Disconnetti GSC
+                                Scollega Search Console
                             </button>
                         </form>
                     </div>
                     <?php else: ?>
                     <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/gsc/connect') ?>" class="block w-full px-4 py-2 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition-colors text-sm text-center">
-                        Connetti Search Console
+                        Collega Search Console
                     </a>
                     <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">
-                        Richiede autorizzazione OAuth2 per accedere ai dati GSC.
+                        Entra con l'account Google che vede il sito in Search Console (solo lettura).
                     </p>
                     <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Google Analytics 4: stesse route del Punto della situazione -->
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="p-5 border-b border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-lg bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
+                            <svg class="h-5 w-5 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-slate-900 dark:text-white">Google Analytics</h3>
+                            <?php if (!empty($ga4Conn['property_id'])): ?>
+                            <span class="text-xs text-emerald-600 dark:text-emerald-400">Connesso</span>
+                            <?php else: ?>
+                            <span class="text-xs text-slate-500 dark:text-slate-400">Non connesso</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-5 space-y-3">
+                    <?php if (!empty($ga4Conn['property_id'])): ?>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-slate-500 dark:text-slate-400">Proprietà:</span>
+                        <span class="font-medium text-slate-900 dark:text-white truncate ml-2"><?= e($ga4Conn['property_name'] ?: $ga4Conn['property_id']) ?></span>
+                    </div>
+                    <form method="POST" action="<?= url('/seo-tracking/project/' . $project['id'] . '/ga4/disconnect') ?>" data-confirm="Scollegare Google Analytics da questo progetto?" data-confirm-button="Scollega" data-confirm-destructive="1">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="w-full px-4 py-2 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm">Scollega Google Analytics</button>
+                    </form>
+                    <?php elseif (!empty($ga4Conn)): ?>
+                    <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/ga4/select-property') ?>" class="block w-full px-4 py-2 rounded-lg bg-orange-600 text-white font-medium hover:bg-orange-700 transition-colors text-sm text-center">Scegli la proprietà</a>
+                    <?php elseif ($googleConfigured): ?>
+                    <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/ga4/connect') ?>" class="block w-full px-4 py-2 rounded-lg bg-orange-600 text-white font-medium hover:bg-orange-700 transition-colors text-sm text-center">Collega Google Analytics</a>
+                    <?php else: ?>
+                    <p class="text-sm text-slate-500">Accesso Google non configurato: contatta l'amministratore.</p>
+                    <?php endif; ?>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Serve al Punto della situazione: da dove arrivano le visite, conversioni, ricavi, visite dagli assistenti AI.</p>
                 </div>
             </div>
         </div>
@@ -107,6 +154,7 @@
                                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Dominio del sito da monitorare (con o senza www)</p>
                             </div>
 
+                            <?php if ($alertsReady): ?>
                             <div>
                                 <label for="notification_emails" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                                     Email notifiche
@@ -119,11 +167,13 @@
                                        class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                                        placeholder="email1@example.com, email2@example.com">
                             </div>
+                            <?php endif; ?>
 
                         </div>
                     </div>
 
-                    <!-- Alert Settings -->
+                    <!-- Alert Settings: nascosti finché AlertService non gira davvero (nessun cron lo chiama) -->
+                    <?php if ($alertsReady): ?>
                     <div class="pt-6 border-t border-slate-200 dark:border-slate-700">
                         <h2 class="text-lg font-medium text-slate-900 dark:text-white mb-4">Impostazioni Alert</h2>
 
@@ -197,6 +247,7 @@
                             </div>
                         </div>
                     </div>
+                <?php endif; ?>
                 </div>
 
                 <!-- Form Footer -->

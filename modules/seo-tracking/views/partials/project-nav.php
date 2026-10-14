@@ -12,32 +12,25 @@ $projectId = $project['id'] ?? 0;
 $currentPath = $_SERVER['REQUEST_URI'] ?? '';
 $basePath = "/seo-tracking/project/{$projectId}";
 
-// Definizione tabs
-// Nota: "Verifica SERP" e "Trend" rimosse - funzionalità integrate in Keywords
+// Definizione tabs: un solo menu, uguale a quello laterale (shared/views/components/nav-items.php)
+// Fuori dal menu ma raggiungibili dai link: Pagine (vista per pagina delle keyword), Storico (dalla scheda keyword),
+// Trend (dalla Panoramica), Search Console grezza (dalle Impostazioni), Analisi pagina (da Quick Wins, Punto, Keyword)
 $tabs = [
     'overview' => ['path' => '', 'label' => 'Panoramica', 'icon' => 'chart-bar'],
     'situation' => ['path' => '/situation', 'label' => 'Punto della situazione', 'icon' => 'sparkles'],
     'keywords' => ['path' => '/keywords', 'label' => 'Keyword', 'icon' => 'key'],
-    'urls' => ['path' => '/urls', 'label' => 'Pagine', 'icon' => 'link'],
     'groups' => ['path' => '/groups', 'label' => 'Gruppi', 'icon' => 'folder'],
-    'history' => ['path' => '/rank-check/history', 'label' => 'Storico', 'icon' => 'clock'],
     'quick-wins' => ['path' => '/quick-wins', 'label' => 'Quick Wins', 'icon' => 'zap'],
-    'page-analyzer' => ['path' => '/page-analyzer', 'label' => 'Analisi pagina', 'icon' => 'document-search'],
 ];
 
-// Helper per verificare tab attivo
+// Helper per verificare tab attivo: le pagine fuori menu accendono la scheda a cui appartengono
 function isActiveTab($tabKey, $currentPage) {
-    // Normalizza currentPage
     $currentPage = $currentPage ?? 'overview';
-    // Match diretto o alias
     $aliases = [
-        'overview' => ['overview', 'dashboard'],
-        'keywords' => ['keywords', 'keywords-overview'],
-        'urls' => ['urls', 'url-ranking'],
+        'overview' => ['overview', 'dashboard', 'trend'],
+        'keywords' => ['keywords', 'keywords-overview', 'urls', 'url-ranking', 'history', 'rank-check'],
         'groups' => ['groups'],
-        'history' => ['history', 'rank-check'],
-        'quick-wins' => ['quick-wins', 'quickwins'],
-        'page-analyzer' => ['page-analyzer', 'pageanalyzer'],
+        'quick-wins' => ['quick-wins', 'quickwins', 'page-analyzer', 'pageanalyzer'],
         'situation' => ['situation'],
     ];
     return in_array($currentPage, $aliases[$tabKey] ?? [$tabKey]);
@@ -87,8 +80,21 @@ $currentPage = $currentPage ?? 'overview';
     </div>
 </div>
 
+<?php
+// Viste secondarie della scheda attiva (le pagine che non stanno nel menu principale)
+$subViews = [
+    'overview' => [['overview', '', 'Riepilogo'], ['trend', '/trend', 'Confronta due periodi']],
+    'keywords' => [['keywords', '/keywords', 'Per keyword'], ['urls', '/urls', 'Per pagina'], ['history', '/rank-check/history', 'Storico verifiche']],
+    'quick-wins' => [['quick-wins', '/quick-wins', 'Ricerche a un passo'], ['page-analyzer', '/page-analyzer', 'Analisi pagina']],
+];
+$activeTab = null;
+foreach (array_keys($tabs) as $k) {
+    if (isActiveTab($k, $currentPage)) { $activeTab = $k; break; }
+}
+$subs = $subViews[$activeTab] ?? [];
+?>
 <!-- Navigation Tabs -->
-<div class="border-b border-slate-200 dark:border-slate-700 mb-6">
+<div class="border-b border-slate-200 dark:border-slate-700 <?= $subs ? 'mb-3' : 'mb-6' ?>">
     <nav class="flex space-x-1 overflow-x-auto" aria-label="Tabs">
         <?php foreach ($tabs as $key => $tab):
             $isActive = isActiveTab($key, $currentPage);
@@ -105,3 +111,16 @@ $currentPage = $currentPage ?? 'overview';
         <?php endforeach; ?>
     </nav>
 </div>
+
+<?php if ($subs): ?>
+<div class="mb-6 flex flex-wrap items-center gap-1 text-sm">
+    <?php foreach ($subs as [$page, $path, $label]):
+        $on = $currentPage === $page || ($page === 'overview' && $currentPage === 'dashboard') || ($page === 'history' && $currentPage === 'rank-check');
+    ?>
+    <a href="<?= url($basePath . $path) ?>"
+       class="px-3 py-1 rounded-full transition-colors <?= $on
+           ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300 font-medium'
+           : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200' ?>"><?= e($label) ?></a>
+    <?php endforeach; ?>
+</div>
+<?php endif; ?>

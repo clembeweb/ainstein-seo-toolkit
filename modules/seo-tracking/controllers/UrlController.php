@@ -82,7 +82,7 @@ class UrlController
         $stats = $this->calculateGlobalStats($urls, $totalCount);
 
         return View::render('seo-tracking/urls/index', [
-            'title' => 'URLs - ' . $project['name'],
+            'title' => 'Pagine - ' . $project['name'],
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
@@ -138,7 +138,7 @@ class UrlController
         $stats = $this->calculateUrlStats($keywords);
 
         return View::render('seo-tracking/urls/show', [
-            'title' => 'Dettaglio URL - ' . $project['name'],
+            'title' => 'Dettaglio pagina - ' . $project['name'],
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,

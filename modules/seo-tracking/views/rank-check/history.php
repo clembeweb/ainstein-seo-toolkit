@@ -36,7 +36,7 @@ $currentPage = 'history';
                        class="w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
             </div>
             <div class="w-32">
-                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Device</label>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Dispositivo</label>
                 <select name="device" class="w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
                     <option value="">Tutti</option>
                     <option value="desktop" <?= ($filters['device'] ?? '') === 'desktop' ? 'selected' : '' ?>>Desktop</option>
@@ -74,7 +74,7 @@ $currentPage = 'history';
     <!-- Stats -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
-            <p class="text-sm text-slate-500 dark:text-slate-400">Check Totali</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Verifiche totali</p>
             <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1"><?= $stats['total_checks'] ?></p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-emerald-200 dark:border-emerald-800 p-4">
@@ -113,8 +113,8 @@ $currentPage = 'history';
                         <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">SERP</th>
                         <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">GSC</th>
                         <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Diff</th>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Device</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Location</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Dispositivo</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Paese</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">URL</th>
                         <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Data</th>
                     </tr>
