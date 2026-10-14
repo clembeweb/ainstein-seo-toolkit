@@ -153,11 +153,23 @@ $kpiCard = function (string $ref, string $label, string $value, string $sub) {
         foreach (['query' => 'queries', 'page' => 'pages'] as $kind => $block) {
             foreach (array_merge($gsc[$block]['losers'] ?? [], $gsc[$block]['gainers'] ?? []) as $r) {
                 $label = $kind === 'page' ? (parse_url($r['key'], PHP_URL_PATH) ?: '/') : $r['key'];
-                $needle = $kind === 'page' ? rtrim($label, '/') : $label;
-                if (mb_strlen($needle) < 4 || isset($seen[$kind . $needle]) || mb_stripos($text, $needle) === false) {
+                $path = rtrim($label, '/');
+                // L'AI cita le pagine anche per nome: "/noleggio-barca-senza-patente/" → "noleggio barca senza patente", "/" → "home"
+                $needles = $kind === 'query' ? [$label] : ($path === ''
+                    ? ['home']
+                    : [$path, str_replace('-', ' ', basename($path))]);
+                $hit = false;
+                foreach ($needles as $needle) {
+                    if (mb_strlen($needle) >= 4 && mb_stripos($text, $needle) !== false) {
+                        $hit = true;
+                        break;
+                    }
+                }
+                $id = $kind . ($kind === 'page' ? $path : mb_strtolower($label));
+                if (!$hit || isset($seen[$id])) {
                     continue;
                 }
-                $seen[$kind . $needle] = true;
+                $seen[$id] = true;
                 $out[] = [$kind, $r, $label];
             }
         }
