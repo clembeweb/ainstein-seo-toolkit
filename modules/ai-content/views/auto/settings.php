@@ -6,7 +6,8 @@
     <div>
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Impostazioni Automazione</h2>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Configura la pubblicazione automatica degli articoli
+            Configura la pubblicazione automatica degli articoli ·
+            <a href="<?= url('/ai-content/projects/' . $project['id'] . '/settings') ?>" class="text-primary-600 dark:text-primary-400 hover:underline">Nome, lingua, paese ed eliminazione del progetto</a>
         </p>
     </div>
 
@@ -161,15 +162,20 @@
                     </svg>
                     <div class="text-sm text-blue-700 dark:text-blue-300">
                         <p class="font-medium mb-1">Costi crediti</p>
+                        <?php
+                        // Costi veri, gli stessi che addebita AutoCreditService (modificabili da Admin > Moduli)
+                        $cScrape = \Core\Credits::getCost('content_scrape', 'ai-content');
+                        $cCover = \Core\Credits::getCost('cover_image_generation', 'ai-content');
+                        $fmtC = fn($v) => rtrim(rtrim(number_format((float) $v, 1, ',', '.'), '0'), ',') . ' credit' . ((float) $v == 1 ? 'o' : 'i');
+                        ?>
                         <ul class="text-blue-600 dark:text-blue-400 space-y-1">
-                            <li>Estrazione SERP: 3 crediti (Standard)</li>
-                            <li>Scraping fonti: 1 credito per fonte (Base)</li>
-                            <li>Generazione brief: 3 crediti (Standard)</li>
-                            <li>Generazione articolo: 10 crediti (Premium)</li>
-                            <li>Immagine di copertina: 3 crediti (Standard, opzionale)</li>
+                            <li>Lettura delle fonti: <?= $fmtC($cScrape) ?> per fonte</li>
+                            <li>Generazione brief: <?= $fmtC(\Core\Credits::getCost('brief_generation', 'ai-content')) ?></li>
+                            <li>Generazione articolo: <?= $fmtC(\Core\Credits::getCost('article_generation', 'ai-content')) ?></li>
+                            <li>Immagine di copertina: <?= $fmtC($cCover) ?> (se attiva)</li>
                         </ul>
                         <p class="mt-2 text-xs">
-                            Totale stimato per articolo (3 fonti): ~19 crediti (+ 3 con copertina)
+                            Totale per articolo con 3 fonti: <?= $fmtC(\Modules\AiContent\Services\AutoCreditService::estimate(3)) ?> (+ <?= $fmtC($cCover) ?> con copertina)
                         </p>
                     </div>
                 </div>

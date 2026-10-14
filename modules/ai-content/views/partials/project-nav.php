@@ -17,25 +17,25 @@ $basePath = "/ai-content/projects/{$projectId}";
 // Definizione tabs in base al tipo progetto
 if ($isMetaTag) {
     $tabs = [
-        'dashboard' => ['path' => '/meta-tags', 'label' => 'Dashboard', 'icon' => 'chart-bar'],
-        'list' => ['path' => '/meta-tags/list', 'label' => 'Meta Tags', 'icon' => 'tag'],
-        'import' => ['path' => '/meta-tags/import', 'label' => 'Import', 'icon' => 'cloud-upload'],
+        'dashboard' => ['path' => '/meta-tags', 'label' => 'Panoramica', 'icon' => 'chart-bar'],
+        'list' => ['path' => '/meta-tags/list', 'label' => 'Meta tag', 'icon' => 'tag'],
+        'import' => ['path' => '/meta-tags/import', 'label' => 'Importa pagine', 'icon' => 'cloud-upload'],
         'settings' => ['path' => '/settings', 'label' => 'Impostazioni', 'icon' => 'cog'],
     ];
 } elseif ($isAuto) {
     $tabs = [
-        'dashboard' => ['path' => '/auto', 'label' => 'Dashboard', 'icon' => 'chart-bar'],
+        'dashboard' => ['path' => '/auto', 'label' => 'Panoramica', 'icon' => 'chart-bar'],
         'queue' => ['path' => '/auto/queue', 'label' => 'Coda', 'icon' => 'queue-list'],
         'articles' => ['path' => '/articles', 'label' => 'Articoli', 'icon' => 'document-text'],
-        'internal-links' => ['path' => '/internal-links', 'label' => 'Link Interni', 'icon' => 'link'],
+        'internal-links' => ['path' => '/internal-links', 'label' => 'Link interni', 'icon' => 'link'],
         'settings' => ['path' => '/auto/settings', 'label' => 'Impostazioni', 'icon' => 'cog'],
     ];
 } else {
     $tabs = [
-        'dashboard' => ['path' => '', 'label' => 'Dashboard', 'icon' => 'chart-bar'],
-        'keywords' => ['path' => '/keywords', 'label' => 'Keywords', 'icon' => 'key'],
+        'dashboard' => ['path' => '', 'label' => 'Panoramica', 'icon' => 'chart-bar'],
+        'keywords' => ['path' => '/keywords', 'label' => 'Keyword', 'icon' => 'key'],
         'articles' => ['path' => '/articles', 'label' => 'Articoli', 'icon' => 'document-text'],
-        'internal-links' => ['path' => '/internal-links', 'label' => 'Link Interni', 'icon' => 'link'],
+        'internal-links' => ['path' => '/internal-links', 'label' => 'Link interni', 'icon' => 'link'],
         'settings' => ['path' => '/settings', 'label' => 'Impostazioni', 'icon' => 'cog'],
     ];
 }
