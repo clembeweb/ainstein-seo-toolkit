@@ -497,7 +497,7 @@ endif;
                 <div>
                     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
                         <div class="px-4 py-3 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                            <span class="text-sm font-medium text-slate-900 dark:text-white">Action Plan</span>
+                            <span class="text-sm font-medium text-slate-900 dark:text-white">Piano d'azione</span>
                             <span class="text-xs text-slate-500 dark:text-slate-400">6 task</span>
                         </div>
                         <div class="divide-y divide-slate-100 dark:divide-slate-700">

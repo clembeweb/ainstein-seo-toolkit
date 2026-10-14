@@ -13,13 +13,13 @@ $basePath = "/seo-audit/project/{$projectId}";
 
 // Definizione tabs
 $tabs = [
-    'dashboard' => ['path' => '/dashboard', 'label' => 'Dashboard', 'icon' => 'chart-bar'],
+    'dashboard' => ['path' => '/dashboard', 'label' => 'Panoramica', 'icon' => 'chart-bar'],
     'pages' => ['path' => '/pages', 'label' => 'Pagine', 'icon' => 'document-text'],
     'issues' => ['path' => '/issues', 'label' => 'Problemi', 'icon' => 'exclamation-triangle'],
-    'links' => ['path' => '/links', 'label' => 'Struttura Link', 'icon' => 'link'],
+    'links' => ['path' => '/links', 'label' => 'Struttura link', 'icon' => 'link'],
     'budget' => ['path' => '/budget', 'label' => 'Crawl Budget', 'icon' => 'arrow-path'],
     'report' => ['path' => '/report', 'label' => 'Report AI', 'icon' => 'sparkles'],
-    'action-plan' => ['path' => '/action-plan', 'label' => 'Action Plan', 'icon' => 'clipboard-list'],
+    'action-plan' => ['path' => '/action-plan', 'label' => "Piano d'azione", 'icon' => 'clipboard-list'],
     'history' => ['path' => '/history', 'label' => 'Storico', 'icon' => 'clock'],
     'settings' => ['path' => '/settings', 'label' => 'Impostazioni', 'icon' => 'cog'],
 ];

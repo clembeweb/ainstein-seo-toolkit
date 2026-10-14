@@ -96,7 +96,12 @@ class UnifiedReportService
         $dataContext = $this->buildDataContext($data);
 
         // 6. Chiama AI
-        $result = $this->ai->analyze($userId, $prompt, $dataContext, self::MODULE_SLUG);
+        // charge_credits=false: l'unico addebito è cost_unified_report (punto 11), come mostrato in pagina
+        $result = $this->ai->complete($userId, [
+            ['role' => 'user', 'content' => $prompt . "
+
+" . $dataContext],
+        ], ['charge_credits' => false], self::MODULE_SLUG);
 
         // 7. SEMPRE reconnect dopo AI call
         Database::reconnect();

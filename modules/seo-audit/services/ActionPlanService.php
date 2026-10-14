@@ -34,7 +34,7 @@ class ActionPlanService
 
     /**
      * Genera piano d'azione completo per un progetto
-     * Nota: I crediti vengono gestiti automaticamente da AiService per ogni chiamata AI
+     * Nota: le chiamate AI non addebitano; il controller addebita cost_action_plan_generate una volta
      */
     public function generatePlan(int $projectId, ?int $sessionId, int $userId): array
     {
@@ -113,7 +113,7 @@ class ActionPlanService
             'status' => 'ready',
         ], 'id = ?', [$planId]);
 
-        // Crediti già consumati da AiService per ogni chiamata AI
+        // Crediti: addebito unico nel controller dopo il successo (non per pagina)
 
         return [
             'success' => true,
@@ -134,7 +134,8 @@ class ActionPlanService
     {
         $prompt = $this->buildPrompt($pageData, $project);
 
-        $result = $this->ai->analyzeWithSystem($userId, $prompt['system'], $prompt['user'], self::MODULE_SLUG);
+        // charge_credits=false: il piano costa cost_action_plan_generate una volta sola (ActionPlanController::generate)
+        $result = $this->ai->analyzeWithSystem($userId, $prompt['system'], $prompt['user'], self::MODULE_SLUG, ['charge_credits' => false]);
 
         // Reconnect dopo chiamata AI lunga
         Database::reconnect();

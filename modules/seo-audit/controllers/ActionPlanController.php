@@ -113,6 +113,14 @@ class ActionPlanController
             exit;
         }
 
+        // Prezzo unico, quello mostrato in pagina
+        $cost = $this->actionPlanService->getCost('action_plan_generate');
+        if (!Credits::hasEnough($user['id'], $cost)) {
+            if (ob_get_level()) ob_end_clean();
+            echo json_encode(['error' => true, 'message' => "Crediti insufficienti: servono {$cost} crediti."]);
+            exit;
+        }
+
         // Rilascia sessione prima dell'operazione lunga
         session_write_close();
 
@@ -121,6 +129,9 @@ class ActionPlanController
         $result = $this->actionPlanService->generatePlan($id, $sessionId, $user['id']);
 
         Database::reconnect();
+        if (!empty($result['success'])) {
+            Credits::consume($user['id'], $cost, 'action_plan_generate', 'seo-audit', ['project_id' => $id, 'plan_id' => $result['plan_id'] ?? null]);
+        }
         if (ob_get_level()) ob_end_clean();
         echo json_encode($result);
         exit;
