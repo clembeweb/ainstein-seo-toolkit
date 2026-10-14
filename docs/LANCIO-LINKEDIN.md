@@ -2,6 +2,24 @@
 
 > File di stato del lancio. Aggiornato: 2026-10-13 notte.
 >
+> **PASSAGGIO DI CONSEGNE 2026-10-14 pomeriggio (RIPARTIRE DA QUI).** Fatto oggi, tutto online:
+> - Punto della situazione su Stabia rifatto con GA4+GSC veri (report id 2): regola numeri piccoli OK, "Parti da qui"
+>   riconosce anche le pagine citate per nome.
+> - **Check sezioni e menu dei tool (richiesta Clemente: stesso check su TUTTI i tool):** fatti AI Rank (`2de5a22`:
+>   un solo menu a 5 voci + viste secondarie, Impostazioni con GA4, alert nascosti finché non funzionano, traduzioni,
+>   fonti delle posizioni), AI Keywords (`61ca0c3`, `90aedae`, `d6e4432`: niente tipo, un progetto per sito, 3 strumenti
+>   INDIPENDENTI senza numeri, Piano propone l'Architettura se c'è), AI Audit (`22e7d28`: Report AI 15 e Piano d'azione
+>   10 senza addebiti nascosti, menu = schede), AI Writer (`8211a49`: menu = schede per tipo, i 3 tipi restano perché
+>   sono flussi diversi, costi veri negli Automatici).
+> - **Prossima sessione, in ordine:** 1) stesso check su **AI GEO Audit**; 2) verificare a schermo in prod (Chrome di
+>   Clemente loggato) un progetto Meta tag di AI Writer e le pagine cambiate oggi; 3) post LinkedIn (era previsto per
+>   la sera del 2026-10-14: chiedere a Clemente se resta così).
+> - Lasciati com'erano: Stabia ha 2 progetti AI Keywords nello stesso progetto globale (id 8 e 9, vecchio sistema a
+>   tipi) → due riquadri uguali; dati di prova, Clemente: "posso anche eliminarli". Copia in prod
+>   `/home/ainstein/backups/2026-10-14-kr-merge-8-in-9.sql`. Le scritture sul DB di prod via ssh sono bloccate dal
+>   controllo della modalità auto: le lancia Clemente o si cambia modalità permessi.
+> - Restano da AI Rank: percorso d'ingresso per progetti nuovi, alert funzionanti; idea "Traffico dalle AI" (punto 9).
+>
 > **PASSAGGIO DI CONSEGNE 2026-10-13 tarda sera (RIPARTIRE DA QUI). Decisione Clemente: domani si continua, DOMANI SERA
 > (2026-10-14) SI PUBBLICA il post LinkedIn.** Fatto stasera, tutto online: Punto della situazione rivisto su Stabia con
 > dati veri (GA4 collegato da Clemente, report id 1 in prod, testo di Claude: credito Anthropic OK). Bug quota brand,
