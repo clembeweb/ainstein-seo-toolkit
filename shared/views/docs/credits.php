@@ -68,7 +68,7 @@ $_crTables = [
             ['Ricerca guidata (raggruppamento delle keyword con l\'AI)', $_crKrResearch, ''],
             ['Architettura sito', $_crKrArchitecture, ''],
             ['Piano editoriale', $_crKrEditorial, ''],
-            ['Quick Check di una parola chiave', 0, ''],
+            ['Controllo veloce di una parola chiave', 0, ''],
         ],
         'note' => null,
     ],

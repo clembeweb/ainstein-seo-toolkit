@@ -1,3 +1,4 @@
+<?php $krStep = 'architecture'; include __DIR__ . '/../partials/project-steps.php'; ?>
 <?php
 // Prepara i dati dei cluster con indice originale per Alpine.js
 $clustersForTable = array_values(array_map(function($c, $i) {

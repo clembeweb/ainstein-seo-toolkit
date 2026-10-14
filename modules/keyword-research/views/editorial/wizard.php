@@ -1,10 +1,11 @@
+<?php $krStep = 'editorial'; include __DIR__ . '/../partials/project-steps.php'; ?>
 <div x-data="editorialWizard()" x-cloak class="space-y-6">
     <!-- Header -->
     <div>
         <nav class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2">
             <a href="<?= url('/keyword-research') ?>" class="hover:text-slate-700 dark:hover:text-slate-300">AI Keywords</a>
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            <a href="<?= url('/keyword-research/projects?type=' . ($project['type'] ?? 'editorial')) ?>" class="hover:text-slate-700 dark:hover:text-slate-300">Progetti</a>
+            <a href="<?= url('/keyword-research/projects') ?>" class="hover:text-slate-700 dark:hover:text-slate-300">Progetti</a>
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             <span class="text-slate-900 dark:text-white"><?= e($project['name']) ?></span>
         </nav>
@@ -23,6 +24,18 @@
             <?php if (!empty($prefill['architecture_date'])): ?>del <?= e(date('d/m/Y', strtotime($prefill['architecture_date']))) ?><?php endif; ?>:
             tema, target e zona sono già compilati, e le categorie sono le keyword principali delle <?= (int) $prefill['pages_count'] ?> pagine proposte (max 6). L'AI riceverà anche le pagine, così ogni articolo rimanda a una di esse con un link interno. Puoi modificare tutto prima di avviare.
         </div>
+    </div>
+    <?php endif; ?>
+
+    <?php if (empty($prefill) && !empty($suggestedArchitecture)): ?>
+    <!-- Architettura già pronta: proposta come punto di partenza -->
+    <div class="rounded-xl border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-900/20 p-4 flex flex-wrap items-center justify-between gap-3">
+        <p class="text-sm text-slate-700 dark:text-slate-300">
+            Hai già un'<strong class="text-slate-900 dark:text-white">Architettura sito</strong> del <?= e(date('d/m/Y', strtotime($suggestedArchitecture['created_at']))) ?>
+            con <?= (int) $suggestedArchitecture['pages'] ?> pagine: partendo da quella, ogni articolo del piano spinge una pagina del sito.
+        </p>
+        <a href="<?= url('/keyword-research/project/' . (int) $project['id'] . '/editorial?from_architecture=' . (int) $suggestedArchitecture['id']) ?>"
+           class="inline-flex items-center px-4 py-2 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 transition-colors">Parti dall'Architettura</a>
     </div>
     <?php endif; ?>
 
@@ -170,7 +183,7 @@
 
                 <!-- Geography -->
                 <div class="max-w-xs">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Location</label>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Paese</label>
                     <select x-model="brief.geography"
                             class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                         <option value="IT">Italia</option>
@@ -241,7 +254,7 @@
 
     <!-- Step 3: AI Piano -->
     <div x-show="currentStep === 2" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 space-y-6">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">AI Piano Editoriale</h2>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Piano editoriale</h2>
 
         <div x-show="analyzing" class="text-center py-8">
             <svg class="w-12 h-12 text-violet-500 mx-auto animate-spin" fill="none" viewBox="0 0 24 24">

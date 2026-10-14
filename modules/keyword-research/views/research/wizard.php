@@ -1,14 +1,15 @@
+<?php $krStep = 'research'; include __DIR__ . '/../partials/project-steps.php'; ?>
 <div x-data="researchWizard()" x-cloak class="space-y-6">
     <!-- Header -->
     <div>
         <nav class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2">
             <a href="<?= url('/keyword-research') ?>" class="hover:text-slate-700 dark:hover:text-slate-300">AI Keywords</a>
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            <a href="<?= url('/keyword-research/projects?type=' . ($project['type'] ?? 'research')) ?>" class="hover:text-slate-700 dark:hover:text-slate-300">Progetti</a>
+            <a href="<?= url('/keyword-research/projects') ?>" class="hover:text-slate-700 dark:hover:text-slate-300">Progetti</a>
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             <span class="text-slate-900 dark:text-white"><?= e($project['name']) ?></span>
         </nav>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Research Guidata</h1>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Ricerca keyword</h1>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Keyword research con clustering AI automatico</p>
     </div>
 
@@ -93,7 +94,7 @@
         <!-- Geography & Language (from project) -->
         <div class="grid grid-cols-2 gap-4">
             <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Location</label>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Paese</label>
                 <select x-model="brief.geography"
                         class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                     <option value="IT">Italia</option>

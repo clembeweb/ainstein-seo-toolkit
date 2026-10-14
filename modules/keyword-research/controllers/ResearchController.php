@@ -29,7 +29,7 @@ class ResearchController
     }
 
     /**
-     * Wizard 4-step per Research Guidata
+     * Wizard 4-step per Ricerca keyword
      */
     public function wizard(int $projectId): string
     {
@@ -46,7 +46,7 @@ class ResearchController
         $researches = $this->researchModel->findByProject($projectId, 'research');
 
         return View::render('keyword-research::research/wizard', [
-            'title' => 'Research Guidata - ' . $project['name'],
+            'title' => 'Ricerca keyword - ' . $project['name'],
             'user' => $user,
             'project' => $project,
             'researches' => $researches,

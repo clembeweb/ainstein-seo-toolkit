@@ -84,12 +84,24 @@ class EditorialController
             }
         }
 
+        // Senza ponte attivo: se il progetto ha già un'Architettura completata la proponiamo come punto di partenza
+        $suggestedArchitecture = null;
+        if (!$prefill) {
+            $suggestedArchitecture = \Core\Database::fetch(
+                "SELECT r.id, r.created_at, (SELECT COUNT(*) FROM kr_clusters c WHERE c.research_id = r.id) AS pages
+                 FROM kr_researches r WHERE r.project_id = ? AND r.type = 'architecture' AND r.status = 'completed'
+                 ORDER BY r.id DESC LIMIT 1",
+                [$projectId]
+            ) ?: null;
+        }
+
         return View::render('keyword-research::editorial/wizard', [
             'title' => 'Piano Editoriale - ' . $project['name'],
             'user' => $user,
             'project' => $project,
             'researches' => $researches,
             'prefill' => $prefill,
+            'suggestedArchitecture' => $suggestedArchitecture,
             'modules' => ModuleLoader::getUserModules($user['id']),
         ]);
     }

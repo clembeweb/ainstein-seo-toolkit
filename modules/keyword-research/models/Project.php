@@ -16,7 +16,7 @@ class Project
     {
         $configs = [
             'research' => [
-                'label' => 'Research Guidata',
+                'label' => 'Ricerca keyword',
                 'route_segment' => 'research',
                 'gradient' => 'from-emerald-500 to-teal-600',
                 'badge_bg' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300',

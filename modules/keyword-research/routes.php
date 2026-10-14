@@ -51,6 +51,17 @@ Router::post('/keyword-research/projects', function () {
     return $controller->store();
 });
 
+// Ingresso del progetto (dal progetto globale e dall'elenco): apre l'ultimo passo usato, altrimenti la Ricerca keyword
+Router::get('/keyword-research/project/{id}', function ($id) {
+    Middleware::auth();
+    $last = \Core\Database::fetch(
+        "SELECT r.type FROM kr_researches r JOIN kr_projects p ON p.id = r.project_id WHERE r.project_id = ? AND p.user_id = ? ORDER BY r.id DESC LIMIT 1",
+        [(int) $id, (int) (\Core\Auth::user()['id'] ?? 0)]
+    );
+    $step = in_array($last['type'] ?? '', ['architecture', 'editorial'], true) ? $last['type'] : 'research';
+    \Core\Router::redirect('/keyword-research/project/' . (int) $id . '/' . $step);
+});
+
 Router::get('/keyword-research/project/{id}/settings', function ($id) {
     Middleware::auth();
     $controller = new ProjectController();

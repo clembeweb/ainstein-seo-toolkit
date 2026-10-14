@@ -39,7 +39,7 @@ $_faqSections = [
         ['Quanto costa un articolo?',
             'Un articolo completo con copertina costa circa <strong class="' . $_faqStrong . '">' . $_faqCr($_faqArticle) . '</strong>: lettura dei risultati Google, lettura di una pagina concorrente, scaletta, articolo e immagine. Prima di ogni passaggio vedi il costo.'],
         ['Cosa è gratis?',
-            'Guardare i risultati, consultare i report ed esportare non costa crediti. Sono gratuiti anche ' . ($_faqCrawl <= 0 ? 'la scansione del sito con l\'AI Audit, ' : '') . 'il Controllo tecnico dell\'AI GEO Audit e il Quick Check di AI Keywords.'],
+            'Guardare i risultati, consultare i report ed esportare non costa crediti. Sono gratuiti anche ' . ($_faqCrawl <= 0 ? 'la scansione del sito con l\'AI Audit, ' : '') . 'il Controllo tecnico dell\'AI GEO Audit e il Controllo veloce di AI Keywords.'],
     ]],
     ['AI Writer', 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z', [
         ['Quanto è lungo un articolo?',
@@ -53,7 +53,7 @@ $_faqSections = [
         ['Cos\'è una keyword e perché mi serve?',
             'Una keyword (parola chiave) è quello che una persona scrive su Google, per esempio "idraulico Napoli" o "scarpe da trail donna". AI Keywords ti mostra quali ricerche fanno i tuoi clienti e quante volte al mese, così scrivi pagine e articoli su cose che le persone cercano davvero.'],
         ['Che differenza c\'è tra Ricerca guidata, Architettura sito e Piano editoriale?',
-            'La <strong class="' . $_faqStrong . '">Ricerca guidata</strong> raccoglie le keyword e le raggruppa per argomento. L\'<strong class="' . $_faqStrong . '">Architettura sito</strong> ti propone quali pagine creare (utile per un sito nuovo o da rifare). Il <strong class="' . $_faqStrong . '">Piano editoriale</strong> ti dice quali articoli scrivere e in che ordine. Il <strong class="' . $_faqStrong . '">Quick Check</strong> controlla una singola parola, gratis.'],
+            'La <strong class="' . $_faqStrong . '">Ricerca guidata</strong> raccoglie le keyword e le raggruppa per argomento. L\'<strong class="' . $_faqStrong . '">Architettura sito</strong> ti propone quali pagine creare (utile per un sito nuovo o da rifare). Il <strong class="' . $_faqStrong . '">Piano editoriale</strong> ti dice quali articoli scrivere e in che ordine. Il <strong class="' . $_faqStrong . '">Controllo veloce</strong> controlla una singola parola, gratis.'],
     ]],
     ['AI Audit', 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', [
         ['Cosa controlla l\'AI Audit?',

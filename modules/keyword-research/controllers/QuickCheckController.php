@@ -33,7 +33,7 @@ class QuickCheckController
         $user = Auth::user();
 
         return View::render('keyword-research::quick-check/index', [
-            'title' => 'Quick Check - AI Keywords',
+            'title' => 'Controllo veloce - AI Keywords',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'keyword' => '',
@@ -52,7 +52,7 @@ class QuickCheckController
         if (empty($keyword)) {
             $_SESSION['_flash']['error'] = 'Inserisci una keyword da cercare.';
             return View::render('keyword-research::quick-check/index', [
-                'title' => 'Quick Check - AI Keywords',
+                'title' => 'Controllo veloce - AI Keywords',
                 'user' => $user,
                 'modules' => ModuleLoader::getUserModules($user['id']),
                 'keyword' => '',
@@ -105,7 +105,7 @@ class QuickCheckController
             if (!$service->isConfigured()) {
                 $_SESSION['_flash']['error'] = 'Nessun servizio keyword configurato. Contatta l\'amministratore.';
                 return View::render('keyword-research::quick-check/index', [
-                    'title' => 'Quick Check - AI Keywords',
+                    'title' => 'Controllo veloce - AI Keywords',
                     'user' => $user,
                     'modules' => ModuleLoader::getUserModules($user['id']),
                     'keyword' => $keyword,
@@ -142,7 +142,7 @@ class QuickCheckController
         }
 
         return View::render('keyword-research::quick-check/index', [
-            'title' => 'Quick Check - ' . $keyword,
+            'title' => 'Controllo veloce - ' . $keyword,
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'keyword' => $keyword,

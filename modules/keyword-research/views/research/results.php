@@ -1,3 +1,4 @@
+<?php $krStep = 'research'; include __DIR__ . '/../partials/project-steps.php'; ?>
 <?php
 // Raccogli intent unici per il filtro
 $uniqueIntents = array_unique(array_filter(array_map(fn($c) => strtolower($c['intent'] ?? ''), $clusters)));

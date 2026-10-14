@@ -1,3 +1,4 @@
+<?php $krStep = 'editorial'; include __DIR__ . '/../partials/project-steps.php'; ?>
 <?php
 $totalArticles = (int) ($stats['total_articles'] ?? 0);
 $totalMonths = (int) ($stats['total_months'] ?? 0);

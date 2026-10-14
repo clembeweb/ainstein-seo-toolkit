@@ -158,8 +158,8 @@ $_moRows = [
             ],
             [
                 'slug' => 'keyword-research', 'name' => 'AI Keywords', 'color' => 'purple', 'icon' => $_moRows[3]['icon'],
-                'text' => 'Ti aiuta a capire cosa cercano davvero i clienti. Con la Ricerca guidata parti da poche parole e ottieni gruppi di keyword con i volumi di ricerca. L\'Architettura sito ti propone quali pagine creare. Il Piano editoriale ti dice quali articoli scrivere e in che ordine. Il Quick Check verifica una singola parola chiave, gratis.',
-                'tags' => ['Ricerca guidata', 'Architettura sito', 'Piano editoriale', 'Quick Check gratuito'],
+                'text' => 'Ti aiuta a capire cosa cercano davvero i clienti. Con la Ricerca guidata parti da poche parole e ottieni gruppi di keyword con i volumi di ricerca. L\'Architettura sito ti propone quali pagine creare. Il Piano editoriale ti dice quali articoli scrivere e in che ordine. Il Controllo veloce verifica una singola parola chiave, gratis.',
+                'tags' => ['Ricerca guidata', 'Architettura sito', 'Piano editoriale', 'Controllo veloce gratuito'],
             ],
             [
                 'slug' => 'ai-reputation', 'name' => 'AI GEO Audit', 'color' => 'indigo', 'icon' => $_moRows[4]['icon'],

@@ -46,7 +46,6 @@ class GlobalProject
             'color' => 'purple',
             'icon' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z',
             'route_prefix' => '/keyword-research/project',
-            'type_in_route' => true,
         ],
         'ads-analyzer' => [
             'table' => 'ga_projects',
@@ -107,23 +106,7 @@ class GlobalProject
                 'icon' => 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z',
             ],
         ],
-        'keyword-research' => [
-            'research' => [
-                'label' => 'Research Guidata',
-                'description' => 'Clustering AI con volumi di ricerca e intent',
-                'icon' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z',
-            ],
-            'architecture' => [
-                'label' => 'Architettura Sito',
-                'description' => 'Struttura URL e gerarchia pagine ottimizzata',
-                'icon' => 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z',
-            ],
-            'editorial' => [
-                'label' => 'Piano Editoriale',
-                'description' => 'Piano contenuti mensile basato su keyword strategiche',
-                'icon' => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
-            ],
-        ],
+        // keyword-research: niente tipi dal 2026-10-14, un progetto per sito con Ricerca → Architettura → Piano in fila
         'ads-analyzer' => [
             'campaign' => [
                 'label' => 'Analisi Campagne',

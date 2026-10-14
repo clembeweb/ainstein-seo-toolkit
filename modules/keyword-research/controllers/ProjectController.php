@@ -22,10 +22,8 @@ class ProjectController
     {
         $user = Auth::user();
 
-        $type = $_GET['type'] ?? null;
-        if ($type !== null && !in_array($type, Project::validTypes(), true)) {
-            $type = null;
-        }
+        // Un solo elenco: il tipo non divide più i progetti (dal 2026-10-14)
+        $type = null;
 
         $projects = $this->projectModel->allWithStats($user['id'], $type);
 

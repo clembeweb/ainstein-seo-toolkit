@@ -55,11 +55,11 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
     <!-- 4 Mode Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <?= \Core\View::partial('components/dashboard-mode-card', [
-            'title' => 'Research Guidata',
+            'title' => 'Ricerca keyword',
             'description' => 'Progetti SEO/Ads con clustering AI. Parti da seed keyword, espandi automaticamente e ottieni cluster semantici con intent e note strategiche.',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>',
             'gradient' => 'from-emerald-500 to-teal-600',
-            'url' => url('/keyword-research/projects?type=research'),
+            'url' => url('/keyword-research/projects'),
             'cost' => $krCost('cost_kr_ai_clustering', 3),
             'costColor' => 'amber',
             'dataTour' => 'kr-guided',
@@ -70,7 +70,7 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
             'description' => "Struttura URL e slug per un nuovo sito. L'AI propone pagine, H1 e URL basati sui volumi di ricerca reali.",
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>',
             'gradient' => 'from-blue-500 to-indigo-600',
-            'url' => url('/keyword-research/projects?type=architecture'),
+            'url' => url('/keyword-research/projects'),
             'cost' => $krCost('cost_kr_ai_architecture', 5),
             'costColor' => 'purple',
             'dataTour' => 'kr-architecture',
@@ -81,14 +81,14 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
             'description' => 'Piano editoriale mensile basato su keyword e analisi competitor. Esporta direttamente in AI Writer.',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>',
             'gradient' => 'from-violet-500 to-purple-600',
-            'url' => url('/keyword-research/projects?type=editorial'),
+            'url' => url('/keyword-research/projects'),
             'cost' => $krCost('cost_kr_editorial_plan', 5),
             'costColor' => 'purple',
             'dataTour' => 'kr-editorial',
         ]) ?>
 
         <?= \Core\View::partial('components/dashboard-mode-card', [
-            'title' => 'Quick Check',
+            'title' => 'Controllo veloce',
             'description' => 'Check istantaneo di una singola keyword. Ottieni volume, CPC, competition e correlate senza creare un progetto.',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>',
             'gradient' => 'from-amber-500 to-orange-600',
@@ -198,7 +198,7 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
             </span>
             <h2 class="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white mt-4">Trova le keyword giuste e trasformale in un piano editoriale</h2>
             <p class="text-lg text-slate-600 dark:text-slate-300 mt-4 leading-relaxed">Dalla ricerca seed alla strategia contenuti completa: scopri keyword ad alto potenziale, organizzale in cluster tematici e genera un piano editoriale pronto per la produzione — tutto guidato dall'AI.</p>
-            <a href="<?= url('/keyword-research/projects?type=research') ?>" class="inline-flex items-center px-6 py-3 rounded-xl bg-purple-500 text-white font-semibold hover:bg-purple-600 shadow-lg shadow-purple-500/25 transition-all mt-8">
+            <a href="<?= url('/keyword-research/projects') ?>" class="inline-flex items-center px-6 py-3 rounded-xl bg-purple-500 text-white font-semibold hover:bg-purple-600 shadow-lg shadow-purple-500/25 transition-all mt-8">
                 Inizia la tua prima ricerca
                 <svg class="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
             </a>
@@ -342,10 +342,10 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
                 <div>
                     <h3 class="text-2xl font-bold text-slate-900 dark:text-white">4 modalità per ogni esigenza di ricerca</h3>
                     <p class="mt-4 text-slate-600 dark:text-slate-300 leading-relaxed">
-                        <strong class="text-purple-600 dark:text-purple-400">Research Guidata</strong>: parti da una seed keyword e lascia che l'AI trovi centinaia di keyword correlate con clustering automatico.
+                        <strong class="text-purple-600 dark:text-purple-400">Ricerca keyword</strong>: parti da una seed keyword e lascia che l'AI trovi centinaia di keyword correlate con clustering automatico.
                         <strong class="text-purple-600 dark:text-purple-400">Architettura Sito</strong>: definisci la struttura URL ideale basata sui volumi di ricerca.
                         <strong class="text-purple-600 dark:text-purple-400">Piano Editoriale</strong>: trasforma le keyword in un calendario contenuti con priorità.
-                        <strong class="text-purple-600 dark:text-purple-400">Quick Check</strong>: verifica veloce volume e difficoltà di una keyword — completamente gratis.
+                        <strong class="text-purple-600 dark:text-purple-400">Controllo veloce</strong>: verifica veloce volume e difficoltà di una keyword — completamente gratis.
                     </p>
                     <a href="<?= url('/keyword-research/projects') ?>" class="inline-flex items-center mt-6 text-purple-600 dark:text-purple-400 font-medium hover:text-purple-700 dark:hover:text-purple-300 transition-colors">
                         Esplora le modalità
@@ -358,12 +358,12 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
                             <span class="text-sm font-medium text-slate-900 dark:text-white">Scegli la modalità</span>
                         </div>
                         <div class="p-4 grid grid-cols-2 gap-3">
-                            <!-- Research Guidata -->
+                            <!-- Ricerca keyword -->
                             <div class="p-3 rounded-lg border-2 border-emerald-300 dark:border-emerald-600 bg-emerald-50 dark:bg-emerald-900/20">
                                 <div class="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mb-2">
                                     <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                                 </div>
-                                <p class="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Research Guidata</p>
+                                <p class="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Ricerca keyword</p>
                                 <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">3 crediti</p>
                             </div>
                             <!-- Architettura Sito -->
@@ -382,12 +382,12 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
                                 <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">Piano Editoriale</p>
                                 <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">10 crediti</p>
                             </div>
-                            <!-- Quick Check -->
+                            <!-- Controllo veloce -->
                             <div class="p-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700/30">
                                 <div class="h-8 w-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mb-2">
                                     <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                                 </div>
-                                <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">Quick Check</p>
+                                <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">Controllo veloce</p>
                                 <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5 font-medium">Gratis</p>
                             </div>
                         </div>
@@ -406,7 +406,7 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
                     <p class="mt-4 text-slate-600 dark:text-slate-300 leading-relaxed">
                         Centinaia di keyword diventano ingestibili. L'AI le raggruppa automaticamente per intento e topic, suggerendo quali keyword targetizzare insieme nella stessa pagina. Per un e-commerce di mobili, <strong class="text-purple-600 dark:text-purple-400">'tavolo da pranzo allungabile'</strong>, <strong class="text-purple-600 dark:text-purple-400">'tavolo 6 persone'</strong> e <strong class="text-purple-600 dark:text-purple-400">'tavolo legno massello'</strong> finiscono nello stesso cluster perché l'utente sta cercando lo stesso prodotto.
                     </p>
-                    <a href="<?= url('/keyword-research/projects?type=research') ?>" class="inline-flex items-center mt-6 text-purple-600 dark:text-purple-400 font-medium hover:text-purple-700 dark:hover:text-purple-300 transition-colors">
+                    <a href="<?= url('/keyword-research/projects') ?>" class="inline-flex items-center mt-6 text-purple-600 dark:text-purple-400 font-medium hover:text-purple-700 dark:hover:text-purple-300 transition-colors">
                         Scopri il clustering
                         <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
@@ -482,7 +482,7 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
                     <p class="mt-4 text-slate-600 dark:text-slate-300 leading-relaxed">
                         Il Piano Editoriale non resta un foglio Excel. Esporta le keyword selezionate direttamente nel modulo AI Writer: per ogni keyword verrà creato automaticamente il processo completo di analisi SERP, brief e generazione articolo. Esempio: <strong class="text-purple-600 dark:text-purple-400">selezioni 10 keyword dal piano → 10 articoli in coda di produzione</strong>.
                     </p>
-                    <a href="<?= url('/keyword-research/projects?type=editorial') ?>" class="inline-flex items-center mt-6 text-purple-600 dark:text-purple-400 font-medium hover:text-purple-700 dark:hover:text-purple-300 transition-colors">
+                    <a href="<?= url('/keyword-research/projects') ?>" class="inline-flex items-center mt-6 text-purple-600 dark:text-purple-400 font-medium hover:text-purple-700 dark:hover:text-purple-300 transition-colors">
                         Crea un piano editoriale
                         <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
@@ -627,7 +627,7 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
                     </svg>
                 </button>
                 <div x-show="openFaq === 1" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-cloak class="px-6 pb-4">
-                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">La <strong>Research Guidata</strong> costa 3 crediti per analisi. L'<strong>Architettura Sito</strong> e il <strong>Piano Editoriale</strong> costano 10 crediti ciascuno. Il <strong>Quick Check</strong> è completamente gratuito e non consuma crediti.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">La <strong>Ricerca keyword</strong> costa 3 crediti per analisi. L'<strong>Architettura Sito</strong> e il <strong>Piano Editoriale</strong> costano 10 crediti ciascuno. Il <strong>Controllo veloce</strong> è completamente gratuito e non consuma crediti.</p>
                 </div>
             </div>
             <!-- FAQ 2 -->
@@ -639,7 +639,7 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
                     </svg>
                 </button>
                 <div x-show="openFaq === 2" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-cloak class="px-6 pb-4">
-                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed"><strong>Research Guidata</strong>: parti da keyword seed, espansione automatica e clustering AI. Ideale per scoprire keyword e organizzarle. <strong>Architettura Sito</strong>: genera una struttura di pagine con URL e H1 basati sui volumi di ricerca. Perfetto per nuovi siti. <strong>Piano Editoriale</strong>: crea un calendario contenuti con priorità e keyword assegnate, esportabile in AI Writer. <strong>Quick Check</strong>: verifica rapida di volume, CPC e competizione per una singola keyword.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed"><strong>Ricerca keyword</strong>: parti da keyword seed, espansione automatica e clustering AI. Ideale per scoprire keyword e organizzarle. <strong>Architettura Sito</strong>: genera una struttura di pagine con URL e H1 basati sui volumi di ricerca. Perfetto per nuovi siti. <strong>Piano Editoriale</strong>: crea un calendario contenuti con priorità e keyword assegnate, esportabile in AI Writer. <strong>Controllo veloce</strong>: verifica rapida di volume, CPC e competizione per una singola keyword.</p>
                 </div>
             </div>
             <!-- FAQ 3 -->
@@ -669,13 +669,13 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
             <!-- FAQ 5 -->
             <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <button @click="openFaq === 5 ? openFaq = null : openFaq = 5" class="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <span class="font-medium text-slate-900 dark:text-white">Il Quick Check è davvero gratuito?</span>
+                    <span class="font-medium text-slate-900 dark:text-white">Il Controllo veloce è davvero gratuito?</span>
                     <svg class="w-5 h-5 text-slate-400 transition-transform duration-200" :class="openFaq === 5 && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
                 <div x-show="openFaq === 5" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-cloak class="px-6 pb-4">
-                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Sì, il Quick Check non consuma crediti. Puoi verificare volume di ricerca, CPC, competizione e keyword correlate per qualsiasi keyword senza costi. È il modo perfetto per fare un controllo rapido prima di avviare una ricerca completa.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Sì, il Controllo veloce non consuma crediti. Puoi verificare volume di ricerca, CPC, competizione e keyword correlate per qualsiasi keyword senza costi. È il modo perfetto per fare un controllo rapido prima di avviare una ricerca completa.</p>
                 </div>
             </div>
             <!-- FAQ 6 -->

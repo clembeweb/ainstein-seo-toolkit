@@ -608,11 +608,11 @@ if ($_navGlobalProjectId && isset($user['id'])) {
                             <?= e(mb_substr($krProject['name'], 0, 20)) ?><?= mb_strlen($krProject['name']) > 20 ? '...' : '' ?>
                         </div>
 
-                        <?= navSubLink("/keyword-research/project/{$krProjectId}/research", 'Research Guidata', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>', $currentPath) ?>
+                        <?= navSubLink("/keyword-research/project/{$krProjectId}/research", '1 · Ricerca keyword', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>', $currentPath) ?>
 
-                        <?= navSubLink("/keyword-research/project/{$krProjectId}/architecture", 'Architettura Sito', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>', $currentPath) ?>
+                        <?= navSubLink("/keyword-research/project/{$krProjectId}/architecture", '2 · Architettura sito', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>', $currentPath) ?>
 
-                        <?= navSubLink("/keyword-research/project/{$krProjectId}/editorial", 'Piano Editoriale', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>', $currentPath) ?>
+                        <?= navSubLink("/keyword-research/project/{$krProjectId}/editorial", '3 · Piano editoriale', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>', $currentPath) ?>
 
                         <!-- Settings -->
                         <div class="pt-1 mt-1 border-t border-slate-200 dark:border-slate-700">
@@ -620,9 +620,9 @@ if ($_navGlobalProjectId && isset($user['id'])) {
                         </div>
                     <?php endif; ?>
 
-                        <!-- Quick Check (sempre visibile) -->
+                        <!-- Controllo veloce (sempre visibile) -->
                         <div class="<?= $krProjectId ? 'pt-1 mt-1 border-t border-slate-200 dark:border-slate-700' : '' ?>">
-                            <?= navSubLink("/keyword-research/quick-check", 'Quick Check', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>', $currentPath) ?>
+                            <?= navSubLink("/keyword-research/quick-check", 'Controllo veloce', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>', $currentPath) ?>
                         </div>
                     </div>
                 </div>

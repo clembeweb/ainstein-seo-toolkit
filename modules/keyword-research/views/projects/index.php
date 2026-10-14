@@ -11,7 +11,7 @@
                 <?= $currentType ? 'Progetti ' . $typeConfig['label'] : 'Tutti i Progetti' ?>
             </h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                <?= $currentType ? 'Gestisci i tuoi progetti di ' . strtolower($typeConfig['label']) : 'Gestisci tutti i tuoi progetti di keyword research' ?>
+                <?= $currentType ? 'Gestisci i tuoi progetti di ' . strtolower($typeConfig['label']) : 'Ogni progetto: ricerca keyword, architettura del sito e piano editoriale' ?>
             </p>
         </div>
         <div class="mt-4 sm:mt-0 flex flex-wrap items-center gap-3">
@@ -23,20 +23,6 @@
                 Nuovo Progetto
             </a>
         </div>
-    </div>
-
-    <!-- Tab Filtro -->
-    <div class="flex items-center gap-2 flex-wrap">
-        <a href="<?= url('/keyword-research/projects') ?>"
-           class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors <?= !$currentType ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700' ?>">
-            Tutti
-        </a>
-        <?php foreach ($allTypeConfigs as $typeKey => $tc): ?>
-        <a href="<?= url('/keyword-research/projects?type=' . $typeKey) ?>"
-           class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors <?= $currentType === $typeKey ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700' ?>">
-            <?= $tc['label'] ?>
-        </a>
-        <?php endforeach; ?>
     </div>
 
     <?php if (empty($projects)): ?>
@@ -85,9 +71,6 @@
                         <div>
                             <h3 class="font-semibold text-slate-900 dark:text-white"><?= e($project['name']) ?></h3>
                             <?php if (!$currentType): ?>
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium <?= $tc['badge_bg'] ?>">
-                                <?= $tc['label'] ?>
-                            </span>
                             <?php elseif (!empty($project['description'])): ?>
                             <p class="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[180px]"><?= e($project['description']) ?></p>
                             <?php endif; ?>
@@ -126,7 +109,7 @@
                 <span class="text-xs text-slate-500 dark:text-slate-400">
                     <?= date('d/m/Y', strtotime($project['created_at'])) ?>
                 </span>
-                <a href="<?= url('/keyword-research/project/' . $project['id'] . '/' . $tc['route_segment']) ?>" class="inline-flex items-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700">
+                <a href="<?= url('/keyword-research/project/' . $project['id']) ?>" class="inline-flex items-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700">
                     Apri
                     <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>

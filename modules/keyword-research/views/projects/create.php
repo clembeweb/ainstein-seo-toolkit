@@ -19,7 +19,7 @@ $infoItems = match($currentType) {
     default => [
         'color' => 'emerald',
         'items' => [
-            'Avviare una Research Guidata con clustering AI',
+            'Avviare una Ricerca keyword con clustering AI',
             'Analizzare keyword con volumi e intent',
             'Esportare i risultati in CSV',
         ],

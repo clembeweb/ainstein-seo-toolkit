@@ -27,7 +27,7 @@
     </h2>
     <div class="prose dark:prose-invert max-w-none">
         <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
-            Ricerca keyword potenziata dall'intelligenza artificiale. Tre modalita operative: <strong class="text-slate-900 dark:text-white">Research Guidata</strong> con clustering semantico, <strong class="text-slate-900 dark:text-white">Architettura Sito</strong> con suggerimenti di struttura pagine, e <strong class="text-slate-900 dark:text-white">Quick Check</strong> gratuito per verifiche rapide. L'AI analizza le keyword raccolte, le raggruppa per intent semantico e ti fornisce una mappa operativa pronta all'uso.
+            Ricerca keyword potenziata dall'intelligenza artificiale. Tre modalita operative: <strong class="text-slate-900 dark:text-white">Ricerca keyword</strong> con clustering semantico, <strong class="text-slate-900 dark:text-white">Architettura Sito</strong> con suggerimenti di struttura pagine, e <strong class="text-slate-900 dark:text-white">Controllo veloce</strong> gratuito per verifiche rapide. L'AI analizza le keyword raccolte, le raggruppa per intent semantico e ti fornisce una mappa operativa pronta all'uso.
         </p>
     </div>
 </section>
@@ -46,7 +46,7 @@
             <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">1</div>
             <div>
                 <h3 class="font-medium text-slate-900 dark:text-white">Scegli la modalita</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Seleziona tra Research Guidata, Architettura Sito o Quick Check in base al tuo obiettivo.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Seleziona tra Ricerca keyword, Architettura Sito o Controllo veloce in base al tuo obiettivo.</p>
             </div>
         </div>
         <!-- Step 2 -->
@@ -54,7 +54,7 @@
             <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">2</div>
             <div>
                 <h3 class="font-medium text-slate-900 dark:text-white">Descrivi il business e inserisci le keyword seed</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Per la Research Guidata, descrivi brevemente il tuo business e inserisci 5-10 keyword seed di partenza.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Per la Ricerca keyword, descrivi brevemente il tuo business e inserisci 5-10 keyword seed di partenza.</p>
             </div>
         </div>
         <!-- Step 3 -->
@@ -93,7 +93,7 @@
         Funzionalita principali
     </h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Research Guidata -->
+        <!-- Ricerca keyword -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <div class="flex items-center gap-3 mb-2">
                 <div class="shrink-0 w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
@@ -101,7 +101,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                 </div>
-                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Research Guidata (4 step)</h3>
+                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Ricerca keyword (4 step)</h3>
             </div>
             <p class="text-sm text-slate-600 dark:text-slate-400">Brief, raccolta keyword, clustering AI e visualizzazione risultati con filtri avanzati.</p>
         </div>
@@ -117,7 +117,7 @@
             </div>
             <p class="text-sm text-slate-600 dark:text-slate-400">Brief, raccolta e analisi combinata, con struttura pagine consigliata dall'AI.</p>
         </div>
-        <!-- Quick Check -->
+        <!-- Controllo veloce -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <div class="flex items-center gap-3 mb-2">
                 <div class="shrink-0 w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
@@ -125,7 +125,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                     </svg>
                 </div>
-                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Quick Check (gratuito)</h3>
+                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Controllo veloce (gratuito)</h3>
             </div>
             <p class="text-sm text-slate-600 dark:text-slate-400">Verifica istantanea di volume, CPC, competition e intent per una singola keyword.</p>
         </div>
@@ -216,7 +216,7 @@
                     </td>
                 </tr>
                 <tr class="bg-white dark:bg-slate-800/50">
-                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Quick Check</td>
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Controllo veloce</td>
                     <td class="px-4 py-3 text-right">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">GRATIS</span>
                     </td>
@@ -243,8 +243,8 @@
                 </svg>
             </div>
             <div>
-                <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Inizia con il Quick Check</h3>
-                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Usa il Quick Check per verificare rapidamente il potenziale di una keyword prima di avviare una ricerca completa. E gratuito e ti permette di risparmiare crediti.</p>
+                <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Inizia con il Controllo veloce</h3>
+                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Usa il Controllo veloce per verificare rapidamente il potenziale di una keyword prima di avviare una ricerca completa. E gratuito e ti permette di risparmiare crediti.</p>
             </div>
         </div>
         <!-- Tip 2 -->
@@ -256,7 +256,7 @@
             </div>
             <div>
                 <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Diversifica le keyword seed</h3>
-                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Nella Research Guidata, inserisci keyword seed diverse tra loro per coprire angolazioni differenti del tuo settore e ampliare la copertura semantica.</p>
+                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Nella Ricerca keyword, inserisci keyword seed diverse tra loro per coprire angolazioni differenti del tuo settore e ampliare la copertura semantica.</p>
             </div>
         </div>
         <!-- Tip 3 -->

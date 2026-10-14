@@ -4,9 +4,9 @@
         <nav class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2">
             <a href="<?= url('/keyword-research') ?>" class="hover:text-slate-700 dark:hover:text-slate-300">AI Keywords</a>
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            <span class="text-slate-900 dark:text-white">Quick Check</span>
+            <span class="text-slate-900 dark:text-white">Controllo veloce</span>
         </nav>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Quick Check Keyword</h1>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Controllo veloce keyword</h1>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Controlla volume, CPC e competition di una keyword istantaneamente</p>
     </div>
 
@@ -99,7 +99,7 @@
             </div>
             <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 text-center">
                 <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= e($main['competition_level'] ?? 'N/A') ?></p>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Competition</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Concorrenza</p>
             </div>
             <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 text-center">
                 <?php
@@ -110,7 +110,7 @@
                     : 'N/A';
                 ?>
                 <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= $cpcDisplay ?></p>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">CPC (EUR)</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Costo per clic (€)</p>
             </div>
             <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 text-center">
                 <?php
@@ -179,7 +179,7 @@
                     </button>
                     <div x-show="openDropdown === 'cpc'" x-cloak x-transition
                          class="absolute left-0 top-full mt-1 z-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-3 w-56">
-                        <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Range CPC (EUR)</p>
+                        <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Range Costo per clic (€)</p>
                         <div class="flex items-center gap-2">
                             <input type="number" x-model.number="filters.cpcMin" placeholder="Min" min="0" step="0.01"
                                    @input="currentPage = 1"
@@ -241,7 +241,7 @@
                             class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors"
                             :class="hasFilter('competition') ? 'border-primary-300 bg-primary-50 text-primary-700 dark:border-primary-600 dark:bg-primary-900/30 dark:text-primary-300' : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'">
                         <span x-show="hasFilter('competition')" class="w-1.5 h-1.5 rounded-full bg-primary-500"></span>
-                        Competition
+                        Concorrenza
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <div x-show="openDropdown === 'competition'" x-cloak x-transition
@@ -337,7 +337,7 @@
                         </th>
                         <th class="px-4 py-3 text-center cursor-pointer select-none" @click="toggleSort('competition_level')">
                             <span class="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase hover:text-slate-700 dark:hover:text-slate-200">
-                                Competition <span x-html="krSortIcon('competition_level', sortField, sortDir)"></span>
+                                Concorrenza <span x-html="krSortIcon('competition_level', sortField, sortDir)"></span>
                             </span>
                         </th>
                         <th class="px-4 py-3 text-right cursor-pointer select-none" @click="toggleSort('high_bid')">
