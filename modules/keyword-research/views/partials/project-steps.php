@@ -10,7 +10,7 @@ $krBase = '/keyword-research/project/' . (int) $project['id'];
 $krSteps = [
     'research' => ['Ricerca keyword', 'Le keyword con i volumi di Google, raggruppate per argomento'],
     'architecture' => ['Architettura sito', 'Le pagine che il sito deve avere'],
-    'editorial' => ['3', 'Piano editoriale', 'Gli articoli mese per mese, dalle pagine dell\'architettura'],
+    'editorial' => ['Piano editoriale', 'Gli articoli mese per mese per un blog o per le pagine di un sito'],
 ];
 $krStep = $krStep ?? 'research';
 ?>
