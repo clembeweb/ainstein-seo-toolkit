@@ -69,6 +69,53 @@
 > Poi restano, nell'ordine: 2) verifica a schermo in prod (Chrome di Clemente loggato) di un
 > progetto Meta tag di AI Writer e delle pagine cambiate il 14 e il 15; 3) post LinkedIn (chiedere a Clemente la data).
 >
+> **PROVA "DA UTENTE" DEI 5 TOOL (2026-10-15 sera, sessione dedicata).** In locale, account admin, 3 siti veri:
+> damichele.net (pizzeria, WordPress), torronenurzia.it (piccolo e-commerce WooCommerce), studiolegalestefanelli.it
+> (studio legale). Prod guardata in sola lettura. Niente codice toccato: le correzioni aspettano l'ok di Clemente.
+> **Funziona bene:** creazione progetto (il dominio incollato con https://www./ viene ripulito), "Come si usa" di AI Rank
+> e GEO (si spuntano da soli), finestre di conferma col costo prima di ogni addebito, posizioni verificate a mano
+> (giuste), meta tag (buoni, lunghezze giuste, dati veri della pagina), brief e articolo (2.200 parole, di qualità),
+> profilo GEO (42 righe con fonti), domande GEO pertinenti, "Usa solo queste", report GEO chiaro, tour sulla pagina elenco.
+> **Costi misurati (locale):** AI Audit Veloce 0 cr · AI Rank 3 keyword = 3 cr (+1,5 per i volumi) · Meta tag 3 cr a
+> pagina (1 lettura + 2 generazione) · articolo con copertina 22 cr (SERP 3 + fonti 3 + brief 3 + articolo 10 +
+> copertina 3), ~7 min · GEO: profilo 2 + domande 2 + audit 3 domande × 3 AI = 9 → 13 cr, audit ~4 min (0,15 $ API).
+> AI Keywords non provata: in locale manca la chiave RapidAPI (in prod c'è) → da provare in prod con l'ok di Clemente.
+> **Problemi, per priorità:**
+> - **P1 · AI Audit legge i redirect invece delle pagine (anche in prod).** `CrawlerService::normalizeUrl()` e
+>   `normalizeUrlForStorage()` tolgono la barra finale: su WordPress `/contatti/` diventa `/contatti`, il sito risponde 301
+>   verso `/contatti/` e il crawler non la segue. Pizzeria: 16 pagine su 20 sono redirect, 16 falsi "Canonical diverso —
+>   spreco crawl budget", le pagine vere non vengono analizzate. Prod: Stabia 20 redirect su 25, clementeteodonno.it 34 su 41.
+> - **P1 · AI Writer propone il sito WordPress di un altro progetto.** Nel progetto della pizzeria i "Link interni" sono
+>   attivi di default con "Articoli pubblicati da clementeteodonno.it"; nel Meta tag del torronificio l'import WordPress
+>   propone clementeteodonno.it. Con più clienti = link o pagine del cliente sbagliato.
+> - **P1 · Il "?" del tour non fa niente dentro un progetto.** Il componente del tour è incluso solo nelle pagine elenco
+>   dei moduli (`/seo-audit`, `/seo-tracking`, ...), non nelle pagine di progetto dove l'utente lavora.
+> - **P1 · GEO, "Genera il profilo" a volte fallisce:** "Risposta AI troncata (limite di 4000 token)". Promette 15-35 righe,
+>   ne ha fatte 42: `OnboardingService` ha `max_tokens 4000` → 8000. Al secondo tentativo è andato (nessun credito perso).
+> - **P1 · AI Audit prima della prima scansione** dice "Nessun problema trovato. Il sito è in buone condizioni!", tutte le
+>   categorie "Nessun problema" e stato "In corso".
+> - **P2 · AI Keywords, costi sbagliati sulla pagina:** schede "Architettura 5 cr / Piano 5 cr" (valori veri), ma la sezione
+>   "Scegli la modalità" e la FAQ dicono 10 crediti (testo fisso in `views/dashboard.php` righe ~376, ~384, ~631).
+>   Promette anche "Analisi competitor" e "Keyword gap analysis": da verificare che esistano.
+> - **P2 · AI Audit "Tempo medio 0 ms":** il cronometro parte dopo il download (`load_time_ms` misura solo l'analisi).
+> - **P2 · AI Writer, l'articolo si apre in vista "Editor" con l'HTML grezzo** (`<p><strong>`): meglio aprire in Anteprima.
+> - **P2 · AI Rank:** la casella dice "1 cr/kw" ma il totale fa 0,5 a keyword; "Monitora giornalmente" ma il controllo
+>   automatico (gratis) è lun/mer/ven; due filtri con la stessa etichetta "Tutte le posizioni"; posizione "1.0" invece di "1";
+>   avviso tecnico "DataForSEO non configurato" mostrato all'utente (in prod c'è la chiave, quindi solo locale).
+> - **P2 · GEO:** "Ti consigliano 14%" con sotto "1 risposte su 9" (è una media pesata, sembra un conto sbagliato);
+>   "Crediti usati 0" non conta profilo e domande; nel registro dal vivo codici inglesi ("not_mentioned") e "Il motore" nei
+>   giudizi; "articolo gap"; refuso "Generale dal profilo".
+> - **P2 · AI Writer Meta tag:** il bottone resta "Scrape (37)" anche con 2 pagine selezionate (la conferma però dice 2);
+>   l'import da sitemap prende anche carrello, checkout, my-account, wishlist, sample-page (si pagano 3 cr l'una);
+>   il campo sitemap non è precompilato col dominio del progetto.
+> - **P2 · Saldo crediti in alto non si aggiorna** dopo gli addebiti (restava 8.976 con 8.957 reali).
+> - **P3 · Parole inglesi o tecniche rimaste:** Health Score, Issues, Spider Crawl, Crawl Budget, warning/notice (AI Audit);
+>   Quick Wins, Location, titolo scheda "Landscape" (AI Rank); Overview, judge (GEO); Pending/Scraped/Generated, Scrappate,
+>   MANUAL, Italy/Spain, Wizard, Search Intent, Informational, featured snippet, "(Base)/(Standard)" (AI Writer); Brief,
+>   Seed Keywords, Both, "L'API espanderà" (AI Keywords); Visibility/Est. Traffic nella scheda AI Rank del progetto;
+>   "Modalita" e "generera" senza accento. In console un "SyntaxError: Unexpected token '}'" da capire.
+> **Prossimo passo:** Clemente sceglie cosa correggere (proposta: i 5 P1 prima del post), poi prova AI Keywords in prod.
+>
 > **PASSAGGIO DI CONSEGNE 2026-10-14 pomeriggio (precedente).** Fatto oggi, tutto online:
 > - Punto della situazione su Stabia rifatto con GA4+GSC veri (report id 2): regola numeri piccoli OK, "Parti da qui"
 >   riconosce anche le pagine citate per nome.
