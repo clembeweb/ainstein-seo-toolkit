@@ -1,4 +1,8 @@
 <?php
+// Prima della prima scansione la pagina non deve dire "sito in buone condizioni" (prova del 2026-10-15)
+$hasScan = !empty($project['completed_at']) || (int) ($project['pages_crawled'] ?? 0) > 0;
+$isCrawling = in_array($project['status'] ?? '', ['crawling', 'stopping'], true);
+
 // Health score colors
 $score = $project['health_score'] ?? 0;
 if ($score >= 80) {
@@ -75,7 +79,7 @@ $categoryColors = [
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
-                        <?= $project['completed_at'] ? date('d/m/Y H:i', strtotime($project['completed_at'])) : 'In corso' ?>
+                        <?= $project['completed_at'] ? date('d/m/Y H:i', strtotime($project['completed_at'])) : ($isCrawling ? 'Scansione in corso' : 'Nessuna scansione ancora') ?>
                     </span>
                     <span class="flex items-center gap-1.5">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -290,6 +294,8 @@ $categoryColors = [
                     </span>
                     <?php endif; ?>
                 </div>
+                <?php elseif (!$hasScan): ?>
+                <div class="text-xs text-slate-400 dark:text-slate-500">Da analizzare</div>
                 <?php else: ?>
                 <div class="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-xs">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -362,6 +368,12 @@ $categoryColors = [
                     </div>
                 </div>
                 <?php endforeach; ?>
+            </div>
+            <?php elseif (!$hasScan): ?>
+            <div class="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                <svg class="w-10 h-10 mx-auto mb-3 text-slate-300 dark:text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <p class="font-medium"><?= $isCrawling ? 'Scansione in corso' : 'Nessuna scansione ancora' ?></p>
+                <p class="text-sm mt-1"><?= $isCrawling ? 'I problemi compaiono qui man mano che le pagine vengono analizzate.' : 'Avvia la prima scansione dal riquadro "Spider Crawl" qui sopra: i problemi trovati compaiono qui.' ?></p>
             </div>
             <?php else: ?>
             <div class="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
