@@ -56,7 +56,10 @@
 >     (report demo con lettura AI vera; report 3 = testo fisso). Verificato desktop e telefono. I report vecchi restano
 >     leggibili. Da fare in prod dopo il deploy: un "Aggiorna" su Stabia (5 cr) per vedere grafici e lettura con dati veri.
 >     **ONLINE il 2026-10-16 (`9098a94`), insieme alla landing nuova (`1e29174`, `9b3cda5`; /landing-b = variante noindex).**
->     Resta: "Aggiorna" su Stabia con Clemente (5 cr); la landing dice ancora "Punto della situazione" → "Andamento".
+>     Clemente ha fatto "Aggiorna" su Stabia in prod con dati veri: **"direi ottimo!"** (2026-10-16). La rinomina sulla
+>     landing è committata dalla sessione landing (2a92f4a), online dopo il suo ok.
+>     **Prima del post restano solo:** la verifica in prod col Chrome di Clemente dei passi 3-6 (AI Keywords, AI Audit,
+>     AI Writer con un progetto Meta tag, GEO Audit e tour dal "?") e la decisione sulla home (card normali o /landing-b).
 >   - **Stabia, progetti AI Keywords doppi: FATTO il 2026-10-15** — le 2 ricerche dell'8 spostate nel 9, progetto 8 cancellato
 >     (backup `/home/ainstein/backups/2026-10-14-kr-merge-8-in-9.sql`). Ora un solo riquadro AI Keywords su Stabia.
 >   - **Scritture sul DB di prod: RISOLTO** — in modalità "Auto" il controllo automatico bloccava ogni scrittura via ssh
