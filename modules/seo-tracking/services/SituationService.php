@@ -279,6 +279,9 @@ class SituationService
         usort($out['sources'], fn($x, $y) => $y['sessions']['b'] <=> $x['sessions']['b']);
         arsort($byPage);
         foreach (array_slice($byPage, 0, 5, true) as $path => $n) {
+            if ($n <= 0) {
+                continue; // GA4 restituisce anche le pagine con 0 visite nel periodo quando ne hanno in quelli di confronto
+            }
             $out['pages'][] = ['page' => $path, 'sessions_b' => $n];
         }
         return $out;
