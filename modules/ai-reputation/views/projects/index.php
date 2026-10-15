@@ -3,11 +3,12 @@
 $onboardingConfig = require BASE_PATH . '/config/onboarding.php';
 $onboardingModuleSlug = 'ai-reputation';
 $showTour = !\Core\OnboardingService::isModuleCompleted($user['id'] ?? 0, $onboardingModuleSlug);
-if ($showTour && isset($onboardingConfig[$onboardingModuleSlug])) {
+if (isset($onboardingConfig[$onboardingModuleSlug])) {
     echo \Core\View::partial('components/onboarding-spotlight', [
         'onboardingSteps' => $onboardingConfig[$onboardingModuleSlug]['steps'],
         'onboardingModuleName' => $onboardingConfig[$onboardingModuleSlug]['name'],
         'onboardingModuleSlug' => $onboardingModuleSlug,
+        'onboardingAutoOpen' => $showTour,
     ]);
 }
 ?>

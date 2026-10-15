@@ -4,8 +4,12 @@
 >
 > **PASSAGGIO DI CONSEGNE 2026-10-15 (RIPARTIRE DA QUI).** Fatto il check sezioni su **AI GEO Audit** (ultimo dei 5):
 > scheda "Domande" a sé, menu laterale = schede, "run"→"audit" e "engine"→"AI" in tutti i testi, avvisi sulle chiavi API
-> solo per admin (dettaglio in `modules/ai-reputation/docs/TASKS.md`). Verificato in locale, **da mettere online**
-> (`git push` + pull in prod). Poi restano, nell'ordine: 2) verifica a schermo in prod (Chrome di Clemente loggato) di un
+> solo per admin (dettaglio in `modules/ai-reputation/docs/TASKS.md`). Online (`67363af`).
+> **Tour guidati ricontrollati a schermo (richiesta Clemente):** tutti e 5 i moduli ce l'hanno (anche il GEO, 4 passi).
+> Trovati e corretti: il "?" nel menu non riapriva un tour già completato (il componente non veniva nemmeno caricato);
+> l'elemento evidenziato restava scuro come il resto (overlay sopra al ritaglio); la scheda usciva dallo schermo (altezza
+> stimata 320 px, vera ~400). Testi aggiornati: AI Keywords ("Ricerca keyword", "Controllo veloce", niente "modalità"),
+> AI Audit (Piano 10 + Report AI 15), AI Rank (costo rank check dalle impostazioni), GEO (scheda Domande). Poi restano, nell'ordine: 2) verifica a schermo in prod (Chrome di Clemente loggato) di un
 > progetto Meta tag di AI Writer e delle pagine cambiate il 14 e il 15; 3) post LinkedIn (chiedere a Clemente la data).
 >
 > **PASSAGGIO DI CONSEGNE 2026-10-14 pomeriggio (precedente).** Fatto oggi, tutto online:

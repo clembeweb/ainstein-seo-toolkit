@@ -3,13 +3,14 @@
 $onboardingConfig = require BASE_PATH . '/config/onboarding.php';
 $onboardingModuleSlug = 'ads-analyzer';
 $showTour = !\Core\OnboardingService::isModuleCompleted($user['id'] ?? 0, $onboardingModuleSlug);
-if ($showTour && isset($onboardingConfig[$onboardingModuleSlug])):
+if (isset($onboardingConfig[$onboardingModuleSlug])):
     $onboardingSteps = $onboardingConfig[$onboardingModuleSlug]['steps'];
     $onboardingModuleName = $onboardingConfig[$onboardingModuleSlug]['name'];
     echo \Core\View::partial('components/onboarding-spotlight', [
         'onboardingSteps' => $onboardingSteps,
         'onboardingModuleName' => $onboardingModuleName,
         'onboardingModuleSlug' => $onboardingModuleSlug,
+        'onboardingAutoOpen' => $showTour,
     ]);
 endif;
 ?>

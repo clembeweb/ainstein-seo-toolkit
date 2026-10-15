@@ -5,6 +5,8 @@
  * Ogni step: title, description, icon, tip (opt), selector (CSS selector o null), position (bottom|top|right|left)
  */
 if (empty($onboardingSteps) || empty($onboardingModuleSlug)) return;
+// Tour già fatto: resta in pagina chiuso, così il "?" nel menu lo riapre (prima spariva del tutto)
+$onboardingAutoOpen = $onboardingAutoOpen ?? true;
 
 // Prepara i dati degli step per JavaScript
 $jsSteps = array_map(function($step) {
@@ -15,16 +17,22 @@ $jsSteps = array_map(function($step) {
 }, $onboardingSteps);
 ?>
 
-<div x-data="onboardingSpotlight()" x-show="open" x-cloak
+<!-- Niente x-show sul contenitore: su Alpine 3.17 non reagiva alla riapertura quando partiva chiuso (tour già fatto, "?" nel menu).
+     Sono i figli a mostrarsi/nascondersi con `open`; da chiuso il contenitore non intercetta i click. -->
+<div x-data="onboardingSpotlight()"
      @open-module-tour.window="if ($event.detail.slug === '<?= e($onboardingModuleSlug) ?>') { reopen(); }"
      @keydown.escape.window="if (open) skip()"
-     class="fixed inset-0 z-[9998]">
+     class="fixed inset-0 z-[9998]" :class="open ? '' : 'pointer-events-none'">
 
     <!-- Overlay scuro (click per saltare) -->
     <div x-show="open" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
          x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-         class="fixed inset-0 bg-slate-900/75 transition-opacity"
+         class="fixed inset-0 transition-opacity"
+         :class="noTarget ? 'bg-slate-900/75' : 'bg-transparent'"
          @click="skip()"></div>
+    <!-- Con un elemento da evidenziare lo scuro lo fa l'ombra del cutout: l'overlay resta trasparente (serve solo al click per saltare),
+         altrimenti l'elemento evidenziato restava scuro anche lui -->
+
 
     <!-- Cutout (evidenzia elemento) -->
     <div x-show="open && !noTarget"
@@ -34,6 +42,7 @@ $jsSteps = array_map(function($step) {
 
     <!-- Tooltip -->
     <div x-show="open" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+         x-ref="tip"
          class="fixed z-[9999] w-[360px] max-w-[calc(100vw-32px)]"
          :class="noTarget ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : ''"
          :style="noTarget ? '' : 'top:'+tip.top+'px; left:'+tip.left+'px;'">
@@ -125,7 +134,7 @@ $jsSteps = array_map(function($step) {
 <script>
 function onboardingSpotlight() {
     return {
-        open: true,
+        open: <?= $onboardingAutoOpen ? 'true' : 'false' ?>,
         currentStep: 0,
         totalSteps: <?= count($onboardingSteps) ?>,
         steps: <?= json_encode($jsSteps) ?>,
@@ -136,7 +145,7 @@ function onboardingSpotlight() {
         _resizeTimer: null,
 
         init() {
-            this.$nextTick(() => this.goToStep(0));
+            if (this.open) this.$nextTick(() => this.goToStep(0));
             // Ricalcola su resize (debounced)
             window.addEventListener('resize', () => {
                 clearTimeout(this._resizeTimer);
@@ -171,10 +180,9 @@ function onboardingSpotlight() {
             // Scroll to element
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-            // Delay per permettere lo scroll
-            setTimeout(() => {
-                this.measureAndPosition(el, step.position || 'bottom');
-            }, 450);
+            // Delay per permettere lo scroll; seconda misura per pagine lunghe (scroll morbido oltre i 450 ms) e prima apertura
+            setTimeout(() => this.measureAndPosition(el, step.position || 'bottom'), 450);
+            setTimeout(() => { if (this.currentStep === i && this.open) this.measureAndPosition(el, step.position || 'bottom'); }, 1000);
         },
 
         measureAndPosition(el, preferredPos) {
@@ -191,7 +199,7 @@ function onboardingSpotlight() {
 
             // Calcola posizione tooltip
             const tipW = 360;
-            const tipH = 320; // stima altezza tooltip
+            const tipH = (this.$refs.tip && this.$refs.tip.offsetHeight) || 320; // altezza vera della scheda, stima se non ancora disegnata
             const gap = 16;
             const vw = window.innerWidth;
             const vh = window.innerHeight;
@@ -234,6 +242,10 @@ function onboardingSpotlight() {
                 top = Math.min(rect.bottom + gap, vh - tipH - 16);
                 left = Math.max(16, (vw - tipW) / 2);
             }
+
+            // La scheda non deve mai uscire dallo schermo
+            top = Math.max(16, Math.min(top, vh - tipH - 16));
+            left = Math.max(16, Math.min(left, vw - tipW - 16));
 
             this.tipPosition = pos;
             this.tip = { top, left };
