@@ -117,7 +117,16 @@ class DashboardController
         $lastReports = $this->aiReport->getLatestByType($id, 'weekly', 1);
         $lastReport = !empty($lastReports) ? $lastReports[0] : null;
 
+        // Riquadro "Come si usa": 3 passi che si spuntano da soli (keyword → controllo posizioni → GSC/GA4)
+        $guideState = [
+            'keywords' => (int) ($kpiStats['tracked_keywords'] ?? 0),
+            'checked' => $lastCheck !== null,
+            'gsc' => !empty($project['gsc_connected']),
+            'ga4' => (new \Modules\SeoTracking\Services\Ga4Service())->getConnection($id) !== null,
+        ];
+
         return View::render('seo-tracking/dashboard/index', [
+            'guideState' => $guideState,
             'title' => $project['name'] . ' - Landscape',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),

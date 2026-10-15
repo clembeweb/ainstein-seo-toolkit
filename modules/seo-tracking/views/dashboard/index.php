@@ -5,6 +5,10 @@
 
     <?= \Core\View::partial('components/orphaned-project-notice', ['project' => $project]) ?>
 
+    <?php if (isset($guideState)): ?>
+    <?= \Core\View::partial('seo-tracking/partials/guide', ['project' => $project, 'guideState' => $guideState]) ?>
+    <?php endif; ?>
+
     <?= \Core\View::partial('seo-tracking/partials/country-bar', [
         'countries' => $countries ?? [],
         'activeCountry' => $activeCountry ?? null,
