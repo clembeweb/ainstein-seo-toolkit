@@ -131,7 +131,7 @@
 >   è morta lo stesso: da capire, forse il limite di Apache/FPM) · P3 · `sa_pages.internal_links_in` resta 0
 >   (`discovered_from` mai valorizzato da `crawlPage`): "Pagina orfana — nessun link in entrata" del crawl budget non può
 >   mai scattare · locale: al DB mancavano `last_test_*` in `aic_wp_sites` (aggiunte a mano, in prod ci sono).
-> **Prossimo passo:** mettere online i 4 commit (con l'ok), poi provare AI Keywords in prod e decidere sui P2.
+> **Prossimo passo:** provare AI Keywords in prod (con l'ok, 3 cr) e decidere sui P2; clementeteodonno.it da riaudire (~5 cr).
 >
 > **PASSAGGIO DI CONSEGNE 2026-10-14 pomeriggio (precedente).** Fatto oggi, tutto online:
 > - Punto della situazione su Stabia rifatto con GA4+GSC veri (report id 2): regola numeri piccoli OK, "Parti da qui"
