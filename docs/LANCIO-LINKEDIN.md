@@ -39,6 +39,9 @@
 >     situazione (spec aggiornata in `docs/specs/seo-tracking-punto-situazione.md`). Verifica vera del blocco AI solo in
 >     prod (in locale GA4/GSC sono scaduti): dopo il deploy lanciare `SituationService::compute` da CLI su Stabia (0 crediti)
 >     e poi un Punto nuovo (5 cr) per vedere il riquadro con dati veri; i report vecchi non lo mostrano.
+>     **ONLINE il 2026-10-15 sera (`4955162` + fix `pagine a 0`).** Prova da CLI su Stabia (ultimi 28 giorni, 0 crediti):
+>     **7 visite da ChatGPT (8,1% del traffico), 25 nel periodo prima**, pagine: /, /amalfi-coast, /sunset. Il riquadro con
+>     dati veri si vede facendo un Punto nuovo su Stabia (5 cr): da fare con Clemente nella verifica in prod.
 >   - **Stabia, progetti AI Keywords doppi: FATTO il 2026-10-15** — le 2 ricerche dell'8 spostate nel 9, progetto 8 cancellato
 >     (backup `/home/ainstein/backups/2026-10-14-kr-merge-8-in-9.sql`). Ora un solo riquadro AI Keywords su Stabia.
 >   - **Scritture sul DB di prod: RISOLTO** — in modalità "Auto" il controllo automatico bloccava ogni scrittura via ssh
