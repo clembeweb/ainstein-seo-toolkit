@@ -47,6 +47,11 @@ class BudgetIssueDetector
     {
         $issues = [];
         $issues = array_merge($issues, $this->checkRedirects($pageData));
+        // Su un redirect (3xx) il contenuto non c'è: spreco e indicizzabilità si valutano solo sulla pagina di arrivo
+        $statusCode = (int) ($pageData['status_code'] ?? 0);
+        if ($statusCode >= 300 && $statusCode < 400) {
+            return $issues;
+        }
         $issues = array_merge($issues, $this->checkWaste($pageData));
         $issues = array_merge($issues, $this->checkIndexability($pageData));
         return $issues;
@@ -235,7 +240,7 @@ class BudgetIssueDetector
         $wordCount = (int) ($data['word_count'] ?? 0);
         $title = $data['title'] ?? '';
         $hasParams = !empty($data['has_parameters']);
-        $canonicalUrl = $data['canonical_url'] ?? null;
+        $canonicalUrl = trim((string) ($data['canonical_url'] ?? '')) ?: null; // vuoto = assente
         $url = $data['url'] ?? '';
         $depth = (int) ($data['depth'] ?? 0);
 
@@ -346,7 +351,7 @@ class BudgetIssueDetector
         $isIndexable = !empty($data['is_indexable']);
         $inSitemap = !empty($data['in_sitemap']);
         $inRobotsAllowed = $data['in_robots_allowed'] ?? null;
-        $canonicalUrl = $data['canonical_url'] ?? null;
+        $canonicalUrl = trim((string) ($data['canonical_url'] ?? '')) ?: null; // vuoto = assente
         $url = $data['url'] ?? '';
 
         // Noindex but in sitemap

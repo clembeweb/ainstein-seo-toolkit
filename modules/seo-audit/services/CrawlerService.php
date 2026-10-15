@@ -297,6 +297,8 @@ class CrawlerService
         // toVisit ora contiene [url, depth]
         $toVisit = [[$actualBaseUrl, 0]];
         $visited = [];
+        // Dedup: /pagina e /pagina/ sono la stessa pagina, si tiene la forma vista per prima
+        $discoveredKeys = [rtrim($actualBaseUrl, '/') => true];
 
         // Usa il dominio effettivo (dopo redirect)
         $baseDomain = strtolower(parse_url($actualBaseUrl, PHP_URL_HOST));
@@ -350,8 +352,10 @@ class CrawlerService
                 // Skip risorse statiche
                 if ($this->isStaticResource($normalizedUrl)) continue;
 
-                // Skip se già scoperto
-                if (in_array($normalizedUrl, $discovered)) continue;
+                // Skip se già scoperto (con o senza barra finale)
+                $dedupKey = rtrim($normalizedUrl, '/');
+                if (isset($discoveredKeys[$dedupKey])) continue;
+                $discoveredKeys[$dedupKey] = true;
 
                 // Aggiungi alla coda con depth+1
                 $discovered[] = $normalizedUrl;
@@ -825,7 +829,7 @@ class CrawlerService
     }
 
     /**
-     * Normalizza URL per storage (rimuove trailing slash, lowercase domain)
+     * Normalizza URL per storage (lowercase del dominio; la barra finale resta)
      */
     public function normalizeUrlForStorage(string $url): string
     {
@@ -836,11 +840,7 @@ class CrawlerService
         $host = strtolower($parsed['host'] ?? '');
         $path = $parsed['path'] ?? '/';
 
-        // Rimuovi trailing slash (eccetto root)
-        if ($path !== '/' && str_ends_with($path, '/')) {
-            $path = rtrim($path, '/');
-        }
-
+        // La barra finale resta com'è (vedi normalizeUrl): è l'indirizzo che il sito usa davvero
         return $scheme . '://' . $host . $path;
     }
 
@@ -921,7 +921,7 @@ class CrawlerService
     }
 
     /**
-     * Normalizza URL - rimuove trailing slash, query string, fragment
+     * Normalizza URL - rimuove query string e fragment (la barra finale resta)
      * Converte URL relativi in assoluti
      */
     private function normalizeUrl(string $href, string $baseUrl, string $currentPageUrl = null): ?string
@@ -977,14 +977,10 @@ class CrawlerService
             $href = $baseScheme . '://' . $baseHost . $href;
         }
 
-        // Normalizza: rimuovi trailing slash (eccetto root)
+        // La barra finale resta com'è: toglierla faceva chiedere /pagina a siti (WordPress) che
+        // rispondono 301 verso /pagina/, e l'audit analizzava i redirect al posto delle pagine.
         $parsed = parse_url($href);
         $path = $parsed['path'] ?? '/';
-
-        // Rimuovi trailing slash se non è root
-        if ($path !== '/' && str_ends_with($path, '/')) {
-            $path = rtrim($path, '/');
-        }
 
         // Ricostruisci URL normalizzato (senza query string per dedup)
         $normalized = ($parsed['scheme'] ?? 'https') . '://' . ($parsed['host'] ?? '');
