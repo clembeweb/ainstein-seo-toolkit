@@ -164,10 +164,8 @@ class KeywordController
                 $wpSiteLinked = $globalPid ? $this->wpSite->getActiveByProject($globalPid) : null;
             }
 
-            // Priority 3: If only one active WP site for this user, use it implicitly
-            if (!$wpSiteLinked && count($wpSites) === 1) {
-                $wpSiteLinked = $wpSites[0];
-            }
+            // Niente ripiego sull'unico sito dell'account: con più clienti finivano nell'articolo
+            // i link di un altro sito (prova del 2026-10-15). Solo il sito collegato a QUESTO progetto.
             $wpLinksAvailable = !empty($wpSiteLinked);
         }
 

@@ -343,13 +343,7 @@ class WizardController
                         $wpSite = $globalProjectId ? $wpSiteModel->getActiveByProject($globalProjectId) : null;
                     }
 
-                    // Priority 3: Single WP site for user
-                    if (!$wpSite) {
-                        $userWpSites = $wpSiteModel->getActiveSites($user['id']);
-                        if (count($userWpSites) === 1) {
-                            $wpSite = $userWpSites[0];
-                        }
-                    }
+                    // Niente ripiego sull'unico sito dell'account (vedi KeywordController::wizard): solo il sito di questo progetto
 
                     if ($wpSite) {
                         $connector = new \Modules\ContentCreator\Services\Connectors\WordPressConnector([

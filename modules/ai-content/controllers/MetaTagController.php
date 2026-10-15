@@ -172,9 +172,19 @@ class MetaTagController
             exit;
         }
 
-        // Load WP sites per import
+        // Siti WordPress da cui importare: solo quelli collegati a QUESTO progetto (non tutti quelli
+        // dell'account: proponeva il sito di un altro cliente, prova del 2026-10-15)
         $wpSiteModel = new WpSite();
-        $wpSites = $wpSiteModel->allByUser($user['id']);
+        $wpSites = [];
+        if (!empty($project['wp_site_id'])) {
+            $linked = $wpSiteModel->find((int) $project['wp_site_id']);
+            if ($linked) {
+                $wpSites[] = $linked;
+            }
+        }
+        if (empty($wpSites) && !empty($project['global_project_id'])) {
+            $wpSites = $wpSiteModel->getAllByProject((int) $project['global_project_id']);
+        }
 
         return View::render('ai-content/meta-tags/import', [
             'title' => 'Importa URL - ' . $project['name'],
