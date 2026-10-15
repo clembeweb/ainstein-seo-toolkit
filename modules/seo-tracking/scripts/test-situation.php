@@ -18,6 +18,15 @@ $check = function (string $name, $got, $want) use (&$fail) {
     echo ($ok ? 'PASS ' : 'FAIL ') . $name . ($ok ? '' : ' → ' . json_encode($got) . ' invece di ' . json_encode($want)) . "\n";
 };
 
+// Nomi delle sorgenti AI (GA4 passa il dominio)
+$check('sorgente AI: chatgpt.com', S::aiSourceName('chatgpt.com'), 'ChatGPT');
+$check('sorgente AI: perplexity.ai', S::aiSourceName('perplexity.ai'), 'Perplexity');
+$check('sorgente AI: gemini.google.com', S::aiSourceName('gemini.google.com'), 'Gemini');
+$check('sorgente AI: copilot.microsoft.com', S::aiSourceName('copilot.microsoft.com'), 'Copilot');
+$check('sorgente AI: claude.ai', S::aiSourceName('claude.ai'), 'Claude');
+$check('sorgente AI: sconosciuta resta come arriva', S::aiSourceName('altro.example'), 'altro.example');
+$check('sorgente AI: vuota', S::aiSourceName(''), '(non definita)');
+
 $p = S::periods('last_28', '2026-10-13');
 $check('28 giorni: B', $p['b'], ['2026-09-14', '2026-10-11']);
 $check('28 giorni: A precedente', $p['a'], ['2026-08-17', '2026-09-13']);

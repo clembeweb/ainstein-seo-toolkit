@@ -250,6 +250,52 @@ $kpiCard = function (string $ref, string $label, string $value, string $sub) {
     </div>
     <?php endif; ?>
 
+    <?php $ai = $ga4['ai_traffic'] ?? null; if ($ai): $aiB = (float) $ai['sessions']['b']; ?>
+    <!-- Visite dalle AI: traffico vero da ChatGPT, Perplexity, Gemini... (canale GA4 "AI Assistant"). Nessun tool lo mostra: gli altri simulano -->
+    <div data-kpi="ai_traffic" class="kpi-card bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden transition-shadow">
+        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h3 class="font-semibold text-slate-900 dark:text-white">Visite dalle AI</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Persone arrivate sul sito da ChatGPT, Perplexity, Gemini, Copilot e simili: traffico vero, non simulato.</p>
+            </div>
+            <?php if (!empty($geoProjectId)): ?>
+            <a href="<?= url('/ai-reputation/project/' . (int) $geoProjectId) ?>" class="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 whitespace-nowrap">Vuoi sapere perché ti citano (o no)? Apri il GEO Audit →</a>
+            <?php elseif (!empty($project['global_project_id'])): ?>
+            <a href="<?= url('/projects/' . (int) $project['global_project_id']) ?>" class="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 whitespace-nowrap">Vuoi sapere perché ti citano (o no)? Attiva il GEO Audit →</a>
+            <?php endif; ?>
+        </div>
+        <div class="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Visite nel periodo</p>
+                <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= $num($aiB) ?> <span class="text-sm font-normal text-slate-400"><?= $ai['share_b_pct'] === null ? '' : $num($ai['share_b_pct'], 1) . '% del totale' ?></span></p>
+                <div class="mt-1 flex flex-wrap gap-x-3"><?= $delta($ai['sessions']['vs_prev_pct'], false, 'vs prima', $aiB, $ai['sessions']['a']) ?><?= $delta($ai['sessions']['vs_year_pct'], false, 'vs anno', $aiB, $ai['sessions']['y']) ?></div>
+                <?php if ((float) $ai['key_events']['b'] > 0): ?><p class="mt-1 text-xs text-slate-500 dark:text-slate-400"><?= $num($ai['key_events']['b']) ?> conversioni</p><?php endif; ?>
+                <?php if ($aiB == 0): ?><p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Nessuna visita dalle AI in questo periodo: con il GEO Audit scopri se ti citano quando un cliente chiede del tuo servizio.</p><?php endif; ?>
+            </div>
+            <div>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Da quale AI</p>
+                <?php if (empty($ai['sources'])): ?><p class="text-sm text-slate-400">–</p><?php else: ?>
+                <ul class="space-y-1">
+                    <?php foreach (array_slice($ai['sources'], 0, 6) as $src): ?>
+                    <li class="flex items-center justify-between gap-3 text-sm"><span class="text-slate-900 dark:text-white"><?= e($src['name']) ?></span><span class="text-slate-700 dark:text-slate-300"><?= $num($src['sessions']['b']) ?> <span class="text-xs text-slate-400">prima <?= $num($src['sessions']['a']) ?></span></span></li>
+                    <?php endforeach; ?>
+                </ul>
+                <?php endif; ?>
+            </div>
+            <div>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Su quali pagine arrivano</p>
+                <?php if (empty($ai['pages'])): ?><p class="text-sm text-slate-400">–</p><?php else: ?>
+                <ul class="space-y-1">
+                    <?php foreach ($ai['pages'] as $pg): ?>
+                    <li class="flex items-center justify-between gap-3 text-sm"><span class="text-slate-900 dark:text-white truncate" title="<?= e($pg['page']) ?>"><?= e($pg['page']) ?></span><span class="text-slate-700 dark:text-slate-300 shrink-0"><?= $num($pg['sessions_b']) ?></span></li>
+                    <?php endforeach; ?>
+                </ul>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <?php
     // Tabelline "chi sale / chi scende"
     $movers = function (string $ref, string $title, array $gainers, array $losers, string $keyField, string $valB, string $valA, string $unit, string $kind = '')

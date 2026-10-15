@@ -75,6 +75,10 @@ class SituationController
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
             'ga4Conn' => $ga4Conn,
+            // GEO Audit dello stesso progetto globale, se c'è: il riquadro "Visite dalle AI" ci rimanda (simulato ↔ reale)
+            'geoProjectId' => !empty($project['global_project_id'])
+                ? (int) (Database::fetchColumn("SELECT id FROM ar_projects WHERE global_project_id = ? ORDER BY id LIMIT 1", [(int) $project['global_project_id']]) ?: 0)
+                : 0,
             'gscConn' => $gscConn ?: null,
             'reports' => $reports,
             'report' => $report,

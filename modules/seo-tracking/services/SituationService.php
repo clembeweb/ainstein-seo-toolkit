@@ -25,7 +25,7 @@ class SituationService
         'last_quarter' => 'Trimestre scorso',
     ];
     /** Riquadri a cui un paragrafo AI può rimandare (data-kpi nella vista). */
-    public const REFS = ['ga4_sessions', 'ga4_key_events', 'ga4_revenue', 'channels', 'organic_pages', 'gsc_clicks', 'gsc_impressions', 'gsc_position', 'gsc_brand', 'gsc_queries', 'gsc_pages'];
+    public const REFS = ['ga4_sessions', 'ga4_key_events', 'ga4_revenue', 'channels', 'ai_traffic', 'organic_pages', 'gsc_clicks', 'gsc_impressions', 'gsc_position', 'gsc_brand', 'gsc_queries', 'gsc_pages'];
     private const GSC_API = 'https://searchconsole.googleapis.com/webmasters/v3';
 
     public static function cost(): float
@@ -216,7 +216,12 @@ class SituationService
         $gainers = array_values(array_filter(array_slice($byDiff, 0, 5), fn($r) => $r['diff'] > 0));
         $losers = array_values(array_filter(array_slice(array_reverse($byDiff), 0, 5), fn($r) => $r['diff'] < 0));
 
+        // 3. Visite dagli assistenti AI (canale GA4 "AI Assistant": chatgpt.com, perplexity.ai, gemini.google.com, copilot, claude.ai...):
+        //    per sorgente sui tre periodi e pagine di atterraggio del periodo. Nessun tool lo mostra: gli altri simulano, qui è traffico vero.
+        $aiTraffic = $this->aiTrafficBlock($ga4, $projectId, $ranges, $metrics, $byChannel['AI Assistant'] ?? [], $tot);
+
         return [
+            'ai_traffic' => $aiTraffic,
             'totals' => [
                 'sessions' => self::pack($tot['b'][0], $tot['a'][0], $tot['y'][0]),
                 'key_events' => self::pack($tot['b'][1], $tot['a'][1], $tot['y'][1]),
@@ -226,6 +231,71 @@ class SituationService
             'channels' => $channels,
             'organic_pages' => ['top' => $top, 'gainers' => $gainers, 'losers' => $losers],
         ];
+    }
+
+    /**
+     * Visite dalle AI: totale (dal canale "AI Assistant" già letto), per sorgente (B/A/Y) e pagine di atterraggio (B).
+     * Se la lettura fallisce il Punto resta valido: il riquadro mostra solo il totale.
+     */
+    private function aiTrafficBlock(Ga4Service $ga4, int $projectId, array $ranges, array $metrics, array $channel, array $tot): array
+    {
+        $g = fn(string $k, int $i) => isset($channel[$k]) ? (float) $channel[$k][$i] : 0.0;
+        $out = [
+            'sessions' => self::pack($g('b', 0), $g('a', 0), $g('y', 0)),
+            'key_events' => self::pack($g('b', 1), $g('a', 1), $g('y', 1)),
+            'share_b_pct' => $tot['b'][0] > 0 ? round($g('b', 0) / $tot['b'][0] * 100, 1) : null,
+            'sources' => [],
+            'pages' => [],
+        ];
+        if ($g('b', 0) + $g('a', 0) + $g('y', 0) <= 0) {
+            return $out; // nessuna visita dalle AI in nessun periodo: inutile chiamare ancora
+        }
+        try {
+            $rows = $ga4->runReport($projectId, [
+                'dateRanges' => $ranges,
+                'dimensions' => [['name' => 'sessionSource'], ['name' => 'landingPage']],
+                'metrics' => $metrics,
+                'dimensionFilter' => ['filter' => ['fieldName' => 'sessionDefaultChannelGroup', 'stringFilter' => ['matchType' => 'EXACT', 'value' => 'AI Assistant']]],
+                'orderBys' => [['metric' => ['metricName' => 'sessions'], 'desc' => true]],
+                'limit' => 500,
+            ]);
+        } catch (\Throwable $e) {
+            return $out;
+        }
+        $bySource = [];
+        $byPage = [];
+        foreach ($rows as $r) {
+            $range = $r['dateRange'] ?? 'b';
+            $src = self::aiSourceName((string) $r['sessionSource']);
+            $bySource[$src][$range] = ($bySource[$src][$range] ?? 0) + (float) $r['sessions'];
+            if ($range === 'b') {
+                $path = $r['landingPage'] !== '' ? $r['landingPage'] : '(non definita)';
+                $byPage[$path] = ($byPage[$path] ?? 0) + (float) $r['sessions'];
+            }
+        }
+        foreach ($bySource as $name => $v) {
+            $out['sources'][] = ['name' => $name, 'sessions' => self::pack((float) ($v['b'] ?? 0), (float) ($v['a'] ?? 0), (float) ($v['y'] ?? 0))];
+        }
+        usort($out['sources'], fn($x, $y) => $y['sessions']['b'] <=> $x['sessions']['b']);
+        arsort($byPage);
+        foreach (array_slice($byPage, 0, 5, true) as $path => $n) {
+            $out['pages'][] = ['page' => $path, 'sessions_b' => $n];
+        }
+        return $out;
+    }
+
+    /** Nome leggibile della sorgente AI (GA4 passa il dominio: chatgpt.com, perplexity.ai, gemini.google.com...). */
+    public static function aiSourceName(string $source): string
+    {
+        $s = strtolower($source);
+        foreach (['chatgpt' => 'ChatGPT', 'openai' => 'ChatGPT', 'perplexity' => 'Perplexity', 'gemini' => 'Gemini', 'bard' => 'Gemini',
+            'copilot' => 'Copilot', 'bing.com/chat' => 'Copilot', 'claude' => 'Claude', 'anthropic' => 'Claude', 'mistral' => 'Mistral',
+            'deepseek' => 'DeepSeek', 'meta.ai' => 'Meta AI', 'grok' => 'Grok', 'x.ai' => 'Grok', 'you.com' => 'You.com'] as $needle => $label) {
+            if (str_contains($s, $needle)) {
+                return $label;
+            }
+        }
+        return $source !== '' ? $source : '(non definita)';
     }
 
     private function gscBlock(array $project, array $p): ?array
@@ -412,7 +482,7 @@ class SituationService
             . "e con lo stesso periodo dell'anno prima (\"anno_scorso\").\n\n"
             . "Scrivi il PUNTO DELLA SITUAZIONE in 5 paragrafi, in quest'ordine e con questi titoli:\n"
             . "1. \"Il punto\": com'è andato il periodo in 2-3 frasi, con i numeri principali.\n"
-            . "2. \"Da dove arriva il traffico\": i canali (organico, diretto, social, a pagamento, referral...), il loro peso e cosa è cambiato.\n"
+            . "2. \"Da dove arriva il traffico\": i canali (organico, diretto, social, a pagamento, referral...), il loro peso e cosa è cambiato. Se in ai_traffic ci sono visite dagli assistenti AI (ChatGPT, Perplexity, Gemini...), dillo con il numero e la quota sul totale: è traffico vero che quasi nessuno misura.\n"
             . "3. \"Google: cosa cresce e cosa cala\": clic e impressioni da Search Console, ricerche e pagine che guadagnano o perdono, quota del brand.\n"
             . "4. \"Criticità\": i problemi veri che emergono dai numeri (cali, dipendenza da un canale o dal brand, pagine che perdono). Se non ce ne sono, dillo.\n"
             . "5. \"Cosa fare adesso\": esattamente 3 azioni concrete, scritte di seguito nel testo (prima..., poi..., infine...).\n\n"

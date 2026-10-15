@@ -224,7 +224,7 @@
                     </div>
                     <h3 class="font-medium text-slate-900 dark:text-white text-sm">Punto della situazione</h3>
                 </div>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Collega Google Analytics e Search Console: l'AI confronta il periodo con quello precedente e con l'anno prima e ti spiega in parole semplici da dove arriva il traffico, cosa cresce, cosa cala, le criticità e le 3 cose da fare. Costa <?= rtrim(rtrim(number_format(\Core\Credits::getCost('situation_report', 'seo-tracking', 5), 1, ',', ''), '0'), ',') ?> crediti; i punti fatti restano nello storico.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Collega Google Analytics e Search Console: l'AI confronta il periodo con quello precedente e con l'anno prima e ti spiega in parole semplici da dove arriva il traffico, cosa cresce, cosa cala, le criticità e le 3 cose da fare. Costa <?= rtrim(rtrim(number_format(\Core\Credits::getCost('situation_report', 'seo-tracking', 5), 1, ',', ''), '0'), ',') ?> crediti; i punti fatti restano nello storico. Mostra anche le <strong>visite dalle AI</strong>: quante persone arrivano davvero da ChatGPT, Perplexity, Gemini e simili, da quale AI e su quali pagine — traffico vero, non simulato.</p>
             </div>
 
             <!-- Confronto periodi -->

@@ -37,6 +37,17 @@ Il Punto non si limita a raccontare: su ogni ricerca e pagina che sale o scende 
 - **Numeri piccoli** (`SituationService::SMALL_BASE` = 50): sotto soglia sia ora sia prima la variazione è grigia con
   spiegazione al passaggio del mouse, e il prompt vieta percentuali e parole forti ("8 visite invece di 24").
 - Canale GA4 "AI Assistant" → "Assistenti AI (ChatGPT, Gemini…)".
+
+## Visite dalle AI (dal 2026-10-15)
+Riquadro "Visite dalle AI" sotto "Da dove arriva il traffico": il canale GA4 **"AI Assistant"** (chatgpt.com, perplexity.ai,
+gemini.google.com, copilot, claude.ai...) è traffico vero, non simulato — nessun tool lo mostra, il GEO Audit simula.
+- Dati (`SituationService::aiTrafficBlock`, chiave `ga4.ai_traffic`): totale B/A/Y + quota sul totale (dal canale già
+  letto); una chiamata GA4 in più solo se c'è almeno una visita: `sessionSource` + `landingPage` filtrate sul canale,
+  tre periodi → per sorgente (nomi leggibili con `aiSourceName`: ChatGPT, Perplexity, Gemini, Copilot, Claude...) e top 5
+  pagine di atterraggio del periodo. Se la chiamata fallisce resta il totale. 0 crediti in più.
+- Ref AI `ai_traffic`; il prompt chiede di citare numero e quota nel paragrafo 2.
+- Link al GEO Audit dello stesso progetto globale ("perché ti citano?") o ad attivarlo; i report salvati prima del
+  2026-10-15 non hanno il blocco e non mostrano il riquadro.
 - Nome del brand per la quota: dal nome del progetto senza note tra parentesi/quadre, senza coda dopo " - " o " | " e
   senza le parole test/prova/demo/copia (`brandRegex`, test in `scripts/test-situation.php`).
 

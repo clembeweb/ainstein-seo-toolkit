@@ -9,7 +9,43 @@
 > Trovati e corretti: il "?" nel menu non riapriva un tour già completato (il componente non veniva nemmeno caricato);
 > l'elemento evidenziato restava scuro come il resto (overlay sopra al ritaglio); la scheda usciva dallo schermo (altezza
 > stimata 320 px, vera ~400). Testi aggiornati: AI Keywords ("Ricerca keyword", "Controllo veloce", niente "modalità"),
-> AI Audit (Piano 10 + Report AI 15), AI Rank (costo rank check dalle impostazioni), GEO (scheda Domande). Poi restano, nell'ordine: 2) verifica a schermo in prod (Chrome di Clemente loggato) di un
+> AI Audit (Piano 10 + Report AI 15), AI Rank (costo rank check dalle impostazioni), GEO (scheda Domande). Online (`9da4eef`).
+> **Coda decisa con Clemente il 2026-10-15 (un punto alla volta):**
+> - PRIMA del post: (a) verifica a schermo in prod col Chrome di Clemente (tour dal "?", pagine cambiate il 14 e 15, un
+>   progetto Meta tag di AI Writer); (b) **AI Rank: riquadro "Come si usa" in cima alla Panoramica** (3 passi come nel GEO:
+>   keyword → primo controllo posizioni → collega GSC/GA4; si spuntano da soli, si chiude dopo il primo controllo) — ~1 h.
+> - DOPO il post: **alert di AI Rank**: oggi nascono solo col bottone "Controlla alert" (AlertController::check), nessun
+>   cron li genera → generarli a fine controllo posizioni nel rank-dispatcher + mail digest (~2 h); scheda resta nascosta
+>   finché non funzionano.
+> - **Sidebar (decisioni 2026-10-15):** i nomi dei moduli li cambia Clemente da Admin (toglie il prefisso "Ai"); i nomi
+>   definitivi si decidono ALLA FINE. In prod oggi il DB dice "Ai SEO Writer / Ai SEO Rank / Ai SEO Audit / Ai Research /
+>   Ai GEO Audit" mentre pagine, tour, docs e prezzi dicono AI Writer / AI Rank / AI Audit / AI Keywords / AI GEO Audit.
+>   Da fare (piaciuto a Clemente): icone più sobrie, "?" del tour visibile solo al passaggio del mouse, **i "?" non sono
+>   allineati** (nei moduli con la freccia stanno più a sinistra di quelli senza). → PRIMA del post, insieme al riquadro di AI Rank (deciso 2026-10-15).
+>   - **AI Rank multilingua (deciso 2026-10-15): PRIMA del post, opzione B** — barra dei paesi sempre visibile anche con un
+>     paese solo (`views/partials/country-bar.php` oggi fa `count < 2 → return`), con "+ Aggiungi paese" che apre
+>     l'aggiunta keyword già impostata sul nuovo paese. Nel riquadro "Come si usa" una riga: "scegli il paese".
+>   - **App Google OAuth: FATTO il 2026-10-15** — Clemente ha messo la schermata di consenso **"In produzione"** (Google Auth
+>     Platform → Pubblico; Branding compilato: nome Ainstein, email bewebsolution@gmail.com, home ainstein.it, privacy
+>     /docs/privacy, termini /docs/terms, senza logo). Niente più scadenza a 7 giorni di GSC/GA4. Tetto 100 utenti finché
+>     non è verificata (oggi 2). DOPO il post: **verifica** (Centro di verifica): logo `public/assets/images/logo-ainstein-square.png`,
+>     video del flusso di collegamento, motivazione degli scope analytics.readonly e webmasters.readonly.
+>   - **"Traffico dalle AI" (deciso 2026-10-15): PRIMA del post** — riquadro nel Punto della situazione: visite dal canale
+>     GA4 "AI Assistant" (totale, % sul traffico, per sorgente chatgpt/perplexity/gemini/copilot/claude, pagine di
+>     atterraggio, confronto col periodo prima) + link al GEO Audit ("vuoi sapere perché ti citano?"). 0 crediti in più.
+>     Clemente: "fattore differenziale importante". ~1 h.
+>     **FATTO il 2026-10-15 sera (locale, da mettere online):** riquadro "Come si usa" di AI Rank (`d91ffaf`), sidebar
+>     (`d3e98cf`), barra paesi sempre visibile con "Aggiungi paese" (`6161c5a`), "Visite dalle AI" nel Punto della
+>     situazione (spec aggiornata in `docs/specs/seo-tracking-punto-situazione.md`). Verifica vera del blocco AI solo in
+>     prod (in locale GA4/GSC sono scaduti): dopo il deploy lanciare `SituationService::compute` da CLI su Stabia (0 crediti)
+>     e poi un Punto nuovo (5 cr) per vedere il riquadro con dati veri; i report vecchi non lo mostrano.
+>   - **Stabia, progetti AI Keywords doppi: FATTO il 2026-10-15** — le 2 ricerche dell'8 spostate nel 9, progetto 8 cancellato
+>     (backup `/home/ainstein/backups/2026-10-14-kr-merge-8-in-9.sql`). Ora un solo riquadro AI Keywords su Stabia.
+>   - **Scritture sul DB di prod: RISOLTO** — in modalità "Auto" il controllo automatico bloccava ogni scrittura via ssh
+>     anche con la regola `Bash(ssh:*)` già presente in `.claude/settings.local.json`. In modalità **"Accetta modifiche"**
+>     la regola vale e i comandi ssh passano senza chiedere. Questa sessione è passata ad "Accetta modifiche"; nelle
+>     prossime sessioni scegliere quella (menu in basso a sinistra, voce 3) se serve scrivere in prod.
+> Poi restano, nell'ordine: 2) verifica a schermo in prod (Chrome di Clemente loggato) di un
 > progetto Meta tag di AI Writer e delle pagine cambiate il 14 e il 15; 3) post LinkedIn (chiedere a Clemente la data).
 >
 > **PASSAGGIO DI CONSEGNE 2026-10-14 pomeriggio (precedente).** Fatto oggi, tutto online:
