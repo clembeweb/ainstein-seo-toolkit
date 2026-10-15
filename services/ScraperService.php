@@ -150,7 +150,12 @@ class ScraperService
         return $headings;
     }
 
-    public function extractLinks(string $html, string $baseUrl): array
+    /**
+     * @param string|null $pageUrl URL della pagina da cui vengono i link: serve a risolvere i link relativi
+     *                             senza barra iniziale (href="capri/", href="../guide/") come fa il browser.
+     *                             Senza, si risolvono rispetto alla root del sito.
+     */
+    public function extractLinks(string $html, string $baseUrl, ?string $pageUrl = null): array
     {
         $links = [
             'internal' => [],
@@ -161,15 +166,30 @@ class ScraperService
         $baseDomain = parse_url($baseUrl, PHP_URL_HOST) ?: parse_url('https://' . $baseUrl, PHP_URL_HOST);
         $baseScheme = parse_url($baseUrl, PHP_URL_SCHEME) ?: 'https';
 
+        // Cartella della pagina corrente, per i link relativi (es. /it/ per https://sito.it/it/capri/ → /it/capri/)
+        $pagePath = $pageUrl ? (parse_url($pageUrl, PHP_URL_PATH) ?: '/') : '/';
+        $pageDir = preg_replace('#/[^/]*$#', '/', $pagePath) ?: '/';
+        $pageScheme = $pageUrl ? (parse_url($pageUrl, PHP_URL_SCHEME) ?: $baseScheme) : $baseScheme;
+        $pageHost = $pageUrl ? (parse_url($pageUrl, PHP_URL_HOST) ?: $baseDomain) : $baseDomain;
+
         preg_match_all('/<a[^>]+href=["\']([^"\'#]+)["\'][^>]*>(.*?)<\/a>/is', $html, $matches, PREG_SET_ORDER);
 
         foreach ($matches as $match) {
-            $href = $match[1];
+            $href = trim($match[1]);
             $text = trim(strip_tags($match[2]));
 
+            if ($href === '' || preg_match('/^(javascript|mailto|tel|sms|whatsapp|data|fax|skype|callto):/i', $href)) {
+                continue;
+            }
+
             // Normalizza URL relativo
-            if (str_starts_with($href, '/')) {
+            if (str_starts_with($href, '//')) {
+                $href = $pageScheme . ':' . $href;
+            } elseif (str_starts_with($href, '/')) {
                 $href = $baseScheme . '://' . $baseDomain . $href;
+            } elseif (!preg_match('#^[a-z][a-z0-9+.-]*://#i', $href)) {
+                // Relativo alla cartella della pagina (href="capri/", "./x", "../y", "pagina.html")
+                $href = $pageScheme . '://' . $pageHost . $this->resolveRelativeHref($pageDir, $href);
             }
 
             if (!filter_var($href, FILTER_VALIDATE_URL)) {
@@ -191,6 +211,34 @@ class ScraperService
         }
 
         return $links;
+    }
+
+    /**
+     * Risolve un href relativo (senza barra iniziale) rispetto alla cartella della pagina, gestendo ./ e ../
+     * e conservando la barra finale (href="capri/" → /capri/).
+     */
+    private function resolveRelativeHref(string $pageDir, string $href): string
+    {
+        $query = '';
+        if (($qPos = strpos($href, '?')) !== false) {
+            $query = substr($href, $qPos);
+            $href = substr($href, 0, $qPos);
+        }
+
+        $parts = explode('/', $pageDir . $href);
+        $resolved = [];
+        foreach ($parts as $part) {
+            if ($part === '..') {
+                array_pop($resolved);
+            } elseif ($part !== '' && $part !== '.') {
+                $resolved[] = $part;
+            }
+        }
+
+        $trailing = ($href === '' || str_ends_with($href, '/') || str_ends_with($href, '/.') || str_ends_with($href, '/..') || $href === '.' || $href === '..')
+            && !empty($resolved) ? '/' : '';
+
+        return '/' . implode('/', $resolved) . $trailing . $query;
     }
 
     public function extractImages(string $html): array

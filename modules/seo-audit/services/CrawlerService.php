@@ -702,7 +702,7 @@ class CrawlerService
         $data['images_data'] = json_encode($images);
 
         // Links
-        $links = $this->scraperService->extractLinks($html, $this->ensureScheme($this->project['base_url']));
+        $links = $this->scraperService->extractLinks($html, $this->ensureScheme($this->project['base_url']), $url);
         $data['internal_links_count'] = count($links['internal'] ?? []);
         $data['external_links_count'] = count($links['external'] ?? []);
         $data['links_data'] = json_encode($links);
