@@ -121,7 +121,7 @@
 >   **Stabia rifatto in prod** con `run-crawl-cli.php 17 3` (il progetto è dell'utente booking@…, non lanciabile dal
 >   Chrome admin; lo script ora fa anche le analisi finali, `b84853e`): 22 pagine tutte 200, score **80** (prima 58 con 20
 >   redirect), budget 100. clementeteodonno.it (progetto admin, ~5 cr) NON rifatto: da decidere.
-> - **In locale, committati, DA METTERE ONLINE:** AI Writer solo col WordPress del progetto (`7029e2b`; in prod oggi non
+> - **ONLINE il 2026-10-15 sera (`fa07c90`, ok di Clemente):** AI Writer solo col WordPress del progetto (`7029e2b`; in prod oggi non
 >   c'è nessun sito WP collegato, zero regressioni), "?" del tour anche dentro i progetti (`b8bb7b3`: porta all'elenco del
 >   modulo con `?tour=slug` e lo apre), AI Audit "Nessuna scansione ancora" prima della prima scansione (`d7b1efb`),
 >   profilo GEO a 8000 token (`3707e35`; rigenerato: 4.394 token, prima sarebbe stato troncato). Tutti verificati a schermo.
