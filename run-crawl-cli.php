@@ -6,7 +6,7 @@
  * Uso: php run-crawl-cli.php <project_id> <user_id>
  * Es:  php run-crawl-cli.php 13 6
  *
- * ELIMINARE DOPO L'USO!
+ * Serve quando il progetto è di un altro utente (es. Stabia) e il flusso web non si può lanciare dal suo browser.
  */
 if (php_sapi_name() !== 'cli') die('Solo CLI');
 
@@ -32,6 +32,7 @@ use Modules\SeoAudit\Services\RobotsTxtParser;
 use Modules\SeoAudit\Services\SitemapParser;
 use Modules\SeoAudit\Services\IssueDetector;
 use Modules\SeoAudit\Services\BudgetIssueDetector;
+use Modules\SeoAudit\Services\BudgetScoreCalculator;
 use Modules\SeoAudit\Services\AuditAnalyzer;
 
 $projectModel = new Project();
@@ -216,6 +217,27 @@ foreach ($pendingPages as $page) {
 }
 
 Database::reconnect();
+
+// Analisi finali, come nel flusso web (CrawlController::processStream + finalizeCrawl)
+echo "\n--- Analisi finali (orfane, titoli doppi, canonical, controlli di progetto) ---\n";
+try {
+    $budgetDetector->runPostAnalysis();
+    Database::reconnect();
+    $issueDetector->runProjectLevelChecks();
+    Database::reconnect();
+    $budgetCalc = new BudgetScoreCalculator();
+    $budgetResult = $budgetCalc->calculate($projectId, $sessionId);
+    Database::reconnect();
+    Database::execute(
+        "UPDATE sa_crawl_sessions SET budget_score = ?, waste_percentage = ? WHERE id = ?",
+        [$budgetResult['score'], $budgetResult['waste_percentage'], $sessionId]
+    );
+    $projectModel->update($projectId, ['budget_score' => $budgetResult['score']]);
+    echo "Budget score: {$budgetResult['score']}\n";
+} catch (\Exception $e) {
+    echo "Errore analisi finali: {$e->getMessage()}\n";
+}
+$projectModel->updateStats($projectId);
 
 // Calcola health score
 echo "\n--- Calcolo Health Score ---\n";
