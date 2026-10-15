@@ -6,7 +6,7 @@
  * Numeri e prezzi letti dal sistema; esempi inventati (nessun dato dei clienti, tranne il caso anonimo 79/2).
  */
 $currentPage = 'home';
-$variant = $variant ?? 'tabs';   // 'slider' su /landing-b (variante con le card che si aprono)
+$variant = $variant ?? 'scroll'; // 'slider' su /landing-b (variante con le card che si aprono)
 $bonus = \Core\Credits::signupBonus();
 $plans = \Core\Database::fetchAll("SELECT name, slug, price_monthly, credits_monthly FROM plans WHERE is_active = 1 AND price_monthly > 0 ORDER BY price_monthly");
 $num = fn($v) => number_format((float) $v, 0, ',', '.');
@@ -55,7 +55,7 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
     <meta property="og:url" content="https://ainstein.it/">
     <meta name="theme-color" content="#006e96">
     <link rel="canonical" href="https://ainstein.it/">
-    <?php if ($variant !== 'tabs'): ?><meta name="robots" content="noindex,nofollow"><?php endif; ?>
+    <?php if ($variant !== 'scroll'): ?><meta name="robots" content="noindex,nofollow"><?php endif; ?>
     <script type="application/ld+json"><?= json_encode([
         '@context' => 'https://schema.org',
         '@graph' => [
@@ -167,21 +167,31 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
         .card h4{font-size:19px;margin:14px 0 8px}.card p{color:var(--md);font-size:15px}
         .card.fact{background:var(--dark);color:#fff;border-color:var(--dark)}.card.fact .ico{background:rgba(255,255,255,.1);color:#7fdcff}.card.fact p{color:#cfe9f3}.card.fact small{display:block;margin-top:14px;color:#7fdcff;font-weight:700;font-size:12px;letter-spacing:1.2px;text-transform:uppercase}
 
-        /* strumenti in tre tempi */
-        .groups{display:flex;gap:28px;flex-wrap:wrap;margin:40px 0 26px}
-        .group small{display:block;font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
-        .tabs{display:flex;gap:8px;flex-wrap:wrap}
-        .tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 18px 9px 9px;font-weight:600;font-size:15px;cursor:pointer;display:flex;align-items:center;gap:10px;font-family:inherit;color:var(--ink)}
-        .tab[aria-selected=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
-        .panel{display:none;grid-template-columns:1fr 1.15fr;gap:48px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:28px;padding:48px}
-        .panel.on{display:grid;animation:rise .35s ease}
-        .panel h3{font-size:32px;letter-spacing:-.8px;line-height:1.1;margin-top:12px}
-        .panel .when{color:var(--muted);font-size:15px;margin-top:12px}
-        .panel ul{list-style:none;margin:18px 0 20px}
-        .panel li{padding:8px 0 8px 30px;position:relative;color:var(--md)}
-        .panel li::before{content:"";position:absolute;left:0;top:12px;width:18px;height:18px;border-radius:50%;background:var(--blue) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpath d='M5 13l4 4L19 7'/%3E%3C/svg%3E") center/12px no-repeat}
-        .panel .cost{font-size:14px;color:var(--md);background:var(--soft);border-radius:12px;padding:10px 14px;margin-bottom:22px}
-        .panel .acts{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+        /* strumenti: riquadro fisso mentre la pagina scorre (desktop), elenco aperto (telefono) */
+        .scrolly{height:calc(var(--n) * 100vh);margin-top:40px}
+        .stage{position:sticky;top:calc(var(--nav-h) + 20px);height:calc(100vh - var(--nav-h) - 40px);display:grid;grid-template-columns:1.05fr 1fr;gap:56px}
+        .visual{background:var(--soft2);border-radius:28px;overflow:hidden}
+        .strip{height:100%;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+        .strip>div{height:100%;display:grid;place-items:center;padding:36px}
+        .strip .mock{width:100%;max-width:540px;box-shadow:0 30px 60px rgba(0,77,105,.14)}
+        .strip .bars div span{width:var(--w)}
+        .listwrap{overflow:hidden;position:relative;-webkit-mask-image:linear-gradient(to bottom,transparent,#000 24px,#000 calc(100% - 60px),transparent);mask-image:linear-gradient(to bottom,transparent,#000 24px,#000 calc(100% - 60px),transparent)}
+        .list{list-style:none;transition:transform .6s cubic-bezier(.2,.8,.2,1);will-change:transform;padding-top:24px}
+        .item{border-top:1px solid #cbd5e1;padding:20px 0 22px}
+        .item .phase{display:block;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+        .item .ttl{background:none;border:0;font:inherit;font-weight:800;font-size:38px;letter-spacing:-1.2px;line-height:1.05;color:#b4c0cc;cursor:pointer;text-align:left;padding:0;display:flex;align-items:center;gap:14px;transition:color .4s}
+        .item .ttl .tile{opacity:.35;transition:opacity .4s}
+        .item.on .ttl{color:var(--ink)}.item.on .ttl .tile{opacity:1}
+        .item .body{max-height:0;opacity:0;overflow:hidden;transition:max-height .55s ease,opacity .4s ease}
+        .item.on .body{max-height:700px;opacity:1}
+        .item h3{font-size:22px;letter-spacing:-.4px;line-height:1.2;margin-top:14px}
+        .item .when{color:var(--muted);font-size:15px;margin-top:8px}
+        .item ul{list-style:none;margin:12px 0 14px}
+        .item li{padding:6px 0 6px 28px;position:relative;color:var(--md);font-size:15px}
+        .item li::before{content:"";position:absolute;left:0;top:10px;width:16px;height:16px;border-radius:50%;background:var(--blue) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpath d='M5 13l4 4L19 7'/%3E%3C/svg%3E") center/11px no-repeat}
+        .item .cost{font-size:14px;color:var(--md);background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px 14px;margin-bottom:16px}
+        .item .acts{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding-bottom:4px}
+        .item-mock{display:none}
         .chip{display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;margin:4px 4px 0 0}
         .mock{background:#fff;border-radius:18px;border:1px solid var(--line);box-shadow:0 30px 60px rgba(0,77,105,.12);overflow:hidden}
         .mock .bar{height:36px;background:#f8fafc;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px;padding:0 14px}
@@ -192,7 +202,6 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
         .kpi{border:1px solid var(--line);border-radius:12px;padding:12px}.kpi small{color:var(--muted);font-size:12px}.kpi b{display:block;font-size:24px}
         .bars div{height:10px;border-radius:6px;background:var(--line);margin:9px 0;position:relative;overflow:hidden}
         .bars div span{position:absolute;inset:0 auto 0 0;border-radius:6px;width:0;transition:width 1.2s ease}
-        .panel.on .bars div span{width:var(--w)}
         table{width:100%;border-collapse:collapse;font-size:15px}
         th{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);text-align:left;padding:12px;border-bottom:1px solid var(--line)}
         td{padding:13px 12px;border-bottom:1px solid var(--line)}
@@ -267,9 +276,9 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
         .footer-col a{display:block;font-size:14px;color:#94a3b8;padding:4px 0}.footer-col a:hover{color:#fff}
         .footer-bottom{padding-top:28px;border-top:1px solid rgba(255,255,255,.08);font-size:13px}
 
-        @media(max-width:1000px){.hero h1{font-size:46px;letter-spacing:-1.4px}h2{font-size:34px}.chain{grid-template-columns:repeat(3,1fr)}.aud,.price{grid-template-columns:1fr 1fr}.pro .cols{grid-template-columns:1fr}.why{grid-template-columns:1fr}.panel,.case{grid-template-columns:1fr;padding:32px}.tcard{flex-basis:min(84vw,384px)}.tcard.open{flex-basis:min(84vw,800px)}.tcard.open .tcard-body{grid-template-columns:1fr}.slider-nav{margin:0 0 18px}.footer-grid{grid-template-columns:1fr 1fr}}
+        @media(max-width:1000px){.hero h1{font-size:46px;letter-spacing:-1.4px}h2{font-size:34px}.chain{grid-template-columns:repeat(3,1fr)}.aud,.price{grid-template-columns:1fr 1fr}.pro .cols{grid-template-columns:1fr}.why{grid-template-columns:1fr}.case{grid-template-columns:1fr;padding:32px}.scrolly{height:auto}.stage{position:static;height:auto;display:block}.visual{display:none}.listwrap{-webkit-mask-image:none;mask-image:none}.list{transform:none!important;padding-top:0}.item .ttl{font-size:28px;letter-spacing:-.6px}.item .body,.item.on .body{max-height:none;opacity:1}.item .ttl{cursor:default;color:var(--ink)}.item .ttl .tile{opacity:1}.item-mock{display:block;margin-top:22px}.item-mock .bars div span{width:var(--w)}.tcard{flex-basis:min(84vw,384px)}.tcard.open{flex-basis:min(84vw,800px)}.tcard.open .tcard-body{grid-template-columns:1fr}.slider-nav{margin:0 0 18px}.footer-grid{grid-template-columns:1fr 1fr}}
         @media(max-width:760px){.site-nav-links,.site-nav-actions{display:none}.nav-hamburger{display:block}.nav-mobile-menu.open{display:flex}}
-        @media(max-width:600px){.hero{padding:56px 0 48px}.hero h1{font-size:36px}.hero .sub{font-size:17px}.check{flex-direction:column;border-radius:20px}.check input[type=text]{padding:12px 14px}.chain,.aud,.price,.what,.footer-grid,.pro .cols{grid-template-columns:1fr}.pro{padding:44px 24px;border-radius:24px}section{padding:64px 0}.gate{flex-direction:column;align-items:flex-start}.lock{display:none}.final{padding:48px 20px}.kpis{grid-template-columns:1fr 1fr 1fr}.kpi b{font-size:18px}.panel h3{font-size:26px}}
+        @media(max-width:600px){.hero{padding:56px 0 48px}.hero h1{font-size:36px}.hero .sub{font-size:17px}.check{flex-direction:column;border-radius:20px}.check input[type=text]{padding:12px 14px}.chain,.aud,.price,.what,.footer-grid,.pro .cols{grid-template-columns:1fr}.pro{padding:44px 24px;border-radius:24px}section{padding:64px 0}.gate{flex-direction:column;align-items:flex-start}.lock{display:none}.final{padding:48px 20px}.kpis{grid-template-columns:1fr 1fr 1fr}.kpi b{font-size:18px}.item .ttl{font-size:24px}.item h3{font-size:19px}}
         @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
     </style>
 </head>
@@ -326,7 +335,7 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
     </div>
 </section>
 
-<!-- STRUMENTI (tabs su /, slider su /landing-b) -->
+<!-- STRUMENTI (riquadro a scorrimento su /, slider su /landing-b) -->
 <?php include __DIR__ . '/includes/landing-tools.php'; ?>
 
 <!-- UNA SETTIMANA CON AINSTEIN -->
@@ -456,13 +465,42 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
     var ham = document.getElementById('navHamburger'), mob = document.getElementById('navMobile');
     if (ham && mob) ham.addEventListener('click', function () { ham.classList.toggle('open'); mob.classList.toggle('open'); });
 
-    // Linguette degli strumenti
-    function showTab(k) {
-        document.querySelectorAll('.tab').forEach(function (t) { t.setAttribute('aria-selected', t.dataset.t === k ? 'true' : 'false'); });
-        document.querySelectorAll('.panel').forEach(function (p) { p.classList.toggle('on', p.id === 'p-' + k); });
+    // Strumenti a scorrimento: il riquadro resta fermo, l'elenco sale e si apre uno alla volta
+    var scrolly = document.getElementById('scrolly'), list = document.getElementById('toolList'), strip = document.getElementById('toolStrip');
+    var items = scrolly ? Array.prototype.slice.call(list.children) : [], n = items.length, cur = -1;
+    var desktop = window.matchMedia('(min-width: 1001px)');
+    function range() { var stage = scrolly.querySelector('.stage'); return { top: scrolly.getBoundingClientRect().top + window.pageYOffset, len: scrolly.offsetHeight - stage.offsetHeight }; }
+    function setActive(i, force) {
+        if (i === cur && !force) return;
+        cur = i;
+        items.forEach(function (li, k) { li.classList.toggle('on', k === i); li.querySelector('.ttl').setAttribute('aria-expanded', k === i ? 'true' : 'false'); });
+        if (!desktop.matches) { list.style.transform = ''; return; }
+        strip.style.transform = 'translateY(' + (-i * 100) + '%)';
+        // altezza delle voci chiuse sopra a quella aperta (misurata senza il corpo, che sta ancora animando)
+        var y = parseInt(getComputedStyle(list).paddingTop, 10) || 0;
+        for (var k = 0; k < i; k++) y += items[k].offsetHeight - items[k].querySelector('.body').offsetHeight;
+        var anchor = Math.round(list.parentElement.offsetHeight * 0.12);
+        list.style.transform = 'translateY(' + (-Math.max(0, y - anchor)) + 'px)';
     }
-    document.querySelectorAll('.tab').forEach(function (t) { t.addEventListener('click', function () { showTab(t.dataset.t); }); });
-    document.querySelectorAll('[data-tab]').forEach(function (a) { a.addEventListener('click', function () { showTab(a.dataset.tab); }); });
+    function onScroll() {
+        if (!scrolly || !desktop.matches) return;
+        var r = range(), p = (window.pageYOffset - r.top) / Math.max(1, r.len);
+        setActive(Math.min(n - 1, Math.max(0, Math.floor(p * n))));
+    }
+    function goTo(i) {
+        if (!scrolly) return;
+        if (!desktop.matches) { items[i].scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+        var r = range();
+        window.scrollTo({ top: Math.round(r.top + (i + 0.5) / n * r.len), behavior: 'smooth' });
+    }
+    if (scrolly) {
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', function () { cur = -1; onScroll(); if (!desktop.matches) setActive(0, true); });
+        items.forEach(function (li, k) { li.querySelector('.ttl').addEventListener('click', function () { goTo(k); }); });
+        document.querySelectorAll('[data-tab]').forEach(function (a) { a.addEventListener('click', function (e) { e.preventDefault(); goTo(items.findIndex(function (li) { return li.id === 't-' + a.dataset.tab; })); }); });
+        setActive(0, true);
+        onScroll();
+    }
 
     // Variante slider: "+" apre la card in largo, frecce scorrono di una card
     var track = document.getElementById('toolTrack');

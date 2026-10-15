@@ -1,11 +1,12 @@
 <?php
 /**
  * Sezione "Gli strumenti" della home, in due varianti:
- *  - tabs   (default, /):        tre tempi con linguette + pannello
- *  - slider (/landing-b):        card affiancate che scorrono e si aprono col "+" (effetto Semrush)
- * Usa $tile, $icons, $C, $tools, $groups, $bonus definiti in landing5.php. $variant = 'tabs' | 'slider'.
+ *  - scroll (default, /):        riquadro fisso mentre la pagina scorre: a destra l'elenco degli strumenti che sale
+ *                                e si apre uno alla volta, a sinistra l'esempio che cambia (come semrush.com/lp/product-free-trial)
+ *  - slider (/landing-b):        card affiancate che scorrono e si aprono col "+"
+ * Usa $tile, $icons, $C, $tools, $groups, $bonus definiti in landing5.php. $variant = 'scroll' | 'slider'.
  */
-$variant = $variant ?? 'tabs';
+$variant = $variant ?? 'scroll';
 
 $panels = [
     'geo' => [
@@ -105,28 +106,29 @@ foreach ($groups as [$gLabel, $keys]) { foreach ($keys as $k) { $phaseOf[$k] = $
         </div>
         <p class="micro" style="text-align:left;margin-top:18px">Apri una card col + per vedere cosa ti ritrovi in mano e quanto costa.</p>
 <?php else: ?>
-        <div class="groups">
-            <?php foreach ($groups as [$gLabel, $keys]): ?>
-            <div class="group"><small><?= $gLabel ?></small><div class="tabs" role="tablist">
-                <?php foreach ($keys as $k): ?>
-                <button class="tab" role="tab" id="tab-<?= $k ?>" aria-controls="p-<?= $k ?>" aria-selected="<?= $k === 'geo' ? 'true' : 'false' ?>" data-t="<?= $k ?>"><?= $tile($C[$k], $icons[$k]) ?><?= $tools[$k][1] ?></button>
-                <?php endforeach; ?>
-            </div></div>
-            <?php endforeach; ?>
-        </div>
-        <?php foreach ($panels as $k => $p): ?>
-        <div class="panel<?= $k === 'geo' ? ' on' : '' ?>" id="p-<?= $k ?>" role="tabpanel" aria-labelledby="tab-<?= $k ?>">
-            <div>
-                <span class="chip" style="background:<?= $p['chip'][0] ?>;color:<?= $p['chip'][1] ?>"><?= $tools[$k][0] ?></span>
-                <h3><?= $p['h3'] ?></h3>
-                <p class="when"><?= $p['when'] ?></p>
-                <ul><?php foreach ($p['li'] as $li): ?><li><?= $li ?></li><?php endforeach; ?></ul>
-                <p class="cost"><?= $p['cost'] ?></p>
-                <div class="acts"><a class="btn btn-blue" href="<?= url('/register') ?>"><?= $p['cta'] ?></a><a class="more" href="<?= url($tools[$k][2]) ?>">Come funziona →</a></div>
+        <div class="scrolly" id="scrolly" style="--n:<?= count($panels) ?>">
+            <div class="stage">
+                <div class="visual" aria-hidden="true"><div class="strip" id="toolStrip">
+                    <?php foreach ($panels as $k => $p): ?><div><div class="mock"><?= $p['mock'] ?></div></div><?php endforeach; ?>
+                </div></div>
+                <div class="listwrap"><ol class="list" id="toolList">
+                    <?php $i = 0; foreach ($panels as $k => $p): ?>
+                    <li class="item<?= $i === 0 ? ' on' : '' ?>" id="t-<?= $k ?>" data-i="<?= $i ?>">
+                        <small class="phase"><?= $phaseOf[$k] ?></small>
+                        <button type="button" class="ttl" aria-expanded="<?= $i === 0 ? 'true' : 'false' ?>" aria-controls="b-<?= $k ?>"><?= $tile($C[$k], $icons[$k]) ?><?= $tools[$k][0] ?></button>
+                        <div class="body" id="b-<?= $k ?>">
+                            <h3><?= $p['h3'] ?></h3>
+                            <p class="when"><?= $p['when'] ?></p>
+                            <ul><?php foreach ($p['li'] as $li): ?><li><?= $li ?></li><?php endforeach; ?></ul>
+                            <p class="cost"><?= $p['cost'] ?></p>
+                            <div class="acts"><a class="btn btn-blue" href="<?= url('/register') ?>"><?= $p['cta'] ?></a><a class="more" href="<?= url($tools[$k][2]) ?>">Come funziona →</a></div>
+                            <div class="mock item-mock" aria-hidden="true"><?= $p['mock'] ?></div>
+                        </div>
+                    </li>
+                    <?php $i++; endforeach; ?>
+                </ol></div>
             </div>
-            <div class="mock" aria-hidden="true"><?= $p['mock'] ?></div>
         </div>
-        <?php endforeach; ?>
 <?php endif; ?>
     </div>
 </section>
