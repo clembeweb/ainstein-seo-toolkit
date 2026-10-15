@@ -86,7 +86,8 @@ class OnboardingService
         $ai = new AiService(self::SLUG);
         $result = $ai->complete($creditUserId, [
             ['role' => 'user', 'content' => $this->userPrompt($subject, $type, $project, $overview, $sources, $texts)],
-        ], ['system' => $this->systemPrompt(), 'max_tokens' => 4000], self::SLUG);
+        // 8000 token: 15-35 righe con fonti e note superavano i 4000 ("Risposta AI troncata", prova del 2026-10-15)
+        ], ['system' => $this->systemPrompt(), 'max_tokens' => 8000], self::SLUG);
         Database::reconnect();
 
         if (!empty($result['error']) || empty($result['result'])) {
