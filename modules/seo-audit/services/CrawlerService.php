@@ -1019,7 +1019,10 @@ class CrawlerService
             }
         }
 
-        return '/' . implode('/', $resolved);
+        // La barra finale del link (es. href="capri/") va conservata: senza, il sito risponde 301
+        $trailing = (str_ends_with($relativePath, '/') || str_ends_with($relativePath, '/.') || str_ends_with($relativePath, '/..')) && !empty($resolved) ? '/' : '';
+
+        return '/' . implode('/', $resolved) . $trailing;
     }
 
     /**
