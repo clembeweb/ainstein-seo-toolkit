@@ -340,7 +340,7 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
             <div class="step"><div class="n">Martedì</div><h4>Descrive l'attività</h4><p>«Pasticceria a Torino, torte su ordinazione, senza glutine e vegane.» <b>AI Keywords</b> le restituisce le ricerche con i volumi di Google, le pagine che servono e gli articoli dei prossimi tre mesi.</p></div>
             <div class="step"><div class="n">Giovedì</div><h4>Il primo articolo</h4><p><b>AI Writer</b> prende il primo titolo del piano, guarda chi è primo su Google, scrive l'articolo con la copertina e lo mette su WordPress come bozza.</p></div>
             <div class="step"><div class="n">Quando vuole</div><h4>Le AI</h4><p><b>AI GEO Audit</b> chiede a ChatGPT e Gemini «dove ordino una torta senza glutine a Torino» e le dice se fanno il suo nome, e chi c'è al posto suo.</p></div>
-            <div class="step"><div class="n">Tra un mese</div><h4>Vede se funziona</h4><p><b>AI Rank</b> le dice dove compare, cosa è salito e cosa è sceso, e glielo spiega in italiano nel Punto della situazione.</p></div>
+            <div class="step"><div class="n">Tra un mese</div><h4>Vede se funziona</h4><p><b>AI Rank</b> le dice dove compare, cosa è salito e cosa è sceso, e nell'Andamento vede da dove arriva il traffico, anche dalle AI, con una lettura breve scritta dall'AI.</p></div>
         </div>
     </div>
 </section>
@@ -390,7 +390,7 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
             <div class="cols">
                 <div class="col"><?= $ico($icons['team']) ?><h4>Condiviso con chi vuoi</h4><p>Il cliente in sola lettura, chi lavora con te può modificare.</p></div>
                 <div class="col"><?= $ico($icons['chart']) ?><h4>Niente da tenere acceso per forza</h4><p>Un GEO Audit per il ristorante, gli articoli per l'e-commerce, le posizioni per tutti.</p></div>
-                <div class="col"><?= $ico($icons['doc']) ?><h4>Cose da girare</h4><p>PDF del GEO Audit, piano d'azione del sito, Punto della situazione: in italiano, con i numeri veri.</p></div>
+                <div class="col"><?= $ico($icons['doc']) ?><h4>Cose da girare</h4><p>PDF del GEO Audit, piano d'azione del sito, Andamento con Analytics e Search Console: in italiano, con i numeri veri.</p></div>
             </div>
             <div class="acts"><a class="btn" style="background:#fff;color:var(--dark)" href="<?= url('/register') ?>">Inizia con <?= (int) $bonus ?> crediti</a><a class="more" href="mailto:info@ainstein.it?subject=<?= rawurlencode('Ainstein per la mia agenzia') ?>">Ne usi di più? Scrivimi per un piano →</a></div>
         </div>

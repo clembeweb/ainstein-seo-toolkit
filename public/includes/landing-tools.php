@@ -64,12 +64,12 @@ $panels = [
         'chip' => ['#e0f2fe', '#0369a1'],
         'h3' => 'Dove compari, cosa cambia, e perché.',
         'when' => 'Quando hai pubblicato e vuoi vedere se serve a qualcosa.',
-        'li' => ['Le posizioni su Google delle ricerche che ti interessano, giorno dopo giorno, in 20 paesi', 'I clic veri da Search Console e le ricerche a un passo dalla prima pagina', 'Il Punto della situazione: Analytics e Search Console letti dall\'AI e spiegati in italiano'],
-        'cost' => 'Posizioni: 1 credito a keyword. Punto della situazione: 5 crediti.',
+        'li' => ['Le posizioni su Google delle ricerche che ti interessano, giorno dopo giorno, in 20 paesi', 'I clic veri da Search Console e le ricerche a un passo dalla prima pagina', 'L\'Andamento: grafici giorno per giorno, da dove arriva il traffico, le visite dalle AI, e una lettura breve scritta dall\'AI'],
+        'cost' => 'Posizioni: 1 credito a keyword. Andamento gratis, la lettura dell\'AI 5 crediti.',
         'cta' => 'Provalo con ' . (int) $bonus . ' crediti',
-        'mock' => '<div class="bar"><i></i><i></i><i></i><small>Punto della situazione · esempio</small></div><div class="in">
+        'mock' => '<div class="bar"><i></i><i></i><i></i><small>Andamento · esempio</small></div><div class="in">
                 <svg viewBox="0 0 300 90" style="width:100%"><polyline fill="none" stroke="#0ea5e9" stroke-width="3" stroke-linecap="round" points="0,70 40,62 80,66 120,48 160,40 200,44 240,26 300,18"/></svg>
-                <p style="font-size:14px;color:var(--md);margin-top:8px"><b>Il punto:</b> le visite da Google crescono del 12%. Il merito è della pagina sulle torte senza glutine, salita dalla posizione 9 alla 3…</p>
+                <p style="font-size:14px;color:var(--md);margin-top:8px"><b>In breve:</b> le visite da Google crescono del 12%. Il merito è della pagina sulle torte senza glutine, salita dalla posizione 9 alla 3…</p>
             </div>',
     ],
 ];
