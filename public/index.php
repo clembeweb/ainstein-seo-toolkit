@@ -127,6 +127,13 @@ Router::get('/', function () {
     exit;
 });
 
+// Variante della home con gli strumenti a card che si aprono (confronto, noindex). Stessa pagina, $variant = 'slider'.
+Router::get('/landing-b', function () {
+    $variant = 'slider';
+    require BASE_PATH . '/public/landing5.php';
+    exit;
+});
+
 // Controllo AI gratuito della home: highlight a tutti (JSON), dettagli su /check/{token} dopo l'iscrizione.
 // Design: docs/plans/2026-10-13-landing-semrush-design.md
 Router::post('/check-ai', function () {

@@ -6,6 +6,7 @@
  * Numeri e prezzi letti dal sistema; esempi inventati (nessun dato dei clienti, tranne il caso anonimo 79/2).
  */
 $currentPage = 'home';
+$variant = $variant ?? 'tabs';   // 'slider' su /landing-b (variante con le card che si aprono)
 $bonus = \Core\Credits::signupBonus();
 $plans = \Core\Database::fetchAll("SELECT name, slug, price_monthly, credits_monthly FROM plans WHERE is_active = 1 AND price_monthly > 0 ORDER BY price_monthly");
 $num = fn($v) => number_format((float) $v, 0, ',', '.');
@@ -24,8 +25,13 @@ $icons = [
     'google' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z',
     'chat' => 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z',
     'chart' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+    'doc' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+    'bag' => 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z',
+    'pin' => 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z',
+    'case' => 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
 ];
 $C = ['geo' => '#6366f1', 'audit' => '#10b981', 'kw' => '#8b5cf6', 'writer' => '#f59e0b', 'rank' => '#0ea5e9'];
+$ico = fn(string $path) => '<span class="ico"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="' . $path . '"/></svg></span>';
 $tools = [
     'geo' => ['AI GEO Audit', 'Le risposte delle AI', '/docs/ai-reputation'],
     'audit' => ['AI Audit', 'Il tuo sito', '/docs/seo-audit'],
@@ -49,6 +55,7 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
     <meta property="og:url" content="https://ainstein.it/">
     <meta name="theme-color" content="#006e96">
     <link rel="canonical" href="https://ainstein.it/">
+    <?php if ($variant !== 'tabs'): ?><meta name="robots" content="noindex,nofollow"><?php endif; ?>
     <script type="application/ld+json"><?= json_encode([
         '@context' => 'https://schema.org',
         '@graph' => [
@@ -150,12 +157,15 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
         .lead{font-size:18px;color:#475569;max-width:680px;margin-top:14px}
         .tile{width:30px;height:30px;border-radius:9px;display:inline-grid;place-items:center;color:#fff;flex-shrink:0}
         .tile svg{width:17px;height:17px}
+        .ico{width:48px;height:48px;border-radius:50%;background:var(--soft2);color:var(--blue);display:inline-grid;place-items:center}
+        .ico svg{width:24px;height:24px}
+        .pro .ico{background:rgba(255,255,255,.1);color:#7fdcff}
 
         /* cos'è cambiato */
         .why{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:40px}
         .card{border:1px solid var(--line);border-radius:20px;padding:26px;background:#fff}
         .card h4{font-size:19px;margin:14px 0 8px}.card p{color:var(--md);font-size:15px}
-        .card.fact{background:var(--dark);color:#fff;border-color:var(--dark)}.card.fact p{color:#cfe9f3}.card.fact small{display:block;margin-top:14px;color:#7fdcff;font-weight:700;font-size:12px;letter-spacing:1.2px;text-transform:uppercase}
+        .card.fact{background:var(--dark);color:#fff;border-color:var(--dark)}.card.fact .ico{background:rgba(255,255,255,.1);color:#7fdcff}.card.fact p{color:#cfe9f3}.card.fact small{display:block;margin-top:14px;color:#7fdcff;font-weight:700;font-size:12px;letter-spacing:1.2px;text-transform:uppercase}
 
         /* strumenti in tre tempi */
         .groups{display:flex;gap:28px;flex-wrap:wrap;margin:40px 0 26px}
@@ -187,6 +197,33 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
         th{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);text-align:left;padding:12px;border-bottom:1px solid var(--line)}
         td{padding:13px 12px;border-bottom:1px solid var(--line)}
 
+        /* variante slider (effetto Semrush): card affiancate, "+" che apre in largo */
+        .slider-nav{display:flex;justify-content:flex-end;gap:10px;margin:-52px 0 22px}
+        .arr{width:48px;height:48px;border-radius:50%;border:1px solid #cbd5e1;background:#fff;font-size:18px;cursor:pointer;color:var(--ink);font-family:inherit}.arr:hover{border-color:var(--ink)}
+        .track{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:4px 4px 24px;margin:0 -4px}
+        .track::-webkit-scrollbar{display:none}
+        .tcard{flex:0 0 384px;scroll-snap-align:start;background:#fff;border:1px solid var(--line);border-radius:24px;padding:26px;display:flex;flex-direction:column;gap:18px;min-height:520px;transition:flex-basis .45s cubic-bezier(.2,.8,.2,1)}
+        .tcard.open{flex-basis:800px}
+        .tcard-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+        .tcard .phase{display:block;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+        .tcard h3{font-size:24px;letter-spacing:-.5px;line-height:1.15;margin-top:10px}
+        .plus{flex-shrink:0;width:44px;height:44px;border-radius:50%;border:1px solid #cbd5e1;background:#fff;cursor:pointer;position:relative;transition:transform .3s}
+        .plus span,.plus span::after{position:absolute;background:var(--ink);border-radius:2px}
+        .plus span{width:16px;height:2px;left:13px;top:20px}.plus span::after{content:"";width:2px;height:16px;left:7px;top:-7px}
+        .tcard.open .plus{transform:rotate(45deg)}
+        .tcard-body{display:grid;grid-template-columns:1fr;gap:22px;align-items:start;flex:1}
+        .tcard.open .tcard-body{grid-template-columns:1fr 1fr}
+        .tcard-text{display:none}
+        .tcard.open .tcard-text{display:block;animation:rise .35s ease}
+        .tcard .when{color:var(--muted);font-size:15px}
+        .tcard ul{list-style:none;margin:14px 0 16px}
+        .tcard li{padding:7px 0 7px 28px;position:relative;color:var(--md);font-size:15px}
+        .tcard li::before{content:"";position:absolute;left:0;top:11px;width:16px;height:16px;border-radius:50%;background:var(--blue) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpath d='M5 13l4 4L19 7'/%3E%3C/svg%3E") center/11px no-repeat}
+        .tcard .cost{font-size:14px;color:var(--md);background:var(--soft);border-radius:12px;padding:10px 14px;margin-bottom:18px}
+        .tcard .acts{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+        .tcard .mock{align-self:end;box-shadow:0 18px 40px rgba(0,77,105,.10)}
+        .tcard:not(.open) .mock{transform:scale(.92);transform-origin:bottom center;margin-top:auto}
+        .tcard.open .bars div span{width:var(--w)}
         /* una settimana */
         .chain{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:44px}
         .step{border:1px solid var(--line);border-radius:18px;padding:22px;background:#fff}
@@ -197,6 +234,14 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
         .case .then{margin-top:22px;padding:18px 20px;border-left:3px solid var(--blue);background:#fff;border-radius:0 14px 14px 0;color:var(--md);font-size:15px}
         .aud{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:40px}
 
+        /* agenzie e professionisti */
+        .pro{background:var(--dark);color:#fff;border-radius:32px;padding:56px 56px 48px}
+        .pro .eyebrow{color:#7fdcff}.pro h2{color:#fff}.pro .lead{color:#cfe9f3}
+        .pro .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:32px}
+        .pro .col{border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:20px;background:rgba(255,255,255,.04)}
+        .pro .col h4{font-size:17px;margin:10px 0 6px}.pro .col p{font-size:14px;color:#cfe9f3}
+        .pro .acts{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:32px}
+        .pro .acts .more{color:#7fdcff}
         /* prezzi */
         .what{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:32px}
         .what .step b{font-size:26px;display:block;letter-spacing:-.5px;color:var(--dark);margin-top:6px}.what .step p{margin-top:4px}
@@ -222,9 +267,9 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
         .footer-col a{display:block;font-size:14px;color:#94a3b8;padding:4px 0}.footer-col a:hover{color:#fff}
         .footer-bottom{padding-top:28px;border-top:1px solid rgba(255,255,255,.08);font-size:13px}
 
-        @media(max-width:1000px){.hero h1{font-size:46px;letter-spacing:-1.4px}h2{font-size:34px}.chain{grid-template-columns:repeat(3,1fr)}.aud,.price{grid-template-columns:1fr 1fr}.why{grid-template-columns:1fr}.panel,.case{grid-template-columns:1fr;padding:32px}.footer-grid{grid-template-columns:1fr 1fr}}
+        @media(max-width:1000px){.hero h1{font-size:46px;letter-spacing:-1.4px}h2{font-size:34px}.chain{grid-template-columns:repeat(3,1fr)}.aud,.price{grid-template-columns:1fr 1fr}.pro .cols{grid-template-columns:1fr}.why{grid-template-columns:1fr}.panel,.case{grid-template-columns:1fr;padding:32px}.tcard{flex-basis:min(84vw,384px)}.tcard.open{flex-basis:min(84vw,800px)}.tcard.open .tcard-body{grid-template-columns:1fr}.slider-nav{margin:0 0 18px}.footer-grid{grid-template-columns:1fr 1fr}}
         @media(max-width:760px){.site-nav-links,.site-nav-actions{display:none}.nav-hamburger{display:block}.nav-mobile-menu.open{display:flex}}
-        @media(max-width:600px){.hero{padding:56px 0 48px}.hero h1{font-size:36px}.hero .sub{font-size:17px}.check{flex-direction:column;border-radius:20px}.check input[type=text]{padding:12px 14px}.chain,.aud,.price,.what,.footer-grid{grid-template-columns:1fr}section{padding:64px 0}.gate{flex-direction:column;align-items:flex-start}.lock{display:none}.final{padding:48px 20px}.kpis{grid-template-columns:1fr 1fr 1fr}.kpi b{font-size:18px}.panel h3{font-size:26px}}
+        @media(max-width:600px){.hero{padding:56px 0 48px}.hero h1{font-size:36px}.hero .sub{font-size:17px}.check{flex-direction:column;border-radius:20px}.check input[type=text]{padding:12px 14px}.chain,.aud,.price,.what,.footer-grid,.pro .cols{grid-template-columns:1fr}.pro{padding:44px 24px;border-radius:24px}section{padding:64px 0}.gate{flex-direction:column;align-items:flex-start}.lock{display:none}.final{padding:48px 20px}.kpis{grid-template-columns:1fr 1fr 1fr}.kpi b{font-size:18px}.panel h3{font-size:26px}}
         @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
     </style>
 </head>
@@ -274,109 +319,15 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
         <h2>Chi cerca, oggi, chiede.</h2>
         <p class="lead">Google resta il primo posto dove ti cercano. Ma non è più l'unico.</p>
         <div class="why">
-            <div class="card"><?= $tile('#94a3b8', $icons['google']) ?><h4>Prima</h4><p>Cercavi su Google, guardavi dieci risultati e sceglievi tu. Bastava esserci, possibilmente in alto.</p></div>
-            <div class="card"><?= $tile($C['geo'], $icons['chat']) ?><h4>Oggi</h4><p>Chiedi a ChatGPT o a Gemini «a chi mi rivolgo per…» e la risposta fa due o tre nomi. Se il tuo non c'è, per quel cliente non esisti.</p></div>
-            <div class="card fact"><?= $tile('#00a3d9', $icons['chart']) ?><h4>Sta già succedendo</h4><p>Su un sito che seguo, quasi una visita su dieci arriva da ChatGPT e simili. Senza che nessuno l'abbia cercato lì.</p><small>Google Analytics, ottobre 2026</small></div>
+            <div class="card"><?= $ico($icons['google']) ?><h4>Prima</h4><p>Cercavi su Google, guardavi dieci risultati e sceglievi tu. Bastava esserci, possibilmente in alto.</p></div>
+            <div class="card"><?= $ico($icons['chat']) ?><h4>Oggi</h4><p>Chiedi a ChatGPT o a Gemini «a chi mi rivolgo per…» e la risposta fa due o tre nomi. Se il tuo non c'è, per quel cliente non esisti.</p></div>
+            <div class="card fact"><?= $ico($icons['chart']) ?><h4>Sta già succedendo</h4><p>Su un sito che seguo, quasi una visita su dieci arriva da ChatGPT e simili. Senza che nessuno l'abbia cercato lì.</p><small>Google Analytics, ottobre 2026</small></div>
         </div>
     </div>
 </section>
 
-<!-- STRUMENTI IN TRE TEMPI -->
-<section id="strumenti" style="background:var(--soft)">
-    <div class="wrap">
-        <div class="eyebrow">Gli strumenti</div>
-        <h2>Prima sai dove sei. Poi fai. Poi vedi se funziona.</h2>
-        <p class="lead">Cinque strumenti che si passano i dati tra loro. Parti da quello che ti serve oggi.</p>
-        <div class="groups">
-            <?php foreach ($groups as [$gLabel, $keys]): ?>
-            <div class="group"><small><?= $gLabel ?></small><div class="tabs" role="tablist">
-                <?php foreach ($keys as $k): ?>
-                <button class="tab" role="tab" id="tab-<?= $k ?>" aria-controls="p-<?= $k ?>" aria-selected="<?= $k === 'geo' ? 'true' : 'false' ?>" data-t="<?= $k ?>"><?= $tile($C[$k], $icons[$k]) ?><?= $tools[$k][1] ?></button>
-                <?php endforeach; ?>
-            </div></div>
-            <?php endforeach; ?>
-        </div>
-
-        <div class="panel on" id="p-geo" role="tabpanel" aria-labelledby="tab-geo">
-            <div>
-                <span class="chip" style="background:#eef2ff;color:#4f46e5">AI GEO Audit</span>
-                <h3>Cosa rispondono le AI quando un cliente chiede di te.</h3>
-                <p class="when">Quando vuoi sapere se ChatGPT e Gemini fanno il tuo nome, o quello di altri.</p>
-                <ul><li>Le domande dei tuoi clienti fatte alle AI senza dire il tuo nome: quante volte ti consigliano e chi consigliano al posto tuo</li><li>I dubbi che le AI hanno su di te (partita IVA, recensioni, contatti) e i testi pronti per chiarirli sul sito</li><li>Il piano: cosa pubblicare e cosa correggere, in ordine, con il PDF da girare</li></ul>
-                <p class="cost">Controllo tecnico gratis. Audit completo: 1 credito a risposta, il totale lo vedi prima di avviarlo.</p>
-                <div class="acts"><a class="btn btn-blue" href="<?= url('/register') ?>">Provalo con <?= (int) $bonus ?> crediti</a><a class="more" href="<?= url('/docs/ai-reputation') ?>">Come funziona →</a></div>
-            </div>
-            <div class="mock" aria-hidden="true"><div class="bar"><i></i><i></i><i></i><small>AI GEO Audit · esempio</small></div><div class="in">
-                <div class="kpis"><div class="kpi"><small>Ti conoscono</small><b>81%</b></div><div class="kpi"><small>Ti consigliano</small><b style="color:#dc2626">6%</b></div><div class="kpi"><small>Usano il tuo sito</small><b style="color:#d97706">3</b></div></div>
-                <small style="color:var(--muted)">Al tuo posto consigliano</small>
-                <div class="bars"><div><span style="--w:82%;background:#6366f1"></span></div><div><span style="--w:61%;background:#a5b4fc"></span></div><div><span style="--w:44%;background:#c7d2fe"></span></div></div>
-                <span class="chip" style="background:#fef3c7;color:#92400e">da chiarire: partita IVA</span><span class="chip" style="background:#ccfbf1;color:#0f766e">articolo: torte senza glutine su ordinazione</span>
-            </div></div>
-        </div>
-
-        <div class="panel" id="p-audit" role="tabpanel" aria-labelledby="tab-audit">
-            <div>
-                <span class="chip" style="background:#d1fae5;color:#047857">AI Audit</span>
-                <h3>Il tuo sito come lo vede Google.</h3>
-                <p class="when">Quando non sai da dove iniziare, o il sito è fermo da anni.</p>
-                <ul><li>Tutte le pagine lette dal server, senza installare niente: titoli mancanti, link rotti, pagine nascoste, immagini senza descrizione</li><li>I problemi in italiano semplice, in ordine di importanza</li><li>Il piano d'azione scritto dall'AI: cosa sistemare prima, quanto è difficile, cosa cambia</li></ul>
-                <p class="cost">Scansione gratis, fino a 100 pagine. Piano d'azione: 10 crediti.</p>
-                <div class="acts"><a class="btn btn-blue" href="<?= url('/register') ?>">Provalo gratis</a><a class="more" href="<?= url('/docs/seo-audit') ?>">Come funziona →</a></div>
-            </div>
-            <div class="mock" aria-hidden="true"><div class="bar"><i></i><i></i><i></i><small>AI Audit · esempio</small></div><div class="in">
-                <div class="kpis"><div class="kpi"><small>Salute</small><b style="color:#059669">78</b></div><div class="kpi"><small>Da sistemare</small><b style="color:#dc2626">3</b></div><div class="kpi"><small>Pagine</small><b>214</b></div></div>
-                <small style="color:var(--muted)">Problemi per gravità</small>
-                <div class="bars"><div><span style="--w:22%;background:#ef4444"></span></div><div><span style="--w:48%;background:#f59e0b"></span></div><div><span style="--w:88%;background:#10b981"></span></div></div>
-            </div></div>
-        </div>
-
-        <div class="panel" id="p-kw" role="tabpanel" aria-labelledby="tab-kw">
-            <div>
-                <span class="chip" style="background:#ede9fe;color:#6d28d9">AI Keywords</span>
-                <h3>Descrivi l'attività. Ti ritrovi le pagine e gli articoli da fare.</h3>
-                <p class="when">Quando devi decidere di cosa parlare sul sito e non vuoi tirare a indovinare.</p>
-                <ul><li>Le ricerche vere della gente con i volumi di Google, raggruppate per argomento</li><li>La struttura del sito: quali pagine servono, con indirizzo e titolo</li><li>Il piano editoriale dei prossimi mesi, pronto per AI Writer</li></ul>
-                <p class="cost">Ricerca: 3 crediti. Struttura del sito: 10. Piano editoriale: 10.</p>
-                <div class="acts"><a class="btn btn-blue" href="<?= url('/register') ?>">Provalo con <?= (int) $bonus ?> crediti</a><a class="more" href="<?= url('/docs/keyword-research') ?>">Come funziona →</a></div>
-            </div>
-            <div class="mock" aria-hidden="true"><div class="bar"><i></i><i></i><i></i><small>Struttura del sito · esempio</small></div><div class="in">
-                <table><tr><th>Ricerca</th><th>Al mese</th><th>Pagina</th></tr><tr><td>torte senza glutine torino</td><td>1.300</td><td>/senza-glutine/</td></tr><tr><td>torta di compleanno a domicilio</td><td>880</td><td>/compleanni/</td></tr><tr><td>pasticceria vegana torino</td><td>590</td><td>/vegano/</td></tr></table>
-            </div></div>
-        </div>
-
-        <div class="panel" id="p-writer" role="tabpanel" aria-labelledby="tab-writer">
-            <div>
-                <span class="chip" style="background:#fef3c7;color:#b45309">AI Writer</span>
-                <h3>Dal titolo all'articolo pubblicato.</h3>
-                <p class="when">Quando hai il piano e non hai il tempo di scrivere.</p>
-                <ul><li>Guarda chi è primo su Google per quella ricerca e prepara la scaletta</li><li>Scrive l'articolo nella tua lingua, con la copertina e i link alle tue pagine</li><li>Lo manda su WordPress come bozza, anche da solo nei giorni che scegli. Scrive anche titolo e descrizione delle pagine che hai già</li></ul>
-                <p class="cost">Un articolo completo con copertina: circa 20 crediti. Titolo e descrizione di una pagina: 2.</p>
-                <div class="acts"><a class="btn btn-blue" href="<?= url('/register') ?>">Provalo con <?= (int) $bonus ?> crediti</a><a class="more" href="<?= url('/docs/ai-content') ?>">Come funziona →</a></div>
-            </div>
-            <div class="mock" aria-hidden="true"><div class="bar"><i></i><i></i><i></i><small>AI Writer · esempio</small></div><div class="in">
-                <div style="height:110px;border-radius:12px;background:linear-gradient(135deg,#fde68a,#f59e0b)"></div>
-                <b style="display:block;margin:12px 0 6px">Torte senza glutine: come ordinarle senza rischi</b>
-                <div class="bars"><div><span style="--w:95%;background:#e2e8f0"></span></div><div><span style="--w:80%;background:#e2e8f0"></span></div></div>
-                <span class="chip" style="background:#dcfce7;color:#15803d">1.800 parole</span><span class="chip" style="background:#e0f2fe;color:#0369a1">bozza su WordPress</span>
-            </div></div>
-        </div>
-
-        <div class="panel" id="p-rank" role="tabpanel" aria-labelledby="tab-rank">
-            <div>
-                <span class="chip" style="background:#e0f2fe;color:#0369a1">AI Rank</span>
-                <h3>Dove compari, cosa cambia, e perché.</h3>
-                <p class="when">Quando hai pubblicato e vuoi vedere se serve a qualcosa.</p>
-                <ul><li>Le posizioni su Google delle ricerche che ti interessano, giorno dopo giorno, in 20 paesi</li><li>I clic veri da Search Console e le ricerche a un passo dalla prima pagina</li><li>Il Punto della situazione: Analytics e Search Console letti dall'AI e spiegati in italiano</li></ul>
-                <p class="cost">Posizioni: 1 credito a keyword. Punto della situazione: 5 crediti.</p>
-                <div class="acts"><a class="btn btn-blue" href="<?= url('/register') ?>">Provalo con <?= (int) $bonus ?> crediti</a><a class="more" href="<?= url('/docs/seo-tracking') ?>">Come funziona →</a></div>
-            </div>
-            <div class="mock" aria-hidden="true"><div class="bar"><i></i><i></i><i></i><small>Punto della situazione · esempio</small></div><div class="in">
-                <svg viewBox="0 0 300 90" style="width:100%"><polyline fill="none" stroke="#0ea5e9" stroke-width="3" stroke-linecap="round" points="0,70 40,62 80,66 120,48 160,40 200,44 240,26 300,18"/></svg>
-                <p style="font-size:14px;color:var(--md);margin-top:8px"><b>Il punto:</b> le visite da Google crescono del 12%. Il merito è della pagina sulle torte senza glutine, salita dalla posizione 9 alla 3…</p>
-            </div></div>
-        </div>
-    </div>
-</section>
+<!-- STRUMENTI (tabs su /, slider su /landing-b) -->
+<?php include __DIR__ . '/includes/landing-tools.php'; ?>
 
 <!-- UNA SETTIMANA CON AINSTEIN -->
 <section>
@@ -421,10 +372,27 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
         <div class="eyebrow">Per chi è</div>
         <h2>Non serve essere esperti SEO.</h2>
         <div class="aud">
-            <div class="card"><?= $tile($C['writer'], $icons['blog']) ?><h4>Hai un blog</h4><p>Descrivi di cosa scrivi: AI Keywords ti dà gli articoli dei prossimi mesi con i volumi di Google, AI Writer li scrive. Anche da solo, nei giorni che scegli.</p></div>
-            <div class="card"><?= $tile($C['kw'], $icons['shop']) ?><h4>Piccolo e-commerce</h4><p>Le pagine di categoria con i nomi che la gente cerca davvero, titoli e descrizioni scritti dall'AI, e un controllo su cosa consigliano le AI quando un cliente chiede un prodotto come il tuo.</p></div>
-            <div class="card"><?= $tile($C['geo'], $icons['local']) ?><h4>Attività locale</h4><p>Quando un cliente chiede a ChatGPT «a chi mi rivolgo in zona», AI GEO Audit ti dice se fanno il tuo nome e cosa mettere sul sito per entrarci.</p></div>
-            <div class="card"><?= $tile($C['rank'], $icons['team']) ?><h4>Freelance e agenzie</h4><p>Un progetto per ogni cliente, condiviso con chi vuoi, con i report e i PDF da girare. I crediti li usi dove servono, cliente per cliente.</p></div>
+            <div class="card"><?= $ico($icons['doc']) ?><h4>Hai un blog</h4><p>Descrivi di cosa scrivi: AI Keywords ti dà gli articoli dei prossimi mesi con i volumi di Google, AI Writer li scrive. Anche da solo, nei giorni che scegli.</p></div>
+            <div class="card"><?= $ico($icons['bag']) ?><h4>Piccolo e-commerce</h4><p>Le pagine di categoria con i nomi che la gente cerca davvero, titoli e descrizioni scritti dall'AI, e un controllo su cosa consigliano le AI quando un cliente chiede un prodotto come il tuo.</p></div>
+            <div class="card"><?= $ico($icons['pin']) ?><h4>Attività locale</h4><p>Quando un cliente chiede a ChatGPT «a chi mi rivolgo in zona», AI GEO Audit ti dice se fanno il tuo nome e cosa mettere sul sito per entrarci.</p></div>
+            <div class="card"><?= $ico($icons['case']) ?><h4>Freelance e agenzie</h4><p>Un progetto per ogni cliente, condiviso con chi vuoi, con i report e i PDF da girare. I crediti li usi dove servono, cliente per cliente.</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- AGENZIE E PROFESSIONISTI -->
+<section style="padding-top:0">
+    <div class="wrap">
+        <div class="pro">
+            <div class="eyebrow">Agenzie e professionisti</div>
+            <h2>Un progetto per ogni cliente. Dentro, solo quello che serve.</h2>
+            <p class="lead">Tieni gli strumenti che usi già: Ainstein si aggiunge. Crei un progetto per sito e in ognuno accendi o spegni i cinque strumenti come vuoi. I crediti sono un conto solo: li spendi dove servono, cliente per cliente.</p>
+            <div class="cols">
+                <div class="col"><?= $ico($icons['team']) ?><h4>Condiviso con chi vuoi</h4><p>Il cliente in sola lettura, chi lavora con te può modificare.</p></div>
+                <div class="col"><?= $ico($icons['chart']) ?><h4>Niente da tenere acceso per forza</h4><p>Un GEO Audit per il ristorante, gli articoli per l'e-commerce, le posizioni per tutti.</p></div>
+                <div class="col"><?= $ico($icons['doc']) ?><h4>Cose da girare</h4><p>PDF del GEO Audit, piano d'azione del sito, Punto della situazione: in italiano, con i numeri veri.</p></div>
+            </div>
+            <div class="acts"><a class="btn" style="background:#fff;color:var(--dark)" href="<?= url('/register') ?>">Inizia con <?= (int) $bonus ?> crediti</a><a class="more" href="mailto:info@ainstein.it?subject=<?= rawurlencode('Ainstein per la mia agenzia') ?>">Ne usi di più? Scrivimi per un piano →</a></div>
         </div>
     </div>
 </section>
@@ -495,6 +463,23 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
     }
     document.querySelectorAll('.tab').forEach(function (t) { t.addEventListener('click', function () { showTab(t.dataset.t); }); });
     document.querySelectorAll('[data-tab]').forEach(function (a) { a.addEventListener('click', function () { showTab(a.dataset.tab); }); });
+
+    // Variante slider: "+" apre la card in largo, frecce scorrono di una card
+    var track = document.getElementById('toolTrack');
+    if (track) {
+        track.querySelectorAll('.plus').forEach(function (b) {
+            b.addEventListener('click', function () {
+                var card = b.closest('.tcard'), open = !card.classList.contains('open');
+                track.querySelectorAll('.tcard.open').forEach(function (c) { c.classList.remove('open'); c.querySelector('.plus').setAttribute('aria-expanded', 'false'); });
+                card.classList.toggle('open', open);
+                b.setAttribute('aria-expanded', open ? 'true' : 'false');
+                if (open) setTimeout(function () { card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' }); }, 80);
+            });
+        });
+        document.querySelectorAll('.arr').forEach(function (a) {
+            a.addEventListener('click', function () { track.scrollBy({ left: 400 * Number(a.dataset.dir), behavior: 'smooth' }); });
+        });
+    }
 
     // Controllo AI gratuito
     var csrf = <?= json_encode($csrf) ?>, endpoint = <?= json_encode(url('/check-ai')) ?>, registerUrl = <?= json_encode(url('/register')) ?>;
