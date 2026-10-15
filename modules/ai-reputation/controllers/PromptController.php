@@ -22,10 +22,34 @@ class PromptController
         $this->prompt = new Prompt();
     }
 
-    /** La lista prompt vive nella dashboard: redirect */
-    public function index(int $id): void
+    /** GET /ai-reputation/project/{id}/prompts - scheda Domande: tipo di audit, generazione, lista */
+    public function index(int $id): string
     {
-        Router::redirect("/ai-reputation/project/{$id}#prompts");
+        $user = Auth::user();
+        $project = $this->project->findAccessible($id, $user['id']);
+        if (!$project) {
+            $_SESSION['_flash']['error'] = 'Progetto non trovato';
+            Router::redirect('/ai-reputation');
+            exit;
+        }
+
+        $prompts = $this->prompt->allByProject($id);
+        $auditType = (string) ($project['audit_type'] ?? 'reputation');
+        $factCounts = (new \Modules\AiReputation\Models\ProfileFact())->counts($id);
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+
+        return \Core\View::render('ai-reputation::prompts/index', [
+            'title' => $project['name'] . ' - Domande',
+            'user' => $user,
+            'modules' => \Core\ModuleLoader::getUserModules($user['id']),
+            'project' => $project,
+            'prompts' => $prompts,
+            'promptsActive' => count(array_filter($prompts, fn($p) => (int) $p['is_active'] === 1)),
+            'clusters' => Prompt::CLUSTERS,
+            'auditType' => $auditType,
+            'runEstimate' => \Modules\AiReputation\Models\Run::estimate($project, $this->prompt->forAudit($id, $auditType), $creditUserId),
+            'profileConfirmed' => ($factCounts['confirmed'] + $factCounts['corrected']) > 0,
+        ]);
     }
 
     public function store(int $id): void
@@ -37,14 +61,14 @@ class PromptController
 
         if (mb_strlen($text) < 5) {
             $_SESSION['_flash']['error'] = 'Scrivi una domanda completa';
-            Router::redirect("/ai-reputation/project/{$id}#prompts");
+            Router::redirect("/ai-reputation/project/{$id}/prompts");
             return;
         }
 
         $set = $_POST['audit_set'] ?? (($project['audit_type'] ?? 'reputation') === 'reputation' ? 'reputation' : 'purchase');
         $this->prompt->create($id, $text, $cluster, 'it', 'manual', null, $set === 'purchase' ? 'purchase' : 'reputation');
         $_SESSION['_flash']['success'] = 'Domanda aggiunta';
-        Router::redirect("/ai-reputation/project/{$id}#prompts");
+        Router::redirect("/ai-reputation/project/{$id}/prompts");
     }
 
     /**
@@ -107,7 +131,7 @@ class PromptController
                 exit;
             }
             $_SESSION['_flash']['error'] = 'Tipo di audit non valido';
-            Router::redirect("/ai-reputation/project/{$id}#prompts");
+            Router::redirect("/ai-reputation/project/{$id}/prompts");
             return;
         }
         $this->project->update($id, ['audit_type' => $type]);
@@ -123,7 +147,7 @@ class PromptController
             exit;
         }
         $_SESSION['_flash']['success'] = 'Audit: ' . Prompt::AUDIT_TYPES[$type];
-        Router::redirect("/ai-reputation/project/{$id}#prompts");
+        Router::redirect("/ai-reputation/project/{$id}/prompts");
     }
 
     public function seed(int $id): void
@@ -133,14 +157,14 @@ class PromptController
         $_SESSION['_flash']['success'] = $added > 0
             ? "Aggiunte {$added} domande base"
             : 'Le domande base erano già presenti';
-        Router::redirect("/ai-reputation/project/{$id}#prompts");
+        Router::redirect("/ai-reputation/project/{$id}/prompts");
     }
 
     public function toggle(int $id, int $promptId): void
     {
         $this->requireEditable($id);
         $this->prompt->toggle($promptId, $id);
-        Router::redirect("/ai-reputation/project/{$id}#prompts");
+        Router::redirect("/ai-reputation/project/{$id}/prompts");
     }
 
     public function destroy(int $id, int $promptId): void
@@ -155,7 +179,7 @@ class PromptController
             $this->prompt->delete($promptId, $id);
             $_SESSION['_flash']['success'] = 'Domanda eliminata';
         }
-        Router::redirect("/ai-reputation/project/{$id}#prompts");
+        Router::redirect("/ai-reputation/project/{$id}/prompts");
     }
 
     /**

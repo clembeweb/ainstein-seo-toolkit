@@ -44,14 +44,14 @@ $canEdit = ($project['access_role'] ?? 'owner') !== 'viewer';
         </div>
 
         <div class="p-5 space-y-4">
-            <h2 class="text-base font-semibold text-slate-900 dark:text-white">Engine da interrogare</h2>
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white">Quali AI interrogare</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <?php foreach ($engineLabels as $engine => $label): ?>
-                <?php $available = in_array($engine, $availableEngines, true); ?>
+                <?php $available = in_array($engine, $availableEngines, true); if (!$available && !\Core\Auth::isAdmin()) continue; ?>
                 <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-700 <?= $available ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50' : 'opacity-50' ?>">
                     <input type="checkbox" name="engines[]" value="<?= $engine ?>" <?= in_array($engine, $project['engines'], true) ? 'checked' : '' ?> <?= $available ? '' : 'disabled' ?> class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
                     <span class="text-sm text-slate-900 dark:text-white"><?= e($label) ?></span>
-                    <?php if (!$available): ?><span class="ml-auto text-xs text-slate-400">non abilitato</span><?php endif; ?>
+                    <?php if (!$available): ?><span class="ml-auto text-xs text-slate-400" title="Visibile solo agli admin: spento in Admin > Moduli">non abilitato</span><?php endif; ?>
                 </label>
                 <?php endforeach; ?>
             </div>

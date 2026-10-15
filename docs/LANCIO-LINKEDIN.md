@@ -2,7 +2,13 @@
 
 > File di stato del lancio. Aggiornato: 2026-10-13 notte.
 >
-> **PASSAGGIO DI CONSEGNE 2026-10-14 pomeriggio (RIPARTIRE DA QUI).** Fatto oggi, tutto online:
+> **PASSAGGIO DI CONSEGNE 2026-10-15 (RIPARTIRE DA QUI).** Fatto il check sezioni su **AI GEO Audit** (ultimo dei 5):
+> scheda "Domande" a sé, menu laterale = schede, "run"→"audit" e "engine"→"AI" in tutti i testi, avvisi sulle chiavi API
+> solo per admin (dettaglio in `modules/ai-reputation/docs/TASKS.md`). Verificato in locale, **da mettere online**
+> (`git push` + pull in prod). Poi restano, nell'ordine: 2) verifica a schermo in prod (Chrome di Clemente loggato) di un
+> progetto Meta tag di AI Writer e delle pagine cambiate il 14 e il 15; 3) post LinkedIn (chiedere a Clemente la data).
+>
+> **PASSAGGIO DI CONSEGNE 2026-10-14 pomeriggio (precedente).** Fatto oggi, tutto online:
 > - Punto della situazione su Stabia rifatto con GA4+GSC veri (report id 2): regola numeri piccoli OK, "Parti da qui"
 >   riconosce anche le pagine citate per nome.
 > - **Check sezioni e menu dei tool (richiesta Clemente: stesso check su TUTTI i tool):** fatti AI Rank (`2de5a22`:

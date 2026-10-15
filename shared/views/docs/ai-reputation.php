@@ -43,7 +43,7 @@
                 ['Crea il progetto e di\' chi stai monitorando', 'Dal progetto globale attiva l\'AI GEO Audit. Nella Overview controlla il nome (come lo cercherebbe un cliente), la città e se è un\'azienda o una persona: sono i dati con cui interroghiamo le AI.'],
                 ['Genera e conferma il profilo', 'In "Profilo" clicca "Genera il profilo": l\'AI raccoglie i fatti su di te dal sito e dal web e li propone riga per riga. Confermali, correggili o rifiutali: sono la verità con cui vengono giudicate le risposte delle AI.'],
                 ['Scegli l\'audit e genera le domande', 'Acquisto: domande di chi cerca il tuo servizio senza conoscerti ("tour privato a Capri da Castellammare"). Reputazione: domande su di te ("è affidabile?"). Oppure entrambi. "Genera domande" le scrive dal profilo; puoi aggiungerne, disattivarne, usarne solo alcune per una prova.'],
-                ['Avvia il run', 'Vedi prima quante risposte verranno raccolte e quanti crediti costa. Ogni domanda viene posta a ogni AI configurata (ChatGPT e Gemini); ogni risposta viene letta e giudicata. Puoi seguire l\'avanzamento in diretta.'],
+                ['Avvia l\'audit','Vedi prima quante risposte verranno raccolte e quanti crediti costa. Ogni domanda viene posta a ogni AI configurata (ChatGPT e Gemini); ogni risposta viene letta e giudicata. Puoi seguire l\'avanzamento in diretta.'],
                 ['Leggi il report e il piano', 'In cima: quanto ti citano, il rischio reputazione, chi citano al posto tuo. Poi gli interventi: i dubbi delle AI con la causa trovata sul tuo sito, gli articoli da pubblicare, le fonti negative. Per ogni intervento "Genera scheda" scrive i testi pronti; "Esporta PDF" dà il piano al cliente.'],
             ];
             foreach ($steps as $i => [$t, $d]): ?>
@@ -105,7 +105,7 @@
         $rows = [
             ['Controllo tecnico del sito', 0, 'emerald'],
             ['Generazione del profilo e delle domande', (float) \Core\Credits::getCost('ai_analysis_medium', null, 1), 'blue'],
-            ['Run: per ogni risposta raccolta e analizzata (domanda × AI)', (float) \Core\Credits::getCost('collect_response', 'ai-reputation', 1), 'blue'],
+            ['Audit: per ogni risposta raccolta e analizzata (domanda × AI)', (float) \Core\Credits::getCost('collect_response', 'ai-reputation', 1), 'blue'],
             ['Rianalizza: per ogni risposta rigiudicata', (float) \Core\Credits::getCost('reanalyze_response', 'ai-reputation', 0.5), 'blue'],
             ['Scheda operativa di un intervento', (float) \Core\Credits::getCost('action_brief', 'ai-reputation', 1), 'purple'],
             ['Report, PDF, Controllo tecnico', 0, 'emerald'],
@@ -130,7 +130,7 @@
             </table>
         </div>
         <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">
-            Esempio: 30 domande d'acquisto × 2 AI = 60 risposte = <?= $fmt(60 * (float) \Core\Credits::getCost('collect_response', 'ai-reputation', 1)) ?> crediti. Prima di "Avvia run" vedi sempre risposte e crediti. Per una prova piccola seleziona alcune domande e usa "Usa solo queste".
+            Esempio: 30 domande d'acquisto × 2 AI = 60 risposte = <?= $fmt(60 * (float) \Core\Credits::getCost('collect_response', 'ai-reputation', 1)) ?> crediti. Prima di "Avvia l'audit" vedi sempre risposte e crediti. Per una prova piccola seleziona alcune domande e usa "Usa solo queste".
         </p>
     </section>
 
@@ -145,10 +145,10 @@
         <div class="space-y-4">
             <?php
             $tips = [
-                ['blue', 'Parti dal Controllo tecnico', 'È gratuito e dura pochi secondi: se un crawler è bloccato o mancano P.IVA e indirizzo, lo sai prima di spendere crediti nel run.'],
+                ['blue', 'Parti dal Controllo tecnico', 'È gratuito e dura pochi secondi: se un crawler è bloccato o mancano P.IVA e indirizzo, lo sai prima di spendere crediti nell\'audit.'],
                 ['blue', 'Conferma il profilo con cura', 'Le righe confermate sono la verità con cui giudichiamo le AI: una riga sbagliata produce verdetti sbagliati. "Conferma tutte" va bene solo dopo averle lette.'],
                 ['blue', 'Per un\'azienda inizia con l\'audit d\'acquisto', 'Dice se, quando un cliente cerca il tuo servizio, le AI fanno il tuo nome o quello dei concorrenti. La reputazione aggiungila dopo, o solo se hai un passato da gestire.'],
-                ['emerald', 'Dopo le correzioni, rilancia', 'Pubblicati i testi della scheda, un nuovo run sulle stesse domande mostra se i dubbi sono spariti. Tieni attive solo le domande coinvolte per spendere meno.'],
+                ['emerald', 'Dopo le correzioni, rilancia', 'Pubblicati i testi della scheda, un nuovo audit sulle stesse domande mostra se i dubbi sono spariti. Tieni attive solo le domande coinvolte per spendere meno.'],
             ];
             foreach ($tips as [$c, $t, $d]): ?>
             <div class="flex items-start gap-4 p-5 rounded-xl bg-<?= $c ?>-50 dark:bg-<?= $c ?>-900/20 border border-<?= $c ?>-200 dark:border-<?= $c ?>-800/50">

@@ -1,9 +1,20 @@
 # TASKS — AI Reputation Radar
 
 > Stato del lavoro. Aggiornare a ogni sessione: fatto, in corso, prossimo passo.
-> Ultimo aggiornamento: 2026-10-13 pomeriggio (GEO Audit: dubbi delle AI, prezzo unico, judge Sonnet)
+> Ultimo aggiornamento: 2026-10-15 (check sezioni e menu, come per gli altri 4 tool)
 
 ## Dove siamo
+**2026-10-15 — Check sezioni e menu (stesso check fatto su AI Rank, AI Keywords, AI Audit, AI Writer).** Verdetto: il GEO
+Audit era già il tool meglio strutturato (4 schede con un ruolo chiaro, niente tipi di progetto, costi già a posto).
+Sistemato: 1) **scheda "Domande" a sé** (`/project/{id}/prompts`, `views/prompts/index.php`, store Alpine condiviso in
+`partials/audit-store.php`): tipo di audit, generazione, lista e azioni di massa stanno lì; l'Overview tiene guida,
+riquadro soggetto, KPI e Audit; 2) **menu laterale = schede** (Overview, Profilo, Domande, Controllo tecnico,
+Impostazioni); 3) **testi in italiano**: "run" → "audit" ovunque (bottone "Avvia l'audit", tabella, report "n. 4",
+messaggi del controller, docs, tour), "engine" → "AI" ("Quali AI interrogare"); 4) **avvisi da admin nascosti ai
+clienti**: "senza chiave: Perplexity" nel KPI, "AI senza chiave, saltate" nel log del run e le AI "non abilitate" in
+Impostazioni si vedono solo da admin. Verificato in locale (Overview, Domande, Profilo, report run 4, Impostazioni).
+Slug, route e tabelle invariati (`ar_runs` resta `runs` nel codice: è cambiata solo la parola visibile).
+
 **2026-10-13 pomeriggio — GEO Audit rifatto dopo la prova su Stabia (ADR-015), online.** Judge con "dubbi delle AI"
 (regola 6b) separati dalle fonti negative; nuovo intervento `clarify` in cima al piano con scheda "testi pronti +
 JSON-LD + checklist"; aziende: contenuti sul sito proprio; prezzo unico 1 credito/risposta (judge senza addebito a

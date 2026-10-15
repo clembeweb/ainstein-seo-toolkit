@@ -86,11 +86,11 @@ $arCost = rtrim(rtrim(number_format((float) \Core\Credits::getCost('collect_resp
                 </div>
                 <div class="p-4 text-center">
                     <p class="text-xl font-bold text-indigo-600 dark:text-indigo-400"><?= (int) $project['runs_completed'] ?></p>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Run</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Audit</p>
                 </div>
                 <div class="p-4 text-center">
                     <p class="text-xl font-bold text-slate-900 dark:text-white"><?= $project['last_run_at'] ? date('d/m', strtotime($project['last_run_at'])) : '–' ?></p>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Ultimo run</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Ultimo audit</p>
                 </div>
             </div>
         </div>

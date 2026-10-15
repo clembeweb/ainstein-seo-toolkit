@@ -71,12 +71,12 @@ class RunController
         $engines = array_values(array_filter($project['engines'], fn($e) => EngineCollectorService::isConfigured($e)));
         $missing = array_diff($project['engines'], $engines);
         if (empty($engines)) {
-            echo json_encode(['success' => false, 'error' => 'Nessun engine configurato: mancano le API key in Impostazioni globali']);
+            echo json_encode(['success' => false, 'error' => 'Nessuna AI disponibile: mancano le chiavi API (le inserisce l’amministratore)']);
             exit;
         }
 
         if ($this->run->getActiveForProject($projectId)) {
-            echo json_encode(['success' => false, 'error' => 'C\'è già un run in corso per questo progetto']);
+            echo json_encode(['success' => false, 'error' => 'C\'è già un audit in corso per questo progetto']);
             exit;
         }
 
@@ -97,7 +97,7 @@ class RunController
             Database::fetch("SELECT id FROM ar_projects WHERE id = ? FOR UPDATE", [$projectId]);
             if ($this->run->getActiveForProject($projectId)) {
                 Database::rollback();
-                echo json_encode(['success' => false, 'error' => 'C\'è già un run in corso per questo progetto']);
+                echo json_encode(['success' => false, 'error' => 'C\'è già un audit in corso per questo progetto']);
                 exit;
             }
             $runId = $this->run->create($projectId, $user['id'], $prompts, $engines, $repeats, $auditType);
@@ -106,7 +106,7 @@ class RunController
             if (Database::inTransaction()) {
                 Database::rollback();
             }
-            echo json_encode(['success' => false, 'error' => 'Impossibile creare il run: ' . $e->getMessage()]);
+            echo json_encode(['success' => false, 'error' => 'Impossibile avviare l\'audit: ' . $e->getMessage()]);
             exit;
         }
 
@@ -131,11 +131,11 @@ class RunController
         $project = $this->project->findAccessible($projectId, $user['id']);
         $run = $project ? $this->run->find($runId, $projectId) : null;
         if (!$run || ($project['access_role'] ?? 'owner') === 'viewer') {
-            echo json_encode(['success' => false, 'error' => 'Run non trovato']);
+            echo json_encode(['success' => false, 'error' => 'Audit non trovato']);
             exit;
         }
         if (in_array($run['status'], [Run::STATUS_PENDING, Run::STATUS_RUNNING], true)) {
-            echo json_encode(['success' => false, 'error' => 'Il run è ancora in corso']);
+            echo json_encode(['success' => false, 'error' => 'L\'audit è ancora in corso']);
             exit;
         }
         // Rifare i giudizi costa (una chiamata AI per risposta): addebito unico all'avvio, al proprietario
@@ -178,7 +178,7 @@ class RunController
         $run = $runId ? $this->run->find($runId, $projectId) : null;
         if (!$run) {
             header('HTTP/1.1 404 Not Found');
-            exit('Run non trovato');
+            exit('Audit non trovato');
         }
         $isViewer = ($project['access_role'] ?? 'owner') === 'viewer';
 
@@ -232,7 +232,7 @@ class RunController
             } catch (\Throwable $e2) {
                 // niente da fare
             }
-            $sendEvent('failed', ['run_id' => $runId, 'message' => 'Il run si è interrotto per un errore interno. Dettagli nel log del server.']);
+            $sendEvent('failed', ['run_id' => $runId, 'message' => 'L\'audit si è interrotto per un errore interno. Dettagli nel log del server.']);
         }
         exit;
     }
@@ -428,7 +428,7 @@ class RunController
      */
     private function follow(int $runId, int $projectId, callable $sendEvent): void
     {
-        $sendEvent('attached', ['run_id' => $runId, 'message' => 'Mostro l\'avanzamento del run']);
+        $sendEvent('attached', ['run_id' => $runId, 'message' => 'Mostro l\'avanzamento dell\'audit']);
         $last = '';
         $ticks = 0;
         while (true) {
@@ -461,7 +461,7 @@ class RunController
             $finished = in_array($r['status'], [Run::STATUS_COMPLETED, Run::STATUS_FAILED, Run::STATUS_CANCELLED], true) && $r['locked_by'] === null;
             if ($finished) {
                 if ($r['status'] === Run::STATUS_FAILED) {
-                    $sendEvent('failed', ['run_id' => $runId, 'message' => (string) ($r['error_message'] ?: 'Run fallito')]);
+                    $sendEvent('failed', ['run_id' => $runId, 'message' => (string) ($r['error_message'] ?: 'Audit fallito')]);
                     return;
                 }
                 $sendEvent($r['status'] === Run::STATUS_CANCELLED ? 'cancelled' : 'completed', [
@@ -501,7 +501,7 @@ class RunController
         $runId = (int) ($_GET['run_id'] ?? 0);
         $run = ($project && $runId) ? $this->run->find($runId, $projectId) : null;
         if (!$run) {
-            echo json_encode(['success' => false, 'error' => 'Run non trovato']);
+            echo json_encode(['success' => false, 'error' => 'Audit non trovato']);
             exit;
         }
         echo json_encode(['success' => true, 'run' => [
@@ -528,7 +528,7 @@ class RunController
         $runId = (int) ($_POST['run_id'] ?? 0);
         $run = ($project && $runId) ? $this->run->find($runId, $projectId) : null;
         if (!$run || ($project['access_role'] ?? 'owner') === 'viewer') {
-            echo json_encode(['success' => false, 'error' => 'Run non trovato']);
+            echo json_encode(['success' => false, 'error' => 'Audit non trovato']);
             exit;
         }
         echo json_encode(['success' => $this->run->cancel($runId)]);
@@ -549,7 +549,7 @@ class RunController
         }
         $run = $this->run->find($runId, $projectId);
         if (!$run) {
-            $_SESSION['_flash']['error'] = 'Run non trovato';
+            $_SESSION['_flash']['error'] = 'Audit non trovato';
             Router::redirect("/ai-reputation/project/{$projectId}");
             exit;
         }
@@ -575,7 +575,7 @@ class RunController
         $homonyms = Database::fetchAll("SELECT * FROM ar_profile_facts WHERE project_id = ? AND category = 'homonym' AND status = 'proposed' ORDER BY id", [$projectId]);
 
         return View::render('ai-reputation::runs/show', [
-            'title' => "Report run #{$runId} - " . $project['name'],
+            'title' => "Report audit n. {$runId} - " . $project['name'],
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
@@ -655,7 +655,7 @@ class RunController
         $project = $this->project->findAccessible($projectId, $user['id']);
         $run = $project ? $this->run->find($runId, $projectId) : null;
         if (!$project || !$run) {
-            $_SESSION['_flash']['error'] = 'Run non trovato';
+            $_SESSION['_flash']['error'] = 'Audit non trovato';
             Router::redirect('/ai-reputation');
             exit;
         }

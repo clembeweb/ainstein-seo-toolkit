@@ -74,7 +74,7 @@ $hasFacts = $counts['total'] > 0;
                     <p class="text-xs text-slate-400 mt-0.5">
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full font-medium <?= $sc ?>"><?= $sl ?></span>
                         <?php if (!empty($f['source_url'])): ?> · <a href="<?= e($f['source_url']) ?>" target="_blank" rel="noopener" class="text-indigo-600 dark:text-indigo-400 hover:underline"><?= e(\Modules\AiReputation\Services\EngineCollectorService::domainOf($f['source_url']) ?? 'fonte') ?></a><?php endif; ?>
-                        <?php if ($f['origin'] === 'run'): ?> · emersa da un run<?php endif; ?>
+                        <?php if ($f['origin'] === 'run'): ?> · emersa da un audit<?php endif; ?>
                     </p>
                     <form x-show="editing" x-cloak method="POST" action="<?= url("{$basePath}/profile/facts/{$f['id']}/correct") ?>" class="mt-2 flex gap-2">
                         <input type="hidden" name="_csrf_token" value="<?= $csrf ?>">

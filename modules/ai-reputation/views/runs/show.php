@@ -51,7 +51,7 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
     <div class="flex flex-wrap items-start justify-between gap-4">
         <div>
             <a href="<?= url($basePath) ?>" class="text-sm text-slate-500 hover:text-indigo-600 dark:text-slate-400">← Overview</a>
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-white mt-1"><?= ['purchase' => 'Audit d’acquisto', 'reputation' => 'Audit reputazione', 'both' => 'Audit acquisto + reputazione'][$run['audit_type'] ?? 'reputation'] ?? 'Report' ?> · run #<?= (int) $run['id'] ?> · <?= date('d/m/Y H:i', strtotime($run['created_at'])) ?></h2>
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white mt-1"><?= ['purchase' => 'Audit d’acquisto', 'reputation' => 'Audit reputazione', 'both' => 'Audit acquisto + reputazione'][$run['audit_type'] ?? 'reputation'] ?? 'Report' ?> · n. <?= (int) $run['id'] ?> · <?= date('d/m/Y H:i', strtotime($run['created_at'])) ?></h2>
             <p class="text-sm text-slate-500 dark:text-slate-400">
                 <?= (int) $run['prompts_total'] ?> domande · <?= count($engines) ?> AI · <?= (int) $run['responses_done'] ?> risposte<?= (int) $run['responses_error'] > 0 ? ' (' . (int) $run['responses_error'] . ' non arrivate)' : '' ?> · <?= $statusLabel ?>
                 <?php if ($hasAnalyses): ?> · <?= (int) $run['analyses_done'] ?> analizzate<?php endif; ?>
@@ -151,7 +151,7 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">AI share of voice</p>
             <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= $hasAnalyses ? $metrics['share'] . '%' : '–' ?></p>
-            <p class="text-xs text-slate-400"><?= $hasAnalyses ? "citato in {$metrics['mentioned_n']} risposte neutre su {$metrics['judged']} (pesate per engine)" : 'dopo l\'analisi' ?></p>
+            <p class="text-xs text-slate-400"><?= $hasAnalyses ? "citato in {$metrics['mentioned_n']} risposte neutre su {$metrics['judged']} (pesate per AI)" : 'dopo l\'analisi' ?></p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Rischio reputazione</p>
@@ -172,11 +172,11 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
             <p class="text-xs text-slate-400"><?php if ($hasAnalyses && $metrics['negative_by_engine']): ?><?= e(implode(' · ', array_map(fn($k, $v) => ($engineLabels[$k] ?? $k) . ' ' . $v, array_keys($metrics['negative_by_engine']), $metrics['negative_by_engine']))) ?><?php elseif ($hasAnalyses): ?>nessuna<?php else: ?>dopo l'analisi<?php endif; ?></p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
-            <p class="text-sm text-slate-500 dark:text-slate-400">Divergenza tra engine</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Le AI non concordano</p>
             <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= $hasAnalyses ? count($metrics['divergent']) : '–' ?> <?php if ($hasAnalyses): ?><span class="text-sm font-normal text-slate-400">domande</span><?php endif; ?></p>
             <p class="text-xs text-slate-400"><?= $hasAnalyses ? ($metrics['divergent'] ? 'le AI non sono d\'accordo' : 'le AI concordano') : 'dopo l\'analisi' ?></p>
             <?php if (!empty($metrics['stability'])): ?>
-            <p class="text-xs text-slate-400" title="Domande poste più volte allo stesso engine: in quante l'esito è stato sempre lo stesso">stabilità ripetizioni: <?= (int) $metrics['stability']['stable'] ?> su <?= (int) $metrics['stability']['cells'] ?></p>
+            <p class="text-xs text-slate-400" title="Domande poste più volte alla stessa AI: in quante l'esito è stato sempre lo stesso">stabilità ripetizioni: <?= (int) $metrics['stability']['stable'] ?> su <?= (int) $metrics['stability']['cells'] ?></p>
             <?php endif; ?>
         </div>
     </div>
@@ -474,7 +474,7 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
                                     </li>
                                 </template>
                             </ul>
-                            <p x-show="!current.citations.length" class="text-slate-400">Nessuna fonte citata: l'engine ha risposto senza cercare.</p>
+                            <p x-show="!current.citations.length" class="text-slate-400">Nessuna fonte citata: l'AI ha risposto senza cercare.</p>
                         </div>
                         <div x-show="current.queries.length">
                             <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Come ha cercato</p>
@@ -542,7 +542,7 @@ function arReport() {
                 this.es.addEventListener('failed', e => { const d = JSON.parse(e.data); this.message = d.message; this.analyzing = false; this.es.close(); });
                 this.es.addEventListener('phase', e => { const d = JSON.parse(e.data); this.total = d.total; this.done = 0; this.percent = 0; });
                 this.es.addEventListener('analysis_completed', e => { const d = JSON.parse(e.data); this.done++; this.percent = this.total ? Math.round(this.done / this.total * 100) : 0; this.log.unshift({ id: d.response_id, text: (this.labels[d.engine] || d.engine) + ': ' + d.verdict + ' · ' + (d.summary || '') }); });
-                this.es.addEventListener('analysis_error', e => { const d = JSON.parse(e.data); this.done++; this.log.unshift({ id: 'e' + d.response_id, text: (this.labels[d.engine] || d.engine) + ': errore judge · ' + d.error }); });
+                this.es.addEventListener('analysis_error', e => { const d = JSON.parse(e.data); this.done++; this.log.unshift({ id: 'e' + d.response_id, text: (this.labels[d.engine] || d.engine) + ': errore di giudizio · ' + d.error }); });
                 this.es.addEventListener('completed', () => { this.message = 'Analisi completata, ricarico il report…'; this.percent = 100; this.es.close(); setTimeout(() => location.reload(), 800); });
                 this.es.addEventListener('cancelled', () => { this.message = 'Annullato'; this.analyzing = false; this.es.close(); });
                 this.es.onerror = () => { this.message = 'Connessione persa: ricarica la pagina tra qualche secondo.'; this.analyzing = false; if (this.es) this.es.close(); };

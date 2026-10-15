@@ -23,7 +23,7 @@ $f = $check['facts'] ?? [];
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 flex flex-wrap items-start justify-between gap-4">
         <div class="max-w-3xl">
             <h2 class="text-base font-semibold text-slate-900 dark:text-white">Le AI riescono a leggere il sito e a capire chi è <?= e($project['subject_name']) ?>?</h2>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Entriamo nel sito con i crawler veri di ChatGPT, Claude, Perplexity e Bing (non solo leggendo il robots.txt), controlliamo i dati strutturati e i dati che <?= $project['subject_type'] === 'person' ? 'servono a riconoscerti: profili, attività' : 'i clienti cercano: partita IVA, indirizzo, telefono, recensioni' ?>. Il controllo è gratuito e gira anche a ogni run, così il piano dice la causa di ogni dubbio delle AI.</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Entriamo nel sito con i crawler veri di ChatGPT, Claude, Perplexity e Bing (non solo leggendo il robots.txt), controlliamo i dati strutturati e i dati che <?= $project['subject_type'] === 'person' ? 'servono a riconoscerti: profili, attività' : 'i clienti cercano: partita IVA, indirizzo, telefono, recensioni' ?>. Il controllo è gratuito e gira anche a ogni audit, così il piano dice la causa di ogni dubbio delle AI.</p>
             <?php if ($check): ?>
             <p class="text-xs text-slate-400 mt-2">Ultimo controllo: <?= date('d/m/Y H:i', strtotime((string) $check['_created_at'])) ?> su <?= e($check['home']['final_url'] ?? $check['url'] ?? '') ?><?= isset($check['seconds']) ? ' · ' . str_replace('.', ',', (string) $check['seconds']) . ' s' : '' ?></p>
             <?php endif; ?>

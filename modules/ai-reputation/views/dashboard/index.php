@@ -10,25 +10,25 @@ $guideSteps = [
     [
         'done' => $profileConfirmed,
         'title' => 'Crea e conferma il profilo',
-        'text' => 'Vai su Profilo e clicca "Genera il profilo": l\'AI cerca chi è ' . $project['subject_name'] . ' e propone delle righe. Leggile e confermale (✅ vero · ✏️ correggi · ❌ falso), una per una o con "Conferma tutte". È la "verità" con cui verranno giudicate le risposte delle AI.',
+        'text' => 'In Profilo clicca "Genera il profilo": l\'AI propone delle righe su ' . $project['subject_name'] . ', tu le confermi o le correggi. È la verità con cui giudichiamo le risposte delle AI.',
         'link' => $basePath . '/profile', 'cta' => 'Apri il profilo',
     ],
     [
         'done' => $promptsActive > 0,
         'title' => 'Prepara le domande',
-        'text' => 'Qui sotto, in "Domande monitorate", scegli che audit vuoi fare: Acquisto (quando un cliente cerca il servizio, le AI citano te o i concorrenti?), Reputazione (cosa dicono di te) o Entrambi. Poi "Genera domande": l’AI le scrive dal profilo e dal sito. Puoi anche aggiungerle a mano.',
-        'link' => $basePath . '#prompts', 'cta' => 'Vai alle domande',
+        'text' => 'In Domande scegli l\'audit: Acquisto (le AI citano te o i concorrenti?), Reputazione (cosa dicono di te) o Entrambi. Poi "Genera domande", o scrivile a mano.',
+        'link' => $basePath . '/prompts', 'cta' => 'Vai alle domande',
     ],
     [
         'done' => $runsCompleted > 0,
-        'title' => 'Avvia il run',
-        'text' => 'Clicca "Avvia run": ogni domanda viene posta a ogni engine attivo (scelti in Impostazioni), poi le risposte vengono giudicate. Può richiedere diversi minuti: lascia la pagina aperta e segui l\'avanzamento.',
+        'title' => 'Avvia l\'audit',
+        'text' => 'Qui sotto, "Avvia l\'audit": ogni domanda viene posta a ogni AI scelta in Impostazioni, poi le risposte vengono giudicate. Dura qualche minuto: lascia la pagina aperta.',
         'link' => null, 'cta' => null,
     ],
     [
         'done' => false,
         'title' => 'Leggi il report',
-        'text' => 'Apri il report del run: in cima il livello di rischio e gli interventi suggeriti, sotto le schede con le risposte delle AI e le fonti citate.',
+        'text' => 'In cima il rischio e gli interventi suggeriti, sotto le risposte delle AI con le fonti citate.',
         'link' => $lastCompletedRun ? $basePath . '/runs/' . $lastCompletedRun['id'] : null,
         'cta' => $lastCompletedRun ? 'Apri l\'ultimo report' : null,
     ],
@@ -103,16 +103,16 @@ $guideOpen = $runsCompleted === 0;
     <!-- KPI -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
-            <p class="text-sm text-slate-500 dark:text-slate-400">Domande nel run <span class="text-xs">(audit <span x-text="$store.arAudit.label().toLowerCase()"></span>)</span></p>
+            <p class="text-sm text-slate-500 dark:text-slate-400"><a href="<?= url($basePath . '/prompts') ?>" class="hover:text-indigo-600 dark:hover:text-indigo-400">Domande</a> <span class="text-xs">(audit <span x-text="$store.arAudit.label().toLowerCase()"></span>)</span></p>
             <p class="text-2xl font-bold text-slate-900 dark:text-white"><span x-text="$store.arAudit.activeCount()"></span> <span class="text-sm font-normal text-slate-400">attive su <span x-text="$store.arAudit.shownCount()"></span></span></p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">AI interrogate</p>
-            <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400"><?= count($enginesReady) ?><?php if (count($enginesReady) < count($project['engines'])): ?> <span class="text-sm font-normal text-slate-400">su <?= count($project['engines']) ?></span><?php endif; ?></p>
-            <p class="text-xs text-slate-400"><?= e(implode(', ', array_map(fn($e) => $engineLabels[$e] ?? $e, $enginesReady))) ?><?php if ($enginesMissing): ?> · senza chiave: <?= e(implode(', ', array_map(fn($e) => $engineLabels[$e] ?? $e, $enginesMissing))) ?><?php endif; ?></p>
+            <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400"><?= count($enginesReady) ?></p>
+            <p class="text-xs text-slate-400"><?= e(implode(', ', array_map(fn($e) => $engineLabels[$e] ?? $e, $enginesReady))) ?><?php if ($enginesMissing && \Core\Auth::isAdmin()): ?> · <span title="Visibile solo agli admin: manca la chiave API in Admin > Impostazioni">senza chiave: <?= e(implode(', ', array_map(fn($e) => $engineLabels[$e] ?? $e, $enginesMissing))) ?></span><?php endif; ?></p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
-            <p class="text-sm text-slate-500 dark:text-slate-400">Run completati</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Audit completati</p>
             <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= $runsCompleted ?></p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
@@ -125,14 +125,14 @@ $guideOpen = $runsCompleted === 0;
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
         <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between gap-4">
             <div>
-                <h2 class="text-base font-semibold text-slate-900 dark:text-white">Run</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-400">Ogni run pone tutte le domande attive a ogni engine e salva le risposte con le fonti citate.</p>
+                <h2 class="text-base font-semibold text-slate-900 dark:text-white">Audit</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Ogni audit pone le domande attive a ogni AI scelta e salva le risposte con le fonti citate.</p>
             </div>
             <?php if ($promptsActive > 0 && ($project['access_role'] ?? 'owner') !== 'viewer'): ?>
             <div x-data="arRunner()" x-init="init()" class="flex items-center gap-3">
                 <button type="button" x-show="!running" @click="start()" class="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors whitespace-nowrap">
                     <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg>
-                    Avvia run
+                    Avvia l'audit
                 </button>
                 <span x-show="!running" class="text-xs text-slate-400 whitespace-nowrap" x-text="$store.arAudit.est.responses + ' risposte · ' + $store.arAudit.fmt($store.arAudit.est.credits) + ' crediti'"></span>
                 <button type="button" x-show="running" x-cloak @click="cancel()" class="inline-flex items-center px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700 font-medium transition-colors whitespace-nowrap">Annulla</button>
@@ -157,7 +157,7 @@ $guideOpen = $runsCompleted === 0;
         </div>
         <?php if (empty($runs)): ?>
         <div class="p-8 text-center text-sm text-slate-500 dark:text-slate-400">
-            Nessun run ancora. <?= $promptsActive === 0 ? 'Prima aggiungi le domande qui sotto.' : 'Avvia il primo run quando sei pronto.' ?>
+            Nessun audit ancora. <?= $promptsActive === 0 ? 'Prima prepara le domande nella scheda <a href="' . url($basePath . '/prompts') . '" class="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">Domande</a>.' : 'Avvia il primo audit quando sei pronto.' ?>
         </div>
         <?php else: ?>
         <div class="overflow-x-auto">
@@ -200,215 +200,18 @@ $guideOpen = $runsCompleted === 0;
         </div>
         <?php endif; ?>
     </div>
-
-    <!-- Prompt -->
-    <div id="prompts" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-        <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between gap-4">
-            <div>
-                <h2 class="text-base font-semibold text-slate-900 dark:text-white">Domande monitorate</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-400">Le domande che la gente fa alle AI su <?= e($project['subject_name']) ?>. Generale dal <a href="<?= url($basePath . '/profile') ?>" class="text-indigo-600 dark:text-indigo-400 hover:underline">profilo confermato</a>, aggiungile a mano, o parti dalle 8 base.</p>
-            </div>
-            <div class="flex flex-wrap items-center justify-end gap-2" x-data="arPromptGen()">
-                <?php foreach (['purchase', 'reputation'] as $set): $genLabel = $set === 'purchase' ? 'Genera domande d&#039;acquisto' : 'Genera domande sulla reputazione'; ?>
-                <button type="button" x-show="$store.arAudit.inSet('<?= $set ?>')" @click="generate('<?= $set ?>')" :disabled="busy" class="inline-flex items-center px-3 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60 text-sm font-medium transition-colors whitespace-nowrap" title="<?= $set === 'purchase' ? 'Scrive 30 domande che un cliente fa alle AI quando cerca il servizio, dal profilo e dal sito' : 'Scrive 40 domande sulla reputazione dal profilo confermato' ?>">
-                    <svg x-show="busy === '<?= $set ?>'" x-cloak class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
-                    <span x-show="busy !== '<?= $set ?>'"><?= $genLabel ?></span><span x-show="busy === '<?= $set ?>'" x-cloak>Genero…</span>
-                </button>
-                <?php endforeach; ?>
-                <form method="POST" action="<?= url($basePath . '/prompts/seed') ?>" x-show="$store.arAudit.inSet('reputation')">
-                    <input type="hidden" name="_csrf_token" value="<?= $csrf ?>">
-                    <button type="submit" class="inline-flex items-center px-3 py-2 rounded-lg border border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-900/30 text-sm font-medium transition-colors whitespace-nowrap">
-                        + Domande base
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <form method="POST" action="<?= url($basePath . '/audit-type') ?>" class="px-5 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 flex flex-wrap items-center gap-3">
-            <input type="hidden" name="_csrf_token" value="<?= $csrf ?>">
-            <span class="text-sm font-medium text-slate-700 dark:text-slate-200">Che audit vuoi fare?</span>
-            <div class="flex rounded-lg border border-slate-300 dark:border-slate-600 overflow-hidden text-sm">
-                <?php foreach (['purchase' => ['Acquisto', 'Quando un cliente cerca il servizio, le AI citano te o i concorrenti?'], 'reputation' => ['Reputazione', 'Cosa dicono le AI di te: affidabilità, rischi, dubbi'], 'both' => ['Entrambi', 'Le due serie di domande nello stesso run']] as $val => [$lbl, $hint]): ?>
-                <button type="submit" name="audit_type" value="<?= $val ?>" title="<?= e($hint) ?>" @click.prevent="$store.arAudit.setType('<?= $val ?>')" :disabled="$store.arAudit.saving" class="px-3 py-1.5 transition-colors" :class="$store.arAudit.type === '<?= $val ?>' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600'"><?= $lbl ?></button>
-                <?php endforeach; ?>
-            </div>
-            <span class="text-xs text-slate-500 dark:text-slate-400" x-text="$store.arAudit.hint()"></span>
-            <span class="text-xs text-indigo-600 dark:text-indigo-400" x-show="$store.arAudit.saving" x-cloak>salvo…</span>
-        </form>
-
-        <form method="POST" action="<?= url($basePath . '/prompts') ?>" x-data="{ addSet: 'purchase' }" class="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-3">
-            <input type="hidden" name="_csrf_token" value="<?= $csrf ?>">
-            <select name="cluster" class="rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
-                <?php foreach ($clusters as $key => $label): ?>
-                <option value="<?= $key ?>"><?= e($label) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <input type="hidden" name="audit_set" :value="$store.arAudit.type === 'both' ? addSet : ($store.arAudit.type === 'purchase' ? 'purchase' : 'reputation')">
-            <select x-model="addSet" x-show="$store.arAudit.type === 'both'" x-cloak class="rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
-                <option value="purchase">Audit acquisto</option>
-                <option value="reputation">Audit reputazione</option>
-            </select>
-            <input type="text" name="text" required minlength="5" :placeholder="$store.arAudit.type === 'reputation' ? <?= json_encode('Es. ' . $project['subject_name'] . ' è affidabile?', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?> : 'Es. Dove posso … vicino a …?'" class="flex-1 rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
-            <button type="submit" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors">Aggiungi</button>
-        </form>
-
-        <?php
-        // Solo le domande dell'audit scelto: quelle dell'altro tipo non entrano nel run e confondono (feedback Clemente 2026-10-13)
-        $promptsMeta = array_map(fn($p) => ['id' => (string) $p['id'], 'set' => ($p['audit_set'] ?? 'reputation') === 'purchase' ? 'purchase' : 'reputation', 'active' => (int) $p['is_active'] === 1], $prompts);
-        $kindLabel = [
-            'nav' => ['Chi è', 'Domande per sapere chi è e dove si trova', 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'],
-            'rep' => ['Reputazione', 'È affidabile? Recensioni, problemi, notizie', 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300'],
-            'comm' => ['Ti sta valutando', 'Il cliente conosce già il nome e valuta prezzi, servizi, condizioni', 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'],
-            'comp' => ['Cerca il servizio', 'Il cliente cerca il servizio senza conoscerti: le AI citano te o i concorrenti?', 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300'],
-        ];
-        ?>
-        <div x-show="$store.arAudit.shownCount() === 0" x-cloak class="p-8 text-center text-sm text-slate-500 dark:text-slate-400">
-            Nessuna domanda per l'audit "<span x-text="$store.arAudit.label()"></span>". Clicca "<span x-text="$store.arAudit.inSet('purchase') ? 'Genera domande d\'acquisto' : 'Genera domande sulla reputazione'"></span>" qui sopra.
-            <template x-if="$store.arAudit.hiddenCount() > 0"><span><br><span class="text-xs">Ci sono <span x-text="$store.arAudit.hiddenCount()"></span> domande dell'altro tipo di audit: non entrano in questo run.</span></span></template>
-        </div>
-        <div x-show="$store.arAudit.shownCount() > 0" x-data="arPromptBulk()">
-            <div class="px-5 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
-                <span><strong class="text-slate-700 dark:text-slate-200" x-text="$store.arAudit.activeCount() + ' domande attive'"></strong> su <span x-text="$store.arAudit.shownCount()"></span>: il run usa solo quelle attive. Per una prova veloce selezionane alcune e disattiva le altre.</span>
-                <span x-show="$store.arAudit.hiddenCount() > 0" x-cloak><span x-text="$store.arAudit.hiddenCount()"></span> domande dell'altro tipo di audit sono nascoste e non entrano nel run.</span>
-            </div>
-            <div x-show="selectedIds.length > 0" x-cloak class="px-5 py-2.5 flex flex-wrap items-center gap-2 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-800">
-                <span class="text-sm font-medium text-indigo-700 dark:text-indigo-300 mr-2"><span x-text="selectedIds.length"></span> selezionate</span>
-                <button type="button" @click="bulk('deactivate')" class="px-3 py-1.5 rounded-lg bg-slate-600 text-white text-sm font-medium hover:bg-slate-700">Disattiva</button>
-                <button type="button" @click="bulk('activate')" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700">Attiva</button>
-                <button type="button" @click="bulk('only')" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700" title="Attiva le selezionate e disattiva tutte le altre di questo audit">Usa solo queste</button>
-                <button type="button" @click="bulk('delete')" class="px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700">Elimina</button>
-                <button type="button" @click="selectedIds = []" class="px-3 py-1.5 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400">Annulla selezione</button>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-slate-50 dark:bg-slate-700/50">
-                        <tr>
-                            <th class="w-10 px-4 py-3"><input type="checkbox" @change="toggleAll($event)" :checked="selectedIds.length > 0 && selectedIds.length === allIds().length" class="rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500" title="Seleziona tutte"></th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tipo</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Domanda</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Attiva</th>
-                            <th class="px-4 py-3"></th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                        <?php foreach ($prompts as $p): $k = $kindLabel[$p['cluster']] ?? $kindLabel['nav']; ?>
-                        <tr x-show="$store.arAudit.inSet('<?= ($p['audit_set'] ?? 'reputation') === 'purchase' ? 'purchase' : 'reputation' ?>')" class="hover:bg-slate-50 dark:hover:bg-slate-700/50 <?= (int) $p['is_active'] ? '' : 'opacity-50' ?>">
-                            <td class="px-4 py-3"><input type="checkbox" value="<?= (int) $p['id'] ?>" x-model="selectedIds" class="rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500"></td>
-                            <td class="px-4 py-3 whitespace-nowrap"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $k[2] ?>" title="<?= e($k[1]) ?>"><?= $k[0] ?></span></td>
-                            <td class="px-4 py-3 text-sm text-slate-900 dark:text-white"><?php if (($p['lang'] ?? 'it') === 'en'): ?><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-2 bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300" title="Domanda in inglese">EN</span><?php endif; ?><?php if ((int) ($p['is_leading'] ?? 0) === 1): ?><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-2 bg-slate-200 text-slate-700 dark:bg-slate-600 dark:text-slate-200" title="Nomina già un fatto negativo: nel report sta in un blocco a parte, fuori dal rischio">mirata</span><?php endif; ?><?= e($p['text']) ?></td>
-                            <td class="px-4 py-3">
-                                <form method="POST" action="<?= url($basePath . '/prompts/' . $p['id'] . '/toggle') ?>">
-                                    <input type="hidden" name="_csrf_token" value="<?= $csrf ?>">
-                                    <button type="submit" class="text-xs font-medium <?= (int) $p['is_active'] ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400' ?>" title="Attiva/disattiva">
-                                        <?= (int) $p['is_active'] ? 'Sì' : 'No' ?>
-                                    </button>
-                                </form>
-                            </td>
-                            <td class="px-4 py-3 text-right">
-                                <form method="POST" action="<?= url($basePath . '/prompts/' . $p['id'] . '/delete') ?>" data-confirm="Eliminare questa domanda?" data-confirm-button="Elimina" data-confirm-destructive="1">
-                                    <input type="hidden" name="_csrf_token" value="<?= $csrf ?>">
-                                    <button type="submit" class="text-slate-400 hover:text-red-600" title="Elimina">
-                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
 </div>
+
+<?= \Core\View::partial('ai-reputation::partials/audit-store', ['project' => $project, 'prompts' => $prompts, 'auditType' => $auditType, 'runEstimate' => $runEstimate, 'csrf' => $csrf, 'basePath' => $basePath]) ?>
 
 <script>
 document.addEventListener('alpine:init', () => {
-    // Tipo di audit scelto in pagina: righe, bottoni e stima cambiano subito; la scelta si salva in sottofondo
-    Alpine.store('arAudit', {
-        type: <?= json_encode($auditType) ?>,
-        est: <?= json_encode($runEstimate) ?>,
-        prompts: <?= json_encode($promptsMeta, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
-        saving: false,
-        sets() { return this.type === 'both' ? ['purchase', 'reputation'] : [this.type === 'purchase' ? 'purchase' : 'reputation']; },
-        inSet(set) { return this.sets().includes(set); },
-        shown() { return this.prompts.filter(p => this.inSet(p.set)); },
-        shownCount() { return this.shown().length; },
-        activeCount() { return this.shown().filter(p => p.active).length; },
-        hiddenCount() { return this.prompts.length - this.shownCount(); },
-        label() { return { purchase: 'Acquisto', reputation: 'Reputazione', both: 'Acquisto + Reputazione' }[this.type] || this.type; },
-        hint() {
-            const h = { purchase: 'Domande di chi cerca il servizio, quasi tutte senza il tuo nome.', reputation: 'Domande su di te: affidabilità, recensioni, notizie.', both: 'Acquisto e reputazione insieme: il run costa di più.' };
-            return (h[this.type] || '') + ' Il run usa solo le domande di questo audit.';
-        },
-        fmt(n) { return String(Math.round(n * 10) / 10).replace('.', ','); },
-        async setType(val) {
-            if (val === this.type || this.saving) return;
-            const prev = this.type;
-            this.type = val; this.saving = true;
-            try {
-                const fd = new FormData(); fd.append('_csrf_token', <?= json_encode($csrf) ?>); fd.append('audit_type', val); fd.append('ajax', '1');
-                const resp = await fetch(<?= json_encode(url($basePath . '/audit-type')) ?>, { method: 'POST', body: fd, headers: { 'Accept': 'application/json' } });
-                if (!resp.ok) throw new Error('Errore server (' + resp.status + ')');
-                const data = await resp.json();
-                if (!data.success) throw new Error(data.error || 'Non salvato');
-                this.est = data.estimate;
-            } catch (e) {
-                this.type = prev;
-                if (window.ainstein && window.ainstein.alert) { window.ainstein.alert('Tipo di audit non salvato: ' + e.message, 'error'); } else { alert(e.message); }
-            } finally { this.saving = false; }
-        },
-    });
     Alpine.store('arRun', {
         running: false, runId: null, total: 0, done: 0, percent: 0, phase: 'Raccolta risposte',
         currentEngine: '', currentPrompt: '', message: '', reportUrl: '', log: [],
         labels: <?= json_encode($engineLabels) ?>,
     });
 });
-
-function arPromptBulk() {
-    const base = '<?= url($basePath) ?>';
-    const csrf = '<?= $csrf ?>';
-    return {
-        selectedIds: [],
-        allIds() { return this.$store.arAudit.shown().map(p => p.id); },
-        toggleAll(ev) { this.selectedIds = ev.target.checked ? [...this.allIds()] : []; },
-        async bulk(action) {
-            const n = this.selectedIds.length;
-            if (action === 'delete' && !(await window.arConfirm('Eliminare ' + n + ' domande? Quelle già usate in un run vengono solo disattivate, così i report passati restano intatti.', { buttonText: 'Elimina', destructive: true }))) return;
-            const fd = new FormData(); fd.append('_csrf_token', csrf); fd.append('action', action);
-            this.selectedIds.forEach(id => fd.append('ids[]', id));
-            try {
-                const resp = await fetch(base + '/prompts/bulk', { method: 'POST', body: fd });
-                if (!resp.ok) throw new Error('Errore server (' + resp.status + ')');
-                const data = await resp.json();
-                if (!data.success) throw new Error(data.error || 'Operazione non riuscita');
-                location.href = location.pathname + '#prompts';
-                location.reload();
-            } catch (e) {
-                if (window.ainstein && window.ainstein.alert) { window.ainstein.alert(e.message, 'error'); } else { alert(e.message); }
-            }
-        },
-    };
-}
-
-function arPromptGen() {
-    const base = '<?= url($basePath) ?>';
-    const csrf = '<?= $csrf ?>';
-    return {
-        busy: false,
-        async generate(set) {
-            this.busy = set;
-            try {
-                const fd = new FormData(); fd.append('_csrf_token', csrf); fd.append('set', set); fd.append('target', set === 'purchase' ? '30' : '40');
-                const resp = await fetch(base + '/prompts/generate', { method: 'POST', body: fd });
-                if (!resp.ok) throw new Error('Errore server (' + resp.status + ')');
-                const data = await resp.json();
-                if (!data.success) throw new Error(data.error || 'Errore');
-                location.href = location.pathname + '?gen=' + data.added + '#prompts';
-            } catch (e) { alert(e.message); this.busy = false; }
-        },
-    };
-}
 
 function arRunner() {
     const base = '<?= url($basePath) ?>';
@@ -427,14 +230,14 @@ function arRunner() {
             const est = this.$store.arAudit.est;
             const fmt = n => this.$store.arAudit.fmt(n);
             if (est.responses === 0) {
-                this.notify('Nessuna domanda per questo tipo di audit: generale con il bottone "Genera domande" qui sotto.', 'error');
+                this.notify('Nessuna domanda per questo tipo di audit: generale nella scheda Domande.', 'error');
                 return;
             }
             if (est.credits > est.balance) {
-                this.notify('Crediti insufficienti: il run costa ' + fmt(est.credits) + ' crediti, ne hai ' + fmt(est.balance) + '. Disattiva qualche domanda o ricarica.', 'error');
+                this.notify('Crediti insufficienti: l’audit costa ' + fmt(est.credits) + ' crediti, ne hai ' + fmt(est.balance) + '. Disattiva qualche domanda o ricarica.', 'error');
                 return;
             }
-            if (!(await window.arConfirm('Il run pone ' + est.prompts + ' domande alle AI: ' + est.responses + ' risposte da raccogliere e analizzare. Costa ' + fmt(est.credits) + ' crediti (ne hai ' + fmt(est.balance) + ') e dura qualche minuto: lascia la pagina aperta per seguire l’avanzamento.', { buttonText: 'Avvia il run' }))) return;
+            if (!(await window.arConfirm('L’audit pone ' + est.prompts + ' domande alle AI: ' + est.responses + ' risposte da raccogliere e analizzare. Costa ' + fmt(est.credits) + ' crediti (ne hai ' + fmt(est.balance) + ') e dura qualche minuto: lascia la pagina aperta per seguire l’avanzamento.', { buttonText: 'Avvia l’audit' }))) return;
             const s = this.$store.arRun;
             s.message = ''; s.reportUrl = ''; s.log = []; s.done = 0; s.percent = 0;
             try {
@@ -444,8 +247,8 @@ function arRunner() {
                 const data = await resp.json();
                 if (!data.success) throw new Error(data.error || 'Errore avvio run');
                 s.runId = data.run_id; s.total = data.responses_total; s.running = true;
-                if (data.engines_missing && data.engines_missing.length) {
-                    s.log.push({ id: 'm', text: 'Engine senza API key, saltati: ' + data.engines_missing.join(', '), error: true });
+                if (<?= \Core\Auth::isAdmin() ? 'true' : 'false' ?> && data.engines_missing && data.engines_missing.length) {
+                    s.log.push({ id: 'm', text: 'AI senza chiave API (solo admin lo vede), saltate: ' + data.engines_missing.join(', '), error: true });
                 }
                 this.connect();
             } catch (e) { this.notify(e.message, 'error'); }
@@ -470,8 +273,8 @@ function arRunner() {
             };
             this.es.addEventListener('item_completed', e => onItem(e, false));
             this.es.addEventListener('item_error', e => onItem(e, true));
-            this.es.addEventListener('completed', e => { const d = JSON.parse(e.data); this.finish('Run completato: ' + d.done + ' risposte, ' + d.analyses + ' analizzate, ' + d.actions + ' azioni proposte' + (d.errors ? ', ' + d.errors + ' errori' : ''), d.report_url); });
-            this.es.addEventListener('cancelled', () => this.finish('Run annullato', ''));
+            this.es.addEventListener('completed', e => { const d = JSON.parse(e.data); this.finish('Audit completato: ' + d.done + ' risposte, ' + d.analyses + ' analizzate, ' + d.actions + ' azioni proposte' + (d.errors ? ', ' + d.errors + ' errori' : ''), d.report_url); });
+            this.es.addEventListener('cancelled', () => this.finish('Audit annullato', ''));
             this.es.onerror = () => { if (this.es) { this.es.close(); this.es = null; } this.startPolling(); };
         },
         startPolling() {
@@ -485,7 +288,7 @@ function arRunner() {
                     const s = this.$store.arRun; const r = data.run;
                     s.total = r.total; s.done = r.done + r.errors; s.percent = r.total ? Math.round(s.done / r.total * 100) : 0;
                     if (['completed', 'failed', 'cancelled'].includes(r.status)) {
-                        this.finish(r.status === 'completed' ? 'Run completato' : 'Run ' + r.status, r.status === 'completed' ? r.report_url : '');
+                        this.finish(r.status === 'completed' ? 'Audit completato' : ({ failed: 'Audit fallito', cancelled: 'Audit annullato' }[r.status] || 'Audit ' + r.status), r.status === 'completed' ? r.report_url : '');
                     }
                 } catch (e) { /* riprova al prossimo giro */ }
             }, 4000);

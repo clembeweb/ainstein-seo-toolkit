@@ -287,7 +287,7 @@ return [
                 'position' => 'bottom',
             ],
             [
-                'title' => 'Le domande e il run',
+                'title' => 'Le domande e l\'audit',
                 'description' => 'Il modulo scrive le domande dei tuoi clienti e tu puoi modificarle. Prima di partire vedi quanti crediti servono: ogni risposta delle AI costa ' . $cost('collect_response', 'ai-reputation', 1) . '.',
                 'icon' => 'M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z',
                 'tip' => 'Il controllo tecnico del sito è gratis',
