@@ -25,7 +25,11 @@ class SituationService
         'last_quarter' => 'Trimestre scorso',
     ];
     /** Riquadri a cui un paragrafo AI può rimandare (data-kpi nella vista). */
-    public const REFS = ['ga4_sessions', 'ga4_key_events', 'ga4_revenue', 'channels', 'ai_traffic', 'organic_pages', 'gsc_clicks', 'gsc_impressions', 'gsc_position', 'gsc_brand', 'gsc_queries', 'gsc_pages'];
+    public const REFS = ['kpi', 'trend', 'channels', 'ai_traffic', 'organic_pages', 'gsc_brand', 'gsc_queries', 'gsc_pages',
+        // vecchi report (prima del 2026-10-16): riquadri dei 5 paragrafi
+        'ga4_sessions', 'ga4_key_events', 'ga4_revenue', 'gsc_clicks', 'gsc_impressions', 'gsc_position'];
+    /** Letture brevi dell'AI, una per blocco della pagina (chiave → riquadro). */
+    public const READINGS = ['numeri' => 'kpi', 'andamento' => 'trend', 'canali' => 'channels', 'ai' => 'ai_traffic', 'google' => 'gsc_queries', 'pagine' => 'gsc_pages'];
     private const GSC_API = 'https://searchconsole.googleapis.com/webmasters/v3';
 
     public static function cost(): float
@@ -216,11 +220,15 @@ class SituationService
         $gainers = array_values(array_filter(array_slice($byDiff, 0, 5), fn($r) => $r['diff'] > 0));
         $losers = array_values(array_filter(array_slice(array_reverse($byDiff), 0, 5), fn($r) => $r['diff'] < 0));
 
+        // 4. Andamento giorno per giorno (periodo e precedente, allineati per indice) per il grafico a linee e le mini-linee
+        $daily = $this->ga4Daily($ga4, $projectId, array_slice($ranges, 0, 2), $metrics);
+
         // 3. Visite dagli assistenti AI (canale GA4 "AI Assistant": chatgpt.com, perplexity.ai, gemini.google.com, copilot, claude.ai...):
         //    per sorgente sui tre periodi e pagine di atterraggio del periodo. Nessun tool lo mostra: gli altri simulano, qui è traffico vero.
         $aiTraffic = $this->aiTrafficBlock($ga4, $projectId, $ranges, $metrics, $byChannel['AI Assistant'] ?? [], $tot);
 
         return [
+            'daily' => $daily,
             'ai_traffic' => $aiTraffic,
             'totals' => [
                 'sessions' => self::pack($tot['b'][0], $tot['a'][0], $tot['y'][0]),
@@ -231,6 +239,36 @@ class SituationService
             'channels' => $channels,
             'organic_pages' => ['top' => $top, 'gainers' => $gainers, 'losers' => $losers],
         ];
+    }
+
+    /** Visite e conversioni per giorno: ['b' => [['date','sessions','key_events'],...], 'a' => [...]]. Vuoto se la lettura fallisce. */
+    private function ga4Daily(Ga4Service $ga4, int $projectId, array $ranges, array $metrics): array
+    {
+        $out = ['b' => [], 'a' => []];
+        try {
+            $rows = $ga4->runReport($projectId, [
+                'dateRanges' => $ranges,
+                'dimensions' => [['name' => 'date']],
+                'metrics' => $metrics,
+                'orderBys' => [['dimension' => ['dimensionName' => 'date']]],
+                'limit' => 400,
+            ]);
+        } catch (\Throwable $e) {
+            return $out;
+        }
+        foreach ($rows as $r) {
+            $range = ($r['dateRange'] ?? 'b') === 'a' ? 'a' : 'b';
+            $d = (string) $r['date']; // YYYYMMDD
+            if (strlen($d) !== 8) {
+                continue;
+            }
+            $out[$range][] = ['date' => substr($d, 0, 4) . '-' . substr($d, 4, 2) . '-' . substr($d, 6, 2), 'sessions' => (float) $r['sessions'], 'key_events' => (float) $r['keyEvents']];
+        }
+        foreach ($out as &$list) {
+            usort($list, fn($x, $y) => strcmp($x['date'], $y['date']));
+        }
+        unset($list);
+        return $out;
     }
 
     /**
@@ -334,6 +372,19 @@ class SituationService
             }
         }
 
+        $daily = ['b' => [], 'a' => []];
+        foreach (['b', 'a'] as $k) {
+            try {
+                foreach ($q($range($k) + ['dimensions' => ['date'], 'rowLimit' => 400]) as $r) {
+                    $daily[$k][] = ['date' => (string) ($r['keys'][0] ?? ''), 'clicks' => (float) ($r['clicks'] ?? 0), 'impressions' => (float) ($r['impressions'] ?? 0),
+                        'position' => isset($r['position']) ? round((float) $r['position'], 1) : null];
+                }
+                usort($daily[$k], fn($x, $y) => strcmp($x['date'], $y['date']));
+            } catch (\Throwable $e) {
+                $daily[$k] = []; // senza la serie resta tutto il resto: manca solo la linea
+            }
+        }
+
         $queries = $this->movers($q, $range, 'query');
         $pages = $this->movers($q, $range, 'page');
         try {
@@ -343,6 +394,7 @@ class SituationService
         }
 
         return [
+            'daily' => $daily,
             'property' => $site,
             'totals' => [
                 'clicks' => self::pack($totals['b']['clicks'], $totals['a']['clicks'], $totals['y']['clicks']),
@@ -483,12 +535,16 @@ class SituationService
         return "Sito: {$project['name']} ({$project['domain']}). Periodo analizzato: {$data['period']['label']} "
             . "(dal {$data['period']['b'][0]} al {$data['period']['b'][1]}), confrontato con il periodo precedente di pari durata (\"prima\") "
             . "e con lo stesso periodo dell'anno prima (\"anno_scorso\").\n\n"
-            . "Scrivi il PUNTO DELLA SITUAZIONE in 5 paragrafi, in quest'ordine e con questi titoli:\n"
-            . "1. \"Il punto\": com'è andato il periodo in 2-3 frasi, con i numeri principali.\n"
-            . "2. \"Da dove arriva il traffico\": i canali (organico, diretto, social, a pagamento, referral...), il loro peso e cosa è cambiato. Se in ai_traffic ci sono visite dagli assistenti AI (ChatGPT, Perplexity, Gemini...), dillo con il numero e la quota sul totale: è traffico vero che quasi nessuno misura.\n"
-            . "3. \"Google: cosa cresce e cosa cala\": clic e impressioni da Search Console, ricerche e pagine che guadagnano o perdono, quota del brand.\n"
-            . "4. \"Criticità\": i problemi veri che emergono dai numeri (cali, dipendenza da un canale o dal brand, pagine che perdono). Se non ce ne sono, dillo.\n"
-            . "5. \"Cosa fare adesso\": esattamente 3 azioni concrete, scritte di seguito nel testo (prima..., poi..., infine...).\n\n"
+            . "La pagina mostra già i numeri, i grafici e le tabelle: tu aggiungi solo la LETTURA, breve. Scrivi:\n"
+            . "- \"sintesi\": UNA frase (max 25 parole) che dice come è andato il periodo, con il numero che conta di più.\n"
+            . "- \"letture\": una lettura di 1-2 frasi (max 45 parole) per ciascun blocco, solo se il blocco ha dati (altrimenti ometti la chiave):\n"
+            . "  · \"numeri\": i numeri grandi (visite, conversioni, clic, impressioni, posizione media) — cosa dice il confronto.\n"
+            . "  · \"andamento\": la serie giorno per giorno (daily): picchi, cali, giorni particolari, direzione nel tempo.\n"
+            . "  · \"canali\": da dove arriva il traffico, cosa pesa e cosa è cambiato; dipendenza da un solo canale.\n"
+            . "  · \"ai\": le visite dagli assistenti AI (ai_traffic): quante, quota sul totale, da quale AI, come cambiano — è traffico vero che quasi nessuno misura.\n"
+            . "  · \"google\": le ricerche su Google che guadagnano o perdono clic, con il PERCHÉ (posizioni) e la quota delle ricerche col tuo nome.\n"
+            . "  · \"pagine\": le pagine che guadagnano o perdono (Search Console e Analytics).\n"
+            . "- \"azioni\": esattamente 3 azioni concrete, in ordine di importanza: {\"titolo\": 3-6 parole, \"testo\": 1-2 frasi con la ricerca o la pagina precisa, \"ref\": il riquadro da cui nasce}.\n\n"
             . "Regole:\n"
             . "- Usa SOLO i numeri del JSON. Le variazioni sono già calcolate (variazione_vs_prima_pct, variazione_vs_anno_scorso_pct): non ricalcolarle. Un numero negativo è un calo, positivo una crescita. Per la posizione media un numero più basso è MEGLIO (1 = primo risultato). null = dato non disponibile. Numeri all'italiana (virgola per i decimali, punto per le migliaia).\n"
             . "- Spiega il PERCHÉ quando i dati lo mostrano: cerca le ricerche e le pagine che pesano di più sulla variazione (campo differenza_ora_meno_prima; posizione_prima → posizione_ora) e confrontale col totale. Esempio: se i clic calano di 1.900 e una sola ricerca ne perde 890 scendendo dalla posizione 2,9 alla 7,8, quella è la causa principale e va detto chiaramente, con le posizioni.\n"
@@ -498,8 +554,8 @@ class SituationService
             . "- Le 3 azioni devono nascere dai problemi trovati nei dati (pagina X, ricerca Y), non consigli generici validi per tutti.\n"
             . "- Se una fonte manca o c'è un avviso in caveats, dillo in modo semplice nel paragrafo giusto, senza inventare.\n"
             . "- Non dare la colpa a cause che i dati non mostrano (algoritmo, stagionalità) se non come ipotesi dichiarata.\n"
-            . "- Ogni paragrafo ha \"refs\": i riquadri che cita, scelti solo tra: " . implode(', ', self::REFS) . ".\n\n"
-            . "Rispondi SOLO con questo JSON: {\"paragrafi\":[{\"titolo\":\"...\",\"testo\":\"...\",\"refs\":[\"...\"]}]}\n\n"
+            . "- \"ref\" di ogni azione scelto solo tra: " . implode(', ', array_slice(self::REFS, 0, 8)) . ".\n\n"
+            . "Rispondi SOLO con questo JSON: {\"sintesi\":\"...\",\"letture\":{\"numeri\":\"...\",\"andamento\":\"...\",\"canali\":\"...\",\"ai\":\"...\",\"google\":\"...\",\"pagine\":\"...\"},\"azioni\":[{\"titolo\":\"...\",\"testo\":\"...\",\"ref\":\"...\"}]}\n\n"
             . "DATI:\n{$json}";
     }
 
@@ -511,6 +567,33 @@ class SituationService
         if (!is_array($d) && preg_match('/\{.*\}/s', $raw, $m)) {
             $d = json_decode($m[0], true);
         }
+        // Formato nuovo (dal 2026-10-16): sintesi + letture per blocco + 3 azioni
+        if (is_array($d) && (isset($d['letture']) || isset($d['azioni']))) {
+            $out = ['sintesi' => mb_substr(trim((string) ($d['sintesi'] ?? '')), 0, 300), 'letture' => [], 'azioni' => []];
+            foreach ((array) ($d['letture'] ?? []) as $k => $txt) {
+                $txt = trim((string) $txt);
+                if (isset(self::READINGS[$k]) && $txt !== '') {
+                    $out['letture'][$k] = mb_substr($txt, 0, 600);
+                }
+            }
+            foreach ((array) ($d['azioni'] ?? []) as $a) {
+                if (!is_array($a) || trim((string) ($a['testo'] ?? '')) === '') {
+                    continue;
+                }
+                $ref = (string) ($a['ref'] ?? '');
+                $out['azioni'][] = [
+                    'titolo' => mb_substr(trim((string) ($a['titolo'] ?? '')), 0, 80),
+                    'testo' => mb_substr(trim((string) $a['testo']), 0, 500),
+                    'ref' => in_array($ref, self::REFS, true) ? $ref : '',
+                ];
+            }
+            $out['azioni'] = array_slice($out['azioni'], 0, 3);
+            if ($out['sintesi'] === '' && !$out['letture'] && !$out['azioni']) {
+                throw new \RuntimeException('Risposta AI non leggibile, riprova.');
+            }
+            return $out;
+        }
+        // Formato vecchio (5 paragrafi): resta leggibile per i report salvati prima
         $out = [];
         foreach ((array) ($d['paragrafi'] ?? []) as $par) {
             if (!is_array($par) || trim((string) ($par['testo'] ?? '')) === '') {
@@ -526,6 +609,12 @@ class SituationService
             throw new \RuntimeException('Risposta AI non leggibile, riprova.');
         }
         return $out;
+    }
+
+    /** true se la lettura salvata è nel formato nuovo (sintesi + letture + azioni). */
+    public static function isNewNarrative(array $narrative): bool
+    {
+        return isset($narrative['letture']) || isset($narrative['azioni']);
     }
 
     public function save(array $project, int $userId, array $data, array $paragraphs, float $credits): int

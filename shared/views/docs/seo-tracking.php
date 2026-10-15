@@ -214,7 +214,7 @@
                 <p class="text-sm text-slate-600 dark:text-slate-400">La lista gratuita delle ricerche in cui sei vicino alla prima pagina. Per ogni pagina puoi chiedere all'AI cosa migliorare.</p>
             </div>
 
-            <!-- Punto della situazione -->
+            <!-- Andamento -->
             <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="flex items-center gap-3 mb-2">
                     <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
@@ -222,9 +222,9 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                         </svg>
                     </div>
-                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Punto della situazione</h3>
+                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Andamento</h3>
                 </div>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Collega Google Analytics e Search Console: l'AI confronta il periodo con quello precedente e con l'anno prima e ti spiega in parole semplici da dove arriva il traffico, cosa cresce, cosa cala, le criticità e le 3 cose da fare. Costa <?= rtrim(rtrim(number_format(\Core\Credits::getCost('situation_report', 'seo-tracking', 5), 1, ',', ''), '0'), ',') ?> crediti; i punti fatti restano nello storico. Mostra anche le <strong>visite dalle AI</strong>: quante persone arrivano davvero da ChatGPT, Perplexity, Gemini e simili, da quale AI e su quali pagine — traffico vero, non simulato.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Collega Google Analytics e Search Console: numeri grandi con la variazione, grafico giorno per giorno (confrontato col periodo prima), da dove arriva il traffico, ricerche e pagine che salgono o scendono. L'AI aggiunge solo una lettura breve sotto ogni blocco e le 3 cose da fare. Costa <?= rtrim(rtrim(number_format(\Core\Credits::getCost('situation_report', 'seo-tracking', 5), 1, ',', ''), '0'), ',') ?> crediti; i punti fatti restano nello storico. Mostra anche le <strong>visite dalle AI</strong>: quante persone arrivano davvero da ChatGPT, Perplexity, Gemini e simili, da quale AI e su quali pagine — traffico vero, non simulato.</p>
             </div>
 
             <!-- Confronto periodi -->

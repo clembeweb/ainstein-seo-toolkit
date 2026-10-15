@@ -92,7 +92,7 @@ $_crTables = [
             ['Importazione completa da Google Search Console', $_crGscFull, ''],
             ['Elenco Quick Wins', 0, ''],
             ['Analisi di una pagina', $_crPage, ''],
-            ['Punto della situazione (Google Analytics + Search Console + AI)', $_crSituation, ''],
+            ['Andamento (Google Analytics + Search Console + AI)', $_crSituation, ''],
         ],
         'note' => null,
     ],

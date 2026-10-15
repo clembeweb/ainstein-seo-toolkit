@@ -60,7 +60,7 @@
                             ?>
                             <?= $syncOn
                                 ? 'Copia automatica dei dati ' . e($syncDays[$syncFreq] ?? 'ogni giorno') . ' alle ' . e(\Core\ModuleLoader::getSetting('seo-tracking', 'gsc_sync_time', '05:00')) . ' (solo progetti con keyword monitorate)'
-                                : 'Copia automatica dei dati spenta: Punto della situazione e Quick Wins leggono comunque Search Console dal vivo' ?>
+                                : 'Copia automatica dei dati spenta: Andamento e Quick Wins leggono comunque Search Console dal vivo' ?>
                         </div>
                         <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/gsc') ?>" class="block text-sm text-primary-600 dark:text-primary-400 hover:underline">Vedi i dati copiati da Search Console</a>
                         <form action="<?= url('/seo-tracking/project/' . $project['id'] . '/gsc/disconnect') ?>" method="POST">
@@ -81,7 +81,7 @@
                 </div>
             </div>
 
-            <!-- Google Analytics 4: stesse route del Punto della situazione -->
+            <!-- Google Analytics 4: stesse route dell'Andamento -->
             <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <div class="p-5 border-b border-slate-200 dark:border-slate-700">
                     <div class="flex items-center gap-3">
@@ -115,7 +115,7 @@
                     <?php else: ?>
                     <p class="text-sm text-slate-500">Accesso Google non configurato: contatta l'amministratore.</p>
                     <?php endif; ?>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Serve al Punto della situazione: da dove arrivano le visite, conversioni, ricavi, visite dagli assistenti AI.</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Serve all'Andamento: da dove arrivano le visite, conversioni, ricavi, visite dagli assistenti AI.</p>
                 </div>
             </div>
         </div>

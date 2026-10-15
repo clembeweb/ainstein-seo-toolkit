@@ -44,7 +44,7 @@
         },
         "situation_report": {
             "cost": 5,
-            "description": "Punto della situazione: GA4 + Search Console commentati dall'AI"
+            "description": "Andamento: GA4 + Search Console con grafici e lettura AI"
         }
     },
     "settings_groups": {
@@ -308,8 +308,8 @@
         },
         "cost_situation_report": {
             "type": "number",
-            "label": "Punto della situazione",
-            "description": "Crediti per un punto della situazione (GA4 + Search Console + commento AI)",
+            "label": "Andamento",
+            "description": "Crediti per una lettura dell'Andamento (GA4 + Search Console + lettura AI)",
             "default": 5,
             "min": 0,
             "step": 0.1,

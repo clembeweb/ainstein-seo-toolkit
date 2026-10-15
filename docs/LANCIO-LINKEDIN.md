@@ -42,6 +42,19 @@
 >     **ONLINE il 2026-10-15 sera (`4955162` + fix `pagine a 0`).** Prova da CLI su Stabia (ultimi 28 giorni, 0 crediti):
 >     **7 visite da ChatGPT (8,1% del traffico), 25 nel periodo prima**, pagine: /, /amalfi-coast, /sunset. Il riquadro con
 >     dati veri si vede facendo un Punto nuovo su Stabia (5 cr): da fare con Clemente nella verifica in prod.
+>   - **Punto della situazione da RIFARE prima del post (deciso 2026-10-15 sera, verifica in prod fermata al passo 2):**
+>     Clemente: "troppo testo, voglio grafici, tabelle dove serve e un minimo di lettura del dato; il nome non mi piace".
+>     Design concordato: 4 numeri grandi con variazione e mini-linea; grafico a linee giorno per giorno (visite e clic,
+>     periodo prima in grigio); canali a barre orizzontali con le AI evidenziate + "Visite dalle AI" a barre per sorgente e
+>     tabellina pagine; tabelle solo per ricerche/pagine che salgono/scendono (restano Analizza/Monitora); AI ridotta a 1-2
+>     frasi sotto ogni grafico + "Cosa fare adesso" in 3 schede (i 5 paragrafi spariscono). Nome proposto "Andamento".
+>     Chart.js già in layout. Una chiamata in più a GA4 (per giorno) e a GSC (per giorno), 0 crediti in più. Si mostra in
+>     LOCALE prima di toccare la prod. Spec: `docs/specs/seo-tracking-punto-situazione.md` (v2).
+>     **FATTA (locale, 2026-10-16 notte), da far vedere a Clemente e poi mettere online.** Scheda rinominata "Andamento"
+>     (tab, menu laterale, tour, docs, impostazioni; la landing dice ancora "Punto della situazione": è il file della
+>     sessione landing). In locale si vede su `http://localhost/seo-toolkit/seo-tracking/project/1/situation?report=4`
+>     (report demo con lettura AI vera; report 3 = testo fisso). Verificato desktop e telefono. I report vecchi restano
+>     leggibili. Da fare in prod dopo il deploy: un "Aggiorna" su Stabia (5 cr) per vedere grafici e lettura con dati veri.
 >   - **Stabia, progetti AI Keywords doppi: FATTO il 2026-10-15** — le 2 ricerche dell'8 spostate nel 9, progetto 8 cancellato
 >     (backup `/home/ainstein/backups/2026-10-14-kr-merge-8-in-9.sql`). Ora un solo riquadro AI Keywords su Stabia.
 >   - **Scritture sul DB di prod: RISOLTO** — in modalità "Auto" il controllo automatico bloccava ogni scrittura via ssh

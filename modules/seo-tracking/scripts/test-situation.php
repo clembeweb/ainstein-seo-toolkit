@@ -48,6 +48,15 @@ $check('brand regex: "(test)" non è brand', S::brandRegex('Stabia Boat Rental (
 $check('brand regex: nota dopo il trattino', S::brandRegex('Rossi Arredamenti - sito nuovo', 'rossiarredamenti.it'), 'rossi ?arredamenti|rossiarredamenti');
 $check('brand regex: parola prova', S::brandRegex('Prova Beweb', 'beweb.it'), 'beweb');
 
+// Formato nuovo: sintesi + letture per blocco + 3 azioni (ref fuori lista → vuoto; letture sconosciute scartate)
+$new = S::parseNarrative('{"sintesi":"Mese in calo: 7 visite da ChatGPT.","letture":{"numeri":"Visite giù.","boh":"x","ai":"Da ChatGPT 7 visite, 25 prima."},"azioni":[{"titolo":"Rivedi la pagina Capri","testo":"Persa la posizione 3.","ref":"gsc_queries"},{"titolo":"B","testo":"b","ref":"inventato"},{"titolo":"C","testo":"c","ref":"trend"},{"titolo":"D","testo":"troppe"}]}');
+$check('nuovo: è nuovo', S::isNewNarrative($new), true);
+$check('nuovo: sintesi', $new['sintesi'], 'Mese in calo: 7 visite da ChatGPT.');
+$check('nuovo: letture note', array_keys($new['letture']), ['numeri', 'ai']);
+$check('nuovo: 3 azioni al massimo', count($new['azioni']), 3);
+$check('nuovo: ref fuori lista → vuoto', $new['azioni'][1]['ref'], '');
+$check('nuovo: ref valido', $new['azioni'][0]['ref'], 'gsc_queries');
+
 $par = S::parseNarrative("```json\n{\"paragrafi\":[{\"titolo\":\"Il punto\",\"testo\":\"Va bene.\",\"refs\":[\"gsc_clicks\",\"inventato\"]}]}\n```");
 $check('parse: refs in whitelist', $par[0]['refs'], ['gsc_clicks']);
 $check('parse: testo', $par[0]['testo'], 'Va bene.');

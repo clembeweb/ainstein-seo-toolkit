@@ -17,7 +17,7 @@ $basePath = "/seo-tracking/project/{$projectId}";
 // Trend (dalla Panoramica), Search Console grezza (dalle Impostazioni), Analisi pagina (da Quick Wins, Punto, Keyword)
 $tabs = [
     'overview' => ['path' => '', 'label' => 'Panoramica', 'icon' => 'chart-bar'],
-    'situation' => ['path' => '/situation', 'label' => 'Punto della situazione', 'icon' => 'sparkles'],
+    'situation' => ['path' => '/situation', 'label' => 'Andamento', 'icon' => 'sparkles'],
     'keywords' => ['path' => '/keywords', 'label' => 'Keyword', 'icon' => 'key'],
     'groups' => ['path' => '/groups', 'label' => 'Gruppi', 'icon' => 'folder'],
     'quick-wins' => ['path' => '/quick-wins', 'label' => 'Quick Wins', 'icon' => 'zap'],

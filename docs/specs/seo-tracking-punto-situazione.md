@@ -1,4 +1,4 @@
-# AI Rank — "Punto della situazione" (GA4 + Search Console + AI)
+# AI Rank — "Andamento" (ex "Punto della situazione": GA4 + Search Console + AI)
 
 > Spec v1, 2026-10-13. Decisioni di Clemente: scheda dentro AI Rank (non modulo a sé), nome "Punto della situazione"
 > (non "Recap"), prendere spunto da come è fatto il Recap di Amevista (`C:\xampp\htdocs\amevista-analysis`) per fare
@@ -76,3 +76,22 @@ credits_used, model, created_at. Storico nella scheda; si riapre senza costi.
 ## Rischio noto
 Gli scope `analytics.readonly` e `webmasters.readonly` sono "sensibili": senza verifica dell'app Google di Ainstein gli
 utenti vedono "app non verificata" e c'è un tetto di 100 utenti. Va chiesta la verifica in Google Cloud Console.
+
+## v2 — "Andamento" (2026-10-16, richiesta di Clemente: "troppo testo, voglio grafici")
+La pagina mostra prima i numeri, i grafici e le tabelle; l'AI aggiunge solo la lettura. Nome della scheda: **Andamento**.
+- **Dati in più** (0 crediti): `ga4.daily` (per giorno: visite, conversioni; periodo B e A allineati per indice) e
+  `gsc.daily` (clic, impressioni, posizione per giorno, B e A). Una chiamata GA4 e due GSC in più.
+- **Lettura AI** (`narrative`, formato nuovo riconosciuto da `isNewNarrative`): `sintesi` (una frase),
+  `letture` {numeri, andamento, canali, ai, google, pagine} (1-2 frasi ciascuna, chiave omessa se il blocco è vuoto),
+  `azioni` (3: titolo, testo, ref). I report vecchi (5 paragrafi) restano leggibili: stessa pagina, senza grafico
+  giorno per giorno, col commento vecchio in fondo e l'invito ad aggiornare.
+- **Pagina** (`views/situation/index.php`, Chart.js del layout): testata compatta con periodo, bottone "Leggi i dati" /
+  "Aggiorna" e chip dei collegamenti; striscia blu con la sintesi; 6 numeri grandi con variazione e mini-linea
+  (visite, conversioni, clic, impressioni, posizione, quota brand); "Giorno per giorno" (linee piene = periodo,
+  tratteggiate = periodo prima); "Da dove arriva il traffico" (barre orizzontali per quota, AI in indaco + tabellina);
+  "Visite dalle AI" (numero, barre per sorgente ora/prima, pagine, link al GEO Audit); tabelle ricerche/pagine che
+  salgono o scendono (Analizza/Monitora come prima); "Cosa fare adesso" in 3 schede con "Parti da qui" per riga e
+  evidenziazione del riquadro al passaggio. Letture AI sotto ogni blocco.
+- **Demo senza Google**: `scripts/demo-situation.php <st_project_id> [--no-ai]` salva un report con dati di prova
+  (serie giornaliere, AI, tabelle) e lettura vera dell'AI (o fissa con --no-ai): serve a vedere la pagina in locale.
+- Test offline aggiornati in `scripts/test-situation.php` (formato nuovo della lettura).

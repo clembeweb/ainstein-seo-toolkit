@@ -22,7 +22,7 @@ $guideSteps = [
     [
         'done' => $guideState['gsc'] && $guideState['ga4'],
         'title' => 'Collega Search Console e Analytics',
-        'text' => 'Con i dati veri di Google (clic, impressioni, visite) si accendono i Quick Wins e il Punto della situazione: cosa cresce, cosa cala e da dove partire.'
+        'text' => 'Con i dati veri di Google (clic, impressioni, visite) si accendono i Quick Wins e l\'Andamento: grafici, cosa cresce, cosa cala e da dove partire.'
             . (!$guideState['gsc'] && $guideState['ga4'] ? ' Manca Search Console.' : '') . ($guideState['gsc'] && !$guideState['ga4'] ? ' Manca Analytics.' : ''),
         'link' => $basePath . '/settings', 'cta' => 'Apri le impostazioni',
     ],

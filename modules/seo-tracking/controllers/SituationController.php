@@ -17,7 +17,7 @@ use Services\GoogleOAuthService;
 use Services\ProjectAccessService;
 
 /**
- * Scheda "Punto della situazione" di AI Rank + collegamento GA4.
+ * Scheda "Andamento" (ex Punto della situazione) di AI Rank + collegamento GA4.
  * Spec: docs/specs/seo-tracking-punto-situazione.md
  */
 class SituationController
@@ -70,7 +70,7 @@ class SituationController
         $balance = Credits::getBalance(ProjectAccessService::getCreditUserId($project, $user['id']));
         $analysisCost = $analyzer->getCreditCost();
         return View::render('seo-tracking/situation/index', [
-            'title' => 'Punto della situazione - ' . $project['name'],
+            'title' => 'Andamento - ' . $project['name'],
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
