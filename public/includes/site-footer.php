@@ -8,7 +8,7 @@
     <div class="footer-inner">
         <div class="footer-grid">
             <div class="footer-col footer-brand">
-                <img src="<?= url('/assets/images/logo-ainstein-orizzontal.png') ?>" alt="Ainstein" height="24" style="filter:brightness(0) invert(1); opacity:0.9;">
+                <img src="<?= url('/assets/images/logo-ainstein-orizzontal-white.png') ?>" alt="Ainstein" height="26">
                 <p>Strumenti con l'intelligenza artificiale per farti trovare su Google e consigliare dalle AI. In italiano, senza essere esperti SEO.</p>
             </div>
             <div class="footer-col">
