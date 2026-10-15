@@ -71,7 +71,7 @@
 >
 > **PROVA "DA UTENTE" DEI 5 TOOL (2026-10-15 sera, sessione dedicata).** In locale, account admin, 3 siti veri:
 > damichele.net (pizzeria, WordPress), torronenurzia.it (piccolo e-commerce WooCommerce), studiolegalestefanelli.it
-> (studio legale). Prod guardata in sola lettura. Niente codice toccato: le correzioni aspettano l'ok di Clemente.
+> (studio legale). Prod guardata in sola lettura. **Stato correzioni in fondo al blocco (riga "FATTO il 2026-10-15 sera").**
 > **Funziona bene:** creazione progetto (il dominio incollato con https://www./ viene ripulito), "Come si usa" di AI Rank
 > e GEO (si spuntano da soli), finestre di conferma col costo prima di ogni addebito, posizioni verificate a mano
 > (giuste), meta tag (buoni, lunghezze giuste, dati veri della pagina), brief e articolo (2.200 parole, di qualità),
@@ -114,7 +114,24 @@
 >   MANUAL, Italy/Spain, Wizard, Search Intent, Informational, featured snippet, "(Base)/(Standard)" (AI Writer); Brief,
 >   Seed Keywords, Both, "L'API espanderà" (AI Keywords); Visibility/Est. Traffic nella scheda AI Rank del progetto;
 >   "Modalita" e "generera" senza accento. In console un "SyntaxError: Unexpected token '}'" da capire.
-> **Prossimo passo:** Clemente sceglie cosa correggere (proposta: i 5 P1 prima del post), poi prova AI Keywords in prod.
+> **FATTO il 2026-10-15 sera (ok di Clemente "vai" sui 5 P1):**
+> - **AI Audit, ONLINE** (`cf12c95`, `67508bb`, `fbfa8db`): barra finale conservata (normalizeUrl, storage, link relativi
+>   `href="capri/"`), link relativi contati come interni (`ScraperService::extractLinks` ora riceve l'URL della pagina),
+>   niente controlli di spreco/indicizzabilità sui redirect. Pizzeria: 37 pagine vere (prima 20 redirect), score 20.
+>   **Stabia rifatto in prod** con `run-crawl-cli.php 17 3` (il progetto è dell'utente booking@…, non lanciabile dal
+>   Chrome admin; lo script ora fa anche le analisi finali, `b84853e`): 22 pagine tutte 200, score **80** (prima 58 con 20
+>   redirect), budget 100. clementeteodonno.it (progetto admin, ~5 cr) NON rifatto: da decidere.
+> - **In locale, committati, DA METTERE ONLINE:** AI Writer solo col WordPress del progetto (`7029e2b`; in prod oggi non
+>   c'è nessun sito WP collegato, zero regressioni), "?" del tour anche dentro i progetti (`b8bb7b3`: porta all'elenco del
+>   modulo con `?tour=slug` e lo apre), AI Audit "Nessuna scansione ancora" prima della prima scansione (`d7b1efb`),
+>   profilo GEO a 8000 token (`3707e35`; rigenerato: 4.394 token, prima sarebbe stato troncato). Tutti verificati a schermo.
+>   Attenzione: sul main c'è anche `f939297` (home, sessione landing): un `git push` lo porta online insieme.
+> - **Trovati strada facendo (non corretti):** P2 · generazione articolo oltre i 120 s → "Maximum execution time of 120
+>   seconds exceeded" in `public/index.php` (log Apache 17:58; `set_time_limit(300)` c'è nel controller ma la richiesta
+>   è morta lo stesso: da capire, forse il limite di Apache/FPM) · P3 · `sa_pages.internal_links_in` resta 0
+>   (`discovered_from` mai valorizzato da `crawlPage`): "Pagina orfana — nessun link in entrata" del crawl budget non può
+>   mai scattare · locale: al DB mancavano `last_test_*` in `aic_wp_sites` (aggiunte a mano, in prod ci sono).
+> **Prossimo passo:** mettere online i 4 commit (con l'ok), poi provare AI Keywords in prod e decidere sui P2.
 >
 > **PASSAGGIO DI CONSEGNE 2026-10-14 pomeriggio (precedente).** Fatto oggi, tutto online:
 > - Punto della situazione su Stabia rifatto con GA4+GSC veri (report id 2): regola numeri piccoli OK, "Parti da qui"
