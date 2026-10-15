@@ -37,7 +37,10 @@ if (!function_exists('navTourButton')) {
         $dot = !$isCompleted ? '<span class="absolute top-0.5 right-0.5 h-1.5 w-1.5 rounded-full bg-primary-500"></span>' : '';
         // Tour già fatto: il "?" compare solo al passaggio del mouse sulla riga (la riga ha la classe `group`)
         $reveal = $isCompleted ? ' opacity-0 group-hover:opacity-100 focus:opacity-100' : '';
-        return '<button @click.stop="$dispatch(\'open-module-tour\', { slug: \'' . $slug . '\' })" '
+        // Il tour vive nella pagina elenco del modulo: se non è in questa pagina (es. dentro un progetto)
+        // si va lì con ?tour=<slug> e si apre all'arrivo (vedi components/onboarding-spotlight.php)
+        $moduleUrl = url('/' . $slug);
+        return '<button @click.stop="if (document.querySelector(\'[data-tour-slug=&quot;' . $slug . '&quot;]\')) { $dispatch(\'open-module-tour\', { slug: \'' . $slug . '\' }) } else { window.location.href = \'' . $moduleUrl . '?tour=' . $slug . '\' }" '
             . 'class="relative shrink-0 p-1.5 text-slate-400 hover:text-primary-500 dark:hover:text-primary-400 transition-all' . $reveal . '" '
             . 'title="Tour guidato">'
             . '<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">'

@@ -19,7 +19,7 @@ $jsSteps = array_map(function($step) {
 
 <!-- Niente x-show sul contenitore: su Alpine 3.17 non reagiva alla riapertura quando partiva chiuso (tour già fatto, "?" nel menu).
      Sono i figli a mostrarsi/nascondersi con `open`; da chiuso il contenitore non intercetta i click. -->
-<div x-data="onboardingSpotlight()"
+<div x-data="onboardingSpotlight()" data-tour-slug="<?= e($onboardingModuleSlug) ?>"
      @open-module-tour.window="if ($event.detail.slug === '<?= e($onboardingModuleSlug) ?>') { reopen(); }"
      @keydown.escape.window="if (open) skip()"
      class="fixed inset-0 z-[9998]" :class="open ? '' : 'pointer-events-none'">
@@ -145,6 +145,16 @@ function onboardingSpotlight() {
         _resizeTimer: null,
 
         init() {
+            // Arrivo dal "?" del menu cliccato in un'altra pagina (?tour=<slug>): apri subito, poi pulisci l'URL
+            try {
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('tour') === '<?= e($onboardingModuleSlug) ?>') {
+                    this.open = true;
+                    params.delete('tour');
+                    const clean = window.location.pathname + (params.toString() ? '?' + params.toString() : '') + window.location.hash;
+                    window.history.replaceState({}, '', clean);
+                }
+            } catch (e) { /* URL non leggibile: si resta chiusi */ }
             if (this.open) this.$nextTick(() => this.goToStep(0));
             // Ricalcola su resize (debounced)
             window.addEventListener('resize', () => {
