@@ -316,8 +316,10 @@ Non un modulo: **la catena intera, in italiano, allo stesso posto, a crediti**: 
 10. **Screenshot:** per ora quelli di febbraio in `public/assets/images/screenshots/` (output-keyword-research = Architettura Sito vera). Da rifare freschi prima di pubblicare: Architettura Sito, GEO Audit, SEO Audit, articolo con copertina.
 
 - [ ] Brief semplice per Claude Design, con il pensiero di Clemente come tono
-- [ ] Allineare i moduli mostrati a quelli accesi (oggi manca AI Reputation Radar, c'è Content Creator)
+- [x] Allineare i moduli mostrati a quelli accesi (oggi manca AI Reputation Radar, c'è Content Creator) — fatto con la landing del 2026-10-15
 - [ ] Pagina /pricing (2026-10-12): mostra l'header pubblico ("Accedi", "Prova gratis") anche a chi è già loggato, dice "tutti i 7 moduli" ed elenca Google Ads Analyzer e Content Creator (spenti). Allinearla insieme alla landing nuova. Da /pricing ora ci si arriva dal badge crediti e dal toast "Crediti insufficienti" (fix c380a5d).
+
+- [x] **Landing rivista con Clemente il 2026-10-15, ONLINE** (`1e29174`, `9b3cda5`, `2a92f4a`, `16c4f91`): racconto in tre tempi (sapere dove sei → fare le cose giuste → vedere se funziona), via la riga dei numeri, sezione "Cos'è cambiato" col dato vero di GA4, "Una settimana con Ainstein" al posto della catena in 6 passi, banda "Agenzie e professionisti" (un progetto per cliente, strumenti accesi/spenti, leggera), prezzi con "cosa fai con 100 crediti", FAQ vere, icone a filo in "Per chi è", logo bianco vero nel footer (`logo-ainstein-orizzontal-white.png`), "Andamento" al posto di "Punto della situazione". Sulla home restano le linguette; `/landing-b` (noindex) è la variante con le card che si aprono col "+" (effetto Semrush), tenuta per confronto. La sezione strumenti sta in `public/includes/landing-tools.php` (una fonte per le due varianti). Regole di tono decise da Clemente: nessun "unico" né paragone con altri strumenti, niente sezione "chi c'è dietro", niente varianti A/B da scegliere (lavoro finito e basta). `landing4.php` resta solo per tornare indietro.
 
 ### Punto 4. Post LinkedIn
 
