@@ -535,6 +535,29 @@ non la merce. Il link ci sta solo come "se vi va di vederlo". La v0 qui sotto è
 
 **Decisione finale 2026-10-09: il post si scrive ALLA FINE di tutto (dopo test e landing), da zero, con Clemente. Le bozze qui sotto non contano: restano solo come memoria di cosa NON fare.**
 
+**Bozza v3 (2026-10-16 sera, dopo la correzione di Clemente: "la mentalità è cambiata, adesso ha una forma e un senso").
+La v2 qui sotto è BOCCIATA: troppo "non è perfetta / è un figlio", tono da chi si scusa. Ora il prodotto esiste, funziona, ha
+un'idea precisa; il post lo dice con sicurezza, sempre in prima persona, senza copy da SaaS e senza paragoni con gli altri.**
+
+> Le AI sanno chi sei. Ma ai tuoi clienti consigliano altri.
+>
+> L'ho visto con i numeri su un sito che seguo: quando chiedi a ChatGPT di quell'azienda, la conosce e la cita 8 volte su 10. Quando un cliente chiede "una barca per Capri", la consiglia 2 volte su 100. E intanto, in un mese, 7 persone sono arrivate sul sito proprio da ChatGPT.
+>
+> È da qui che nasce Ainstein, la piattaforma che ho costruito negli ultimi quattro anni e che da oggi è online.
+>
+> Fa una cosa semplice: ti dice come stai su Google e su ChatGPT, e cosa fare dopo. Controlla il sito, trova le ricerche che contano, segue le posizioni, scrive gli articoli, e ti dice se le AI ti consigliano o no, con le visite vere che ti portano.
+>
+> L'ho fatta pensando a chi ha un sito, un blog, un piccolo e-commerce e non ha un consulente SEO in casa: linguaggio semplice, numeri veri, un percorso chiaro. Per chi come me segue più clienti, un progetto per cliente e tutto allo stesso posto.
+>
+> L'ho costruita da solo: vent'anni di SEO e Google Ads, e l'intelligenza artificiale che mi ha dato le mani che non avevo, quelle di chi sa programmare.
+>
+> È su ainstein.it. Se la provate, ditemi cosa vi manca: la sto facendo anche con chi la usa.
+
+Note v3: prima riga 59 caratteri (gancio GEO, sotto il taglio); nessun "prova gratis", nessun "unico/nessun altro", nessun
+paragone; numeri veri (GEO Audit di Stabia 79% / 2%, GA4 Stabia 7 visite da ChatGPT negli ultimi 28 giorni). Da decidere
+con Clemente: nominare Stabia o no; "quattro anni" (lui aveva scritto 2 come esempio); 2-3 screenshot veri (Andamento con
+"Visite dalle AI", report GEO, Panoramica AI Audit).
+
 **Bozza v2 (2026-10-16 sera, scritta "al volo" su richiesta di Clemente, da rivedere insieme con lui):**
 
 > Dopo 4 anni ho detto basta: oggi è online.
