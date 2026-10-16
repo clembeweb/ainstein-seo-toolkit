@@ -83,7 +83,10 @@
   ~25 s l'una; 19k token in, 33k out) in un'unica richiesta HTTP. Nessun tetto: la scansione di default arriva a
   100 pagine → ~100 chiamate, **~45 minuti** di attesa per lo stesso prezzo fisso di 10 crediti (costo API ~8 volte
   quello di Madcrumbs). Con siti veri dei clienti dal post, è facile che l'utente chiuda o che la richiesta muoia.
-- Possibili strade (da decidere): tetto alle N pagine più importanti; più pagine per chiamata (BATCH_SIZE = 5 c'è
+- **Decisione di Clemente (2026-10-16): far scegliere le pagine da analizzare** prima di generare ("se un sito ne ha
+  a centinaia succede un casino"). Clemente: "mi sembra ottimo" sulla qualità; "procedi con i fix che servono" →
+  passato alla sessione p2-fix.
+- Altre strade complementari: tetto alle N pagine più importanti; più pagine per chiamata (BATCH_SIZE = 5 c'è
   ma non viene usato per raggruppare le chiamate); lavoro in background con avanzamento "pagina X di Y".
 - Note: il Report AI (15 cr) non è ancora stato provato; mai generato in prod né l'uno né l'altro prima di oggi.
 
@@ -104,6 +107,15 @@
   per pagina fa 259). "Tempo stimato 9h 33m" per 12 pagine. Etichette: "Score Attuale/Atteso", "0/72 fix",
   "Esporta To-Do List".
 - Nella stessa sessione, Impostazioni del progetto: "Issues Totali", "URL Base", "puo" senza accento; saldo in alto "90.0".
+
+### [P3] AI Audit, scheda "Impostazioni" del progetto: non ha impostazioni del modulo
+- Scenario / passo: 1B, Madcrumbs, scheda Impostazioni. Domanda di Clemente: "non dovrebbe stare nei singoli moduli?"
+- Cosa c'è: Nome progetto (rinomina il progetto del modulo, diverso dal nome del progetto globale), URL base in sola
+  lettura, Statistiche (le stesse della Panoramica), "Zona pericolosa" con Elimina progetto. Nessuna impostazione
+  propria di AI Audit (le opzioni della scansione stanno nel riquadro Scansione).
+- In più è doppia: icona ingranaggio in alto a destra + scheda Impostazioni; icona orologio + scheda Storico.
+- Proposta: nome/URL/elimina vivono nel progetto globale (/projects/{id}); nel modulo una scheda Impostazioni solo se
+  ha impostazioni vere (es. pagine massime, frequenza). Da controllare se gli altri 4 moduli hanno la stessa pagina.
 
 ### [P3] Storico crediti: "action_plan_generate" come descrizione
 - Scenario / passo: 1B, dopo il Piano d'azione.
