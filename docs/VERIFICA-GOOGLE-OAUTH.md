@@ -42,7 +42,11 @@ degli indirizzi, e come l'app usa i dati. Schermata di consenso in **inglese** (
 - [x] Progetto, API, branding testi, scope, client, In produzione (2026-10-16)
 - [x] Privacy con sezione "Dati ricevuti da Google" + frase Limited Use (`944d506`)
 - [x] Logo caricato (2026-10-16)
-- [ ] Deploy + SQL + client nuovo in Admin
+- [x] Deploy + client nuovo in Admin (2026-10-16 sera). La SQL `gads_oauth_*` era partita dopo l'incolla e aveva
+      copiato il client nuovo: rimesso il client Beweb dal DB locale + cache settings svuotata.
+- [ ] **MCC Google Ads da ricollegare** (Admin → Integrazioni → Keyword Planner → Ricollega): il token del 9/10 era nato
+      con l'app Beweb in Test (scadenza 7 giorni) ed è scaduto il 16/10 ~18:34. Senza, niente volumi Keyword Planner.
+- [ ] Ricollegare GSC e GA4 sui progetti AI Rank (token del client vecchio)
 - [x] Search Console: proprietà `https://ainstein.it/` VERIFICATA per bewebsolution (2026-10-16 sera, file HTML
       `public/google671e942f079f888e.html`, `897f817`: NON cancellarlo).
       Primo controllo branding (2026-10-16) bocciato: "home page non registrata a tuo nome".
