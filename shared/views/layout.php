@@ -25,6 +25,8 @@ $_accentShades = \Core\BrandingHelper::generateShades($_brandAccent);
     <meta name="theme-color" content="<?= e($_brandPrimary) ?>">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
 
+    <?= \Core\Analytics::headScript() ?>
+
     <!-- Tailwind CSS with Typography plugin -->
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <script>
@@ -410,19 +412,48 @@ $_accentShades = \Core\BrandingHelper::generateShades($_brandAccent);
         const nativeFetch = window.fetch.bind(window);
         let timer = null;
 
+        // GA4 credits_spent: il saldo arriva con le righe nuove di usage_log (id > since); since sta in localStorage,
+        // seminato dal server alla prima visita così la storia passata non viene rimandata (docs/GA4-AINSTEIN.md).
+        const USAGE_KEY = 'ainstein_usage_since';
+        const usageSeed = <?= (int) (isset($user) && $user ? \Core\Analytics::usageSeed((int) $user['id']) : 0) ?>;
+        // Solo con utente loggato: su /login e /register la chiamata a /credits/balance finirebbe nel middleware auth,
+        // che la salverebbe come pagina di destinazione dopo il login.
+        const tracking = <?= (isset($user) && $user) ? 'true' : 'false' ?> && typeof window.ainsteinTrack === 'function';
+        const usageSince = () => {
+            try {
+                const raw = localStorage.getItem(USAGE_KEY);
+                if (raw !== null) return parseInt(raw, 10) || 0; // anche "0": utente nuovo, prende tutto da qui in poi
+                localStorage.setItem(USAGE_KEY, String(usageSeed));
+            } catch (e) {}
+            return usageSeed;
+        };
+        const sendUsage = (rows) => {
+            if (!tracking || !Array.isArray(rows) || !rows.length) return;
+            let last = 0;
+            rows.forEach((u) => {
+                window.ainsteinTrack('credits_spent', { module: u.module || '', operation: u.operation || '', credits: Number(u.credits) || 0 });
+                last = Math.max(last, Number(u.id) || 0);
+            });
+            if (last) { try { localStorage.setItem(USAGE_KEY, String(last)); } catch (e) {} }
+        };
+
         window.refreshCredits = function () {
             clearTimeout(timer);
             timer = setTimeout(async () => {
                 try {
-                    const r = await nativeFetch(balanceUrl, { headers: { 'Accept': 'application/json' } });
+                    const url = tracking ? balanceUrl + '?since=' + usageSince() : balanceUrl;
+                    const r = await nativeFetch(url, { headers: { 'Accept': 'application/json' } });
                     if (!r.ok) return;
                     const d = await r.json();
                     if (typeof d.credits === 'number') {
                         window.dispatchEvent(new CustomEvent('credits-updated', { detail: { credits: d.credits } }));
                     }
+                    sendUsage(d.usage);
                 } catch (e) {}
             }, 400);
         };
+        // All'apertura di una pagina: eventuali crediti spesi tra una pagina e l'altra (form POST + redirect, job in background)
+        if (tracking) window.refreshCredits();
 
         const sameOrigin = (url) => {
             try { return new URL(url, location.href).origin === location.origin; } catch (e) { return false; }
@@ -551,5 +582,6 @@ $_accentShades = \Core\BrandingHelper::generateShades($_brandAccent);
         ]) ?>
         <?php endif; ?>
     <?php endif; ?>
+    <?= \Core\Analytics::banner() ?>
 </body>
 </html>

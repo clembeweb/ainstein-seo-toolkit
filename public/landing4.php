@@ -818,6 +818,7 @@ $currentPage = 'home';
             .proof-grid { grid-template-columns: 1fr; }
         }
     </style>
+    <?= \Core\Analytics::headScript() ?>
 </head>
 <body>
 
@@ -1548,5 +1549,6 @@ const counterObserver = new IntersectionObserver((entries) => {
 }, { threshold: 0.5 });
 document.querySelectorAll('.proof-num[data-count]').forEach(el => counterObserver.observe(el));
 </script>
+<?= \Core\Analytics::banner() ?>
 </body>
 </html>

@@ -247,7 +247,7 @@ class AdminController
         // Prima venivano aggiornate solo le righe già esistenti: su un'installazione dove la riga
         // non c'era (es. serper_api_key in locale) il valore inserito spariva in silenzio al salvataggio.
         $creatable = [
-            'site_name', 'free_credits',
+            'site_name', 'free_credits', 'ga4_measurement_id',
             'ai_provider', 'ai_model', 'ai_fallback_enabled',
             'anthropic_api_key', 'openai_api_key', 'google_gemini_api_key', 'perplexity_api_key',
             'serper_api_key', 'serper_api_key_2', 'serp_api_key', 'serp_api_key_2',

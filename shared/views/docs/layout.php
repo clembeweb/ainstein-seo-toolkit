@@ -90,6 +90,7 @@ $navItems = [
         /* Smooth scroll */
         html { scroll-behavior: smooth; }
     </style>
+    <?= \Core\Analytics::headScript() ?>
 </head>
 <body class="h-full bg-slate-50 dark:bg-slate-900 font-sans"
       x-data="{
@@ -193,6 +194,6 @@ $navItems = [
             </div>
         </footer>
     </div>
-
+    <?= \Core\Analytics::banner() ?>
 </body>
 </html>

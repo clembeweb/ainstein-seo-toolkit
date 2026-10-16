@@ -983,6 +983,13 @@ $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
                                    class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm">
                             <p class="mt-1 text-xs text-slate-500">Assegnati automaticamente alla registrazione</p>
                         </div>
+                        <div class="sm:col-span-2">
+                            <label for="ga4_measurement_id" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Google Analytics 4 — ID misurazione del sito Ainstein</label>
+                            <input type="text" name="ga4_measurement_id" id="ga4_measurement_id" value="<?= e($settings['ga4_measurement_id']['value'] ?? '') ?>"
+                                   placeholder="G-XXXXXXXXXX" pattern="G-[A-Za-z0-9]{6,14}" autocomplete="off"
+                                   class="block w-full sm:max-w-xs rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm font-mono">
+                            <p class="mt-1 text-xs text-slate-500">Vuoto = nessun tracciamento. Con l'ID: pagine ed eventi (iscrizioni, progetti, crediti) del sito ainstein.it, banner cookie con consenso, admin esclusi. Guida: <code>docs/GA4-AINSTEIN.md</code></p>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -281,6 +281,7 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
         @media(max-width:600px){.hero{padding:56px 0 48px}.hero h1{font-size:36px}.hero .sub{font-size:17px}.check{flex-direction:column;border-radius:20px}.check input[type=text]{padding:12px 14px}.chain,.aud,.price,.what,.footer-grid,.pro .cols{grid-template-columns:1fr}.pro{padding:44px 24px;border-radius:24px}section{padding:64px 0}.gate{flex-direction:column;align-items:flex-start}.lock{display:none}.final{padding:48px 20px}.kpis{grid-template-columns:1fr 1fr 1fr}.kpi b{font-size:18px}.item .ttl{font-size:24px}.item h3{font-size:19px}}
         @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
     </style>
+    <?= \Core\Analytics::headScript() ?>
 </head>
 <body>
 
@@ -556,6 +557,9 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
                 }
                 fill.style.width = '100%';
                 render(data);
+                if (typeof window.ainsteinTrack === 'function') {
+                    window.ainsteinTrack('free_check', { score: Number(data.score) || 0, total: Number(data.total) || 0, result: data.error_site ? 'site_error' : (data.score >= 4 ? 'good' : (data.score >= 2 ? 'partial' : 'poor')) });
+                }
             } catch (err) {
                 msg.innerHTML = esc(err.message) + ' <a href="' + registerUrl + '" style="font-weight:600;text-decoration:underline">Registrati gratis</a>';
                 msg.classList.add('show');
@@ -588,5 +592,6 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
     }
 })();
 </script>
+<?= \Core\Analytics::banner() ?>
 </body>
 </html>

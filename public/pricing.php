@@ -239,6 +239,7 @@ $currentPage = 'pricing';
             .footer-grid { grid-template-columns: 1fr; gap: 32px; }
         }
     </style>
+    <?= \Core\Analytics::headScript([['name' => 'pricing_view', 'params' => []]]) ?>
 </head>
 <body>
 
@@ -580,5 +581,6 @@ pricingSwitch.addEventListener('click', () => {
     document.querySelectorAll('.yearly-text-annual').forEach(el => el.style.display = isYearly ? '' : 'none');
 });
 </script>
+<?= \Core\Analytics::banner() ?>
 </body>
 </html>
