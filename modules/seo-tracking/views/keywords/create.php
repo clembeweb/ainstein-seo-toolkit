@@ -73,7 +73,15 @@
                        class="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
                 <div>
                     <span class="block text-sm font-medium text-slate-900 dark:text-white">Traccia posizioni</span>
-                    <span class="block text-xs text-slate-500 dark:text-slate-400">Monitora giornalmente le variazioni di posizione</span>
+                    <?php
+                    // Quello che fa davvero il controllo automatico (impostazioni del modulo, rank-dispatcher)
+                    $_rankDays = ['daily' => 'ogni giorno', 'mon_thu' => 'lunedì e giovedì', 'mon_wed_fri' => 'lunedì, mercoledì e venerdì', 'weekly' => 'ogni lunedì'];
+                    $_rankPreset = \Core\ModuleLoader::getSetting('seo-tracking', 'rank_auto_days', 'mon_thu');
+                    $_rankAutoOn = (bool) \Core\ModuleLoader::getSetting('seo-tracking', 'rank_auto_enabled', false);
+                    ?>
+                    <span class="block text-xs text-slate-500 dark:text-slate-400"><?= $_rankAutoOn
+                        ? 'Controllo automatico gratuito ' . e($_rankDays[$_rankPreset] ?? 'lunedì e giovedì')
+                        : 'Le posizioni si aggiornano quando lanci il controllo' ?></span>
                 </div>
             </label>
 
@@ -85,7 +93,7 @@
                        onchange="updateCostPreview()">
                 <div>
                     <span class="block text-sm font-medium text-slate-900 dark:text-white">Recupera dati automaticamente</span>
-                    <span class="block text-xs text-slate-500 dark:text-slate-400">Ottieni volume, CPC e competition per ogni keyword (1 cr/kw Base)</span>
+                    <span class="block text-xs text-slate-500 dark:text-slate-400">Volume, CPC e concorrenza di ogni keyword (<?= rtrim(rtrim(number_format((float) ($volumeCost ?? 1), 1, ',', ''), '0'), ',') ?> cr a keyword)</span>
                 </div>
             </label>
             <?php endif; ?>
@@ -187,9 +195,9 @@ function countKeywords() {
 
 function calculateCost(count) {
     if (count === 0) return 0;
-    // 0.5 crediti/kw, 0.3 se 10+ keyword
-    const costPerKeyword = count >= 10 ? 0.3 : 0.5;
-    return (count * costPerKeyword).toFixed(1);
+    // Stesso costo che scala il server (impostazione "Volumi keyword")
+    const costPerKeyword = <?= json_encode((float) ($volumeCost ?? 1)) ?>;
+    return (Math.round(count * costPerKeyword * 10) / 10).toLocaleString('it-IT');
 }
 
 function updateCostPreview() {

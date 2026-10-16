@@ -140,13 +140,6 @@
                 <option value="1" <?= $filters['is_tracked'] === '1' ? 'selected' : '' ?>>Solo tracciate</option>
                 <option value="0" <?= $filters['is_tracked'] === '0' ? 'selected' : '' ?>>Non tracciate</option>
             </select>
-            <select name="position" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm">
-                <option value="">Tutte le posizioni</option>
-                <option value="3" <?= $filters['position_max'] === '3' ? 'selected' : '' ?>>Top 3</option>
-                <option value="10" <?= $filters['position_max'] === '10' ? 'selected' : '' ?>>Top 10</option>
-                <option value="20" <?= $filters['position_max'] === '20' ? 'selected' : '' ?>>Top 20</option>
-                <option value="50" <?= $filters['position_max'] === '50' ? 'selected' : '' ?>>Top 50</option>
-            </select>
             <select name="group" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm">
                 <option value="">Tutti i gruppi</option>
                 <?php foreach ($groups as $group): ?>
@@ -554,7 +547,8 @@
                                            ($pos <= 20 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' : $slateClass)));
                                 ?>
                                 <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium <?= $posClass ?>"<?= $notInTop100 ? ' title="Verificata: non presente nelle prime 100 posizioni"' : '' ?>>
-                                    <?= $pos > 0 ? number_format($pos, 1) : ($notInTop100 ? '>100' : '-') ?>
+                                    <?php // Posizione SERP intera ("1", non "1.0"); la media GSC resta con un decimale ("4,3") ?>
+                                    <?= $pos > 0 ? ((float) $pos == floor((float) $pos) ? (int) $pos : number_format((float) $pos, 1, ',', '')) : ($notInTop100 ? '>100' : '-') ?>
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-right text-sm text-slate-900 dark:text-white">

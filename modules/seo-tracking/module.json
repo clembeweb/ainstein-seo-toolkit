@@ -336,6 +336,16 @@
             "admin_only": true,
             "group": "costs"
         },
+        "cost_keyword_volume": {
+            "type": "number",
+            "label": "Volumi keyword",
+            "description": "Crediti per keyword per volume, CPC e concorrenza (aggiunta keyword e aggiornamento volumi)",
+            "default": 1,
+            "min": 0,
+            "step": 0.1,
+            "admin_only": true,
+            "group": "costs"
+        },
         "cost_alert_ai_insight": {
             "type": "number",
             "label": "Alert AI Insight",

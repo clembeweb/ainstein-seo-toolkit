@@ -205,6 +205,7 @@ class KeywordController
             'project' => $project,
             'groups' => $groups,
             'locations' => $locations,
+            'volumeCost' => self::volumeCost(),
         ]);
     }
 
@@ -290,8 +291,8 @@ class KeywordController
             $dataForSeo = new \Services\DataForSeoService();
 
             if ($dataForSeo->isConfigured()) {
-                // Calcola costo: 1 credito/kw (livello Base)
-                $cost = $added * 1;
+                // Costo dalle impostazioni del modulo (cost_keyword_volume), lo stesso mostrato nel form
+                $cost = round($added * self::volumeCost(), 2);
 
                 if (Credits::hasEnough($creditUserId, $cost)) {
                     // Aggiorna volumi solo per le keyword appena inserite
@@ -310,7 +311,10 @@ class KeywordController
                     $fetchedMsg = " (crediti insufficienti per recupero dati automatico)";
                 }
             } else {
-                $fetchedMsg = " (DataForSEO non configurato)";
+                // Avviso tecnico solo per chi può configurarlo
+                $fetchedMsg = (($user['role'] ?? '') === 'admin')
+                    ? " (volumi non recuperati: DataForSEO non configurato in Admin > Impostazioni)"
+                    : '';
             }
         }
 
@@ -742,6 +746,7 @@ class KeywordController
             'groups' => $groups,
             'locations' => $locations,
             'defaultCountry' => $defaultCountry,
+            'volumeCost' => self::volumeCost(),
         ]);
     }
 
@@ -878,19 +883,24 @@ class KeywordController
      */
     private function calculateRefreshCost(int $keywordCount, string $type = 'volumes'): float
     {
+        $volumeCost = $keywordCount * self::volumeCost();
+        $positionCost = $keywordCount * Credits::getCost('rank_check', 'seo-tracking', 1);
         if ($type === 'volumes') {
-            // 1 credito/kw (livello Base)
-            return $keywordCount * 1;
+            return $volumeCost;
         } elseif ($type === 'positions') {
-            // 1 credito/kw
-            return $keywordCount * 1.0;
+            return $positionCost;
         } elseif ($type === 'all') {
-            // Somma di volumi (1 cr Base) + posizioni (1 cr Base)
-            $volumeCost = $keywordCount * 1;
-            $positionCost = $keywordCount * 1;
             return $volumeCost + $positionCost;
         }
         return 0;
+    }
+
+    /**
+     * Crediti per keyword del recupero volume/CPC/concorrenza (impostazione cost_keyword_volume)
+     */
+    private static function volumeCost(): float
+    {
+        return Credits::getCost('keyword_volume', 'seo-tracking', 1);
     }
 
     /**

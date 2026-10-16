@@ -81,7 +81,15 @@
                        class="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
                 <div>
                     <span class="block text-sm font-medium text-slate-900 dark:text-white">Traccia posizioni</span>
-                    <span class="block text-xs text-slate-500 dark:text-slate-400">Monitora giornalmente le variazioni di posizione</span>
+                    <?php
+                    // Quello che fa davvero il controllo automatico (impostazioni del modulo, rank-dispatcher)
+                    $_rankDays = ['daily' => 'ogni giorno', 'mon_thu' => 'lunedì e giovedì', 'mon_wed_fri' => 'lunedì, mercoledì e venerdì', 'weekly' => 'ogni lunedì'];
+                    $_rankPreset = \Core\ModuleLoader::getSetting('seo-tracking', 'rank_auto_days', 'mon_thu');
+                    $_rankAutoOn = (bool) \Core\ModuleLoader::getSetting('seo-tracking', 'rank_auto_enabled', false);
+                    ?>
+                    <span class="block text-xs text-slate-500 dark:text-slate-400"><?= $_rankAutoOn
+                        ? 'Controllo automatico gratuito ' . e($_rankDays[$_rankPreset] ?? 'lunedì e giovedì')
+                        : 'Le posizioni si aggiornano quando lanci il controllo' ?></span>
                 </div>
             </label>
         </div>
