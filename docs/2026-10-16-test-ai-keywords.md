@@ -53,3 +53,21 @@ Prova in prod su Stabia, nuovo ingresso (tutto gratis, saldo invariato 7.226,3):
 |---|---|---|---|---|
 | 2.3 | Parole proposte | Le ricerche principali del settore | Troppo specifiche, mancavano le più cercate | P1 — **corretto** (`05fcf05`) |
 | 2.4 | Storico | Stato in italiano | "Draft" | P3 — **corretto** (`05fcf05`) |
+
+### Raggruppamento AI su Stabia (3 crediti, ok di Clemente)
+
+- Costo mostrato 3 = addebitato 3 (saldo 7.226,3 → 7.223,3). Tempo ~2 minuti con 200 keyword.
+- 8 gruppi giusti per il business: senza patente generico (1.000) e per mezzo (40 cv, gommone), Castellammare (locale),
+  Sorrento, giro in barca Capri (720), tour privato Capri da Sorrento/Napoli, Grotta Azzurra e Faraglioni, Costiera
+  Amalfitana e Positano. 179 keyword nei gruppi, 9.040 ricerche al mese.
+- Note per gruppo concrete e coerenti col profilo (es. "il noleggio senza patente parte solo da Castellammare, Sorrento
+  è imbarco solo per i tour"; "il sito è solo in inglese: serve /it/").
+- 22 escluse, tutte giuste (altre località, barche a vela, un concorrente, partenze da Amalfi o Ischia). Il dubbio del
+  giro manuale ("escluse keyword in target") qui non si presenta: il profilo vero aiuta.
+- "E adesso?": AI Rank attivo su Stabia → "Manda ad AI Rank"; AI Writer non attivo → "Attiva AI Writer".
+
+| # | Passo | Cosa mi aspettavo | Cosa è successo | Priorità |
+|---|---|---|---|---|
+| 2.5 | Attesa del raggruppamento | Tempo indicato vero | "Di solito meno di un minuto", ma con 200 keyword ci vogliono ~2 minuti | P3 |
+| 2.6 | Storico ricerche | Solo le ricerche utili | Ogni raccolta non portata all'AI resta come "Non finita" (oggi 3 righe su Stabia) | P3 |
+| 2.7 | Note dei gruppi | Parole semplici | L'AI scrive ancora "cluster", "pillar page", "CTA" nelle note | P3 |
