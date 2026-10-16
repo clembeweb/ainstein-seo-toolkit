@@ -285,7 +285,7 @@ if ($isStopping) {
             <!-- Preset Buttons -->
             <div>
                 <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-                    Modalita Scansione
+                    Modalità di scansione
                 </label>
                 <div class="grid grid-cols-3 gap-3">
                     <?php foreach ($presets as $key => $preset): ?>

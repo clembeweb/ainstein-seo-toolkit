@@ -3,6 +3,17 @@
 $hasScan = !empty($project['completed_at']) || (int) ($project['pages_crawled'] ?? 0) > 0;
 $isCrawling = in_array($project['status'] ?? '', ['crawling', 'stopping'], true);
 
+// "Come funziona": prima della prima scansione sta in alto al posto dei riquadri vuoti (test manuali 2026-10-16)
+$howItWorks = \Core\View::partial('components/dashboard-how-it-works', [
+    'color' => 'emerald',
+    'steps' => [
+        ['title' => 'Inserisci il sito', 'description' => 'L\'indirizzo del sito da controllare'],
+        ['title' => 'Scansione del sito', 'description' => 'Gratis: legge le pagine come Google'],
+        ['title' => 'Problemi trovati', 'description' => 'Critici, avvisi e note per ogni pagina'],
+        ['title' => 'Report AI', 'description' => 'Cosa correggere, in ordine di importanza'],
+    ],
+]);
+
 // Health score colors
 $score = $project['health_score'] ?? 0;
 if ($score >= 80) {
@@ -90,7 +101,8 @@ $categoryColors = [
                 </div>
             </div>
 
-            <!-- Health Score Gauge -->
+            <!-- Punteggio (solo dopo una scansione: prima sarebbe un "/100" vuoto) -->
+            <?php if ($hasScan): ?>
             <div class="flex items-center gap-6">
                 <div class="relative w-32 h-32">
                     <svg class="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
@@ -149,9 +161,14 @@ $categoryColors = [
                     <?php endif; ?>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
     </div>
 
+    <?php if (!$hasScan): ?>
+    <!-- Prima della prima scansione: come funziona, poi il riquadro Scansione -->
+    <?= $howItWorks ?>
+    <?php else: ?>
     <!-- Quick Stats -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
@@ -208,6 +225,8 @@ $categoryColors = [
         </div>
     </div>
 
+    <?php endif; ?>
+
     <!-- Azioni Prioritarie (top 3 critical issues) -->
     <?php
     $priorityActions = array_filter($topIssues ?? [], fn($i) => $i['severity'] === 'critical');
@@ -254,6 +273,7 @@ $categoryColors = [
     include __DIR__ . '/../partials/crawl-control.php';
     ?>
 
+    <?php if ($hasScan): ?>
     <!-- Categorie Grid -->
     <div>
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Categorie Audit</h2>
@@ -475,6 +495,8 @@ $categoryColors = [
         </div>
     </div>
 
+    <?php endif; ?>
+
     <!-- Cross-module CTA: AI Rank -->
     <?php if ($project['status'] === 'completed'): ?>
     <div class="flex items-center justify-between bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 px-5 py-4">
@@ -493,15 +515,9 @@ $categoryColors = [
     </div>
     <?php endif; ?>
 
-    <!-- Come funziona -->
-    <?= \Core\View::partial('components/dashboard-how-it-works', [
-        'color' => 'emerald',
-        'steps' => [
-            ['title' => 'Inserisci URL', 'description' => 'Il sito da analizzare'],
-            ['title' => 'Crawl Sito', 'description' => 'Scansione pagine e risorse'],
-            ['title' => 'Analisi AI', 'description' => 'Identifica problemi SEO'],
-            ['title' => 'Piano d\'Azione', 'description' => 'Suggerimenti prioritizzati'],
-        ],
-    ]) ?>
+    <!-- Come funziona (prima della prima scansione sta in alto) -->
+    <?php if ($hasScan): ?>
+    <?= $howItWorks ?>
+    <?php endif; ?>
 
 </div>
