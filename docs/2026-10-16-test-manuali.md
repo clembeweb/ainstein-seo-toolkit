@@ -68,6 +68,13 @@
 - Successo: dai nomi non si capisce; in più il Report AI ha una sezione che si chiama "Piano d'azione consigliato".
 - Note: basta una riga sotto ogni scheda che dica a cosa serve (e magari rinominare la sezione del report in "Tempi").
 
+## Idee per DOPO il post
+
+- **Landing: scansione AI Audit insieme al controllo AI gratuito** (Clemente, 2026-10-16). La scansione di AI Audit è
+  gratis: quando un visitatore analizza il suo sito dalla home, oltre all'analisi AI far partire una scansione come la
+  farebbe il tool e mostrare il riassunto senza dettagli (quante criticità/avvisi trovati, punteggio, pagine lette).
+  I dettagli si vedono dopo l'iscrizione. Da fare alla fine, dopo il post.
+
 ## Lista corta prima del post
 
 _Si compila alla fine._
