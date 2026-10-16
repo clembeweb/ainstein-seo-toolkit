@@ -514,10 +514,12 @@ function arReport() {
         async generateBrief(actionId, ev, regenerate) {
             const box = document.getElementById('brief-' + actionId);
             if (!box || this.generatingBrief[actionId]) return;
+            // Il bottone va preso subito: dopo l'await della conferma ev.currentTarget è già null
+            const btn = ev.currentTarget;
             const costLabel = <?= json_encode($briefCostLabel, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>;
             if (!(await window.arConfirm(regenerate ? 'Rigenerare la scheda? Sovrascrive quella attuale e costa ' + costLabel + '.' : 'Generare la scheda operativa? Costa ' + costLabel + ' e richiede 20-40 secondi.', { buttonText: regenerate ? 'Rigenera' : 'Genera' }))) return;
             this.generatingBrief[actionId] = true;
-            const btn = ev.currentTarget; const oldHtml = btn.innerHTML;
+            const oldHtml = btn.innerHTML;
             btn.disabled = true; btn.innerHTML = '<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg> Genero la scheda…';
             try {
                 const fd = new FormData(); fd.append('_csrf_token', csrf); if (regenerate) fd.append('force', '1');
