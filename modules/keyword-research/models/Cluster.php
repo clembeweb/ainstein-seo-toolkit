@@ -8,6 +8,54 @@ class Cluster
 {
     protected string $table = 'kr_clusters';
 
+    /**
+     * Volume di un cluster contando UNA volta le varianti della stessa ricerca.
+     * Google raggruppa "giro in barca a capri", "capri giro in barca", "giri in barca capri" nella stessa
+     * keyword e riporta per tutte lo stesso volume/CPC/competizione: sommarle gonfiava i totali
+     * (8 righe da 720 → 5.900, prova del 2026-10-16). Due righe sono la stessa ricerca se hanno le stesse
+     * parole (senza articoli/preposizioni, al netto di plurali e ordine) E gli stessi numeri.
+     */
+    public static function dedupedVolume(array $keywords): int
+    {
+        $seen = [];
+        $total = 0;
+        foreach ($keywords as $kw) {
+            $key = self::variantKey($kw);
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $total += (int) ($kw['volume'] ?? 0);
+        }
+        return $total;
+    }
+
+    public static function variantKey(array $kw): string
+    {
+        $stop = ['a', 'ad', 'al', 'ai', 'agli', 'alla', 'alle', 'allo', 'con', 'da', 'dal', 'dai', 'dalla', 'dalle', 'dallo', 'di', 'del', 'dei', 'della', 'delle', 'dello', 'degli', 'e', 'ed', 'il', 'lo', 'la', 'i', 'gli', 'le', 'in', 'nel', 'nei', 'nella', 'nelle', 'nello', 'per', 'su', 'sul', 'sui', 'sulla', 'sulle', 'un', 'una', 'uno', 'd', 'l', 'the', 'of', 'for', 'to', 'and', 'in', 'on', 'with'];
+        $text = mb_strtolower((string) ($kw['text'] ?? ''));
+        $tokens = preg_split('/[^\p{L}\p{N}]+/u', $text, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $stems = [];
+        foreach ($tokens as $t) {
+            if (in_array($t, $stop, true)) {
+                continue;
+            }
+            // Radice grezza: via l'ultima vocale (giro/giri → gir, barca/barche → barc) e una eventuale h finale
+            if (mb_strlen($t) > 3) {
+                $t = preg_replace('/[aeiou]$/u', '', $t);
+                $t = preg_replace('/h$/u', '', $t);
+            }
+            $stems[$t] = true;
+        }
+        $stems = array_keys($stems);
+        sort($stems);
+        return implode(' ', $stems)
+            . '|' . (int) ($kw['volume'] ?? 0)
+            . '|' . number_format((float) ($kw['low_bid'] ?? 0), 2, '.', '')
+            . '|' . number_format((float) ($kw['high_bid'] ?? 0), 2, '.', '')
+            . '|' . strtolower((string) ($kw['competition_level'] ?? ''));
+    }
+
     public function find(int $id): ?array
     {
         return Database::fetch("SELECT * FROM {$this->table} WHERE id = ?", [$id]);

@@ -64,6 +64,7 @@ sort($uniqueIntents);
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 text-center">
             <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($totalVolume) ?></p>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Volume totale</p>
+            <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5" title="Google dà lo stesso volume a 'giro in barca capri' e 'capri giro in barca': qui contano una volta sola">varianti della stessa ricerca contate una volta</p>
         </div>
     </div>
 

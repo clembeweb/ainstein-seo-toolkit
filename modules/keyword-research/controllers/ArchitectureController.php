@@ -454,12 +454,17 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
         }
 
         foreach ($clusters as $i => $cluster) {
+            // Volume calcolato qui, non preso dall'AI: le varianti della stessa ricerca contano una volta
+            $clusterRows = [];
+            foreach ($cluster['keywords'] ?? [] as $kwText) {
+                $clusterRows[] = $kwMap[strtolower($kwText)] ?? ['text' => $kwText, 'volume' => 0];
+            }
             $clusterId = $this->clusterModel->create([
                 'research_id' => $researchId,
                 'name' => $cluster['name'] ?? 'Pagina ' . ($i + 1),
                 'main_keyword' => $cluster['main_keyword'] ?? '',
                 'main_volume' => (int) ($cluster['main_volume'] ?? 0),
-                'total_volume' => (int) ($cluster['total_volume'] ?? 0),
+                'total_volume' => \Modules\KeywordResearch\Models\Cluster::dedupedVolume($clusterRows),
                 'keywords_count' => count($cluster['keywords'] ?? []),
                 'intent' => $cluster['intent'] ?? null,
                 'note' => $cluster['note'] ?? null,
@@ -555,6 +560,8 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
 
         foreach ($clusters as &$cluster) {
             $cluster['keywords_list'] = $this->clusterModel->getKeywords($cluster['id']);
+            // Varianti della stessa ricerca contate una volta (anche per le architetture vecchie)
+            $cluster['total_volume'] = \Modules\KeywordResearch\Models\Cluster::dedupedVolume($cluster['keywords_list']);
         }
         unset($cluster);
 
