@@ -39,7 +39,7 @@ $sortFilters = array_filter([
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
-                Leggi pagine (<?= $stats['pending'] ?>)
+                <span x-text="scrapeLabel()">Leggi pagine (<?= $stats['pending'] ?>)</span>
             </button>
             <button type="button"
                     @click="startGenerate()"
@@ -49,7 +49,7 @@ $sortFilters = array_filter([
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                 </svg>
-                Genera AI (<?= $stats['scraped'] ?>)
+                <span x-text="'Genera AI (' + generateCount() + ')'">Genera AI (<?= $stats['scraped'] ?>)</span>
             </button>
             <!-- Pulsante annulla durante generazione -->
             <button type="button"
@@ -398,6 +398,25 @@ function metaTagsList() {
             return this.selectedIds.filter(id => this.statusById[id] === status);
         },
 
+        // Quante pagine legge davvero "Leggi pagine": le spuntate in attesa (max 50), senza selezione gruppi di 10
+        scrapeCount() {
+            if (this.selectedIds.length > 0) {
+                return Math.min(50, this.selectedWithStatus('pending').length);
+            }
+            return Math.min(10, this.pendingTotal);
+        },
+
+        scrapeLabel() {
+            const n = this.scrapeCount();
+            const outOf = this.selectedIds.length === 0 && this.pendingTotal > n ? ` di ${this.pendingTotal}` : '';
+            return `Leggi pagine (${n}${outOf})`;
+        },
+
+        // Quante pagine genera "Genera AI": le spuntate già lette, senza selezione tutte le lette
+        generateCount() {
+            return this.selectedIds.length > 0 ? this.selectedWithStatus('scraped').length : this.scrapedTotal;
+        },
+
         fmtCredits(n) {
             return (Math.round(n * 10) / 10).toLocaleString('it-IT');
         },
@@ -453,12 +472,12 @@ function metaTagsList() {
             // Solo le pagine spuntate (se ce ne sono tra quelle pronte), altrimenti tutte le pronte
             const chosen = this.selectedWithStatus('scraped');
             if (this.selectedIds.length > 0 && chosen.length === 0) {
-                window.ainstein.alert('Tra le pagine spuntate nessuna è pronta per la generazione: prima va fatto lo scrape.', 'error');
+                window.ainstein.alert('Tra le pagine spuntate nessuna è pronta per la generazione: prima vanno lette (Leggi pagine).', 'error');
                 return;
             }
-            const count = chosen.length || this.scrapedTotal;
+            const count = this.generateCount();
             if (count === 0) {
-                window.ainstein.alert('Nessuna pagina pronta: prima fai lo scrape.', 'error');
+                window.ainstein.alert('Nessuna pagina pronta: prima leggile con "Leggi pagine".', 'error');
                 return;
             }
             if (!(await this.confirmCost('Generi i meta tag di', count, this.generateCost))) {
@@ -680,13 +699,12 @@ function metaTagsList() {
         async runScrape() {
             const chosen = this.selectedWithStatus('pending');
             if (this.selectedIds.length > 0 && chosen.length === 0) {
-                window.ainstein.alert('Tra le pagine spuntate nessuna è in attesa di scrape.', 'error');
+                window.ainstein.alert('Tra le pagine spuntate nessuna è ancora da leggere.', 'error');
                 return;
             }
-            // Senza selezione lavora a gruppi di 10, con selezione fino a 50 pagine scelte
-            const count = chosen.length ? Math.min(50, chosen.length) : Math.min(10, this.pendingTotal);
+            const count = this.scrapeCount();
             if (count === 0) {
-                window.ainstein.alert('Nessuna pagina in attesa di scrape.', 'error');
+                window.ainstein.alert('Nessuna pagina da leggere.', 'error');
                 return;
             }
             if (!(await this.confirmCost('Leggi', count, this.scrapeCost))) {

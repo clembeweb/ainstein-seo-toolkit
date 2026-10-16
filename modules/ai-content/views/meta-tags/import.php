@@ -99,6 +99,10 @@
                             Numero massimo
                         </label>
                         <input type="number" x-model="wpLimit" min="10" max="500" class="w-32 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <label class="mt-3 flex items-start gap-2 cursor-pointer">
+                            <input type="checkbox" x-model="excludeService" class="mt-0.5 rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
+                            <span class="text-sm text-slate-700 dark:text-slate-300">Escludi le pagine di servizio <span class="text-slate-500 dark:text-slate-400">(carrello, checkout, account, wishlist, pagina di esempio)</span></span>
+                        </label>
                     </div>
 
                     <div class="pt-4">
@@ -171,6 +175,10 @@
                                    x-model="sitemapFilter"
                                    placeholder="Es: /blog/ per filtrare solo gli articoli"
                                    class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <label class="mt-3 flex items-start gap-2 cursor-pointer">
+                            <input type="checkbox" x-model="excludeService" class="mt-0.5 rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
+                            <span class="text-sm text-slate-700 dark:text-slate-300">Escludi le pagine di servizio <span class="text-slate-500 dark:text-slate-400">(carrello, checkout, account, wishlist, pagina di esempio)</span></span>
+                        </label>
                         </div>
 
                         <div class="pt-4">
@@ -314,8 +322,11 @@ function importWizard() {
         wpPostTypes: ['post', 'page'],
         wpLimit: 100,
 
-        // Sitemap
-        siteUrl: '',
+        // Sitemap (precompilato col dominio del progetto)
+        siteUrl: <?= json_encode($projectDomain ?? '') ?>,
+
+        // Carrello, checkout, account, wishlist...: esclusi di default (3 cr l'una per niente)
+        excludeService: true,
         sitemaps: [],
         selectedSitemaps: [],
         sitemapFilter: '',
@@ -370,6 +381,7 @@ function importWizard() {
                 formData.append('_csrf_token', '<?= csrf_token() ?>');
                 formData.append('wp_site_id', this.wpSiteId);
                 formData.append('limit', this.wpLimit);
+                formData.append('exclude_service', this.excludeService ? '1' : '0');
                 this.wpPostTypes.forEach(t => formData.append('post_types[]', t));
 
                 const response = await fetch('<?= url("/ai-content/projects/{$project['id']}/meta-tags/import/wp") ?>', {
@@ -402,6 +414,7 @@ function importWizard() {
                 const formData = new FormData();
                 formData.append('_csrf_token', '<?= csrf_token() ?>');
                 formData.append('filter', this.sitemapFilter);
+                formData.append('exclude_service', this.excludeService ? '1' : '0');
                 this.selectedSitemaps.forEach(s => formData.append('sitemaps[]', s));
 
                 const response = await fetch('<?= url("/ai-content/projects/{$project['id']}/meta-tags/import/sitemap") ?>', {

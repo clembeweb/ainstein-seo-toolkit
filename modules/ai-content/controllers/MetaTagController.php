@@ -53,6 +53,39 @@ class MetaTagController
     /**
      * Verifica progetto e ownership
      */
+    /**
+     * Pagine di servizio che non servono a niente nei risultati di Google (carrello, checkout, account,
+     * wishlist, pagina di esempio di WordPress): ognuna costerebbe 3 crediti di lettura + generazione.
+     */
+    private const SERVICE_PAGE_PATTERN = '#/(cart|carrello|checkout|my-account|mio-account|il-mio-account|account|wishlist|lista-desideri|lista-dei-desideri|sample-page|pagina-di-esempio|wp-login\.php|login|accedi|logout|registrati|register|order-received|ordine-ricevuto)(-\d+)?(/|$|\?)#i';
+
+    /**
+     * @return array{0: array, 1: int} [elementi tenuti (reindicizzati), quanti esclusi]
+     */
+    private static function withoutServicePages(array $items, callable $urlOf): array
+    {
+        $kept = [];
+        foreach ($items as $item) {
+            $path = (string) (parse_url($urlOf($item), PHP_URL_PATH) ?? '');
+            $query = (string) (parse_url($urlOf($item), PHP_URL_QUERY) ?? '');
+            if (preg_match(self::SERVICE_PAGE_PATTERN, $path) || stripos($query, 'add-to-cart') !== false) {
+                continue;
+            }
+            $kept[] = $item;
+        }
+        return [$kept, count($items) - count($kept)];
+    }
+
+    private static function excludedNote(int $excluded): string
+    {
+        if ($excluded <= 0) {
+            return '';
+        }
+        return $excluded === 1
+            ? ' (esclusa 1 pagina di servizio: carrello, checkout, account…)'
+            : " (escluse {$excluded} pagine di servizio: carrello, checkout, account…)";
+    }
+
     private function getProject(int $id, int $userId): ?array
     {
         $project = $this->project->findAccessible($id, $userId);
@@ -186,8 +219,22 @@ class MetaTagController
             $wpSites = $wpSiteModel->getAllByProject((int) $project['global_project_id']);
         }
 
+        // Dominio del progetto globale: precompila "URL del sito" nella scheda Sitemap
+        $projectDomain = '';
+        if (!empty($project['global_project_id'])) {
+            $gp = Database::fetch("SELECT domain FROM projects WHERE id = ?", [(int) $project['global_project_id']]);
+            $projectDomain = trim((string) ($gp['domain'] ?? ''));
+        }
+        if ($projectDomain === '' && !empty($wpSites[0]['url'])) {
+            $projectDomain = (string) $wpSites[0]['url'];
+        }
+        if ($projectDomain !== '' && !preg_match('#^https?://#i', $projectDomain)) {
+            $projectDomain = 'https://' . $projectDomain;
+        }
+
         return View::render('ai-content/meta-tags/import', [
             'title' => 'Importa URL - ' . $project['name'],
+            'projectDomain' => rtrim($projectDomain, '/'),
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,
@@ -295,13 +342,24 @@ class MetaTagController
                 return;
             }
 
-            $inserted = $this->metaTag->addBulk($projectId, $user['id'], $result['urls']);
+            $urls = $result['urls'];
+            $excluded = 0;
+            if (($_POST['exclude_service'] ?? '1') === '1') {
+                [$urls, $excluded] = self::withoutServicePages($urls, fn($u) => $u);
+            }
+
+            if (empty($urls)) {
+                echo json_encode(['success' => false, 'error' => 'Nelle sitemap ci sono solo pagine di servizio (carrello, checkout, account…)']);
+                return;
+            }
+
+            $inserted = $this->metaTag->addBulk($projectId, $user['id'], $urls);
 
             echo json_encode([
                 'success' => true,
                 'inserted' => $inserted,
-                'total_found' => count($result['urls']),
-                'message' => "Importate {$inserted} URL",
+                'total_found' => count($urls),
+                'message' => "Importate {$inserted} URL" . self::excludedNote($excluded),
             ]);
 
         } catch (\Exception $e) {
@@ -409,13 +467,19 @@ class MetaTagController
                 return;
             }
 
-            $inserted = $this->metaTag->addBulkFromWp($projectId, $user['id'], $wpSiteId, $data['posts']);
+            $posts = $data['posts'];
+            $excluded = 0;
+            if (($_POST['exclude_service'] ?? '1') === '1') {
+                [$posts, $excluded] = self::withoutServicePages($posts, fn($p) => (string) ($p['url'] ?? ''));
+            }
+
+            $inserted = $this->metaTag->addBulkFromWp($projectId, $user['id'], $wpSiteId, $posts);
 
             echo json_encode([
                 'success' => true,
                 'inserted' => $inserted,
-                'total_found' => count($data['posts']),
-                'message' => "Importate {$inserted} pagine da WordPress",
+                'total_found' => count($posts),
+                'message' => "Importate {$inserted} pagine da WordPress" . self::excludedNote($excluded),
             ]);
 
         } catch (\Exception $e) {
