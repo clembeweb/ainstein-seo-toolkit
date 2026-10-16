@@ -74,6 +74,24 @@
   (solo i numeri chiave, es. pagine orfane, profondità, spreco di crawl budget), con il link alla scheda per i dettagli.
 - Note: miglioria, non un errore. Quando farla lo decide Clemente.
 
+### [P1 proposto] AI Audit, Piano d'azione: una chiamata AI per pagina, senza tetto e senza avanzamento
+- Scenario / passo: 1B, Madcrumbs (12 pagine con problemi), "Genera" Piano d'azione.
+- Atteso: piano pronto in poco tempo, o almeno una barra "pagina X di Y".
+- Successo: **4 min 53 s** di "Generazione in corso…" senza nient'altro; Clemente ha pensato che fosse bloccato. Alla fine
+  ha funzionato: 72 correzioni, punteggio 69 → 100 atteso, 10 crediti scalati (100 → 90), piano id 5.
+- Causa: `ActionPlanService::generatePlan()` fa **una chiamata Opus per ogni pagina con problemi** (12 chiamate,
+  ~25 s l'una; 19k token in, 33k out) in un'unica richiesta HTTP. Nessun tetto: la scansione di default arriva a
+  100 pagine → ~100 chiamate, **~45 minuti** di attesa per lo stesso prezzo fisso di 10 crediti (costo API ~8 volte
+  quello di Madcrumbs). Con siti veri dei clienti dal post, è facile che l'utente chiuda o che la richiesta muoia.
+- Possibili strade (da decidere): tetto alle N pagine più importanti; più pagine per chiamata (BATCH_SIZE = 5 c'è
+  ma non viene usato per raggruppare le chiamate); lavoro in background con avanzamento "pagina X di Y".
+- Note: il Report AI (15 cr) non è ancora stato provato; mai generato in prod né l'uno né l'altro prima di oggi.
+
+### [P3] Storico crediti: "action_plan_generate" come descrizione
+- Scenario / passo: 1B, dopo il Piano d'azione.
+- Successo: in `credit_transactions` la riga è "-10 usage action_plan_generate" (codice tecnico). Da verificare se è
+  questo il testo che l'utente vede nel suo storico crediti.
+
 ## Idee per DOPO il post
 
 - **Landing: scansione AI Audit insieme al controllo AI gratuito** (Clemente, 2026-10-16). La scansione di AI Audit è
