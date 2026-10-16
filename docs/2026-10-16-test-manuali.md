@@ -10,7 +10,7 @@
 
 | # | Scenario | Stato |
 |---|----------|-------|
-| 1 | Utente nuovo da zero (iscrizione, mail, 100 crediti, tour, primo progetto, primo tool) | da fare |
+| 1 | Utente nuovo da zero (iscrizione, mail, 100 crediti, tour, primo progetto, primo tool) | fatto: iscrizione Google OK, scansione OK; tour benvenuto assente (P2) |
 | 2 | Crediti che finiscono | da fare |
 | 3 | Progetto condiviso (Owner + Editor + Viewer) | da fare |
 | 4 | Agenzia con più clienti (niente dati mescolati) | da fare |
@@ -21,11 +21,11 @@
 
 | P1 | Dove si vede | Esito |
 |----|--------------|-------|
-| AI Audit legge le pagine vere (non i redirect) | scenario 1 o 4 | da fare |
+| AI Audit legge le pagine vere (non i redirect) | scenario 1 | OK: Madcrumbs 12 pagine, 10 a 200, 2 redirect veri del sito (/adobe-analytics/ → /adobe-analytics-agency/), score 69, 0 crediti |
 | AI Writer usa solo il WordPress del progetto | scenario 4 | da fare |
-| "?" del tour funziona dentro un progetto | scenario 1 | da fare |
+| "?" del tour funziona dentro un progetto | scenario 1 | da ricontrollare (non riportato) |
 | GEO "Genera il profilo" non si tronca | scenario 1 o 4 | da fare |
-| AI Audit prima della scansione dice "Nessuna scansione ancora" | scenario 1 | da fare |
+| AI Audit prima della scansione dice "Nessuna scansione ancora" | scenario 1 | OK (ma riquadri vuoti intorno: P2 sotto) |
 
 ## Problemi trovati
 
