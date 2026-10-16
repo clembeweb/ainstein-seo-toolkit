@@ -23,6 +23,18 @@
 >   verdetti in italiano nel registro dal vivo; "Il motore" → "L'AI" (prompt del judge + giudizi già salvati);
 >   "Generane dal profilo", "articolo da scrivere", "Ti citano", "Panoramica".
 > - **AI Writer, articolo in Anteprima**: era già fatto e online (`aed48ae`).
+> - **Giro 2, dai test manuali di Clemente in prod** (`docs/2026-10-16-test-manuali.md`, lo scrive la sessione "Test
+>   manuali"; tutto in locale, non online):
+>   - `fe38c6e` AI Audit: /x/ e /en/x/ con lo stesso titolo = "uguale alla versione in un'altra lingua" (tradurre +
+>     hreflang), non duplicato né spreco di crawl budget. Utile anche al Report AI.
+>   - `c9bcfc5` Piano d'azione: scelta delle pagine (10 spuntate, max 20), generazione SSE "pagina X di Y" che riprende
+>     se si chiude la pagina, addebito unico; prompt con lingua della pagina (prova AI vera su /en/: title inglese,
+>     hreflang, canonical su sé stessa). **Richiede la migrazione `modules/seo-audit/database/migrations/007_*.sql` in
+>     prod.** ATTENZIONE: subito dopo Clemente ha deciso di **togliere il Piano d'azione e tenere solo il Report AI**
+>     (25134c0): se si toglie, `git revert c9bcfc5` e niente migrazione. Chiesto alla sessione Test manuali chi lo fa.
+>   - `1fa6c60` tour "Benvenuto su Ainstein" che non partiva mai: ora parte al primo accesso per chi non ha progetti.
+>   - `b3200ac` Panoramica AI Audit prima della scansione: niente anello/riquadri a 0, "Come funziona" in alto.
+>   - Aperto (P1, non fatto qui): Report AI in errore 500 (`unified-view.php:322`, `e()` su array).
 > **Prima del post restano:** deploy di questi P2 (ok di Clemente), AI Keywords da provare in prod (la fa Clemente),
 > decidere /landing-b, la bozza del post.
 > **DOPO il post (raccolto da questo file):** 1) alert di AI Rank generati a fine controllo posizioni + mail digest (~2 h,
