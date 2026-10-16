@@ -23,23 +23,6 @@ if (isset($onboardingConfig[$onboardingModuleSlug])):
 endif;
 ?>
 
-<!-- Hero Value Block -->
-<div class="mb-6">
-<?= \Core\View::partial('components/dashboard-hero-banner', [
-    'title' => 'Genera articoli SEO con l\'AI',
-    'description' => 'Dalla keyword all\'articolo pubblicato: l\'AI analizza la SERP, genera un brief strategico e scrive contenuti ottimizzati. Programmazione automatica e pubblicazione su WordPress.',
-    'color' => 'amber',
-    'badge' => 'Come funziona',
-    'storageKey' => 'ainstein_hero_ai_content',
-    'steps' => [
-        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>', 'title' => 'Scegli keyword', 'subtitle' => 'Brief AI strategico'],
-        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>', 'title' => 'Genera contenuto', 'subtitle' => 'Articolo SEO ottimizzato'],
-        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>', 'title' => 'Pubblica', 'subtitle' => 'WordPress automatico'],
-    ],
-    'ctaText' => 'Nuovo Progetto',
-    'ctaUrl' => url('/projects/create'),
-]) ?>
-</div>
 
 <div class="space-y-8">
     <!-- Header -->
@@ -56,7 +39,7 @@ endif;
                 WordPress
             </a>
             <?= \Core\View::partial('components/module-activate-existing', ['moduleSlug' => 'ai-content', 'userId' => (int) ($user['id'] ?? 0), 'color' => 'primary']) ?>
-            <a href="<?= url('/projects/create') ?>" class="inline-flex items-center rounded-lg bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 transition-colors">
+            <a href="<?= url('/projects/create') ?>" class="inline-flex items-center whitespace-nowrap rounded-lg bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 transition-colors">
                 <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -65,77 +48,11 @@ endif;
         </div>
     </div>
 
-    <!-- Mode Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" data-tour="aic-modes">
-        <!-- Articoli Manuali -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
-            <div class="p-6">
-                <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm mb-4">
-                    <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Articoli Manuali</h3>
-                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                    Controllo totale con wizard 4 step: keyword, SERP, Brief AI, Articolo. Modifica brief e contenuto prima di pubblicare.
-                </p>
-                <div class="mt-3 flex items-center gap-2">
-                    <?= credit_badge($manualCost) ?>
-                    <span class="text-xs text-slate-400 dark:text-slate-500">/articolo</span>
-                    <?php if ($stats['manual_count'] > 0): ?>
-                    <span class="text-xs text-slate-400 dark:text-slate-500"><?= $stats['manual_count'] ?> progetti</span>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <div class="px-6 py-4 bg-slate-50 dark:bg-slate-700/50 border-t border-slate-200 dark:border-slate-700">
-                <a href="<?= url('/ai-content/projects?tab=manual') ?>" class="inline-flex items-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700">
-                    Vai ai progetti
-                    <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
-            </div>
-        </div>
-
-        <!-- Articoli Automatici -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
-            <div class="p-6">
-                <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-sm mb-4">
-                    <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Articoli Automatici</h3>
-                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                    Elaborazione in bulk automatica. Aggiungi keyword alla coda e il sistema genera articoli uno dopo l'altro.
-                </p>
-                <div class="mt-3 flex items-center gap-2">
-                    <?= credit_badge($manualCost) ?>
-                    <span class="text-xs text-slate-400 dark:text-slate-500">/articolo</span>
-                    <?php if ($stats['auto_count'] > 0): ?>
-                    <span class="text-xs text-slate-400 dark:text-slate-500"><?= $stats['auto_count'] ?> progetti</span>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <div class="px-6 py-4 bg-slate-50 dark:bg-slate-700/50 border-t border-slate-200 dark:border-slate-700">
-                <a href="<?= url('/ai-content/projects?tab=auto') ?>" class="inline-flex items-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700">
-                    Vai ai progetti
-                    <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
-            </div>
-        </div>
-
-        <!-- SEO Meta Tags: rimosso dalla dashboard (UX audit 2026-03-11, task A1) -->
-        <!-- TODO: migrazione a seo-onpage -->
-    </div>
-
     <!-- Progetti recenti -->
     <?php if (!empty($recentProjects)): ?>
     <div>
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Progetti recenti</h2>
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">I tuoi progetti</h2>
             <a href="<?= url('/ai-content/projects') ?>" class="text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700">
                 Vedi tutti
                 <svg class="w-4 h-4 ml-0.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -214,6 +131,87 @@ endif;
         </div>
     </div>
     <?php endif; ?>
+
+<?php $_aicArticle = rtrim(rtrim(number_format((float) $manualCost, 1, ',', ''), '0'), ','); ?>
+    <!-- Come iniziare (al posto del vecchio banner, decisione Clemente 2026-10-16) -->
+    <?= \Core\View::partial('components/module-getting-started', [
+        'color' => 'amber',
+        'subtitle' => 'Dalla parola chiave all\'articolo pronto da pubblicare.',
+        'open' => empty($recentProjects),
+        'steps' => [
+            ['title' => 'Crea il progetto', 'text' => 'Con il sito per cui scrivi. Poi attiva AI Writer nel progetto e scegli come lavorare: un articolo alla volta o articoli automatici.'],
+            ['title' => 'Dai la parola chiave', 'text' => 'AI Writer guarda chi è primo su Google, prepara la scaletta (la puoi cambiare) e scrive l\'articolo con la copertina. Circa ' . $_aicArticle . ' crediti ad articolo.'],
+            ['title' => 'Pubblica', 'text' => 'Copia l\'articolo, oppure collega una volta il sito WordPress e gli articoli ci arrivano da soli come bozza.'],
+        ],
+        'ctaText' => empty($recentProjects) ? 'Crea il primo progetto' : null,
+        'ctaUrl' => url('/projects/create'),
+    ]) ?>
+
+    <!-- Mode Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" data-tour="aic-modes">
+        <!-- Articoli Manuali -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
+            <div class="p-6">
+                <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm mb-4">
+                    <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Articoli Manuali</h3>
+                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                    Controllo totale con wizard 4 step: keyword, SERP, Brief AI, Articolo. Modifica brief e contenuto prima di pubblicare.
+                </p>
+                <div class="mt-3 flex items-center gap-2">
+                    <?= credit_badge($manualCost) ?>
+                    <span class="text-xs text-slate-400 dark:text-slate-500">/articolo</span>
+                    <?php if ($stats['manual_count'] > 0): ?>
+                    <span class="text-xs text-slate-400 dark:text-slate-500"><?= $stats['manual_count'] ?> progetti</span>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-slate-50 dark:bg-slate-700/50 border-t border-slate-200 dark:border-slate-700">
+                <a href="<?= url('/ai-content/projects?tab=manual') ?>" class="inline-flex items-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700">
+                    Vai ai progetti
+                    <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+
+        <!-- Articoli Automatici -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
+            <div class="p-6">
+                <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-sm mb-4">
+                    <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Articoli Automatici</h3>
+                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                    Elaborazione in bulk automatica. Aggiungi keyword alla coda e il sistema genera articoli uno dopo l'altro.
+                </p>
+                <div class="mt-3 flex items-center gap-2">
+                    <?= credit_badge($manualCost) ?>
+                    <span class="text-xs text-slate-400 dark:text-slate-500">/articolo</span>
+                    <?php if ($stats['auto_count'] > 0): ?>
+                    <span class="text-xs text-slate-400 dark:text-slate-500"><?= $stats['auto_count'] ?> progetti</span>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-slate-50 dark:bg-slate-700/50 border-t border-slate-200 dark:border-slate-700">
+                <a href="<?= url('/ai-content/projects?tab=auto') ?>" class="inline-flex items-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700">
+                    Vai ai progetti
+                    <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+
+        <!-- SEO Meta Tags: rimosso dalla dashboard (UX audit 2026-03-11, task A1) -->
+        <!-- TODO: migrazione a seo-onpage -->
+    </div>
 
     <!-- Stats -->
     <?php if ($stats['total_projects'] > 0): ?>

@@ -15,23 +15,6 @@ if (isset($onboardingConfig[$onboardingModuleSlug])):
 endif;
 ?>
 
-<!-- Hero Value Block -->
-<div class="mb-6">
-<?= \Core\View::partial('components/dashboard-hero-banner', [
-    'title' => 'Le tue posizioni su Google, con i dati reali',
-    'description' => 'Ainstein monitora le posizioni per le tue keyword e, collegando Google Search Console, incrocia i dati per mostrarti quanti click reali riceve ogni keyword, il CTR e le tendenze. Report periodici con insight e anomalie.',
-    'color' => 'blue',
-    'badge' => 'Come funziona',
-    'storageKey' => 'ainstein_hero_seo_tracking',
-    'steps' => [
-        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>', 'title' => 'Aggiungi keyword', 'subtitle' => 'Le keyword da monitorare'],
-        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>', 'title' => 'Collega GSC', 'subtitle' => 'Click e CTR reali'],
-        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>', 'title' => 'Report AI', 'subtitle' => 'Insight e anomalie'],
-    ],
-    'ctaText' => 'Crea il primo progetto',
-    'ctaUrl' => url('/projects/create'),
-]) ?>
-</div>
 
 <div class="space-y-6">
     <!-- Header -->
@@ -51,43 +34,7 @@ endif;
         </div>
     </div>
 
-    <?php if (empty($projects)): ?>
-    <!-- Empty State -->
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
-        <div class="mx-auto h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mb-4">
-            <svg class="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-            </svg>
-        </div>
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Inizia a sapere dove sei su Google</h3>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4 max-w-md mx-auto">
-            Crea un progetto, aggiungi le keyword e scopri le posizioni reali su Google.
-        </p>
-        <div class="flex flex-col items-center gap-3 max-w-sm mx-auto mb-6">
-            <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                <svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                Posizioni aggiornate automaticamente
-            </div>
-            <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                <svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                Click reali da Google Search Console
-            </div>
-            <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                <svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                Report settimanali AI con insight e anomalie
-            </div>
-        </div>
-        <a href="<?= url('/projects/create') ?>" class="inline-flex items-center px-5 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors">
-            <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Crea il primo progetto
-        </a>
-        <p class="mt-3">
-            <a href="<?= url('/docs/seo-tracking') ?>" class="text-xs text-slate-400 hover:text-primary-500 transition-colors">Scopri di piu &rarr;</a>
-        </p>
-    </div>
-    <?php else: ?>
+    <?php if (!empty($projects)): ?>
     <!-- Projects Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <?php foreach ($projects as $project): ?>
@@ -173,35 +120,20 @@ endif;
     </div>
     <?php endif; ?>
 
-    <!-- Info Box -->
-    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-sm p-6 text-white">
-        <div class="flex items-center justify-between">
-            <div>
-                <h3 class="text-lg font-semibold">Come funziona</h3>
-                <p class="text-blue-100 text-sm mt-1">Aggiungi keyword e verifica le posizioni sui motori di ricerca</p>
-            </div>
-            <div class="flex gap-6">
-                <div class="text-center">
-                    <div class="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-1">
-                        <span class="text-lg font-bold">1</span>
-                    </div>
-                    <p class="text-xs text-blue-200">Crea progetto</p>
-                </div>
-                <div class="text-center">
-                    <div class="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-1">
-                        <span class="text-lg font-bold">2</span>
-                    </div>
-                    <p class="text-xs text-blue-200">Aggiungi keyword</p>
-                </div>
-                <div class="text-center">
-                    <div class="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-1">
-                        <span class="text-lg font-bold">3</span>
-                    </div>
-                    <p class="text-xs text-blue-200">Verifica posizioni</p>
-                </div>
-            </div>
-        </div>
-    </div>
+<?php $_stRank = rtrim(rtrim(number_format((float) \Core\Credits::getCost('rank_check', 'seo-tracking', 1), 1, ',', ''), '0'), ','); ?>
+    <!-- Come iniziare (al posto del vecchio banner, decisione Clemente 2026-10-16) -->
+    <?= \Core\View::partial('components/module-getting-started', [
+        'color' => 'blue',
+        'subtitle' => 'Sapere dove compari su Google e come cambia nel tempo.',
+        'open' => empty($projects),
+        'steps' => [
+            ['title' => 'Aggiungi le keyword', 'text' => 'Crea il progetto con il sito, poi scrivi le ricerche su Google che vuoi seguire, per ogni paese che ti interessa.'],
+            ['title' => 'Controlla le posizioni', 'text' => 'Vedi dove sei su Google da computer e da telefono. Costa ' . $_stRank . ' credit' . ($_stRank === '1' ? 'o' : 'i') . ' a keyword e lo storico resta salvato.'],
+            ['title' => 'Collega Search Console e Analytics', 'text' => 'Con i dati veri di Google si accendono i Quick Wins e l\'Andamento: cosa cresce, cosa cala e da dove arriva il traffico, anche dalle AI.'],
+        ],
+        'ctaText' => empty($projects) ? 'Crea il primo progetto' : null,
+        'ctaUrl' => url('/projects/create'),
+    ]) ?>
 </div>
 
 <!-- ═══════════ SEZIONE EDUCATIVA ═══════════ -->

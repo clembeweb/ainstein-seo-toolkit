@@ -15,23 +15,6 @@ if (isset($onboardingConfig[$onboardingModuleSlug])):
 endif;
 ?>
 
-<!-- Hero Value Block -->
-<div class="mb-6">
-<?= \Core\View::partial('components/dashboard-hero-banner', [
-    'title' => 'Audit SEO completo con piano d\'azione',
-    'description' => 'Ainstein scansiona il sito, analizza struttura, performance, contenuti e fattori tecnici. Non si limita a segnalare i problemi: li mette in ordine di impatto e crea un piano d\'azione con priorita chiare.',
-    'color' => 'emerald',
-    'badge' => 'Come funziona',
-    'storageKey' => 'ainstein_hero_seo_audit',
-    'steps' => [
-        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>', 'title' => 'Inserisci l\'URL', 'subtitle' => 'Scansione completa'],
-        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>', 'title' => 'Analisi AI', 'subtitle' => 'Problemi e opportunita'],
-        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>', 'title' => 'Piano d\'azione', 'subtitle' => 'Priorita per impatto'],
-    ],
-    'ctaText' => 'Nuovo Audit',
-    'ctaUrl' => url('/projects/create'),
-]) ?>
-</div>
 
 <div class="space-y-6">
     <!-- Header -->
@@ -51,43 +34,7 @@ endif;
         </div>
     </div>
 
-    <?php if (empty($projects)): ?>
-    <!-- Empty State -->
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
-        <div class="mx-auto h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center mb-4">
-            <svg class="h-8 w-8 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-            </svg>
-        </div>
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Scopri cosa migliorare nel tuo sito</h3>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4 max-w-md mx-auto">
-            Inserisci un URL e ricevi un audit completo con le azioni da fare, in ordine di priorita.
-        </p>
-        <div class="flex flex-col items-center gap-3 max-w-sm mx-auto mb-6">
-            <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                Scansione struttura, performance e contenuti
-            </div>
-            <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                Problemi ordinati per impatto SEO
-            </div>
-            <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                Report AI con le correzioni in ordine, pronte da eseguire
-            </div>
-        </div>
-        <a href="<?= url('/projects/create') ?>" class="inline-flex items-center px-5 py-2.5 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors">
-            <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Nuovo Audit
-        </a>
-        <p class="mt-3">
-            <a href="<?= url('/docs/seo-audit') ?>" class="text-xs text-slate-400 hover:text-primary-500 transition-colors">Scopri di piu &rarr;</a>
-        </p>
-    </div>
-    <?php else: ?>
+    <?php if (!empty($projects)): ?>
     <!-- Projects Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <?php foreach ($projects as $project): ?>
@@ -190,6 +137,21 @@ endif;
         <?php endforeach; ?>
     </div>
     <?php endif; ?>
+
+<?php $_saCrawl = (float) \Core\Credits::getCost('crawl_per_page', 'seo-audit', 0); $_saCrawlTxt = $_saCrawl <= 0 ? 'La scansione è gratis.' : 'Costa ' . rtrim(rtrim(number_format($_saCrawl, 1, ',', ''), '0'), ',') . ' crediti a pagina.'; ?>
+    <!-- Come iniziare (al posto del vecchio banner, decisione Clemente 2026-10-16) -->
+    <?= \Core\View::partial('components/module-getting-started', [
+        'color' => 'emerald',
+        'subtitle' => 'Trovare i problemi tecnici del sito e sapere cosa sistemare per primo.',
+        'open' => empty($projects),
+        'steps' => [
+            ['title' => 'Crea il progetto', 'text' => 'Con il sito da controllare. Se il progetto c\'è già, attiva AI Audit con il bottone qui in alto.'],
+            ['title' => 'Lancia la scansione', 'text' => 'Ainstein visita il sito come Google e controlla ogni pagina: titoli, link rotti, pagine lente o nascoste. ' . $_saCrawlTxt],
+            ['title' => 'Leggi cosa sistemare', 'text' => 'Vedi il punteggio e i problemi in ordine di gravità. Il Report AI ti dice cosa fare per primo e come.'],
+        ],
+        'ctaText' => empty($projects) ? 'Crea il primo progetto' : null,
+        'ctaUrl' => url('/projects/create'),
+    ]) ?>
 </div>
 
 <!-- Separator -->
