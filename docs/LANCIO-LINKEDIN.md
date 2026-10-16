@@ -155,10 +155,10 @@
 > **P3.2 nota strategica con somme gonfiate: ONLINE (`0c92847`, 2026-10-16).** Il prompt di clustering e
 > di architettura passa una riga per ricerca con le varianti tra parentesi e la regola "contale una volta sola" (Stabia: 93
 > righe da 121 keyword). Si verifica alla prossima ricerca in prod (3 cr): la nota non deve più dire ~9.000 per 2.860.
-> **P3.3 link in entrata sempre 0: FATTO in locale (2026-10-16), da mettere online.** Profondità e pagina di provenienza
+> **P3.3 link in entrata sempre 0: ONLINE (`65d25dc`, 2026-10-16).** Profondità e pagina di provenienza
 > salvate alla scoperta e non più azzerate; `internal_links_in` conta le pagine diverse che linkano l'URL dai link veri;
 > "pagina orfana" resta un avviso solo (IssueDetector). Pizzeria: menu 18 link in entrata, pagina del plugin 1.
-> **Prossimo passo:** online P3.3 (con l'ok), poi P3.4 articolo >120 s (etichette inglesi fatte,
+> **Prossimo passo:** P3.4 articolo >120 s (etichette inglesi fatte,
 > nota strategica dell'AI con somme gonfiate, `internal_links_in` sempre 0, generazione articolo oltre i 120 s da capire)
 > e clementeteodonno.it da riaudire (~5 cr). Fatti il 2026-10-16: sessione 8 h, volumi dei cluster, costi AI Keywords,
 > articolo in Anteprima, tempo medio.
