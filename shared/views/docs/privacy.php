@@ -23,6 +23,7 @@ include __DIR__ . '/_legal-head.php';
             <li><strong>Dati dei progetti:</strong> i siti web, le parole chiave, i testi e le informazioni che inserisci nella piattaforma per usare gli strumenti.</li>
             <li><strong>Dati da servizi collegati:</strong> se decidi di collegare Google Search Console, Google Analytics o Google Ads, riceviamo i dati di quei servizi relativi ai siti che scegli tu. Puoi scollegarli in qualsiasi momento.</li>
             <li><strong>Dati di utilizzo:</strong> operazioni eseguite, crediti consumati, data e ora degli accessi, indirizzo IP, tipo di browser. Servono per far funzionare il servizio, prevenire abusi e migliorarlo.</li>
+            <li><strong>Statistiche del sito:</strong> usiamo Google Analytics 4 (Google Ireland Ltd) per contare visite, iscrizioni e uso degli strumenti di ainstein.it. I cookie di Analytics vengono impostati solo dopo il tuo consenso nel banner (base giuridica: consenso); se scegli "Solo necessari" Google riceve soltanto conteggi anonimi senza cookie. Google Analytics 4 non conserva gli indirizzi IP, i dati non vengono usati per pubblicità e non li condividiamo con altri. Dettagli nella <a href="<?= url('/docs/cookies') ?>" class="text-primary-600 dark:text-primary-400 hover:underline">Cookie Policy</a>.</li>
             <li><strong>Dati di pagamento:</strong> se acquisti un piano, il pagamento è gestito da un fornitore esterno. Non conserviamo i dati della tua carta.</li>
         </ul>
     </section>
@@ -48,7 +49,7 @@ include __DIR__ . '/_legal-head.php';
         <p class="mt-3 text-slate-600 dark:text-slate-400 leading-relaxed">I fornitori che possono trattare dati per nostro conto sono:</p>
         <ul class="list-disc pl-6 space-y-2 text-slate-600 dark:text-slate-400 leading-relaxed mt-2">
             <li><strong>Anthropic</strong> e <strong>OpenAI</strong> (USA): elaborazione dei contenuti tramite modelli di intelligenza artificiale.</li>
-            <li><strong>Google</strong> (Google LLC / Google Ireland): accesso con Google e, su tua scelta, Search Console, Analytics e Google Ads.</li>
+            <li><strong>Google</strong> (Google LLC / Google Ireland): accesso con Google e, su tua scelta, Search Console, Analytics e Google Ads; statistiche del sito con Google Analytics 4, solo con il tuo consenso.</li>
             <li><strong>Fornitori di dati SEO</strong> (ad esempio DataForSEO, SerpApi, Keywords Everywhere): verifica delle posizioni e dei volumi di ricerca delle parole chiave che inserisci.</li>
             <li><strong>Contabo GmbH</strong> (Germania, UE): hosting dei server e dei database.</li>
             <li><strong>Fornitore di invio email</strong>: recapito delle email di servizio.</li>
@@ -107,7 +108,7 @@ include __DIR__ . '/_legal-head.php';
     <section>
         <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-3">9. Cookie</h2>
         <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
-            Ainstein usa solo cookie tecnici necessari al funzionamento. I dettagli sono nella
+            Ainstein usa cookie tecnici necessari al funzionamento e, solo con il tuo consenso, i cookie di Google Analytics. I dettagli sono nella
             <a href="<?= url('/docs/cookies') ?>" class="text-primary-600 dark:text-primary-400 hover:underline">Cookie Policy</a>.
         </p>
     </section>
