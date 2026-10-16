@@ -111,7 +111,8 @@
 >   la FAQ leggono i costi dalle impostazioni come le schede (3/5/5). Resta da verificare che "Analisi competitor" e
 >   "Keyword gap analysis" promessi nella sezione "Cosa puoi fare" esistano davvero.
 > - **P2 · AI Audit "Tempo medio 0 ms":** il cronometro parte dopo il download (`load_time_ms` misura solo l'analisi).
-> - **P2 · AI Writer, l'articolo si apre in vista "Editor" con l'HTML grezzo** (`<p><strong>`): meglio aprire in Anteprima.
+> - **P2 · AI Writer, l'articolo si apriva col codice HTML: CORRETTO e ONLINE (`aed48ae`, 2026-10-16).** Si apre in
+>   Anteprima; pulsanti "Anteprima" / "Modifica HTML" nel wizard e nella pagina articolo.
 > - **P2 · AI Rank:** la casella dice "1 cr/kw" ma il totale fa 0,5 a keyword; "Monitora giornalmente" ma il controllo
 >   automatico (gratis) è lun/mer/ven; due filtri con la stessa etichetta "Tutte le posizioni"; posizione "1.0" invece di "1";
 >   avviso tecnico "DataForSEO non configurato" mostrato all'utente (in prod c'è la chiave, quindi solo locale).
@@ -144,8 +145,8 @@
 >   è morta lo stesso: da capire, forse il limite di Apache/FPM) · P3 · `sa_pages.internal_links_in` resta 0
 >   (`discovered_from` mai valorizzato da `crawlPage`): "Pagina orfana — nessun link in entrata" del crawl budget non può
 >   mai scattare · locale: al DB mancavano `last_test_*` in `aic_wp_sites` (aggiunte a mano, in prod ci sono).
-> **Prossimo passo:** P2 rimasti (proposta, in ordine: articolo che si apre in Anteprima, tempo medio 0 ms, etichette
-> inglesi); clementeteodonno.it da riaudire (~5 cr). Fatti il 2026-10-16: sessione 8 h, volumi dei cluster, costi AI Keywords.
+> **Prossimo passo:** P2 rimasti (tempo medio 0 ms in AI Audit, poi le etichette inglesi P3); clementeteodonno.it da
+> riaudire (~5 cr). Fatti il 2026-10-16: sessione 8 h, volumi dei cluster, costi AI Keywords, articolo in Anteprima.
 >
 > **PASSAGGIO DI CONSEGNE 2026-10-14 pomeriggio (precedente).** Fatto oggi, tutto online:
 > - Punto della situazione su Stabia rifatto con GA4+GSC veri (report id 2): regola numeri piccoli OK, "Parti da qui"
