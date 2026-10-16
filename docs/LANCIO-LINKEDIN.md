@@ -110,7 +110,9 @@
 > - **P2 · AI Keywords, costi sbagliati sulla pagina: CORRETTO e ONLINE (`bb74ec3`, 2026-10-16).** "Scegli la modalità" e
 >   la FAQ leggono i costi dalle impostazioni come le schede (3/5/5). Resta da verificare che "Analisi competitor" e
 >   "Keyword gap analysis" promessi nella sezione "Cosa puoi fare" esistano davvero.
-> - **P2 · AI Audit "Tempo medio 0 ms":** il cronometro parte dopo il download (`load_time_ms` misura solo l'analisi).
+> - **P2 · AI Audit "Tempo medio 0 ms": CORRETTO (2026-10-16), timer attorno al download.** Pizzeria: media 826 ms
+>   (473–1.301) su 37 pagine. Nello stesso commit: timeout letto dalla proprietà vera (prima un "Undefined property"
+>   a ogni pagina) e redirect dichiaratamente non seguiti.
 > - **P2 · AI Writer, l'articolo si apriva col codice HTML: CORRETTO e ONLINE (`aed48ae`, 2026-10-16).** Si apre in
 >   Anteprima; pulsanti "Anteprima" / "Modifica HTML" nel wizard e nella pagina articolo.
 > - **P2 · AI Rank:** la casella dice "1 cr/kw" ma il totale fa 0,5 a keyword; "Monitora giornalmente" ma il controllo
@@ -145,8 +147,10 @@
 >   è morta lo stesso: da capire, forse il limite di Apache/FPM) · P3 · `sa_pages.internal_links_in` resta 0
 >   (`discovered_from` mai valorizzato da `crawlPage`): "Pagina orfana — nessun link in entrata" del crawl budget non può
 >   mai scattare · locale: al DB mancavano `last_test_*` in `aic_wp_sites` (aggiunte a mano, in prod ci sono).
-> **Prossimo passo:** P2 rimasti (tempo medio 0 ms in AI Audit, poi le etichette inglesi P3); clementeteodonno.it da
-> riaudire (~5 cr). Fatti il 2026-10-16: sessione 8 h, volumi dei cluster, costi AI Keywords, articolo in Anteprima.
+> **Prossimo passo:** mettere online il tempo medio (`6314a7e`, con l'ok); poi restano solo i P3 (etichette inglesi,
+> nota strategica dell'AI con somme gonfiate, `internal_links_in` sempre 0, generazione articolo oltre i 120 s da capire)
+> e clementeteodonno.it da riaudire (~5 cr). Fatti il 2026-10-16: sessione 8 h, volumi dei cluster, costi AI Keywords,
+> articolo in Anteprima, tempo medio.
 >
 > **PASSAGGIO DI CONSEGNE 2026-10-14 pomeriggio (precedente).** Fatto oggi, tutto online:
 > - Punto della situazione su Stabia rifatto con GA4+GSC veri (report id 2): regola numeri piccoli OK, "Parti da qui"
