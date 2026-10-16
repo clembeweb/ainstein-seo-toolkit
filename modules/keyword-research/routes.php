@@ -13,6 +13,7 @@ use Modules\KeywordResearch\Controllers\ResearchController;
 use Modules\KeywordResearch\Controllers\ArchitectureController;
 use Modules\KeywordResearch\Controllers\QuickCheckController;
 use Modules\KeywordResearch\Controllers\EditorialController;
+use Modules\KeywordResearch\Controllers\ProfileController;
 
 $moduleSlug = 'keyword-research';
 
@@ -80,6 +81,16 @@ Router::post('/keyword-research/project/{id}/delete', function ($id) {
     Middleware::csrf();
     $controller = new ProjectController();
     return $controller->destroy((int) $id);
+});
+
+// ============================================
+// PROFILO DELL'ATTIVITÀ (ingresso dei 3 strumenti)
+// ============================================
+
+Router::post('/keyword-research/project/{id}/profile', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new ProfileController())->build((int) $id);
 });
 
 // ============================================

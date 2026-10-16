@@ -13,6 +13,7 @@ use Modules\KeywordResearch\Models\Project;
 use Modules\KeywordResearch\Models\Research;
 use Modules\KeywordResearch\Models\Cluster;
 use Modules\KeywordResearch\Services\KeywordInsightService;
+use Modules\KeywordResearch\Services\BusinessProfileService;
 use Services\KeywordPlannerService;
 
 class ResearchController
@@ -50,6 +51,7 @@ class ResearchController
             'user' => $user,
             'project' => $project,
             'researches' => $researches,
+            'profileState' => (new BusinessProfileService())->state($project),
             'modules' => ModuleLoader::getUserModules($user['id']),
         ]);
     }
@@ -69,22 +71,27 @@ class ResearchController
             return;
         }
 
+        // Il brief nasce dal profilo dell'attività salvato nel progetto (target dalle proposte dell'AI)
+        $profileService = new BusinessProfileService();
+        $profile = $profileService->getProfile($project);
+        $suggestions = $profileService->getSuggestions($project, $profile) ?? [];
+
         $brief = [
-            'business' => trim($_POST['business'] ?? ''),
-            'target' => trim($_POST['target'] ?? 'B2B'),
+            'business' => $profile,
+            'target' => $suggestions['target'] ?? 'Both',
             'geography' => trim($_POST['geography'] ?? $project['default_location']),
-            'objective' => trim($_POST['objective'] ?? 'SEO'),
-            'seeds' => array_filter(array_map('trim', explode(',', $_POST['seeds'] ?? ''))),
-            'exclusions' => array_filter(array_map('trim', explode(',', $_POST['exclusions'] ?? ''))),
+            'objective' => 'SEO',
+            'seeds' => array_slice(array_values(array_filter(array_map('trim', explode(',', $_POST['seeds'] ?? '')))), 0, 10),
+            'exclusions' => array_values(array_filter(array_map('trim', explode(',', $_POST['exclusions'] ?? '')))),
         ];
 
-        if (empty($brief['business'])) {
-            echo json_encode(['success' => false, 'error' => 'La descrizione del business è obbligatoria.']);
+        if ($brief['business'] === '') {
+            echo json_encode(['success' => false, 'error' => 'Prima descrivi la tua attività nel riquadro in alto.']);
             return;
         }
 
         if (empty($brief['seeds'])) {
-            echo json_encode(['success' => false, 'error' => 'Inserisci almeno una seed keyword.']);
+            echo json_encode(['success' => false, 'error' => 'Serve almeno una parola da cercare su Google.']);
             return;
         }
 

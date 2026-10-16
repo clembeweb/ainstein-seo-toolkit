@@ -10,17 +10,10 @@
             <span class="text-slate-900 dark:text-white"><?= e($project['name']) ?></span>
         </nav>
         <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Ricerca keyword</h1>
-        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Keyword research con clustering AI automatico</p>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Le ricerche che fanno i tuoi clienti su Google, con i volumi, raggruppate per argomento dall'AI</p>
     </div>
 
     <?= \Core\View::partial('components/orphaned-project-notice', ['project' => $project]) ?>
-
-    <!-- Draft Restored Toast -->
-    <div x-show="draftRestored" x-transition class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-center gap-2">
-        <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <span class="text-sm text-blue-700 dark:text-blue-300">Bozza ripristinata dalla sessione precedente</span>
-        <button @click="brief = { business: '', target: 'B2B', geography: '<?= e($project['default_location'] ?? 'IT') ?>', objective: 'SEO', seeds: [], exclusions: [] }; clearDraft(); draftRestored = false;" class="ml-auto text-xs text-blue-500 hover:text-blue-700 font-medium">Cancella</button>
-    </div>
 
     <!-- Progress Steps -->
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
@@ -49,118 +42,74 @@
         </div>
     </div>
 
-    <!-- Step 1: Brief -->
-    <div x-show="currentStep === 0" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 space-y-6">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Descrivi il tuo business</h2>
+    <!-- Step 1: la tua attività + cosa cerchiamo -->
+    <div x-show="currentStep === 0" class="space-y-6">
+        <?php $profileHint = 'Le parole da cercare su Google le proponiamo noi.'; include __DIR__ . '/../partials/business-profile.php'; ?>
 
-        <!-- Business Description -->
-        <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Descrizione business <span class="text-red-500">*</span>
-            </label>
-            <textarea x-model="brief.business" rows="3" required minlength="10"
-                      placeholder="Es: Agenzia SEO a Milano che offre consulenza e servizi di ottimizzazione per PMI"
-                      class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                      :class="validationAttempted && !brief.business.trim() ? 'border-red-500 dark:border-red-500' : ''"></textarea>
-            <p x-show="validationAttempted && !brief.business.trim()" class="mt-1 text-xs text-red-500">Descrizione obbligatoria</p>
-        </div>
-
-        <!-- Target -->
-        <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Target</label>
-            <div class="flex gap-3">
-                <template x-for="opt in ['B2B', 'B2C', 'Both']" :key="opt">
-                    <button type="button" @click="brief.target = opt"
-                            class="px-4 py-2 rounded-lg border text-sm font-medium transition-colors"
-                            :class="brief.target === opt ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-slate-400'"
-                            x-text="opt === 'Both' ? 'Entrambi' : opt"></button>
-                </template>
-            </div>
-        </div>
-
-        <!-- Objective -->
-        <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Obiettivo</label>
-            <div class="flex gap-3">
-                <template x-for="opt in ['SEO', 'Google Ads', 'Content']" :key="opt">
-                    <button type="button" @click="brief.objective = opt"
-                            class="px-4 py-2 rounded-lg border text-sm font-medium transition-colors"
-                            :class="brief.objective === opt ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-slate-400'"
-                            x-text="opt"></button>
-                </template>
-            </div>
-        </div>
-
-        <!-- Geography & Language (from project) -->
-        <div class="grid grid-cols-2 gap-4">
+        <div x-show="profile && !editingProfile && !profileBusy" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 space-y-6">
+            <!-- Seed Keywords -->
             <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Paese</label>
-                <select x-model="brief.geography"
-                        class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                    <option value="IT">Italia</option>
-                    <option value="US">Stati Uniti</option>
-                    <option value="GB">Regno Unito</option>
-                    <option value="DE">Germania</option>
-                    <option value="FR">Francia</option>
-                    <option value="ES">Spagna</option>
-                </select>
-            </div>
-            <div class="flex items-end">
-                <div class="text-sm text-slate-500 dark:text-slate-400 py-2.5">
-                    Lingua: <span class="font-medium text-slate-700 dark:text-slate-300"><?= e($project['default_language'] ?? 'it') ?></span>
-                    (configurabile nelle impostazioni progetto)
-                </div>
-            </div>
-        </div>
-
-        <!-- Seed Keywords -->
-        <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Parole di partenza <span class="text-red-500">*</span>
-            </label>
-            <div class="space-y-2">
-                <div class="flex gap-2">
-                    <input type="text" x-model="seedInput" @keydown.enter.prevent="addSeed()"
-                           placeholder="Digita una keyword e premi Invio"
-                           class="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                    <button type="button" @click="addSeed()" class="px-3 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    </button>
-                </div>
-                <div class="flex flex-wrap gap-2">
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Cosa cerchiamo su Google</h2>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Le ha proposte l'AI dal profilo: da ognuna Google ci dà decine di ricerche simili con i volumi. Puoi togliere o aggiungere, ma non serve.</p>
+                <div class="mt-3 flex flex-wrap gap-2">
                     <template x-for="(seed, idx) in brief.seeds" :key="idx">
                         <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-sm">
                             <span x-text="seed"></span>
-                            <button type="button" @click="brief.seeds.splice(idx, 1)" class="hover:text-emerald-900 dark:hover:text-emerald-100">
+                            <button type="button" @click="brief.seeds.splice(idx, 1)" class="hover:text-emerald-900 dark:hover:text-emerald-100" title="Togli">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </span>
                     </template>
                 </div>
-            </div>
-            <p x-show="validationAttempted && brief.seeds.length === 0" class="mt-1 text-xs text-red-500">Aggiungi almeno 1 seed keyword</p>
-            <p x-show="!validationAttempted || brief.seeds.length > 0" class="mt-1 text-xs text-slate-400">Da 1 a 5 parole: da ognuna troviamo decine di ricerche correlate con i volumi di Google.</p>
-        </div>
-
-        <!-- Exclusions -->
-        <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Parole da escludere <span class="text-slate-400">(opzionale)</span>
-            </label>
-            <div class="space-y-2">
-                <div class="flex gap-2">
-                    <input type="text" x-model="exclusionInput" @keydown.enter.prevent="addExclusion()"
-                           placeholder="Es: gratis, free, corso..."
-                           class="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                    <button type="button" @click="addExclusion()" class="px-3 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
+                <div class="mt-3 flex gap-2 max-w-xl" x-show="brief.seeds.length < 8">
+                    <input type="text" x-model="seedInput" @keydown.enter.prevent="addSeed()"
+                           placeholder="Aggiungi una ricerca e premi Invio"
+                           class="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    <button type="button" @click="addSeed()" class="px-3 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors" title="Aggiungi">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     </button>
                 </div>
-                <div class="flex flex-wrap gap-2">
+                <p x-show="validationAttempted && brief.seeds.length === 0" class="mt-1 text-xs text-red-500">Serve almeno una ricerca</p>
+            </div>
+
+            <div class="flex flex-wrap items-end gap-6">
+                <!-- Paese -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Paese</label>
+                    <select x-model="brief.geography"
+                            class="block w-48 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="IT">Italia</option>
+                        <option value="US">Stati Uniti</option>
+                        <option value="GB">Regno Unito</option>
+                        <option value="DE">Germania</option>
+                        <option value="FR">Francia</option>
+                        <option value="ES">Spagna</option>
+                    </select>
+                </div>
+                <button type="button" @click="showExclusions = true" x-show="!showExclusions && brief.exclusions.length === 0"
+                        class="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 py-2">
+                    + Parole da escludere
+                </button>
+            </div>
+
+            <!-- Exclusions -->
+            <div x-show="showExclusions || brief.exclusions.length > 0">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Parole da escludere <span class="text-slate-400">(facoltativo)</span>
+                </label>
+                <div class="flex gap-2 max-w-xl">
+                    <input type="text" x-model="exclusionInput" @keydown.enter.prevent="addExclusion()"
+                           placeholder="Es: gratis, corso, lavoro..."
+                           class="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    <button type="button" @click="addExclusion()" class="px-3 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors" title="Aggiungi">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    </button>
+                </div>
+                <div class="mt-2 flex flex-wrap gap-2">
                     <template x-for="(ex, idx) in brief.exclusions" :key="idx">
                         <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-sm">
                             <span x-text="ex"></span>
-                            <button type="button" @click="brief.exclusions.splice(idx, 1)" class="hover:text-red-900 dark:hover:text-red-100">
+                            <button type="button" @click="brief.exclusions.splice(idx, 1)" class="hover:text-red-900 dark:hover:text-red-100" title="Togli">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </span>
@@ -170,12 +119,12 @@
         </div>
     </div>
 
-    <!-- Step 2: Raccolta Keyword (SSE) -->
+    <!-- Step 2: keyword trovate (gratis), da scegliere prima dell'AI -->
     <div x-show="currentStep === 1" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 space-y-6">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Raccolta Keyword</h2>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Keyword trovate</h2>
 
         <!-- Progress -->
-        <div class="space-y-4">
+        <div x-show="!collectionDone" class="space-y-4">
             <div class="flex items-center justify-between text-sm">
                 <span class="text-slate-500 dark:text-slate-400" x-text="collectionStatus"></span>
                 <span class="font-medium text-slate-900 dark:text-white" x-text="collectionProgress + '%'"></span>
@@ -185,56 +134,53 @@
             </div>
         </div>
 
-        <!-- Seed Log -->
-        <div class="space-y-2 max-h-60 overflow-y-auto">
-            <template x-for="(log, idx) in seedLogs" :key="idx">
-                <div class="flex items-center gap-3 text-sm py-1.5 px-3 rounded-lg"
-                     :class="log.status === 'completed' ? 'bg-emerald-50 dark:bg-emerald-900/20' : (log.status === 'error' ? 'bg-red-50 dark:bg-red-900/20' : 'bg-blue-50 dark:bg-blue-900/20')">
-                    <template x-if="log.status === 'completed'">
-                        <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    </template>
-                    <template x-if="log.status === 'error'">
-                        <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </template>
-                    <template x-if="log.status === 'loading'">
-                        <svg class="w-4 h-4 text-blue-500 flex-shrink-0 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    </template>
-                    <span class="flex-1" x-text="log.message"></span>
-                    <span x-show="log.count" class="text-xs text-slate-500" x-text="'+' + log.count + ' kw'"></span>
-                </div>
-            </template>
-        </div>
-
-        <!-- Risultato raccolta -->
-        <div x-show="collectionDone" class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4">
-            <div class="grid grid-cols-3 gap-4 text-center">
-                <div>
-                    <p class="text-xl font-bold text-slate-900 dark:text-white" x-text="rawKeywordsCount"></p>
-                    <p class="text-xs text-slate-500">Raccolte</p>
-                </div>
-                <div>
-                    <p class="text-xl font-bold text-emerald-600 dark:text-emerald-400" x-text="filteredKeywords.length"></p>
-                    <p class="text-xs text-slate-500">Dopo filtro</p>
-                </div>
-                <div>
-                    <p class="text-xl font-bold text-slate-500" x-text="rawKeywordsCount - filteredKeywords.length"></p>
-                    <p class="text-xs text-slate-500">Escluse</p>
-                </div>
+        <!-- Elenco: si tolgono quelle che non servono, poi si raggruppa con l'AI -->
+        <div x-show="collectionDone" class="space-y-3">
+            <p class="text-sm text-slate-600 dark:text-slate-300">
+                Google ha trovato <strong x-text="fmt(rawKeywordsCount)"></strong> ricerche<span x-show="rawKeywordsCount > filteredKeywords.length"> (<span x-text="fmt(rawKeywordsCount - filteredKeywords.length)"></span> tolte perché con volume troppo basso o con parole escluse)</span>.
+                Togli la spunta a quelle che non c'entrano: all'AI vanno solo le <strong x-text="fmt(selectedCount())"></strong> spuntate.
+            </p>
+            <div class="flex items-center gap-3 text-sm">
+                <button type="button" @click="setAll(true)" class="text-primary-600 dark:text-primary-400 hover:underline">Spunta tutte</button>
+                <span class="text-slate-300 dark:text-slate-600">·</span>
+                <button type="button" @click="setAll(false)" class="text-primary-600 dark:text-primary-400 hover:underline">Togli tutte</button>
+            </div>
+            <div class="rounded-xl border border-slate-200 dark:border-slate-700 max-h-96 overflow-y-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-slate-50 dark:bg-slate-700/50 sticky top-0">
+                        <tr>
+                            <th class="px-4 py-3 w-10"></th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ricerca</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Volume al mese</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden sm:table-cell">Concorrenza</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                        <template x-for="(kw, idx) in filteredKeywords" :key="kw.text">
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer" @click="selected[idx] = !selected[idx]">
+                                <td class="px-4 py-2"><input type="checkbox" :checked="selected[idx]" @click.stop="selected[idx] = !selected[idx]" class="rounded border-slate-300 text-primary-600 focus:ring-primary-500"></td>
+                                <td class="px-4 py-2" :class="selected[idx] ? 'text-slate-900 dark:text-white' : 'line-through text-slate-400 dark:text-slate-500'" x-text="kw.text"></td>
+                                <td class="px-4 py-2 text-right tabular-nums text-slate-700 dark:text-slate-300" x-text="fmt(kw.volume)"></td>
+                                <td class="px-4 py-2 text-slate-500 dark:text-slate-400 hidden sm:table-cell" x-text="competitionLabel(kw.competition_level)"></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <!-- Step 3: AI Clustering -->
     <div x-show="currentStep === 2" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 space-y-6">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">AI Clustering</h2>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Raggruppamento AI</h2>
 
         <div x-show="analyzing" class="text-center py-8">
             <svg class="w-12 h-12 text-primary-500 mx-auto animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <p class="mt-4 text-slate-600 dark:text-slate-400">L'AI sta analizzando <span x-text="filteredKeywords.length" class="font-bold"></span> keyword...</p>
-            <p class="mt-1 text-sm text-slate-400">Clustering semantico, classificazione intent, note strategiche</p>
+            <p class="mt-4 text-slate-600 dark:text-slate-400">L'AI sta raggruppando <span x-text="fmt(selectedCount())" class="font-bold"></span> keyword...</p>
+            <p class="mt-1 text-sm text-slate-400">Gruppi per argomento, intento di ricerca e una nota per gruppo. Di solito meno di un minuto.</p>
         </div>
 
         <div x-show="analyzeError" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
@@ -244,7 +190,7 @@
         <div x-show="analyzeDone" class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 text-center">
             <svg class="w-12 h-12 text-emerald-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <p class="mt-3 text-lg font-semibold text-slate-900 dark:text-white">Analisi completata!</p>
-            <p class="mt-1 text-sm text-slate-500" x-text="`${analyzeResult.clusters_count} cluster identificati, ${analyzeResult.credits_used} crediti utilizzati`"></p>
+            <p class="mt-1 text-sm text-slate-500" x-text="`${analyzeResult.clusters_count} gruppi trovati, ${analyzeResult.credits_used} crediti usati`"></p>
         </div>
     </div>
 
@@ -256,6 +202,7 @@
         </button>
         <div x-show="currentStep === 0 || (currentStep > 0 && !collecting && !analyzing)" class="ml-auto"></div>
         <div class="flex items-center gap-2" x-show="canProceed()">
+            <span x-show="currentStep === 0" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">gratis</span>
             <span x-show="currentStep === 1" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                 <?= \Core\ModuleLoader::getSetting('keyword-research', 'cost_kr_ai_clustering', 3) ?> crediti
             </span>
@@ -278,7 +225,7 @@
             <div class="px-6 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50">
                 <div>
                     <span class="text-sm text-slate-900 dark:text-white"><?= date('d/m/Y H:i', strtotime($r['created_at'])) ?></span>
-                    <span class="text-xs text-slate-500 ml-2"><?= $r['filtered_keywords_count'] ?? 0 ?> kw filtrate</span>
+                    <span class="text-xs text-slate-500 ml-2"><?= number_format((int) ($r['filtered_keywords_count'] ?? 0), 0, ',', '.') ?> keyword</span>
                     <?php
                     $statusBadge = match($r['status']) {
                         'completed' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300',
@@ -305,50 +252,40 @@
 <script>
 function researchWizard() {
     return {
-        steps: ['Brief', 'Raccolta', 'AI Clustering', 'Risultati'],
+        ...krProfile(<?= json_encode([
+            'profile' => $profileState['profile'],
+            'suggestions' => $profileState['suggestions'],
+            'geoFacts' => $profileState['geo_facts'],
+            'domain' => $profileState['domain'],
+            'url' => url('/keyword-research/project/' . $project['id'] . '/profile'),
+            'csrf' => csrf_token(),
+        ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS) ?>),
+
+        steps: ['La tua attività', 'Keyword trovate', 'Raggruppamento AI', 'Risultati'],
         currentStep: 0,
         projectId: <?= $project['id'] ?>,
         csrfToken: '<?= csrf_token() ?>',
-        draftRestored: false,
 
-        // Brief
+        // Brief: il resto (descrizione, target) lo prende il server dal profilo del progetto
         brief: {
-            business: '',
-            target: 'B2B',
             geography: '<?= e($project['default_location'] ?? 'IT') ?>',
-            objective: 'SEO',
             seeds: [],
             exclusions: [],
         },
         seedInput: '',
         exclusionInput: '',
+        showExclusions: false,
 
         init() {
-            const key = 'kr_research_draft_' + this.projectId;
-            try {
-                const saved = localStorage.getItem(key);
-                if (saved) {
-                    const draft = JSON.parse(saved);
-                    if (draft.business) this.brief.business = draft.business;
-                    if (draft.target) this.brief.target = draft.target;
-                    if (draft.geography) this.brief.geography = draft.geography;
-                    if (draft.objective) this.brief.objective = draft.objective;
-                    if (Array.isArray(draft.seeds) && draft.seeds.length) this.brief.seeds = draft.seeds;
-                    if (Array.isArray(draft.exclusions)) this.brief.exclusions = draft.exclusions;
-                    this.draftRestored = true;
-                    setTimeout(() => { this.draftRestored = false; }, 4000);
-                }
-            } catch (_) {}
-
-            this.$watch('brief', () => {
-                if (this.currentStep === 0) {
-                    localStorage.setItem(key, JSON.stringify(this.brief));
-                }
-            }, { deep: true });
+            this.profileInit();
         },
 
-        clearDraft() {
-            localStorage.removeItem('kr_research_draft_' + this.projectId);
+        // Proposte dell'AI dal profilo: parole di partenza (sostituite quando il profilo cambia)
+        applySuggestions(s, profileChanged = false) {
+            if (!s) return;
+            if (profileChanged || this.brief.seeds.length === 0) {
+                this.brief.seeds = [...(s.seeds || [])];
+            }
         },
 
         validationAttempted: false,
@@ -362,6 +299,7 @@ function researchWizard() {
         seedLogs: [],
         rawKeywordsCount: 0,
         filteredKeywords: [],
+        selected: [],
         eventSource: null,
 
         // AI Analysis
@@ -370,9 +308,25 @@ function researchWizard() {
         analyzeError: '',
         analyzeResult: {},
 
+        fmt(n) {
+            return new Intl.NumberFormat('it-IT', { useGrouping: 'always' }).format(Number(n) || 0);
+        },
+
+        competitionLabel(level) {
+            return { HIGH: 'Alta', MEDIUM: 'Media', LOW: 'Bassa' }[String(level || '').toUpperCase()] || '—';
+        },
+
+        selectedCount() {
+            return this.selected.filter(Boolean).length;
+        },
+
+        setAll(value) {
+            this.selected = this.filteredKeywords.map(() => value);
+        },
+
         addSeed() {
-            const val = this.seedInput.trim();
-            if (val && !this.brief.seeds.includes(val) && this.brief.seeds.length < 5) {
+            const val = this.seedInput.trim().toLowerCase();
+            if (val && !this.brief.seeds.includes(val) && this.brief.seeds.length < 8) {
                 this.brief.seeds.push(val);
             }
             this.seedInput = '';
@@ -388,16 +342,16 @@ function researchWizard() {
 
         canProceed() {
             if (this.collecting || this.analyzing) return false;
-            if (this.currentStep === 0) return this.brief.business.trim() !== '' && this.brief.seeds.length > 0;
-            if (this.currentStep === 1) return this.collectionDone && this.filteredKeywords.length > 0;
+            if (this.currentStep === 0) return this.profile !== '' && !this.profileBusy && !this.editingProfile && this.brief.seeds.length > 0;
+            if (this.currentStep === 1) return this.collectionDone && this.selectedCount() > 0;
             if (this.currentStep === 2) return this.analyzeDone;
             return false;
         },
 
         nextButtonText() {
-            if (this.currentStep === 0) return 'Avvia Raccolta';
-            if (this.currentStep === 1) return 'Analizza con AI';
-            if (this.currentStep === 2) return 'Vedi Risultati';
+            if (this.currentStep === 0) return 'Cerca su Google';
+            if (this.currentStep === 1) return 'Raggruppa con AI';
+            if (this.currentStep === 2) return 'Vedi i risultati';
             return 'Avanti';
         },
 
@@ -406,7 +360,6 @@ function researchWizard() {
                 this.validationAttempted = true;
                 if (!this.canProceed()) return;
                 this.currentStep = 1;
-                this.clearDraft();
                 this.startCollection();
             } else if (this.currentStep === 1) {
                 this.currentStep = 2;
@@ -431,10 +384,7 @@ function researchWizard() {
 
             const formData = new FormData();
             formData.append('_csrf_token', this.csrfToken);
-            formData.append('business', this.brief.business);
-            formData.append('target', this.brief.target);
             formData.append('geography', this.brief.geography);
-            formData.append('objective', this.brief.objective);
             formData.append('seeds', this.brief.seeds.join(','));
             formData.append('exclusions', this.brief.exclusions.join(','));
 
@@ -455,7 +405,7 @@ function researchWizard() {
                 this.researchId = data.research_id;
                 this.connectSSE();
             } catch (e) {
-                this.collectionStatus = 'Errore di connessione.';
+                this.collectionStatus = 'Errore di connessione, riprova.';
                 this.collecting = false;
             }
         },
@@ -466,14 +416,14 @@ function researchWizard() {
 
             this.eventSource.addEventListener('started', (e) => {
                 const d = JSON.parse(e.data);
-                this.collectionStatus = `Raccolta da ${d.total_seeds} seed keyword...`;
+                this.collectionStatus = `Cerco su Google ${d.total_seeds} ricerche e quelle simili...`;
             });
 
             this.eventSource.addEventListener('seed_started', (e) => {
                 const d = JSON.parse(e.data);
                 this.seedLogs.push({ message: `Ricerca: "${d.seed}"...`, status: 'loading', count: 0 });
                 this.collectionProgress = Math.round(((d.index) / d.total) * 80);
-                this.collectionStatus = `Seed ${d.index + 1}/${d.total}: "${d.seed}"`;
+                this.collectionStatus = d.total > 1 ? `Ricerca ${d.index + 1} di ${d.total}: "${d.seed}"` : 'Chiedo a Google le ricerche simili e i volumi...';
             });
 
             this.eventSource.addEventListener('seed_completed', (e) => {
@@ -481,10 +431,10 @@ function researchWizard() {
                 const last = this.seedLogs[this.seedLogs.length - 1];
                 if (last) {
                     last.status = 'completed';
-                    last.message = `"${d.seed}" completato`;
+                    last.message = `"${d.seed}" fatto`;
                     last.count = d.new_keywords;
                 }
-                this.collectionProgress = Math.round(((d.index + 1) / this.brief.seeds.length) * 80);
+                this.collectionProgress = d.index === undefined ? 80 : Math.round(((d.index + 1) / this.brief.seeds.length) * 80);
             });
 
             this.eventSource.addEventListener('seed_error', (e) => {
@@ -498,13 +448,14 @@ function researchWizard() {
 
             this.eventSource.addEventListener('filtering', (e) => {
                 this.collectionProgress = 90;
-                this.collectionStatus = 'Filtraggio keyword...';
+                this.collectionStatus = 'Tolgo le ricerche senza volume...';
             });
 
             this.eventSource.addEventListener('completed', (e) => {
                 const d = JSON.parse(e.data);
                 this.rawKeywordsCount = d.raw_keywords;
                 this.filteredKeywords = d.keywords || [];
+                this.setAll(true);
                 this.collectionProgress = 100;
                 this.collectionStatus = 'Raccolta completata!';
                 this.collectionDone = true;
@@ -557,6 +508,7 @@ function researchWizard() {
                 if (data.success && data.keywords && data.keywords.length > 0) {
                     this.rawKeywordsCount = data.raw_keywords;
                     this.filteredKeywords = data.keywords;
+                    this.setAll(true);
                     this.collectionProgress = 100;
                     this.collectionStatus = 'Raccolta completata!';
                     this.collectionDone = true;
@@ -578,7 +530,7 @@ function researchWizard() {
             const formData = new FormData();
             formData.append('_csrf_token', this.csrfToken);
             formData.append('research_id', this.researchId);
-            formData.append('keywords', JSON.stringify(this.filteredKeywords));
+            formData.append('keywords', JSON.stringify(this.filteredKeywords.filter((_, i) => this.selected[i])));
 
             try {
                 const resp = await fetch(`<?= url('/keyword-research/project/' . $project['id'] . '/research/analyze') ?>`, {
