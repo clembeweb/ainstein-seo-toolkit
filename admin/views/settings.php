@@ -480,6 +480,19 @@ $smtpConfigured = !empty($settings['smtp_host']['value'] ?? '');
                                        class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm">
                                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Formato: 123-456-7890 o 1234567890</p>
                             </div>
+                            <div>
+                                <label for="gads_oauth_client_id" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Client ID OAuth Google Ads</label>
+                                <input type="text" name="gads_oauth_client_id" id="gads_oauth_client_id"
+                                       value="<?= e($settings['gads_oauth_client_id']['value'] ?? '') ?>"
+                                       class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm">
+                            </div>
+                            <div>
+                                <label for="gads_oauth_client_secret" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Client Secret OAuth Google Ads</label>
+                                <input type="password" name="gads_oauth_client_secret" id="gads_oauth_client_secret"
+                                       value="<?= e($settings['gads_oauth_client_secret']['value'] ?? '') ?>"
+                                       class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm">
+                                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Client del progetto Cloud legato al Developer Token. Vuoti = usa quelli di Google OAuth.</p>
+                            </div>
                         </div>
                     </div>
                 </div>

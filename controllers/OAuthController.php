@@ -70,7 +70,10 @@ class OAuthController
         $projectId = $stateData['project_id'];
         $type = $stateData['type'] ?? 'gsc';
 
-        // Scambia code per tokens
+        // Scambia code per tokens (Google Ads usa il suo client OAuth)
+        if ($type === 'google_ads') {
+            $oauth = new GoogleOAuthService(true);
+        }
         $tokens = $oauth->exchangeCode($code);
 
         if (isset($tokens['error'])) {
@@ -114,6 +117,7 @@ class OAuthController
     {
         Middleware::admin();
 
+        $oauth = new GoogleOAuthService(true);
         $tokens = $oauth->exchangeCode($code);
 
         if (isset($tokens['error'])) {

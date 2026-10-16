@@ -435,7 +435,7 @@ class GoogleAdsService
         }
 
         // Token scaduto o in scadenza — rinnova
-        $oauth = new GoogleOAuthService();
+        $oauth = new GoogleOAuthService(true);
         $result = $oauth->refreshToken($this->refreshToken);
 
         if (isset($result['error'])) {

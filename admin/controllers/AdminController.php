@@ -254,7 +254,7 @@ class AdminController
             'dataforseo_login', 'dataforseo_password',
             'rapidapi_keyword_key', 'keywordseverywhere_api_key',
             'gsc_client_id', 'gsc_client_secret',
-            'gads_developer_token', 'gads_mcc_customer_id',
+            'gads_developer_token', 'gads_mcc_customer_id', 'gads_oauth_client_id', 'gads_oauth_client_secret',
             'kp_enabled', 'kp_daily_limit_global', 'kp_daily_limit_per_user', 'kp_cache_ttl_days',
             'smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_from_email', 'smtp_from_name',
             'email_logo_url', 'email_brand_color', 'email_footer_text',
@@ -336,7 +336,7 @@ class AdminController
      */
     public function mccConnect(): string
     {
-        $oauth = new \Services\GoogleOAuthService();
+        $oauth = new \Services\GoogleOAuthService(true);
 
         if (!$oauth->isConfigured()) {
             $_SESSION['_flash']['error'] = 'Configura prima Client ID e Client Secret nella sezione Google OAuth.';

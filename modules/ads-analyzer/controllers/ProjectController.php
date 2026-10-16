@@ -259,7 +259,7 @@ class ProjectController
             exit;
         }
 
-        $oauth = new GoogleOAuthService();
+        $oauth = new GoogleOAuthService(true);
 
         if (!$oauth->isConfigured()) {
             $_SESSION['_flash']['error'] = 'Credenziali Google non configurate. Contatta l\'amministratore.';
@@ -446,7 +446,7 @@ class ProjectController
         // Genera URL per OAuth connect
         $connectUrl = '';
         try {
-            $oauth = new GoogleOAuthService();
+            $oauth = new GoogleOAuthService(true);
             if ($oauth->isConfigured()) {
                 $connectUrl = $oauth->getAuthUrl('ads-analyzer', $projectId, GoogleOAuthService::SCOPE_GOOGLE_ADS, 'google_ads');
             }

@@ -28,18 +28,32 @@ class GoogleOAuthService
     private ?string $clientSecret = null;
     private ?string $appUrl = null;
 
-    public function __construct()
+    /**
+     * @param bool $forGoogleAds true = client OAuth di Google Ads (MCC, Ads Analyzer).
+     *   Google Ads resta sul progetto Cloud del developer token (Beweb), separato
+     *   dall'app verificata Ainstein (login, GSC, GA4). Se gads_oauth_* è vuoto usa gsc_*.
+     */
+    public function __construct(bool $forGoogleAds = false)
     {
-        $this->loadSettings();
+        $this->loadSettings($forGoogleAds);
     }
 
     /**
      * Carica credenziali OAuth da settings globali
      */
-    private function loadSettings(): void
+    private function loadSettings(bool $forGoogleAds = false): void
     {
         $this->clientId = Settings::get('gsc_client_id', '');
         $this->clientSecret = Settings::get('gsc_client_secret', '');
+
+        if ($forGoogleAds) {
+            $adsId = Settings::get('gads_oauth_client_id', '');
+            $adsSecret = Settings::get('gads_oauth_client_secret', '');
+            if (!empty($adsId) && !empty($adsSecret)) {
+                $this->clientId = $adsId;
+                $this->clientSecret = $adsSecret;
+            }
+        }
 
         // Carica APP_URL da config
         $configFile = dirname(__DIR__) . '/config/app.php';
