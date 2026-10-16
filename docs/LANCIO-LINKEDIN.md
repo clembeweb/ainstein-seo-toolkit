@@ -57,10 +57,20 @@
 >   `components/module-getting-started`, aperto solo senza progetti), poi blocchi ed educativa; AI Keywords: le card
 >   Ricerca/Architettura/Piano vanno dritte al progetto (con più progetti "Su quale progetto?"). Tour: selettori tutti
 >   presenti, tour di AI Writer riprovato dal "?".
+> - **App Google OAuth → verifica (2026-10-16 sera; tutto in `docs/VERIFICA-GOOGLE-OAUTH.md`).** Il vecchio progetto Cloud
+>   "Beweb" non era verificabile (8 client, scope Gmail/Drive con restrizioni). Creato il progetto **Ainstein**
+>   (`ainstein-511817`), solo login + GSC + GA4, client "Ainstein web", **In produzione**; unico scope sensibile
+>   `analytics.readonly` (`webmasters.readonly` per Google non lo è). Login con Google: solo openid/email/profile, nessun
+>   avviso. Google Ads resta sul client Beweb (`gads_oauth_client_*`, `cda3798`). Online: riga "Avanzate → Vai a
+>   ainstein.it" sotto i Collega (`3cf7384`), privacy con "5. Dati ricevuti da Google" + Limited Use (`944d506`), logo
+>   120×120 caricato, ainstein.it verificato in GSC per bewebsolution (`897f817`, non cancellare il file).
+>   **Restano:** client nuovo in Admin (dopo la SQL `gads_oauth_*`) e ricollegare GSC/GA4; dal **2026-10-17 sera** ritentare
+>   la verifica del branding ("Ho risolto i problemi"); poi video (scaletta nel doc) + motivazione → invio. Fino
+>   all'approvazione (giorni) chi collega GA4 vede l'avviso, spiegato dalla riga sotto il pulsante.
 > **Prima del post restano:** deploy di questi P2 (ok di Clemente), AI Keywords da provare in prod (la fa Clemente),
 > decidere /landing-b, la bozza del post.
 > **DOPO il post (raccolto da questo file):** 1) alert di AI Rank generati a fine controllo posizioni + mail digest (~2 h,
-> scheda nascosta finché non vanno); 2) verifica dell'app Google OAuth (logo, video del collegamento, motivazione scope);
+> scheda nascosta finché non vanno); 2) verifica dell'app Google OAuth (avviata il 2026-10-16, vedi sopra: branding + video);
 > 3) nomi definitivi dei moduli (li cambia Clemente da Admin); 4) piano assegnabile agli utenti in admin (`users` non ha
 > `plan_id`: oggi si ricaricano crediti a mano); 5) P3 parole inglesi rimaste ("Quick Wins", "Crawl Budget" e altre);
 > 6) /landing-b da decidere (se non prima); 7) miglioramento di AI Writer che Clemente aveva in mente (sessione "Ragionare
