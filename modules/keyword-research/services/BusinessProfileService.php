@@ -21,6 +21,8 @@ class BusinessProfileService
     private const MAX_PAGES = 5;
     private const SITE_TYPES = ['corporate', 'ecommerce', 'blog', 'saas', 'local', 'portfolio'];
     private const TARGETS = ['B2B', 'B2C', 'Both'];
+    // Cambia quando cambia il prompt delle proposte: quelle salvate col prompt vecchio si rifanno
+    private const SUGGEST_VERSION = 'v2';
 
     public const LANGUAGE_NAMES = ['it' => 'italiano', 'en' => 'inglese', 'de' => 'tedesco', 'fr' => 'francese', 'es' => 'spagnolo'];
     public const COUNTRY_NAMES = ['IT' => 'Italia', 'US' => 'Stati Uniti', 'GB' => 'Regno Unito', 'DE' => 'Germania', 'FR' => 'Francia', 'ES' => 'Spagna'];
@@ -72,7 +74,7 @@ class BusinessProfileService
             return null;
         }
         $s = json_decode((string) $project['suggestions'], true);
-        if (!is_array($s) || ($s['profile_hash'] ?? '') !== md5($profile)) {
+        if (!is_array($s) || ($s['profile_hash'] ?? '') !== md5(self::SUGGEST_VERSION . $profile)) {
             return null;
         }
         return $s;
@@ -205,10 +207,15 @@ PAESE DELLE RICERCHE: {$country}
 LINGUA DELLE RICERCHE: {$language}
 
 Proponi:
-1. "seeds": 5 parole di partenza per Google Keyword Planner. Sono le ricerche che farebbe un potenziale cliente per
-   trovare questa attività: servizio o prodotto + luogo quando l'attività è locale (es. "noleggio barche sorrento").
-   2-5 parole ciascuna, in {$language}, minuscole, senza nome del marchio, una per servizio/prodotto principale,
-   niente doppioni o varianti della stessa ricerca.
+1. "seeds": 5 parole di partenza per Google Keyword Planner, che da ognuna trova le ricerche simili con i volumi.
+   Devono essere le ricerche PRINCIPALI e più cercate con cui un cliente trova questa attività, non frasi di nicchia:
+   - corte: 2-4 parole, servizio o prodotto principale + la città o zona più importante se l'attività è locale
+     (es. "noleggio barche sorrento", "noleggio gommone senza patente", "tour in barca capri");
+   - un solo dettaglio per ricerca: mai servizio + caratteristica + luogo insieme
+     (no "noleggio barca senza patente castellammare", sì "noleggio gommone senza patente" e "noleggio barche castellammare");
+   - una per ogni servizio o prodotto principale; al massimo una per un tipo di cliente o un'occasione particolare
+     (es. feste, eventi);
+   - in {$language}, minuscole, senza nome del marchio, niente varianti della stessa ricerca.
 2. "categories": 5 categorie per il blog del sito: argomenti su cui scrivere articoli utili ai clienti (non i servizi
    venduti), 1-4 parole ciascuna, in {$language}.
 3. "site_type": uno tra corporate, ecommerce, blog, saas, local, portfolio.
@@ -239,7 +246,7 @@ PROMPT;
             'categories' => $this->cleanList($data['categories'] ?? [], 6),
             'site_type' => in_array($data['site_type'] ?? '', self::SITE_TYPES, true) ? $data['site_type'] : 'corporate',
             'target' => in_array($data['target'] ?? '', self::TARGETS, true) ? $data['target'] : 'Both',
-            'profile_hash' => md5($profile),
+            'profile_hash' => md5(self::SUGGEST_VERSION . $profile),
         ];
         Database::update('kr_projects', ['suggestions' => json_encode($suggestions, JSON_UNESCAPED_UNICODE)], 'id = ?', [(int) $project['id']]);
 

@@ -292,7 +292,7 @@
                     };
                     ?>
                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ml-2 <?= $statusBadge ?>">
-                        <?= ['completed' => 'Completata', 'error' => 'Errore', 'collecting' => 'In corso', 'clustering' => 'In corso', 'pending' => 'In attesa', 'processing' => 'In corso', 'failed' => 'Errore'][$r['status']] ?? ucfirst($r['status']) ?>
+                        <?= ['completed' => 'Completata', 'error' => 'Errore', 'collecting' => 'In corso', 'clustering' => 'In corso', 'pending' => 'In attesa', 'processing' => 'In corso', 'failed' => 'Errore', 'draft' => 'Non finita', 'analyzing' => 'In corso'][$r['status']] ?? ucfirst($r['status']) ?>
                     </span>
                 </div>
                 <?php if ($r['status'] === 'completed'): ?>
