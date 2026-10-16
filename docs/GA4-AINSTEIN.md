@@ -101,8 +101,11 @@ Con un utente non admin creato apposta (`ga4-test@seo-toolkit.local`, solo DB lo
 Pagine /docs: una sola volta lo snippet anche se oggi quelle pagine hanno due `<head>` (layout.php annidato in
 docs/layout.php, bug preesistente, segnalato).
 
-## Dopo il deploy
+## In produzione (dal 2026-10-16 sera)
 
-1. Admin → Impostazioni → Avanzate → incollare `G-VFS16XJYRQ` → Salva.
-2. Aprire ainstein.it da una finestra anonima, accettare il banner, fare un giro: GA4 → Tempo reale deve mostrare la visita.
-3. Entro 24 h: stella sugli eventi chiave (sopra).
+Online con il deploy della sessione "Ainstein Online": l'ID è stato inserito nella tabella `settings` di prod via SQL e la
+cache file svuotata (`storage/cache/ainstein`, di www-data: serve sudo). **Nota:** dopo un INSERT/UPDATE diretto in
+`settings` la cache va svuotata a mano (Admin → Cache, o cancellare la cartella); salvando da Admin → Impostazioni lo fa da sola.
+
+Restano a Clemente: 1) aprire ainstein.it in una finestra anonima, accettare il banner e guardare GA4 → Tempo reale;
+2) entro 24 h la stella su `sign_up` e `project_created` in Amministrazione → Eventi.
