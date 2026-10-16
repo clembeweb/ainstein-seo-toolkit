@@ -47,6 +47,16 @@
 > - **GEO Audit, dal giro manuale in prod** (in locale, non online): `a96ddaa` "Genera scheda" non faceva niente dopo la
 >   conferma (errore JS, nessun credito scalato), riparato; `607a7b2` riassunto del profilo (quello che usa AI Keywords)
 >   in un accordion sopra Identità, con data e "Rigenera" (ADR-019, nessuna migrazione). Dettagli nel TASKS del modulo.
+> - **UX generale, dal giro manuale di Clemente** (in locale, non online; deploy insieme agli altri dalla sessione
+>   "Ainstein Online" dopo che Clemente ha guardato in locale): `5473a74` moduli sempre GEO Audit → Keywords → Rank →
+>   Audit → Writer (`ModuleLoader::ORDER`, non dipende dai nomi di Admin; menu, progetto, home, docs, prezzi, footer;
+>   la landing pubblica resta nell'ordine del racconto; nessuna modifica al DB); `bb818d7` pagina Progetti più chiara
+>   ("un progetto è un sito", riquadro 3 passi, strumenti attivi sulle card, via la tabella WordPress) e nel progetto
+>   bottone Condividi, una riga per strumento, "Pubblicazione su WordPress · Facoltativo" chiusa e spiegata in fondo;
+>   `e163ea6` + `bdba85a` ingresso dei 5 tool senza hero banner: progetti in cima, poi "Come iniziare" (componente
+>   `components/module-getting-started`, aperto solo senza progetti), poi blocchi ed educativa; AI Keywords: le card
+>   Ricerca/Architettura/Piano vanno dritte al progetto (con più progetti "Su quale progetto?"). Tour: selettori tutti
+>   presenti, tour di AI Writer riprovato dal "?".
 > **Prima del post restano:** deploy di questi P2 (ok di Clemente), AI Keywords da provare in prod (la fa Clemente),
 > decidere /landing-b, la bozza del post.
 > **DOPO il post (raccolto da questo file):** 1) alert di AI Rank generati a fine controllo posizioni + mail digest (~2 h,
