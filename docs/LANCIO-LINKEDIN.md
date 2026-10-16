@@ -2,6 +2,8 @@
 
 > File di stato del lancio. Aggiornato: 2026-10-16 sera.
 >
+> **AI Writer (2026-10-16 sera):** articolo troncato su Madcrumbs corretto in locale (`f95f6a8`, tetto token + "continua da qui", provato col prompt vero), NON online: dopo il deploy riprovare su Madcrumbs con Clemente. Proposta "solo automatico" in `docs/specs/2026-10-16-ai-writer-solo-automatico.md`: presentato il blocco 1 (cosa funziona), domani si riparte dal blocco 2 (cosa togliere), niente codice prima del suo ok.
+>
 > **PASSAGGIO DI CONSEGNE 2026-10-16 sera (RIPARTIRE DA QUI). P2 della prova "da utente" tutti corretti IN LOCALE,
 > NON ancora online** (deploy solo con l'ok di Clemente: `git push origin main` + `git pull` sul VPS). Un commit per tool,
 > `php -l` e verifica a schermo su localhost con l'admin locale:
