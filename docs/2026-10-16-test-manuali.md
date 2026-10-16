@@ -237,6 +237,11 @@ correzione durante il giro.
 Già online e verificato: tutti i P1 trovati oggi (pagina Report AI, sitemap) e la decisione "solo Report AI".
 Restano, in ordine:
 
+> **In mano alla sessione "test AI Keywords in prod"** (su richiesta di Clemente): punti 1 e 2 e i P3 di testo di
+> AI Keywords del punto 5 (numeri all'inglese, "API: 1.0s | AI: 12.2s"). Rifà anche l'ingresso dei 3 strumenti
+> (profilo dell'attività dal GEO Audit o dal sito, niente parole di partenza obbligatorie). Commit da segnare qui
+> quando finisce. Le altre sessioni non toccano `modules/keyword-research/` né i servizi di keyword.
+
 1. **AI Keywords, "e adesso?" dopo la Ricerca keyword (P2):** dai risultati mandare le keyword ad AI Rank / AI Writer
    (gli invii esistono già in Controllo veloce e Piano editoriale, manca qui). È il passaggio che si mostra nel post.
 2. **AI Keywords, anteprima prima del filtro AI (P2):** vedere le keyword raccolte e poi decidere se spendere 3 cr.
