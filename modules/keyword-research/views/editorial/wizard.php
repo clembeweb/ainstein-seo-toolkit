@@ -10,7 +10,7 @@
             <span class="text-slate-900 dark:text-white"><?= e($project['name']) ?></span>
         </nav>
         <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Piano Editoriale</h1>
-        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Crea un piano editoriale basato su keyword research e analisi competitor</p>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Crea un piano editoriale basato sulle keyword e sui titoli che Google mostra oggi</p>
     </div>
 
     <?= \Core\View::partial('components/orphaned-project-notice', ['project' => $project]) ?>

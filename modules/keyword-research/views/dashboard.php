@@ -84,7 +84,7 @@ $costoPiano = $krCrediti('cost_kr_editorial_plan', 5);
 
         <?= \Core\View::partial('components/dashboard-mode-card', [
             'title' => 'Piano Editoriale',
-            'description' => 'Piano editoriale mensile basato su keyword e analisi competitor. Esporta direttamente in AI Writer.',
+            'description' => 'Piano editoriale mensile basato su keyword e sui titoli che Google mostra oggi. Esporta direttamente in AI Writer.',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>',
             'gradient' => 'from-violet-500 to-purple-600',
             'url' => url('/keyword-research/projects'),
@@ -554,7 +554,7 @@ $costoPiano = $krCrediti('cost_kr_editorial_plan', 5);
             <h3 class="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">Cosa puoi fare con AI Keywords</h3>
             <p class="mt-3 text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">Dalla ricerca di nicchia all'export automatico verso la produzione contenuti</p>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <!-- Ricerca keyword di nicchia -->
             <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 hover:shadow-md hover:border-purple-300 dark:hover:border-purple-700 transition-all">
                 <div class="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-4">
@@ -564,16 +564,6 @@ $costoPiano = $krCrediti('cost_kr_editorial_plan', 5);
                 </div>
                 <h4 class="font-semibold text-slate-900 dark:text-white mb-2">Ricerca keyword di nicchia</h4>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Trova keyword long-tail con bassa competizione e alto potenziale di traffico. Ideale per siti nuovi o di nicchia.</p>
-            </div>
-            <!-- Analisi competitor -->
-            <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 hover:shadow-md hover:border-purple-300 dark:hover:border-purple-700 transition-all">
-                <div class="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-4">
-                    <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
-                </div>
-                <h4 class="font-semibold text-slate-900 dark:text-white mb-2">Analisi competitor</h4>
-                <p class="text-sm text-slate-500 dark:text-slate-400">Scopri su quali keyword si posizionano i competitor e trova opportunità inesplorate nel tuo settore.</p>
             </div>
             <!-- Struttura sito web -->
             <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 hover:shadow-md hover:border-purple-300 dark:hover:border-purple-700 transition-all">
@@ -594,16 +584,6 @@ $costoPiano = $krCrediti('cost_kr_editorial_plan', 5);
                 </div>
                 <h4 class="font-semibold text-slate-900 dark:text-white mb-2">Calendario contenuti</h4>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Crea un piano editoriale mensile con priorità, scadenze e keyword assegnate a ogni contenuto.</p>
-            </div>
-            <!-- Keyword gap analysis -->
-            <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 hover:shadow-md hover:border-purple-300 dark:hover:border-purple-700 transition-all">
-                <div class="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-4">
-                    <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-9L21 12m0 0l-4.5 4.5M21 12H7.5"/>
-                    </svg>
-                </div>
-                <h4 class="font-semibold text-slate-900 dark:text-white mb-2">Keyword gap analysis</h4>
-                <p class="text-sm text-slate-500 dark:text-slate-400">Identifica le keyword che i competitor coprono e tu no. Colma i gap nella tua strategia SEO.</p>
             </div>
             <!-- Export automatico -->
             <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 hover:shadow-md hover:border-purple-300 dark:hover:border-purple-700 transition-all">
