@@ -28,7 +28,7 @@ $intentColor = $intentColors[strtolower($cluster['intent'] ?? '')] ?? 'bg-slate-
                 </div>
                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
                     Principale: <span class="font-medium text-slate-700 dark:text-slate-300"><?= e($cluster['main_keyword']) ?></span>
-                    <span class="text-slate-400 ml-1">(vol: <?= number_format($cluster['main_volume']) ?>)</span>
+                    <span class="text-slate-400 ml-1">(vol: <?= number_format($cluster['main_volume'], 0, ',', '.') ?>)</span>
                 </p>
             </div>
             <svg class="w-5 h-5 text-slate-400 transition-transform" :class="expanded ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -43,11 +43,11 @@ $intentColor = $intentColors[strtolower($cluster['intent'] ?? '')] ?? 'bg-slate-
                 <p class="text-xs text-slate-500">Keyword</p>
             </div>
             <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg py-2 px-3 text-center">
-                <p class="text-lg font-bold text-emerald-600 dark:text-emerald-400"><?= number_format($cluster['total_volume']) ?></p>
+                <p class="text-lg font-bold text-emerald-600 dark:text-emerald-400"><?= number_format($cluster['total_volume'], 0, ',', '.') ?></p>
                 <p class="text-xs text-slate-500">Volume</p>
             </div>
             <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg py-2 px-3 text-center">
-                <p class="text-lg font-bold text-slate-900 dark:text-white"><?= number_format($cluster['main_volume']) ?></p>
+                <p class="text-lg font-bold text-slate-900 dark:text-white"><?= number_format($cluster['main_volume'], 0, ',', '.') ?></p>
                 <p class="text-xs text-slate-500">Vol. principale</p>
             </div>
         </div>
@@ -110,7 +110,7 @@ $intentColor = $intentColors[strtolower($cluster['intent'] ?? '')] ?? 'bg-slate-
                                 <span x-text="kw.text"></span>
                             </template>
                         </td>
-                        <td class="px-4 py-3 text-right text-slate-700 dark:text-slate-300 font-medium" x-text="(kw.volume || 0).toLocaleString()"></td>
+                        <td class="px-4 py-3 text-right text-slate-700 dark:text-slate-300 font-medium" x-text="(kw.volume || 0).toLocaleString('it-IT', { useGrouping: 'always' })"></td>
                         <td class="px-4 py-3 text-center">
                             <span class="text-xs" :class="krCompClass(kw.competition_level)" x-text="kw.competition_level ? ({high: 'Alta', medium: 'Media', low: 'Bassa'})[String(kw.competition_level).toLowerCase()] || kw.competition_level : '-'"></span>
                         </td>

@@ -135,6 +135,12 @@ Router::get('/keyword-research/project/{id}/research/{researchId}', function ($i
     return $controller->results((int) $id, (int) $researchId);
 });
 
+Router::post('/keyword-research/project/{id}/research/{researchId}/send-to-writer', function ($id, $researchId) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new ResearchController())->sendToWriter((int) $id, (int) $researchId);
+});
+
 Router::get('/keyword-research/project/{id}/research/{researchId}/export', function ($id, $researchId) {
     Middleware::auth();
     $controller = new ResearchController();

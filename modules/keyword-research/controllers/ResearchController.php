@@ -695,7 +695,93 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
             'brief' => $brief,
             'totalKeywords' => $totalKeywordsInClusters,
             'totalVolume' => $totalVolume,
+            'nextTargets' => $this->nextTargets($project),
             'modules' => ModuleLoader::getUserModules($user['id']),
+        ]);
+    }
+
+    /**
+     * "E adesso?": i progetti AI Rank e AI Writer (articoli) dello stesso sito, se attivi.
+     */
+    private function nextTargets(array $project): array
+    {
+        $globalId = (int) ($project['global_project_id'] ?? 0);
+        $targets = ['global_project_id' => $globalId ?: null, 'rank' => null, 'writer' => null];
+        if (!$globalId) {
+            return $targets;
+        }
+        if (ModuleLoader::isModuleActive('seo-tracking')) {
+            $targets['rank'] = Database::fetch("SELECT id, name FROM st_projects WHERE global_project_id = ? ORDER BY id LIMIT 1", [$globalId]) ?: null;
+        }
+        if (ModuleLoader::isModuleActive('ai-content')) {
+            $targets['writer'] = Database::fetch("SELECT id, name FROM aic_projects WHERE global_project_id = ? AND type = 'manual' ORDER BY id LIMIT 1", [$globalId]) ?: null;
+        }
+        return $targets;
+    }
+
+    /**
+     * "E adesso?": la keyword principale dei gruppi scelti va tra le keyword del progetto AI Writer (articoli)
+     * dello stesso sito, pronta da scrivere. Nessun addebito qui: brief e articolo si pagano in AI Writer.
+     */
+    public function sendToWriter(int $projectId, int $researchId): void
+    {
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->projectModel->findAccessible($projectId, $user['id']);
+        $research = $this->researchModel->find($researchId);
+
+        if (!$project || !$research || $research['project_id'] !== $projectId) {
+            echo json_encode(['success' => false, 'error' => 'Ricerca non trovata.']);
+            return;
+        }
+        if (($project['access_role'] ?? 'owner') === 'viewer') {
+            echo json_encode(['success' => false, 'error' => 'Non hai i permessi per questa operazione']);
+            return;
+        }
+
+        $writer = $this->nextTargets($project)['writer'];
+        if (!$writer) {
+            echo json_encode(['success' => false, 'error' => 'AI Writer non è attivo su questo progetto.']);
+            return;
+        }
+        $aic = Database::fetch("SELECT id, user_id FROM aic_projects WHERE id = ?", [(int) $writer['id']]);
+
+        $clusterIds = array_map('intval', (array) (json_decode($_POST['cluster_ids'] ?? '[]', true) ?: []));
+        $brief = json_decode($research['brief'] ?? '{}', true) ?: [];
+        $locationNames = ['IT' => 'Italy', 'US' => 'United States', 'GB' => 'United Kingdom', 'DE' => 'Germany', 'FR' => 'France', 'ES' => 'Spain'];
+        $location = $locationNames[$brief['geography'] ?? 'IT'] ?? 'Italy';
+
+        $added = 0;
+        $skipped = 0;
+        foreach ($this->clusterModel->findByResearch($researchId) as $cluster) {
+            if (!in_array((int) $cluster['id'], $clusterIds, true)) {
+                continue;
+            }
+            $keyword = trim((string) ($cluster['main_keyword'] ?? ''));
+            if ($keyword === '') {
+                continue;
+            }
+            $exists = Database::fetch("SELECT id FROM aic_keywords WHERE project_id = ? AND keyword = ?", [(int) $aic['id'], $keyword]);
+            if ($exists) {
+                $skipped++;
+                continue;
+            }
+            Database::insert('aic_keywords', [
+                'user_id' => (int) $aic['user_id'],
+                'project_id' => (int) $aic['id'],
+                'keyword' => $keyword,
+                'language' => $project['default_language'] ?? 'it',
+                'location' => $location,
+            ]);
+            $added++;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'added' => $added,
+            'skipped' => $skipped,
+            'url' => url('/ai-content/projects/' . (int) $aic['id'] . '/keywords'),
         ]);
     }
 

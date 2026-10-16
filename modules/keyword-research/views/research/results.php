@@ -20,7 +20,7 @@ sort($uniqueIntents);
             </nav>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Risultati della ricerca</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                <?= date('d/m/Y H:i', strtotime($research['created_at'])) ?> | <?= e($brief['business'] ?? '') ?>
+                <?= date('d/m/Y H:i', strtotime($research['created_at'])) ?> · <?= e(mb_strimwidth((string) ($brief['business'] ?? ''), 0, 140, '…')) ?>
             </p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-3">
@@ -36,7 +36,7 @@ sort($uniqueIntents);
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
-                Nuova Ricerca
+                Nuova ricerca
             </a>
         </div>
     </div>
@@ -46,23 +46,23 @@ sort($uniqueIntents);
     <!-- Stats Grid -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 text-center">
-            <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($research['raw_keywords_count'] ?? 0) ?></p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Keyword raccolte</p>
+            <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($research['raw_keywords_count'] ?? 0, 0, ',', '.') ?></p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Ricerche trovate</p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 text-center">
-            <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($research['filtered_keywords_count'] ?? 0) ?></p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Dopo filtro</p>
+            <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($research['filtered_keywords_count'] ?? 0, 0, ',', '.') ?></p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Date all'AI</p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 text-center">
             <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400"><?= count($clusters) ?></p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Cluster</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Gruppi</p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 text-center">
-            <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($totalKeywords) ?></p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Kw nei cluster</p>
+            <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($totalKeywords, 0, ',', '.') ?></p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Keyword nei gruppi</p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 text-center">
-            <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($totalVolume) ?></p>
+            <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($totalVolume, 0, ',', '.') ?></p>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Volume totale</p>
             <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5" title="Google dà lo stesso volume a 'giro in barca capri' e 'capri giro in barca': qui contano una volta sola">varianti della stessa ricerca contate una volta</p>
         </div>
@@ -76,11 +76,191 @@ sort($uniqueIntents);
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
             </svg>
             <div>
-                <h3 class="font-semibold text-emerald-800 dark:text-emerald-200 mb-1">Nota Strategica</h3>
+                <h3 class="font-semibold text-emerald-800 dark:text-emerald-200 mb-1">Nota strategica</h3>
                 <p class="text-sm text-emerald-700 dark:text-emerald-300"><?= e($research['strategy_note']) ?></p>
             </div>
         </div>
     </div>
+    <?php endif; ?>
+
+    <!-- E adesso? -->
+    <?php
+    $nextClusters = array_map(function ($c) {
+        $main = null;
+        foreach ($c['keywords_list'] ?? [] as $kw) {
+            if (!empty($kw['is_main']) || mb_strtolower($kw['text']) === mb_strtolower((string) $c['main_keyword'])) {
+                $main = $kw;
+                break;
+            }
+        }
+        return [
+            'id' => (int) $c['id'],
+            'name' => (string) $c['name'],
+            'main_keyword' => (string) $c['main_keyword'],
+            'main_volume' => (int) $c['main_volume'],
+            'kw' => [
+                'text' => (string) $c['main_keyword'],
+                'volume' => (int) ($main['volume'] ?? $c['main_volume']),
+                'competition_level' => $main['competition_level'] ?? '',
+                'intent' => $main['intent'] ?? ($c['intent'] ?? ''),
+                'high_bid' => (float) ($main['high_bid'] ?? 0),
+            ],
+        ];
+    }, $clusters);
+    $rankTarget = $nextTargets['rank'] ?? null;
+    $writerTarget = $nextTargets['writer'] ?? null;
+    $activateUrl = !empty($nextTargets['global_project_id']) ? url('/projects/' . (int) $nextTargets['global_project_id']) : url('/projects');
+    $canWrite = ($project['access_role'] ?? 'owner') !== 'viewer';
+    ?>
+    <?php if (!empty($clusters) && $canWrite): ?>
+    <div x-data="nextActions()" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 space-y-4">
+        <div>
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">E adesso?</h2>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Scegli i gruppi e mandali dove ti servono: va la keyword principale di ogni gruppo.</p>
+        </div>
+
+        <div class="flex items-center gap-3 text-sm">
+            <button type="button" @click="setAll(true)" class="text-primary-600 dark:text-primary-400 hover:underline">Tutti</button>
+            <span class="text-slate-300 dark:text-slate-600">·</span>
+            <button type="button" @click="setAll(false)" class="text-primary-600 dark:text-primary-400 hover:underline">Nessuno</button>
+            <span class="text-slate-400 ml-auto" x-text="selectedIds().length + ' gruppi scelti'"></span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-72 overflow-y-auto">
+            <template x-for="c in clusters" :key="c.id">
+                <label class="flex items-start gap-2 rounded-lg border px-3 py-2 cursor-pointer transition-colors"
+                       :class="picked[c.id] ? 'border-primary-300 dark:border-primary-700 bg-primary-50/50 dark:bg-primary-900/20' : 'border-slate-200 dark:border-slate-700'">
+                    <input type="checkbox" x-model="picked[c.id]" class="mt-0.5 rounded border-slate-300 text-primary-600 focus:ring-primary-500">
+                    <span class="min-w-0">
+                        <span class="block text-sm font-medium text-slate-900 dark:text-white truncate" x-text="c.main_keyword"></span>
+                        <span class="block text-xs text-slate-500 dark:text-slate-400 truncate" x-text="c.name + ' · ' + fmt(c.main_volume) + ' al mese'"></span>
+                    </span>
+                </label>
+            </template>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <!-- AI Rank -->
+            <div class="rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+                <p class="font-medium text-slate-900 dark:text-white">Monitora le posizioni su Google</p>
+                <?php if ($rankTarget): ?>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Le keyword vanno in AI Rank (<?= e($rankTarget['name']) ?>), un gruppo per ogni gruppo scelto. Il controllo delle posizioni si paga in AI Rank.</p>
+                <button type="button" @click="sendToRank()" :disabled="busy || selectedIds().length === 0"
+                        class="mt-3 inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    Manda ad AI Rank
+                </button>
+                <p x-show="rankMsg" class="mt-2 text-sm text-emerald-700 dark:text-emerald-400">
+                    <span x-text="rankMsg"></span>
+                    <a href="<?= url('/seo-tracking/project/' . (int) $rankTarget['id'] . '/keywords') ?>" class="font-medium underline">Apri AI Rank</a>
+                </p>
+                <?php else: ?>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">AI Rank non è attivo su questo progetto: attivalo e poi torna qui.</p>
+                <a href="<?= $activateUrl ?>" class="mt-3 inline-flex items-center px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Attiva AI Rank</a>
+                <?php endif; ?>
+            </div>
+            <!-- AI Writer -->
+            <div class="rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+                <p class="font-medium text-slate-900 dark:text-white">Scrivi gli articoli</p>
+                <?php if ($writerTarget): ?>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Le keyword vanno tra quelle di AI Writer (<?= e($writerTarget['name']) ?>), pronte da scrivere. Brief e articolo si pagano in AI Writer.</p>
+                <button type="button" @click="sendToWriter()" :disabled="busy || selectedIds().length === 0"
+                        class="mt-3 inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    Manda ad AI Writer
+                </button>
+                <p x-show="writerMsg" class="mt-2 text-sm text-emerald-700 dark:text-emerald-400">
+                    <span x-text="writerMsg"></span>
+                    <a :href="writerUrl" class="font-medium underline">Apri AI Writer</a>
+                </p>
+                <?php else: ?>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">AI Writer (articoli) non è attivo su questo progetto: attivalo e poi torna qui.</p>
+                <a href="<?= $activateUrl ?>" class="mt-3 inline-flex items-center px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Attiva AI Writer</a>
+                <?php endif; ?>
+            </div>
+        </div>
+        <p x-show="errorMsg" x-text="errorMsg" class="text-sm text-red-600 dark:text-red-400"></p>
+    </div>
+
+    <script>
+    function nextActions() {
+        return {
+            clusters: <?= json_encode($nextClusters, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS) ?>,
+            picked: {},
+            busy: false,
+            rankMsg: '',
+            writerMsg: '',
+            writerUrl: '',
+            errorMsg: '',
+
+            init() {
+                this.setAll(true);
+            },
+            setAll(value) {
+                const p = {};
+                this.clusters.forEach(c => { p[c.id] = value; });
+                this.picked = p;
+            },
+            selectedIds() {
+                return this.clusters.filter(c => this.picked[c.id]).map(c => c.id);
+            },
+            fmt(n) {
+                return new Intl.NumberFormat('it-IT', { useGrouping: 'always' }).format(Number(n) || 0);
+            },
+            doneText(added, skipped) {
+                let t = added === 1 ? '1 keyword aggiunta' : `${added} keyword aggiunte`;
+                if (skipped) t += skipped === 1 ? ", 1 c'era già" : `, ${skipped} c'erano già`;
+                return t + '.';
+            },
+
+            async sendToRank() {
+                <?php if ($rankTarget): ?>
+                this.busy = true; this.errorMsg = ''; this.rankMsg = '';
+                let added = 0, skipped = 0;
+                try {
+                    for (const c of this.clusters.filter(c => this.picked[c.id])) {
+                        const fd = new FormData();
+                        fd.append('_csrf_token', '<?= csrf_token() ?>');
+                        fd.append('project_id', '<?= (int) $rankTarget['id'] ?>');
+                        fd.append('group_name', c.name);
+                        fd.append('location', '<?= e($brief['geography'] ?? 'IT') ?>');
+                        fd.append('keywords_data', JSON.stringify([c.kw]));
+                        const resp = await fetch('<?= url('/keyword-research/quick-check/send-to-tracking') ?>', { method: 'POST', body: fd });
+                        if (!resp.ok) { throw new Error(`Errore server (${resp.status})`); }
+                        const data = await resp.json();
+                        if (!data.success) { throw new Error(data.error || 'Invio non riuscito'); }
+                        added += data.added || 0;
+                        skipped += data.skipped || 0;
+                    }
+                    this.rankMsg = this.doneText(added, skipped);
+                } catch (e) {
+                    this.errorMsg = e.message || 'Errore di connessione, riprova.';
+                } finally {
+                    this.busy = false;
+                }
+                <?php endif; ?>
+            },
+
+            async sendToWriter() {
+                <?php if ($writerTarget): ?>
+                this.busy = true; this.errorMsg = ''; this.writerMsg = '';
+                try {
+                    const fd = new FormData();
+                    fd.append('_csrf_token', '<?= csrf_token() ?>');
+                    fd.append('cluster_ids', JSON.stringify(this.selectedIds()));
+                    const resp = await fetch('<?= url('/keyword-research/project/' . (int) $project['id'] . '/research/' . (int) $research['id'] . '/send-to-writer') ?>', { method: 'POST', body: fd });
+                    if (!resp.ok) { throw new Error(`Errore server (${resp.status})`); }
+                    const data = await resp.json();
+                    if (!data.success) { throw new Error(data.error || 'Invio non riuscito'); }
+                    this.writerMsg = this.doneText(data.added, data.skipped);
+                    this.writerUrl = data.url;
+                } catch (e) {
+                    this.errorMsg = e.message || 'Errore di connessione, riprova.';
+                } finally {
+                    this.busy = false;
+                }
+                <?php endif; ?>
+            },
+        };
+    }
+    </script>
     <?php endif; ?>
 
     <!-- Clusters -->
@@ -88,19 +268,19 @@ sort($uniqueIntents);
         <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div class="flex items-center gap-3">
                 <h2 class="text-lg font-semibold text-slate-900 dark:text-white">
-                    <span x-show="!intentFilter"><?= count($clusters) ?> Cluster identificati</span>
+                    <span x-show="!intentFilter"><?= count($clusters) ?> gruppi</span>
                     <span x-show="intentFilter" x-cloak>
-                        Cluster <span x-text="krIntentLabel(intentFilter)"></span>
+                        Gruppi <span x-text="krIntentLabel(intentFilter)"></span>
                     </span>
                 </h2>
                 <select x-model="intentFilter"
                         class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm py-1.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                    <option value="">Tutti gli intent</option>
+                    <option value="">Tutti gli intenti</option>
                     <?php foreach ($uniqueIntents as $intent): ?>
                     <option value="<?= e($intent) ?>"><?= e(kr_intent_label($intent)) ?></option>
                     <?php endforeach; ?>
                 </select>
-                <input type="text" x-model="searchQuery" placeholder="Cerca cluster o keyword..."
+                <input type="text" x-model="searchQuery" placeholder="Cerca gruppo o keyword..."
                        class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm py-1.5 px-3 w-48 focus:ring-2 focus:ring-primary-500">
             </div>
             <div class="flex items-center gap-2">
@@ -161,8 +341,8 @@ sort($uniqueIntents);
                                     </td>
                                     <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300" x-text="cluster.main_keyword"></td>
                                     <td class="px-4 py-3 text-center text-sm font-medium text-slate-900 dark:text-white" x-text="cluster.keywords_count"></td>
-                                    <td class="px-4 py-3 text-right text-sm font-medium text-emerald-600 dark:text-emerald-400" x-text="cluster.total_volume.toLocaleString()"></td>
-                                    <td class="px-4 py-3 text-right text-sm text-slate-700 dark:text-slate-300" x-text="cluster.main_volume.toLocaleString()"></td>
+                                    <td class="px-4 py-3 text-right text-sm font-medium text-emerald-600 dark:text-emerald-400" x-text="cluster.total_volume.toLocaleString('it-IT', { useGrouping: 'always' })"></td>
+                                    <td class="px-4 py-3 text-right text-sm text-slate-700 dark:text-slate-300" x-text="cluster.main_volume.toLocaleString('it-IT', { useGrouping: 'always' })"></td>
                                     <td class="px-4 py-3 text-center">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" :class="intentBadgeClass(cluster.intent)" x-text="cluster.intent ? krIntentLabel(cluster.intent) : '-'"></span>
                                     </td>
@@ -283,7 +463,7 @@ function clusterResults() {
                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400">
                     <?= e($kw['text']) ?>
                     <?php if ($kw['volume'] > 0): ?>
-                    <span class="ml-1 text-slate-400">(<?= number_format($kw['volume']) ?>)</span>
+                    <span class="ml-1 text-slate-400">(<?= number_format($kw['volume'], 0, ',', '.') ?>)</span>
                     <?php endif; ?>
                 </span>
                 <?php endforeach; ?>
@@ -292,8 +472,5 @@ function clusterResults() {
     </div>
     <?php endif; ?>
 
-    <!-- Meta info -->
-    <div class="text-center text-xs text-slate-400 dark:text-slate-500">
-        API: <?= number_format(($research['api_time_ms'] ?? 0) / 1000, 1) ?>s | AI: <?= number_format(($research['ai_time_ms'] ?? 0) / 1000, 1) ?>s | Crediti: <?= $research['credits_used'] ?? 0 ?>
-    </div>
+    <p class="text-center text-xs text-slate-400 dark:text-slate-500">Crediti usati: <?= number_format((float) ($research['credits_used'] ?? 0), 0, ',', '.') ?></p>
 </div>
