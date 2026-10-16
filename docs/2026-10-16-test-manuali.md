@@ -87,6 +87,24 @@
   ma non viene usato per raggruppare le chiamate); lavoro in background con avanzamento "pagina X di Y".
 - Note: il Report AI (15 cr) non è ancora stato provato; mai generato in prod né l'uno né l'altro prima di oggi.
 
+### [P2] Piano d'azione: scambia le versioni IT/EN per duplicati e consiglia canonical/301
+- Scenario / passo: 1B, Madcrumbs, piano id 5 (prima pagina: /adobe-data-collection-launch/).
+- Atteso: su un sito bilingue le pagine /x/ e /en/x/ sono traduzioni; il consiglio giusto è tradurre title e description
+  della versione inglese (oggi su Madcrumbs sono in italiano anche in /en/) e controllare gli hreflang.
+- Successo: "title duplicato" e "description duplicata" su 6 coppie IT/EN; la correzione proposta è un canonical verso
+  la pagina italiana e un redirect 301 in .htaccess ("se sono varianti URL della stessa pagina…"). Se l'utente lo
+  applica, la versione inglese sparisce da Google.
+- Il resto del piano è buono: title e description riscritti con le lunghezze giuste, codice pronto da incollare,
+  indica il campo di Yoast/Rank Math, un solo H1 con il secondo in H2, alt da adattare alle immagini vere.
+- Note: serve che il prompt (o il rilevatore dei duplicati) riconosca le versioni in lingua (/en/, hreflang).
+
+### [P3] Piano d'azione: numeri che non tornano ed etichette inglesi
+- Scenario / passo: 1B, Madcrumbs, scheda Piano d'azione.
+- Successo: in alto "Punti guadagno +31", ma la prima pagina da sola dice "+31 punti" e la seconda "+30" (la somma
+  per pagina fa 259). "Tempo stimato 9h 33m" per 12 pagine. Etichette: "Score Attuale/Atteso", "0/72 fix",
+  "Esporta To-Do List".
+- Nella stessa sessione, Impostazioni del progetto: "Issues Totali", "URL Base", "puo" senza accento; saldo in alto "90.0".
+
 ### [P3] Storico crediti: "action_plan_generate" come descrizione
 - Scenario / passo: 1B, dopo il Piano d'azione.
 - Successo: in `credit_transactions` la riga è "-10 usage action_plan_generate" (codice tecnico). Da verificare se è
