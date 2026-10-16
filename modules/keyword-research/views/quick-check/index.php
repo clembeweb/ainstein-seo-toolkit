@@ -7,7 +7,7 @@
             <span class="text-slate-900 dark:text-white">Controllo veloce</span>
         </nav>
         <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Controllo veloce keyword</h1>
-        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Controlla volume, CPC e competition di una keyword istantaneamente</p>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Volume, costo per clic e concorrenza di una ricerca su Google, subito e gratis</p>
     </div>
 
     <!-- Search Form -->
@@ -27,7 +27,7 @@
 
             <div class="w-40">
                 <label for="location" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Location
+                    Paese
                 </label>
                 <select name="location" id="location"
                         class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
@@ -94,11 +94,11 @@
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 text-center">
-                <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($main['volume'] ?? 0) ?></p>
+                <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= number_format($main['volume'] ?? 0, 0, ',', '.') ?></p>
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Volume mensile</p>
             </div>
             <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 text-center">
-                <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= e($main['competition_level'] ?? 'N/A') ?></p>
+                <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= e(['HIGH' => 'Alta', 'MEDIUM' => 'Media', 'LOW' => 'Bassa'][strtoupper((string) ($main['competition_level'] ?? ''))] ?? 'n.d.') ?></p>
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Concorrenza</p>
             </div>
             <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 text-center">
@@ -106,8 +106,8 @@
                 $lowBid = $main['low_bid'] ?? 0;
                 $highBid = $main['high_bid'] ?? 0;
                 $cpcDisplay = ($lowBid > 0 || $highBid > 0)
-                    ? number_format($lowBid, 2) . ' - ' . number_format($highBid, 2)
-                    : 'N/A';
+                    ? number_format($lowBid, 2, ',', '.') . ' - ' . number_format($highBid, 2, ',', '.')
+                    : 'n.d.';
                 ?>
                 <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= $cpcDisplay ?></p>
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Costo per clic (€)</p>
@@ -119,7 +119,7 @@
                 $trendIcon = $trend > 0 ? '+' : '';
                 ?>
                 <p class="text-2xl font-bold <?= $trendColor ?>"><?= $trendIcon . number_format($trend, 0) ?>%</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Trend</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Andamento</p>
             </div>
         </div>
     </div>
@@ -250,17 +250,17 @@
                         <label class="flex items-center gap-2 py-1 cursor-pointer">
                             <input type="checkbox" value="low" x-model="filters.competitions" @change="currentPage = 1"
                                    class="rounded border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500">
-                            <span class="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Low</span>
+                            <span class="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Bassa</span>
                         </label>
                         <label class="flex items-center gap-2 py-1 cursor-pointer">
                             <input type="checkbox" value="medium" x-model="filters.competitions" @change="currentPage = 1"
                                    class="rounded border-slate-300 dark:border-slate-600 text-amber-600 focus:ring-amber-500">
-                            <span class="text-sm text-amber-600 dark:text-amber-400 font-medium">Medium</span>
+                            <span class="text-sm text-amber-600 dark:text-amber-400 font-medium">Media</span>
                         </label>
                         <label class="flex items-center gap-2 py-1 cursor-pointer">
                             <input type="checkbox" value="high" x-model="filters.competitions" @change="currentPage = 1"
                                    class="rounded border-slate-300 dark:border-slate-600 text-red-600 focus:ring-red-500">
-                            <span class="text-sm text-red-600 dark:text-red-400 font-medium">High</span>
+                            <span class="text-sm text-red-600 dark:text-red-400 font-medium">Alta</span>
                         </label>
                         <button @click="filters.competitions = []; currentPage = 1"
                                 class="mt-2 text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 underline">Reset</button>
@@ -308,11 +308,11 @@
                 </span>
                 <span class="w-px h-3 bg-slate-300 dark:bg-slate-600"></span>
                 <span>
-                    Volume totale: <span class="font-medium text-slate-700 dark:text-slate-300" x-text="statsVolume.toLocaleString()"></span>
+                    Volume totale: <span class="font-medium text-slate-700 dark:text-slate-300" x-text="statsVolume.toLocaleString('it-IT', { useGrouping: 'always' })"></span>
                 </span>
                 <span class="w-px h-3 bg-slate-300 dark:bg-slate-600"></span>
                 <span>
-                    CPC medio: <span class="font-medium text-slate-700 dark:text-slate-300" x-text="statsCpcAvg + ' EUR'"></span>
+                    CPC medio: <span class="font-medium text-slate-700 dark:text-slate-300" x-text="String(statsCpcAvg).replace('.', ',') + ' €'"></span>
                 </span>
             </div>
         </div>
@@ -352,7 +352,7 @@
                         </th>
                         <th class="px-4 py-3 text-right cursor-pointer select-none" @click="toggleSort('trend')">
                             <span class="inline-flex items-center justify-end text-xs font-medium text-slate-500 dark:text-slate-400 uppercase hover:text-slate-700 dark:hover:text-slate-200">
-                                Trend <span x-html="krSortIcon('trend', sortField, sortDir)"></span>
+                                Andamento <span x-html="krSortIcon('trend', sortField, sortDir)"></span>
                             </span>
                         </th>
                     </tr>
@@ -366,11 +366,11 @@
                                    class="rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500">
                         </td>
                         <td class="px-4 py-3 text-slate-900 dark:text-white font-medium" x-text="kw.text"></td>
-                        <td class="px-4 py-3 text-right text-slate-700 dark:text-slate-300" x-text="(kw.volume || 0).toLocaleString()"></td>
+                        <td class="px-4 py-3 text-right text-slate-700 dark:text-slate-300" x-text="(kw.volume || 0).toLocaleString('it-IT', { useGrouping: 'always' })"></td>
                         <td class="px-4 py-3 text-center">
-                            <span :class="krCompClass(kw.competition_level)" x-text="kw.competition_level ? kw.competition_level.charAt(0).toUpperCase() + kw.competition_level.slice(1) : 'N/A'"></span>
+                            <span :class="krCompClass(kw.competition_level)" x-text="({ high: 'Alta', medium: 'Media', low: 'Bassa' })[(kw.competition_level || '').toLowerCase()] || 'n.d.'"></span>
                         </td>
-                        <td class="px-4 py-3 text-right text-slate-700 dark:text-slate-300" x-text="parseFloat(kw.high_bid) > 0 ? parseFloat(kw.high_bid).toFixed(2) + ' EUR' : '-'"></td>
+                        <td class="px-4 py-3 text-right text-slate-700 dark:text-slate-300" x-text="parseFloat(kw.high_bid) > 0 ? parseFloat(kw.high_bid).toFixed(2).replace('.', ',') + ' €' : '-'"></td>
                         <td class="px-4 py-3 text-center">
                             <template x-if="kw.intent">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" :class="krIntentClass(kw.intent)" x-text="krIntentLabel(kw.intent)"></span>
