@@ -75,8 +75,8 @@
 >   Provato in locale con DebugView: tutti gli eventi arrivano. In GA4 già definite le dimensioni Modulo/Operazione/Metodo
 >   e la metrica Crediti spesi. **Dopo il deploy: incollare l'ID in Admin → Impostazioni → Avanzate (il DB di prod non ce
 >   l'ha), aprire ainstein.it in anonimo e accettare il banner, controllare Tempo reale; entro 24 h stella su `sign_up` e
->   `project_created` in Amministrazione → Eventi.** Cookie Policy aggiornata (`1e8c2d8`); alla Privacy manca una
->   riga su GA4 (chiesta alla sessione Verifica app Google). Guida: `docs/GA4-AINSTEIN.md`.
+>   `project_created` in Amministrazione → Eventi.** Cookie Policy aggiornata (`1e8c2d8`); Privacy aggiornata dalla
+>   sessione Verifica app Google (riga "Statistiche del sito", GA4 tra i fornitori Google). Guida: `docs/GA4-AINSTEIN.md`.
 >   Bug preesistente visto per strada: le pagine /docs hanno due `<head>` (View::render con layout `null` usa comunque
 >   layout.php, poi docs/layout.php lo avvolge); lo snippet GA4 si stampa una volta sola, ma il doppio HTML resta.
 > **Prima del post restano:** deploy di questi P2 (ok di Clemente), AI Keywords da provare in prod (la fa Clemente),
