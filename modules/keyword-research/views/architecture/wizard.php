@@ -9,8 +9,8 @@
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             <span class="text-slate-900 dark:text-white"><?= e($project['name']) ?></span>
         </nav>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Architettura Sito</h1>
-        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Progetta la struttura del sito basata su volumi di ricerca reali</p>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Architettura sito</h1>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Le pagine che il sito deve avere, con indirizzo e titolo, partendo da quello che la gente cerca su Google</p>
     </div>
 
     <?= \Core\View::partial('components/orphaned-project-notice', ['project' => $project]) ?>
@@ -42,87 +42,51 @@
         </div>
     </div>
 
-    <!-- Step 1: Brief -->
-    <div x-show="currentStep === 0" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 space-y-6">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Descrivi il progetto</h2>
+    <!-- Step 1: la tua attività + cosa cerchiamo -->
+    <div x-show="currentStep === 0" class="space-y-6">
+        <?php $profileHint = 'Le pagine che il sito deve avere le proponiamo noi, partendo da quello che la gente cerca su Google.'; include __DIR__ . '/../partials/business-profile.php'; ?>
 
-        <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Descrizione business <span class="text-red-500">*</span>
-            </label>
-            <textarea x-model="brief.business" rows="3" required
-                      placeholder="Es: Studio dentistico a Roma specializzato in implantologia e ortodonzia"
-                      class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"></textarea>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
+        <div x-show="profile && !editingProfile && !profileBusy" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 space-y-6">
             <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo sito</label>
-                <select x-model="brief.site_type" class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                    <option value="corporate">Sito corporate/aziendale</option>
-                    <option value="ecommerce">E-commerce</option>
-                    <option value="blog">Blog/Magazine</option>
-                    <option value="saas">SaaS/Software</option>
-                    <option value="local">Attività locale</option>
-                    <option value="portfolio">Portfolio/Freelance</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Target</label>
-                <div class="flex gap-3">
-                    <template x-for="opt in ['B2B', 'B2C', 'Both']" :key="opt">
-                        <button type="button" @click="brief.target = opt"
-                                class="px-4 py-2 rounded-lg border text-sm font-medium transition-colors"
-                                :class="brief.target === opt ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-slate-400'"
-                                x-text="opt"></button>
-                    </template>
-                </div>
-            </div>
-        </div>
-
-        <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Paese</label>
-            <select x-model="brief.geography" class="block w-full max-w-xs rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                <option value="IT">Italia</option>
-                <option value="US">Stati Uniti</option>
-                <option value="GB">Regno Unito</option>
-                <option value="DE">Germania</option>
-                <option value="FR">Francia</option>
-                <option value="ES">Spagna</option>
-            </select>
-        </div>
-
-        <!-- Seed Keywords -->
-        <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Keyword di partenza <span class="text-red-500">*</span>
-            </label>
-            <div class="space-y-2">
-                <div class="flex gap-2">
-                    <input type="text" x-model="seedInput" @keydown.enter.prevent="addSeed()"
-                           placeholder="Digita una keyword e premi Invio"
-                           class="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                    <button type="button" @click="addSeed()" class="px-3 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 transition-colors">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    </button>
-                </div>
-                <div class="flex flex-wrap gap-2">
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Cosa cerchiamo su Google</h2>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Le ha proposte l'AI dal profilo: da ognuna Google ci dà le ricerche simili con i volumi, e da quelle nascono le pagine. Puoi togliere o aggiungere, ma non serve.</p>
+                <div class="mt-3 flex flex-wrap gap-2">
                     <template x-for="(seed, idx) in brief.seeds" :key="idx">
                         <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-sm">
                             <span x-text="seed"></span>
-                            <button type="button" @click="brief.seeds.splice(idx, 1)" class="hover:text-blue-900">
+                            <button type="button" @click="brief.seeds.splice(idx, 1)" class="hover:text-blue-900 dark:hover:text-blue-100" title="Togli">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </span>
                     </template>
                 </div>
+                <div class="mt-3 flex gap-2 max-w-xl" x-show="brief.seeds.length < 8">
+                    <input type="text" x-model="seedInput" @keydown.enter.prevent="addSeed()"
+                           placeholder="Aggiungi una ricerca e premi Invio"
+                           class="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    <button type="button" @click="addSeed()" class="px-3 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors" title="Aggiungi">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Paese</label>
+                <select x-model="brief.geography" class="block w-48 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    <option value="IT">Italia</option>
+                    <option value="US">Stati Uniti</option>
+                    <option value="GB">Regno Unito</option>
+                    <option value="DE">Germania</option>
+                    <option value="FR">Francia</option>
+                    <option value="ES">Spagna</option>
+                </select>
             </div>
         </div>
     </div>
 
     <!-- Step 2: Raccolta + AI -->
     <div x-show="currentStep === 1" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 space-y-6">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Raccolta e Analisi</h2>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Ricerca e proposta delle pagine</h2>
 
         <!-- Collection Progress -->
         <div x-show="collecting || collectionDone">
@@ -142,7 +106,7 @@
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
             <p class="mt-4 text-slate-600 dark:text-slate-400">L'AI sta progettando l'architettura del sito...</p>
-            <p class="mt-1 text-sm text-slate-400">Struttura pagine, URL, H1 ottimizzati</p>
+            <p class="mt-1 text-sm text-slate-400">Pagine, indirizzi e titoli. Di solito meno di un minuto.</p>
         </div>
 
         <div x-show="analyzeError" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
@@ -212,19 +176,37 @@
 <script>
 function architectureWizard() {
     return {
-        steps: ['Brief', 'Raccolta + AI', 'Risultati'],
+        ...krProfile(<?= json_encode([
+            'profile' => $profileState['profile'],
+            'suggestions' => $profileState['suggestions'],
+            'geoFacts' => $profileState['geo_facts'],
+            'domain' => $profileState['domain'],
+            'url' => url('/keyword-research/project/' . $project['id'] . '/profile'),
+            'csrf' => csrf_token(),
+        ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS) ?>),
+
+        steps: ['La tua attività', 'Ricerca e pagine', 'Risultati'],
         currentStep: 0,
         projectId: <?= $project['id'] ?>,
         csrfToken: '<?= csrf_token() ?>',
 
+        // Brief: descrizione, tipo di sito e target li prende il server dal profilo del progetto
         brief: {
-            business: '',
-            target: 'B2C',
             geography: '<?= e($project['default_location'] ?? 'IT') ?>',
-            site_type: 'corporate',
             seeds: [],
         },
         seedInput: '',
+
+        init() {
+            this.profileInit();
+        },
+
+        applySuggestions(s, profileChanged = false) {
+            if (!s) return;
+            if (profileChanged || this.brief.seeds.length === 0) {
+                this.brief.seeds = [...(s.seeds || [])];
+            }
+        },
 
         researchId: null,
         collecting: false,
@@ -241,8 +223,8 @@ function architectureWizard() {
         analyzeResult: {},
 
         addSeed() {
-            const val = this.seedInput.trim();
-            if (val && !this.brief.seeds.includes(val) && this.brief.seeds.length < 5) {
+            const val = this.seedInput.trim().toLowerCase();
+            if (val && !this.brief.seeds.includes(val) && this.brief.seeds.length < 8) {
                 this.brief.seeds.push(val);
             }
             this.seedInput = '';
@@ -250,12 +232,12 @@ function architectureWizard() {
 
         canProceed() {
             if (this.collecting || this.analyzing) return false;
-            if (this.currentStep === 0) return this.brief.business.trim() !== '' && this.brief.seeds.length > 0;
+            if (this.currentStep === 0) return this.profile !== '' && !this.profileBusy && !this.editingProfile && this.brief.seeds.length > 0;
             return false;
         },
 
         nextButtonText() {
-            if (this.currentStep === 0) return 'Avvia Analisi';
+            if (this.currentStep === 0) return 'Proponi le pagine';
             return 'Avanti';
         },
 
@@ -274,14 +256,11 @@ function architectureWizard() {
             this.collecting = true;
             this.collectionDone = false;
             this.collectionProgress = 0;
-            this.collectionStatus = 'Avvio raccolta...';
+            this.collectionStatus = 'Avvio la ricerca su Google...';
 
             const formData = new FormData();
             formData.append('_csrf_token', this.csrfToken);
-            formData.append('business', this.brief.business);
-            formData.append('target', this.brief.target);
             formData.append('geography', this.brief.geography);
-            formData.append('site_type', this.brief.site_type);
             formData.append('seeds', this.brief.seeds.join(','));
 
             try {
@@ -301,7 +280,7 @@ function architectureWizard() {
                 this.researchId = data.research_id;
                 this.connectSSE();
             } catch (e) {
-                this.collectionStatus = 'Errore di connessione.';
+                this.collectionStatus = 'Errore di connessione, riprova.';
                 this.collecting = false;
             }
         },
@@ -312,18 +291,18 @@ function architectureWizard() {
 
             this.eventSource.addEventListener('started', (e) => {
                 const d = JSON.parse(e.data);
-                this.collectionStatus = `Raccolta da ${d.total_seeds} seed keyword...`;
+                this.collectionStatus = `Cerco su Google ${d.total_seeds} ricerche e quelle simili...`;
             });
 
             this.eventSource.addEventListener('seed_started', (e) => {
                 const d = JSON.parse(e.data);
                 this.collectionProgress = Math.round(((d.index) / d.total) * 40);
-                this.collectionStatus = `Seed ${d.index + 1}/${d.total}: "${d.seed}"`;
+                this.collectionStatus = d.total > 1 ? `Ricerca ${d.index + 1} di ${d.total}: "${d.seed}"` : 'Chiedo a Google le ricerche simili e i volumi...';
             });
 
             this.eventSource.addEventListener('seed_completed', (e) => {
                 const d = JSON.parse(e.data);
-                this.collectionProgress = Math.round(((d.index + 1) / this.brief.seeds.length) * 40);
+                this.collectionProgress = d.index === undefined ? 40 : Math.round(((d.index + 1) / this.brief.seeds.length) * 40);
             });
 
             this.eventSource.addEventListener('completed', (e) => {
@@ -331,7 +310,7 @@ function architectureWizard() {
                 this.rawKeywordsCount = d.raw_keywords;
                 this.filteredKeywords = d.keywords || [];
                 this.collectionProgress = 50;
-                this.collectionStatus = `${d.filtered_keywords} keyword raccolte. Avvio analisi AI...`;
+                this.collectionStatus = `${d.filtered_keywords} ricerche trovate. L'AI propone le pagine...`;
                 this.collectionDone = true;
                 this.collecting = false;
                 this.eventSource.close();
@@ -401,7 +380,7 @@ function architectureWizard() {
             this.analyzeDone = false;
             this.analyzeError = '';
             this.collectionProgress = 60;
-            this.collectionStatus = 'AI in corso...';
+            this.collectionStatus = "L'AI propone le pagine...";
 
             const formData = new FormData();
             formData.append('_csrf_token', this.csrfToken);

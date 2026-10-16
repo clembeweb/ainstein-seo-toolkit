@@ -96,12 +96,13 @@ class EditorialController
         }
 
         return View::render('keyword-research::editorial/wizard', [
-            'title' => 'Piano Editoriale - ' . $project['name'],
+            'title' => 'Piano editoriale - ' . $project['name'],
             'user' => $user,
             'project' => $project,
             'researches' => $researches,
             'prefill' => $prefill,
             'suggestedArchitecture' => $suggestedArchitecture,
+            'profileState' => (new \Modules\KeywordResearch\Services\BusinessProfileService())->state($project),
             'modules' => ModuleLoader::getUserModules($user['id']),
         ]);
     }
@@ -152,12 +153,18 @@ class EditorialController
             $categories = array_filter(array_map('trim', explode(',', $rawCategories)));
         }
 
+        // Tema = profilo dell'attività; target dalle proposte dell'AI
+        $profileService = new \Modules\KeywordResearch\Services\BusinessProfileService();
+        $profile = $profileService->getProfile($project);
+        $suggestions = $profileService->getSuggestions($project, $profile) ?? [];
+        $targetMap = ['B2B' => 'B2B', 'B2C' => 'B2C', 'Both' => 'Entrambi'];
+
         $brief = [
-            'theme' => trim($_POST['theme'] ?? ''),
-            'categories' => $categories,
-            'months' => (int) ($_POST['months'] ?? 6),
-            'articles_per_month' => (int) ($_POST['articles_per_month'] ?? 4),
-            'target' => trim($_POST['target'] ?? 'B2C'),
+            'theme' => $profile,
+            'categories' => array_values($categories),
+            'months' => in_array((int) ($_POST['months'] ?? 3), [3, 6, 12], true) ? (int) $_POST['months'] : 3,
+            'articles_per_month' => in_array((int) ($_POST['articles_per_month'] ?? 4), [2, 4, 6, 8], true) ? (int) $_POST['articles_per_month'] : 4,
+            'target' => $targetMap[$suggestions['target'] ?? 'Both'] ?? 'Entrambi',
             'geography' => trim($_POST['geography'] ?? $project['default_location']),
         ];
 
@@ -167,13 +174,13 @@ class EditorialController
             $brief['architecture_research_id'] = $archId;
         }
 
-        if (empty($brief['theme'])) {
-            echo json_encode(['success' => false, 'error' => 'Il tema del blog è obbligatorio.']);
+        if ($brief['theme'] === '') {
+            echo json_encode(['success' => false, 'error' => 'Prima descrivi la tua attività nel riquadro in alto.']);
             return;
         }
 
         if (count($brief['categories']) < 2) {
-            echo json_encode(['success' => false, 'error' => 'Inserisci almeno 2 categorie.']);
+            echo json_encode(['success' => false, 'error' => 'Servono almeno 2 argomenti.']);
             return;
         }
 
@@ -753,7 +760,7 @@ class EditorialController
         }
 
         return View::render('keyword-research::editorial/results', [
-            'title' => 'Piano Editoriale - ' . $project['name'],
+            'title' => 'Piano editoriale - ' . $project['name'],
             'missingPages' => $missingPages,
             'user' => $user,
             'project' => $project,

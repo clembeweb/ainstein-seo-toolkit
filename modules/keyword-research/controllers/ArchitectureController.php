@@ -13,6 +13,7 @@ use Modules\KeywordResearch\Models\Project;
 use Modules\KeywordResearch\Models\Research;
 use Modules\KeywordResearch\Models\Cluster;
 use Modules\KeywordResearch\Services\KeywordInsightService;
+use Modules\KeywordResearch\Services\BusinessProfileService;
 use Services\KeywordPlannerService;
 
 class ArchitectureController
@@ -42,10 +43,11 @@ class ArchitectureController
         $researches = $this->researchModel->findByProject($projectId, 'architecture');
 
         return View::render('keyword-research::architecture/wizard', [
-            'title' => 'Architettura Sito - ' . $project['name'],
+            'title' => 'Architettura sito - ' . $project['name'],
             'user' => $user,
             'project' => $project,
             'researches' => $researches,
+            'profileState' => (new BusinessProfileService())->state($project),
             'modules' => ModuleLoader::getUserModules($user['id']),
         ]);
     }
@@ -68,16 +70,25 @@ class ArchitectureController
             return;
         }
 
+        // Il brief nasce dal profilo dell'attività (tipo di sito e target dalle proposte dell'AI)
+        $profileService = new BusinessProfileService();
+        $profile = $profileService->getProfile($project);
+        $suggestions = $profileService->getSuggestions($project, $profile) ?? [];
+
         $brief = [
-            'business' => trim($_POST['business'] ?? ''),
-            'target' => trim($_POST['target'] ?? 'B2B'),
+            'business' => $profile,
+            'target' => $suggestions['target'] ?? 'Both',
             'geography' => trim($_POST['geography'] ?? $project['default_location']),
-            'site_type' => trim($_POST['site_type'] ?? 'corporate'),
-            'seeds' => array_filter(array_map('trim', explode(',', $_POST['seeds'] ?? ''))),
+            'site_type' => $suggestions['site_type'] ?? 'corporate',
+            'seeds' => array_slice(array_values(array_filter(array_map('trim', explode(',', $_POST['seeds'] ?? '')))), 0, 10),
         ];
 
-        if (empty($brief['business']) || empty($brief['seeds'])) {
-            echo json_encode(['success' => false, 'error' => 'Business e seed keyword sono obbligatori.']);
+        if ($brief['business'] === '') {
+            echo json_encode(['success' => false, 'error' => 'Prima descrivi la tua attività nel riquadro in alto.']);
+            return;
+        }
+        if (empty($brief['seeds'])) {
+            echo json_encode(['success' => false, 'error' => 'Serve almeno una parola da cercare su Google.']);
             return;
         }
 
@@ -595,7 +606,7 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
         }
 
         return View::render('keyword-research::architecture/results', [
-            'title' => 'Architettura Sito - ' . $project['name'],
+            'title' => 'Architettura sito - ' . $project['name'],
             'user' => $user,
             'project' => $project,
             'research' => $research,

@@ -9,7 +9,7 @@
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             <span class="text-slate-900 dark:text-white"><?= e($project['name']) ?></span>
         </nav>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Piano Editoriale</h1>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Piano editoriale</h1>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Crea un piano editoriale basato sulle keyword e sui titoli che Google mostra oggi</p>
     </div>
 
@@ -39,12 +39,6 @@
     </div>
     <?php endif; ?>
 
-    <!-- Draft Restored Toast -->
-    <div x-show="draftRestored" x-transition class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-center gap-2">
-        <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <span class="text-sm text-blue-700 dark:text-blue-300">Bozza ripristinata dalla sessione precedente</span>
-        <button @click="brief = { theme: '', categories: [], months: 3, articles_per_month: 4, target: 'Entrambi', geography: '<?= e($project['default_location'] ?? 'IT') ?>' }; clearDraft(); draftRestored = false;" class="ml-auto text-xs text-blue-500 hover:text-blue-700 font-medium">Cancella</button>
-    </div>
 
     <!-- Progress Steps -->
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
@@ -73,31 +67,21 @@
         </div>
     </div>
 
-    <!-- Step 1: Brief -->
-    <div x-show="currentStep === 0" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 space-y-6">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Configura il piano editoriale</h2>
+    <!-- Step 1: la tua attività + il piano -->
+    <div x-show="currentStep === 0" class="space-y-6">
+        <?php $profileHint = 'Gli argomenti del blog li proponiamo noi; tu scegli quanti mesi e quanti articoli al mese.'; include __DIR__ . '/../partials/business-profile.php'; ?>
 
-        <!-- Theme -->
-        <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Tema del blog <span class="text-red-500">*</span>
-            </label>
-            <textarea x-model="brief.theme" rows="3" required minlength="10"
-                      placeholder="Es: Blog su SEO, digital marketing e advertising per professionisti del web"
-                      class="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2.5 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                      :class="validationAttempted && !brief.theme.trim() ? 'border-red-500 dark:border-red-500' : ''"></textarea>
-            <p x-show="validationAttempted && !brief.theme.trim()" class="mt-1 text-xs text-red-500">Tema obbligatorio</p>
-        </div>
-
+    <div x-show="profile && !editingProfile && !profileBusy" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 space-y-6">
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Il piano</h2>
         <!-- Categories -->
         <div>
             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Categorie <span class="text-red-500">*</span>
+                Argomenti del blog <span class="text-red-500">*</span>
             </label>
             <div class="space-y-2">
                 <div class="flex gap-2">
                     <input type="text" x-model="categoryInput" @keydown.enter.prevent="addCategory()"
-                           placeholder="Es: SEO tecnica, Google Ads, Content Marketing..."
+                           placeholder="Aggiungi un argomento e premi Invio"
                            class="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white py-2 px-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                     <button type="button" @click="addCategory()" class="px-3 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -114,17 +98,15 @@
                     </template>
                 </div>
             </div>
-            <p x-show="validationAttempted && brief.categories.length < 2" class="mt-1 text-xs text-red-500">Aggiungi almeno 2 categorie</p>
-            <p x-show="!validationAttempted || brief.categories.length >= 2" class="mt-1 text-xs text-slate-400">Min 2, max 6 categorie. Ogni categoria genera keyword e analisi SERP.</p>
+            <p x-show="validationAttempted && brief.categories.length < 2" class="mt-1 text-xs text-red-500">Servono almeno 2 argomenti</p>
+            <p x-show="!validationAttempted || brief.categories.length >= 2" class="mt-1 text-xs text-slate-400">Da 2 a 6. Li ha proposti l'AI dal profilo: per ognuno cerchiamo le ricerche su Google e i titoli che Google mostra già.</p>
         </div>
 
         <!-- Summary of current settings -->
         <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
             <span x-text="brief.months + ' mesi'"></span>
             <span class="text-slate-300 dark:text-slate-600">·</span>
-            <span x-text="brief.articles_per_month + ' articoli/mese'"></span>
-            <span class="text-slate-300 dark:text-slate-600">·</span>
-            <span x-text="brief.target"></span>
+            <span x-text="brief.articles_per_month + ' articoli al mese'"></span>
             <span class="text-slate-300 dark:text-slate-600">·</span>
             <span>Totale: <span class="font-semibold text-violet-600 dark:text-violet-400" x-text="brief.months * brief.articles_per_month"></span> articoli</span>
         </div>
@@ -136,7 +118,7 @@
                 <svg class="w-4 h-4 transition-transform" :class="showAdvanced ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
-                Opzioni avanzate
+                Cambia mesi, articoli al mese o paese
             </button>
 
             <div x-show="showAdvanced" x-collapse x-cloak class="mt-4 space-y-5 pl-6 border-l-2 border-slate-200 dark:border-slate-700">
@@ -168,19 +150,6 @@
                     </div>
                 </div>
 
-                <!-- Target -->
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Target</label>
-                    <div class="flex gap-3">
-                        <template x-for="opt in ['B2B', 'B2C', 'Entrambi']" :key="opt">
-                            <button type="button" @click="brief.target = opt"
-                                    class="px-4 py-2 rounded-lg border text-sm font-medium transition-colors"
-                                    :class="brief.target === opt ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-slate-400'"
-                                    x-text="opt"></button>
-                        </template>
-                    </div>
-                </div>
-
                 <!-- Geography -->
                 <div class="max-w-xs">
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Paese</label>
@@ -196,6 +165,8 @@
                 </div>
             </div>
         </div>
+    </div>
+
     </div>
 
     <!-- Step 2: Raccolta Dati (SSE) -->
@@ -339,21 +310,27 @@
 <script>
 function editorialWizard() {
     return {
-        steps: ['Brief', 'Raccolta Dati', 'AI Piano', 'Risultati'],
+        ...krProfile(<?= json_encode([
+            'profile' => $profileState['profile'],
+            'suggestions' => $profileState['suggestions'],
+            'geoFacts' => $profileState['geo_facts'],
+            'domain' => $profileState['domain'],
+            'url' => url('/keyword-research/project/' . $project['id'] . '/profile'),
+            'csrf' => csrf_token(),
+        ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS) ?>),
+
+        steps: ['La tua attività', 'Ricerche e Google', 'Piano AI', 'Risultati'],
         currentStep: 0,
         projectId: <?= $project['id'] ?>,
         csrfToken: '<?= csrf_token() ?>',
-        draftRestored: false,
 
         validationAttempted: false,
 
-        // Brief
+        // Brief: tema (= profilo) e target li prende il server dal profilo del progetto
         brief: {
-            theme: '',
             categories: [],
             months: 3,
             articles_per_month: 4,
-            target: 'Entrambi',
             geography: '<?= e($project['default_location'] ?? 'IT') ?>',
         },
         categoryInput: '',
@@ -361,39 +338,21 @@ function editorialWizard() {
         prefill: <?= json_encode($prefill ?: null, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
 
         init() {
-            const key = 'kr_editorial_draft_' + this.projectId;
             if (this.prefill) {
-                // Arrivo dall'Architettura Sito: il prefill vince sulla bozza salvata
-                this.brief.theme = this.prefill.theme || '';
+                // Arrivo dall'Architettura sito: argomenti = pagine proposte
                 this.brief.categories = Array.isArray(this.prefill.categories) ? this.prefill.categories.slice(0, 6) : [];
-                if (this.prefill.target) this.brief.target = this.prefill.target;
                 if (this.prefill.geography) this.brief.geography = this.prefill.geography;
                 this.brief.architecture_research_id = this.prefill.architecture_research_id || 0;
             }
-            try {
-                const saved = localStorage.getItem(key);
-                if (saved && !this.prefill) {
-                    const draft = JSON.parse(saved);
-                    if (draft.theme) this.brief.theme = draft.theme;
-                    if (Array.isArray(draft.categories) && draft.categories.length) this.brief.categories = draft.categories;
-                    if (draft.months) this.brief.months = draft.months;
-                    if (draft.articles_per_month) this.brief.articles_per_month = draft.articles_per_month;
-                    if (draft.target) this.brief.target = draft.target;
-                    if (draft.geography) this.brief.geography = draft.geography;
-                    this.draftRestored = true;
-                    setTimeout(() => { this.draftRestored = false; }, 4000);
-                }
-            } catch (_) {}
-
-            this.$watch('brief', () => {
-                if (this.currentStep === 0) {
-                    localStorage.setItem(key, JSON.stringify(this.brief));
-                }
-            }, { deep: true });
+            this.profileInit();
         },
 
-        clearDraft() {
-            localStorage.removeItem('kr_editorial_draft_' + this.projectId);
+        // Proposte dell'AI dal profilo: argomenti del blog (non sostituiscono le pagine dell'Architettura)
+        applySuggestions(s, profileChanged = false) {
+            if (!s || this.prefill) return;
+            if (profileChanged || this.brief.categories.length === 0) {
+                this.brief.categories = [...(s.categories || [])].slice(0, 6);
+            }
         },
 
         // Collection
@@ -415,7 +374,7 @@ function editorialWizard() {
         analyzeResult: {},
 
         addCategory() {
-            const val = this.categoryInput.trim();
+            const val = this.categoryInput.trim().toLowerCase();
             if (val && !this.brief.categories.includes(val) && this.brief.categories.length < 6) {
                 this.brief.categories.push(val);
             }
@@ -424,16 +383,16 @@ function editorialWizard() {
 
         canProceed() {
             if (this.collecting || this.analyzing) return false;
-            if (this.currentStep === 0) return this.brief.theme.trim() !== '' && this.brief.categories.length >= 2;
+            if (this.currentStep === 0) return this.profile !== '' && !this.profileBusy && !this.editingProfile && this.brief.categories.length >= 2;
             if (this.currentStep === 1) return this.collectionDone && this.totalKeywords > 0;
             if (this.currentStep === 2) return this.analyzeDone;
             return false;
         },
 
         nextButtonText() {
-            if (this.currentStep === 0) return 'Avvia Raccolta';
-            if (this.currentStep === 1) return 'Genera Piano AI';
-            if (this.currentStep === 2) return 'Vedi Piano';
+            if (this.currentStep === 0) return 'Cerca su Google';
+            if (this.currentStep === 1) return 'Prepara il piano con AI';
+            if (this.currentStep === 2) return 'Vedi il piano';
             return 'Avanti';
         },
 
@@ -442,7 +401,6 @@ function editorialWizard() {
                 this.validationAttempted = true;
                 if (!this.canProceed()) return;
                 this.currentStep = 1;
-                this.clearDraft();
                 this.startCollection();
             } else if (this.currentStep === 1) {
                 this.currentStep = 2;
@@ -467,11 +425,9 @@ function editorialWizard() {
 
             const formData = new FormData();
             formData.append('_csrf_token', this.csrfToken);
-            formData.append('theme', this.brief.theme);
             formData.append('categories', this.brief.categories.join(','));
             formData.append('months', this.brief.months);
             formData.append('articles_per_month', this.brief.articles_per_month);
-            formData.append('target', this.brief.target);
             formData.append('geography', this.brief.geography);
             if (this.brief.architecture_research_id) formData.append('architecture_research_id', this.brief.architecture_research_id);
 
