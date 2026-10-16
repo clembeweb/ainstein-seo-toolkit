@@ -44,6 +44,9 @@
 >   costi di AI Keywords letti dalle impostazioni). Nota: le 3 cancellazioni di file (controller, servizio, vista del
 >   Piano) sono finite nel commit `21b3089` della sessione Test manuali (indice git condiviso): risultato giusto.
 >   Deploy: un `git push` porta online tutto il main; nessuna modifica al DB di prod serve.
+> - **GEO Audit, dal giro manuale in prod** (in locale, non online): `a96ddaa` "Genera scheda" non faceva niente dopo la
+>   conferma (errore JS, nessun credito scalato), riparato; `607a7b2` riassunto del profilo (quello che usa AI Keywords)
+>   in un accordion sopra Identità, con data e "Rigenera" (ADR-019, nessuna migrazione). Dettagli nel TASKS del modulo.
 > **Prima del post restano:** deploy di questi P2 (ok di Clemente), AI Keywords da provare in prod (la fa Clemente),
 > decidere /landing-b, la bozza del post.
 > **DOPO il post (raccolto da questo file):** 1) alert di AI Rank generati a fine controllo posizioni + mail digest (~2 h,
