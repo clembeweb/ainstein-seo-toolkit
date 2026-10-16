@@ -18,7 +18,7 @@ $currentPage = 'history';
     <!-- Grafico Trend -->
     <?php if (count($sessions) > 1): ?>
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-        <h3 class="font-semibold text-slate-900 dark:text-white mb-4">Trend Health Score</h3>
+        <h3 class="font-semibold text-slate-900 dark:text-white mb-4">Andamento del punteggio di salute</h3>
         <div class="flex items-end gap-2 h-40">
             <?php
             $maxScore = 100;
@@ -160,7 +160,7 @@ $currentPage = 'history';
 
     <!-- Legenda -->
     <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4">
-        <h4 class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Legenda Health Score</h4>
+        <h4 class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Legenda del punteggio</h4>
         <div class="flex flex-wrap gap-4 text-sm">
             <div class="flex items-center gap-2">
                 <span class="w-3 h-3 rounded-full bg-emerald-500"></span>

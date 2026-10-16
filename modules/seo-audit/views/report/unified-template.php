@@ -392,7 +392,7 @@ $issueNum = 0;
     <div class="score-chip">
       <div>
         <div class="score-value" style="color: <?= $healthScore >= 80 ? 'var(--positive)' : ($healthScore >= 50 ? 'var(--important)' : 'var(--critical)') ?>"><?= (int)$healthScore ?></div>
-        <div class="score-label">Health Score</div>
+        <div class="score-label">Punteggio di salute</div>
       </div>
     </div>
     <div class="score-chip">

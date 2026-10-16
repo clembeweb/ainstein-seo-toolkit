@@ -127,7 +127,7 @@
             <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg p-5 text-white">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-emerald-100 text-sm font-medium">Opportunita trovate</p>
+                        <p class="text-emerald-100 text-sm font-medium">Opportunità trovate</p>
                         <p class="text-3xl font-bold mt-1" x-text="results?.summary?.total_opportunities || 0"></p>
                     </div>
                     <div class="p-3 bg-white/20 rounded-lg">
@@ -170,7 +170,7 @@
         <!-- Opportunities List -->
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
             <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Opportunita Quick Wins</h3>
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Opportunità Quick Wins</h3>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Ordinate per impatto potenziale</p>
             </div>
             <div class="divide-y divide-slate-200 dark:divide-slate-700">

@@ -67,7 +67,7 @@
                     <dd class="text-2xl font-bold text-slate-900 dark:text-white mt-1"><?= number_format($project['issues_count'] ?? 0) ?></dd>
                 </div>
                 <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4">
-                    <dt class="text-sm text-slate-500 dark:text-slate-400">Health Score</dt>
+                    <dt class="text-sm text-slate-500 dark:text-slate-400">Punteggio di salute</dt>
                     <dd class="text-2xl font-bold text-slate-900 dark:text-white mt-1"><?= $project['health_score'] ?? '-' ?></dd>
                 </div>
             </dl>

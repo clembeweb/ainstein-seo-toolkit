@@ -144,7 +144,7 @@ function reportGenerator() {
 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5">
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
         <div class="text-3xl font-bold <?= $healthScore >= 80 ? 'text-emerald-600' : ($healthScore >= 50 ? 'text-amber-600' : 'text-red-600') ?>"><?= $healthScore ?></div>
-        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Health Score</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Punteggio di salute</div>
     </div>
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
         <div class="text-3xl font-bold <?= $budgetScore >= 80 ? 'text-emerald-600' : ($budgetScore >= 50 ? 'text-amber-600' : 'text-red-600') ?>"><?= $budgetScore ?></div>

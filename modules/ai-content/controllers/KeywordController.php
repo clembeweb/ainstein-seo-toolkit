@@ -212,7 +212,7 @@ class KeywordController
         ];
 
         return View::render('ai-content/keywords/wizard', [
-            'title' => 'Wizard - ' . $keyword['keyword'],
+            'title' => 'Scrivi l\'articolo - ' . $keyword['keyword'],
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'keyword' => $keyword,

@@ -18,7 +18,7 @@ sort($uniqueIntents);
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 <span class="text-slate-900 dark:text-white">Risultati</span>
             </nav>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Risultati Research</h1>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Risultati della ricerca</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 <?= date('d/m/Y H:i', strtotime($research['created_at'])) ?> | <?= e($brief['business'] ?? '') ?>
             </p>
@@ -144,9 +144,9 @@ sort($uniqueIntents);
                                     <span class="inline-flex items-center gap-1 justify-end">Volume Tot. <span x-html="tableSortIcon('total_volume')"></span></span>
                                 </th>
                                 <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer select-none" @click="toggleTableSort('main_volume')">
-                                    <span class="inline-flex items-center gap-1 justify-end">Vol. Main <span x-html="tableSortIcon('main_volume')"></span></span>
+                                    <span class="inline-flex items-center gap-1 justify-end">Vol. principale <span x-html="tableSortIcon('main_volume')"></span></span>
                                 </th>
-                                <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Intent</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Intento</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200 dark:divide-slate-700">

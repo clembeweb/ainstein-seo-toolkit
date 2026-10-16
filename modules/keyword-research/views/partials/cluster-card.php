@@ -48,7 +48,7 @@ $intentColor = $intentColors[strtolower($cluster['intent'] ?? '')] ?? 'bg-slate-
             </div>
             <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg py-2 px-3 text-center">
                 <p class="text-lg font-bold text-slate-900 dark:text-white"><?= number_format($cluster['main_volume']) ?></p>
-                <p class="text-xs text-slate-500">Vol. Main</p>
+                <p class="text-xs text-slate-500">Vol. principale</p>
             </div>
         </div>
 
@@ -112,7 +112,7 @@ $intentColor = $intentColors[strtolower($cluster['intent'] ?? '')] ?? 'bg-slate-
                         </td>
                         <td class="px-4 py-3 text-right text-slate-700 dark:text-slate-300 font-medium" x-text="(kw.volume || 0).toLocaleString()"></td>
                         <td class="px-4 py-3 text-center">
-                            <span class="text-xs" :class="krCompClass(kw.competition_level)" x-text="kw.competition_level ? kw.competition_level.charAt(0).toUpperCase() + kw.competition_level.slice(1) : '-'"></span>
+                            <span class="text-xs" :class="krCompClass(kw.competition_level)" x-text="kw.competition_level ? ({high: 'Alta', medium: 'Media', low: 'Bassa'})[String(kw.competition_level).toLowerCase()] || kw.competition_level : '-'"></span>
                         </td>
                         <td class="px-4 py-3 text-right text-slate-500 text-xs" x-text="parseFloat(kw.high_bid) > 0 ? parseFloat(kw.high_bid).toFixed(2) : '-'"></td>
                         <td class="px-4 py-3 text-center">

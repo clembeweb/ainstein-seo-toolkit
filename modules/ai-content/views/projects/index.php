@@ -163,7 +163,7 @@
         <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-sm p-6 text-white mt-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="text-lg font-semibold">Modalita Manuale</h3>
+                    <h3 class="text-lg font-semibold">Modalità Manuale</h3>
                     <p class="text-blue-100 text-sm mt-1">Controllo completo su ogni articolo generato</p>
                 </div>
                 <div class="flex gap-6">
@@ -297,7 +297,7 @@
         <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-sm p-6 text-white mt-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="text-lg font-semibold">Modalita Automatica</h3>
+                    <h3 class="text-lg font-semibold">Modalità Automatica</h3>
                     <p class="text-purple-100 text-sm mt-1">Genera articoli in batch da una lista di keyword</p>
                 </div>
                 <div class="flex gap-6">
@@ -381,7 +381,7 @@
                     </div>
                     <div class="p-3 text-center">
                         <p class="text-lg font-bold text-blue-600 dark:text-blue-400"><?= number_format($project['urls_scraped'] ?? 0) ?></p>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">Scrappate</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Lette</p>
                     </div>
                     <div class="p-3 text-center">
                         <p class="text-lg font-bold text-purple-600 dark:text-purple-400"><?= number_format($project['urls_generated'] ?? 0) ?></p>

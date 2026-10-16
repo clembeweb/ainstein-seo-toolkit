@@ -320,7 +320,7 @@ $baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['
                             <svg class="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            Costo: <span x-text="totalSources"></span> cr scraping (Base) + 3 cr brief (Standard)
+                            Costo: <span x-text="totalSources"></span> cr lettura fonti + 3 cr brief
                         </p>
                     </div>
                 </div>
@@ -329,7 +329,7 @@ $baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['
                 <div x-show="briefGenerated">
                     <!-- Search Intent -->
                     <div class="mb-6">
-                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">Search Intent</h3>
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">Intento di ricerca</h3>
                         <div class="flex items-center gap-3">
                             <span class="px-3 py-1 rounded-full text-sm font-medium"
                                   :class="{
@@ -338,7 +338,7 @@ $baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['
                                       'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300': briefData.searchIntent === 'navigational',
                                       'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300': briefData.searchIntent === 'commercial'
                                   }"
-                                  x-text="briefData.searchIntent?.charAt(0).toUpperCase() + briefData.searchIntent?.slice(1)">
+                                  x-text="({informational: 'Informativo', transactional: 'Transazionale', navigational: 'Navigazionale', commercial: 'Commerciale'})[briefData.searchIntent] || briefData.searchIntent">
                             </span>
                             <p class="text-sm text-slate-600 dark:text-slate-400" x-text="briefData.intentDescription"></p>
                         </div>
@@ -506,7 +506,7 @@ $baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['
                         </div>
                         <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Genera l'Articolo</h3>
                         <p class="mt-2 text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                            L'AI generera un articolo completo basato sul brief creato, ottimizzato per la keyword target.
+                            L'AI genererà un articolo completo basato sul brief creato, ottimizzato per la keyword target.
                         </p>
 
                         <!-- Progress during generation -->

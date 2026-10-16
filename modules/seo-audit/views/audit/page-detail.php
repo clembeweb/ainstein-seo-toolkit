@@ -80,7 +80,7 @@ if ($statusCode >= 200 && $statusCode < 300) {
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
             <p class="text-2xl font-bold <?= count($pageIssues) > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' ?>"><?= count($pageIssues) ?></p>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Issues</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Problemi</p>
         </div>
     </div>
 

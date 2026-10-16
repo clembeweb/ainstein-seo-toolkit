@@ -538,10 +538,10 @@ class Project
         );
 
         $metrics = [
-            ['label' => 'Visibility', 'value' => $visibility . '%', 'delta' => $visibilityDelta],
-            ['label' => 'Est. Traffic', 'value' => number_format($estTraffic, 0, ',', '.'), 'delta' => $trafficDelta],
+            ['label' => 'Visibilità', 'value' => $visibility . '%', 'delta' => $visibilityDelta],
+            ['label' => 'Traffico stimato', 'value' => number_format($estTraffic, 0, ',', '.'), 'delta' => $trafficDelta],
             ['label' => 'Pos. Media', 'value' => $avgPosition, 'delta' => $posDelta],
-            ['label' => 'In Top 10', 'value' => (int) ($kwStats['top10'] ?? 0)],
+            ['label' => 'In top 10', 'value' => (int) ($kwStats['top10'] ?? 0)],
         ];
 
         // Country breakdown for widget

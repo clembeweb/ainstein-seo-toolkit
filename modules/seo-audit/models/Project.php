@@ -416,10 +416,10 @@ class Project
 
         $metrics = [
             [
-                'label' => 'Health Score',
+                'label' => 'Punteggio di salute',
                 'value' => $healthScore,
             ],
-            ['label' => 'Issues critiche', 'value' => $criticalCount],
+            ['label' => 'Problemi critici', 'value' => $criticalCount],
             ['label' => 'Pagine analizzate', 'value' => (int) ($project['pages_crawled'] ?? 0)],
         ];
 

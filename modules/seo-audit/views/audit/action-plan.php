@@ -338,7 +338,7 @@ if ($estimatedMinutes >= 60) {
                     </svg>
                 </div>
                 <h3 class="text-xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">Nessun Problema Rilevato!</h3>
-                <p class="text-slate-600 dark:text-slate-400">Il tuo sito non ha problemi da risolvere. Health Score: 100!</p>
+                <p class="text-slate-600 dark:text-slate-400">Il tuo sito non ha problemi da risolvere. Punteggio di salute: 100!</p>
             </div>
             <?php endif; ?>
         </div>

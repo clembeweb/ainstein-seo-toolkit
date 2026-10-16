@@ -666,7 +666,7 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
         }
 
         return View::render('keyword-research::research/results', [
-            'title' => 'Risultati Research - ' . $project['name'],
+            'title' => 'Risultati della ricerca - ' . $project['name'],
             'user' => $user,
             'project' => $project,
             'research' => $research,

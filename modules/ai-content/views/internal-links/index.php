@@ -192,7 +192,7 @@ $ilPaginationFilters = array_filter([
                             default => 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
                         };
                         $statusLabel = match($link['scrape_status']) {
-                            'pending' => 'Pending',
+                            'pending' => 'In attesa',
                             'completed' => 'Pronto',
                             'error' => 'Errore',
                             default => $link['scrape_status']

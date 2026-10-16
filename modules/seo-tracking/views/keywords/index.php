@@ -424,7 +424,7 @@
                             <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Gruppo</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Stato</th>
                             <?php else: ?>
-                            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase" title="Location">Loc</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase" title="Paese">Paese</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase" title="Ultima verifica della posizione su Google (non la media di Search Console)">Posizione</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Volume</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">CPC</th>
@@ -719,8 +719,8 @@
     });
 
     const datasets = {
-        visibility: { data: trendData.map(d => d.visibility), label: 'Visibility %', color: '#3b82f6', reverse: false },
-        traffic: { data: trendData.map(d => d.est_traffic), label: 'Est. Traffic', color: '#10b981', reverse: false },
+        visibility: { data: trendData.map(d => d.visibility), label: 'Visibilità %', color: '#3b82f6', reverse: false },
+        traffic: { data: trendData.map(d => d.est_traffic), label: 'Traffico stimato', color: '#10b981', reverse: false },
         position: { data: trendData.map(d => d.avg_position), label: 'Pos. Media', color: '#f59e0b', reverse: true },
     };
 

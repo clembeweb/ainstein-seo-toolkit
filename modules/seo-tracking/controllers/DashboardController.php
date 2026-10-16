@@ -127,7 +127,7 @@ class DashboardController
 
         return View::render('seo-tracking/dashboard/index', [
             'guideState' => $guideState,
-            'title' => $project['name'] . ' - Landscape',
+            'title' => $project['name'] . ' - Panoramica',
             'user' => $user,
             'modules' => ModuleLoader::getUserModules($user['id']),
             'project' => $project,

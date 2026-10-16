@@ -73,7 +73,7 @@
                     <button type="button" @click="brief.target = opt"
                             class="px-4 py-2 rounded-lg border text-sm font-medium transition-colors"
                             :class="brief.target === opt ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-slate-400'"
-                            x-text="opt"></button>
+                            x-text="opt === 'Both' ? 'Entrambi' : opt"></button>
                 </template>
             </div>
         </div>
@@ -116,7 +116,7 @@
         <!-- Seed Keywords -->
         <div>
             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Seed Keywords <span class="text-red-500">*</span>
+                Parole di partenza <span class="text-red-500">*</span>
             </label>
             <div class="space-y-2">
                 <div class="flex gap-2">
@@ -139,7 +139,7 @@
                 </div>
             </div>
             <p x-show="validationAttempted && brief.seeds.length === 0" class="mt-1 text-xs text-red-500">Aggiungi almeno 1 seed keyword</p>
-            <p x-show="!validationAttempted || brief.seeds.length > 0" class="mt-1 text-xs text-slate-400">Min 1, max 5 seed keyword. L'API espanderà ogni seed in decine di keyword correlate.</p>
+            <p x-show="!validationAttempted || brief.seeds.length > 0" class="mt-1 text-xs text-slate-400">Da 1 a 5 parole: da ognuna troviamo decine di ricerche correlate con i volumi di Google.</p>
         </div>
 
         <!-- Exclusions -->
@@ -287,7 +287,7 @@
                     };
                     ?>
                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ml-2 <?= $statusBadge ?>">
-                        <?= ucfirst($r['status']) ?>
+                        <?= ['completed' => 'Completata', 'error' => 'Errore', 'collecting' => 'In corso', 'clustering' => 'In corso', 'pending' => 'In attesa', 'processing' => 'In corso', 'failed' => 'Errore'][$r['status']] ?? ucfirst($r['status']) ?>
                     </span>
                 </div>
                 <?php if ($r['status'] === 'completed'): ?>

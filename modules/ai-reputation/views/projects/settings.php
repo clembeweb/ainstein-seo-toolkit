@@ -38,7 +38,7 @@ $canEdit = ($project['access_role'] ?? 'owner') !== 'viewer';
                 <div class="sm:col-span-2">
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Omonimi e soggetti da non confondere</label>
                     <textarea name="disambiguation_notes" rows="3" placeholder="Es. «Mario Rossi S.r.l. di Ancona non c'entra», «Maria Rossi è un'altra persona». Persone e aziende, in forma libera." class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm"><?= e($project['disambiguation_notes'] ?? '') ?></textarea>
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Serve al judge per non attribuire al soggetto fatti di altri. Se un run fa emergere un possibile omonimo non dichiarato, te lo chiederà nel report.</p>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Serve all'AI che giudica per non attribuire al soggetto fatti di altri. Se un run fa emergere un possibile omonimo non dichiarato, te lo chiederà nel report.</p>
                 </div>
             </div>
         </div>

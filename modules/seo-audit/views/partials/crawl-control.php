@@ -104,7 +104,7 @@ if ($isStopping) {
                 </svg>
             </div>
             <div>
-                <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Spider Crawl</h2>
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Scansione del sito</h2>
                 <?php if ($hasCompletedScans && $lastScanDate): ?>
                 <p class="text-sm text-slate-500 dark:text-slate-400">
                     Ultima scansione: <?= date('d/m/Y H:i', strtotime($lastScanDate)) ?> - <?= $project['pages_crawled'] ?> pagine
@@ -176,7 +176,7 @@ if ($isStopping) {
                 </div>
                 <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 text-center">
                     <p class="text-2xl font-bold text-red-600 dark:text-red-400" x-text="issues"></p>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Issues</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Problemi</p>
                 </div>
                 <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 text-center">
                     <p class="text-2xl font-bold text-slate-900 dark:text-white" x-text="percent + '%'"></p>

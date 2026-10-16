@@ -39,7 +39,7 @@ $sortFilters = array_filter([
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
-                Scrape (<?= $stats['pending'] ?>)
+                Leggi pagine (<?= $stats['pending'] ?>)
             </button>
             <button type="button"
                     @click="startGenerate()"
@@ -104,8 +104,8 @@ $sortFilters = array_filter([
             <div>
                 <select name="status" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                     <option value="">Tutti gli stati</option>
-                    <option value="pending" <?= ($filters['status'] ?? '') === 'pending' ? 'selected' : '' ?>>Pending</option>
-                    <option value="scraped" <?= ($filters['status'] ?? '') === 'scraped' ? 'selected' : '' ?>>Scrappate</option>
+                    <option value="pending" <?= ($filters['status'] ?? '') === 'pending' ? 'selected' : '' ?>>In attesa</option>
+                    <option value="scraped" <?= ($filters['status'] ?? '') === 'scraped' ? 'selected' : '' ?>>Lette</option>
                     <option value="generated" <?= ($filters['status'] ?? '') === 'generated' ? 'selected' : '' ?>>Generate</option>
                     <option value="approved" <?= ($filters['status'] ?? '') === 'approved' ? 'selected' : '' ?>>Approvate</option>
                     <option value="published" <?= ($filters['status'] ?? '') === 'published' ? 'selected' : '' ?>>Pubblicate</option>
@@ -251,7 +251,7 @@ $sortFilters = array_filter([
                                           'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300': generatedData[<?= $item['id'] ?>].status === 'generated',
                                           'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300': generatedData[<?= $item['id'] ?>].status === 'error'
                                       }"
-                                      x-text="generatedData[<?= $item['id'] ?>].status === 'generated' ? 'Generated' : 'Error'"></span>
+                                      x-text="generatedData[<?= $item['id'] ?>].status === 'generated' ? 'Generata' : 'Errore'"></span>
                             </template>
                             <template x-if="!generatedData[<?= $item['id'] ?>]?.status">
                                 <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
@@ -277,7 +277,7 @@ $sortFilters = array_filter([
                                             break;
                                     }
                                     ?>">
-                                    <?= ucfirst($item['status']) ?>
+                                    <?= ['pending' => 'In attesa', 'scraped' => 'Letta', 'generated' => 'Generata', 'approved' => 'Approvata', 'published' => 'Pubblicata', 'error' => 'Errore'][$item['status']] ?? ucfirst($item['status']) ?>
                                 </span>
                             </template>
                         </td>

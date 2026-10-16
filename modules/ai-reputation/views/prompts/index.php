@@ -144,7 +144,7 @@ $kindLabel = [
 
     <?php if ($promptsActive > 0): ?>
     <div class="flex items-center justify-between gap-4 rounded-xl border border-indigo-200 bg-indigo-50 dark:border-indigo-800 dark:bg-indigo-900/20 px-5 py-4">
-        <p class="text-sm text-slate-700 dark:text-slate-200">Domande pronte? L'audit si avvia dalla Overview: prima vedi quante risposte e quanti crediti.</p>
+        <p class="text-sm text-slate-700 dark:text-slate-200">Domande pronte? L'audit si avvia dalla Panoramica: prima vedi quante risposte e quanti crediti.</p>
         <a href="<?= url($basePath) ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 whitespace-nowrap">Vai all'Overview →</a>
     </div>
     <?php endif; ?>

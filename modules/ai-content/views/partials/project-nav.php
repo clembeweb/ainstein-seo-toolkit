@@ -85,11 +85,11 @@ $currentPage = $currentPage ?? 'dashboard';
             </a>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white"><?= e($project['name']) ?></h1>
             <?php if ($isMetaTag): ?>
-            <span class="px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">META TAG</span>
+            <span class="px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">Meta tag</span>
             <?php elseif ($isAuto): ?>
-            <span class="px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">AUTO</span>
+            <span class="px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">Automatico</span>
             <?php else: ?>
-            <span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400">MANUAL</span>
+            <span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400">Manuale</span>
             <?php endif; ?>
         </div>
         <?php if (!empty($project['description'])): ?>

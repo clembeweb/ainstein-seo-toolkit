@@ -104,7 +104,7 @@ $categoryColors = [
                     </div>
                 </div>
                 <div class="text-sm">
-                    <p class="font-medium text-slate-900 dark:text-white mb-2">Health Score</p>
+                    <p class="font-medium text-slate-900 dark:text-white mb-2">Punteggio di salute</p>
                     <div class="space-y-1">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 rounded-full bg-red-500"></span>
@@ -112,11 +112,11 @@ $categoryColors = [
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
-                            <span class="text-slate-600 dark:text-slate-400"><?= $issueCounts['warning'] ?> warning</span>
+                            <span class="text-slate-600 dark:text-slate-400"><?= $issueCounts['warning'] ?> avvisi</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-                            <span class="text-slate-600 dark:text-slate-400"><?= $issueCounts['notice'] ?> notice</span>
+                            <span class="text-slate-600 dark:text-slate-400"><?= $issueCounts['notice'] ?> note</span>
                         </div>
                     </div>
                     <?php
@@ -176,7 +176,7 @@ $categoryColors = [
                 </div>
                 <div>
                     <p class="text-2xl font-bold text-red-600 dark:text-red-400"><?= number_format($issueCounts['critical']) ?></p>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Issues Critiche</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Problemi critici</p>
                 </div>
             </div>
         </div>
@@ -285,12 +285,12 @@ $categoryColors = [
                     <?php endif; ?>
                     <?php if ($cat['warning'] > 0): ?>
                     <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300">
-                        <?= $cat['warning'] ?> warning
+                        <?= $cat['warning'] ?> avvisi
                     </span>
                     <?php endif; ?>
                     <?php if ($cat['notice'] > 0 && $cat['critical'] == 0 && $cat['warning'] == 0): ?>
                     <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-                        <?= $cat['notice'] ?> notice
+                        <?= $cat['notice'] ?> note
                     </span>
                     <?php endif; ?>
                 </div>
@@ -373,7 +373,7 @@ $categoryColors = [
             <div class="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
                 <svg class="w-10 h-10 mx-auto mb-3 text-slate-300 dark:text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 <p class="font-medium"><?= $isCrawling ? 'Scansione in corso' : 'Nessuna scansione ancora' ?></p>
-                <p class="text-sm mt-1"><?= $isCrawling ? 'I problemi compaiono qui man mano che le pagine vengono analizzate.' : 'Avvia la prima scansione dal riquadro "Spider Crawl" qui sopra: i problemi trovati compaiono qui.' ?></p>
+                <p class="text-sm mt-1"><?= $isCrawling ? 'I problemi compaiono qui man mano che le pagine vengono analizzate.' : 'Avvia la prima scansione dal riquadro "Scansione del sito" qui sopra: i problemi trovati compaiono qui.' ?></p>
             </div>
             <?php else: ?>
             <div class="px-4 py-8 text-center text-slate-500 dark:text-slate-400">

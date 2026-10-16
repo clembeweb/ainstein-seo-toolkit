@@ -117,7 +117,7 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
             <p class="text-xs text-slate-400">quando la domanda fa il tuo nome · <a href="<?= url("{$basePath}/runs/{$known['run_id']}") ?>" class="text-indigo-600 dark:text-indigo-400 hover:underline">audit reputazione #<?= (int) $known['run_id'] ?></a></p>
             <?php else: ?>
             <p class="text-2xl font-bold text-slate-400">–</p>
-            <p class="text-xs text-slate-400">per il confronto lancia anche un audit reputazione dalla Overview</p>
+            <p class="text-xs text-slate-400">per il confronto lancia anche un audit reputazione dalla Panoramica</p>
             <?php endif; ?>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">

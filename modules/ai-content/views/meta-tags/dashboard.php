@@ -18,7 +18,7 @@
                 'color' => 'blue',
             ],
             [
-                'label' => 'Scrappate',
+                'label' => 'Lette',
                 'value' => $stats['scraped'] ?? 0,
                 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>',
                 'color' => 'cyan',
@@ -205,7 +205,7 @@
                                 break;
                         }
                         ?>">
-                        <?= ucfirst($item['status']) ?>
+                        <?= ['pending' => 'In attesa', 'scraped' => 'Letta', 'generated' => 'Generata', 'approved' => 'Approvata', 'published' => 'Pubblicata', 'error' => 'Errore'][$item['status']] ?? ucfirst($item['status']) ?>
                     </span>
                 </div>
             </div>

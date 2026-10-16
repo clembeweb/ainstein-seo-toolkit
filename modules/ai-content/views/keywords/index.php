@@ -156,7 +156,7 @@ $paginationFilters = array_filter([
                                 <!-- Open Wizard -->
                                 <a href="<?= url(!empty($projectId) ? '/ai-content/projects/' . $projectId . '/keywords/' . $kw['id'] . '/wizard' : '/ai-content/keywords/' . $kw['id'] . '/wizard') ?>"
                                    class="p-2 rounded-lg text-slate-500 hover:text-primary-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                                   title="Apri Wizard">
+                                   title="Scrivi l'articolo">
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                                     </svg>
@@ -218,7 +218,7 @@ $paginationFilters = array_filter([
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Location</label>
                                 <select name="location" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
-                                    <option value="Italy">Italy</option>
+                                    <option value="Italy">Italia</option>
                                     <option value="United States">United States</option>
                                     <option value="United Kingdom">United Kingdom</option>
                                     <option value="Spain">Spain</option>

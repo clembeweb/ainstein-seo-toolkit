@@ -146,7 +146,7 @@ endif;
                 <div class="mt-4 flex items-center gap-4">
                     <div class="flex-1">
                         <div class="flex items-center justify-between mb-1">
-                            <span class="text-xs text-slate-500 dark:text-slate-400">Health Score</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400">Punteggio di salute</span>
                             <span class="text-lg font-bold <?= $scoreColor ?>"><?= $score ?>/100</span>
                         </div>
                         <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -353,7 +353,7 @@ endif;
         <div class="max-w-6xl mx-auto px-4">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 <div>
-                    <h3 class="text-2xl font-bold text-slate-900 dark:text-white">Health Score e panoramica a colpo d'occhio</h3>
+                    <h3 class="text-2xl font-bold text-slate-900 dark:text-white">Punteggio di salute e panoramica a colpo d'occhio</h3>
                     <p class="mt-4 text-slate-600 dark:text-slate-300 leading-relaxed">
                         Ogni audit produce un punteggio da 0 a 100 che sintetizza la salute SEO del sito. Le 5 categorie — Performance, Technical SEO, Content Quality, Accessibility, Meta Tags — mostrano esattamente dove il sito eccelle e dove ha margine di miglioramento. Basta un'occhiata per capire su cosa concentrarsi.
                     </p>
@@ -365,7 +365,7 @@ endif;
                 <div>
                     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
                         <div class="px-4 py-3 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
-                            <span class="text-sm font-medium text-slate-900 dark:text-white">Health Score</span>
+                            <span class="text-sm font-medium text-slate-900 dark:text-white">Punteggio di salute</span>
                         </div>
                         <div class="p-5">
                             <!-- Big score number with ring -->
@@ -530,7 +530,7 @@ endif;
                         <div class="px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 border-t border-emerald-200 dark:border-emerald-800/30">
                             <div class="flex items-center justify-center gap-2">
                                 <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-                                <span class="text-xs font-medium text-emerald-600 dark:text-emerald-300">Impatto stimato: +15 punti Health Score</span>
+                                <span class="text-xs font-medium text-emerald-600 dark:text-emerald-300">Impatto stimato: +15 punti di salute</span>
                             </div>
                         </div>
                     </div>
@@ -669,7 +669,7 @@ endif;
             <!-- FAQ 5 -->
             <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <button @click="openFaq === 5 ? openFaq = null : openFaq = 5" class="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <span class="font-medium text-slate-900 dark:text-white">Come viene calcolato l'Health Score?</span>
+                    <span class="font-medium text-slate-900 dark:text-white">Come viene calcolato il punteggio di salute?</span>
                     <svg class="w-5 h-5 text-slate-400 transition-transform duration-200" :class="openFaq === 5 && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
