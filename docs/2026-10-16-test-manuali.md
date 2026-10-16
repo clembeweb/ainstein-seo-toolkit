@@ -15,7 +15,7 @@
 | 3 | Progetto condiviso (Owner + Editor + Viewer) | da fare |
 | 4 | Agenzia con più clienti (niente dati mescolati) | da fare |
 | 5 | Telefono e tema scuro | da fare |
-| 6 | Admin: aggiungere crediti a un utente | da fare |
+| 6 | Admin: aggiungere crediti a un utente | OK: +50 due volte ("test pre post", "test"), saldo aggiornato lato admin e utente |
 
 ## Ricontrollo dei 5 P1 corretti il 2026-10-15
 
@@ -117,10 +117,15 @@
 - Proposta: nome/URL/elimina vivono nel progetto globale (/projects/{id}); nel modulo una scheda Impostazioni solo se
   ha impostazioni vere (es. pagine massime, frequenza). Da controllare se gli altri 4 moduli hanno la stessa pagina.
 
-### [P3] Storico crediti: "action_plan_generate" come descrizione
-- Scenario / passo: 1B, dopo il Piano d'azione.
-- Successo: in `credit_transactions` la riga è "-10 usage action_plan_generate" (codice tecnico). Da verificare se è
-  questo il testo che l'utente vede nel suo storico crediti.
+### [P3] Storico crediti: codici tecnici come descrizione
+- Scenario / passo: 1B e 6.
+- Successo: in `credit_transactions` le righe sono "action_plan_generate", "collect_response" (GEO, 1 cr a risposta).
+  Da verificare se è questo il testo che l'utente vede nel suo storico crediti.
+
+### [P3] Notifica "Analisi SEO completata per Progetto #19"
+- Scenario / passo: 1B, campanella dopo la scansione di Madcrumbs.
+- Atteso: il nome del progetto ("Madcrumbs") e il nome del tool (AI Audit).
+- Successo: numero interno del progetto al posto del nome.
 
 ## Idee per DOPO il post
 
