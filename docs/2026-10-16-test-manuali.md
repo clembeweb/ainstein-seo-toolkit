@@ -114,7 +114,7 @@
   `robots_disallows`. Gli hreflang non vengono letti dal crawler, quindi l'AI li tira a indovinare.
 - Note: `ssl_valid = 0` su tutti i progetti, anche su siti https validi (oggi non sembra mostrato all'utente: da verificare).
 
-### [P2] Report AI: cosa va bene
+### [OK] Report AI: cosa va bene
 - Il Report AI su Madcrumbs **riconosce il sito bilingue** (consiglia title/description "unici e tradotti" e hreflang),
   a differenza del Piano d'azione; trova anche un refuso vero ("Analyics" nell'H1 della pagina GTM). Riepilogo chiaro,
   15 crediti esatti (173 → 156 contando anche il GEO in corso), una sola chiamata AI in 78 s con la pagina in attesa.
