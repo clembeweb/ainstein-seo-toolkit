@@ -1,6 +1,6 @@
 # AINSTEIN - Istruzioni Claude Code
 
-> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-10-12 (ordine dei file, cron rank ogni minuto)
+> Caricato automaticamente ad ogni sessione. Ultimo aggiornamento: 2026-10-16 (sessioni PHP 8 h)
 
 ---
 
@@ -464,6 +464,7 @@ ssh -i ~/.ssh/ainstein_contabo ainstein@184.174.32.213 "tail -f /var/log/apache2
 | DocumentRoot | `.../public_html/public` |
 | DB | `ainstein_seo` / user `ainstein` |
 | PHP | 8.3-fpm, 512MB, Europe/Rome |
+| Sessioni PHP | 8 h: `/etc/php/8.3/fpm/conf.d/99-ainstein-session.ini` (`gc_maxlifetime=28800`, letto anche dal timer `phpsessionclean`) + `SESSION_LIFETIME` in `public/index.php` (dal 2026-10-16) |
 | Logs cron | `/var/log/ainstein/cron.log` |
 | Logs Apache | `/var/log/apache2/ainstein-error.log` |
 | Backup DB | `/home/ainstein/backups/` (daily, 7gg) + Contabo Auto Backup (off-server, 10 versioni) |

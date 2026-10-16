@@ -89,9 +89,10 @@
 > totale 9.810 → 2.860, nota "varianti della stessa ricerca contate una volta" sotto il numero. Restano P3: la nota
 > strategica dell'AI può ancora citare somme gonfiate (nel prompt le varianti arrivano una per riga); "COMP. HIGH/LOW",
 > "Vol. Main", "Intent", "Completed/Error", titolo "Risultati Research" in inglese.
-> **P2 nuovo (2026-10-16): la sessione in prod scade dopo 24 minuti di inattività** (`session.gc_maxlifetime=1440` in
-> php-fpm, cookie di sessione) se non si spunta "Ricordami": Clemente ha dovuto rifare il login due volte in un'ora.
-> Proposta: `ini_set('session.gc_maxlifetime', 28800)` + cookie 8 h in `public/index.php`, o "Ricordami" spuntato di default.
+> **Sessione che scadeva dopo 24 minuti: CORRETTO e ONLINE (2026-10-16, ok di Clemente).** Ora 8 ore: cookie e
+> `gc_maxlifetime` in `public/index.php` (SESSION_LIFETIME) + sul VPS `/etc/php/8.3/fpm/conf.d/99-ainstein-session.ini`
+> (`session.gc_maxlifetime = 28800`, backup del pool in `/home/ainstein/backups/www.conf.2026-10-16.bak`). Il file conf.d
+> serve perché su Ubuntu le sessioni le cancella il timer `phpsessionclean`, che legge php.ini + conf.d e ignora `ini_set`.
 > **Problemi, per priorità:**
 > - **P1 · AI Audit legge i redirect invece delle pagine (anche in prod).** `CrawlerService::normalizeUrl()` e
 >   `normalizeUrlForStorage()` tolgono la barra finale: su WordPress `/contatti/` diventa `/contatti`, il sito risponde 301
