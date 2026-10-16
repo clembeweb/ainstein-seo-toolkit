@@ -68,6 +68,12 @@
 - Successo: dai nomi non si capisce; in più il Report AI ha una sezione che si chiama "Piano d'azione consigliato".
 - Note: basta una riga sotto ogni scheda che dica a cosa serve (e magari rinominare la sezione del report in "Tempi").
 
+### [P3] AI Audit, Panoramica: aggiungere gli highlights di Struttura link e Crawl Budget
+- Scenario / passo: 1B, Madcrumbs dopo la scansione.
+- Proposta di Clemente: dopo l'analisi la Panoramica mostra anche i punti salienti di Struttura link e Crawl Budget
+  (solo i numeri chiave, es. pagine orfane, profondità, spreco di crawl budget), con il link alla scheda per i dettagli.
+- Note: miglioria, non un errore. Quando farla lo decide Clemente.
+
 ## Idee per DOPO il post
 
 - **Landing: scansione AI Audit insieme al controllo AI gratuito** (Clemente, 2026-10-16). La scansione di AI Audit è
