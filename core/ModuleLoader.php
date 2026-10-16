@@ -6,13 +6,40 @@ class ModuleLoader
 {
     private static array $loadedModules = [];
 
+    /**
+     * Ordine dei moduli ovunque sono elencati (menu, progetti, dashboard, docs, prezzi).
+     * Deciso da Clemente il 2026-10-16. I moduli non elencati vanno in coda, per nome.
+     * L'ordine NON dipende dal nome (che si cambia da Admin).
+     */
+    public const ORDER = ['ai-reputation', 'keyword-research', 'seo-tracking', 'seo-audit', 'ai-content'];
+
+    /**
+     * Ordina una lista di moduli secondo ORDER.
+     * $key = campo che contiene lo slug (o null se la lista e' indicizzata per slug).
+     */
+    public static function sortByOrder(array $items, ?string $key = 'slug'): array
+    {
+        $pos = array_flip(self::ORDER);
+        $rank = fn($slug) => $pos[$slug] ?? count(self::ORDER);
+
+        if ($key === null) {
+            uksort($items, fn($a, $b) => [$rank($a), $a] <=> [$rank($b), $b]);
+            return $items;
+        }
+
+        usort($items, fn($a, $b) => [$rank($a[$key] ?? ''), $a['name'] ?? ''] <=> [$rank($b[$key] ?? ''), $b['name'] ?? '']);
+        return $items;
+    }
+
     public static function getActiveModules(): array
     {
-        return Cache::get('active_modules', function () {
+        $modules = Cache::get('active_modules', function () {
             return Database::fetchAll(
                 "SELECT * FROM modules WHERE is_active = 1 ORDER BY name"
             );
         }, 300);
+
+        return self::sortByOrder($modules);
     }
 
     public static function getModule(string $slug): ?array

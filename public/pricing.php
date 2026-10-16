@@ -380,7 +380,7 @@ $currentPage = 'pricing';
                     <!-- Moduli -->
                     <tr class="category-row"><td colspan="<?= count($plans) + 1 ?>">Moduli AI</td></tr>
                     <?php
-                    $moduleNames = ['AI Writer', 'AI Keywords', 'AI Audit', 'AI Rank', 'AI GEO Audit'];
+                    $moduleNames = ['AI GEO Audit', 'AI Keywords', 'AI Rank', 'AI Audit', 'AI Writer'];
                     foreach ($moduleNames as $mod):
                     ?>
                     <tr>

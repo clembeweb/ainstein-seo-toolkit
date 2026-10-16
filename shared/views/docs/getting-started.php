@@ -59,11 +59,11 @@
 
         <?php
         $_gsModules = [
-            ['ai-content', 'AI Writer', 'Scrive articoli per il blog partendo da una parola chiave: guarda cosa c\'è già su Google, prepara una scaletta e scrive il testo. Fa anche title e description delle pagine.', 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'],
-            ['keyword-research', 'AI Keywords', 'Trova le parole che i clienti scrivono su Google, le raggruppa per argomento e ti aiuta a decidere quali pagine e articoli creare.', 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'],
-            ['seo-audit', 'AI Audit', 'Controlla il sito pagina per pagina e trova i problemi tecnici (titoli mancanti, link rotti, pagine lente). Ti dice cosa sistemare prima.', 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
-            ['seo-tracking', 'AI Rank', 'Segue nel tempo la posizione delle tue parole chiave su Google e legge i dati di Google Search Console.', 'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z'],
             ['ai-reputation', 'AI GEO Audit', 'Fa a ChatGPT e Gemini le domande dei tuoi clienti e ti mostra se consigliano te o i concorrenti, quali siti usano come fonte e cosa fare per farti citare.', 'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z'],
+            ['keyword-research', 'AI Keywords', 'Trova le parole che i clienti scrivono su Google, le raggruppa per argomento e ti aiuta a decidere quali pagine e articoli creare.', 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'],
+            ['seo-tracking', 'AI Rank', 'Segue nel tempo la posizione delle tue parole chiave su Google e legge i dati di Google Search Console.', 'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z'],
+            ['seo-audit', 'AI Audit', 'Controlla il sito pagina per pagina e trova i problemi tecnici (titoli mancanti, link rotti, pagine lente). Ti dice cosa sistemare prima.', 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
+            ['ai-content', 'AI Writer', 'Scrive articoli per il blog partendo da una parola chiave: guarda cosa c\'è già su Google, prepara una scaletta e scrive il testo. Fa anche title e description delle pagine.', 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'],
         ];
         ?>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

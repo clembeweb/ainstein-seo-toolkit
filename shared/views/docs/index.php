@@ -11,48 +11,16 @@
     <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-6">Moduli</h2>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-        <!-- AI Writer -->
-        <a href="<?= url('/docs/ai-content') ?>" class="group flex items-start gap-4 p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
+        <!-- AI GEO Audit -->
+        <a href="<?= url('/docs/ai-reputation') ?>" class="group flex items-start gap-4 p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
             <div class="shrink-0 w-11 h-11 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
                 <svg class="w-6 h-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
             </div>
             <div class="min-w-0">
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI Writer</h3>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Articoli per il tuo blog scritti partendo da ciò che si cerca su Google</p>
-            </div>
-            <svg class="w-5 h-5 text-slate-300 dark:text-slate-600 shrink-0 mt-0.5 group-hover:text-primary-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
-        </a>
-
-        <!-- AI Audit -->
-        <a href="<?= url('/docs/seo-audit') ?>" class="group flex items-start gap-4 p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
-            <div class="shrink-0 w-11 h-11 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
-                <svg class="w-6 h-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-            </div>
-            <div class="min-w-0">
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI Audit</h3>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Analisi tecnica del sito con 50+ controlli e punteggio salute</p>
-            </div>
-            <svg class="w-5 h-5 text-slate-300 dark:text-slate-600 shrink-0 mt-0.5 group-hover:text-primary-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
-        </a>
-
-        <!-- AI Rank -->
-        <a href="<?= url('/docs/seo-tracking') ?>" class="group flex items-start gap-4 p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
-            <div class="shrink-0 w-11 h-11 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
-                <svg class="w-6 h-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
-                </svg>
-            </div>
-            <div class="min-w-0">
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI Rank</h3>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Segui le posizioni del tuo sito su Google e scopri dove puoi salire</p>
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI GEO Audit</h3>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Cosa dicono ChatGPT, Gemini e le altre AI di te, e cosa fare</p>
             </div>
             <svg class="w-5 h-5 text-slate-300 dark:text-slate-600 shrink-0 mt-0.5 group-hover:text-primary-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -75,16 +43,48 @@
             </svg>
         </a>
 
-        <!-- AI GEO Audit -->
-        <a href="<?= url('/docs/ai-reputation') ?>" class="group flex items-start gap-4 p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
+        <!-- AI Rank -->
+        <a href="<?= url('/docs/seo-tracking') ?>" class="group flex items-start gap-4 p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
             <div class="shrink-0 w-11 h-11 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
                 <svg class="w-6 h-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
                 </svg>
             </div>
             <div class="min-w-0">
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI GEO Audit</h3>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Cosa dicono ChatGPT, Gemini e le altre AI di te, e cosa fare</p>
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI Rank</h3>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Segui le posizioni del tuo sito su Google e scopri dove puoi salire</p>
+            </div>
+            <svg class="w-5 h-5 text-slate-300 dark:text-slate-600 shrink-0 mt-0.5 group-hover:text-primary-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+        </a>
+
+        <!-- AI Audit -->
+        <a href="<?= url('/docs/seo-audit') ?>" class="group flex items-start gap-4 p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
+            <div class="shrink-0 w-11 h-11 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
+                <svg class="w-6 h-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div class="min-w-0">
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI Audit</h3>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Analisi tecnica del sito con 50+ controlli e punteggio salute</p>
+            </div>
+            <svg class="w-5 h-5 text-slate-300 dark:text-slate-600 shrink-0 mt-0.5 group-hover:text-primary-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+        </a>
+
+        <!-- AI Writer -->
+        <a href="<?= url('/docs/ai-content') ?>" class="group flex items-start gap-4 p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
+            <div class="shrink-0 w-11 h-11 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
+                <svg class="w-6 h-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+            </div>
+            <div class="min-w-0">
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">AI Writer</h3>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Articoli per il tuo blog scritti partendo da ciò che si cerca su Google</p>
             </div>
             <svg class="w-5 h-5 text-slate-300 dark:text-slate-600 shrink-0 mt-0.5 group-hover:text-primary-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>

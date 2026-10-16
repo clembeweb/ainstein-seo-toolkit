@@ -19,25 +19,11 @@ $_moGeo = \Core\Credits::getCost('collect_response', 'ai-reputation', 1);
 
 $_moRows = [
     [
-        'name' => 'AI Writer', 'color' => 'amber',
-        'icon' => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
-        'what' => 'Scrive articoli per il blog e i meta tag (title e description) delle pagine',
-        'when' => 'Devi pubblicare articoli ma non hai tempo di scriverli da zero',
-        'cost' => '~' . $_moFmt($_moArticle) . ' cr/articolo',
-    ],
-    [
-        'name' => 'AI Audit', 'color' => 'emerald',
-        'icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-        'what' => 'Scansiona il sito e trova i problemi tecnici che frenano Google',
-        'when' => 'Vuoi sapere se il sito ha errori e cosa sistemare per primo',
-        'cost' => $_moCrawl <= 0 ? 'Scansione gratis' : $_moFmt($_moCrawl) . ' cr/pagina',
-    ],
-    [
-        'name' => 'AI Rank', 'color' => 'blue',
-        'icon' => 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
-        'what' => 'Segue la posizione delle tue parole chiave su Google e legge Search Console',
-        'when' => 'Vuoi vedere se stai salendo o scendendo su Google nel tempo',
-        'cost' => $_moFmt($_moRank) . ' cr/keyword',
+        'name' => 'AI GEO Audit', 'color' => 'indigo',
+        'icon' => 'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z',
+        'what' => 'Chiede a ChatGPT e Gemini quello che chiedono i tuoi clienti e ti dice se consigliano te o altri',
+        'when' => 'Vuoi sapere cosa dicono le AI della tua attività e come farti citare',
+        'cost' => $_moFmt($_moGeo) . ' cr/risposta',
     ],
     [
         'name' => 'AI Keywords', 'color' => 'purple',
@@ -47,11 +33,25 @@ $_moRows = [
         'cost' => ($_moKrMin == $_moKrMax ? $_moFmt($_moKrMin) : $_moFmt($_moKrMin) . '-' . $_moFmt($_moKrMax)) . ' cr/ricerca',
     ],
     [
-        'name' => 'AI GEO Audit', 'color' => 'indigo',
-        'icon' => 'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z',
-        'what' => 'Chiede a ChatGPT e Gemini quello che chiedono i tuoi clienti e ti dice se consigliano te o altri',
-        'when' => 'Vuoi sapere cosa dicono le AI della tua attività e come farti citare',
-        'cost' => $_moFmt($_moGeo) . ' cr/risposta',
+        'name' => 'AI Rank', 'color' => 'blue',
+        'icon' => 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
+        'what' => 'Segue la posizione delle tue parole chiave su Google e legge Search Console',
+        'when' => 'Vuoi vedere se stai salendo o scendendo su Google nel tempo',
+        'cost' => $_moFmt($_moRank) . ' cr/keyword',
+    ],
+    [
+        'name' => 'AI Audit', 'color' => 'emerald',
+        'icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+        'what' => 'Scansiona il sito e trova i problemi tecnici che frenano Google',
+        'when' => 'Vuoi sapere se il sito ha errori e cosa sistemare per primo',
+        'cost' => $_moCrawl <= 0 ? 'Scansione gratis' : $_moFmt($_moCrawl) . ' cr/pagina',
+    ],
+    [
+        'name' => 'AI Writer', 'color' => 'amber',
+        'icon' => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
+        'what' => 'Scrive articoli per il blog e i meta tag (title e description) delle pagine',
+        'when' => 'Devi pubblicare articoli ma non hai tempo di scriverli da zero',
+        'cost' => '~' . $_moFmt($_moArticle) . ' cr/articolo',
     ],
 ];
 ?>
@@ -142,14 +142,14 @@ $_moRows = [
         <?php
         $_moDetails = [
             [
-                'slug' => 'ai-content', 'name' => 'AI Writer', 'color' => 'amber', 'icon' => $_moRows[0]['icon'],
-                'text' => 'Gli dai una parola chiave e lui fa il resto: guarda i primi risultati su Google, legge le pagine dei concorrenti, prepara una scaletta (che puoi modificare) e scrive l\'articolo. Se vuoi crea anche l\'immagine di copertina e pubblica su WordPress. Scrive anche title e description per le pagine che hai già, e può programmare articoli in automatico.',
-                'tags' => ['Articoli', 'Scaletta modificabile', 'Meta tag', 'Copertina', 'WordPress', 'Articoli programmati'],
+                'slug' => 'ai-reputation', 'name' => 'AI GEO Audit', 'color' => 'indigo', 'icon' => $_moRows[0]['icon'],
+                'text' => 'Sempre più persone chiedono a ChatGPT e Gemini "a chi mi rivolgo per...". Questo modulo fa alle AI le domande che farebbero i tuoi clienti e ti mostra se consigliano te, chi consigliano al posto tuo e quali siti usano come fonte. Poi ti dà un piano: articoli da pubblicare, dati da chiarire sul sito, correzioni tecniche. Puoi fare l\'audit d\'acquisto (chi cerca il tuo servizio) e quello di reputazione (cosa dicono di te). Il Controllo tecnico è gratuito e il piano si esporta in PDF.',
+                'tags' => ['Audit d\'acquisto', 'Audit di reputazione', 'Fonti citate', 'Piano d\'azione', 'Controllo tecnico gratuito', 'PDF'],
             ],
             [
-                'slug' => 'seo-audit', 'name' => 'AI Audit', 'color' => 'emerald', 'icon' => $_moRows[1]['icon'],
-                'text' => 'Visita il sito come fa Google e controlla ogni pagina: titoli e descrizioni mancanti, link rotti, immagini senza testo alternativo, pagine lente o che Google non può indicizzare. Ti dà un punteggio di salute e una lista di problemi ordinata per gravità. Il Report AI legge tutta la scansione e ti dice cosa correggere prima, con il codice pronto.',
-                'tags' => ['Scansione del sito', 'Punteggio di salute', 'Problemi per gravità', 'Report AI', 'Storico scansioni'],
+                'slug' => 'keyword-research', 'name' => 'AI Keywords', 'color' => 'purple', 'icon' => $_moRows[1]['icon'],
+                'text' => 'Ti aiuta a capire cosa cercano davvero i clienti. Con la Ricerca guidata parti da poche parole e ottieni gruppi di keyword con i volumi di ricerca. L\'Architettura sito ti propone quali pagine creare. Il Piano editoriale ti dice quali articoli scrivere e in che ordine. Il Controllo veloce verifica una singola parola chiave, gratis.',
+                'tags' => ['Ricerca guidata', 'Architettura sito', 'Piano editoriale', 'Controllo veloce gratuito'],
             ],
             [
                 'slug' => 'seo-tracking', 'name' => 'AI Rank', 'color' => 'blue', 'icon' => $_moRows[2]['icon'],
@@ -157,14 +157,14 @@ $_moRows = [
                 'tags' => ['Posizioni su Google', 'Search Console', 'Quick Wins', 'Analisi pagina', 'Gruppi di keyword', 'Avvisi'],
             ],
             [
-                'slug' => 'keyword-research', 'name' => 'AI Keywords', 'color' => 'purple', 'icon' => $_moRows[3]['icon'],
-                'text' => 'Ti aiuta a capire cosa cercano davvero i clienti. Con la Ricerca guidata parti da poche parole e ottieni gruppi di keyword con i volumi di ricerca. L\'Architettura sito ti propone quali pagine creare. Il Piano editoriale ti dice quali articoli scrivere e in che ordine. Il Controllo veloce verifica una singola parola chiave, gratis.',
-                'tags' => ['Ricerca guidata', 'Architettura sito', 'Piano editoriale', 'Controllo veloce gratuito'],
+                'slug' => 'seo-audit', 'name' => 'AI Audit', 'color' => 'emerald', 'icon' => $_moRows[3]['icon'],
+                'text' => 'Visita il sito come fa Google e controlla ogni pagina: titoli e descrizioni mancanti, link rotti, immagini senza testo alternativo, pagine lente o che Google non può indicizzare. Ti dà un punteggio di salute e una lista di problemi ordinata per gravità. Il Report AI legge tutta la scansione e ti dice cosa correggere prima, con il codice pronto.',
+                'tags' => ['Scansione del sito', 'Punteggio di salute', 'Problemi per gravità', 'Report AI', 'Storico scansioni'],
             ],
             [
-                'slug' => 'ai-reputation', 'name' => 'AI GEO Audit', 'color' => 'indigo', 'icon' => $_moRows[4]['icon'],
-                'text' => 'Sempre più persone chiedono a ChatGPT e Gemini "a chi mi rivolgo per...". Questo modulo fa alle AI le domande che farebbero i tuoi clienti e ti mostra se consigliano te, chi consigliano al posto tuo e quali siti usano come fonte. Poi ti dà un piano: articoli da pubblicare, dati da chiarire sul sito, correzioni tecniche. Puoi fare l\'audit d\'acquisto (chi cerca il tuo servizio) e quello di reputazione (cosa dicono di te). Il Controllo tecnico è gratuito e il piano si esporta in PDF.',
-                'tags' => ['Audit d\'acquisto', 'Audit di reputazione', 'Fonti citate', 'Piano d\'azione', 'Controllo tecnico gratuito', 'PDF'],
+                'slug' => 'ai-content', 'name' => 'AI Writer', 'color' => 'amber', 'icon' => $_moRows[4]['icon'],
+                'text' => 'Gli dai una parola chiave e lui fa il resto: guarda i primi risultati su Google, legge le pagine dei concorrenti, prepara una scaletta (che puoi modificare) e scrive l\'articolo. Se vuoi crea anche l\'immagine di copertina e pubblica su WordPress. Scrive anche title e description per le pagine che hai già, e può programmare articoli in automatico.',
+                'tags' => ['Articoli', 'Scaletta modificabile', 'Meta tag', 'Copertina', 'WordPress', 'Articoli programmati'],
             ],
         ];
         ?>
@@ -207,11 +207,11 @@ $_moRows = [
             <p class="text-slate-700 dark:text-slate-300 text-sm mb-4">Non devi usarli tutti. Se vuoi un ordine da seguire, questo funziona:</p>
             <?php
             $_moSteps = [
-                ['emerald', 'AI Audit', 'Controlla che il sito non abbia errori tecnici gravi'],
-                ['purple', 'AI Keywords', 'Scopri cosa cercano i tuoi clienti'],
-                ['amber', 'AI Writer', 'Scrivi i contenuti per quelle ricerche'],
-                ['blue', 'AI Rank', 'Guarda nel tempo se stai salendo su Google'],
                 ['indigo', 'AI GEO Audit', 'Verifica se ChatGPT e Gemini ti consigliano e cosa fare per farti citare'],
+                ['purple', 'AI Keywords', 'Scopri cosa cercano i tuoi clienti'],
+                ['blue', 'AI Rank', 'Guarda nel tempo se stai salendo su Google'],
+                ['emerald', 'AI Audit', 'Controlla che il sito non abbia errori tecnici gravi'],
+                ['amber', 'AI Writer', 'Scrivi i contenuti per le ricerche trovate con AI Keywords'],
             ];
             ?>
             <div class="space-y-4">

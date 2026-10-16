@@ -14,6 +14,8 @@ $gpUrl = $project['website_url'] ?? null;
 $gpColor = $project['color'] ?? '#3B82F6';
 $health = $project['health_status'] ?? 'gray';
 $activeModules = $project['active_modules'] ?? [];
+// Stesso ordine del menu (ModuleLoader::ORDER), poi gli altri
+$activeModules = array_values(array_unique(array_intersect(array_merge(\Core\ModuleLoader::ORDER, $activeModules), $activeModules)));
 $modulesData = $project['modules_data'] ?? [];
 $action = $project['primary_action'] ?? null;
 $modulesCount = $project['active_modules_count'] ?? 0;
@@ -37,6 +39,7 @@ $moduleIcons = [
     'internal-links' => 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1',
     'content-creator' => 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z',
     'crawl-budget' => 'M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z',
+    'ai-reputation' => 'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z',
 ];
 
 $moduleColorClasses = [
@@ -48,6 +51,7 @@ $moduleColorClasses = [
     'internal-links' => 'text-cyan-500',
     'content-creator' => 'text-indigo-500',
     'crawl-budget' => 'text-orange-500',
+    'ai-reputation' => 'text-indigo-500',
 ];
 
 // Build KPIs array (max 3, priorità: audit → tracking → content → kw → ads → links)

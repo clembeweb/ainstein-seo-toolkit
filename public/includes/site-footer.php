@@ -14,10 +14,10 @@
             <div class="footer-col">
                 <h4>Strumenti AI</h4>
                 <a href="<?= url('/docs/ai-reputation') ?>">AI GEO Audit</a>
-                <a href="<?= url('/docs/seo-audit') ?>">AI Audit</a>
                 <a href="<?= url('/docs/keyword-research') ?>">AI Keywords</a>
-                <a href="<?= url('/docs/ai-content') ?>">AI Writer</a>
                 <a href="<?= url('/docs/seo-tracking') ?>">AI Rank</a>
+                <a href="<?= url('/docs/seo-audit') ?>">AI Audit</a>
+                <a href="<?= url('/docs/ai-content') ?>">AI Writer</a>
             </div>
             <div class="footer-col">
                 <h4>Risorse</h4>

@@ -21,7 +21,7 @@ $_faqStrong = 'text-slate-900 dark:text-white';
 $_faqSections = [
     ['Generali', 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', [
         ['Cos\'è Ainstein?',
-            'Ainstein è una piattaforma che ti aiuta a farti trovare su Google e nelle risposte delle AI. Ha 5 moduli: <strong class="' . $_faqStrong . '">AI Writer</strong> scrive articoli e meta tag; <strong class="' . $_faqStrong . '">AI Keywords</strong> trova le parole che cercano i clienti; <strong class="' . $_faqStrong . '">AI Audit</strong> controlla il sito e trova i problemi tecnici; <strong class="' . $_faqStrong . '">AI Rank</strong> segue le tue posizioni su Google; <strong class="' . $_faqStrong . '">AI GEO Audit</strong> ti dice se ChatGPT e Gemini consigliano la tua attività e cosa fare per farti citare.'],
+            'Ainstein è una piattaforma che ti aiuta a farti trovare su Google e nelle risposte delle AI. Ha 5 moduli: <strong class="' . $_faqStrong . '">AI GEO Audit</strong> ti dice se ChatGPT e Gemini consigliano la tua attività e cosa fare per farti citare; <strong class="' . $_faqStrong . '">AI Keywords</strong> trova le parole che cercano i clienti; <strong class="' . $_faqStrong . '">AI Rank</strong> segue le tue posizioni su Google; <strong class="' . $_faqStrong . '">AI Audit</strong> controlla il sito e trova i problemi tecnici; <strong class="' . $_faqStrong . '">AI Writer</strong> scrive articoli e meta tag.'],
         ['Devo essere un esperto di SEO?',
             'No. Ainstein è pensato anche per chi ha una piccola attività, un blog o un piccolo negozio online. Ogni modulo ti guida passo per passo e ti spiega cosa fare in parole semplici. Se non sai da dove partire, inizia dalla scansione dell\'AI Audit e dal Controllo tecnico dell\'AI GEO Audit.'],
         ['Serve un account?',
@@ -90,7 +90,7 @@ $_faqSections = [
         ['I miei dati sono al sicuro?',
             'Le comunicazioni passano su connessione HTTPS cifrata, le password sono salvate in forma protetta e i dati dei tuoi progetti li vedi solo tu e le persone con cui li condividi. Per i dettagli leggi la <a href="' . url('/docs/privacy') . '" class="' . $_faqLink . '">Privacy</a>.'],
         ['Posso esportare i miei dati?',
-            'Sì. Puoi esportare in CSV le keyword di AI Keywords, i problemi trovati dall\'AI Audit e i dati di AI Rank. Il piano dell\'AI GEO Audit si scarica in PDF. Gli articoli di AI Writer li copi o li pubblichi su WordPress.'],
+            'Sì. Il piano dell\'AI GEO Audit si scarica in PDF. Puoi esportare in CSV le keyword di AI Keywords, i dati di AI Rank e i problemi trovati dall\'AI Audit. Gli articoli di AI Writer li copi o li pubblichi su WordPress.'],
     ]],
 ];
 ?>

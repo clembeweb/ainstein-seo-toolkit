@@ -35,7 +35,7 @@ return [
             ],
             [
                 'title' => 'I tuoi 5 strumenti',
-                'description' => 'AI Audit controlla il sito, AI Keywords trova cosa cerca la gente, AI Writer scrive gli articoli, AI Rank segue le posizioni su Google, AI GEO Audit ti dice se ChatGPT e Gemini ti consigliano.',
+                'description' => 'AI GEO Audit ti dice se ChatGPT e Gemini ti consigliano, AI Keywords trova cosa cerca la gente, AI Rank segue le posizioni su Google, AI Audit controlla il sito, AI Writer scrive gli articoli.',
                 'icon' => 'M11.42 15.17l-5.1-3.57m5.1 3.57l5.1-3.57m-5.1 3.57V21m5.1-6.83L21 9.34m0 0L15.52 5.1 11.42 2 7.32 5.1 1.82 9.34m19.18 0L21 15.17m-19.18-5.83L1.82 15.17',
                 'tip' => 'Ogni modulo ha un tour dedicato che puoi rivedere dal menu laterale',
                 'selector' => '[data-tour-welcome="modules"]',

@@ -47,18 +47,16 @@ $_crGeoBrief = \Core\Credits::getCost('action_brief', 'ai-reputation', 1);
 
 $_crTables = [
     [
-        'name' => 'AI Writer',
-        'icon' => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
+        'name' => 'AI GEO Audit',
+        'icon' => 'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z',
         'rows' => [
-            ['Lettura dei risultati Google per la parola chiave', $_crSerp, ''],
-            ['Lettura di una pagina concorrente', $_crScrape, '/pagina'],
-            ['Scaletta dell\'articolo (brief)', $_crBrief, ''],
-            ['Scrittura dell\'articolo', $_crArticle, ''],
-            ['Immagine di copertina (facoltativa)', $_crCover, ''],
-            ['Meta tag: lettura della pagina', $_crMetaScrape, '/pagina'],
-            ['Meta tag: scrittura di title e description', $_crMetaGen, '/pagina'],
+            ['Controllo tecnico del sito', 0, ''],
+            ['Ogni risposta raccolta e analizzata (una domanda a una AI)', $_crGeoResponse, '/risposta'],
+            ['Rianalizza una risposta già raccolta', $_crGeoReanalyze, '/risposta'],
+            ['Scheda operativa di un intervento', $_crGeoBrief, ''],
+            ['Report e PDF', 0, ''],
         ],
-        'note' => 'Un articolo completo, con una pagina concorrente letta e la copertina, costa circa <strong class="text-slate-700 dark:text-slate-300">' . $_crFmt($_crArticleTotal) . ' crediti</strong>. Ogni pagina concorrente in più aggiunge ' . $_crFmt($_crScrape) . ' cr. La pubblicazione su WordPress non costa crediti.',
+        'note' => 'Esempio: 30 domande fatte a ChatGPT e Gemini sono 60 risposte, cioè <strong class="text-slate-700 dark:text-slate-300">' . $_crFmt(60 * $_crGeoResponse) . ' crediti</strong>. Prima di avviare vedi sempre quante risposte e quanti crediti servono.',
     ],
     [
         'name' => 'AI Keywords',
@@ -68,16 +66,6 @@ $_crTables = [
             ['Architettura sito', $_crKrArchitecture, ''],
             ['Piano editoriale', $_crKrEditorial, ''],
             ['Controllo veloce di una parola chiave', 0, ''],
-        ],
-        'note' => null,
-    ],
-    [
-        'name' => 'AI Audit',
-        'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-        'rows' => [
-            ['Scansione del sito', $_crCrawl, '/pagina'],
-            ['Report AI dell\'audit', $_crAuditReport, ''],
-            ['Consultare risultati, storico ed export', 0, ''],
         ],
         'note' => null,
     ],
@@ -95,16 +83,28 @@ $_crTables = [
         'note' => null,
     ],
     [
-        'name' => 'AI GEO Audit',
-        'icon' => 'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z',
+        'name' => 'AI Audit',
+        'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
         'rows' => [
-            ['Controllo tecnico del sito', 0, ''],
-            ['Ogni risposta raccolta e analizzata (una domanda a una AI)', $_crGeoResponse, '/risposta'],
-            ['Rianalizza una risposta già raccolta', $_crGeoReanalyze, '/risposta'],
-            ['Scheda operativa di un intervento', $_crGeoBrief, ''],
-            ['Report e PDF', 0, ''],
+            ['Scansione del sito', $_crCrawl, '/pagina'],
+            ['Report AI dell\'audit', $_crAuditReport, ''],
+            ['Consultare risultati, storico ed export', 0, ''],
         ],
-        'note' => 'Esempio: 30 domande fatte a ChatGPT e Gemini sono 60 risposte, cioè <strong class="text-slate-700 dark:text-slate-300">' . $_crFmt(60 * $_crGeoResponse) . ' crediti</strong>. Prima di avviare vedi sempre quante risposte e quanti crediti servono.',
+        'note' => null,
+    ],
+    [
+        'name' => 'AI Writer',
+        'icon' => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
+        'rows' => [
+            ['Lettura dei risultati Google per la parola chiave', $_crSerp, ''],
+            ['Lettura di una pagina concorrente', $_crScrape, '/pagina'],
+            ['Scaletta dell\'articolo (brief)', $_crBrief, ''],
+            ['Scrittura dell\'articolo', $_crArticle, ''],
+            ['Immagine di copertina (facoltativa)', $_crCover, ''],
+            ['Meta tag: lettura della pagina', $_crMetaScrape, '/pagina'],
+            ['Meta tag: scrittura di title e description', $_crMetaGen, '/pagina'],
+        ],
+        'note' => 'Un articolo completo, con una pagina concorrente letta e la copertina, costa circa <strong class="text-slate-700 dark:text-slate-300">' . $_crFmt($_crArticleTotal) . ' crediti</strong>. Ogni pagina concorrente in più aggiunge ' . $_crFmt($_crScrape) . ' cr. La pubblicazione su WordPress non costa crediti.',
     ],
 ];
 

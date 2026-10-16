@@ -133,6 +133,7 @@ $moduleBlocks = [
         ],
     ],
 ];
+$moduleBlocks = \Core\ModuleLoader::sortByOrder($moduleBlocks, null);
 ?>
 
 <div class="space-y-8">

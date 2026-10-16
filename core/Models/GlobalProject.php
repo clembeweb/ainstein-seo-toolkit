@@ -19,19 +19,19 @@ class GlobalProject
      * Ogni entry mappa slug → tabella, label, colore, icona Heroicons, route prefix.
      */
     private const MODULE_CONFIG = [
-        'ai-content' => [
-            'table' => 'aic_projects',
-            'label' => 'AI Writer',
-            'color' => 'amber',
-            'icon' => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
-            'route_prefix' => '/ai-content/projects',
+        'ai-reputation' => [
+            'table' => 'ar_projects',
+            'label' => 'AI GEO Audit',
+            'color' => 'indigo',
+            'icon' => 'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z',
+            'route_prefix' => '/ai-reputation/project',
         ],
-        'seo-audit' => [
-            'table' => 'sa_projects',
-            'label' => 'AI Audit',
-            'color' => 'emerald',
-            'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-            'route_prefix' => '/seo-audit/project',
+        'keyword-research' => [
+            'table' => 'kr_projects',
+            'label' => 'AI Keywords',
+            'color' => 'purple',
+            'icon' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z',
+            'route_prefix' => '/keyword-research/project',
         ],
         'seo-tracking' => [
             'table' => 'st_projects',
@@ -40,12 +40,19 @@ class GlobalProject
             'icon' => 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
             'route_prefix' => '/seo-tracking/project',
         ],
-        'keyword-research' => [
-            'table' => 'kr_projects',
-            'label' => 'AI Keywords',
-            'color' => 'purple',
-            'icon' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z',
-            'route_prefix' => '/keyword-research/project',
+        'seo-audit' => [
+            'table' => 'sa_projects',
+            'label' => 'AI Audit',
+            'color' => 'emerald',
+            'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+            'route_prefix' => '/seo-audit/project',
+        ],
+        'ai-content' => [
+            'table' => 'aic_projects',
+            'label' => 'AI Writer',
+            'color' => 'amber',
+            'icon' => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
+            'route_prefix' => '/ai-content/projects',
         ],
         'ads-analyzer' => [
             'table' => 'ga_projects',
@@ -74,13 +81,6 @@ class GlobalProject
             'color' => 'orange',
             'icon' => 'M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z',
             'route_prefix' => '/crawl-budget/projects',
-        ],
-        'ai-reputation' => [
-            'table' => 'ar_projects',
-            'label' => 'AI GEO Audit',
-            'color' => 'indigo',
-            'icon' => 'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z',
-            'route_prefix' => '/ai-reputation/project',
         ],
     ];
 
@@ -605,15 +605,16 @@ class GlobalProject
         }
 
         // 4. Nessuna azione urgente — suggerisci modulo da attivare
-        $allSlugs = ['seo-audit', 'seo-tracking', 'ai-content', 'keyword-research', 'ads-analyzer', 'internal-links'];
+        $allSlugs = ['ai-reputation', 'keyword-research', 'seo-tracking', 'seo-audit', 'ai-content'];
         $activeSlugs = $project['active_modules'];
         $missing = array_diff($allSlugs, $activeSlugs);
         if (!empty($missing)) {
             $suggestions = [
-                'seo-audit' => 'Attiva AI Audit per analizzare il sito',
-                'seo-tracking' => 'Attiva AI Rank per monitorare le posizioni',
-                'ai-content' => 'Attiva AI Writer per generare articoli',
+                'ai-reputation' => 'Attiva AI GEO Audit per sapere cosa dicono di te le AI',
                 'keyword-research' => 'Attiva AI Keywords per trovare opportunità',
+                'seo-tracking' => 'Attiva AI Rank per monitorare le posizioni',
+                'seo-audit' => 'Attiva AI Audit per analizzare il sito',
+                'ai-content' => 'Attiva AI Writer per generare articoli',
             ];
             foreach ($suggestions as $slug => $text) {
                 if (in_array($slug, $missing)) {
