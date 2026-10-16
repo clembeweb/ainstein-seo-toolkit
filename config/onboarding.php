@@ -231,14 +231,14 @@ return [
             ],
             [
                 'title' => 'Ricerca keyword',
-                'description' => 'Scrivi da 1 a 5 parole di partenza: il sistema trova centinaia di ricerche collegate e l\'AI le raggruppa per argomento.',
+                'description' => 'Ci dici cosa fai (o lo leggiamo dal sito o dal GEO Audit), l\'AI propone cosa cercare, Google dà le ricerche con i volumi e l\'AI le raggruppa per argomento.',
                 'icon' => 'M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z',
                 'tip' => 'Costa ' . $krCost('cost_kr_ai_clustering', 3),
                 'selector' => '[data-tour="kr-guided"]',
                 'position' => 'right',
             ],
             [
-                'title' => 'Architettura Sito',
+                'title' => 'Architettura sito',
                 'description' => 'Progetta le pagine del sito partendo da cosa cerca la gente: l\'AI propone nome, titolo e indirizzo di ogni pagina.',
                 'icon' => 'M2.25 7.125C2.25 6.504 2.754 6 3.375 6h6c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-6a1.125 1.125 0 01-1.125-1.125v-3.75zM14.25 8.625c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v8.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 01-1.125-1.125v-8.25zM3.75 16.125c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 01-1.125-1.125v-2.25z',
                 'tip' => 'Costa ' . $krCost('cost_kr_ai_architecture', 5) . ', ideale per un sito nuovo o da rifare',
@@ -246,7 +246,7 @@ return [
                 'position' => 'left',
             ],
             [
-                'title' => 'Piano Editoriale',
+                'title' => 'Piano editoriale',
                 'description' => 'Un calendario di articoli mese per mese, basato su ricerche reali. Ogni articolo indica la pagina del sito a cui collegarsi.',
                 'icon' => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
                 'tip' => 'Costa ' . $krCost('cost_kr_editorial_plan', 5) . '. Poi passi gli articoli ad AI Writer',

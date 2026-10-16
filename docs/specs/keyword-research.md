@@ -8,11 +8,34 @@
 | **Prefisso DB** | `kr_` |
 | **Files** | 25 |
 | **Stato** | ✅ Attivo (100%) |
-| **Ultimo update** | 2026-02-13 |
+| **Ultimo update** | 2026-10-16 |
 
 Modulo per keyword research potenziata da AI con 4 modalità: Research Guidata (clustering semantico), Architettura Sito (struttura pagine con URL/H1), Piano Editoriale (piano articoli mensile con SERP + AI), Quick Check (ricerca istantanea gratis).
 
 > **Differenziazione:** Output azionabili (cluster, architettura sito, note strategiche) invece di soli dati grezzi.
+
+---
+
+## Ingresso dei 3 strumenti: profilo dell'attività (dal 2026-10-16)
+
+Design: `docs/plans/2026-10-16-ai-keywords-ingresso-design.md`.
+
+- Riquadro "La tua attività" (`views/partials/business-profile.php`, mixin Alpine `krProfile()`) in cima a Ricerca,
+  Architettura e Piano. Il profilo nasce dal GEO Audit (righe confermate di `ar_profile_facts`), dal sito
+  (SafeScraper: home + fino a 4 pagine del menu) o da testo libero; si salva in `projects.description`
+  (o `kr_projects.description` senza progetto globale). `POST /keyword-research/project/{id}/profile`
+  (`source` = geo | site | text | suggest), `ProfileController` + `services/BusinessProfileService.php`.
+- Dal profilo l'AI propone 5 parole di partenza, 5 argomenti del blog, tipo di sito e target, salvati in
+  `kr_projects.suggestions` (rifatti solo se cambia il profilo). Tutte queste chiamate AI sono gratis
+  (`charge_credits => false`).
+- Il server costruisce il brief dal profilo: `business`/`theme` = profilo, `target` e `site_type` dalle proposte.
+  Dal form arrivano solo parole (o argomenti), paese, esclusioni, mesi e articoli al mese.
+- Ricerca keyword: dopo la raccolta (gratis) l'elenco delle keyword con le spunte; all'AI vanno solo le spuntate.
+- Risultati della Ricerca, "E adesso?": keyword principale dei gruppi scelti ad AI Rank (`quick-check/send-to-tracking`,
+  un gruppo AI Rank per gruppo) o ad AI Writer (`POST .../research/{rid}/send-to-writer` → `aic_keywords` del progetto
+  AI Writer di tipo `manual` dello stesso progetto globale).
+- Prova del 2026-10-16 (prod, Stabia): Keyword Planner "dal sito" (urlSeed/siteSeed) dà ricerche generiche e in
+  inglese, quindi non si usa.
 
 ---
 

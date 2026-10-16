@@ -62,7 +62,7 @@ $costoPiano = $krCrediti('cost_kr_editorial_plan', 5);
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <?= \Core\View::partial('components/dashboard-mode-card', [
             'title' => 'Ricerca keyword',
-            'description' => 'Progetti SEO/Ads con clustering AI. Parti da seed keyword, espandi automaticamente e ottieni cluster semantici con intent e note strategiche.',
+            'description' => 'Ci dici cosa fai (o lo leggiamo dal sito), l\'AI propone cosa cercare, Google dà le ricerche con i volumi e l\'AI le raggruppa per argomento.',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>',
             'gradient' => 'from-emerald-500 to-teal-600',
             'url' => url('/keyword-research/projects'),
@@ -309,7 +309,7 @@ $costoPiano = $krCrediti('cost_kr_editorial_plan', 5);
                 </svg>
             </div>
             <h4 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Parti da una keyword seed</h4>
-            <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Inserisci una keyword di partenza e il settore. L'AI genera centinaia di varianti: long-tail, domande degli utenti, keyword correlate. Esempio: da "scarpe running" ottieni "migliori scarpe running principianti", "scarpe running pronazione", "scarpe running donna offerte".</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Non serve sapere da quali parole partire: basta il tuo sito o due righe su cosa fai. L'AI propone le ricerche dei tuoi clienti e Google restituisce centinaia di varianti con i volumi. Esempio: per un negozio di scarpe da corsa escono "migliori scarpe running principianti", "scarpe running pronazione", "scarpe running donna offerte".</p>
         </div>
 
         <!-- Step 2 -->
@@ -348,7 +348,7 @@ $costoPiano = $krCrediti('cost_kr_editorial_plan', 5);
                 <div>
                     <h3 class="text-2xl font-bold text-slate-900 dark:text-white">4 modalità per ogni esigenza di ricerca</h3>
                     <p class="mt-4 text-slate-600 dark:text-slate-300 leading-relaxed">
-                        <strong class="text-purple-600 dark:text-purple-400">Ricerca keyword</strong>: parti da una seed keyword e lascia che l'AI trovi centinaia di keyword correlate con clustering automatico.
+                        <strong class="text-purple-600 dark:text-purple-400">Ricerca keyword</strong>: parti dal tuo sito o da due righe su cosa fai; l'AI propone cosa cercare e raggruppa per argomento centinaia di ricerche con i volumi.
                         <strong class="text-purple-600 dark:text-purple-400">Architettura Sito</strong>: definisci la struttura URL ideale basata sui volumi di ricerca.
                         <strong class="text-purple-600 dark:text-purple-400">Piano Editoriale</strong>: trasforma le keyword in un calendario contenuti con priorità.
                         <strong class="text-purple-600 dark:text-purple-400">Controllo veloce</strong>: verifica veloce volume e difficoltà di una keyword — completamente gratis.

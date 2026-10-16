@@ -177,7 +177,7 @@ sort($uniqueIntents);
                     <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Prossimo passo: il piano editoriale</h2>
                     <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">
                         Le <?= count($clusters) ?> pagine qui sopra sono la struttura del sito. Il piano editoriale aggiunge gli articoli del blog che le alimentano con link interni:
-                        l'AI riceve le pagine, il brief e le keyword di partenza già compilati.
+                        l'AI riceve le pagine e il profilo della tua attività, e ogni articolo rimanda a una pagina.
                     </p>
                 </div>
             </div>

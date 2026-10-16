@@ -53,24 +53,24 @@
         <div class="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">2</div>
             <div>
-                <h3 class="font-medium text-slate-900 dark:text-white">Descrivi il business e inserisci le keyword seed</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Per la Ricerca keyword, descrivi brevemente il tuo business e inserisci 5-10 keyword seed di partenza.</p>
+                <h3 class="font-medium text-slate-900 dark:text-white">Racconta la tua attività (una volta sola)</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Nel riquadro "La tua attività" scegli da dove partire: il profilo del GEO Audit (se l'hai fatto), il tuo sito (leggiamo la home e fino a 4 pagine) oppure due righe scritte da te. Il profilo resta nel progetto e vale per tutti e 3 gli strumenti. Dal profilo l'AI propone le ricerche da fare su Google: puoi toglierle o aggiungerne, ma non serve. Gratis.</p>
             </div>
         </div>
         <!-- Step 3 -->
         <div class="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">3</div>
             <div>
-                <h3 class="font-medium text-slate-900 dark:text-white">Raccolta keyword correlate</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Le keyword correlate vengono raccolte automaticamente da Google Keyword Planner (se configurato) o da RapidAPI, con dati su volumi di ricerca e CPC.</p>
+                <h3 class="font-medium text-slate-900 dark:text-white">Keyword trovate, da scegliere</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Google restituisce le ricerche simili con volumi e costo per clic. Le vedi in un elenco e togli la spunta a quelle che non c'entrano: all'AI vanno solo quelle spuntate. Fin qui è gratis.</p>
             </div>
         </div>
         <!-- Step 4 -->
         <div class="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">4</div>
             <div>
-                <h3 class="font-medium text-slate-900 dark:text-white">Clustering AI per intent semantico</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">L'intelligenza artificiale raggruppa le keyword per intent semantico, creando cluster tematici utilizzabili.</p>
+                <h3 class="font-medium text-slate-900 dark:text-white">Raggruppamento con l'AI</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">L'AI raggruppa le keyword per argomento e intento di ricerca, con una nota per ogni gruppo. Dai risultati, con "E adesso?", mandi le keyword principali ad AI Rank (per seguire le posizioni) o ad AI Writer (per scrivere gli articoli).</p>
             </div>
         </div>
         <!-- Step 5 -->
@@ -101,9 +101,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                 </div>
-                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Ricerca keyword (4 step)</h3>
+                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Ricerca keyword (4 passi)</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Brief, raccolta keyword, clustering AI e visualizzazione risultati con filtri avanzati.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">La tua attività, keyword trovate da scegliere, raggruppamento AI e risultati con filtri e invio ad AI Rank o AI Writer.</p>
         </div>
         <!-- Architettura Sito -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -113,9 +113,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                     </svg>
                 </div>
-                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Architettura Sito (3 step)</h3>
+                <h3 class="font-medium text-slate-900 dark:text-white text-sm">Architettura sito (3 passi)</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Brief, raccolta e analisi combinata, con struttura pagine consigliata dall'AI.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">La tua attività, ricerca su Google e pagine proposte dall'AI con indirizzo e titolo.</p>
         </div>
         <!-- Controllo veloce -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -127,7 +127,7 @@
                 </div>
                 <h3 class="font-medium text-slate-900 dark:text-white text-sm">Controllo veloce (gratuito)</h3>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Verifica istantanea di volume, CPC, competition e intent per una singola keyword.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Volume, costo per clic, concorrenza e intento di una singola ricerca, subito.</p>
         </div>
         <!-- Clustering AI -->
         <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -255,8 +255,8 @@
                 </svg>
             </div>
             <div>
-                <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Diversifica le keyword seed</h3>
-                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Nella Ricerca keyword, inserisci keyword seed diverse tra loro per coprire angolazioni differenti del tuo settore e ampliare la copertura semantica.</p>
+                <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Un profilo concreto dà ricerche migliori</h3>
+                <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Nel profilo dell'attività scrivi servizi, zone e clienti veri (es. "noleggio gommoni senza patente a Sorrento"): l'AI propone ricerche più precise e i gruppi escono più utili.</p>
             </div>
         </div>
         <!-- Tip 3 -->

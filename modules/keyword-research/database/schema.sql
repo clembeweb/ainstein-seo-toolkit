@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS kr_projects (
     type ENUM('research', 'architecture', 'editorial') NOT NULL DEFAULT 'research',
     default_location VARCHAR(10) DEFAULT 'IT',
     default_language VARCHAR(10) DEFAULT 'it',
+    suggestions JSON NULL,  -- proposte AI dal profilo dell'attività (seeds, categories, site_type, target, profile_hash)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_user (user_id),

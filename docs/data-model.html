@@ -1149,6 +1149,7 @@ erDiagram
         int user_id FK
         varchar name
         varchar default_location
+        json suggestions
     }
     kr_researches {
         int id PK
@@ -1178,7 +1179,7 @@ erDiagram
         <details class="mt-6 bg-white dark:bg-slate-800 rounded-lg border border-purple-200 dark:border-purple-900/50 shadow-sm">
             <summary class="p-4 font-semibold text-slate-900 dark:text-white">Tutte le tabelle kr_</summary>
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
-                <div><strong class="text-slate-900 dark:text-white">kr_projects</strong>: id(PK), user_id, name, description, default_location, default_language, created_at, updated_at</div>
+                <div><strong class="text-slate-900 dark:text-white">kr_projects</strong>: id(PK), user_id, name, description (profilo dell'attività se il progetto non ha progetto globale; altrimenti sta in projects.description), default_location, default_language, suggestions (JSON: parole di partenza, argomenti, tipo di sito e target proposti dall'AI dal profilo, con profile_hash), created_at, updated_at</div>
                 <div><strong class="text-slate-900 dark:text-white">kr_researches</strong>: id(PK), project_id(FK), user_id, type(research/architecture), status(draft/collecting/analyzing/completed/error), brief(JSON), raw_keywords_count, filtered_keywords_count, ai_response(JSON), strategy_note, credits_used, api_time_ms, ai_time_ms</div>
                 <div><strong class="text-slate-900 dark:text-white">kr_clusters</strong>: id(PK), research_id(FK), name, main_keyword, main_volume, total_volume, keywords_count, intent, note, suggested_url, suggested_h1, sort_order</div>
                 <div><strong class="text-slate-900 dark:text-white">kr_keywords</strong>: id(PK), research_id(FK), cluster_id(FK), text, volume, competition_level, competition_index, low_bid, high_bid, trend, intent, is_main, is_excluded, source</div>
