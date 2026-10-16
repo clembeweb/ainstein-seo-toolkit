@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/_helpers.php';
 /**
  * Template HTML standalone per Report AI Unificato (on-page + crawl budget)
  * Stile amevista — self-contained, scaricabile, condivisibile
@@ -413,7 +414,7 @@ $issueNum = 0;
   <?php if ($summary): ?>
   <div class="summary-box">
     <h3>Panoramica</h3>
-    <p><?= nl2br(htmlspecialchars($summary)) ?></p>
+    <p><?= nl2br(htmlspecialchars(sa_report_text($summary))) ?></p>
   </div>
   <?php endif; ?>
 
@@ -450,21 +451,22 @@ $issueNum = 0;
     </div>
     <div class="issues-grid">
       <?php foreach ($criticals as $issue): $issueNum++; ?>
-      <?php $this_impact = $issue['impact'] ?? 'ALTO'; ?>
+      <?php $imp = sa_report_impact($issue['impact'] ?? '', 'ALTO'); ?>
       <div class="issue critical" data-id="<?= $issueNum ?>" data-sev="critical">
         <div class="issue-header" onclick="toggleIssue(this.parentElement, event)">
           <span class="num"><?= $issueNum ?></span>
-          <span class="title"><?= htmlspecialchars($issue['title'] ?? '') ?></span>
-          <span class="impact-tag"><?= htmlspecialchars(strtoupper($this_impact)) ?></span>
+          <span class="title"><?= htmlspecialchars(sa_report_text($issue['title'] ?? '')) ?></span>
+          <span class="impact-tag"><?= htmlspecialchars($imp['tag']) ?></span>
           <button class="hide-btn" onclick="hideIssue(event, this)" title="Nascondi">&#10005;</button>
           <span class="arrow">&#9654;</span>
         </div>
         <div class="issue-body">
-          <p><?= nl2br(htmlspecialchars($issue['description'] ?? '')) ?></p>
+          <?php if ($imp['text'] !== ''): ?><p><strong>Impatto:</strong> <?= htmlspecialchars($imp['text']) ?></p><?php endif; ?>
+          <p><?= nl2br(htmlspecialchars(sa_report_text($issue['description'] ?? ''))) ?></p>
           <?php if (!empty($issue['affected_urls'])): ?>
           <div class="urls"><strong>URL interessate:</strong><br>
             <?php foreach (array_slice($issue['affected_urls'], 0, 5) as $url): ?>
-            <code><?= htmlspecialchars($url) ?></code><br>
+            <code><?= htmlspecialchars(sa_report_text($url)) ?></code><br>
             <?php endforeach; ?>
             <?php if (count($issue['affected_urls']) > 5): ?>
             <em>... e altre <?= count($issue['affected_urls']) - 5 ?></em>
@@ -472,10 +474,10 @@ $issueNum = 0;
           </div>
           <?php endif; ?>
           <?php if (!empty($issue['code_example'])): ?>
-          <pre><code><?= htmlspecialchars($issue['code_example']) ?></code></pre>
+          <pre><code><?= htmlspecialchars(sa_report_text($issue['code_example'])) ?></code></pre>
           <?php endif; ?>
           <?php if (!empty($issue['fix'])): ?>
-          <div class="fix"><strong>Fix:</strong> <?= nl2br(htmlspecialchars($issue['fix'])) ?></div>
+          <div class="fix"><strong>Fix:</strong> <?= nl2br(htmlspecialchars(sa_report_text($issue['fix']))) ?></div>
           <?php endif; ?>
         </div>
       </div>
@@ -495,21 +497,22 @@ $issueNum = 0;
     </div>
     <div class="issues-grid">
       <?php foreach ($importants as $issue): $issueNum++; ?>
-      <?php $this_impact = $issue['impact'] ?? 'MEDIO'; ?>
+      <?php $imp = sa_report_impact($issue['impact'] ?? '', 'MEDIO'); ?>
       <div class="issue important" data-id="<?= $issueNum ?>" data-sev="important">
         <div class="issue-header" onclick="toggleIssue(this.parentElement, event)">
           <span class="num"><?= $issueNum ?></span>
-          <span class="title"><?= htmlspecialchars($issue['title'] ?? '') ?></span>
-          <span class="impact-tag"><?= htmlspecialchars(strtoupper($this_impact)) ?></span>
+          <span class="title"><?= htmlspecialchars(sa_report_text($issue['title'] ?? '')) ?></span>
+          <span class="impact-tag"><?= htmlspecialchars($imp['tag']) ?></span>
           <button class="hide-btn" onclick="hideIssue(event, this)" title="Nascondi">&#10005;</button>
           <span class="arrow">&#9654;</span>
         </div>
         <div class="issue-body">
-          <p><?= nl2br(htmlspecialchars($issue['description'] ?? '')) ?></p>
+          <?php if ($imp['text'] !== ''): ?><p><strong>Impatto:</strong> <?= htmlspecialchars($imp['text']) ?></p><?php endif; ?>
+          <p><?= nl2br(htmlspecialchars(sa_report_text($issue['description'] ?? ''))) ?></p>
           <?php if (!empty($issue['affected_urls'])): ?>
           <div class="urls"><strong>URL interessate:</strong><br>
             <?php foreach (array_slice($issue['affected_urls'], 0, 5) as $url): ?>
-            <code><?= htmlspecialchars($url) ?></code><br>
+            <code><?= htmlspecialchars(sa_report_text($url)) ?></code><br>
             <?php endforeach; ?>
             <?php if (count($issue['affected_urls']) > 5): ?>
             <em>... e altre <?= count($issue['affected_urls']) - 5 ?></em>
@@ -517,10 +520,10 @@ $issueNum = 0;
           </div>
           <?php endif; ?>
           <?php if (!empty($issue['code_example'])): ?>
-          <pre><code><?= htmlspecialchars($issue['code_example']) ?></code></pre>
+          <pre><code><?= htmlspecialchars(sa_report_text($issue['code_example'])) ?></code></pre>
           <?php endif; ?>
           <?php if (!empty($issue['fix'])): ?>
-          <div class="fix"><strong>Fix:</strong> <?= nl2br(htmlspecialchars($issue['fix'])) ?></div>
+          <div class="fix"><strong>Fix:</strong> <?= nl2br(htmlspecialchars(sa_report_text($issue['fix']))) ?></div>
           <?php endif; ?>
         </div>
       </div>
@@ -540,21 +543,22 @@ $issueNum = 0;
     </div>
     <div class="issues-grid">
       <?php foreach ($minors as $issue): $issueNum++; ?>
-      <?php $this_impact = $issue['impact'] ?? 'BASSO'; ?>
+      <?php $imp = sa_report_impact($issue['impact'] ?? '', 'BASSO'); ?>
       <div class="issue minor" data-id="<?= $issueNum ?>" data-sev="minor">
         <div class="issue-header" onclick="toggleIssue(this.parentElement, event)">
           <span class="num"><?= $issueNum ?></span>
-          <span class="title"><?= htmlspecialchars($issue['title'] ?? '') ?></span>
-          <span class="impact-tag"><?= htmlspecialchars(strtoupper($this_impact)) ?></span>
+          <span class="title"><?= htmlspecialchars(sa_report_text($issue['title'] ?? '')) ?></span>
+          <span class="impact-tag"><?= htmlspecialchars($imp['tag']) ?></span>
           <button class="hide-btn" onclick="hideIssue(event, this)" title="Nascondi">&#10005;</button>
           <span class="arrow">&#9654;</span>
         </div>
         <div class="issue-body">
-          <p><?= nl2br(htmlspecialchars($issue['description'] ?? '')) ?></p>
+          <?php if ($imp['text'] !== ''): ?><p><strong>Impatto:</strong> <?= htmlspecialchars($imp['text']) ?></p><?php endif; ?>
+          <p><?= nl2br(htmlspecialchars(sa_report_text($issue['description'] ?? ''))) ?></p>
           <?php if (!empty($issue['affected_urls'])): ?>
           <div class="urls"><strong>URL interessate:</strong><br>
             <?php foreach (array_slice($issue['affected_urls'], 0, 5) as $url): ?>
-            <code><?= htmlspecialchars($url) ?></code><br>
+            <code><?= htmlspecialchars(sa_report_text($url)) ?></code><br>
             <?php endforeach; ?>
             <?php if (count($issue['affected_urls']) > 5): ?>
             <em>... e altre <?= count($issue['affected_urls']) - 5 ?></em>
@@ -562,10 +566,10 @@ $issueNum = 0;
           </div>
           <?php endif; ?>
           <?php if (!empty($issue['code_example'])): ?>
-          <pre><code><?= htmlspecialchars($issue['code_example']) ?></code></pre>
+          <pre><code><?= htmlspecialchars(sa_report_text($issue['code_example'])) ?></code></pre>
           <?php endif; ?>
           <?php if (!empty($issue['fix'])): ?>
-          <div class="fix"><strong>Fix:</strong> <?= nl2br(htmlspecialchars($issue['fix'])) ?></div>
+          <div class="fix"><strong>Fix:</strong> <?= nl2br(htmlspecialchars(sa_report_text($issue['fix']))) ?></div>
           <?php endif; ?>
         </div>
       </div>
@@ -587,7 +591,8 @@ $issueNum = 0;
       <?php foreach ($positives as $positive): ?>
       <div class="positive-item">
         <span class="check">&#10003;</span>
-        <?= htmlspecialchars($positive) ?>
+        <?php $pos = sa_report_positive($positive); ?>
+        <span><strong><?= htmlspecialchars($pos['title']) ?></strong><?php if ($pos['description'] !== ''): ?><br><small><?= htmlspecialchars($pos['description']) ?></small><?php endif; ?></span>
       </div>
       <?php endforeach; ?>
     </div>
@@ -598,7 +603,7 @@ $issueNum = 0;
   <?php if (!empty($timeline)): ?>
   <div class="section" data-severity="positive">
     <div class="section-bar" onclick="toggleSection(this)">
-      <h2>Piano d'azione consigliato</h2>
+      <h2>Tempi consigliati</h2>
       <span class="badge" style="background:var(--gray-100);color:var(--gray-600);border:1px solid var(--gray-200)">Timeline</span>
       <span class="chevron">&#9660;</span>
     </div>
@@ -606,19 +611,22 @@ $issueNum = 0;
       <?php if (!empty($timeline['week1'])): ?>
       <div class="tl-card urgent">
         <div class="week">Settimana 1</div>
-        <div class="desc"><?= nl2br(htmlspecialchars($timeline['week1'])) ?></div>
+        <?php $wk = sa_report_week($timeline['week1']); ?>
+        <div class="desc"><?php if ($wk['title'] !== ''): ?><strong><?= htmlspecialchars(preg_replace('/^Settiman[ae] [^:]*:\s*/u', '', $wk['title'])) ?></strong><br><?php endif; ?><?php if ($wk['actions']): ?><ul><?php foreach ($wk['actions'] as $act): ?><li><?= htmlspecialchars($act) ?></li><?php endforeach; ?></ul><?php else: ?><?= nl2br(htmlspecialchars($wk['text'])) ?><?php endif; ?></div>
       </div>
       <?php endif; ?>
       <?php if (!empty($timeline['week2_3'])): ?>
       <div class="tl-card imp">
         <div class="week">Settimane 2-3</div>
-        <div class="desc"><?= nl2br(htmlspecialchars($timeline['week2_3'])) ?></div>
+        <?php $wk = sa_report_week($timeline['week2_3']); ?>
+        <div class="desc"><?php if ($wk['title'] !== ''): ?><strong><?= htmlspecialchars(preg_replace('/^Settiman[ae] [^:]*:\s*/u', '', $wk['title'])) ?></strong><br><?php endif; ?><?php if ($wk['actions']): ?><ul><?php foreach ($wk['actions'] as $act): ?><li><?= htmlspecialchars($act) ?></li><?php endforeach; ?></ul><?php else: ?><?= nl2br(htmlspecialchars($wk['text'])) ?><?php endif; ?></div>
       </div>
       <?php endif; ?>
       <?php if (!empty($timeline['week4_plus'])): ?>
       <div class="tl-card improve">
         <div class="week">Settimana 4+</div>
-        <div class="desc"><?= nl2br(htmlspecialchars($timeline['week4_plus'])) ?></div>
+        <?php $wk = sa_report_week($timeline['week4_plus']); ?>
+        <div class="desc"><?php if ($wk['title'] !== ''): ?><strong><?= htmlspecialchars(preg_replace('/^Settiman[ae] [^:]*:\s*/u', '', $wk['title'])) ?></strong><br><?php endif; ?><?php if ($wk['actions']): ?><ul><?php foreach ($wk['actions'] as $act): ?><li><?= htmlspecialchars($act) ?></li><?php endforeach; ?></ul><?php else: ?><?= nl2br(htmlspecialchars($wk['text'])) ?><?php endif; ?></div>
       </div>
       <?php endif; ?>
     </div>
@@ -635,7 +643,7 @@ $issueNum = 0;
     <div class="extra-panel-body">
       <ol style="margin-left:16px;">
         <?php foreach ($priorityActions as $action): ?>
-        <li style="margin-bottom:6px;"><?= htmlspecialchars($action) ?></li>
+        <li style="margin-bottom:6px;"><?= htmlspecialchars(sa_report_text($action)) ?></li>
         <?php endforeach; ?>
       </ol>
     </div>
@@ -650,7 +658,7 @@ $issueNum = 0;
       Impatto stimato delle correzioni
     </div>
     <div class="extra-panel-body">
-      <p><?= nl2br(htmlspecialchars($estimatedImpact)) ?></p>
+      <p><?= nl2br(htmlspecialchars(sa_report_text($estimatedImpact))) ?></p>
     </div>
   </div>
   <?php endif; ?>

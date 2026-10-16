@@ -6,6 +6,8 @@
  *   $project, $report, $reportData, $siteProfile, $cost, $currentPage
  */
 
+require_once __DIR__ . '/_helpers.php';
+
 $projectId = $project['id'];
 $hasReport = !empty($report);
 $healthScore = (int)($report['health_score'] ?? $project['health_score'] ?? 0);
@@ -169,7 +171,7 @@ function reportGenerator() {
 <?php if ($summary): ?>
 <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 mb-5">
     <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-2">Panoramica</h3>
-    <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed"><?= nl2br(e($summary)) ?></p>
+    <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed"><?= nl2br(e(sa_report_text($summary))) ?></p>
 </div>
 <?php endif; ?>
 
@@ -200,17 +202,18 @@ function reportGenerator() {
             <div x-data="{ open: false }" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 border-l-4 border-l-red-500 overflow-hidden">
                 <div @click="open = !open" class="flex items-center gap-3 p-4 cursor-pointer select-none hover:bg-slate-50 dark:hover:bg-slate-700/50">
                     <span class="w-7 h-7 rounded-full bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-bold flex items-center justify-center shrink-0"><?= $issueNum ?></span>
-                    <span class="flex-1 text-sm font-semibold text-slate-900 dark:text-white"><?= e($issue['title'] ?? '') ?></span>
-                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 shrink-0"><?= strtoupper(e($issue['impact'] ?? 'ALTO')) ?></span>
+                    <span class="flex-1 text-sm font-semibold text-slate-900 dark:text-white"><?= e(sa_report_text($issue['title'] ?? '')) ?></span>
+                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 shrink-0"><?php $imp = sa_report_impact($issue['impact'] ?? '', 'ALTO'); ?><?= e($imp['tag']) ?></span>
                     <svg :class="open ? 'rotate-90' : ''" class="w-4 h-4 text-slate-400 transition-transform shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </div>
                 <div x-show="open" x-collapse class="px-4 pb-4 pl-14 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                    <p><?= nl2br(e($issue['description'] ?? '')) ?></p>
+                    <?php if ($imp['text'] !== ''): ?><p class="mb-2"><strong class="text-slate-800 dark:text-slate-200">Impatto:</strong> <?= e($imp['text']) ?></p><?php endif; ?>
+                    <p><?= nl2br(e(sa_report_text($issue['description'] ?? ''))) ?></p>
                     <?php if (!empty($issue['affected_urls'])): ?>
                     <div class="mt-2 p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg text-xs">
                         <strong class="text-slate-700 dark:text-slate-300">URL interessate:</strong><br>
                         <?php foreach (array_slice($issue['affected_urls'], 0, 5) as $url): ?>
-                        <code class="text-red-600 dark:text-red-400"><?= e($url) ?></code><br>
+                        <code class="text-red-600 dark:text-red-400"><?= e(sa_report_text($url)) ?></code><br>
                         <?php endforeach; ?>
                         <?php if (count($issue['affected_urls']) > 5): ?>
                         <em class="text-slate-400">... e altre <?= count($issue['affected_urls']) - 5 ?></em>
@@ -218,11 +221,11 @@ function reportGenerator() {
                     </div>
                     <?php endif; ?>
                     <?php if (!empty($issue['code_example'])): ?>
-                    <pre class="mt-2 bg-slate-900 text-slate-200 rounded-lg p-3 text-xs font-mono overflow-x-auto"><code><?= e($issue['code_example']) ?></code></pre>
+                    <pre class="mt-2 bg-slate-900 text-slate-200 rounded-lg p-3 text-xs font-mono overflow-x-auto"><code><?= e(sa_report_text($issue['code_example'])) ?></code></pre>
                     <?php endif; ?>
                     <?php if (!empty($issue['fix'])): ?>
                     <div class="mt-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm">
-                        <strong class="text-emerald-700 dark:text-emerald-400">Fix:</strong> <?= nl2br(e($issue['fix'])) ?>
+                        <strong class="text-emerald-700 dark:text-emerald-400">Fix:</strong> <?= nl2br(e(sa_report_text($issue['fix']))) ?>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -245,26 +248,27 @@ function reportGenerator() {
             <div x-data="{ open: false }" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 border-l-4 border-l-amber-500 overflow-hidden">
                 <div @click="open = !open" class="flex items-center gap-3 p-4 cursor-pointer select-none hover:bg-slate-50 dark:hover:bg-slate-700/50">
                     <span class="w-7 h-7 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center justify-center shrink-0"><?= $issueNum ?></span>
-                    <span class="flex-1 text-sm font-semibold text-slate-900 dark:text-white"><?= e($issue['title'] ?? '') ?></span>
-                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 shrink-0"><?= strtoupper(e($issue['impact'] ?? 'MEDIO')) ?></span>
+                    <span class="flex-1 text-sm font-semibold text-slate-900 dark:text-white"><?= e(sa_report_text($issue['title'] ?? '')) ?></span>
+                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 shrink-0"><?php $imp = sa_report_impact($issue['impact'] ?? '', 'MEDIO'); ?><?= e($imp['tag']) ?></span>
                     <svg :class="open ? 'rotate-90' : ''" class="w-4 h-4 text-slate-400 transition-transform shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </div>
                 <div x-show="open" x-collapse class="px-4 pb-4 pl-14 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                    <p><?= nl2br(e($issue['description'] ?? '')) ?></p>
+                    <?php if ($imp['text'] !== ''): ?><p class="mb-2"><strong class="text-slate-800 dark:text-slate-200">Impatto:</strong> <?= e($imp['text']) ?></p><?php endif; ?>
+                    <p><?= nl2br(e(sa_report_text($issue['description'] ?? ''))) ?></p>
                     <?php if (!empty($issue['affected_urls'])): ?>
                     <div class="mt-2 p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg text-xs">
                         <strong class="text-slate-700 dark:text-slate-300">URL interessate:</strong><br>
                         <?php foreach (array_slice($issue['affected_urls'], 0, 5) as $url): ?>
-                        <code class="text-amber-600 dark:text-amber-400"><?= e($url) ?></code><br>
+                        <code class="text-amber-600 dark:text-amber-400"><?= e(sa_report_text($url)) ?></code><br>
                         <?php endforeach; ?>
                     </div>
                     <?php endif; ?>
                     <?php if (!empty($issue['code_example'])): ?>
-                    <pre class="mt-2 bg-slate-900 text-slate-200 rounded-lg p-3 text-xs font-mono overflow-x-auto"><code><?= e($issue['code_example']) ?></code></pre>
+                    <pre class="mt-2 bg-slate-900 text-slate-200 rounded-lg p-3 text-xs font-mono overflow-x-auto"><code><?= e(sa_report_text($issue['code_example'])) ?></code></pre>
                     <?php endif; ?>
                     <?php if (!empty($issue['fix'])): ?>
                     <div class="mt-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm">
-                        <strong class="text-emerald-700 dark:text-emerald-400">Fix:</strong> <?= nl2br(e($issue['fix'])) ?>
+                        <strong class="text-emerald-700 dark:text-emerald-400">Fix:</strong> <?= nl2br(e(sa_report_text($issue['fix']))) ?>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -287,15 +291,16 @@ function reportGenerator() {
             <div x-data="{ open: false }" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 border-l-4 border-l-blue-500 overflow-hidden">
                 <div @click="open = !open" class="flex items-center gap-3 p-4 cursor-pointer select-none hover:bg-slate-50 dark:hover:bg-slate-700/50">
                     <span class="w-7 h-7 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-xs font-bold flex items-center justify-center shrink-0"><?= $issueNum ?></span>
-                    <span class="flex-1 text-sm font-semibold text-slate-900 dark:text-white"><?= e($issue['title'] ?? '') ?></span>
-                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 shrink-0"><?= strtoupper(e($issue['impact'] ?? 'BASSO')) ?></span>
+                    <span class="flex-1 text-sm font-semibold text-slate-900 dark:text-white"><?= e(sa_report_text($issue['title'] ?? '')) ?></span>
+                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 shrink-0"><?php $imp = sa_report_impact($issue['impact'] ?? '', 'BASSO'); ?><?= e($imp['tag']) ?></span>
                     <svg :class="open ? 'rotate-90' : ''" class="w-4 h-4 text-slate-400 transition-transform shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </div>
                 <div x-show="open" x-collapse class="px-4 pb-4 pl-14 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                    <p><?= nl2br(e($issue['description'] ?? '')) ?></p>
+                    <?php if ($imp['text'] !== ''): ?><p class="mb-2"><strong class="text-slate-800 dark:text-slate-200">Impatto:</strong> <?= e($imp['text']) ?></p><?php endif; ?>
+                    <p><?= nl2br(e(sa_report_text($issue['description'] ?? ''))) ?></p>
                     <?php if (!empty($issue['fix'])): ?>
                     <div class="mt-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm">
-                        <strong class="text-emerald-700 dark:text-emerald-400">Fix:</strong> <?= nl2br(e($issue['fix'])) ?>
+                        <strong class="text-emerald-700 dark:text-emerald-400">Fix:</strong> <?= nl2br(e(sa_report_text($issue['fix']))) ?>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -314,12 +319,17 @@ function reportGenerator() {
         <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">Ben fatto</span>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-        <?php foreach ($positives as $positive): ?>
-        <div class="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg text-sm text-slate-700 dark:text-slate-300">
-            <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <?php foreach ($positives as $positive): $pos = sa_report_positive($positive); ?>
+        <div class="flex items-start gap-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg text-sm text-slate-700 dark:text-slate-300">
+            <svg class="w-4 h-4 mt-0.5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
             </svg>
-            <?= e($positive) ?>
+            <div>
+                <p class="font-medium text-slate-900 dark:text-white"><?= e($pos['title']) ?></p>
+                <?php if ($pos['description'] !== ''): ?>
+                <p class="mt-0.5 text-xs text-slate-600 dark:text-slate-400"><?= e($pos['description']) ?></p>
+                <?php endif; ?>
+            </div>
         </div>
         <?php endforeach; ?>
     </div>
@@ -329,24 +339,48 @@ function reportGenerator() {
 <!-- Timeline -->
 <?php if (!empty($timeline)): ?>
 <div class="mb-5">
-    <h2 class="text-base font-bold text-slate-900 dark:text-white mb-3">Piano d'azione consigliato</h2>
+    <h2 class="text-base font-bold text-slate-900 dark:text-white mb-3">Tempi consigliati</h2>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
         <?php if (!empty($timeline['week1'])): ?>
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 border-l-4 border-l-red-500 p-4">
             <div class="text-sm font-bold text-red-600 dark:text-red-400 mb-2">Settimana 1</div>
-            <p class="text-sm text-slate-600 dark:text-slate-400"><?= nl2br(e($timeline['week1'])) ?></p>
+            <?php $wk = sa_report_week($timeline['week1']); ?>
+            <?php if ($wk['title'] !== ''): ?><p class="text-sm font-medium text-slate-900 dark:text-white mb-1"><?= e(preg_replace('/^Settiman[ae] [^:]*:\s*/u', '', $wk['title'])) ?></p><?php endif; ?>
+            <?php if ($wk['actions']): ?>
+            <ul class="list-disc ml-4 space-y-1 text-sm text-slate-600 dark:text-slate-400">
+                <?php foreach ($wk['actions'] as $act): ?><li><?= e($act) ?></li><?php endforeach; ?>
+            </ul>
+            <?php else: ?>
+            <p class="text-sm text-slate-600 dark:text-slate-400"><?= nl2br(e($wk['text'])) ?></p>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
         <?php if (!empty($timeline['week2_3'])): ?>
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 border-l-4 border-l-amber-500 p-4">
             <div class="text-sm font-bold text-amber-600 dark:text-amber-400 mb-2">Settimane 2-3</div>
-            <p class="text-sm text-slate-600 dark:text-slate-400"><?= nl2br(e($timeline['week2_3'])) ?></p>
+            <?php $wk = sa_report_week($timeline['week2_3']); ?>
+            <?php if ($wk['title'] !== ''): ?><p class="text-sm font-medium text-slate-900 dark:text-white mb-1"><?= e(preg_replace('/^Settiman[ae] [^:]*:\s*/u', '', $wk['title'])) ?></p><?php endif; ?>
+            <?php if ($wk['actions']): ?>
+            <ul class="list-disc ml-4 space-y-1 text-sm text-slate-600 dark:text-slate-400">
+                <?php foreach ($wk['actions'] as $act): ?><li><?= e($act) ?></li><?php endforeach; ?>
+            </ul>
+            <?php else: ?>
+            <p class="text-sm text-slate-600 dark:text-slate-400"><?= nl2br(e($wk['text'])) ?></p>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
         <?php if (!empty($timeline['week4_plus'])): ?>
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 border-l-4 border-l-blue-500 p-4">
             <div class="text-sm font-bold text-blue-600 dark:text-blue-400 mb-2">Settimana 4+</div>
-            <p class="text-sm text-slate-600 dark:text-slate-400"><?= nl2br(e($timeline['week4_plus'])) ?></p>
+            <?php $wk = sa_report_week($timeline['week4_plus']); ?>
+            <?php if ($wk['title'] !== ''): ?><p class="text-sm font-medium text-slate-900 dark:text-white mb-1"><?= e(preg_replace('/^Settiman[ae] [^:]*:\s*/u', '', $wk['title'])) ?></p><?php endif; ?>
+            <?php if ($wk['actions']): ?>
+            <ul class="list-disc ml-4 space-y-1 text-sm text-slate-600 dark:text-slate-400">
+                <?php foreach ($wk['actions'] as $act): ?><li><?= e($act) ?></li><?php endforeach; ?>
+            </ul>
+            <?php else: ?>
+            <p class="text-sm text-slate-600 dark:text-slate-400"><?= nl2br(e($wk['text'])) ?></p>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
     </div>
@@ -363,7 +397,7 @@ function reportGenerator() {
     <div x-show="open" x-collapse class="px-4 pb-4">
         <ol class="list-decimal list-inside text-sm text-slate-600 dark:text-slate-400 space-y-1">
             <?php foreach ($priorityActions as $action): ?>
-            <li><?= e($action) ?></li>
+            <li><?= e(sa_report_text($action)) ?></li>
             <?php endforeach; ?>
         </ol>
     </div>
@@ -378,7 +412,7 @@ function reportGenerator() {
         <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">Impatto stimato delle correzioni</span>
     </div>
     <div x-show="open" x-collapse class="px-4 pb-4 text-sm text-slate-600 dark:text-slate-400">
-        <p><?= nl2br(e($estimatedImpact)) ?></p>
+        <p><?= nl2br(e(sa_report_text($estimatedImpact))) ?></p>
     </div>
 </div>
 <?php endif; ?>
