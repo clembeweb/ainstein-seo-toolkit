@@ -237,19 +237,18 @@ correzione durante il giro.
 Già online e verificato: tutti i P1 trovati oggi (pagina Report AI, sitemap) e la decisione "solo Report AI".
 Restano, in ordine:
 
-> **In mano alla sessione "test AI Keywords in prod"** (su richiesta di Clemente): punti 1 e 2 e i P3 di testo di
-> AI Keywords del punto 5 (numeri all'inglese, "API: 1.0s | AI: 12.2s"). Rifà anche l'ingresso dei 3 strumenti
-> (profilo dell'attività dal GEO Audit o dal sito, niente parole di partenza obbligatorie). Commit da segnare qui
-> quando finisce. Le altre sessioni non toccano `modules/keyword-research/` né i servizi di keyword.
+> **AI Keywords chiuso dalla sessione "test AI Keywords in prod"** (online, prod = `9a669b1`, dettagli in
+> `docs/2026-10-16-test-ai-keywords.md`): punti 1 e 2 fatti, più i P3 di testo di AI Keywords del punto 5. Commit
+> `7701ac2` (e adesso), `ae064b5` (anteprima keyword + nuovo ingresso dal profilo), `88b4c3b` (Controllo veloce in
+> italiano), `05d543a` (niente muri di testo). Da far vedere a Clemente a schermo.
 
-1. **AI Keywords, "e adesso?" dopo la Ricerca keyword (P2):** dai risultati mandare le keyword ad AI Rank / AI Writer
-   (gli invii esistono già in Controllo veloce e Piano editoriale, manca qui). È il passaggio che si mostra nel post.
-2. **AI Keywords, anteprima prima del filtro AI (P2):** vedere le keyword raccolte e poi decidere se spendere 3 cr.
+1. ~~**AI Keywords, "e adesso?" dopo la Ricerca keyword (P2)**~~ — FATTO, online (`7701ac2`).
+2. ~~**AI Keywords, anteprima prima del filtro AI (P2)**~~ — FATTO, online (`ae064b5`).
 3. **Scenario 3, progetto condiviso: chi paga il Report AI.** Dal codice `UnifiedReportService::generate` controlla e
    scala i crediti di chi clicca, non dell'owner: se l'Editor paga, è un errore sui soldi. Da provare (10 min).
 4. **Scenario 4, agenzia con 2-3 clienti:** ricontrollo del P1 del 15 (AI Writer col WordPress di un altro cliente).
-5. **Testi (P3, un giro unico):** "Budget Score", "Tipo: generic", "Report SEO Unificato", "Score", numeri all'inglese
-   ("15,400"), "API: 1.0s | AI: 12.2s" in fondo ad AI Keywords, codici tecnici nello storico crediti, notifica
+5. **Testi (P3, un giro unico):** "Budget Score", "Tipo: generic", "Report SEO Unificato", "Score", ~~numeri all'inglese
+   ("15,400"), "API: 1.0s | AI: 12.2s" in fondo ad AI Keywords~~ (fatti, `88b4c3b`/`ae064b5`), codici tecnici nello storico crediti, notifica
    "Progetto #19", "Issues Totali", "puo". Nomi dei moduli nel menu ("Ai SEO …"): li cambia Clemente da Admin.
 
 Dopo il post: scenario 2 (crediti che finiscono) e 5 (telefono/scuro) se non fatti prima; tour "?" dentro il progetto
