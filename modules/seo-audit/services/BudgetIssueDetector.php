@@ -473,6 +473,10 @@ class BudgetIssueDetector
 
         foreach ($duplicates as $dup) {
             $urls = explode('|||', $dup['urls']);
+            // Stessa pagina in lingue diverse (/x/ e /en/x/): non è spreco di crawl budget
+            if (LanguageVariants::areVariants($urls)) {
+                continue;
+            }
             foreach ($urls as $url) {
                 $page = $this->pageModel->findByUrl($this->projectId, $url);
                 if (!$page) continue;

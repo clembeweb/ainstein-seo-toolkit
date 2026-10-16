@@ -395,6 +395,8 @@ class IssueDetector
         // Title duplicati
         $duplicateTitles = $this->pageModel->getDuplicateTitles($this->projectId);
         foreach ($duplicateTitles as $dup) {
+            // /x/ e /en/x/ con lo stesso titolo: traduzione mancante, non duplicato (LanguageVariants)
+            $isTranslation = LanguageVariants::areVariants($dup['urls']);
             foreach ($dup['urls'] as $url) {
                 $page = $this->pageModel->findByUrl($this->projectId, $url);
                 if ($page) {
@@ -404,10 +406,14 @@ class IssueDetector
                         'category' => 'meta',
                         'issue_type' => 'duplicate_title',
                         'severity' => 'warning',
-                        'title' => 'Titolo duplicato',
-                        'description' => "Condiviso con altre {$dup['count']} pagine",
+                        'title' => $isTranslation ? "Titolo uguale alla versione in un'altra lingua" : 'Titolo duplicato',
+                        'description' => $isTranslation
+                            ? 'Stesso titolo di: ' . implode(', ', array_diff($dup['urls'], [$url]))
+                            : "Condiviso con altre {$dup['count']} pagine",
                         'affected_element' => $dup['title'],
-                        'recommendation' => 'Ogni pagina dovrebbe avere un titolo unico.',
+                        'recommendation' => $isTranslation
+                            ? 'Traduci il titolo nella lingua della pagina e controlla gli hreflang. Niente canonical né redirect: toglierebbero la lingua da Google.'
+                            : 'Ogni pagina dovrebbe avere un titolo unico.',
                         'source' => 'crawler',
                     ]);
                     $issuesCreated++;
@@ -418,6 +424,7 @@ class IssueDetector
         // Description duplicate
         $duplicateDescriptions = $this->pageModel->getDuplicateDescriptions($this->projectId);
         foreach ($duplicateDescriptions as $dup) {
+            $isTranslation = LanguageVariants::areVariants($dup['urls']);
             foreach ($dup['urls'] as $url) {
                 $page = $this->pageModel->findByUrl($this->projectId, $url);
                 if ($page) {
@@ -427,10 +434,14 @@ class IssueDetector
                         'category' => 'meta',
                         'issue_type' => 'duplicate_description',
                         'severity' => 'warning',
-                        'title' => 'Meta description duplicata',
-                        'description' => "Condivisa con altre {$dup['count']} pagine",
+                        'title' => $isTranslation ? "Meta description uguale alla versione in un'altra lingua" : 'Meta description duplicata',
+                        'description' => $isTranslation
+                            ? 'Stessa description di: ' . implode(', ', array_diff($dup['urls'], [$url]))
+                            : "Condivisa con altre {$dup['count']} pagine",
                         'affected_element' => substr($dup['meta_description'], 0, 100) . '...',
-                        'recommendation' => 'Ogni pagina dovrebbe avere una meta description unica.',
+                        'recommendation' => $isTranslation
+                            ? 'Traduci la meta description nella lingua della pagina e controlla gli hreflang. Niente canonical né redirect.'
+                            : 'Ogni pagina dovrebbe avere una meta description unica.',
                         'source' => 'crawler',
                     ]);
                     $issuesCreated++;
