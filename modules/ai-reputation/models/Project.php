@@ -155,7 +155,7 @@ class Project
         return [
             'metrics' => [
                 ['label' => 'Domande attive', 'value' => (int) ($stats['prompts_active'] ?? 0)],
-                ['label' => 'Run completati', 'value' => (int) ($stats['runs_completed'] ?? 0)],
+                ['label' => 'Audit completati', 'value' => (int) ($stats['runs_completed'] ?? 0)],
                 ['label' => 'Risposte negative', 'value' => (int) ($stats['negatives'] ?? 0)],
             ],
             'lastActivity' => $stats['last_run_at'] ?? null,
