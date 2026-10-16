@@ -606,13 +606,13 @@ $baseUrl = !empty($keyword['project_id']) ? '/ai-content/projects/' . $keyword['
                             <div class="flex items-center gap-2">
                                 <span class="text-sm text-slate-500" x-text="articleData.wordCount + ' parole'"></span>
                                 <div class="flex rounded-lg border border-slate-300 dark:border-slate-600 overflow-hidden">
-                                    <button @click="contentView = 'editor'" class="px-3 py-1 text-sm transition-colors"
-                                            :class="contentView === 'editor' ? 'bg-primary-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300'">
-                                        Editor
-                                    </button>
                                     <button @click="contentView = 'preview'" class="px-3 py-1 text-sm transition-colors"
                                             :class="contentView === 'preview' ? 'bg-primary-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300'">
-                                        Preview
+                                        Anteprima
+                                    </button>
+                                    <button @click="contentView = 'editor'" class="px-3 py-1 text-sm transition-colors" title="Modifica il codice HTML dell'articolo"
+                                            :class="contentView === 'editor' ? 'bg-primary-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300'">
+                                        Modifica HTML
                                     </button>
                                 </div>
                             </div>
@@ -857,7 +857,7 @@ function keywordWizard(initialData) {
         generateCover: true,
         articleProgress: 0,
         articleProgressText: '',
-        contentView: 'editor',
+        contentView: 'preview', // l'articolo si apre leggibile, il codice HTML solo a richiesta (prova del 2026-10-15)
         articleData: initialData.articleData || {
             title: '',
             metaDescription: '',
