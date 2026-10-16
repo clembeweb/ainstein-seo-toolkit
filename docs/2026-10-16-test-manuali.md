@@ -101,6 +101,23 @@
   indica il campo di Yoast/Rank Math, un solo H1 con il secondo in H2, alt da adattare alle immagini vere.
 - Note: serve che il prompt (o il rilevatore dei duplicati) riconosca le versioni in lingua (/en/, hreflang).
 
+### [P1] Report AI: la pagina del report va in errore 500 (sempre)
+- Scenario / passo: 1B, Madcrumbs, dopo "Genera" del Report AI (15 cr pagati), apertura di /seo-audit/project/19/report.
+- Atteso: il report impaginato.
+- Successo: pagina senza stile con un'icona blu gigante, poi 500. Log: `TypeError: e(): Argument #1 must be of type
+  ?string, array given` in `modules/seo-audit/views/report/unified-view.php:322`.
+- Causa: il prompt (`UnifiedReportService` ~riga 256) chiede `positives` come `{title, description}` e la `timeline`
+  come `{title, actions[]}` per settimana; le viste li stampano come stringhe (`e($positive)`,
+  `nl2br(e($timeline['week1']))`). Stesso difetto nel file scaricabile `unified-template.php` (righe 590, 609-621).
+  Non era mai stato generato un report in prod, per questo non era emerso.
+- Note: i dati salvati (report id 1) sono buoni; corretta la vista, il report si vede senza rigenerarlo.
+
+### Decisione di Clemente (2026-10-16): in AI Audit resta solo il Report AI
+- Il Piano d'azione si toglie (scheda, menu, tour, docs, costi). Motivi: il report guarda il sito intero (ha capito
+  IT/EN), una sola chiamata AI (78 s) a prescindere dal numero di pagine, contiene già correzione + codice + URL per
+  ogni problema, si scarica per il cliente. La spunta "fatto" per problema si può aggiungere dopo dentro il report.
+  I due problemi del Piano d'azione qui sotto restano solo come storia.
+
 ### [P1 proposto] AI Audit dice "Sitemap XML assente" anche quando c'è (tutti i progetti)
 - Scenario / passo: 1B, Madcrumbs, Report AI (id 1, 15 cr, 78 s, una chiamata).
 - Atteso: Madcrumbs ha la sitemap di Yoast (`/sitemap_index.xml`, 200, dichiarata nel robots.txt) e i tag hreflang
