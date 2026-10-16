@@ -67,6 +67,18 @@
 >   **Restano:** client nuovo in Admin (dopo la SQL `gads_oauth_*`) e ricollegare GSC/GA4; dal **2026-10-17 sera** ritentare
 >   la verifica del branding ("Ho risolto i problemi"); poi video (scaletta nel doc) + motivazione → invio. Fino
 >   all'approvazione (giorni) chi collega GA4 vede l'avviso, spiegato dalla riga sotto il pulsante.
+> - **Google Analytics 4 del sito (2026-10-16 sera, sessione "GA4 Ainstein"; in locale, non online):** proprietà
+>   **Ainstein** creata nell'account Analytics "Gestione Beweb" (bewebsolution@gmail.com), stream web ainstein.it,
+>   **Measurement ID `G-VFS16XJYRQ`** (proprietà `559342254`). Codice: `6a545e2` (core/Analytics.php, banner cookie con
+>   Consent Mode, campo in Admin → Impostazioni → Avanzate, snippet in app/docs/landing/prezzi, admin esclusi) + `5baa93d`
+>   (eventi sign_up, login, project_created, module_activated, credits_spent da usage_log, free_check, pricing_view).
+>   Provato in locale con DebugView: tutti gli eventi arrivano. In GA4 già definite le dimensioni Modulo/Operazione/Metodo
+>   e la metrica Crediti spesi. **Dopo il deploy: incollare l'ID in Admin → Impostazioni → Avanzate (il DB di prod non ce
+>   l'ha), aprire ainstein.it in anonimo e accettare il banner, controllare Tempo reale; entro 24 h stella su `sign_up` e
+>   `project_created` in Amministrazione → Eventi.** Cookie Policy aggiornata (`1e8c2d8`); alla Privacy manca una
+>   riga su GA4 (chiesta alla sessione Verifica app Google). Guida: `docs/GA4-AINSTEIN.md`.
+>   Bug preesistente visto per strada: le pagine /docs hanno due `<head>` (View::render con layout `null` usa comunque
+>   layout.php, poi docs/layout.php lo avvolge); lo snippet GA4 si stampa una volta sola, ma il doppio HTML resta.
 > **Prima del post restano:** deploy di questi P2 (ok di Clemente), AI Keywords da provare in prod (la fa Clemente),
 > decidere /landing-b, la bozza del post.
 > **DOPO il post (raccolto da questo file):** 1) alert di AI Rank generati a fine controllo posizioni + mail digest (~2 h,
