@@ -36,6 +36,11 @@ endif;
 <?php
 // Prezzi delle modalità: dalle impostazioni del modulo (gli stessi che addebitano i controller), mai scritti a mano
 $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (\Core\ModuleLoader::getSetting('keyword-research', $key) ?? $default), 1, ',', ''), '0'), ',') . ' cr';
+// Stessi prezzi scritti per esteso ("3 crediti"), per la sezione "Scegli la modalità" e la FAQ (prima erano scritti a mano: dicevano 10)
+$krCrediti = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (\Core\ModuleLoader::getSetting('keyword-research', $key) ?? $default), 1, ',', ''), '0'), ',') . ' crediti';
+$costoRicerca = $krCrediti('cost_kr_ai_clustering', 3);
+$costoArchitettura = $krCrediti('cost_kr_ai_architecture', 5);
+$costoPiano = $krCrediti('cost_kr_editorial_plan', 5);
 ?>
 <div class="space-y-8">
     <!-- Header -->
@@ -365,7 +370,7 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
                                     <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                                 </div>
                                 <p class="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Ricerca keyword</p>
-                                <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">3 crediti</p>
+                                <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5"><?= $costoRicerca ?></p>
                             </div>
                             <!-- Architettura Sito -->
                             <div class="p-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700/30">
@@ -373,7 +378,7 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
                                     <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                                 </div>
                                 <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">Architettura Sito</p>
-                                <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">10 crediti</p>
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5"><?= $costoArchitettura ?></p>
                             </div>
                             <!-- Piano Editoriale -->
                             <div class="p-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700/30">
@@ -381,7 +386,7 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
                                     <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                 </div>
                                 <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">Piano Editoriale</p>
-                                <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">10 crediti</p>
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5"><?= $costoPiano ?></p>
                             </div>
                             <!-- Controllo veloce -->
                             <div class="p-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700/30">
@@ -628,7 +633,7 @@ $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (
                     </svg>
                 </button>
                 <div x-show="openFaq === 1" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-cloak class="px-6 pb-4">
-                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">La <strong>Ricerca keyword</strong> costa 3 crediti per analisi. L'<strong>Architettura Sito</strong> e il <strong>Piano Editoriale</strong> costano 10 crediti ciascuno. Il <strong>Controllo veloce</strong> è completamente gratuito e non consuma crediti.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">La <strong>Ricerca keyword</strong> costa <?= $costoRicerca ?> per analisi. L'<strong>Architettura Sito</strong> costa <?= $costoArchitettura ?> e il <strong>Piano Editoriale</strong> <?= $costoPiano ?>. Il <strong>Controllo veloce</strong> è completamente gratuito e non consuma crediti.</p>
                 </div>
             </div>
             <!-- FAQ 2 -->
