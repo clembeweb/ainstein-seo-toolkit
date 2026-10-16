@@ -20,8 +20,14 @@ if (PHP_SAPI !== 'cli' && str_starts_with(strtolower($__host), 'www.')) {
 unset($__host);
 
 // Session security
+// Sessione di 8 ore (prima 24 minuti: il default di php.ini faceva rifare il login di continuo, prova del 2026-10-16).
+// Su Ubuntu le sessioni le cancella il timer phpsessionclean leggendo gc_maxlifetime da php.ini + conf.d di php-fpm
+// (non dal pool, né da ini_set): lo stesso valore sta in /etc/php/8.3/fpm/conf.d/99-ainstein-session.ini sul VPS.
+// Qui vale per XAMPP e come rete di sicurezza.
+define('SESSION_LIFETIME', 28800);
+ini_set('session.gc_maxlifetime', (string) SESSION_LIFETIME);
 session_set_cookie_params([
-    'lifetime' => 0,
+    'lifetime' => SESSION_LIFETIME,
     'path' => '/',
     'secure' => !empty($_SERVER['HTTPS']),
     'httponly' => true,
