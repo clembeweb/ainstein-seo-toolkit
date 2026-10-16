@@ -15,24 +15,6 @@ if (isset($onboardingConfig[$onboardingModuleSlug])):
 endif;
 ?>
 
-<!-- Hero Value Block -->
-<div class="mb-6">
-<?= \Core\View::partial('components/dashboard-hero-banner', [
-    'title' => 'Ricerca keyword AI con clustering semantico',
-    'description' => 'Dalla keyword seed alla strategia completa: l\'AI genera centinaia di varianti, le organizza in cluster tematici per intento di ricerca e crea un piano editoriale pronto per la produzione contenuti.',
-    'color' => 'purple',
-    'badge' => 'Come funziona',
-    'storageKey' => 'ainstein_hero_keyword_research',
-    'steps' => [
-        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>', 'title' => 'Keyword seed', 'subtitle' => 'Espansione AI'],
-        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>', 'title' => 'Cluster semantici', 'subtitle' => 'Raggruppamento per intent'],
-        ['icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>', 'title' => 'Piano editoriale', 'subtitle' => 'Export in AI Writer'],
-    ],
-    'ctaText' => 'Nuova Ricerca',
-    'ctaUrl' => url('/projects/create'),
-]) ?>
-</div>
-
 <?php
 // Prezzi delle modalità: dalle impostazioni del modulo (gli stessi che addebitano i controller), mai scritti a mano
 $krCost = fn(string $key, float $default) => rtrim(rtrim(number_format((float) (\Core\ModuleLoader::getSetting('keyword-research', $key) ?? $default), 1, ',', ''), '0'), ',') . ' cr';
@@ -41,6 +23,23 @@ $krCrediti = fn(string $key, float $default) => rtrim(rtrim(number_format((float
 $costoRicerca = $krCrediti('cost_kr_ai_clustering', 3);
 $costoArchitettura = $krCrediti('cost_kr_ai_architecture', 5);
 $costoPiano = $krCrediti('cost_kr_editorial_plan', 5);
+
+// Scorciatoie delle card (richiesta Clemente 2026-10-16): con un progetto AI Keywords si va dritti alla scheda,
+// con più progetti si sceglie quale, senza progetti si crea
+$krAll = $allProjects ?? [];
+$krStep = function (string $step) use ($krAll): array {
+    if (count($krAll) === 0) {
+        return ['url' => url('/projects/create'), 'choices' => [], 'cta' => 'Crea il progetto'];
+    }
+    if (count($krAll) === 1) {
+        return ['url' => url('/keyword-research/project/' . (int) $krAll[0]['id'] . '/' . $step), 'choices' => [], 'cta' => 'Apri ' . $krAll[0]['name']];
+    }
+    $choices = array_map(fn($p) => ['label' => $p['name'], 'url' => url('/keyword-research/project/' . (int) $p['id'] . '/' . $step)], $krAll);
+    return ['url' => url('/keyword-research/projects'), 'choices' => $choices, 'cta' => 'Scegli il progetto'];
+};
+$krResearch = $krStep('research');
+$krArchitecture = $krStep('architecture');
+$krEditorial = $krStep('editorial');
 ?>
 <div class="space-y-8">
     <!-- Header -->
@@ -58,59 +57,11 @@ $costoPiano = $krCrediti('cost_kr_editorial_plan', 5);
         </div>
     </div>
 
-    <!-- 4 Mode Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <?= \Core\View::partial('components/dashboard-mode-card', [
-            'title' => 'Ricerca keyword',
-            'description' => 'Ci dici cosa fai (o lo leggiamo dal sito), l\'AI propone cosa cercare, Google dà le ricerche con i volumi e l\'AI le raggruppa per argomento.',
-            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>',
-            'gradient' => 'from-emerald-500 to-teal-600',
-            'url' => url('/keyword-research/projects'),
-            'cost' => $krCost('cost_kr_ai_clustering', 3),
-            'costColor' => 'amber',
-            'dataTour' => 'kr-guided',
-        ]) ?>
-
-        <?= \Core\View::partial('components/dashboard-mode-card', [
-            'title' => 'Architettura Sito',
-            'description' => "Struttura URL e slug per un nuovo sito. L'AI propone pagine, H1 e URL basati sui volumi di ricerca reali.",
-            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>',
-            'gradient' => 'from-blue-500 to-indigo-600',
-            'url' => url('/keyword-research/projects'),
-            'cost' => $krCost('cost_kr_ai_architecture', 5),
-            'costColor' => 'purple',
-            'dataTour' => 'kr-architecture',
-        ]) ?>
-
-        <?= \Core\View::partial('components/dashboard-mode-card', [
-            'title' => 'Piano Editoriale',
-            'description' => 'Piano editoriale mensile basato su keyword e sui titoli che Google mostra oggi. Esporta direttamente in AI Writer.',
-            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>',
-            'gradient' => 'from-violet-500 to-purple-600',
-            'url' => url('/keyword-research/projects'),
-            'cost' => $krCost('cost_kr_editorial_plan', 5),
-            'costColor' => 'purple',
-            'dataTour' => 'kr-editorial',
-        ]) ?>
-
-        <?= \Core\View::partial('components/dashboard-mode-card', [
-            'title' => 'Controllo veloce',
-            'description' => 'Check istantaneo di una singola keyword. Ottieni volume, CPC, competition e correlate senza creare un progetto.',
-            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>',
-            'gradient' => 'from-amber-500 to-orange-600',
-            'url' => url('/keyword-research/quick-check'),
-            'ctaText' => 'Cerca keyword',
-            'cost' => 'Gratis',
-            'costColor' => 'emerald',
-            'dataTour' => 'kr-quickcheck',
-        ]) ?>
-    </div>
-
     <!-- Recent Projects -->
     <?php if (!empty($recentProjects)): ?>
     <div>
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Progetti recenti</h2>
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">I tuoi progetti</h2>
             <a href="<?= url('/keyword-research/projects') ?>" class="text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700">
                 Vedi tutti
                 <svg class="w-4 h-4 ml-0.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -163,6 +114,74 @@ $costoPiano = $krCrediti('cost_kr_editorial_plan', 5);
         </div>
     </div>
     <?php endif; ?>
+
+    <!-- Come iniziare (al posto del vecchio banner) -->
+    <?= \Core\View::partial('components/module-getting-started', [
+        'color' => 'purple',
+        'subtitle' => 'Da cosa fa la tua attività alle pagine e agli articoli da scrivere.',
+        'open' => empty($recentProjects),
+        'steps' => [
+            ['title' => 'Crea il progetto', 'text' => 'Dalla pagina Progetti: nome e sito. Se il progetto c\'è già, attiva AI Keywords con il bottone qui in alto.'],
+            ['title' => 'Descrivi l\'attività', 'text' => 'Ci dici cosa fai, o lo leggiamo dal sito. L\'AI propone cosa cercano i clienti e Google dà i volumi veri.'],
+            ['title' => 'Scegli cosa ti serve', 'text' => 'Ricerca keyword per sapere cosa cercano, Architettura sito per le pagine, Piano editoriale per gli articoli dei prossimi mesi.'],
+        ],
+        'ctaText' => empty($recentProjects) ? 'Crea il primo progetto' : null,
+        'ctaUrl' => url('/projects/create'),
+    ]) ?>
+
+    <!-- 4 Mode Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <?= \Core\View::partial('components/dashboard-mode-card', [
+            'title' => 'Ricerca keyword',
+            'description' => 'Ci dici cosa fai (o lo leggiamo dal sito), l\'AI propone cosa cercare, Google dà le ricerche con i volumi e l\'AI le raggruppa per argomento.',
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>',
+            'gradient' => 'from-emerald-500 to-teal-600',
+            'url' => $krResearch['url'],
+            'choices' => $krResearch['choices'],
+            'ctaText' => $krResearch['cta'],
+            'cost' => $krCost('cost_kr_ai_clustering', 3),
+            'costColor' => 'amber',
+            'dataTour' => 'kr-guided',
+        ]) ?>
+
+        <?= \Core\View::partial('components/dashboard-mode-card', [
+            'title' => 'Architettura Sito',
+            'description' => "Struttura URL e slug per un nuovo sito. L'AI propone pagine, H1 e URL basati sui volumi di ricerca reali.",
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>',
+            'gradient' => 'from-blue-500 to-indigo-600',
+            'url' => $krArchitecture['url'],
+            'choices' => $krArchitecture['choices'],
+            'ctaText' => $krArchitecture['cta'],
+            'cost' => $krCost('cost_kr_ai_architecture', 5),
+            'costColor' => 'purple',
+            'dataTour' => 'kr-architecture',
+        ]) ?>
+
+        <?= \Core\View::partial('components/dashboard-mode-card', [
+            'title' => 'Piano Editoriale',
+            'description' => 'Piano editoriale mensile basato su keyword e sui titoli che Google mostra oggi. Esporta direttamente in AI Writer.',
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>',
+            'gradient' => 'from-violet-500 to-purple-600',
+            'url' => $krEditorial['url'],
+            'choices' => $krEditorial['choices'],
+            'ctaText' => $krEditorial['cta'],
+            'cost' => $krCost('cost_kr_editorial_plan', 5),
+            'costColor' => 'purple',
+            'dataTour' => 'kr-editorial',
+        ]) ?>
+
+        <?= \Core\View::partial('components/dashboard-mode-card', [
+            'title' => 'Controllo veloce',
+            'description' => 'Check istantaneo di una singola keyword. Ottieni volume, CPC, competition e correlate senza creare un progetto.',
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>',
+            'gradient' => 'from-amber-500 to-orange-600',
+            'url' => url('/keyword-research/quick-check'),
+            'ctaText' => 'Cerca keyword',
+            'cost' => 'Gratis',
+            'costColor' => 'emerald',
+            'dataTour' => 'kr-quickcheck',
+        ]) ?>
+    </div>
 
     <!-- Stats -->
     <?php if ($stats['total_projects'] > 0): ?>

@@ -14,6 +14,8 @@
  * @param string $costColor   - (optional) Cost badge color: amber|purple|emerald
  * @param string $badge       - (optional) Extra badge text (es. "3 progetti")
  * @param string $dataTour    - (optional) data-tour attribute
+ * @param array  $choices     - (optional) [['label' => '...', 'url' => '...'], ...]: con piu' progetti, al posto
+ *                              del link unico si sceglie su quale aprire (AI Keywords, richiesta Clemente 2026-10-16)
  */
 
 $ctaText = $ctaText ?? 'Vai ai progetti';
@@ -21,6 +23,7 @@ $cost = $cost ?? null;
 $costColor = $costColor ?? 'amber';
 $badge = $badge ?? null;
 $dataTour = $dataTour ?? null;
+$choices = $choices ?? [];
 
 $costColors = [
     'amber'   => 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
@@ -30,7 +33,7 @@ $costColors = [
 
 $costClass = $costColors[$costColor] ?? $costColors['amber'];
 ?>
-<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow"<?= $dataTour ? ' data-tour="' . htmlspecialchars($dataTour) . '"' : '' ?>>
+<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 <?= count($choices) > 1 ? '' : 'overflow-hidden' ?> hover:shadow-md transition-shadow"<?= $dataTour ? ' data-tour="' . htmlspecialchars($dataTour) . '"' : '' ?>>
     <div class="p-5">
         <div class="h-12 w-12 rounded-xl bg-gradient-to-br <?= htmlspecialchars($gradient) ?> flex items-center justify-center shadow-sm mb-4">
             <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,6 +51,20 @@ $costClass = $costColors[$costColor] ?? $costColors['amber'];
             <?php endif; ?>
         </div>
     </div>
+    <?php if (count($choices) > 1): ?>
+    <div x-data="{ pick: false }" class="relative rounded-b-xl px-5 py-3 bg-slate-50 dark:bg-slate-700/50 border-t border-slate-200 dark:border-slate-700">
+        <button type="button" @click="pick = !pick" @click.outside="pick = false" class="inline-flex items-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
+            <?= htmlspecialchars($ctaText) ?>
+            <svg class="w-4 h-4 ml-1 transition-transform" :class="pick ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div x-show="pick" x-cloak x-transition class="absolute left-3 bottom-full mb-1 z-20 w-max min-w-[14rem] max-w-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg py-1 max-h-64 overflow-y-auto">
+            <p class="px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">Su quale progetto?</p>
+            <?php foreach ($choices as $choice): ?>
+            <a href="<?= htmlspecialchars($choice['url']) ?>" class="block px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 truncate"><?= htmlspecialchars($choice['label']) ?></a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php else: ?>
     <div class="px-5 py-3 bg-slate-50 dark:bg-slate-700/50 border-t border-slate-200 dark:border-slate-700">
         <a href="<?= htmlspecialchars($url) ?>" class="inline-flex items-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
             <?= htmlspecialchars($ctaText) ?>
@@ -56,4 +73,5 @@ $costClass = $costColors[$costColor] ?? $costColors['amber'];
             </svg>
         </a>
     </div>
+    <?php endif; ?>
 </div>

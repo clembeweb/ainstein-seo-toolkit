@@ -35,6 +35,8 @@ class DashboardController
             'title' => 'AI Keywords',
             'user' => $user,
             'recentProjects' => $recentProjects,
+            // Tutti i progetti (propri e condivisi) per le scorciatoie delle card Ricerca / Architettura / Piano
+            'allProjects' => $this->projectModel->getRecentByUser($user['id'], 100),
             'stats' => $stats,
             'typeConfigs' => Project::typeConfig(),
             'modules' => ModuleLoader::getUserModules($user['id']),
