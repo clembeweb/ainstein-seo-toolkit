@@ -101,6 +101,24 @@
   indica il campo di Yoast/Rank Math, un solo H1 con il secondo in H2, alt da adattare alle immagini vere.
 - Note: serve che il prompt (o il rilevatore dei duplicati) riconosca le versioni in lingua (/en/, hreflang).
 
+### [P1 proposto] AI Audit dice "Sitemap XML assente" anche quando c'è (tutti i progetti)
+- Scenario / passo: 1B, Madcrumbs, Report AI (id 1, 15 cr, 78 s, una chiamata).
+- Atteso: Madcrumbs ha la sitemap di Yoast (`/sitemap_index.xml`, 200, dichiarata nel robots.txt) e i tag hreflang
+  it/en nell'head della home.
+- Successo: il report ha come problema #3 "Sitemap XML assente e probabile mancanza di hreflang", con "da creare
+  sitemap.xml" e il codice di una sitemap da zero; anche il riepilogo dice "la mancanza di una sitemap XML".
+  Un consulente che lo gira al cliente fa una figuraccia.
+- Causa: `sa_site_config.has_sitemap = 0` su **tutti** i progetti in prod (Madcrumbs, clementeteodonno.it e Stabia,
+  tutti WordPress con la sitemap dichiarata nel robots.txt). Il profilo passato all'AI (`UnifiedReportService` riga ~290,
+  `SiteProfileDetector`) dice "Sitemap: No". In più il robots.txt viene letto male: la riga "Sitemap: …" finisce in
+  `robots_disallows`. Gli hreflang non vengono letti dal crawler, quindi l'AI li tira a indovinare.
+- Note: `ssl_valid = 0` su tutti i progetti, anche su siti https validi (oggi non sembra mostrato all'utente: da verificare).
+
+### [P2] Report AI: cosa va bene
+- Il Report AI su Madcrumbs **riconosce il sito bilingue** (consiglia title/description "unici e tradotti" e hreflang),
+  a differenza del Piano d'azione; trova anche un refuso vero ("Analyics" nell'H1 della pagina GTM). Riepilogo chiaro,
+  15 crediti esatti (173 → 156 contando anche il GEO in corso), una sola chiamata AI in 78 s con la pagina in attesa.
+
 ### [P3] Piano d'azione: numeri che non tornano ed etichette inglesi
 - Scenario / passo: 1B, Madcrumbs, scheda Piano d'azione.
 - Successo: in alto "Punti guadagno +31", ma la prima pagina da sola dice "+31 punti" e la seconda "+30" (la somma
