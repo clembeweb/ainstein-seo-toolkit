@@ -46,6 +46,49 @@ $hasFacts = $counts['total'] > 0;
 
     <div x-show="message" x-cloak class="rounded-xl px-5 py-3 text-sm" :class="error ? 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'" x-text="message"></div>
 
+    <?php if ($hasFacts && !empty($summary['available'])): ?>
+    <?php $hasSummary = $summary['text'] !== ''; ?>
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700" x-data="{ open: false }">
+        <button type="button" @click="open = !open" class="w-full px-5 py-3 flex flex-wrap items-center justify-between gap-2 text-left">
+            <span class="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+                <svg class="w-4 h-4 text-slate-400 transition-transform" :class="open ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+                Riassunto del profilo <span class="font-normal text-slate-400">(quello che usano gli altri tool)</span>
+            </span>
+            <span class="text-xs text-slate-400 flex items-center gap-2">
+                <?php if (!$hasSummary): ?>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">da creare</span>
+                <?php else: ?>
+                <?php if ($summary['stale']): ?><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">righe cambiate dopo: da rifare</span><?php endif; ?>
+                <?php if ($summary['updated_at']): ?>aggiornato il <?= date('d/m/Y H:i', strtotime((string) $summary['updated_at'])) ?><?php endif; ?>
+                <?php endif; ?>
+            </span>
+        </button>
+        <div x-show="open" x-cloak class="px-5 pb-4 border-t border-slate-200 dark:border-slate-700 pt-3 space-y-3">
+            <?php if ($hasSummary): ?>
+            <p class="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-line p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700"><?= e($summary['text']) ?></p>
+            <?php endif; ?>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+                È il "profilo dell'attività" con cui AI Keywords propone le parole di partenza, le categorie del blog e l'architettura del sito.
+                <?php if ($summary['facts'] > 0): ?>
+                Si scrive dalle <?= (int) $summary['facts'] ?> righe confermate di Identità, Attività, Alias e Fatti chiave.
+                <?php else: ?>
+                Si scrive dalle righe confermate di Identità, Attività, Alias e Fatti chiave: conferma prima quelle.
+                <?php endif; ?>
+            </p>
+            <?php if ($canEdit && $summary['facts'] > 0): ?>
+            <div class="flex items-center gap-2">
+                <button type="button" @click="summarize(<?= $hasSummary ? 'true' : 'false' ?>)" :disabled="summaryBusy" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-60 <?= $hasSummary ? 'border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700' : 'bg-indigo-600 text-white hover:bg-indigo-700' ?>">
+                    <svg x-show="!summaryBusy" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                    <svg x-show="summaryBusy" x-cloak class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
+                    <span x-text="summaryBusy ? 'Scrivo il riassunto…' : '<?= $hasSummary ? 'Rigenera' : 'Crea il riassunto' ?>'"></span>
+                </button>
+                <span class="text-xs text-slate-400">gratis · circa 10-20 s</span>
+            </div>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <?php if (!$hasFacts): ?>
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-10 text-center">
         <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">Nessuna riga di profilo</h3>
@@ -125,7 +168,20 @@ function arProfile() {
     const base = '<?= url($basePath) ?>';
     const csrf = '<?= $csrf ?>';
     return {
-        busy: false, message: '', error: false,
+        busy: false, summaryBusy: false, message: '', error: false,
+        async summarize(regenerate) {
+            if (regenerate && !(await window.arConfirm('Rifare il riassunto dalle righe confermate? Sostituisce quello attuale anche negli altri tool (AI Keywords). Gratis.', { buttonText: 'Rigenera' }))) return;
+            this.summaryBusy = true; this.message = ''; this.error = false;
+            try {
+                const fd = new FormData(); fd.append('_csrf_token', csrf);
+                const resp = await fetch(base + '/profile/summary', { method: 'POST', body: fd });
+                if (!resp.ok) throw new Error('Errore server (' + resp.status + ')');
+                const data = await resp.json();
+                if (!data.success) throw new Error(data.error || 'Errore');
+                this.message = 'Riassunto pronto. Ricarico…';
+                setTimeout(() => location.reload(), 700);
+            } catch (e) { this.error = true; this.message = e.message; this.summaryBusy = false; }
+        },
         async generate() {
             if (<?= $hasFacts ? 'true' : 'false' ?> && !(await window.arConfirm('Rigenerare la bozza? Le righe AI ancora da confermare vengono sostituite; quelle confermate, corrette o rifiutate restano.', { buttonText: 'Rigenera' }))) return;
             this.busy = true; this.message = ''; this.error = false;

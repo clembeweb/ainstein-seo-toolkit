@@ -330,3 +330,20 @@ dello stesso progetto) / Usano il tuo sito senza nominarti (`ReportBuilderServic
 chiamata AI. In `GapGroupingService` per le aziende "pending" solo se il servizio non è offerto; deduzioni lecite: zona
 vicina, capienza, occasioni; dato mancante (prezzo, disponibilità) → articolo senza inventarlo, con invito al preventivo.
 Le persone restano con la regola delle prove (operazione documentata, incarico, pubblicazione).
+
+## ADR-019: Riassunto del profilo = profilo dell'attività di AI Keywords, letto dallo stesso posto
+
+**Date**: 2026-10-16 · **Status**: Accepted (richiesta di Clemente dal giro manuale in produzione)
+
+**Context**: Clemente vuole vedere nella scheda Profilo il riassunto "che viene mandato ai tool keyword". AI Keywords
+(`modules/keyword-research/services/BusinessProfileService.php`) non lo calcola al volo: l'AI lo scrive in 5-8 righe dalle
+righe confermate del GEO (categorie identity, activity, alias, fact) e lo salva in `projects.description` del progetto
+globale (`kr_projects.description` solo per progetti senza progetto globale). Può anche nascere dal sito o da un testo libero.
+
+**Decision**: nessuna colonna nuova in `ar_projects` (sarebbe una seconda copia che si stacca). La scheda Profilo legge il
+testo con `BusinessProfileService::getProfile()` — lo stesso metodo di AI Keywords, quindi lo stesso testo ovunque — e lo
+mostra in un accordion chiuso sopra Identità. "Rigenera"/"Crea il riassunto" chiama `profileFromGeo()` (gratis per
+l'utente, come in AI Keywords): riscrive `projects.description` e, se il sito ha un progetto AI Keywords, ne rifà le
+proposte; senza progetto AI Keywords l'aggiornamento delle proposte non tocca righe. Data mostrata = `projects.updated_at`
+(cambia anche se si rinomina il progetto globale: accettato). Badge "da rifare" se una riga di quelle categorie è cambiata
+dopo. Nessuna modifica dentro `modules/keyword-research/`.

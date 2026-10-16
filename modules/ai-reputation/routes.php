@@ -189,6 +189,12 @@ Router::post('/ai-reputation/project/{id}/profile/facts', function ($id) {
 });
 
 // Conferma tutte le righe da confermare (omonimi esclusi)
+Router::post('/ai-reputation/project/{id}/profile/summary', function ($id) {
+    Middleware::auth();
+    Middleware::csrf();
+    return (new ProfileController())->summary((int) $id);
+});
+
 Router::post('/ai-reputation/project/{id}/profile/confirm-all', function ($id) {
     Middleware::auth();
     Middleware::csrf();

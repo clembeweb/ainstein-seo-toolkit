@@ -9,6 +9,8 @@ use Core\ModuleLoader;
 use Modules\AiReputation\Models\Project;
 use Modules\AiReputation\Models\ProfileFact;
 use Modules\AiReputation\Services\OnboardingService;
+use Modules\KeywordResearch\Services\BusinessProfileService;
+use Core\Database;
 
 /**
  * ProfileController - profilo del soggetto: generazione (onboarding agent) e conferma riga per riga
@@ -43,7 +45,82 @@ class ProfileController
             'counts' => $this->facts->counts($id),
             'categories' => ProfileFact::CATEGORIES,
             'perplexityOk' => \Modules\AiReputation\Services\EngineCollectorService::isConfigured('perplexity'),
+            'summary' => $this->summaryState($project),
         ]);
+    }
+
+    /**
+     * Riassunto del profilo = "profilo dell'attività" che usano gli altri tool (oggi AI Keywords, ADR-018).
+     * Sta in projects.description del progetto globale: si legge con lo stesso servizio di AI Keywords, così è lo stesso testo.
+     */
+    private function summaryState(array $project): array
+    {
+        $gid = (int) ($project['global_project_id'] ?? 0);
+        if ($gid <= 0 || !class_exists(BusinessProfileService::class)) {
+            return ['available' => false];
+        }
+        $service = new BusinessProfileService();
+        $ref = ['global_project_id' => $gid];
+        $global = Database::fetch("SELECT updated_at FROM projects WHERE id = ?", [$gid]);
+        $text = $service->getProfile($ref);
+        $factsCount = $service->geoFactsCount($ref);
+        // Righe confermate cambiate dopo l'ultimo aggiornamento del riassunto → va rifatto
+        $lastFact = Database::fetch(
+            "SELECT MAX(updated_at) AS t FROM ar_profile_facts WHERE project_id = ? AND category IN ('identity', 'activity', 'alias', 'fact')",
+            [(int) $project['id']]
+        );
+        $updatedAt = $text !== '' ? ($global['updated_at'] ?? null) : null;
+        return [
+            'available' => true,
+            'text' => $text,
+            'updated_at' => $updatedAt,
+            'facts' => $factsCount,
+            'stale' => $updatedAt && !empty($lastFact['t']) && strtotime($lastFact['t']) > strtotime($updatedAt),
+        ];
+    }
+
+    /**
+     * POST /ai-reputation/project/{id}/profile/summary (AJAX lungo, JSON)
+     * Rifà il riassunto dalle righe confermate con lo stesso servizio di AI Keywords (gratis: charge_credits=false).
+     * Se il progetto ha AI Keywords, si rifanno anche le sue proposte (parole di partenza, categorie).
+     */
+    public function summary(int $id): void
+    {
+        ignore_user_abort(true);
+        set_time_limit(300);
+        ob_start();
+        header('Content-Type: application/json');
+
+        $user = Auth::user();
+        $project = $this->project->findAccessible($id, $user['id']);
+        if (!$project || ($project['access_role'] ?? 'owner') === 'viewer') {
+            ob_end_clean();
+            echo json_encode(['success' => false, 'error' => 'Progetto non trovato o permessi insufficienti']);
+            exit;
+        }
+        $gid = (int) ($project['global_project_id'] ?? 0);
+        if ($gid <= 0 || !class_exists(BusinessProfileService::class)) {
+            ob_end_clean();
+            echo json_encode(['success' => false, 'error' => 'Il riassunto serve solo ai progetti collegati a un progetto globale']);
+            exit;
+        }
+        $creditUserId = \Services\ProjectAccessService::getCreditUserId($project, $user['id']);
+        // Il progetto AI Keywords dello stesso sito, se c'è (le sue proposte si rifanno col nuovo riassunto)
+        $kr = Database::fetch("SELECT * FROM kr_projects WHERE global_project_id = ? ORDER BY id LIMIT 1", [$gid])
+            ?: ['id' => 0, 'global_project_id' => $gid, 'default_location' => 'IT', 'default_language' => 'it'];
+        session_write_close();
+
+        try {
+            $result = (new BusinessProfileService())->profileFromGeo($creditUserId, $kr);
+        } catch (\Throwable $e) {
+            \Core\Logger::channel('ai-reputation')->error('Riassunto profilo fallito', ['project_id' => $id, 'error' => $e->getMessage()]);
+            $result = ['success' => false, 'error' => 'Errore imprevisto, riprova.'];
+        }
+        Database::reconnect();
+
+        ob_end_clean();
+        echo json_encode(['success' => !empty($result['success']), 'error' => $result['error'] ?? null], JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
     /**
