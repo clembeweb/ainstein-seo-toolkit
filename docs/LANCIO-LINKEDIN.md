@@ -92,6 +92,20 @@
 > — **già fatto il 2026-10-16** (41 pagine, score 41). Più le voci della sezione "Dopo il post" in fondo (Recap SEO,
 > report settimanale, AI Optimizer/SEO On-Page, Google Ads).
 >
+> **PASSAGGIO DI CONSEGNE 2026-10-16 sera (RIPARTIRE DA QUI).** Tutto online e allineato (locale = GitHub = prod).
+> Oggi: nuovo ingresso AI Keywords, P2 della prova da utente, giro manuale di Clemente smistato in 4 sessioni e fatto:
+> UX generale (ordine moduli GEO→Keywords→Rank→Audit→Writer, pagina Progetti chiara, ingresso dei tool senza banner con
+> "Come iniziare", card AI Keywords → progetto), GEO ("Genera scheda" riparato, riassunto del profilo), AI Writer (articolo
+> non più troncato; proposta "solo automatico" in `docs/specs/2026-10-16-ai-writer-solo-automatico.md`, presentata fino al
+> blocco 2), app Google (client nuovo "Ainstein web" in prod, privacy con Limited Use, ainstein.it verificato in GSC con
+> bewebsolution; materiale in `docs/VERIFICA-GOOGLE-OAUTH.md`), GA4 di ainstein.it online (G-VFS16XJYRQ, banner cookie,
+> eventi; guida `docs/GA4-AINSTEIN.md`). Nota: dopo INSERT/UPDATE diretti su `settings` in prod svuotare la cache
+> (`sudo rm -rf storage/cache/ainstein/*`). MCC Keyword Planner ricollegato da Clemente alle 20:40 (da verificare).
+> **Domani, in ordine:** 1) provare "Genera scheda" in prod con Clemente (sessione GEO, `modules/ai-reputation/docs/TASKS.md`);
+> 2) riprovare l'articolo automatico su Madcrumbs; 3) proposta AI Writer "solo automatico" dal blocco 3 e decisione;
+> 4) verifica app Google: branding (da domani sera), video, invio; 5) GA4: stella su sign_up e project_created;
+> 6) test manuali scenari 3-4 (`docs/2026-10-16-test-manuali.md`); 7) `/landing-b` tenere o togliere; 8) bozza del post.
+>
 > **PASSAGGIO DI CONSEGNE 2026-10-15 (RIPARTIRE DA QUI).** Fatto il check sezioni su **AI GEO Audit** (ultimo dei 5):
 > scheda "Domande" a sé, menu laterale = schede, "run"→"audit" e "engine"→"AI" in tutti i testi, avvisi sulle chiavi API
 > solo per admin (dettaglio in `modules/ai-reputation/docs/TASKS.md`). Online (`67363af`).
