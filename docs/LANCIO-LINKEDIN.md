@@ -152,7 +152,10 @@
 > di Overview, In attesa/Lette/Generata, Leggi pagine, Manuale/Automatico/Meta tag, Scrivi l'articolo, Intento di ricerca,
 > Risultati della ricerca, Parole di partenza, Entrambi, Concorrenza alta/media/bassa, Completata/Errore). Restano "Quick Wins"
 > e "Crawl Budget" (nomi di scheda, decisione Clemente). Verificato in locale pagina per pagina con l'account di test.
-> **Prossimo passo:** P3.2 nota strategica, P3.3 link in entrata, P3.4 articolo >120 s (etichette inglesi fatte,
+> **P3.2 nota strategica con somme gonfiate: FATTO in locale (2026-10-16), da mettere online.** Il prompt di clustering e
+> di architettura passa una riga per ricerca con le varianti tra parentesi e la regola "contale una volta sola" (Stabia: 93
+> righe da 121 keyword). Si verifica alla prossima ricerca in prod (3 cr): la nota non deve più dire ~9.000 per 2.860.
+> **Prossimo passo:** online P3.2 (con l'ok), poi P3.3 link in entrata, P3.4 articolo >120 s (etichette inglesi fatte,
 > nota strategica dell'AI con somme gonfiate, `internal_links_in` sempre 0, generazione articolo oltre i 120 s da capire)
 > e clementeteodonno.it da riaudire (~5 cr). Fatti il 2026-10-16: sessione 8 h, volumi dei cluster, costi AI Keywords,
 > articolo in Anteprima, tempo medio.
