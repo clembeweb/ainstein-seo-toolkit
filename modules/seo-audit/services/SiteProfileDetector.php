@@ -193,7 +193,7 @@ class SiteProfileDetector
     private function hasSitemap(int $projectId): bool
     {
         $config = Database::fetch(
-            "SELECT sitemap_urls, has_sitemap
+            "SELECT sitemap_urls, has_sitemap, robots_txt
              FROM sa_site_config
              WHERE project_id = ?",
             [$projectId]
@@ -211,10 +211,14 @@ class SiteProfileDetector
         // Fallback: controlla se sitemap_urls contiene dati
         if (!empty($config['sitemap_urls'])) {
             $urls = json_decode($config['sitemap_urls'], true);
-            return is_array($urls) && count($urls) > 0;
+            if (is_array($urls) && count($urls) > 0) {
+                return true;
+            }
         }
 
-        return false;
+        // Scansioni di prima della correzione del 2026-10-16: has_sitemap restava 0, ma il robots.txt salvato
+        // dichiara la sitemap
+        return !empty($config['robots_txt']) && preg_match('/^Sitemap:[ \t]*\S/mi', (string) $config['robots_txt']) === 1;
     }
 
     /**

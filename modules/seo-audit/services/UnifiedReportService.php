@@ -210,6 +210,11 @@ class UnifiedReportService
         // === PROFILO SITO ===
         $data['site_profile'] = $this->profileDetector->detect($projectId);
 
+        // Sitemap e versioni in lingua: senza questi dati l'AI dava la sitemap per assente e tirava a indovinare
+        // sugli hreflang (Madcrumbs, test manuali 2026-10-16)
+        $data['sitemap_urls'] = $this->sitemapUrls($projectId);
+        $data['hreflang'] = $this->hreflangStats($projectId, $sessionId);
+
         return $data;
     }
 
@@ -287,7 +292,13 @@ FORMATO RISPOSTA (JSON):
         $lines[] = "- Tipo: {$profile['type']}";
         $lines[] = "- Dimensione: {$profile['size_label']}";
         $lines[] = "- Profondita media: {$profile['avg_depth']}";
-        $lines[] = "- Sitemap: " . ($profile['has_sitemap'] ? 'Si' : 'No');
+        $lines[] = "- Sitemap XML: " . ($profile['has_sitemap']
+            ? 'presente' . (!empty($data['sitemap_urls']) ? ' (' . implode(', ', array_slice($data['sitemap_urls'], 0, 3)) . ')' : '')
+            : 'non trovata (cercata nel robots.txt e nei percorsi standard)');
+        $hl = $data['hreflang'] ?? ['pages' => 0, 'total' => 0, 'langs' => []];
+        $lines[] = "- Hreflang (letti dal crawler): " . ($hl['pages'] > 0
+            ? "presenti su {$hl['pages']} pagine su {$hl['total']}, lingue: " . implode(', ', $hl['langs'])
+            : "nessuna pagina li dichiara su {$hl['total']}");
         $lines[] = "- Rapporto link interni: " . round($profile['internal_links_ratio'] * 100, 1) . '%';
         $lines[] = "";
 
@@ -367,6 +378,48 @@ FORMATO RISPOSTA (JSON):
         }
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * Indirizzi delle sitemap: quelli salvati dal crawler o le righe "Sitemap:" del robots.txt salvato.
+     */
+    private function sitemapUrls(int $projectId): array
+    {
+        $config = Database::fetch("SELECT sitemap_urls, robots_txt FROM sa_site_config WHERE project_id = ?", [$projectId]);
+        if (!$config) {
+            return [];
+        }
+        $urls = json_decode((string) ($config['sitemap_urls'] ?? ''), true);
+        if (is_array($urls) && $urls) {
+            return array_values($urls);
+        }
+        preg_match_all('/^Sitemap:[ \t]*(\S+)/mi', (string) ($config['robots_txt'] ?? ''), $m);
+        return array_values(array_unique($m[1] ?? []));
+    }
+
+    /**
+     * Quante pagine (risposte 200) dichiarano hreflang e con quali lingue.
+     */
+    private function hreflangStats(int $projectId, ?int $sessionId): array
+    {
+        $rows = Database::fetchAll(
+            "SELECT hreflang_tags FROM sa_pages WHERE project_id = ? AND (? IS NULL OR session_id = ?) AND status_code = 200",
+            [$projectId, $sessionId, $sessionId]
+        );
+        $pages = 0;
+        $langs = [];
+        foreach ($rows as $r) {
+            $tags = json_decode((string) ($r['hreflang_tags'] ?? ''), true);
+            if (is_array($tags) && $tags) {
+                $pages++;
+                foreach ($tags as $t) {
+                    if (!empty($t['lang'])) {
+                        $langs[$t['lang']] = true;
+                    }
+                }
+            }
+        }
+        return ['pages' => $pages, 'total' => count($rows), 'langs' => array_keys($langs)];
     }
 
     /**

@@ -887,21 +887,33 @@ class CrawlerService
         $disallows = [];
 
         if ($robotsTxt) {
-            preg_match_all('/^Allow:\s*(.+)$/mi', $robotsTxt, $allowMatches);
-            preg_match_all('/^Disallow:\s*(.+)$/mi', $robotsTxt, $disallowMatches);
+            // [ \t]* e non \s*: con "Disallow:" vuoto (Yoast) \s* saltava a capo e prendeva la riga dopo,
+            // così "Sitemap: …" finiva tra i Disallow e la sitemap risultava assente (test manuali 2026-10-16)
+            preg_match_all('/^Allow:[ \t]*(\S[^\r\n]*)/mi', $robotsTxt, $allowMatches);
+            preg_match_all('/^Disallow:[ \t]*(\S[^\r\n]*)/mi', $robotsTxt, $disallowMatches);
             $allows = array_map('trim', $allowMatches[1] ?? []);
             $disallows = array_map('trim', $disallowMatches[1] ?? []);
+        }
+
+        // Sitemap: righe "Sitemap:" del robots.txt, altrimenti i percorsi standard (/sitemap.xml, /sitemap_index.xml…)
+        $sitemapUrls = [];
+        try {
+            $sitemapUrls = array_values(array_unique(array_column($this->sitemapService->discoverFromRobotsTxt($baseUrl, false), 'url')));
+        } catch (\Throwable $e) {
+            // sitemap non raggiungibile: resta "assente", la scansione continua
         }
 
         $isHttps = str_starts_with($baseUrl, 'https://');
 
         Database::execute("
-            INSERT INTO sa_site_config (project_id, robots_txt, robots_allows, robots_disallows, has_robots, is_https)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO sa_site_config (project_id, robots_txt, robots_allows, robots_disallows, sitemap_urls, has_sitemap, has_robots, is_https)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 robots_txt = VALUES(robots_txt),
                 robots_allows = VALUES(robots_allows),
                 robots_disallows = VALUES(robots_disallows),
+                sitemap_urls = VALUES(sitemap_urls),
+                has_sitemap = VALUES(has_sitemap),
                 has_robots = VALUES(has_robots),
                 is_https = VALUES(is_https)
         ", [
@@ -909,6 +921,8 @@ class CrawlerService
             $robotsTxt ?: null,
             json_encode($allows),
             json_encode($disallows),
+            $sitemapUrls ? json_encode($sitemapUrls) : null,
+            (int) !empty($sitemapUrls),
             (int) (bool) $robotsTxt,
             (int) $isHttps,
         ]);
