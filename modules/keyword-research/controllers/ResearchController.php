@@ -459,6 +459,10 @@ TASK:
 5. Le keyword tra parentesi '[stessa ricerca, scritta anche: ...]' sono la STESSA ricerca di Google con lo stesso volume:
    nei totali e nella nota strategica contale UNA volta sola (non sommare le varianti); in 'keywords' elencale tutte
 
+STILE DEI TESTI (li legge un imprenditore, non un SEO):
+- italiano semplice, niente gergo: niente cluster, pillar page, CTA, landing, SERP, intent, OTA; di' pagina, gruppo, ricerche, bottone, concorrenti
+- strategy_note: UNA frase di massimo 20 parole su da dove partire; poi 3 righe che iniziano con '- ', ognuna un'azione concreta di massimo 15 parole. Separa le righe con \\n
+
 RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
 {
   \"clusters\": [
@@ -469,12 +473,12 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
       \"keywords\": [\"kw1\", \"kw2\", \"kw3\"],
       \"total_volume\": 2500,
       \"intent\": \"informational|transactional|commercial|navigational\",
-      \"note\": \"Breve nota strategica per questo cluster\"
+      \"note\": \"Massimo 2 frasi brevi (30 parole in tutto): solo cosa fare con questo gruppo\"
     }
   ],
   \"excluded\": [\"keyword1 esclusa\", \"keyword2 esclusa\"],
   \"excluded_reason\": \"Motivo generale esclusione\",
-  \"strategy_note\": \"Nota strategica complessiva per il business\"
+  \"strategy_note\": \"Una frase su da dove partire, poi 3 righe che iniziano con - \"
 }";
 
         // Chiamata AI

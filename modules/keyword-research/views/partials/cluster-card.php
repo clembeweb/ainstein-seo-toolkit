@@ -53,7 +53,12 @@ $intentColor = $intentColors[strtolower($cluster['intent'] ?? '')] ?? 'bg-slate-
         </div>
 
         <?php if (!empty($cluster['note'])): ?>
-        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400 italic"><?= e($cluster['note']) ?></p>
+        <div class="mt-3" x-data="{ more: false }">
+            <p class="text-sm text-slate-600 dark:text-slate-400" :class="more ? '' : 'line-clamp-2'"><?= e($cluster['note']) ?></p>
+            <?php if (mb_strlen((string) $cluster['note']) > 160): ?>
+            <button type="button" @click.stop="more = !more" class="mt-0.5 text-xs font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300" x-text="more ? 'Mostra meno' : 'Leggi tutto'"></button>
+            <?php endif; ?>
+        </div>
         <?php endif; ?>
 
         <?php if (!empty($cluster['suggested_url'])): ?>

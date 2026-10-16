@@ -413,6 +413,10 @@ TASK:
 6. Le keyword tra parentesi '[stessa ricerca, scritta anche: ...]' sono la STESSA ricerca di Google con lo stesso volume:
    nei totali contale UNA volta sola (non sommare le varianti); in 'keywords' elencale tutte
 
+STILE DEI TESTI (li legge un imprenditore, non un SEO):
+- italiano semplice, niente gergo: niente cluster, pillar page, CTA, landing, SERP, intent, OTA; di' pagina, gruppo, ricerche, bottone, concorrenti
+- strategy_note: UNA frase di massimo 20 parole su da dove partire; poi 3 righe che iniziano con '- ', ognuna un'azione concreta di massimo 15 parole. Separa le righe con \\n
+
 RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
 {
   \"clusters\": [
@@ -425,12 +429,12 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
       \"intent\": \"informational|transactional|commercial|navigational\",
       \"suggested_url\": \"/url-suggerito\",
       \"suggested_h1\": \"H1 ottimizzato per la pagina\",
-      \"note\": \"Note su contenuto e struttura della pagina\"
+      \"note\": \"Massimo 2 frasi brevi (30 parole in tutto): cosa mettere nella pagina\"
     }
   ],
   \"excluded\": [\"keyword1 non usata\"],
   \"excluded_reason\": \"Motivo esclusione\",
-  \"strategy_note\": \"Nota strategica sull'architettura proposta\"
+  \"strategy_note\": \"Una frase su da dove partire, poi 3 righe che iniziano con - \"
 }";
 
         $ai = new AiService('keyword-research');

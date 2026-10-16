@@ -1090,12 +1090,16 @@ CATEGORIE: " . implode(', ', $categories) . "
 7. Aggiungi note strategiche per ogni mese
 8. Non ripetere mai la stessa keyword principale in articoli diversi{$sitePagesRule}
 
+STILE DEI TESTI (li legge un imprenditore, non un SEO):
+- italiano semplice, niente gergo: niente cluster, pillar page, CTA, landing, SERP, intent, OTA; di' pagina, gruppo, ricerche, bottone, concorrenti
+- strategy_note: UNA frase di massimo 20 parole su da dove partire; poi 3 righe che iniziano con '- ', ognuna un'azione concreta di massimo 15 parole. Separa le righe con \\n
+
 RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
 {
   \"months\": [
     {
       \"month_number\": 1,
-      \"month_note\": \"Nota strategica per questo mese\",
+      \"month_note\": \"Una frase breve (massimo 15 parole) sul perché di questo mese\",
       \"articles\": [
         {
           \"title\": \"Titolo articolo SEO-ottimizzato\",
@@ -1108,14 +1112,14 @@ RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
           \"content_type\": \"guida\",
           \"intent\": \"informational\",
           \"difficulty\": \"medium\",
-          \"notes\": \"Perche questo articolo e importante\",
+          \"notes\": \"Una frase breve (massimo 20 parole): perché scriverlo\",
           \"seasonal_note\": \"Rilevanza stagionale (o null)\",
           \"serp_gap\": \"Cosa manca nei risultati attuali\"
         }
       ]
     }
   ],
-  \"strategy_note\": \"Strategia complessiva del piano editoriale\"
+  \"strategy_note\": \"Una frase su da dove partire, poi 3 righe che iniziano con - \"
 }";
 
         return $prompt;
