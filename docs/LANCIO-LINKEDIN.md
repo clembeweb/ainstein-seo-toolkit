@@ -147,7 +147,7 @@
 >   è morta lo stesso: da capire, forse il limite di Apache/FPM) · P3 · `sa_pages.internal_links_in` resta 0
 >   (`discovered_from` mai valorizzato da `crawlPage`): "Pagina orfana — nessun link in entrata" del crawl budget non può
 >   mai scattare · locale: al DB mancavano `last_test_*` in `aic_wp_sites` (aggiunte a mano, in prod ci sono).
-> **Prossimo passo:** mettere online il tempo medio (`6314a7e`, con l'ok); poi restano solo i P3 (etichette inglesi,
+> **Prossimo passo:** tempo medio ONLINE (`6314a7e`, 2026-10-16); restano solo i P3 (etichette inglesi,
 > nota strategica dell'AI con somme gonfiate, `internal_links_in` sempre 0, generazione articolo oltre i 120 s da capire)
 > e clementeteodonno.it da riaudire (~5 cr). Fatti il 2026-10-16: sessione 8 h, volumi dei cluster, costi AI Keywords,
 > articolo in Anteprima, tempo medio.
