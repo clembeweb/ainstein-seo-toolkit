@@ -162,7 +162,9 @@
 > richieste dell'utente aspettavano la sessione bloccata da generateArticle (in locale limite 120 s → morte; in prod
 > limite 0 → app ferma per tutta la generazione). Aggiunto session_write_close() in generazione articolo, estrazione
 > SERP e analisi pagina di AI Rank. Prova: durante la SERP un'altra pagina risponde in 0,2 s.
-> **Prossimo passo:** i P3 sono finiti; resta il riaudit di clementeteodonno.it (~5 cr) e il post (etichette inglesi fatte,
+> **clementeteodonno.it riaudito in prod il 2026-10-16** (`run-crawl-cli.php 18 1`, 0 crediti: la scansione è gratuita): 41 pagine,
+> 34 vere (prima 34 redirect), score 41 (prima 29), budget 93. Aperta la sessione "Ragionare su un miglioramento di AI Writer".
+> **Prossimo passo:** il post LinkedIn (etichette inglesi fatte,
 > nota strategica dell'AI con somme gonfiate, `internal_links_in` sempre 0, generazione articolo oltre i 120 s da capire)
 > e clementeteodonno.it da riaudire (~5 cr). Fatti il 2026-10-16: sessione 8 h, volumi dei cluster, costi AI Keywords,
 > articolo in Anteprima, tempo medio.
