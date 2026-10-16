@@ -79,7 +79,12 @@
 > **Costi misurati (locale):** AI Audit Veloce 0 cr · AI Rank 3 keyword = 3 cr (+1,5 per i volumi) · Meta tag 3 cr a
 > pagina (1 lettura + 2 generazione) · articolo con copertina 22 cr (SERP 3 + fonti 3 + brief 3 + articolo 10 +
 > copertina 3), ~7 min · GEO: profilo 2 + domande 2 + audit 3 domande × 3 AI = 9 → 13 cr, audit ~4 min (0,15 $ API).
-> AI Keywords non provata: in locale manca la chiave RapidAPI (in prod c'è) → da provare in prod con l'ok di Clemente.
+> **AI Keywords provata in PROD il 2026-10-16 mattina** (Chrome di Clemente, progetto "Stabia Boat Rental (test)", ricerca 18):
+> 2 seed → 141 keyword in 20 s (raccolta gratis), clustering AI 61 s, **3 crediti esatti** (7.229,3 → 7.226,3), 8 cluster con
+> volumi/CPC/competizione veri, nota strategica pertinente (coglie anche la stagionalità). Funziona. Da sistemare (P2):
+> il volume dei cluster somma le varianti della stessa ricerca ("giro in barca a capri", "capri giro in barca"… 8 righe da
+> 720 = stessa query di Google) → cluster #1 dichiara 5.900 e il totale 9.810 è gonfiato; "COMP. HIGH/LOW", "Vol. Main",
+> "Intent", "Completed/Error" nelle ricerche precedenti, titolo "Risultati Research" in inglese.
 > **Problemi, per priorità:**
 > - **P1 · AI Audit legge i redirect invece delle pagine (anche in prod).** `CrawlerService::normalizeUrl()` e
 >   `normalizeUrlForStorage()` tolgono la barra finale: su WordPress `/contatti/` diventa `/contatti`, il sito risponde 301
@@ -131,7 +136,8 @@
 >   è morta lo stesso: da capire, forse il limite di Apache/FPM) · P3 · `sa_pages.internal_links_in` resta 0
 >   (`discovered_from` mai valorizzato da `crawlPage`): "Pagina orfana — nessun link in entrata" del crawl budget non può
 >   mai scattare · locale: al DB mancavano `last_test_*` in `aic_wp_sites` (aggiunte a mano, in prod ci sono).
-> **Prossimo passo:** provare AI Keywords in prod (con l'ok, 3 cr) e decidere sui P2; clementeteodonno.it da riaudire (~5 cr).
+> **Prossimo passo:** decidere quali P2 fare prima del post (proposta: volumi gonfiati nei cluster di AI Keywords, costi
+> sbagliati sulla pagina di AI Keywords, articolo che si apre in Anteprima, tempo medio 0 ms); clementeteodonno.it da riaudire (~5 cr).
 >
 > **PASSAGGIO DI CONSEGNE 2026-10-14 pomeriggio (precedente).** Fatto oggi, tutto online:
 > - Punto della situazione su Stabia rifatto con GA4+GSC veri (report id 2): regola numeri piccoli OK, "Parti da qui"
