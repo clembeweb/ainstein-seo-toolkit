@@ -22,7 +22,6 @@ class ActionPlanService
     private Page $pageModel;
 
     private const MODULE_SLUG = 'seo-audit';
-    private const BATCH_SIZE = 5; // Pagine per batch AI
 
     public function __construct()
     {
@@ -32,98 +31,179 @@ class ActionPlanService
         $this->pageModel = new Page();
     }
 
+    /** Pagine al massimo in un piano: ~25 s di AI a pagina, oltre diventa un'attesa da non proporre */
+    public const MAX_PAGES = 20;
+    /** Pagine spuntate di default (le più importanti per impatto) */
+    public const DEFAULT_PAGES = 10;
+    /** Secondi di AI stimati per pagina (prod Madcrumbs: 24 s; locale fino a 55 s) */
+    public const SECONDS_PER_PAGE = 30;
+
     /**
-     * Genera piano d'azione completo per un progetto
-     * Nota: le chiamate AI non addebitano; il controller addebita cost_action_plan_generate una volta
+     * Pagine con problemi tra cui scegliere, in ordine di impatto (le prime sono le più utili da sistemare).
+     *
+     * @return array<int, array{page_id:int, url:string, page_title:?string, critical:int, warning:int, notice:int, issues:int}>
      */
-    public function generatePlan(int $projectId, ?int $sessionId, int $userId): array
+    public function getSelectablePages(int $projectId): array
     {
-        // Verifica API configurata
-        if (!$this->ai->isConfigured()) {
-            return [
-                'error' => true,
-                'message' => 'API AI non configurata. Contatta l\'amministratore.',
+        $out = [];
+        foreach ($this->groupIssuesByPage($projectId) as $pageId => $g) {
+            $sev = array_count_values(array_column($g['issues'], 'severity'));
+            $out[] = [
+                'page_id' => (int) $pageId,
+                'url' => $g['url'],
+                'page_title' => $g['page_title'],
+                'critical' => (int) ($sev['critical'] ?? 0),
+                'warning' => (int) ($sev['warning'] ?? 0),
+                'notice' => (int) ($sev['notice'] ?? 0),
+                'issues' => count($g['issues']),
             ];
         }
+        return $out;
+    }
 
-        // Recupera progetto (userId per verifica ownership)
+    /**
+     * Crea il piano con le pagine scelte (status 'generating'). Le pagine le lavora processPlan(), una alla volta.
+     */
+    public function startPlan(int $projectId, ?int $sessionId, int $userId, array $pageIds): array
+    {
+        if (!$this->ai->isConfigured()) {
+            return ['error' => true, 'message' => 'API AI non configurata. Contatta l\'amministratore.'];
+        }
+
         $project = $this->projectModel->findWithStats($projectId, $userId);
         if (!$project) {
             return ['error' => true, 'message' => 'Progetto non trovato'];
         }
 
-        // Verifica che ci siano issue
-        $issueCounts = $this->issueModel->countBySeverity($projectId);
-        if ($issueCounts['total'] === 0) {
-            return [
-                'error' => true,
-                'message' => 'Nessun problema rilevato. Health Score: 100!',
-            ];
+        // Tengo solo pagine del progetto che hanno davvero problemi, nell'ordine di impatto
+        $available = array_map('intval', array_keys($this->groupIssuesByPage($projectId)));
+        $wanted = array_flip(array_map('intval', $pageIds));
+        $chosen = array_values(array_filter($available, fn($id) => isset($wanted[$id])));
+
+        if (empty($chosen)) {
+            return ['error' => true, 'message' => 'Scegli almeno una pagina da analizzare.'];
+        }
+        if (count($chosen) > self::MAX_PAGES) {
+            return ['error' => true, 'message' => 'Al massimo ' . self::MAX_PAGES . ' pagine per piano.'];
         }
 
-        // Raggruppa issue per pagina
-        $pageGroups = $this->groupIssuesByPage($projectId);
-        if (empty($pageGroups)) {
-            return ['error' => true, 'message' => 'Nessuna issue associata a pagine'];
-        }
+        // Un piano per scansione: un tentativo rimasto a metà si sostituisce
+        Database::execute(
+            "DELETE FROM sa_action_plans WHERE project_id = ? AND session_id <=> ?",
+            [$projectId, $sessionId]
+        );
 
-        // Crea record piano
         $planId = Database::insert('sa_action_plans', [
             'project_id' => $projectId,
             'session_id' => $sessionId,
+            'page_ids' => json_encode($chosen),
             'status' => 'generating',
             'health_current' => $project['health_score'] ?? 0,
-            'total_pages' => count($pageGroups),
+            'total_pages' => count($chosen),
+            'pages_done' => 0,
         ]);
 
-        $totalFixes = 0;
-        $totalTime = 0;
-        $totalImpact = 0;
-        $errors = [];
+        return ['success' => true, 'plan_id' => $planId, 'total_pages' => count($chosen)];
+    }
 
-        // Processa pagine in batch
-        $batches = array_chunk($pageGroups, self::BATCH_SIZE, true);
-
-        foreach ($batches as $batch) {
-            foreach ($batch as $pageId => $pageData) {
-                $result = $this->generatePageFixes($planId, $projectId, $pageId, $pageData, $project, $userId);
-
-                if (isset($result['error'])) {
-                    $errors[] = $result['message'];
-                    continue;
-                }
-
-                $totalFixes += $result['fixes_count'];
-                $totalTime += $result['total_time'];
-                $totalImpact += $result['total_impact'];
-            }
-
-            // Reconnect dopo ogni batch per evitare timeout
-            Database::reconnect();
+    /**
+     * Lavora le pagine del piano ancora da fare, una chiamata AI per pagina, e chiude il piano.
+     * Riprende da pages_done: se la connessione cade, riaprire la pagina continua da dove era rimasto.
+     *
+     * @param callable $onEvent fn(string $event, array $data): void — avanzamento per lo stream SSE
+     * @return array ['success' => true, 'finalized' => bool, ...] oppure ['error' => true, 'message' => ...]
+     */
+    public function processPlan(int $planId, int $projectId, int $userId, callable $onEvent): array
+    {
+        $plan = Database::fetch("SELECT * FROM sa_action_plans WHERE id = ? AND project_id = ?", [$planId, $projectId]);
+        if (!$plan) {
+            return ['error' => true, 'message' => 'Piano non trovato'];
+        }
+        if ($plan['status'] !== 'generating') {
+            return ['success' => true, 'finalized' => false, 'already_done' => true];
         }
 
-        // Calcola health score atteso
-        $healthExpected = min(100, ($project['health_score'] ?? 0) + $totalImpact);
+        $project = $this->projectModel->findWithStats($projectId, $userId);
+        if (!$project) {
+            return ['error' => true, 'message' => 'Progetto non trovato'];
+        }
 
-        // Aggiorna piano con totali
-        Database::update('sa_action_plans', [
-            'total_fixes' => $totalFixes,
-            'estimated_time_minutes' => $totalTime,
-            'health_expected' => $healthExpected,
-            'status' => 'ready',
-        ], 'id = ?', [$planId]);
+        $pageIds = json_decode((string) $plan['page_ids'], true) ?: [];
+        $groups = $this->groupIssuesByPage($projectId);
+        $total = count($pageIds);
+        $done = (int) $plan['pages_done'];
+        $errors = json_decode((string) ($plan['page_errors'] ?? ''), true) ?: [];
 
-        // Crediti: addebito unico nel controller dopo il successo (non per pagina)
+        $onEvent('started', ['total' => $total, 'done' => $done]);
+
+        for ($i = $done; $i < $total; $i++) {
+            set_time_limit(300); // per pagina: il conto riparte a ogni giro
+            $pageId = (int) $pageIds[$i];
+            $pageData = $groups[$pageId] ?? null;
+
+            $onEvent('page_started', ['index' => $i + 1, 'total' => $total, 'url' => $pageData['url'] ?? '']);
+
+            if ($pageData === null) {
+                $result = ['error' => true, 'message' => 'La pagina non ha più problemi'];
+            } else {
+                // Una ripresa dopo un'interruzione non lascia fix doppi sulla stessa pagina
+                Database::delete('sa_page_fixes', 'plan_id = ? AND page_id = ?', [$planId, $pageId]);
+                $result = $this->generatePageFixes($planId, $projectId, $pageId, $pageData, $project, $userId);
+            }
+
+            Database::reconnect();
+            if (isset($result['error'])) {
+                $errors[] = ['page_id' => $pageId, 'url' => $pageData['url'] ?? '', 'message' => $result['message']];
+            }
+            Database::update('sa_action_plans', [
+                'pages_done' => $i + 1,
+                'page_errors' => $errors ? json_encode($errors, JSON_UNESCAPED_UNICODE) : null,
+            ], 'id = ?', [$planId]);
+
+            $onEvent('page_completed', [
+                'index' => $i + 1,
+                'total' => $total,
+                'url' => $pageData['url'] ?? '',
+                'fixes' => $result['fixes_count'] ?? 0,
+                'error' => $result['message'] ?? null,
+            ]);
+        }
+
+        return $this->finalizePlan($planId, $project);
+    }
+
+    /**
+     * Totali dal DB e status 'ready'. 'finalized' => true solo per la richiesta che ha chiuso il piano
+     * (è quella che addebita), così due stream sullo stesso piano non addebitano due volte.
+     */
+    private function finalizePlan(int $planId, array $project): array
+    {
+        $totals = Database::fetch(
+            "SELECT COUNT(*) AS fixes, COALESCE(SUM(time_estimate_minutes), 0) AS time_min,
+                    COALESCE(SUM(impact_points), 0) AS impact, COUNT(DISTINCT page_id) AS pages
+             FROM sa_page_fixes WHERE plan_id = ?",
+            [$planId]
+        );
+
+        if ((int) $totals['fixes'] === 0) {
+            Database::delete('sa_action_plans', 'id = ?', [$planId]);
+            return ['error' => true, 'message' => 'L\'AI non ha prodotto correzioni per le pagine scelte. Nessun credito scalato: riprova.'];
+        }
+
+        $healthExpected = min(100, (int) ($project['health_score'] ?? 0) + (int) $totals['impact']);
+        $closed = Database::execute(
+            "UPDATE sa_action_plans SET total_fixes = ?, estimated_time_minutes = ?, health_expected = ?, status = 'ready'
+             WHERE id = ? AND status = 'generating'",
+            [(int) $totals['fixes'], (int) $totals['time_min'], $healthExpected, $planId]
+        );
 
         return [
             'success' => true,
+            'finalized' => $closed === 1,
             'plan_id' => $planId,
-            'total_pages' => count($pageGroups),
-            'total_fixes' => $totalFixes,
-            'estimated_time_minutes' => $totalTime,
-            'health_current' => $project['health_score'] ?? 0,
+            'total_pages' => (int) $totals['pages'],
+            'total_fixes' => (int) $totals['fixes'],
             'health_expected' => $healthExpected,
-            'errors' => $errors,
         ];
     }
 
@@ -321,6 +401,8 @@ class ActionPlanService
                 p.title as page_title,
                 p.meta_description,
                 p.h1_count,
+                p.hreflang_tags,
+                p.session_id as page_session_id,
                 SUBSTRING(p.html_content, 1, 500) as content_snippet
             FROM sa_issues i
             JOIN sa_pages p ON i.page_id = p.id
@@ -343,6 +425,8 @@ class ActionPlanService
                     'page_title' => $issue['page_title'],
                     'meta_description' => $issue['meta_description'],
                     'h1_count' => $issue['h1_count'],
+                    'hreflang_tags' => $issue['hreflang_tags'] ?? null,
+                    'page_session_id' => $issue['page_session_id'] ?? null,
                     'content_snippet' => $issue['content_snippet'],
                     'issues' => [],
                     'impact' => 0,
@@ -379,8 +463,8 @@ class ActionPlanService
      */
     private function buildPrompt(array $pageData, array $project): array
     {
-        $issuesJson = json_encode(array_map(function ($issue) {
-            return [
+        $issuesJson = json_encode(array_map(function ($issue) use ($pageData) {
+            $row = [
                 'id' => $issue['id'],
                 'type' => $issue['issue_type'],
                 'title' => $issue['title'],
@@ -389,7 +473,20 @@ class ActionPlanService
                 'affected_element' => $issue['affected_element'] ?? null,
                 'recommendation' => $issue['recommendation'] ?? null,
             ];
+            // Duplicati: con quali pagine, e se sono la stessa pagina in un'altra lingua (/x/ e /en/x/)
+            $others = $this->duplicateUrls($issue, $pageData);
+            if ($others) {
+                $row['uguale_a'] = $others;
+                $row['stessa_pagina_in_altra_lingua'] = LanguageVariants::areVariants(array_merge([$pageData['url']], $others));
+            }
+            return $row;
         }, $pageData['issues']), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
+        $pageLang = LanguageVariants::language($pageData['url']);
+        $langLine = $pageLang
+            ? "- Lingua della pagina (dal percorso): {$pageLang}"
+            : '- Lingua della pagina: quella principale del sito';
+        $hreflang = !empty($pageData['hreflang_tags']) && $pageData['hreflang_tags'] !== '[]' ? 'sì' : 'no';
 
         $system = <<<PROMPT
 Sei un consulente SEO italiano esperto. Genera un PIANO D'AZIONE con fix PRONTI ALL'USO.
@@ -399,13 +496,15 @@ PROMPT;
         $user = <<<PROMPT
 CONTESTO SITO:
 - URL base: {$project['base_url']}
-- Health Score attuale: {$project['health_score']}
+- Punteggio di salute attuale: {$project['health_score']}
 
 PAGINA DA OTTIMIZZARE:
 - URL: {$pageData['url']}
 - Title attuale: {$pageData['page_title']}
 - Meta Description attuale: {$pageData['meta_description']}
 - H1 count: {$pageData['h1_count']}
+{$langLine}
+- Tag hreflang presenti: {$hreflang}
 - Contenuto (snippet): {$pageData['content_snippet']}
 
 PROBLEMI RILEVATI SU QUESTA PAGINA:
@@ -419,6 +518,10 @@ ISTRUZIONI:
 5. Priorità 1-10 basata su impatto SEO reale
 6. Limiti: Title max 60 char, Description max 155 char
 7. Stima tempo realistico per ogni fix
+8. Scrivi title, description, H1 e testi NELLA LINGUA DELLA PAGINA (una pagina /en/ va in inglese)
+9. Se un duplicato ha "stessa_pagina_in_altra_lingua": true, è la traduzione della stessa pagina, NON un duplicato:
+   MAI canonical verso l'altra lingua né redirect 301 (toglierebbero quella lingua da Google). Proponi il testo
+   tradotto nella lingua della pagina e, se mancano gli hreflang, i tag hreflang reciproci tra le versioni.
 
 OUTPUT JSON (rispondi SOLO con questo formato):
 {
@@ -439,6 +542,27 @@ OUTPUT JSON (rispondi SOLO con questo formato):
 PROMPT;
 
         return ['system' => $system, 'user' => $user];
+    }
+
+    /**
+     * Altre pagine con lo stesso title/description di questa (solo per i duplicati), al massimo 5.
+     */
+    private function duplicateUrls(array $issue, array $pageData): array
+    {
+        $col = match ($issue['issue_type']) {
+            'duplicate_title', 'duplicate_title_budget' => 'title',
+            'duplicate_description' => 'meta_description',
+            default => null,
+        };
+        $value = $col === 'title' ? ($pageData['page_title'] ?? '') : ($col ? ($pageData['meta_description'] ?? '') : '');
+        if ($col === null || trim((string) $value) === '') {
+            return [];
+        }
+        $rows = Database::fetchAll(
+            "SELECT url FROM sa_pages WHERE project_id = ? AND session_id <=> ? AND {$col} = ? AND id <> ? LIMIT 5",
+            [(int) $issue['project_id'], $pageData['page_session_id'] ?? null, $value, (int) $pageData['page_id']]
+        );
+        return array_column($rows, 'url');
     }
 
     /**

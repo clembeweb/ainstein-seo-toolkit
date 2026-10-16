@@ -91,7 +91,7 @@
                 <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">5</div>
                 <div>
                     <h3 class="font-medium text-slate-900 dark:text-white">Genera il Piano d'Azione AI</h3>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">L'AI analizza ogni pagina e genera fix concreti con codice, priorita e tempo stimato. Traccia il completamento e esporta in Markdown.</p>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Scegli le pagine da sistemare (le 10 con più problemi gravi sono già spuntate, fino a 20): l'AI le lavora una alla volta, con l'avanzamento a schermo, e per ognuna scrive le correzioni con codice, priorità e tempo stimato. Sui siti in più lingue traduce invece di proporre canonical o redirect. Traccia il completamento ed esporta in Markdown.</p>
                 </div>
                 <svg class="w-5 h-5 shrink-0 text-slate-300 dark:text-slate-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>

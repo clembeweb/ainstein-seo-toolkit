@@ -1001,7 +1001,7 @@ erDiagram
         <details class="mt-2 bg-white dark:bg-slate-800 rounded-lg border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
             <summary class="p-4 font-semibold text-slate-900 dark:text-white">sa_action_plans &middot; sa_page_fixes</summary>
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 space-y-3">
-                <div><strong class="text-slate-900 dark:text-white">sa_action_plans</strong>: id(PK), project_id(FK), session_id, total_pages, total_fixes, fixes_completed, health_current, health_expected, estimated_time_minutes, status(generating/ready/in_progress/completed), created_at, updated_at</div>
+                <div><strong class="text-slate-900 dark:text-white">sa_action_plans</strong>: id(PK), project_id(FK), session_id, page_ids(TEXT JSON: pagine scelte, in ordine), total_pages, pages_done (pagine lavorate dallo stream), page_errors(TEXT JSON), total_fixes, fixes_completed, health_current, health_expected, estimated_time_minutes, status(generating/ready/in_progress/completed), created_at, updated_at</div>
                 <div><strong class="text-slate-900 dark:text-white">sa_page_fixes</strong>: id(PK), plan_id(FK&rarr;sa_action_plans), project_id(FK), page_id(FK&rarr;sa_pages), issue_id(FK&rarr;sa_issues), fix_code(TEXT), fix_explanation(TEXT), priority, difficulty(facile/medio/difficile), time_estimate_minutes, impact_points, step_order, is_completed, completed_at</div>
             </div>
         </details>

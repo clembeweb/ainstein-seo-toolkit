@@ -49,6 +49,10 @@ class ActionPlanController
 
         // Stats per preview (se piano non esiste)
         $issueStats = $this->actionPlanService->getIssueStats($id);
+        // Pagine tra cui scegliere (solo se non c'è un piano pronto)
+        $selectablePages = (!$plan || $plan['status'] === 'generating')
+            ? $this->actionPlanService->getSelectablePages($id)
+            : [];
 
         // Costi e crediti
         $generateCost = $this->actionPlanService->getCost('action_plan_generate');
@@ -74,6 +78,12 @@ class ActionPlanController
             'plan' => $plan,
             'pagesWithFixes' => $pagesWithFixes,
             'issueStats' => $issueStats,
+            'selectablePages' => $selectablePages,
+            'planLimits' => [
+                'max' => ActionPlanService::MAX_PAGES,
+                'default' => ActionPlanService::DEFAULT_PAGES,
+                'seconds_per_page' => ActionPlanService::SECONDS_PER_PAGE,
+            ],
             'credits' => [
                 'balance' => $creditBalance,
                 'generate_cost' => $generateCost,
@@ -82,13 +92,11 @@ class ActionPlanController
     }
 
     /**
-     * Genera piano (POST AJAX)
+     * Crea il piano con le pagine scelte (POST AJAX). Il lavoro vero lo fa stream(), una pagina alla volta.
+     * Prima era una sola richiesta con una chiamata AI per OGNI pagina: 12 pagine = 5 minuti senza avanzamento.
      */
     public function generate(int $id): void
     {
-        // La generazione AI può richiedere minuti su siti con molte issue
-        ignore_user_abort(true);
-        set_time_limit(300);
         ob_start();
         header('Content-Type: application/json');
 
@@ -102,18 +110,14 @@ class ActionPlanController
             exit;
         }
 
-        // Verifica che ci siano issues
         $issueCounts = $this->issueModel->countBySeverity($id);
         if ($issueCounts['total'] === 0) {
             if (ob_get_level()) ob_end_clean();
-            echo json_encode([
-                'error' => true,
-                'message' => 'Nessun problema rilevato. Health Score: 100!'
-            ]);
+            echo json_encode(['error' => true, 'message' => 'Nessun problema rilevato: non c\'è niente da correggere.']);
             exit;
         }
 
-        // Prezzo unico, quello mostrato in pagina
+        // Prezzo unico, quello mostrato in pagina: addebitato a fine generazione (stream)
         $cost = $this->actionPlanService->getCost('action_plan_generate');
         if (!Credits::hasEnough($user['id'], $cost)) {
             if (ob_get_level()) ob_end_clean();
@@ -121,20 +125,104 @@ class ActionPlanController
             exit;
         }
 
-        // Rilascia sessione prima dell'operazione lunga
-        session_write_close();
-
-        // Genera piano
+        $pageIds = array_map('intval', (array) ($_POST['page_ids'] ?? []));
         $sessionId = $project['current_session_id'] ?? null;
-        $result = $this->actionPlanService->generatePlan($id, $sessionId, $user['id']);
+        $result = $this->actionPlanService->startPlan($id, $sessionId, $user['id'], $pageIds);
 
-        Database::reconnect();
-        if (!empty($result['success'])) {
-            Credits::consume($user['id'], $cost, 'action_plan_generate', 'seo-audit', ['project_id' => $id, 'plan_id' => $result['plan_id'] ?? null]);
-        }
         if (ob_get_level()) ob_end_clean();
         echo json_encode($result);
         exit;
+    }
+
+    /**
+     * Genera le correzioni pagina per pagina (GET SSE ?plan_id=X).
+     * Eventi: started, page_started, page_completed, completed, error. Riprende da dove era rimasto.
+     */
+    public function stream(int $id): void
+    {
+        ignore_user_abort(true);
+        set_time_limit(300);
+
+        $user = Auth::user();
+        if (!$user) {
+            header('HTTP/1.1 401 Unauthorized');
+            exit('Unauthorized');
+        }
+        $project = $this->projectModel->findWithStats($id, $user['id']);
+        $planId = (int) ($_GET['plan_id'] ?? 0);
+        if (!$project || !$planId) {
+            header('HTTP/1.1 404 Not Found');
+            exit('Piano non trovato');
+        }
+
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache');
+        header('Connection: keep-alive');
+        header('X-Accel-Buffering: no');
+        session_write_close();
+        while (ob_get_level()) {
+            ob_end_flush();
+        }
+
+        $sendEvent = function (string $event, array $data) {
+            echo "event: {$event}\n";
+            echo 'data: ' . json_encode($data, JSON_UNESCAPED_UNICODE) . "\n\n";
+            if (ob_get_level()) ob_flush();
+            flush();
+        };
+
+        // Un solo lavoratore per piano: una seconda scheda (o una riconnessione) guarda e basta
+        $lock = fopen(sys_get_temp_dir() . "/ainstein-sa-plan-{$planId}.lock", 'c');
+        if (!$lock || !flock($lock, LOCK_EX | LOCK_NB)) {
+            $this->watchPlan($planId, $id, $sendEvent);
+            exit;
+        }
+
+        $result = $this->actionPlanService->processPlan($planId, $id, $user['id'], $sendEvent);
+        Database::reconnect();
+
+        if (!empty($result['error'])) {
+            $sendEvent('error', ['message' => $result['message']]);
+        } else {
+            // Addebito una volta sola: lo fa chi ha chiuso il piano
+            if (!empty($result['finalized'])) {
+                $cost = $this->actionPlanService->getCost('action_plan_generate');
+                Credits::consume($user['id'], $cost, 'action_plan_generate', 'seo-audit', ['project_id' => $id, 'plan_id' => $planId]);
+            }
+            $sendEvent('completed', $result);
+        }
+
+        flock($lock, LOCK_UN);
+        fclose($lock);
+        exit;
+    }
+
+    /**
+     * Avanzamento di un piano che sta lavorando un'altra richiesta: legge il DB ogni 3 s.
+     */
+    private function watchPlan(int $planId, int $projectId, callable $sendEvent): void
+    {
+        $last = -1;
+        for ($i = 0; $i < 400; $i++) {
+            if (connection_aborted()) {
+                return;
+            }
+            Database::reconnect();
+            $plan = Database::fetch("SELECT status, pages_done, total_pages FROM sa_action_plans WHERE id = ? AND project_id = ?", [$planId, $projectId]);
+            if (!$plan) {
+                $sendEvent('error', ['message' => 'Il piano non c\'è più: riprova a generarlo.']);
+                return;
+            }
+            if ((int) $plan['pages_done'] !== $last) {
+                $last = (int) $plan['pages_done'];
+                $sendEvent('page_completed', ['index' => $last, 'total' => (int) $plan['total_pages'], 'url' => '', 'fixes' => null, 'error' => null]);
+            }
+            if ($plan['status'] !== 'generating') {
+                $sendEvent('completed', ['success' => true, 'plan_id' => $planId]);
+                return;
+            }
+            sleep(3);
+        }
     }
 
     /**

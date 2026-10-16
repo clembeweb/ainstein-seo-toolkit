@@ -136,9 +136,12 @@ CREATE TABLE IF NOT EXISTS sa_action_plans (
     id INT AUTO_INCREMENT PRIMARY KEY,
     project_id INT NOT NULL,
     session_id INT NULL,
+    page_ids TEXT NULL,               -- JSON: pagine scelte dall'utente, in ordine (migrazione 007)
 
     -- Metriche piano
     total_pages INT DEFAULT 0,
+    pages_done INT DEFAULT 0,         -- pagine già lavorate dallo stream (anche fallite)
+    page_errors TEXT NULL,            -- JSON: errori per pagina
     total_fixes INT DEFAULT 0,
     fixes_completed INT DEFAULT 0,
     health_current INT DEFAULT 0,
