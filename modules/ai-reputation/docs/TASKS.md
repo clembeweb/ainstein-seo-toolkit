@@ -11,7 +11,7 @@ JS prima della chiamata, nessun credito scalato. Il bottone si prende prima dell
 chiuso sopra Identità con il "profilo dell'attività" che usa AI Keywords (`projects.description` del progetto globale,
 letto con `BusinessProfileService::getProfile()`), data, badge "da rifare" e "Rigenera"/"Crea il riassunto" (gratis,
 rifà anche le proposte di AI Keywords). Provato su Stefanelli (progetto 5): testo uguale in AI Keywords. Nessuna
-migrazione. **Da fare:** deploy con l'ok di Clemente, poi prova di "Genera scheda" in prod con lui; guida utente
+migrazione. **Online dal 2026-10-16 sera** (deploy unico della sessione "Ainstein Online", anche `7be8add` "Audit completati" nella dashboard del progetto). **Da fare domani (2026-10-17):** prova di "Genera scheda" in prod con Clemente (un intervento di un report, 1 credito; console senza errori); guida utente
 `shared/views/docs/ai-reputation.php` (una riga sul riassunto) quando la sessione che sta toccando `shared/views/docs/` ha finito.
 
 **2026-10-15 — Check sezioni e menu (stesso check fatto su AI Rank, AI Keywords, AI Audit, AI Writer).** Verdetto: il GEO
