@@ -107,9 +107,9 @@
 >   ne ha fatte 42: `OnboardingService` ha `max_tokens 4000` → 8000. Al secondo tentativo è andato (nessun credito perso).
 > - **P1 · AI Audit prima della prima scansione** dice "Nessun problema trovato. Il sito è in buone condizioni!", tutte le
 >   categorie "Nessun problema" e stato "In corso".
-> - **P2 · AI Keywords, costi sbagliati sulla pagina:** schede "Architettura 5 cr / Piano 5 cr" (valori veri), ma la sezione
->   "Scegli la modalità" e la FAQ dicono 10 crediti (testo fisso in `views/dashboard.php` righe ~376, ~384, ~631).
->   Promette anche "Analisi competitor" e "Keyword gap analysis": da verificare che esistano.
+> - **P2 · AI Keywords, costi sbagliati sulla pagina: CORRETTO e ONLINE (`bb74ec3`, 2026-10-16).** "Scegli la modalità" e
+>   la FAQ leggono i costi dalle impostazioni come le schede (3/5/5). Resta da verificare che "Analisi competitor" e
+>   "Keyword gap analysis" promessi nella sezione "Cosa puoi fare" esistano davvero.
 > - **P2 · AI Audit "Tempo medio 0 ms":** il cronometro parte dopo il download (`load_time_ms` misura solo l'analisi).
 > - **P2 · AI Writer, l'articolo si apre in vista "Editor" con l'HTML grezzo** (`<p><strong>`): meglio aprire in Anteprima.
 > - **P2 · AI Rank:** la casella dice "1 cr/kw" ma il totale fa 0,5 a keyword; "Monitora giornalmente" ma il controllo
@@ -144,8 +144,8 @@
 >   è morta lo stesso: da capire, forse il limite di Apache/FPM) · P3 · `sa_pages.internal_links_in` resta 0
 >   (`discovered_from` mai valorizzato da `crawlPage`): "Pagina orfana — nessun link in entrata" del crawl budget non può
 >   mai scattare · locale: al DB mancavano `last_test_*` in `aic_wp_sites` (aggiunte a mano, in prod ci sono).
-> **Prossimo passo:** decidere quali P2 fare prima del post (proposta, in ordine: sessione che scade in 24 min, costi
-> sbagliati sulla pagina di AI Keywords, articolo che si apre in Anteprima, tempo medio 0 ms); clementeteodonno.it da riaudire (~5 cr).
+> **Prossimo passo:** P2 rimasti (proposta, in ordine: articolo che si apre in Anteprima, tempo medio 0 ms, etichette
+> inglesi); clementeteodonno.it da riaudire (~5 cr). Fatti il 2026-10-16: sessione 8 h, volumi dei cluster, costi AI Keywords.
 >
 > **PASSAGGIO DI CONSEGNE 2026-10-14 pomeriggio (precedente).** Fatto oggi, tutto online:
 > - Punto della situazione su Stabia rifatto con GA4+GSC veri (report id 2): regola numeri piccoli OK, "Parti da qui"
