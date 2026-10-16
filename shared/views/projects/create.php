@@ -13,7 +13,7 @@
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
             <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
                 <h1 class="text-lg font-semibold text-slate-900 dark:text-white">Nuovo Progetto</h1>
-                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Crea un progetto per raggruppare i moduli di un cliente o sito web. Dopo la creazione, potrai attivare i moduli dalla dashboard del progetto.</p>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Un progetto è un sito: il tuo o quello di un cliente. Dopo averlo creato, dentro attivi gli strumenti che ti servono.</p>
             </div>
 
             <form method="POST" action="<?= url('/projects') ?>" class="p-5 space-y-5" x-data="{ selectedColor: '#3B82F6' }">
@@ -25,7 +25,7 @@
                         Nome progetto <span class="text-red-500">*</span>
                     </label>
                     <input type="text" name="name" id="name" required minlength="2" maxlength="100"
-                           placeholder="Es. Cliente ABC"
+                           placeholder="Es. Pizzeria da Mario"
                            value="<?= htmlspecialchars(old('name') ?: preg_replace('/[^a-z0-9.-]/i', '', (string) ($_GET['domain'] ?? ''))) ?>"
                            class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
                 </div>
@@ -33,13 +33,13 @@
                 <!-- Dominio -->
                 <div>
                     <label for="domain" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                        Dominio
+                        Sito (dominio)
                     </label>
                     <input type="text" name="domain" id="domain"
                            placeholder="Es. esempio.it"
                            value="<?= htmlspecialchars(old('domain') ?: preg_replace('/[^a-z0-9.-]/i', '', (string) ($_GET['domain'] ?? ''))) ?>"
                            class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Opzionale. Il dominio viene ereditato dai moduli che lo richiedono.</p>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Il sito su cui lavori. Lo usano tutti gli strumenti del progetto, così non devi riscriverlo.</p>
                 </div>
 
                 <!-- Descrizione -->

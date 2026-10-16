@@ -26,6 +26,15 @@ $activeSlugs = array_unique(array_column($activeModules, 'slug'));
 // Slugs dei moduli attivi nel sistema (ModuleLoader)
 $systemActiveSlugs = array_column($availableModules, 'slug');
 
+// Nomi come nel menu laterale (li decide Clemente da Admin), non quelli scritti nel codice
+$_moduleNames = array_column($availableModules, 'name', 'slug');
+foreach ($moduleConfig as $_slug => $_cfg) {
+    if (!empty($_moduleNames[$_slug])) $moduleConfig[$_slug]['label'] = $_moduleNames[$_slug];
+}
+foreach ($activeModules as $_i => $_mod) {
+    if (!empty($_moduleNames[$_mod['slug']])) $activeModules[$_i]['label'] = $_moduleNames[$_mod['slug']];
+}
+
 // Tipi modulo per modal selezione
 $_moduleTypes = $moduleTypes ?? [];
 
@@ -53,6 +62,15 @@ foreach ($moduleConfig as $slug => $config) {
         }
     }
 }
+
+// Cosa fa ogni strumento, in una riga (per chi non lo conosce ancora)
+$_moduleWhat = [
+    'ai-reputation' => 'Chiede a ChatGPT e Gemini quello che chiedono i clienti e ti dice se consigliano te o altri.',
+    'keyword-research' => 'Trova cosa cercano i clienti su Google e propone pagine e piano editoriale.',
+    'seo-tracking' => 'Segue le posizioni su Google e legge Search Console e Analytics.',
+    'seo-audit' => 'Scansiona il sito e trova i problemi tecnici che frenano Google.',
+    'ai-content' => 'Scrive articoli e meta tag e li pubblica su WordPress.',
+];
 
 // Helper: format metric value
 if (!function_exists('_dashboard_format_value')):
@@ -107,7 +125,11 @@ endif;
             </div>
         </div>
         <?php if (($access_role ?? 'owner') === 'owner'): ?>
-        <div class="mt-4 sm:mt-0">
+        <div class="mt-4 sm:mt-0 flex items-center gap-2">
+            <a href="<?= url('/projects/' . $project['id'] . '/sharing') ?>" class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors" title="Invita un collaboratore o il cliente">
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z"/></svg>
+                Condividi
+            </a>
             <a href="<?= url('/projects/' . $project['id'] . '/settings') ?>" class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
@@ -124,7 +146,7 @@ endif;
     <?php if (!empty($activeModules)): ?>
     <!-- Active Modules KPI Section -->
     <div class="mb-6">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Moduli attivi</h2>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Strumenti attivi</h2>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <?php foreach ($groupedModules as $slug => $modules):
                 $firstMod = $modules[0];
@@ -358,15 +380,16 @@ endif;
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
             </svg>
         </div>
-        <h3 class="text-base font-semibold text-slate-700 dark:text-slate-300">Nessun modulo attivo</h3>
-        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Attiva il primo modulo qui sotto per iniziare a lavorare sul progetto.</p>
+        <h3 class="text-base font-semibold text-slate-700 dark:text-slate-300">Nessuno strumento attivo</h3>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Attiva qui sotto il primo strumento per lavorare su questo sito.</p>
     </div>
     <?php endif; ?>
 
     <!-- Available (non-activated) Modules — owner only -->
     <?php if (!empty($nonActivated) && ($access_role ?? 'owner') === 'owner'): ?>
     <div>
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Moduli disponibili</h2>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-white"><?= empty($activeModules) ? 'Scegli da dove partire' : 'Altri strumenti da attivare' ?></h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Attivarli è gratis: i crediti si usano solo quando lanci un'analisi. Puoi attivarne quanti vuoi.</p>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <?php foreach ($nonActivated as $slug => $config):
                 $color = $config['color'] ?? 'blue';
@@ -382,6 +405,9 @@ endif;
                     </div>
                     <span class="font-medium text-slate-700 dark:text-slate-300 text-sm"><?= htmlspecialchars($config['label'] ?? $slug) ?></span>
                 </div>
+                <?php if (!empty($_moduleWhat[$slug])): ?>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-3"><?= e($_moduleWhat[$slug]) ?></p>
+                <?php endif; ?>
                 <?php if ($hasTypes): ?>
                 <!-- Modulo con tipi: apre modal -->
                 <button type="button" @click="openTypeModal('<?= $slug ?>')"
@@ -505,6 +531,14 @@ endif;
 
     </div><!-- /x-data activationModal -->
 
+    <!-- Project Description (if set) -->
+    <?php if (!empty($project['description'])): ?>
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+        <h3 class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Descrizione</h3>
+        <p class="text-sm text-slate-700 dark:text-slate-300"><?= nl2br(htmlspecialchars($project['description'])) ?></p>
+    </div>
+    <?php endif; ?>
+
     <!-- WordPress Sites Section — owner only -->
     <?php if (($access_role ?? 'owner') === 'owner'): ?>
     <?php
@@ -533,15 +567,16 @@ endif;
                     </svg>
                 </div>
                 <div>
-                    <h3 class="font-semibold text-slate-900 dark:text-white text-sm">Siti WordPress</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Collega il tuo WordPress per pubblicazione e analisi SEO dirette</p>
+                    <h3 class="font-semibold text-slate-900 dark:text-white text-sm">
+                        Pubblicazione su WordPress
+                        <span class="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">Facoltativo</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Serve solo se il sito è fatto con WordPress: AI Writer ci pubblica gli articoli e AI Audit ne importa le pagine. Se non ti serve, puoi ignorarlo.</p>
                 </div>
             </div>
-            <?php if (!empty($wpSites)): ?>
-            <button @click="showForm = !showForm" class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors">
-                <span x-text="showForm ? 'Chiudi' : 'Aggiungi'"></span>
+            <button @click="showForm = !showForm" class="flex-shrink-0 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors">
+                <span x-text="showForm ? 'Chiudi' : '<?= empty($wpSites) ? 'Collega WordPress' : 'Aggiungi' ?>'"></span>
             </button>
-            <?php endif; ?>
         </div>
 
         <?php if (!empty($suggestedSite) && empty($wpSites)): ?>
@@ -750,6 +785,13 @@ endif;
             <p class="text-xs text-center text-slate-400 dark:text-slate-500 my-3">oppure</p>
             <?php endif; ?>
 
+            <!-- Come si collega -->
+            <ol class="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-slate-600 dark:text-slate-300">
+                <li class="rounded-lg bg-slate-50 dark:bg-slate-700/50 p-3"><strong class="text-slate-900 dark:text-white">1.</strong> Scarica il plugin (link qui sotto) e installalo su WordPress da Plugin → Aggiungi nuovo → Carica plugin.</li>
+                <li class="rounded-lg bg-slate-50 dark:bg-slate-700/50 p-3"><strong class="text-slate-900 dark:text-white">2.</strong> In WordPress apri Impostazioni → SEO Toolkit e copia la chiave API (inizia con stk_).</li>
+                <li class="rounded-lg bg-slate-50 dark:bg-slate-700/50 p-3"><strong class="text-slate-900 dark:text-white">3.</strong> Incolla qui nome, indirizzo del sito e chiave, poi "Aggiungi e collega".</li>
+            </ol>
+
             <!-- Add new WP site form -->
             <form method="POST" action="<?= url('/projects/' . $project['id'] . '/wp-sites') ?>" class="space-y-3">
                 <?= csrf_field() ?>
@@ -791,7 +833,7 @@ endif;
     <script>
     function wpSiteManager() {
         return {
-            showForm: <?= empty($wpSites) ? 'true' : 'false' ?>,
+            showForm: false,
             testing: {},
             testResults: {},
             editing: {},
@@ -884,11 +926,4 @@ endif;
     </script>
     <?php endif; ?><!-- /owner-only WordPress Sites -->
 
-    <!-- Project Description (if set) -->
-    <?php if (!empty($project['description'])): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
-        <h3 class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Descrizione</h3>
-        <p class="text-sm text-slate-700 dark:text-slate-300"><?= nl2br(htmlspecialchars($project['description'])) ?></p>
-    </div>
-    <?php endif; ?>
 </div>

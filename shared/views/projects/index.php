@@ -1,16 +1,100 @@
+<?php
+// Nomi dei moduli come nel menu laterale (li decide Clemente da Admin), colori come nel progetto
+$_pjNames = [];
+foreach ($modules ?? [] as $_m) {
+    $_pjNames[$_m['slug']] = $_m['name'];
+}
+$_pjChip = [
+    'indigo' => 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+    'purple' => 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+    'blue' => 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    'emerald' => 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+    'amber' => 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+    'rose' => 'bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+    'cyan' => 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300',
+    'orange' => 'bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+];
+$_pjToolNames = array_values(array_filter(array_map(
+    fn($slug) => $_pjNames[$slug] ?? null,
+    \Core\ModuleLoader::ORDER
+)));
+$_pjCount = count($projects ?? []) + count($sharedProjects ?? []);
+
+$_pjTimeAgo = function (?string $date): ?string {
+    if (!$date) return null;
+    $diff = time() - strtotime($date);
+    if ($diff < 60) return 'adesso';
+    if ($diff < 3600) return floor($diff / 60) . ' min fa';
+    if ($diff < 86400) return floor($diff / 3600) . ' ore fa';
+    if ($diff < 604800) return floor($diff / 86400) . ' giorni fa';
+    return date('d/m/Y', strtotime($date));
+};
+
+// Card di un progetto (propri e condivisi)
+$_pjCard = function (array $project, bool $shared) use ($moduleConfig, $_pjNames, $_pjChip, $_pjTimeAgo) {
+    $slugs = \Core\ModuleLoader::sortByOrder(array_flip($project['active_module_slugs'] ?? []), null);
+    $lastActivity = $_pjTimeAgo($project['last_module_activity'] ?? null);
+    ?>
+    <a href="<?= url('/projects/' . $project['id']) ?>" class="group flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md hover:border-primary-300 dark:hover:border-primary-600 transition">
+        <div class="flex items-start justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: <?= e($project['color'] ?? '#3B82F6') ?>"></span>
+                <div class="min-w-0">
+                    <h3 class="font-semibold text-slate-900 dark:text-white truncate group-hover:text-primary-600 dark:group-hover:text-primary-400"><?= e($project['name']) ?></h3>
+                    <?php if (!empty($project['domain'])): ?>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 truncate"><?= e($project['domain']) ?></p>
+                    <?php endif; ?>
+                    <?php if ($shared): ?>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">di <?= e($project['owner_name'] ?? $project['owner_email']) ?></p>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php if ($shared): ?>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium flex-shrink-0 <?= $project['access_role'] === 'editor' ? 'bg-blue-500/20 text-blue-500 dark:text-blue-400' : 'bg-slate-500/20 text-slate-500 dark:text-slate-400' ?>">
+                <?= $project['access_role'] === 'editor' ? 'Editor' : 'Visualizzatore' ?>
+            </span>
+            <?php endif; ?>
+        </div>
+
+        <div class="mt-4 flex-1">
+            <?php if (!empty($slugs)): ?>
+            <div class="flex flex-wrap gap-1.5">
+                <?php foreach (array_keys($slugs) as $slug):
+                    $cfg = $moduleConfig[$slug] ?? null;
+                    if (!$cfg) continue;
+                ?>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium <?= $_pjChip[$cfg['color']] ?? $_pjChip['blue'] ?>">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="<?= e($cfg['icon']) ?>"/></svg>
+                    <?= e($_pjNames[$slug] ?? $cfg['label']) ?>
+                </span>
+                <?php endforeach; ?>
+            </div>
+            <?php else: ?>
+            <p class="text-sm text-amber-600 dark:text-amber-400">Nessuno strumento attivo: apri il progetto e attivane uno.</p>
+            <?php endif; ?>
+        </div>
+
+        <div class="mt-4 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+            <span><?= $lastActivity ? 'Ultima attività: ' . e($lastActivity) : '' ?></span>
+            <span class="font-medium text-primary-600 dark:text-primary-400 text-sm">Apri &rarr;</span>
+        </div>
+    </a>
+    <?php
+};
+?>
 <div class="space-y-6">
     <!-- Header -->
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Progetti</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Gestisci i tuoi progetti e i moduli collegati</p>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Un progetto è un sito: il tuo o quello di un cliente. Dentro attivi gli strumenti che ti servono.</p>
         </div>
         <div class="mt-4 sm:mt-0">
-            <a href="<?= url('/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
+            <a href="<?= url('/projects/create') ?>" class="inline-flex items-center whitespace-nowrap px-4 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
-                Nuovo Progetto
+                Nuovo progetto
             </a>
         </div>
     </div>
@@ -63,347 +147,82 @@
     </div>
     <?php endif; ?>
 
+    <!-- Come funziona: aperto per chi ha 0-1 progetti, poi richiudibile -->
+    <div x-data="{ open: <?= $_pjCount <= 1 ? 'true' : 'false' ?> }" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <button type="button" @click="open = !open" class="w-full px-5 py-4 flex items-center justify-between gap-4 text-left">
+            <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 flex-shrink-0 text-primary-600 dark:text-primary-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+                <div>
+                    <h2 class="text-base font-semibold text-slate-900 dark:text-white">Come funzionano i progetti</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Un progetto per ogni sito, e dentro tutti gli strumenti che usi su quel sito.</p>
+                </div>
+            </div>
+            <svg class="w-5 h-5 text-slate-400 transition-transform flex-shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+        </button>
+        <ol x-show="open" x-cloak class="px-5 pb-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <li class="rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="flex items-center justify-center w-6 h-6 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300 text-xs font-bold">1</span>
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Crea il progetto</h3>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-300">Un progetto per ogni sito: il tuo o quello di un cliente. Bastano il nome e il dominio.</p>
+            </li>
+            <li class="rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="flex items-center justify-center w-6 h-6 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300 text-xs font-bold">2</span>
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Attiva gli strumenti</h3>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-300">Apri il progetto e accendi quelli che ti servono<?= $_pjToolNames ? ' (' . e(implode(', ', $_pjToolNames)) . ')' : '' ?>. Attivarli è gratis: i crediti si usano solo quando lanci un'analisi.</p>
+            </li>
+            <li class="rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="flex items-center justify-center w-6 h-6 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300 text-xs font-bold">3</span>
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Condividilo, se serve</h3>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-300">Col bottone "Condividi" nel progetto inviti un collaboratore o il cliente e scegli cosa può vedere. Facoltativo.</p>
+            </li>
+        </ol>
+    </div>
+
     <?php if (empty($projects) && empty($sharedProjects)): ?>
     <!-- Empty State -->
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
-        <div class="mx-auto">
-            <svg class="mx-auto w-16 h-16 text-slate-300 dark:text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-dashed border-slate-300 dark:border-slate-600 p-12 text-center">
+        <svg class="mx-auto w-14 h-14 text-slate-300 dark:text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+        </svg>
+        <h3 class="mt-4 text-lg font-semibold text-slate-700 dark:text-slate-300">Ancora nessun progetto</h3>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">Parti dal sito su cui vuoi lavorare. Ci vuole un minuto.</p>
+        <a href="<?= url('/projects/create') ?>" class="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
-            <h3 class="mt-4 text-lg font-semibold text-slate-700 dark:text-slate-300">Nessun progetto</h3>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                Crea il tuo primo progetto per organizzare il lavoro sui tuoi clienti. Ogni progetto raggruppa i moduli attivi in un unico hub.
-            </p>
-            <a href="<?= url('/projects/create') ?>" class="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Nuovo Progetto
-            </a>
-        </div>
+            Crea il primo progetto
+        </a>
     </div>
     <?php else: ?>
 
     <!-- I miei progetti -->
     <?php if (!empty($projects)): ?>
-    <?php if (!empty($sharedProjects)): ?>
-    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">I miei progetti</h2>
-    <?php endif; ?>
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        <?php foreach ($projects as $project): ?>
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md transition-shadow">
-            <div class="flex items-start justify-between">
-                <div class="flex items-center gap-3 min-w-0">
-                    <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: <?= htmlspecialchars($project['color'] ?? '#3B82F6') ?>"></span>
-                    <div class="min-w-0">
-                        <h3 class="font-semibold text-slate-900 dark:text-white truncate"><?= htmlspecialchars($project['name']) ?></h3>
-                        <?php if (!empty($project['domain'])): ?>
-                        <p class="text-sm text-slate-500 dark:text-slate-400 truncate"><?= htmlspecialchars($project['domain']) ?></p>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                <a href="<?= url('/projects/' . $project['id'] . '/settings') ?>" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex-shrink-0" title="Impostazioni">
-                    <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                </a>
-            </div>
-
-            <div class="mt-3 flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
-                <span class="inline-flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-                    </svg>
-                    <?= (int)($project['active_modules_count'] ?? 0) ?> moduli attivi
-                </span>
-                <?php if (!empty($project['last_module_activity'])): ?>
-                <span class="inline-flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <?php
-                    $lastActivity = strtotime($project['last_module_activity']);
-                    $diff = time() - $lastActivity;
-                    if ($diff < 60) {
-                        $timeAgo = 'Adesso';
-                    } elseif ($diff < 3600) {
-                        $timeAgo = floor($diff / 60) . ' min fa';
-                    } elseif ($diff < 86400) {
-                        $timeAgo = floor($diff / 3600) . ' ore fa';
-                    } elseif ($diff < 604800) {
-                        $timeAgo = floor($diff / 86400) . ' giorni fa';
-                    } else {
-                        $timeAgo = date('d/m/Y', $lastActivity);
-                    }
-                    ?>
-                    <?= $timeAgo ?>
-                </span>
-                <?php endif; ?>
-            </div>
-
-            <a href="<?= url('/projects/' . $project['id']) ?>" class="mt-3 inline-flex items-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline">
-                Apri progetto &rarr;
-            </a>
+    <div>
+        <?php if (!empty($sharedProjects)): ?>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">I miei progetti</h2>
+        <?php endif; ?>
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <?php foreach ($projects as $project) { $_pjCard($project, false); } ?>
         </div>
-        <?php endforeach; ?>
     </div>
     <?php endif; ?>
 
     <!-- Condivisi con me -->
     <?php if (!empty($sharedProjects)): ?>
     <div class="mt-10">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Condivisi con me</h2>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-1">Condivisi con me</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Progetti di altri utenti a cui ti hanno invitato. I crediti li usa chi ha creato il progetto.</p>
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            <?php foreach ($sharedProjects as $project): ?>
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md transition-shadow">
-                <div class="flex items-start justify-between">
-                    <div class="flex items-center gap-3 min-w-0">
-                        <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: <?= htmlspecialchars($project['color'] ?? '#3B82F6') ?>"></span>
-                        <div class="min-w-0">
-                            <h3 class="font-semibold text-slate-900 dark:text-white truncate"><?= htmlspecialchars($project['name']) ?></h3>
-                            <?php if (!empty($project['domain'])): ?>
-                            <p class="text-sm text-slate-500 dark:text-slate-400 truncate"><?= htmlspecialchars($project['domain']) ?></p>
-                            <?php endif; ?>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">di <?= e($project['owner_name'] ?? $project['owner_email']) ?></p>
-                        </div>
-                    </div>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0
-                                 <?= $project['access_role'] === 'editor' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-500/20 text-slate-400' ?>">
-                        <?= $project['access_role'] === 'editor' ? 'Editor' : 'Visualizzatore' ?>
-                    </span>
-                </div>
-
-                <div class="mt-3 flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
-                    <span class="inline-flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-                        </svg>
-                        <?= (int)($project['active_modules_count'] ?? 0) ?> moduli attivi
-                    </span>
-                    <?php if (!empty($project['last_module_activity'])): ?>
-                    <span class="inline-flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <?php
-                        $lastActivity = strtotime($project['last_module_activity']);
-                        $diff = time() - $lastActivity;
-                        if ($diff < 60) {
-                            $timeAgo = 'Adesso';
-                        } elseif ($diff < 3600) {
-                            $timeAgo = floor($diff / 60) . ' min fa';
-                        } elseif ($diff < 86400) {
-                            $timeAgo = floor($diff / 3600) . ' ore fa';
-                        } elseif ($diff < 604800) {
-                            $timeAgo = floor($diff / 86400) . ' giorni fa';
-                        } else {
-                            $timeAgo = date('d/m/Y', $lastActivity);
-                        }
-                        ?>
-                        <?= $timeAgo ?>
-                    </span>
-                    <?php endif; ?>
-                </div>
-
-                <a href="<?= url('/projects/' . $project['id']) ?>" class="mt-3 inline-flex items-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline">
-                    Apri progetto &rarr;
-                </a>
-            </div>
-            <?php endforeach; ?>
+            <?php foreach ($sharedProjects as $project) { $_pjCard($project, true); } ?>
         </div>
     </div>
     <?php endif; ?>
 
     <?php endif; ?>
-
-    <!-- Siti WordPress — vista centralizzata -->
-    <div class="mt-10" x-data="wpSitesManager()">
-        <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-                    <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
-                    </svg>
-                </div>
-                <div>
-                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Siti WordPress</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Tutti i tuoi siti WordPress collegati alla piattaforma</p>
-                </div>
-            </div>
-        </div>
-
-        <?php if (empty($allWpSites)): ?>
-        <!-- Empty state -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-8 text-center">
-            <div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mx-auto mb-4">
-                <svg class="w-6 h-6 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
-                </svg>
-            </div>
-            <h3 class="text-sm font-medium text-slate-900 dark:text-white mb-1">Nessun sito WordPress</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Collega il tuo primo sito WordPress dalla dashboard di un progetto per pubblicare articoli direttamente.</p>
-            <a href="<?= url('/projects/create') ?>" class="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors">
-                <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Crea un Progetto
-            </a>
-        </div>
-        <?php else: ?>
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <table class="w-full">
-                <thead>
-                    <tr class="dark:bg-slate-700/50">
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Sito</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Progetto</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stato</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ultimo test</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Azioni</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                    <?php foreach ($allWpSites as $wpSite):
-                        $wpDomain = parse_url($wpSite['url'], PHP_URL_HOST) ?: $wpSite['url'];
-                        $testStatus = $wpSite['last_test_status'] ?? null;
-                        $testAt = $wpSite['last_test_at'] ?? null;
-                    ?>
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                        <td class="px-4 py-3">
-                            <div class="flex items-center gap-2.5">
-                                <span class="w-2 h-2 rounded-full flex-shrink-0"
-                                      :class="testStatus[<?= (int) $wpSite['id'] ?>] === 'success' ? 'bg-emerald-400' : (testStatus[<?= (int) $wpSite['id'] ?>] === 'error' ? 'bg-red-400' : 'bg-slate-400')"></span>
-                                <div class="min-w-0">
-                                    <p class="text-sm font-medium text-slate-900 dark:text-white truncate"><?= htmlspecialchars($wpSite['name']) ?></p>
-                                    <a href="<?= htmlspecialchars($wpSite['url']) ?>" target="_blank" class="text-xs text-indigo-500 dark:text-indigo-400 hover:underline"><?= htmlspecialchars($wpDomain) ?></a>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-4 py-3">
-                            <?php if ($wpSite['project_name']): ?>
-                            <a href="<?= url('/projects/' . $wpSite['global_project_id']) ?>" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"><?= htmlspecialchars($wpSite['project_name']) ?></a>
-                            <?php else: ?>
-                            <span class="text-xs text-slate-400 dark:text-slate-500 italic">Non collegato</span>
-                            <?php endif; ?>
-                        </td>
-                        <td class="px-4 py-3">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $wpSite['is_active'] ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-400' ?>">
-                                <?= $wpSite['is_active'] ? 'Attivo' : 'Disattivato' ?>
-                            </span>
-                        </td>
-                        <td class="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">
-                            <!-- Test result (reactive) -->
-                            <template x-if="testResult[<?= (int) $wpSite['id'] ?>]">
-                                <div>
-                                    <template x-if="testResult[<?= (int) $wpSite['id'] ?>].success">
-                                        <span class="text-emerald-600 dark:text-emerald-400">
-                                            OK
-                                            <span x-show="testResult[<?= (int) $wpSite['id'] ?>].wp_version" class="text-slate-400 dark:text-slate-500 ml-1">
-                                                WP <span x-text="testResult[<?= (int) $wpSite['id'] ?>].wp_version"></span>
-                                            </span>
-                                        </span>
-                                    </template>
-                                    <template x-if="!testResult[<?= (int) $wpSite['id'] ?>].success">
-                                        <span class="text-red-500 dark:text-red-400" x-text="testResult[<?= (int) $wpSite['id'] ?>].message || 'Errore'"></span>
-                                    </template>
-                                </div>
-                            </template>
-                            <!-- Initial server-rendered state -->
-                            <template x-if="!testResult[<?= (int) $wpSite['id'] ?>]">
-                                <span>
-                                    <?php if ($testAt): ?>
-                                        <?php
-                                            $tDiff = time() - strtotime($testAt);
-                                            if ($tDiff < 60) $tAgo = 'Adesso';
-                                            elseif ($tDiff < 3600) $tAgo = floor($tDiff / 60) . ' min fa';
-                                            elseif ($tDiff < 86400) $tAgo = floor($tDiff / 3600) . ' ore fa';
-                                            elseif ($tDiff < 604800) $tAgo = floor($tDiff / 86400) . 'g fa';
-                                            else $tAgo = date('d/m/Y', strtotime($testAt));
-                                        ?>
-                                        <span class="<?= $testStatus === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400' ?>"><?= $testStatus === 'success' ? 'OK' : 'Errore' ?></span>
-                                        <span class="ml-1"><?= $tAgo ?></span>
-                                    <?php else: ?>
-                                        <span class="italic">Mai testato</span>
-                                    <?php endif; ?>
-                                </span>
-                            </template>
-                        </td>
-                        <td class="px-4 py-3">
-                            <div class="flex items-center justify-end gap-1">
-                                <!-- Test button -->
-                                <button @click="testSite(<?= (int) $wpSite['id'] ?>)"
-                                        :disabled="testing[<?= (int) $wpSite['id'] ?>]"
-                                        class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:text-indigo-400 dark:hover:bg-indigo-900/20 transition-colors disabled:opacity-50"
-                                        title="Testa connessione">
-                                    <svg x-show="!testing[<?= (int) $wpSite['id'] ?>]" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                                    </svg>
-                                    <svg x-show="testing[<?= (int) $wpSite['id'] ?>]" x-cloak class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                    </svg>
-                                </button>
-                                <!-- Delete button -->
-                                <form method="POST" action="<?= url('/wp-sites/delete') ?>"
-                                      data-confirm="Eliminare il sito <?= htmlspecialchars(($wpSite['name'] ?: $wpDomain)) ?>? Gli articoli già pubblicati non saranno modificati, ma la configurazione auto-publish perderà il riferimento." data-confirm-button="Elimina" data-confirm-destructive="1">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="site_id" value="<?= (int) $wpSite['id'] ?>">
-                                    <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Elimina sito">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                        </svg>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-        <?php endif; ?>
-    </div>
-
-    <script>
-    function wpSitesManager() {
-        return {
-            testing: {},
-            testResult: {},
-            testStatus: {
-                <?php foreach ($allWpSites ?? [] as $s): ?>
-                <?= (int) $s['id'] ?>: '<?= ($s['last_test_status'] ?? '') ?>',
-                <?php endforeach; ?>
-            },
-            csrfToken: '<?= csrf_token() ?>',
-
-            async testSite(siteId) {
-                if (this.testing[siteId]) return;
-                this.testing[siteId] = true;
-                this.testResult[siteId] = null;
-
-                try {
-                    const formData = new FormData();
-                    formData.append('site_id', siteId);
-                    formData.append('_csrf_token', this.csrfToken);
-
-                    const resp = await fetch('<?= url('/wp-sites/test') ?>', {
-                        method: 'POST',
-                        body: formData,
-                    });
-
-                    if (!resp.ok) throw new Error('Errore HTTP ' + resp.status);
-                    const data = await resp.json();
-
-                    this.testResult[siteId] = data;
-                    this.testStatus[siteId] = data.success ? 'success' : 'error';
-                } catch (e) {
-                    this.testResult[siteId] = { success: false, message: e.message };
-                    this.testStatus[siteId] = 'error';
-                } finally {
-                    this.testing[siteId] = false;
-                }
-            }
-        }
-    }
-    </script>
 </div>

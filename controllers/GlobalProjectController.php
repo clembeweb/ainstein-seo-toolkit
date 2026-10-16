@@ -42,20 +42,8 @@ class GlobalProjectController
         // Mantieni compatibilita: $projects = owned per viste esistenti
         $projects = $ownedProjects;
 
-        // Tutti i siti WordPress dell'utente (con info progetto collegato)
-        $wpSiteModel = new \Modules\AiContent\Models\WpSite();
-        $allWpSites = $wpSiteModel->allByUser($user['id']);
-        // Arricchisci con nome progetto
-        $projectNames = [];
-        foreach (array_merge($ownedProjects, $sharedProjects) as $p) {
-            $projectNames[(int) $p['id']] = $p['name'];
-        }
-        foreach ($allWpSites as &$wpSite) {
-            $gpId = (int) ($wpSite['global_project_id'] ?? 0);
-            $wpSite['project_name'] = $gpId > 0 ? ($projectNames[$gpId] ?? 'Progetto #' . $gpId) : null;
-        }
-        unset($wpSite);
-
+        // I siti WordPress non stanno più qui (confondevano): si collegano dentro il progetto
+        // e servono solo a pubblicare con AI Writer (decisione Clemente 2026-10-16)
         return View::render('projects/index', [
             'title' => 'Progetti',
             'user' => $user,
@@ -64,7 +52,7 @@ class GlobalProjectController
             'ownedProjects' => $ownedProjects,
             'sharedProjects' => $sharedProjects,
             'pendingInvitations' => $pendingInvitations,
-            'allWpSites' => $allWpSites,
+            'moduleConfig' => $this->project->getModuleConfig(),
         ]);
     }
 
@@ -79,6 +67,7 @@ class GlobalProjectController
         foreach ($projects as &$project) {
             $activeCount = 0;
             $lastActivity = null;
+            $project['active_module_slugs'] = [];
 
             foreach ($moduleConfig as $slug => $config) {
                 try {
@@ -89,6 +78,7 @@ class GlobalProjectController
 
                     if ($row && (int) $row['cnt'] > 0) {
                         $activeCount++;
+                        $project['active_module_slugs'][] = $slug;
                         if ($row['last_at'] && ($lastActivity === null || $row['last_at'] > $lastActivity)) {
                             $lastActivity = $row['last_at'];
                         }
