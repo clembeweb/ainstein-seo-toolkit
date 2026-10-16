@@ -47,7 +47,6 @@ return [
         'article_generation' => 10,
         'gsc_full_sync' => 10,
         'monthly_executive' => 10,
-        'action_plan_generate' => 10,
         'architecture' => 10,
         'editorial_plan' => 10,
         'campaign_evaluation' => 10,

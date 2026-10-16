@@ -399,7 +399,7 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
             <div class="cols">
                 <div class="col"><?= $ico($icons['team']) ?><h4>Condiviso con chi vuoi</h4><p>Il cliente in sola lettura, chi lavora con te può modificare.</p></div>
                 <div class="col"><?= $ico($icons['chart']) ?><h4>Niente da tenere acceso per forza</h4><p>Un GEO Audit per il ristorante, gli articoli per l'e-commerce, le posizioni per tutti.</p></div>
-                <div class="col"><?= $ico($icons['doc']) ?><h4>Cose da girare</h4><p>PDF del GEO Audit, piano d'azione del sito, Andamento con Analytics e Search Console: in italiano, con i numeri veri.</p></div>
+                <div class="col"><?= $ico($icons['doc']) ?><h4>Cose da girare</h4><p>PDF del GEO Audit, Report AI del sito, Andamento con Analytics e Search Console: in italiano, con i numeri veri.</p></div>
             </div>
             <div class="acts"><a class="btn" style="background:#fff;color:var(--dark)" href="<?= url('/register') ?>">Inizia con <?= (int) $bonus ?> crediti</a><a class="more" href="mailto:info@ainstein.it?subject=<?= rawurlencode('Ainstein per la mia agenzia') ?>">Ne usi di più? Scrivimi per un piano →</a></div>
         </div>
@@ -415,7 +415,8 @@ $groups = [['Sapere dove sei', ['geo', 'audit']], ['Fare le cose giuste', ['kw',
         <div class="what">
             <div class="step"><div class="n">Con <?= (int) $bonus ?> crediti fai, per esempio</div><b>4 articoli</b><p>completi, con copertina e scaletta presa da chi è primo su Google.</p></div>
             <div class="step"><div class="n">Oppure</div><b>30 ricerche</b><p>di keyword con i volumi veri di Google, raggruppate per argomento.</p></div>
-            <div class="step"><div class="n">Oppure</div><b>Audit + piano</b><p>la scansione del sito è gratis, il piano d'azione costa 10. Ne restano 90.</p></div>
+            <?php $_lpReport = (float) \Core\ModuleLoader::getSetting('seo-audit', 'cost_unified_report', 15); ?>
+            <div class="step"><div class="n">Oppure</div><b>Audit + Report AI</b><p>la scansione del sito è gratis, il Report AI con le correzioni in ordine costa <?= $num($_lpReport) ?>. Ne restano <?= $num((int) $bonus - $_lpReport) ?>.</p></div>
         </div>
         <div class="price">
             <div class="pc hl"><small>All'iscrizione</small><b><?= (int) $bonus ?> crediti</b><small>in regalo, una volta sola, senza carta di credito.</small><div class="sp"></div><a class="btn" style="background:#fff;color:var(--dark)" href="<?= url('/register') ?>">Inizia gratis</a></div>

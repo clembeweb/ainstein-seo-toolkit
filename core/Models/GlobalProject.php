@@ -572,8 +572,8 @@ class GlobalProject
             $n = $sa['issues_count'];
             return [
                 'text' => $n . ' problem' . ($n > 1 ? 'i' : 'a') . ' trovat' . ($n > 1 ? 'i' : 'o') . ' nell\'AI Audit',
-                'cta' => 'Vedi piano',
-                'url' => '/seo-audit/project/' . $sa['module_project_id'] . '/action-plan',
+                'cta' => 'Vedi problemi',
+                'url' => '/seo-audit/project/' . $sa['module_project_id'] . '/issues',
                 'slug' => 'seo-audit',
                 'severity' => 'warning',
             ];

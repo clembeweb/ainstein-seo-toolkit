@@ -5,7 +5,7 @@
  *
  * Required variables:
  * - $project: array with project data
- * - $currentPage: string identifying current page (dashboard, pages, issues, analysis, links, action-plan, history, gsc, settings)
+ * - $currentPage: string identifying current page (dashboard, pages, issues, analysis, links, history, gsc, settings)
  */
 
 $projectId = $project['id'] ?? 0;
@@ -19,7 +19,6 @@ $tabs = [
     'links' => ['path' => '/links', 'label' => 'Struttura link', 'icon' => 'link'],
     'budget' => ['path' => '/budget', 'label' => 'Crawl Budget', 'icon' => 'arrow-path'],
     'report' => ['path' => '/report', 'label' => 'Report AI', 'icon' => 'sparkles'],
-    'action-plan' => ['path' => '/action-plan', 'label' => "Piano d'azione", 'icon' => 'clipboard-list'],
     'history' => ['path' => '/history', 'label' => 'Storico', 'icon' => 'clock'],
     'settings' => ['path' => '/settings', 'label' => 'Impostazioni', 'icon' => 'cog'],
 ];
@@ -34,7 +33,6 @@ function isActiveTabSa($tabKey, $currentPage) {
         'links' => ['links', 'links-orphans', 'links-anchors', 'links-graph'],
         'budget' => ['budget', 'budget-redirects', 'budget-waste', 'budget-indexability'],
         'report' => ['report'],
-        'action-plan' => ['action-plan'],
         'history' => ['history'],
         'settings' => ['settings'],
     ];

@@ -32,7 +32,6 @@ $_crKrEditorial = (float) \Core\ModuleLoader::getSetting('keyword-research', 'co
 
 // AI Audit
 $_crCrawl = \Core\Credits::getCost('crawl_per_page', 'seo-audit', 0.1);
-$_crActionPlan = \Core\Credits::getCost('action_plan_generate', 'seo-audit', 15);
 $_crAuditReport = (float) \Core\ModuleLoader::getSetting('seo-audit', 'cost_unified_report', 15);
 
 // AI Rank
@@ -77,7 +76,6 @@ $_crTables = [
         'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
         'rows' => [
             ['Scansione del sito', $_crCrawl, '/pagina'],
-            ['Piano d\'Azione AI', $_crActionPlan, ''],
             ['Report AI dell\'audit', $_crAuditReport, ''],
             ['Consultare risultati, storico ed export', 0, ''],
         ],

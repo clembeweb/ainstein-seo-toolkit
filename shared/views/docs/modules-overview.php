@@ -148,8 +148,8 @@ $_moRows = [
             ],
             [
                 'slug' => 'seo-audit', 'name' => 'AI Audit', 'color' => 'emerald', 'icon' => $_moRows[1]['icon'],
-                'text' => 'Visita il sito come fa Google e controlla ogni pagina: titoli e descrizioni mancanti, link rotti, immagini senza testo alternativo, pagine lente o che Google non può indicizzare. Ti dà un punteggio di salute e una lista di problemi ordinata per gravità. Il Piano d\'Azione AI trasforma i problemi in interventi concreti, pagina per pagina.',
-                'tags' => ['Scansione del sito', 'Punteggio di salute', 'Problemi per gravità', 'Piano d\'Azione AI', 'Storico scansioni'],
+                'text' => 'Visita il sito come fa Google e controlla ogni pagina: titoli e descrizioni mancanti, link rotti, immagini senza testo alternativo, pagine lente o che Google non può indicizzare. Ti dà un punteggio di salute e una lista di problemi ordinata per gravità. Il Report AI legge tutta la scansione e ti dice cosa correggere prima, con il codice pronto.',
+                'tags' => ['Scansione del sito', 'Punteggio di salute', 'Problemi per gravità', 'Report AI', 'Storico scansioni'],
             ],
             [
                 'slug' => 'seo-tracking', 'name' => 'AI Rank', 'color' => 'blue', 'icon' => $_moRows[2]['icon'],

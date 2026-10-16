@@ -74,7 +74,7 @@ endif;
             </div>
             <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
                 <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                Piano d'azione AI concreto e pronto da eseguire
+                Report AI con le correzioni in ordine, pronte da eseguire
             </div>
         </div>
         <a href="<?= url('/projects/create') ?>" class="inline-flex items-center px-5 py-2.5 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors">
@@ -211,8 +211,8 @@ endif;
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
                 AI Audit
             </span>
-            <h2 class="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white mt-4">Scansiona il tuo sito, scopri cosa migliorare e ricevi un piano d'azione concreto</h2>
-            <p class="text-lg text-slate-600 dark:text-slate-300 mt-4 leading-relaxed">Ainstein scansiona le pagine del tuo sito e analizza struttura tecnica, performance, contenuti, meta tags e accessibilita. Non si limita a trovare i problemi: li ordina per impatto reale sulla SEO e genera un piano d'azione con task concreti, pronti da eseguire.</p>
+            <h2 class="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white mt-4">Scansiona il tuo sito, scopri cosa migliorare e ricevi le correzioni in ordine</h2>
+            <p class="text-lg text-slate-600 dark:text-slate-300 mt-4 leading-relaxed">Ainstein scansiona le pagine del tuo sito e analizza struttura tecnica, performance, contenuti, meta tags e accessibilita. Non si limita a trovare i problemi: il Report AI li ordina per impatto reale sulla SEO e per ognuno ti dice come correggerlo, con il codice pronto e le pagine coinvolte.</p>
             <a href="<?= url('/projects/create') ?>" class="inline-flex items-center px-6 py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 shadow-lg shadow-emerald-500/25 transition-all mt-8">
                 Avvia il tuo primo audit
                 <svg class="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
@@ -303,7 +303,7 @@ endif;
 <div class="mt-20">
     <div class="text-center mb-12">
         <h3 class="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">Come funziona</h3>
-        <p class="mt-3 text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">Da URL a piano d'azione completo in 3 passaggi</p>
+        <p class="mt-3 text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">Dall'indirizzo del sito alle correzioni in 3 passaggi</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -339,8 +339,8 @@ endif;
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                 </svg>
             </div>
-            <h4 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Piano d'azione prioritizzato</h4>
-            <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">L'AI ordina i problemi per impatto SEO e genera un Action Plan con task concreti. Ogni task ha descrizione dettagliata, pagine coinvolte e impatto stimato. Non devi decidere da dove iniziare: lo decide l'AI.</p>
+            <h4 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Report AI con le priorità</h4>
+            <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">L'AI legge tutta la scansione e ordina i problemi per impatto SEO. Per ognuno: cosa succede, come correggerlo, il codice pronto e le pagine coinvolte. Non devi decidere da dove iniziare.</p>
         </div>
     </div>
 </div>
@@ -481,24 +481,24 @@ endif;
         </div>
     </div>
 
-    <!-- Feature 3: Action Plan (text LEFT, visual RIGHT, white bg) -->
+    <!-- Feature 3: Report AI (text LEFT, visual RIGHT, white bg) -->
     <div class="py-16 bg-white dark:bg-slate-900">
         <div class="max-w-6xl mx-auto px-4">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 <div>
-                    <h3 class="text-2xl font-bold text-slate-900 dark:text-white">Action Plan AI: dall'analisi all'azione</h3>
+                    <h3 class="text-2xl font-bold text-slate-900 dark:text-white">Report AI: dall'analisi all'azione</h3>
                     <p class="mt-4 text-slate-600 dark:text-slate-300 leading-relaxed">
-                        L'audit non finisce con la lista dei problemi. L'AI genera un Action Plan completo: per ogni problema, un task concreto con descrizione, le pagine coinvolte, la priorita e l'impatto stimato. Puoi seguire il piano dall'alto verso il basso — le azioni piu importanti sono sempre in cima.
+                        L'audit non finisce con la lista dei problemi. Il Report AI guarda il sito intero e per ogni problema ti dice come correggerlo, con il codice pronto, le pagine coinvolte e i tempi consigliati. Le correzioni più importanti sono in cima, e il report si scarica per il cliente.
                     </p>
                     <a href="<?= url('/projects/create') ?>" class="inline-flex items-center mt-6 text-emerald-600 dark:text-emerald-400 font-medium hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors">
-                        Crea un Action Plan
+                        Genera il Report AI
                         <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
                 </div>
                 <div>
                     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
                         <div class="px-4 py-3 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                            <span class="text-sm font-medium text-slate-900 dark:text-white">Piano d'azione</span>
+                            <span class="text-sm font-medium text-slate-900 dark:text-white">Report AI</span>
                             <span class="text-xs text-slate-500 dark:text-slate-400">6 task</span>
                         </div>
                         <div class="divide-y divide-slate-100 dark:divide-slate-700">
@@ -545,7 +545,7 @@ endif;
 <div class="mt-20">
     <div class="text-center mb-12">
         <h3 class="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">Cosa puoi fare con AI Audit</h3>
-            <p class="mt-3 text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">Dall'analisi completa al piano d'azione personalizzato</p>
+            <p class="mt-3 text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">Dall'analisi completa alle correzioni in ordine</p>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Audit completo -->
@@ -599,15 +599,15 @@ endif;
                 <h4 class="font-semibold text-slate-900 dark:text-white mb-2">Analisi contenuti</h4>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Qualita del testo, lunghezza, leggibilita, keyword density e struttura heading.</p>
             </div>
-            <!-- Action Plan AI -->
+            <!-- Report AI -->
             <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-700 transition-all">
                 <div class="h-10 w-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-4">
                     <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
                     </svg>
                 </div>
-                <h4 class="font-semibold text-slate-900 dark:text-white mb-2">Action Plan AI</h4>
-                <p class="text-sm text-slate-500 dark:text-slate-400">Piano d'azione con task concreti, priorita per impatto e pagine coinvolte.</p>
+                <h4 class="font-semibold text-slate-900 dark:text-white mb-2">Report AI</h4>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Le correzioni in ordine di impatto, con codice pronto e pagine coinvolte, da scaricare per il cliente.</p>
             </div>
         </div>
     </div>
@@ -627,7 +627,7 @@ endif;
                     </svg>
                 </button>
                 <div x-show="openFaq === 1" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-cloak class="px-6 pb-4">
-                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Un audit SEO completo costa <strong>5 crediti</strong>. Il costo include la scansione delle pagine, l'analisi AI multi-dimensionale e la generazione dell'Action Plan con task prioritizzati.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">La scansione del sito è <strong>gratis</strong>: pagine, problemi e punteggio di salute non costano niente. Il <strong>Report AI</strong>, con le correzioni in ordine e il codice pronto, costa <strong><?= rtrim(rtrim(number_format((float) \Core\ModuleLoader::getSetting('seo-audit', 'cost_unified_report', 15), 1, ',', ''), '0'), ',') ?> crediti</strong>.</p>
                 </div>
             </div>
             <!-- FAQ 2 -->
@@ -645,13 +645,13 @@ endif;
             <!-- FAQ 3 -->
             <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <button @click="openFaq === 3 ? openFaq = null : openFaq = 3" class="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <span class="font-medium text-slate-900 dark:text-white">Cosa include l'Action Plan?</span>
+                    <span class="font-medium text-slate-900 dark:text-white">Cosa include il Report AI?</span>
                     <svg class="w-5 h-5 text-slate-400 transition-transform duration-200" :class="openFaq === 3 && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
                 <div x-show="openFaq === 3" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-cloak class="px-6 pb-4">
-                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Una lista di <strong>task prioritizzati</strong>: per ogni problema trovato, l'AI genera una descrizione dettagliata, le pagine coinvolte, la severita (critico/warning/info) e l'impatto stimato sulla SEO. I task sono ordinati per impatto decrescente.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Una sintesi del sito, i problemi divisi in <strong>critici, importanti e minori</strong> con impatto, correzione, codice pronto e pagine coinvolte, gli aspetti positivi e i tempi consigliati (settimana 1, settimane 2-3, dopo). Si scarica in HTML da dare al cliente.</p>
                 </div>
             </div>
             <!-- FAQ 4 -->
@@ -690,7 +690,7 @@ endif;
             <div class="relative flex flex-col sm:flex-row items-center justify-between gap-6">
                 <div>
                     <h3 class="text-2xl font-bold text-white">Scopri i problemi nascosti nel tuo sito</h3>
-                    <p class="mt-2 text-emerald-100">Avvia un audit completo e ricevi un piano d'azione personalizzato</p>
+                    <p class="mt-2 text-emerald-100">Avvia la scansione gratuita e ricevi le correzioni in ordine</p>
                 </div>
                 <a href="<?= url('/projects/create') ?>" class="inline-flex items-center px-8 py-3 rounded-xl bg-white text-emerald-600 font-semibold hover:bg-emerald-50 shadow-lg transition-all flex-shrink-0">
                     Avvia audit

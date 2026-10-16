@@ -3,7 +3,7 @@
 /**
  * AI Audit Module - Routes
  *
- * Modulo per audit SEO completo con Piano d'Azione AI
+ * Modulo per audit SEO completo con Report AI
  */
 
 use Core\Router;
@@ -16,7 +16,6 @@ use Modules\SeoAudit\Controllers\ProjectController;
 use Modules\SeoAudit\Controllers\CrawlController;
 use Modules\SeoAudit\Controllers\AuditController;
 use Modules\SeoAudit\Controllers\ReportController;
-use Modules\SeoAudit\Controllers\ActionPlanController;
 
 $moduleSlug = 'seo-audit';
 
@@ -261,52 +260,13 @@ Router::get('/seo-audit/project/{id}/links/graph', function ($id) {
 });
 
 // ============================================
-// ACTION PLAN AI ROUTES
+// PIANO D'AZIONE: tolto il 2026-10-16 (decisione di Clemente: resta solo il Report AI).
+// I dati in sa_action_plans / sa_page_fixes restano; il vecchio indirizzo porta al Report AI.
 // ============================================
 
-// Vista principale Piano d'Azione
 Router::get('/seo-audit/project/{id}/action-plan', function ($id) {
     Middleware::auth();
-    $controller = new ActionPlanController();
-    return $controller->index((int) $id);
-});
-
-// Genera piano (POST AJAX)
-Router::post('/seo-audit/project/{id}/action-plan/generate', function ($id) {
-    Middleware::auth();
-    Middleware::csrf();
-    $controller = new ActionPlanController();
-    $controller->generate((int) $id);
-});
-
-// Toggle fix completato (POST AJAX)
-Router::post('/seo-audit/project/{id}/fix/{fixId}/toggle', function ($id, $fixId) {
-    Middleware::auth();
-    Middleware::csrf();
-    $controller = new ActionPlanController();
-    $controller->toggleFix((int) $id, (int) $fixId);
-});
-
-// Export To-Do List Markdown
-Router::get('/seo-audit/project/{id}/action-plan/export', function ($id) {
-    Middleware::auth();
-    $controller = new ActionPlanController();
-    $controller->export((int) $id);
-});
-
-// Elimina piano (POST AJAX)
-Router::post('/seo-audit/project/{id}/action-plan/delete', function ($id) {
-    Middleware::auth();
-    Middleware::csrf();
-    $controller = new ActionPlanController();
-    $controller->delete((int) $id);
-});
-
-// API: Ottieni fix per una pagina (GET AJAX)
-Router::get('/seo-audit/project/{id}/action-plan/page/{pageId}/fixes', function ($id, $pageId) {
-    Middleware::auth();
-    $controller = new ActionPlanController();
-    $controller->getPageFixes((int) $id, (int) $pageId);
+    Router::redirect('/seo-audit/project/' . (int) $id . '/report');
 });
 
 // ============================================

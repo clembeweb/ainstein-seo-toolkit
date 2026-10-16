@@ -404,8 +404,6 @@ if ($_navGlobalProjectId && isset($user['id'])) {
 
                         <?= navSubLink("/seo-audit/project/{$seoAuditProjectId}/report", 'Report AI', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>', $currentPath) ?>
 
-                        <?= navSubLink("/seo-audit/project/{$seoAuditProjectId}/action-plan", "Piano d'azione", '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>', $currentPath) ?>
-
                         <?= navSubLink("/seo-audit/project/{$seoAuditProjectId}/history", 'Storico', '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>', $currentPath) ?>
 
                         <!-- Settings -->

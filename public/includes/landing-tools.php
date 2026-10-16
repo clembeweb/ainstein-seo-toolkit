@@ -8,6 +8,9 @@
  */
 $variant = $variant ?? 'scroll';
 
+// Costi dalle impostazioni dei moduli, mai scritti a mano (AI Keywords diceva 10 dove sono 5)
+$_lt = fn(string $mod, string $key, float $def) => rtrim(rtrim(number_format((float) \Core\ModuleLoader::getSetting($mod, $key, $def), 1, ',', ''), '0'), ',');
+
 $panels = [
     'geo' => [
         'chip' => ['#eef2ff', '#4f46e5'],
@@ -27,8 +30,8 @@ $panels = [
         'chip' => ['#d1fae5', '#047857'],
         'h3' => 'Il tuo sito come lo vede Google.',
         'when' => 'Quando non sai da dove iniziare, o il sito è fermo da anni.',
-        'li' => ['Tutte le pagine lette dal server, senza installare niente: titoli mancanti, link rotti, pagine nascoste, immagini senza descrizione', 'I problemi in italiano semplice, in ordine di importanza', 'Il piano d\'azione scritto dall\'AI: cosa sistemare prima, quanto è difficile, cosa cambia'],
-        'cost' => 'Scansione gratis, fino a 100 pagine. Piano d\'azione: 10 crediti.',
+        'li' => ['Tutte le pagine lette dal server, senza installare niente: titoli mancanti, link rotti, pagine nascoste, immagini senza descrizione', 'I problemi in italiano semplice, in ordine di importanza', 'Il Report AI: cosa sistemare prima, come farlo con il codice pronto, su quali pagine'],
+        'cost' => 'Scansione gratis, fino a 100 pagine. Report AI: ' . $_lt('seo-audit', 'cost_unified_report', 15) . ' crediti.',
         'cta' => 'Provalo gratis',
         'mock' => '<div class="bar"><i></i><i></i><i></i><small>AI Audit · esempio</small></div><div class="in">
                 <div class="kpis"><div class="kpi"><small>Salute</small><b style="color:#059669">78</b></div><div class="kpi"><small>Da sistemare</small><b style="color:#dc2626">3</b></div><div class="kpi"><small>Pagine</small><b>214</b></div></div>
@@ -41,7 +44,7 @@ $panels = [
         'h3' => 'Descrivi l\'attività. Ti ritrovi le pagine e gli articoli da fare.',
         'when' => 'Quando devi decidere di cosa parlare sul sito e non vuoi tirare a indovinare.',
         'li' => ['Le ricerche vere della gente con i volumi di Google, raggruppate per argomento', 'La struttura del sito: quali pagine servono, con indirizzo e titolo', 'Il piano editoriale dei prossimi mesi, pronto per AI Writer'],
-        'cost' => 'Ricerca: 3 crediti. Struttura del sito: 10. Piano editoriale: 10.',
+        'cost' => 'Ricerca: ' . $_lt('keyword-research', 'cost_kr_ai_clustering', 3) . ' crediti. Struttura del sito: ' . $_lt('keyword-research', 'cost_kr_ai_architecture', 5) . '. Piano editoriale: ' . $_lt('keyword-research', 'cost_kr_editorial_plan', 5) . '.',
         'cta' => 'Provalo con ' . (int) $bonus . ' crediti',
         'mock' => '<div class="bar"><i></i><i></i><i></i><small>Struttura del sito · esempio</small></div><div class="in">
                 <table><tr><th>Ricerca</th><th>Al mese</th><th>Pagina</th></tr><tr><td>torte senza glutine torino</td><td>1.300</td><td>/senza-glutine/</td></tr><tr><td>torta di compleanno a domicilio</td><td>880</td><td>/compleanni/</td></tr><tr><td>pasticceria vegana torino</td><td>590</td><td>/vegano/</td></tr></table>

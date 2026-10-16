@@ -90,8 +90,8 @@
             <div class="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="shrink-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">5</div>
                 <div>
-                    <h3 class="font-medium text-slate-900 dark:text-white">Genera il Piano d'Azione AI</h3>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">L'AI analizza ogni pagina e genera fix concreti con codice, priorita e tempo stimato. Traccia il completamento e esporta in Markdown.</p>
+                    <h3 class="font-medium text-slate-900 dark:text-white">Genera il Report AI</h3>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">L'AI legge tutta la scansione e ti dice cosa correggere, dal più importante, con il codice pronto, le pagine coinvolte e i tempi. Si scarica in HTML da dare al cliente.</p>
                 </div>
                 <svg class="w-5 h-5 shrink-0 text-slate-300 dark:text-slate-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
@@ -161,7 +161,7 @@
                 <p class="text-sm text-slate-600 dark:text-slate-400">Panoramica dei link interni, pagine orfane, distribuzione anchor text e grafo visuale della struttura.</p>
             </div>
 
-            <!-- Action Plan -->
+            <!-- Report AI -->
             <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="flex items-center gap-3 mb-2">
                     <div class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center">
@@ -169,9 +169,9 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                         </svg>
                     </div>
-                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Action Plan AI</h3>
+                    <h3 class="font-medium text-slate-900 dark:text-white text-sm">Report AI</h3>
                 </div>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Piano d'azione con fix prioritizzati, ordinati per impatto e facilita di implementazione.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Cosa correggere in ordine di importanza, con codice pronto, pagine coinvolte e tempi consigliati.</p>
             </div>
 
             <!-- Audit via WordPress -->
@@ -264,11 +264,11 @@
                                 <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                                 </svg>
-                                Piano d'Azione AI (per progetto)
+                                Report AI (per progetto)
                             </div>
                         </td>
                         <td class="px-5 py-3 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">10 crediti</span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300"><?= rtrim(rtrim(number_format((float) \Core\ModuleLoader::getSetting('seo-audit', 'cost_unified_report', 15), 1, ',', ''), '0'), ',') ?> crediti</span>
                         </td>
                     </tr>
                 </tbody>
@@ -278,7 +278,7 @@
             <svg class="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <?php $_saCrawl = (float) \Core\Credits::getCost('crawl_per_page', 'seo-audit', 0.1); ?><?= $_saCrawl > 0 ? 'La scansione costa ' . rtrim(rtrim(number_format($_saCrawl, 1, ',', ''), '0'), ',') . ' crediti per pagina analizzata.' : 'La scansione delle pagine è gratis.' ?> L'analisi via WordPress e gratuita. Il Piano d'Azione AI costa 10 crediti per generazione. Tutte le altre funzionalita (dashboard, issues, link, storico, export) sono gratuite.
+            <?php $_saCrawl = (float) \Core\Credits::getCost('crawl_per_page', 'seo-audit', 0.1); ?><?= $_saCrawl > 0 ? 'La scansione costa ' . rtrim(rtrim(number_format($_saCrawl, 1, ',', ''), '0'), ',') . ' crediti per pagina analizzata.' : 'La scansione delle pagine è gratis.' ?> L'analisi via WordPress e gratuita. Il Report AI costa <?= rtrim(rtrim(number_format((float) \Core\ModuleLoader::getSetting('seo-audit', 'cost_unified_report', 15), 1, ',', ''), '0'), ',') ?> crediti per generazione. Tutte le altre funzionalita (dashboard, issues, link, storico, export) sono gratuite.
         </p>
     </section>
 
@@ -325,8 +325,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Usa il Piano d'Azione AI</h3>
-                    <p class="mt-1 text-sm text-blue-800 dark:text-blue-300/80">Dopo aver risolto i problemi Critical, genera il Piano d'Azione AI. Riceverai fix concreti con codice pronto, priorita e tempo stimato per ogni pagina. Puoi tracciare il completamento e esportare tutto in Markdown.</p>
+                    <h3 class="font-medium text-blue-900 dark:text-blue-200 text-sm">Usa il Report AI</h3>
+                    <p class="mt-1 text-sm text-blue-800 dark:text-blue-300/80">Dopo la scansione genera il Report AI: ti dice cosa correggere prima, con il codice pronto e le pagine coinvolte, e lo scarichi in HTML per il cliente.</p>
                 </div>
             </div>
 

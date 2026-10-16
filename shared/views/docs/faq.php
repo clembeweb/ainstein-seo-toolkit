@@ -10,7 +10,7 @@ $_faqArticle = \Core\Credits::getCost('serp_extraction', 'ai-content', 3)
     + \Core\Credits::getCost('cover_image_generation', 'ai-content', 3);
 $_faqWords = (int) \Core\ModuleLoader::getSetting('ai-content', 'default_word_count', 1500);
 $_faqCrawl = \Core\Credits::getCost('crawl_per_page', 'seo-audit', 0.1);
-$_faqActionPlan = \Core\Credits::getCost('action_plan_generate', 'seo-audit', 15);
+$_faqAuditReport = (float) \Core\ModuleLoader::getSetting('seo-audit', 'cost_unified_report', 15);
 $_faqRank = \Core\Credits::getCost('rank_check', 'seo-tracking', 1);
 $_faqGeo = \Core\Credits::getCost('collect_response', 'ai-reputation', 1);
 $_faqGeoBrief = \Core\Credits::getCost('action_brief', 'ai-reputation', 1);
@@ -62,7 +62,7 @@ $_faqSections = [
             ($_faqCrawl <= 0
                 ? 'La scansione del sito è <strong class="' . $_faqStrong . '">gratuita</strong>.'
                 : 'La scansione costa ' . $_faqCr($_faqCrawl) . ' per pagina.')
-            . ' Il Piano d\'Azione AI, che trasforma i problemi in interventi concreti pagina per pagina, costa ' . $_faqCr($_faqActionPlan) . '.'],
+            . ' Il Report AI, che legge tutta la scansione e ti dice cosa correggere in ordine, con il codice pronto e le pagine coinvolte, costa ' . $_faqCr($_faqAuditReport) . '.'],
     ]],
     ['AI Rank', 'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z', [
         ['Cosa fa AI Rank?',

@@ -2,7 +2,7 @@
     "name": "AI Audit",
     "slug": "seo-audit",
     "version": "1.1.0",
-    "description": "Audit SEO completo con Piano d'Azione AI",
+    "description": "Audit SEO completo con Report AI",
     "icon": "clipboard-document-check",
     "menu_order": 20,
     "requires": {
@@ -13,10 +13,6 @@
         "crawl_per_page": {
             "cost": 0,
             "description": "Scansione singola pagina (Gratis)"
-        },
-        "action_plan_generate": {
-            "cost": 10,
-            "description": "Generazione Piano d'Azione AI completo (Premium)"
         }
     },
     "settings_groups": {
@@ -77,16 +73,6 @@
             "label": "Costo scansione per pagina",
             "description": "Crediti per ogni pagina scansionata (0 = audit gratuito, decisione 2026-10-12)",
             "default": 0,
-            "min": 0,
-            "step": 0.1,
-            "admin_only": true,
-            "group": "costs"
-        },
-        "cost_action_plan_generate": {
-            "type": "number",
-            "label": "Costo Piano d'Azione AI",
-            "description": "Crediti per generazione Piano d'Azione AI (Premium)",
-            "default": 10,
             "min": 0,
             "step": 0.1,
             "admin_only": true,
