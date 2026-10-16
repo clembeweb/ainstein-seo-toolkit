@@ -535,6 +535,29 @@ non la merce. Il link ci sta solo come "se vi va di vederlo". La v0 qui sotto è
 
 **Decisione finale 2026-10-09: il post si scrive ALLA FINE di tutto (dopo test e landing), da zero, con Clemente. Le bozze qui sotto non contano: restano solo come memoria di cosa NON fare.**
 
+**Bozza v2 (2026-10-16 sera, scritta "al volo" su richiesta di Clemente, da rivedere insieme con lui):**
+
+> Dopo 4 anni ho detto basta: oggi è online.
+>
+> Si chiama Ainstein. L'ho costruita da solo, di notte e nei buchi tra un cliente e l'altro. Nessun team, nessun investitore. Vent'anni di SEO e Google Ads, e l'intelligenza artificiale che mi ha dato le mani che non avevo: quelle di chi sa programmare.
+>
+> L'ho lasciata e ripresa non so quante volte. Mi fermavo sempre per lo stesso motivo: "non è ancora perfetta". Non è mai stata una questione di idee.
+>
+> Non è perfetta neanche adesso. Ha difetti che vedo benissimo. Ma tenerla nel cassetto un altro anno sarebbe stata l'ennesima cosa che non vede la luce, e non mi sembrava giusto.
+>
+> Una cosa l'ho imparata facendola, e la condivido perché mi ha colpito: le AI sanno chi sei, ma ai tuoi clienti consigliano altri. Su un sito che seguo, ChatGPT lo conosce bene (lo cita 8 volte su 10 quando gli chiedi di lui) e quando un cliente chiede "una barca per Capri" lo consiglia 2 volte su 100. Nel frattempo, in un mese, 7 persone sono arrivate sul sito proprio da ChatGPT. Nessuno strumento me lo diceva. Ora ce l'ho.
+>
+> Non la pubblico per venderla. La pubblico perché per me è come far nascere un figlio, e i figli a un certo punto escono di casa.
+>
+> Se vi va di vederla è su ainstein.it. Se la provate e vi sembra utile, miglioriamola insieme. Se vi sembra inutile, ditemelo: è il regalo più grande che potete farmi.
+>
+> Questa non è una buona pubblicità per il prodotto. Lo è per me. E oggi preferisco così.
+
+Note v2: prima riga 42 caratteri (sotto il taglio); nessun "prova gratis", nessun elenco di funzioni; i numeri sono veri
+(GEO Audit di Stabia: citata nel 79% col nome, consigliata nel 2% senza; GA4 Stabia ultimi 28 giorni: 7 visite da ChatGPT);
+chiedere a Clemente se Stabia può essere nominata o resta "un sito che seguo"; 2-3 screenshot veri (Andamento con
+"Visite dalle AI", report GEO, Panoramica AI Audit).
+
 **Bozza v1 (scartata, da rifare alla fine):**
 
 > Dopo 4 anni ho detto BASTA.
