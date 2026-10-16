@@ -41,6 +41,10 @@ degli indirizzi, e come l'app usa i dati. Schermata di consenso in **inglese** (
 ## Stato
 - [x] Progetto, API, branding testi, scope, client, In produzione (2026-10-16)
 - [x] Privacy con sezione "Dati ricevuti da Google" + frase Limited Use (`944d506`)
+- [x] Logo caricato (2026-10-16)
 - [ ] Deploy + SQL + client nuovo in Admin
-- [ ] Logo caricato + verifica branding
+- [ ] Search Console: proprietà `https://ainstein.it/` aggiunta all'account bewebsolution, file
+      `public/google671e942f079f888e.html` (`897f817`) → dopo il deploy cliccare VERIFICA in GSC.
+      Primo controllo branding (2026-10-16) bocciato: "home page non registrata a tuo nome".
+- [ ] Branding: **24 h dopo** la verifica GSC → Branding → Stato di verifica → "Ho risolto i problemi" → Procedi
 - [ ] Video + invio verifica scope
