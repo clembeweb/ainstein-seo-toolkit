@@ -6,6 +6,25 @@
 >
 > Priorità: **P1** = blocca il lancio · **P2** = da sistemare presto · **P3** = rifinitura.
 
+## DOVE SIAMO (passaggio di consegne, 2026-10-16 ~16:15) — RIPARTIRE DA QUI
+
+- **Fatti:** scenario 1 (utente nuovo, iscrizione Google: utente 4 `bewebagencysrls@gmail.com`, progetto Madcrumbs
+  = global/AI Audit 19) e scenario 6 (admin regala crediti). Clemente ha voluto **chiudere AI Audit prima di andare
+  avanti**: provati scansione (gratis, OK), Piano d'azione e Report AI.
+- **Decisione di Clemente:** in AI Audit resta **solo il Report AI**, il Piano d'azione si toglie.
+- **In mano alla sessione "P2 della prova da utente" (p2-fix)**, in quest'ordine: A) pagina Report AI in errore 500
+  (P1, da mettere online da sola appena pronta, con l'ok di Clemente); B) falso "Sitemap XML assente" su tutti i
+  progetti (P1); C) togliere il Piano d'azione (revert di c9bcfc5, tiene fe38c6e = IT/EN come traduzione mancante);
+  D) tour di benvenuto e Panoramica vuota (P2).
+- **Prossimo passo (nuova sessione):** quando A è online, Clemente riapre `/seo-audit/project/19/report` (account
+  Beweb Agency, finestra in incognito) e si verifica il report impaginato + il download. Poi B e C online → AI Audit
+  chiuso. Poi scenari 2 (crediti che finiscono: Admin toglie crediti fino a 5, prova il Report AI da 15),
+  4 (agenzia con più clienti, ricontrolla P1 WordPress dell'altro cliente), 3 (progetto condiviso: chi paga — il
+  Report AI controlla e scala i crediti di chi clicca, `UnifiedReportService::generate` usa `$userId`, non l'owner:
+  da verificare), 5 (telefono e scuro).
+- **Rimandati da Clemente:** tour (benvenuto e "?" dentro il progetto) — "li fixiamo dopo".
+- Guardare lo schermo di Clemente: computer-use su Google Chrome in sola lettura (monitor S24F350); lui clicca.
+
 ## Scenari
 
 | # | Scenario | Stato |
