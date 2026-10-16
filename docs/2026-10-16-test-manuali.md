@@ -8,6 +8,10 @@
 
 ## DOVE SIAMO (passaggio di consegne, 2026-10-16 ~16:15) — RIPARTIRE DA QUI
 
+> **Aggiornamento chiusura 2026-10-16 sera:** AI Audit chiuso e verificato in prod (deploy `0ce9538`, blocco "Esito AI
+> Audit" sotto). Clemente ha chiuso la giornata. **Si riparte dalla "Lista corta prima del post" in fondo al file.**
+> Il testo qui sotto è lo stato di metà pomeriggio, lasciato come storia.
+
 - **Fatti:** scenario 1 (utente nuovo, iscrizione Google: utente 4 `bewebagencysrls@gmail.com`, progetto Madcrumbs
   = global/AI Audit 19) e scenario 6 (admin regala crediti). Clemente ha voluto **chiudere AI Audit prima di andare
   avanti**: provati scansione (gratis, OK), Piano d'azione e Report AI.
@@ -228,6 +232,21 @@ correzione durante il giro.
   farebbe il tool e mostrare il riassunto senza dettagli (quante criticità/avvisi trovati, punteggio, pagine lette).
   I dettagli si vedono dopo l'iscrizione. Da fare alla fine, dopo il post.
 
-## Lista corta prima del post
+## Lista corta prima del post (chiusura 2026-10-16 sera)
 
-_Si compila alla fine._
+Già online e verificato: tutti i P1 trovati oggi (pagina Report AI, sitemap) e la decisione "solo Report AI".
+Restano, in ordine:
+
+1. **AI Keywords, "e adesso?" dopo la Ricerca keyword (P2):** dai risultati mandare le keyword ad AI Rank / AI Writer
+   (gli invii esistono già in Controllo veloce e Piano editoriale, manca qui). È il passaggio che si mostra nel post.
+2. **AI Keywords, anteprima prima del filtro AI (P2):** vedere le keyword raccolte e poi decidere se spendere 3 cr.
+3. **Scenario 3, progetto condiviso: chi paga il Report AI.** Dal codice `UnifiedReportService::generate` controlla e
+   scala i crediti di chi clicca, non dell'owner: se l'Editor paga, è un errore sui soldi. Da provare (10 min).
+4. **Scenario 4, agenzia con 2-3 clienti:** ricontrollo del P1 del 15 (AI Writer col WordPress di un altro cliente).
+5. **Testi (P3, un giro unico):** "Budget Score", "Tipo: generic", "Report SEO Unificato", "Score", numeri all'inglese
+   ("15,400"), "API: 1.0s | AI: 12.2s" in fondo ad AI Keywords, codici tecnici nello storico crediti, notifica
+   "Progetto #19", "Issues Totali", "puo". Nomi dei moduli nel menu ("Ai SEO …"): li cambia Clemente da Admin.
+
+Dopo il post: scenario 2 (crediti che finiscono) e 5 (telefono/scuro) se non fatti prima; tour "?" dentro il progetto
+(rimandato da Clemente); icone menu/dashboard; scheda Impostazioni dei moduli; highlights di Struttura link e Crawl
+Budget nella Panoramica; spunta "fatto" per problema nel Report AI; scansione AI Audit dalla landing.
