@@ -181,6 +181,36 @@
 - Atteso: il nome del progetto ("Madcrumbs") e il nome del tool (AI Audit).
 - Successo: numero interno del progetto al posto del nome.
 
+## Giro manuale di Clemente (2026-10-16 sera) — si risolve in blocco alla fine
+
+Account Beweb Agency (utente 4), progetto Madcrumbs. Clemente segnala, la sessione Test manuali scrive; nessuna
+correzione durante il giro.
+
+### [P2] AI Keywords, Ricerca keyword: non vedo le keyword raccolte prima del filtro AI (3 cr)
+- Scenario / passo: giro manuale, nuova Ricerca keyword su Madcrumbs, dopo i dati iniziali.
+- Atteso: vedere l'elenco delle keyword estratte (104) e poi decidere se applicare il filtro AI da 3 crediti.
+- Successo: si passa direttamente ai risultati già filtrati e raggruppati.
+
+### [P2] AI Keywords, Ricerca keyword: risultati senza un "e adesso?"
+- Scenario / passo: giro manuale, pagina Risultati della ricerca (8 cluster, 49 kw).
+- Atteso: dai risultati poter mandare le keyword ad AI Rank (se attivo sul progetto) o ad AI Writer.
+- Successo: c'è solo "Esporta CSV" e "Nuova Ricerca". Nel codice gli invii esistono ma altrove: "Invia a AI Rank" solo
+  in Controllo veloce, "Invia a AI Writer" solo in Piano editoriale, "Invia a Content Creator" in Architettura sito.
+  Dalla Ricerca keyword nessuno dei tre.
+
+### [P3] AI Keywords, qualità: escluse keyword in target e cluster molto simili
+- Scenario / passo: giro manuale, stessi risultati.
+- Successo: in "Keyword escluse dall'AI" (6) ci sono keyword in target (es. "agency web marketing", "digital agenzia",
+  "web communication agency"); gli 8 cluster sono quasi tutti "agenzia di …" e si somigliano.
+- Note: Clemente: "non mi convince ma per adesso non tocchiamo".
+
+### [P3] AI Keywords, Risultati: dettagli visti nello screenshot
+- Numeri all'inglese: "15,400", "11,930", "4,400" (in italiano 15.400).
+- In fondo alla pagina "API: 1.0s | AI: 12.2s | Crediti: 3.00": dato tecnico visibile all'utente.
+- Nomi diversi: menu laterale "AI Research", briciole "AI Keywords"; nel menu "AI SEO Audit / AI SEO Rank /
+  AI SEO Writer".
+- Saldo in alto "137.0" (corretto in locale da p2-fix, `a159e50`, non ancora online).
+
 ## Idee per DOPO il post
 
 - **Landing: scansione AI Audit insieme al controllo AI gratuito** (Clemente, 2026-10-16). La scansione di AI Audit è
