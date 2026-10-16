@@ -337,6 +337,8 @@ class AiService
                     'error' => true,
                     'message' => "Risposta AI troncata (limite di {$maxTokens} token raggiunto). Riduci i dati in input o riprova.",
                     'truncated' => true,
+                    // Il testo arrivato fin li': chi sa completarlo (es. articoli, "continua da qui") non lo butta
+                    'partial_content' => (string) ($result['content'] ?? ''),
                 ];
             }
 

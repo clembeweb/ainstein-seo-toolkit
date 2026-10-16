@@ -53,17 +53,32 @@ class ArticleGeneratorService
 
         $startTime = microtime(true);
 
+        // Oltre le 3000 parole la richiesta supera i tempi del server (Apache 300 s) e l'articolo non migliora
+        $targetWords = max(300, min(3000, $targetWords));
+
         // Build the prompt
         $prompt = $this->buildPrompt($brief, $targetWords);
 
-        // Calculate max tokens (roughly 1.3 tokens per word + buffer for formatting)
-        // ~2 token per parola in italiano + HTML, titolo e meta: 4096 troncava gli articoli da 1500+ parole
-        $maxTokens = min(16000, max(8192, (int) ($targetWords * 4) + 1500));
+        // Token per parola misurati (2026-10-16, Opus 5.5, Madcrumbs): ~3,5 con HTML, piu' ~1000 di ragionamento,
+        // e il modello sfora la lunghezza chiesta. Col vecchio tetto (parole x 4 + 1500 = 12.700 per 2800 parole)
+        // l'articolo si fermava a meta' delle FAQ. Margine largo: si pagano solo i token scritti.
+        $maxTokens = min(24000, max(8192, $targetWords * 5 + 4000));
 
         // Try generation with retries
         $lastError = null;
         for ($attempt = 1; $attempt <= $this->maxRetries; $attempt++) {
             $response = $this->callClaudeApi($prompt, $maxTokens, $userId);
+
+            if (!$response['success'] && !empty($response['truncated'])) {
+                // Tagliato comunque: ripetere la stessa richiesta darebbe lo stesso taglio (e la stessa spesa).
+                // Si tiene quanto scritto e si chiede solo il seguito.
+                $completed = $this->completeTruncated($response['partial_content'] ?? '', $brief, $userId);
+                if ($completed === null) {
+                    $lastError = 'Articolo troppo lungo: la generazione si è interrotta prima della fine. Riprova con meno parole.';
+                    break;
+                }
+                $response = ['success' => true, 'content' => $completed];
+            }
 
             if ($response['success']) {
                 $parsed = $this->parseResponse($response['content']);
@@ -155,7 +170,7 @@ Sei un esperto SEO copywriter. Il tuo obiettivo è creare un articolo che sia MI
 ## ISTRUZIONI DI GENERAZIONE
 
 1. **Lingua**: Scrivi INTERAMENTE in {$languageName}
-2. **Lunghezza**: Circa {$targetWords} parole
+2. **Lunghezza**: circa {$targetWords} parole, senza superarle di oltre il 10%. Per stare nella lunghezza accorcia le sezioni, non la fine: FAQ (se le metti) e conclusione devono esserci sempre, complete
 3. **Obiettivo**: Crea un articolo più COMPLETO e UTILE di qualsiasi singola fonte
 4. **Struttura**:
    - Titolo H1 accattivante con keyword (max 60 caratteri)
@@ -438,6 +453,8 @@ PROMPT;
             ['role' => 'user', 'content' => $prompt],
         ], [
             'max_tokens' => $maxTokens,
+            // ~110 token/s: 20.000 token sono quasi 3 minuti, oltre il timeout di 120 s di default
+            'timeout' => 240,
             'charge_credits' => false, // addebita il chiamante (article_generation), evita il doppio addebito ai_analysis_*
         ], 'ai-content');
 
@@ -445,6 +462,8 @@ PROMPT;
             return [
                 'success' => false,
                 'error' => $result['message'] ?? 'Errore API Claude',
+                'truncated' => !empty($result['truncated']),
+                'partial_content' => $result['partial_content'] ?? '',
             ];
         }
 
@@ -457,6 +476,63 @@ PROMPT;
             ],
             'credits_used' => $result['credits_used'] ?? 0,
         ];
+    }
+
+    /**
+     * Articolo tagliato dal tetto di token: tiene quanto scritto fino all'ultimo blocco HTML chiuso e chiede
+     * all'AI solo il seguito (i modelli 5.x non accettano il "prefill" dell'assistente: il testo va nel messaggio).
+     * Ritorna la risposta completa nel formato ```title / ```meta / ```html, o null se non si riesce.
+     */
+    private function completeTruncated(string $partial, array $brief, int $userId): ?string
+    {
+        $htmlPos = strpos($partial, self::HTML_START);
+        if ($htmlPos === false) {
+            return null; // tagliato prima ancora dell'articolo
+        }
+
+        // Fino all'ultimo blocco chiuso: niente parole o tag a meta' da ricucire
+        $cut = 0;
+        if (preg_match_all('#</(?:p|ul|ol|h2|h3|table|blockquote)>#i', $partial, $m, PREG_OFFSET_CAPTURE, $htmlPos)) {
+            $last = end($m[0]);
+            $cut = $last[1] + strlen($last[0]);
+        }
+        if ($cut <= $htmlPos) {
+            return null;
+        }
+        $head = substr($partial, 0, $cut);
+        $written = substr($head, $htmlPos + strlen(self::HTML_START));
+
+        $keyword = $brief['keyword'] ?? '';
+        $prompt = <<<PROMPT
+Stavi scrivendo un articolo SEO in HTML sulla keyword "{$keyword}" e il testo si è interrotto. Ecco quanto hai già scritto:
+
+<articolo_scritto>
+{$written}
+</articolo_scritto>
+
+Scrivi SOLO il seguito, a partire dal blocco successivo all'ultimo qui sopra:
+- non ripetere niente di quanto già scritto;
+- completa la sezione in corso, poi chiudi l'articolo in modo conciso (in tutto al massimo 500 parole): se non ci sono ancora, aggiungi poche FAQ brevi e una conclusione;
+- stesso stile e stessi tag (<h2>, <h3>, <p>, <ul>, <strong>), niente <h1>;
+- rispondi solo con l'HTML del seguito, senza ``` e senza commenti.
+PROMPT;
+
+        $result = $this->aiService->complete($userId, [
+            ['role' => 'user', 'content' => $prompt],
+        ], [
+            'max_tokens' => 6000,
+            'timeout' => 120,
+            'charge_credits' => false, // fa parte della stessa generazione (article_generation)
+        ], 'ai-content');
+
+        $rest = trim((string) ($result['result'] ?? ''));
+        if (!empty($result['error']) || $rest === '') {
+            return null;
+        }
+        // Se l'AI ha comunque aperto/chiuso un blocco di codice, lo tolgo
+        $rest = trim(preg_replace('/^```(?:html)?\s*|\s*```$/i', '', $rest));
+
+        return $head . "\n" . $rest . "\n" . self::HTML_END;
     }
 
     /**
@@ -677,7 +753,7 @@ PROMPT;
 
         $prompt = $this->buildRegeneratePrompt($brief, $existingContent, $instructions, $targetWords);
         // ~2 token per parola in italiano + HTML, titolo e meta: 4096 troncava gli articoli da 1500+ parole
-        $maxTokens = min(16000, max(8192, (int) ($targetWords * 4) + 1500));
+        $maxTokens = min(24000, max(8192, $targetWords * 5 + 4000)); // come generate()
 
         $response = $this->callClaudeApi($prompt, $maxTokens);
 
