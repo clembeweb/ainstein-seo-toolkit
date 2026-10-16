@@ -59,8 +59,24 @@ include __DIR__ . '/_legal-head.php';
         </p>
     </section>
 
+    <section id="dati-google">
+        <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-3">5. Dati ricevuti da Google</h2>
+        <ul class="list-disc pl-6 space-y-2 text-slate-600 dark:text-slate-400 leading-relaxed">
+            <li><strong>Accesso con Google:</strong> riceviamo solo nome, email, identificativo e immagine del profilo, per creare il tuo account e farti entrare.</li>
+            <li><strong>Search Console e Google Analytics:</strong> l'accesso è in sola lettura e lo chiediamo solo quando colleghi tu il servizio a un progetto. Leggiamo i dati dei siti che scegli (clic, impressioni, posizioni, query, pagine, visite, canali, conversioni) e li usiamo solo per mostrarti report e analisi del tuo sito dentro Ainstein. Non modifichiamo nulla nei tuoi account Google.</li>
+            <li><strong>Commenti scritti con l'AI:</strong> quando chiedi un commento automatico (ad esempio il Punto della situazione), i numeri del periodo vengono inviati al fornitore AI (Anthropic o, in riserva, OpenAI) solo per scrivere il testo che leggi. Usiamo le loro API commerciali, che non usano questi dati per addestrare i modelli.</li>
+            <li><strong>Cosa non facciamo:</strong> non vendiamo i dati di Google, non li usiamo per pubblicità, non li usiamo per addestrare modelli di intelligenza artificiale e non li trasferiamo ad altri, salvo quanto descritto qui o se lo impone la legge. Nessuna persona li legge, salvo tuo consenso (ad esempio per assistenza), per sicurezza o per obbligo di legge.</li>
+            <li><strong>Come revocare:</strong> puoi scollegare Search Console o Analytics dalle impostazioni del progetto: cancelliamo subito i token di accesso. Puoi anche revocare l'accesso da <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener" class="text-primary-600 dark:text-primary-400 hover:underline">myaccount.google.com/permissions</a>. Se chiedi la cancellazione dell'account cancelliamo anche i token e i dati salvati dei tuoi progetti.</li>
+        </ul>
+        <p class="mt-3 text-slate-600 dark:text-slate-400 leading-relaxed" lang="en">
+            Ainstein's use and transfer to any other app of information received from Google APIs will adhere to the
+            <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener" class="text-primary-600 dark:text-primary-400 hover:underline">Google API Services User Data Policy</a>,
+            including the Limited Use requirements.
+        </p>
+    </section>
+
     <section>
-        <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-3">5. Per quanto tempo conserviamo i dati</h2>
+        <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-3">6. Per quanto tempo conserviamo i dati</h2>
         <ul class="list-disc pl-6 space-y-2 text-slate-600 dark:text-slate-400 leading-relaxed">
             <li><strong>Account e progetti:</strong> finché l'account è attivo. Puoi chiedere la cancellazione in qualsiasi momento.</li>
             <li><strong>Log tecnici e di utilizzo:</strong> periodi limitati, con pulizia automatica periodica.</li>
@@ -69,7 +85,7 @@ include __DIR__ . '/_legal-head.php';
     </section>
 
     <section>
-        <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-3">6. I tuoi diritti</h2>
+        <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-3">7. I tuoi diritti</h2>
         <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
             Hai diritto di accedere ai tuoi dati, correggerli, chiederne la cancellazione o la limitazione, opporti al trattamento,
             ottenerli in formato portabile e revocare il consenso dove previsto. Per esercitarli scrivi a
@@ -80,7 +96,7 @@ include __DIR__ . '/_legal-head.php';
     </section>
 
     <section>
-        <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-3">7. Sicurezza</h2>
+        <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-3">8. Sicurezza</h2>
         <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
             Le connessioni sono protette da HTTPS, le password sono salvate solo in forma cifrata, i token di accesso ai servizi Google
             sono conservati in modo protetto e l'accesso ai server è limitato. Nessun sistema è sicuro al 100%: in caso di violazione
@@ -89,7 +105,7 @@ include __DIR__ . '/_legal-head.php';
     </section>
 
     <section>
-        <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-3">8. Cookie</h2>
+        <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-3">9. Cookie</h2>
         <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
             Ainstein usa solo cookie tecnici necessari al funzionamento. I dettagli sono nella
             <a href="<?= url('/docs/cookies') ?>" class="text-primary-600 dark:text-primary-400 hover:underline">Cookie Policy</a>.
@@ -97,7 +113,7 @@ include __DIR__ . '/_legal-head.php';
     </section>
 
     <section>
-        <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-3">9. Modifiche</h2>
+        <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-3">10. Modifiche</h2>
         <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
             Possiamo aggiornare questa informativa. Le modifiche rilevanti vengono comunicate via email o con un avviso nella piattaforma.
             La data in cima alla pagina indica la versione in vigore.

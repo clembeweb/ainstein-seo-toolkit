@@ -11,7 +11,7 @@ $legalOwner = [
     'vat'     => '09334871218',
     'email'   => 'supporto@ainstein.it',
 ];
-$legalUpdated = '9 ottobre 2026';
+$legalUpdated = '16 ottobre 2026';
 ?>
 <!-- Breadcrumb -->
 <nav class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-8">
