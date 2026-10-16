@@ -54,7 +54,16 @@ class DashboardController
         $factCounts = (new ProfileFact())->counts($id);
         $profileConfirmed = ($factCounts['confirmed'] + $factCounts['corrected']) > 0;
         $lastCompletedRun = array_values(array_filter($runs, fn($r) => $r['status'] === 'completed'))[0] ?? null;
-        $creditsTotal = (float) Database::fetchColumn("SELECT COALESCE(SUM(credits_used), 0) FROM ar_runs WHERE project_id = ?", [$id]);
+        // Crediti del progetto: audit (ar_runs) + profilo, domande e schede azione (registro usage_log).
+        // collect_response e reanalyze_response sono già in ar_runs.credits_used: esclusi per non contarli due volte.
+        $creditsTotal = (float) Database::fetchColumn("SELECT COALESCE(SUM(credits_used), 0) FROM ar_runs WHERE project_id = ?", [$id])
+            + (float) Database::fetchColumn(
+                "SELECT COALESCE(SUM(credits_used), 0) FROM usage_log
+                 WHERE module_slug = ? AND action NOT IN ('collect_response', 'reanalyze_response')
+                   AND (JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.project_id')) = ?
+                        OR JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.run_id')) IN (SELECT id FROM ar_runs WHERE project_id = ?))",
+                [Project::SLUG, (string) $id, $id]
+            );
 
         // Stima del prossimo run, mostrata prima di "Avvia run": stesso calcolo di RunController::start()
         $auditType = (string) ($project['audit_type'] ?? 'reputation');

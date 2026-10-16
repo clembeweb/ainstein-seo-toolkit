@@ -38,7 +38,18 @@ $riskClass = match ($metrics['risk_label']) {
     'Basso' => 'text-emerald-600 dark:text-emerald-400',
     default => 'text-slate-400',
 };
-$actionLabel = ['clarify' => 'da chiarire', 'removal' => 'rimozione', 'counter_content' => 'contro-contenuto', 'gap_article' => 'articolo gap', 'correction' => 'tecnico', 'gap_pending' => 'da valutare'];
+// Sotto la percentuale: il conto semplice, e perché la % può non coincidere (le AI pesano diverso, ADR-009)
+$shareBasis = function (string $verb, string $what) use ($metrics): string {
+    $n = (int) ($metrics['mentioned_n'] ?? 0);
+    $tot = (int) ($metrics['judged'] ?? 0);
+    $text = "{$verb} in {$n} " . ($n === 1 ? 'risposta' : 'risposte') . " su {$tot} {$what}";
+    $simple = $tot > 0 ? (int) round($n / $tot * 100) : 0;
+    if ($tot > 0 && $simple !== (int) ($metrics['share'] ?? 0)) {
+        $text .= " ({$simple}% a conto semplice: nella percentuale ChatGPT e Gemini contano di più, perché li usano più persone)";
+    }
+    return $text;
+};
+$actionLabel = ['clarify' => 'da chiarire', 'removal' => 'rimozione', 'counter_content' => 'contro-contenuto', 'gap_article' => 'articolo da scrivere', 'correction' => 'tecnico', 'gap_pending' => 'da valutare'];
 $actionClass = ['clarify' => 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300', 'removal' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300', 'counter_content' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300', 'gap_article' => 'bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300', 'correction' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300', 'gap_pending' => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'];
 $isActive = in_array($run['status'], ['pending', 'running'], true);
 $briefCost = $briefCost ?? 1;
@@ -108,7 +119,7 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Ti consigliano</p>
             <p class="text-2xl font-bold <?= $shareClass ?>"><?= (int) $metrics['share'] ?>%</p>
-            <p class="text-xs text-slate-400">nominato in <?= (int) $metrics['mentioned_n'] ?> risposte su <?= (int) $metrics['judged'] ?> a domande di chi cerca il servizio</p>
+            <p class="text-xs text-slate-400"><?= e($shareBasis('nominato', 'a domande di chi cerca il servizio')) ?></p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Ti conoscono</p>
@@ -149,15 +160,15 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
     <!-- KPI -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
-            <p class="text-sm text-slate-500 dark:text-slate-400">AI share of voice</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Ti citano</p>
             <p class="text-2xl font-bold text-slate-900 dark:text-white"><?= $hasAnalyses ? $metrics['share'] . '%' : '–' ?></p>
-            <p class="text-xs text-slate-400"><?= $hasAnalyses ? "citato in {$metrics['mentioned_n']} risposte neutre su {$metrics['judged']} (pesate per AI)" : 'dopo l\'analisi' ?></p>
+            <p class="text-xs text-slate-400"><?= $hasAnalyses ? e($shareBasis('citato', 'neutre')) : 'dopo l\'analisi' ?></p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
             <p class="text-sm text-slate-500 dark:text-slate-400">Rischio reputazione</p>
             <?php if (($run['audit_type'] ?? 'reputation') === 'purchase'): ?>
             <p class="text-2xl font-bold text-slate-400">–</p>
-            <p class="text-xs text-slate-400">non misurato: è un audit d'acquisto. Per il rischio scegli "Reputazione" o "Entrambi" nella Overview.</p>
+            <p class="text-xs text-slate-400">non misurato: è un audit d'acquisto. Per il rischio scegli "Reputazione" o "Entrambi" nella Panoramica.</p>
             <?php else: ?>
             <p class="text-2xl font-bold <?= $riskClass ?>"><?= $hasAnalyses ? $metrics['risk_label'] : '–' ?> <?php if ($hasAnalyses): ?><span class="text-sm font-normal text-slate-400"><?= $metrics['risk'] ?>%</span><?php endif; ?></p>
             <p class="text-xs text-slate-400"><?= $hasAnalyses ? e($metrics['risk_basis']) . ' sono negative · ' . $metrics['negative_domains'] . ' fonti negative' : 'dopo l\'analisi' ?></p>
@@ -455,7 +466,7 @@ $briefCostLabel = rtrim(rtrim(number_format((float) $briefCost, 1, ',', ''), '0'
                             <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-700/50 space-y-1">
                                 <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Giudizio</p>
                                 <p class="text-slate-800 dark:text-slate-100" x-text="current.analysis.summary"></p>
-                                <p class="text-xs text-slate-500 dark:text-slate-400" x-text="'Verdetto: ' + current.analysis.verdict + ' · sentiment ' + current.analysis.sentiment + (current.analysis.is_homonym !== 'no' ? ' · omonimia: ' + current.analysis.is_homonym : '') + (current.analysis.outcome !== 'answered' ? ' · esito: ' + current.analysis.outcome : '')"></p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400" x-text="'Verdetto: ' + current.analysis.verdict_label + ' · tono ' + current.analysis.sentiment + (current.analysis.is_homonym !== 'no' ? ' · omonimo: ' + current.analysis.homonym_label : '') + (current.analysis.outcome !== 'answered' ? ' · esito: ' + current.analysis.outcome_label : '')"></p>
                                 <p class="text-xs text-amber-700 dark:text-amber-300" x-show="current.analysis.homonym_note" x-text="current.analysis.homonym_note"></p>
                                 <p class="text-xs text-amber-700 dark:text-amber-300" x-show="current.analysis.contradiction_note" x-text="'In contrasto con i fatti confermati: ' + current.analysis.contradiction_note"></p>
                                 <ul class="text-xs text-red-700 dark:text-red-300 list-disc ml-4" x-show="current.analysis.negative_reasons.length"><template x-for="n in current.analysis.negative_reasons" :key="n"><li x-text="n"></li></template></ul>
@@ -541,7 +552,7 @@ function arReport() {
                 this.es.addEventListener('stalled', e => { const d = JSON.parse(e.data); this.message = d.message; this.analyzing = false; this.es.close(); });
                 this.es.addEventListener('failed', e => { const d = JSON.parse(e.data); this.message = d.message; this.analyzing = false; this.es.close(); });
                 this.es.addEventListener('phase', e => { const d = JSON.parse(e.data); this.total = d.total; this.done = 0; this.percent = 0; });
-                this.es.addEventListener('analysis_completed', e => { const d = JSON.parse(e.data); this.done++; this.percent = this.total ? Math.round(this.done / this.total * 100) : 0; this.log.unshift({ id: d.response_id, text: (this.labels[d.engine] || d.engine) + ': ' + d.verdict + ' · ' + (d.summary || '') }); });
+                this.es.addEventListener('analysis_completed', e => { const d = JSON.parse(e.data); this.done++; this.percent = this.total ? Math.round(this.done / this.total * 100) : 0; this.log.unshift({ id: d.response_id, text: (this.labels[d.engine] || d.engine) + ': ' + (d.verdict_label || d.verdict) + ' · ' + (d.summary || '') }); });
                 this.es.addEventListener('analysis_error', e => { const d = JSON.parse(e.data); this.done++; this.log.unshift({ id: 'e' + d.response_id, text: (this.labels[d.engine] || d.engine) + ': errore di giudizio · ' + d.error }); });
                 this.es.addEventListener('completed', () => { this.message = 'Analisi completata, ricarico il report…'; this.percent = 100; this.es.close(); setTimeout(() => location.reload(), 800); });
                 this.es.addEventListener('cancelled', () => { this.message = 'Annullato'; this.analyzing = false; this.es.close(); });

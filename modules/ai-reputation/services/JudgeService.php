@@ -90,7 +90,7 @@ Regole:
 2b. Se il motore chiede chiarimenti ma nomina il soggetto (anche tra le opzioni), "brand_mentioned" è true.
 8. "competitors": nomi di persone o aziende che la risposta propone come alternative o come "i migliori" al posto del soggetto (solo se la domanda è commerciale o competitiva; altrimenti []).
 9. "claims": massimo 6 affermazioni chiave sul soggetto, ciascuna {"text": "...", "negative": true|false}.
-10. "summary": una frase in italiano, max 160 caratteri, che dice cosa risponde il motore sul soggetto. Lingua: italiano.
+10. "summary": una frase in italiano, max 160 caratteri, che dice cosa risponde l'AI sul soggetto. Chiamala "l'AI", mai "il motore". Lingua: italiano.
 
 Formato esatto:
 {"outcome":"answered","brand_mentioned":true,"mention_position":1,"is_homonym":"no","homonym_note":null,"sentiment":0,"verdict":"neutral","summary":"...","negative":false,"contradicts_profile":false,"contradiction_note":null,"negative_reasons":[],"negative_urls":[],"doubts":[],"citations_about_subject":[],"citations_noise":[],"competitors":[],"claims":[]}
@@ -352,10 +352,10 @@ TXT;
             'brand_mentioned' => $mentioned ? 1 : 0,
             'mention_position' => isset($d['mention_position']) && is_numeric($d['mention_position']) ? (int) $d['mention_position'] : null,
             'is_homonym' => $isHomonym,
-            'homonym_note' => !empty($d['homonym_note']) ? mb_substr((string) $d['homonym_note'], 0, 500) : null,
+            'homonym_note' => !empty($d['homonym_note']) ? \Modules\AiReputation\Models\Analysis::plain(mb_substr((string) $d['homonym_note'], 0, 500)) : null,
             'sentiment' => $sentiment,
             'verdict' => $verdict,
-            'summary' => mb_substr((string) ($d['summary'] ?? ''), 0, 500),
+            'summary' => \Modules\AiReputation\Models\Analysis::plain(mb_substr((string) ($d['summary'] ?? ''), 0, 500)),
             'negative' => $negative ? 1 : 0,
             'negative_reasons' => array_values(array_filter(array_map(
                 fn($x) => is_scalar($x) ? (string) $x : json_encode($x, JSON_UNESCAPED_UNICODE),

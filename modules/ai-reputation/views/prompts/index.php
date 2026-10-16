@@ -22,7 +22,7 @@ $kindLabel = [
         <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between gap-4">
             <div>
                 <h2 class="text-base font-semibold text-slate-900 dark:text-white">Domande</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-400">Le domande che la gente fa alle AI su <?= e($project['subject_name']) ?>. Generale dal <a href="<?= url($basePath . '/profile') ?>" class="text-indigo-600 dark:text-indigo-400 hover:underline">profilo confermato</a>, aggiungile a mano, o parti dalle 8 base.</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Le domande che la gente fa alle AI su <?= e($project['subject_name']) ?>. Generane dal <a href="<?= url($basePath . '/profile') ?>" class="text-indigo-600 dark:text-indigo-400 hover:underline">profilo confermato</a>, aggiungile a mano, o parti dalle 8 base.</p>
             </div>
             <?php if ($canEdit): ?>
             <div class="flex flex-wrap items-center justify-end gap-2" x-data="arPromptGen()">

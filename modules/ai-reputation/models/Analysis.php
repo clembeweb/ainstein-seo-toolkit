@@ -9,6 +9,29 @@ use Core\Database;
  */
 class Analysis
 {
+    /** Etichette italiane dei codici del judge (registro dal vivo, dettaglio risposta) */
+    public const VERDICT_LABELS = ['positive' => 'positivo', 'neutral' => 'neutro', 'mixed' => 'misto', 'negative' => 'negativo', 'not_mentioned' => 'non nominato'];
+    public const OUTCOME_LABELS = ['answered' => 'ha risposto', 'clarification_requested' => 'ha chiesto chiarimenti', 'refused' => 'si è rifiutata', 'empty' => 'risposta vuota'];
+    public const HOMONYM_LABELS = ['no' => 'no', 'yes' => 'sì', 'uncertain' => 'da verificare'];
+
+    /**
+     * "Il motore" → "L'AI" nei testi del judge: il prompt lo chiamava così e i giudizi lo ripetevano.
+     * Vale per i giudizi nuovi (JudgeService) e per quelli già salvati (byRun).
+     */
+    public static function plain(?string $text): ?string
+    {
+        if ($text === null || $text === '') {
+            return $text;
+        }
+        return strtr($text, [
+            'Il motore' => "L'AI", 'il motore' => "l'AI",
+            'Del motore' => "Dell'AI", 'del motore' => "dell'AI",
+            'Dal motore' => "Dall'AI", 'dal motore' => "dall'AI",
+            'Al motore' => "All'AI", 'al motore' => "all'AI",
+            'I motori' => 'Le AI', 'i motori' => 'le AI',
+        ]);
+    }
+
     public function save(int $responseId, int $runId, int $projectId, array $a): int
     {
         $enc = fn($v) => json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -50,6 +73,16 @@ class Analysis
                 $r[$k] = json_decode((string) $r[$k], true) ?: [];
             }
             unset($r['raw']);
+            foreach (['summary', 'homonym_note', 'contradiction_note'] as $k) {
+                if (isset($r[$k])) {
+                    $r[$k] = self::plain($r[$k]);
+                }
+            }
+            foreach ($r['doubts'] as $i => $dbt) {
+                if (is_array($dbt) && isset($dbt['doubt'])) {
+                    $r['doubts'][$i]['doubt'] = self::plain((string) $dbt['doubt']);
+                }
+            }
             $out[(int) $r['response_id']] = $r;
         }
         return $out;

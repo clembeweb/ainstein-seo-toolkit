@@ -230,7 +230,7 @@ function arRunner() {
             const est = this.$store.arAudit.est;
             const fmt = n => this.$store.arAudit.fmt(n);
             if (est.responses === 0) {
-                this.notify('Nessuna domanda per questo tipo di audit: generale nella scheda Domande.', 'error');
+                this.notify('Nessuna domanda per questo tipo di audit: creale nella scheda Domande.', 'error');
                 return;
             }
             if (est.credits > est.balance) {
@@ -261,7 +261,7 @@ function arRunner() {
             this.es.addEventListener('stalled', e => { const d = JSON.parse(e.data); this.finish(d.message, ''); });
             this.es.addEventListener('failed', e => { const d = JSON.parse(e.data); this.finish(d.message, ''); });
             this.es.addEventListener('phase', e => { const d = JSON.parse(e.data); s.phase = d.label; s.total = d.total; s.done = 0; s.percent = 0; });
-            this.es.addEventListener('analysis_completed', e => { const d = JSON.parse(e.data); s.done++; s.percent = s.total ? Math.round(s.done / s.total * 100) : 0; s.log.unshift({ id: 'a' + d.response_id, error: false, text: 'Giudizio ' + (s.labels[d.engine] || d.engine) + ': ' + d.verdict + ' · ' + (d.summary || '') }); });
+            this.es.addEventListener('analysis_completed', e => { const d = JSON.parse(e.data); s.done++; s.percent = s.total ? Math.round(s.done / s.total * 100) : 0; s.log.unshift({ id: 'a' + d.response_id, error: false, text: 'Giudizio ' + (s.labels[d.engine] || d.engine) + ': ' + (d.verdict_label || d.verdict) + ' · ' + (d.summary || '') }); });
             this.es.addEventListener('analysis_error', e => { const d = JSON.parse(e.data); s.done++; s.log.unshift({ id: 'ae' + d.response_id, error: true, text: 'Giudizio ' + (s.labels[d.engine] || d.engine) + ': errore · ' + d.error }); });
             this.es.addEventListener('progress', e => { const d = JSON.parse(e.data); s.currentEngine = d.engine; s.currentPrompt = d.prompt; });
             const onItem = (e, isError) => {

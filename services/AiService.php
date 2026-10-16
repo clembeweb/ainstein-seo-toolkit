@@ -271,10 +271,11 @@ class AiService
 
         // Consume credits
         if ($chargeCredits) {
+            // credit_metadata: contesto in più per il registro (es. project_id, per contare i crediti del progetto)
             Credits::consume($userId, $cost, $costType, $this->moduleSlug, [
                 'tokens_estimate' => $tokenEstimate,
                 'model' => $result['model_used'] ?? $model,
-            ]);
+            ] + (array) ($options['credit_metadata'] ?? []));
         }
 
         return [

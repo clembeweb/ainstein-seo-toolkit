@@ -87,7 +87,7 @@ class OnboardingService
         $result = $ai->complete($creditUserId, [
             ['role' => 'user', 'content' => $this->userPrompt($subject, $type, $project, $overview, $sources, $texts)],
         // 8000 token: 15-35 righe con fonti e note superavano i 4000 ("Risposta AI troncata", prova del 2026-10-15)
-        ], ['system' => $this->systemPrompt(), 'max_tokens' => 8000], self::SLUG);
+        ], ['system' => $this->systemPrompt(), 'max_tokens' => 8000, 'credit_metadata' => ['project_id' => (int) $project['id'], 'step' => 'profile']], self::SLUG);
         Database::reconnect();
 
         if (!empty($result['error']) || empty($result['result'])) {

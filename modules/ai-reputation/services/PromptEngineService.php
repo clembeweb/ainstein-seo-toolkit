@@ -31,7 +31,7 @@ class PromptEngineService
         $ai = new AiService(self::SLUG);
         $result = $ai->complete($creditUserId, [
             ['role' => 'user', 'content' => $this->userPrompt($project, $truth, $rejected, $existing, $target, $set)],
-        ], ['system' => $set === 'purchase' ? self::purchaseSystemPrompt() : $this->systemPrompt(), 'max_tokens' => 8000], self::SLUG);
+        ], ['system' => $set === 'purchase' ? self::purchaseSystemPrompt() : $this->systemPrompt(), 'max_tokens' => 8000, 'credit_metadata' => ['project_id' => (int) $project['id'], 'step' => 'prompts']], self::SLUG);
         Database::reconnect();
 
         if (!empty($result['error']) || empty($result['result'])) {

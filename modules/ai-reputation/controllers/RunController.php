@@ -59,7 +59,7 @@ class RunController
         $auditType = (string) ($project['audit_type'] ?? 'reputation');
         $prompts = $this->prompt->forAudit($projectId, $auditType);
         if (empty($prompts)) {
-            echo json_encode(['success' => false, 'error' => 'Nessuna domanda attiva per l\'audit "' . (Prompt::AUDIT_TYPES[$auditType] ?? $auditType) . '": generale con "Genera domande con AI" o aggiungine una']);
+            echo json_encode(['success' => false, 'error' => 'Nessuna domanda attiva per l\'audit "' . (Prompt::AUDIT_TYPES[$auditType] ?? $auditType) . '": creale con "Genera domande con AI" o aggiungine una']);
             exit;
         }
         $maxPrompts = (int) ModuleLoader::getSetting(Project::SLUG, 'max_prompts_per_run', 60);
@@ -363,6 +363,7 @@ class RunController
                     'response_id' => (int) $item['id'],
                     'engine' => $item['engine'],
                     'verdict' => $verdict['verdict'],
+                    'verdict_label' => \Modules\AiReputation\Models\Analysis::VERDICT_LABELS[$verdict['verdict']] ?? $verdict['verdict'],
                     'outcome' => $verdict['outcome'],
                     'is_homonym' => $verdict['is_homonym'],
                     'summary' => $verdict['summary'],
@@ -607,7 +608,10 @@ class RunController
                 'prompt' => $r['prompt_text'],
                 'analysis' => isset($analyses[(int) $r['id']]) ? [
                     'verdict' => $analyses[(int) $r['id']]['verdict'],
+                    'verdict_label' => \Modules\AiReputation\Models\Analysis::VERDICT_LABELS[$analyses[(int) $r['id']]['verdict']] ?? $analyses[(int) $r['id']]['verdict'],
                     'outcome' => $analyses[(int) $r['id']]['outcome'],
+                    'outcome_label' => \Modules\AiReputation\Models\Analysis::OUTCOME_LABELS[$analyses[(int) $r['id']]['outcome']] ?? $analyses[(int) $r['id']]['outcome'],
+                    'homonym_label' => \Modules\AiReputation\Models\Analysis::HOMONYM_LABELS[$analyses[(int) $r['id']]['is_homonym']] ?? $analyses[(int) $r['id']]['is_homonym'],
                     'summary' => $analyses[(int) $r['id']]['summary'],
                     'sentiment' => (int) $analyses[(int) $r['id']]['sentiment'],
                     'is_homonym' => $analyses[(int) $r['id']]['is_homonym'],
