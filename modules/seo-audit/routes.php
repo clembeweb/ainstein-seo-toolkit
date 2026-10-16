@@ -279,13 +279,6 @@ Router::post('/seo-audit/project/{id}/action-plan/generate', function ($id) {
     $controller->generate((int) $id);
 });
 
-// Genera le correzioni pagina per pagina (SSE)
-Router::get('/seo-audit/project/{id}/action-plan/stream', function ($id) {
-    Middleware::auth();
-    $controller = new ActionPlanController();
-    $controller->stream((int) $id);
-});
-
 // Toggle fix completato (POST AJAX)
 Router::post('/seo-audit/project/{id}/fix/{fixId}/toggle', function ($id, $fixId) {
     Middleware::auth();

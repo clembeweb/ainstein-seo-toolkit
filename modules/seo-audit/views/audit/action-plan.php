@@ -1,8 +1,4 @@
 <?php
-// Un piano in generazione si mostra come avanzamento, non come piano
-$planReady = $plan && ($plan['status'] ?? '') !== 'generating';
-$fmtCr = fn($n) => rtrim(rtrim(number_format((float) $n, 1, ',', '.'), '0'), ',');
-
 // Health score colors
 $currentScore = $plan['health_current'] ?? ($project['health_score'] ?? 0);
 $expectedScore = $plan['health_expected'] ?? $currentScore;
@@ -41,7 +37,7 @@ if ($estimatedMinutes >= 60) {
 <div class="space-y-6" x-data="actionPlan(<?= htmlspecialchars(json_encode([
     'projectId' => $project['id'],
     'baseUrl' => url(''),
-    'planExists' => $planReady,
+    'planExists' => !empty($plan),
     'totalFixes' => $totalFixes,
     'completedFixes' => $completedFixes,
     'progress' => $progress,
@@ -62,7 +58,7 @@ if ($estimatedMinutes >= 60) {
                     <p class="text-sm text-slate-500 dark:text-slate-400"><?= e($project['name']) ?></p>
                 </div>
             </div>
-            <?php if ($planReady): ?>
+            <?php if ($plan): ?>
             <a href="<?= url('/seo-audit/project/' . $project['id'] . '/action-plan/export') ?>"
                class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -74,7 +70,7 @@ if ($estimatedMinutes >= 60) {
         </div>
     </div>
 
-    <?php if ($planReady): ?>
+    <?php if ($plan): ?>
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Score Attuale -->
@@ -269,133 +265,84 @@ if ($estimatedMinutes >= 60) {
     </div>
 
     <?php else: ?>
-    <!-- Nessun piano pronto: scelta delle pagine + avanzamento della generazione -->
-    <?php
-    $selectable = $selectablePages ?? [];
-    $limits = $planLimits ?? ['max' => 20, 'default' => 10, 'seconds_per_page' => 25];
-    $generatingPlan = ($plan && $plan['status'] === 'generating') ? $plan : null;
-    $canPay = $credits['balance'] >= $credits['generate_cost'];
-    ?>
-    <?php if ($issueStats['total_issues'] > 0 && $selectable): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700"
-         x-data="planPicker(<?= htmlspecialchars(json_encode([
-             'pages' => array_map(fn($p) => ['id' => $p['page_id']], $selectable),
-             'max' => $limits['max'],
-             'default' => $limits['default'],
-             'secondsPerPage' => $limits['seconds_per_page'],
-             'generatingPlanId' => $generatingPlan ? (int) $generatingPlan['id'] : null,
-             'generatingDone' => $generatingPlan ? (int) $generatingPlan['pages_done'] : 0,
-             'generatingTotal' => $generatingPlan ? (int) $generatingPlan['total_pages'] : 0,
-         ])) ?>)" x-init="init()">
-
-        <!-- Avanzamento -->
-        <div x-show="running" x-cloak class="p-6 space-y-4">
-            <div class="flex items-center gap-3">
-                <svg class="w-5 h-5 animate-spin text-indigo-600" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+    <!-- No Plan - Generate CTA -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-8 text-center">
+        <div class="max-w-md mx-auto">
+            <div class="h-20 w-20 mx-auto mb-6 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+                <svg class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                 </svg>
-                <h2 class="text-lg font-semibold text-slate-900 dark:text-white">
-                    Sto scrivendo le correzioni: pagina <span x-text="Math.min(current, total)"></span> di <span x-text="total"></span>
-                </h2>
             </div>
-            <div class="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                <div class="h-full bg-indigo-600 transition-all duration-500" :style="`width: ${total ? Math.round(done / total * 100) : 0}%`"></div>
-            </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">
-                <span x-show="currentUrl" x-text="currentUrl" class="font-mono text-xs break-all"></span>
-                <span class="block mt-1">Circa <span x-text="minutesLeft()"></span> ancora. Puoi chiudere questa pagina: il lavoro continua e il piano lo ritrovi qui.</span>
-            </p>
-            <ul class="text-xs space-y-1 max-h-48 overflow-y-auto">
-                <template x-for="row in log" :key="row.key">
-                    <li :class="row.error ? 'text-red-600 dark:text-red-400' : 'text-slate-500 dark:text-slate-400'" x-text="row.text"></li>
-                </template>
-            </ul>
-        </div>
 
-        <!-- Scelta delle pagine -->
-        <div x-show="!running">
-            <div class="p-6 border-b border-slate-200 dark:border-slate-700">
-                <h2 class="text-xl font-bold text-slate-900 dark:text-white">Scegli le pagine da sistemare</h2>
-                <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                    Hai <strong><?= $issueStats['total_issues'] ?> problemi</strong> su <strong><?= count($selectable) ?> pagine</strong>
-                    (<?= $issueStats['critical'] ?> critici, <?= $issueStats['warning'] ?> avvisi, <?= $issueStats['notice'] ?> note).
-                    Per ogni pagina scelta l'AI scrive le correzioni pronte da copiare, circa <?= (int) $limits['seconds_per_page'] ?> secondi l'una.
-                    Abbiamo spuntato le <?= min($limits['default'], count($selectable)) ?> con più problemi gravi; puoi sceglierne fino a <?= (int) $limits['max'] ?>.
-                </p>
-                <div class="mt-3 flex flex-wrap gap-2 text-sm">
-                    <button type="button" @click="selectTop()" class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">Le prime <?= min($limits['default'], count($selectable)) ?></button>
-                    <button type="button" @click="selected = []" class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">Nessuna</button>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-3">Nessun Piano Generato</h2>
+
+            <?php if ($issueStats['total_issues'] > 0): ?>
+            <p class="text-slate-600 dark:text-slate-400 mb-6">
+                Analizzeremo <strong><?= $issueStats['total_issues'] ?> problemi</strong> su <strong><?= $issueStats['pages_with_issues'] ?> pagine</strong>
+                e genereremo fix specifici pronti da copiare, ordinati per impatto.
+            </p>
+
+            <div class="flex items-center justify-center gap-6 mb-6 text-sm">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                    <span class="text-slate-600 dark:text-slate-400"><?= $issueStats['critical'] ?> critici</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+                    <span class="text-slate-600 dark:text-slate-400"><?= $issueStats['warning'] ?> warning</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                    <span class="text-slate-600 dark:text-slate-400"><?= $issueStats['notice'] ?> notice</span>
                 </div>
             </div>
 
-            <div class="max-h-[28rem] overflow-y-auto">
-                <table class="w-full">
-                    <thead class="bg-slate-50 dark:bg-slate-700/50 sticky top-0">
-                        <tr>
-                            <th class="px-4 py-3 w-10"></th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pagina</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Problemi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                        <?php foreach ($selectable as $sp): ?>
-                        <?php $path = parse_url($sp['url'], PHP_URL_PATH) ?: '/'; ?>
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                            <td class="px-4 py-3">
-                                <input type="checkbox" value="<?= (int) $sp['page_id'] ?>" x-model.number="selected"
-                                       :disabled="!selected.includes(<?= (int) $sp['page_id'] ?>) && selected.length >= max"
-                                       class="rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 disabled:opacity-40">
-                            </td>
-                            <td class="px-4 py-3 text-sm">
-                                <span class="block text-slate-900 dark:text-white font-mono text-xs break-all"><?= e($path) ?></span>
-                                <?php if (!empty($sp['page_title'])): ?>
-                                <span class="block text-xs text-slate-500 dark:text-slate-400 truncate max-w-xl"><?= e($sp['page_title']) ?></span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="px-4 py-3">
-                                <div class="flex flex-wrap justify-end gap-1">
-                                <?php if ($sp['critical']): ?><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"><?= $sp['critical'] ?> critici</span><?php endif; ?>
-                                <?php if ($sp['warning']): ?><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"><?= $sp['warning'] ?> avvisi</span><?php endif; ?>
-                                <?php if ($sp['notice']): ?><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"><?= $sp['notice'] ?> note</span><?php endif; ?>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+            <div class="bg-slate-100 dark:bg-slate-700/50 rounded-lg p-4 mb-6">
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-slate-600 dark:text-slate-400">Costo stimato:</span>
+                    <span class="font-semibold text-slate-900 dark:text-white">~<?= $credits['generate_cost'] ?> crediti</span>
+                </div>
+                <div class="flex items-center justify-between text-sm mt-1">
+                    <span class="text-slate-600 dark:text-slate-400">I tuoi crediti:</span>
+                    <span class="font-semibold <?= $credits['balance'] >= $credits['generate_cost'] ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' ?>"><?= number_format($credits['balance'], 1) ?></span>
+                </div>
             </div>
 
-            <div class="p-6 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <p class="text-sm text-slate-600 dark:text-slate-400">
-                    <strong class="text-slate-900 dark:text-white" x-text="selected.length + (selected.length === 1 ? ' pagina' : ' pagine')"></strong>
-                    · circa <span x-text="minutesFor(selected.length)"></span>
-                    · <strong class="text-slate-900 dark:text-white"><?= $fmtCr($credits['generate_cost']) ?> crediti</strong> in tutto
-                    <span class="<?= $canPay ? 'text-slate-500 dark:text-slate-400' : 'text-red-600 dark:text-red-400' ?>">(ne hai <?= $fmtCr($credits['balance']) ?>)</span>
-                </p>
-                <?php if ($canPay): ?>
-                <button type="button" @click="start()" :disabled="!selected.length || starting"
-                        class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                    <span x-text="'Genera il piano (' + selected.length + ')'">Genera il piano</span>
-                </button>
-                <?php else: ?>
-                <a href="<?= url('/pricing') ?>" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-colors">Ricarica i crediti</a>
-                <?php endif; ?>
+            <?php if ($credits['balance'] >= $credits['generate_cost']): ?>
+            <button @click="generatePlan()"
+                    :disabled="generating"
+                    class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg x-show="!generating" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <svg x-show="generating" class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                <span x-text="generating ? 'Generazione in corso...' : 'Genera Piano d\'Azione'">Genera Piano d'Azione</span>
+            </button>
+            <?php else: ?>
+            <div class="text-center">
+                <p class="text-red-600 dark:text-red-400 mb-4">Crediti insufficienti per generare il piano.</p>
+                <a href="<?= url('/credits/buy') ?>" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-colors">
+                    Acquista Crediti
+                </a>
             </div>
+            <?php endif; ?>
+
+            <?php else: ?>
+            <div class="text-center">
+                <div class="h-16 w-16 mx-auto mb-4 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">Nessun Problema Rilevato!</h3>
+                <p class="text-slate-600 dark:text-slate-400">Il tuo sito non ha problemi da risolvere. Punteggio di salute: 100!</p>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
-    <?php else: ?>
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-8 text-center">
-        <div class="h-16 w-16 mx-auto mb-4 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-            <svg class="w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-            </svg>
-        </div>
-        <h3 class="text-xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">Nessun problema da correggere</h3>
-        <p class="text-slate-600 dark:text-slate-400">La scansione non ha trovato problemi sulle pagine: non serve un piano d'azione.</p>
-    </div>
-    <?php endif; ?>
     <?php endif; ?>
 
 </div>
@@ -410,6 +357,38 @@ function actionPlan(config) {
         completedFixes: config.completedFixes,
         progress: config.progress,
         csrfToken: config.csrfToken,
+        generating: false,
+
+        async generatePlan() {
+            this.generating = true;
+
+            try {
+                const response = await fetch(`${this.baseUrl}/seo-audit/project/${this.projectId}/action-plan/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ _csrf_token: this.csrfToken })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Errore server (${response.status})`);
+                }
+                const data = await response.json();
+
+                if (data.success) {
+                    // Reload page to show generated plan
+                    window.location.reload();
+                } else {
+                    window.ainstein.alert(data.message || 'Errore durante la generazione del piano', 'error');
+                    this.generating = false;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                window.ainstein.alert('Errore di connessione', 'error');
+                this.generating = false;
+            }
+        },
 
         async toggleFix(fixId, currentState) {
             try {
@@ -447,117 +426,5 @@ function actionPlan(config) {
             });
         }
     }
-}
-// Scelta delle pagine e generazione pagina per pagina (stream SSE /action-plan/stream)
-function planPicker(cfg) {
-    return {
-        pages: cfg.pages,
-        max: cfg.max,
-        secondsPerPage: cfg.secondsPerPage,
-        selected: [],
-        starting: false,
-        running: false,
-        planId: cfg.generatingPlanId,
-        total: cfg.generatingTotal,
-        done: cfg.generatingDone,
-        current: cfg.generatingDone + 1,
-        currentUrl: '',
-        log: [],
-        es: null,
-        retries: 0,
-
-        init() {
-            this.selectTop();
-            // Piano rimasto a metà (pagina chiusa o ricaricata): si riprende da solo
-            if (this.planId) {
-                this.running = true;
-                this.connect();
-            }
-        },
-
-        selectTop() {
-            this.selected = this.pages.slice(0, Math.min(cfg.default, this.max)).map(p => p.id);
-        },
-
-        minutesFor(n) {
-            const min = Math.max(1, Math.round(n * this.secondsPerPage / 60));
-            return min === 1 ? '1 minuto' : min + ' minuti';
-        },
-
-        minutesLeft() {
-            return this.minutesFor(Math.max(1, this.total - this.done));
-        },
-
-        async start() {
-            if (!this.selected.length) return;
-            try {
-                await window.ainstein.confirm(
-                    `Genero le correzioni per ${this.selected.length} ${this.selected.length === 1 ? 'pagina' : 'pagine'}: circa ${this.minutesFor(this.selected.length)}, <?= $fmtCr($credits['generate_cost']) ?> crediti scalati alla fine.`,
-                    { buttonText: 'Avvia' }
-                );
-            } catch (e) { return; }
-
-            this.starting = true;
-            try {
-                const fd = new FormData();
-                fd.append('_csrf_token', '<?= csrf_token() ?>');
-                this.selected.forEach(id => fd.append('page_ids[]', id));
-                const r = await fetch('<?= url('/seo-audit/project/' . $project['id'] . '/action-plan/generate') ?>', { method: 'POST', body: fd });
-                if (!r.ok) throw new Error(`Errore server (${r.status})`);
-                const d = await r.json();
-                if (!d.success) {
-                    window.ainstein.alert(d.message || 'Errore durante la generazione del piano', 'error');
-                    this.starting = false;
-                    return;
-                }
-                this.planId = d.plan_id;
-                this.total = d.total_pages;
-                this.done = 0;
-                this.current = 1;
-                this.running = true;
-                this.connect();
-            } catch (e) {
-                window.ainstein.alert('Errore di connessione: ' + e.message, 'error');
-            }
-            this.starting = false;
-        },
-
-        connect() {
-            const url = '<?= url('/seo-audit/project/' . $project['id'] . '/action-plan/stream') ?>?plan_id=' + this.planId;
-            this.es = new EventSource(url);
-            this.es.addEventListener('started', e => {
-                const d = JSON.parse(e.data);
-                this.total = d.total; this.done = d.done; this.current = d.done + 1;
-            });
-            this.es.addEventListener('page_started', e => {
-                const d = JSON.parse(e.data);
-                this.current = d.index; this.total = d.total; this.currentUrl = d.url;
-            });
-            this.es.addEventListener('page_completed', e => {
-                const d = JSON.parse(e.data);
-                this.done = d.index; this.current = d.index + 1; this.total = d.total; this.retries = 0;
-                if (d.url) {
-                    this.log.unshift({ key: 'p' + d.index, error: !!d.error, text: `${d.index}/${d.total} ${d.url}: ` + (d.error ? 'non riuscita (' + d.error + ')' : d.fixes + ' correzioni') });
-                }
-            });
-            this.es.addEventListener('completed', () => { this.es.close(); window.location.reload(); });
-            this.es.addEventListener('error', e => {
-                // Errore mandato dal server (evento con dati) o connessione caduta
-                if (e.data) {
-                    this.es.close();
-                    this.running = false;
-                    window.ainstein.alert(JSON.parse(e.data).message || 'Generazione non riuscita', 'error');
-                    return;
-                }
-                this.es.close();
-                if (this.retries++ < 5) {
-                    setTimeout(() => this.connect(), 3000);
-                } else {
-                    this.running = false;
-                    window.ainstein.alert('Connessione persa. Ricarica la pagina: il piano riprende da dove era rimasto.', 'error');
-                }
-            });
-        }
-    };
 }
 </script>
