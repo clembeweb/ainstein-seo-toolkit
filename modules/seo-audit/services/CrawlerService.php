@@ -39,6 +39,9 @@ class CrawlerService
     private bool $followRedirects = true;
     private bool $respectRobots = true;
 
+    /** url => ['parent' => url della pagina che l'ha scoperta (null per la home), 'depth' => profondità] (riempito dallo spider) */
+    private array $discoveryMeta = [];
+
     // Rate limiting
     private float $lastRequestTime = 0;
     private int $rateLimitHits = 0;        // Contatore pagine rate_limited consecutive
@@ -155,6 +158,14 @@ class CrawlerService
         }
 
         return $this;
+    }
+
+    /**
+     * url => ['parent', 'depth'] delle pagine scoperte dallo spider (vuoto se gli URL vengono da import)
+     */
+    public function getDiscoveryMeta(): array
+    {
+        return $this->discoveryMeta;
     }
 
     /**
@@ -294,6 +305,7 @@ class CrawlerService
         $actualBaseUrl = $this->normalizeUrl($actualBaseUrl, $actualBaseUrl) ?? $actualBaseUrl;
 
         $discovered = [$actualBaseUrl];
+        $this->discoveryMeta = [$actualBaseUrl => ['parent' => null, 'depth' => 0]];
         // toVisit ora contiene [url, depth]
         $toVisit = [[$actualBaseUrl, 0]];
         $visited = [];
@@ -357,8 +369,9 @@ class CrawlerService
                 if (isset($discoveredKeys[$dedupKey])) continue;
                 $discoveredKeys[$dedupKey] = true;
 
-                // Aggiungi alla coda con depth+1
+                // Aggiungi alla coda con depth+1, ricordando da quale pagina è stata scoperta
                 $discovered[] = $normalizedUrl;
+                $this->discoveryMeta[$normalizedUrl] = ['parent' => $currentUrl, 'depth' => $currentDepth + 1];
                 $toVisit[] = [$normalizedUrl, $currentDepth + 1];
 
                 if (count($discovered) >= $limit) break;
@@ -643,9 +656,22 @@ class CrawlerService
         $html = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $html);
         $data['html_content'] = $html;
 
-        // Crawl budget data
+        // Crawl budget data. Profondità e pagina di provenienza vengono dallo spider (stesso processo) o dalla riga
+        // salvata alla scoperta: prima venivano azzerate qui a ogni pagina (depth 0, discovered_from null).
         $redirectData = $this->traceRedirectChain($url);
-        $budgetMeta = $this->computeBudgetMetadata($url);
+        $parentUrl = null;
+        $parentDepth = 0;
+        if (isset($this->discoveryMeta[$url])) {
+            $parentUrl = $this->discoveryMeta[$url]['parent'];
+            $parentDepth = max(0, (int) $this->discoveryMeta[$url]['depth'] - 1);
+        } elseif ($this->projectId) {
+            $existingRow = $this->pageModel->findByUrl($this->projectId, $url);
+            if ($existingRow && !empty($existingRow['discovered_from'])) {
+                $parentUrl = $existingRow['discovered_from'];
+                $parentDepth = max(0, (int) ($existingRow['depth'] ?? 1) - 1);
+            }
+        }
+        $budgetMeta = $this->computeBudgetMetadata($url, $parentUrl, $parentDepth);
 
         $data['redirect_chain'] = json_encode($redirectData['chain']);
         $data['redirect_hops'] = $redirectData['hops'];

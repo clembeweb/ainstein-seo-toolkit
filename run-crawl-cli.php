@@ -140,12 +140,15 @@ $projectModel->update($projectId, ['pages_found' => count($urls)]);
 
 // Inserisci URL in sa_pages
 $pendingCount = 0;
+$discoveryMeta = $crawler->getDiscoveryMeta();
 foreach ($urls as $url) {
     Database::insert('sa_pages', [
         'project_id' => $projectId,
         'session_id' => $sessionId,
         'url' => $url,
         'status' => 'pending',
+        'depth' => $discoveryMeta[$url]['depth'] ?? 0,
+        'discovered_from' => $discoveryMeta[$url]['parent'] ?? null,
     ]);
     $pendingCount++;
 }

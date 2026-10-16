@@ -681,9 +681,12 @@ class CrawlController
                 exit;
             }
 
-            // Inserisci URL scoperti in sa_pages
+            // Inserisci URL scoperti in sa_pages (con profondità e pagina di provenienza, per i link in entrata)
             $pendingCount = 0;
+            $discoveryMeta = $crawlerService->getDiscoveryMeta();
             foreach ($urls as $url) {
+                $depth = (int) ($discoveryMeta[$url]['depth'] ?? 0);
+                $discoveredFrom = $discoveryMeta[$url]['parent'] ?? null;
                 $exists = Database::fetch(
                     "SELECT id FROM sa_pages WHERE project_id = ? AND url = ?",
                     [$id, $url]
@@ -694,11 +697,13 @@ class CrawlController
                         'session_id' => $sessionId,
                         'url' => $url,
                         'status' => 'pending',
+                        'depth' => $depth,
+                        'discovered_from' => $discoveredFrom,
                     ]);
                 } else {
                     Database::execute(
-                        "UPDATE sa_pages SET session_id = ?, status = 'pending' WHERE id = ?",
-                        [$sessionId, $exists['id']]
+                        "UPDATE sa_pages SET session_id = ?, status = 'pending', depth = ?, discovered_from = ? WHERE id = ?",
+                        [$sessionId, $depth, $discoveredFrom, $exists['id']]
                     );
                 }
                 $pendingCount++;

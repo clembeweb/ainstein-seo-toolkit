@@ -420,6 +420,10 @@ class BudgetIssueDetector
 
     private function detectOrphanPages(): int
     {
+        // Le pagine orfane le segnala già IssueDetector (categoria Link, dai link veri): un secondo avviso
+        // "nessun link interno in entrata" sarebbe un doppione. internal_links_in resta aggiornato per gli altri controlli.
+        return 0;
+
         $count = 0;
         $sessionFilter = $this->sessionId ? " AND session_id = " . (int)$this->sessionId : "";
 

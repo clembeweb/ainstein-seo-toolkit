@@ -138,7 +138,7 @@ class Page
         'links_data', 'has_schema', 'schema_types', 'hreflang_tags', 'is_indexable',
         'indexability_reason', 'html_content', 'crawled_at', 'redirect_chain',
         'redirect_hops', 'redirect_target', 'is_redirect_loop', 'depth',
-        'has_parameters', 'in_sitemap', 'in_robots_allowed',
+        'has_parameters', 'in_sitemap', 'in_robots_allowed', 'discovered_from', 'crawl_source', 'internal_links_in',
     ];
 
     public function upsert(int $projectId, string $url, array $data): int
@@ -539,14 +539,31 @@ class Page
      */
     public function updateInternalLinksIn(int $projectId, ?int $sessionId = null): void
     {
+        // Quante pagine DIVERSE del sito linkano ogni URL, dai link veri trovati nelle pagine (links_data).
+        // Prima contava le pagine con discovered_from = url: al massimo 1, e discovered_from non veniva mai salvato → sempre 0.
         $sessionFilter = $sessionId ? " AND session_id = " . (int) $sessionId : "";
+        $pages = Database::fetchAll(
+            "SELECT id, url, links_data FROM {$this->table} WHERE project_id = ? {$sessionFilter}",
+            [$projectId]
+        );
 
-        // Count how many pages have each URL as discovered_from
-        $sql = "UPDATE {$this->table} p SET internal_links_in = (
-            SELECT COUNT(*) FROM (SELECT discovered_from FROM {$this->table} WHERE project_id = ? {$sessionFilter} AND discovered_from IS NOT NULL) sub
-            WHERE sub.discovered_from = p.url
-        ) WHERE p.project_id = ? {$sessionFilter}";
+        $norm = fn(string $u): string => strtolower(rtrim(strtok($u, '#') ?: $u, '/'));
+        $sources = []; // url normalizzato => [url pagina sorgente => true]
+        foreach ($pages as $page) {
+            $links = json_decode($page['links_data'] ?? '[]', true);
+            $from = $norm($page['url']);
+            foreach ($links['internal'] ?? [] as $link) {
+                $to = $norm((string) ($link['url'] ?? ''));
+                if ($to === '' || $to === $from) {
+                    continue; // link a se stessa non conta
+                }
+                $sources[$to][$from] = true;
+            }
+        }
 
-        Database::execute($sql, [$projectId, $projectId]);
+        foreach ($pages as $page) {
+            $count = count($sources[$norm($page['url'])] ?? []);
+            Database::execute("UPDATE {$this->table} SET internal_links_in = ? WHERE id = ?", [$count, (int) $page['id']]);
+        }
     }
 }
