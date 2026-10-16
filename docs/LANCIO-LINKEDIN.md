@@ -158,7 +158,11 @@
 > **P3.3 link in entrata sempre 0: ONLINE (`65d25dc`, 2026-10-16).** Profondità e pagina di provenienza
 > salvate alla scoperta e non più azzerate; `internal_links_in` conta le pagine diverse che linkano l'URL dai link veri;
 > "pagina orfana" resta un avviso solo (IssueDetector). Pizzeria: menu 18 link in entrata, pagina del plugin 1.
-> **Prossimo passo:** P3.4 articolo >120 s (etichette inglesi fatte,
+> **P3.4 articolo >120 s: CAPITO e CORRETTO in locale (2026-10-16), da mettere online.** Non moriva l'articolo: le altre
+> richieste dell'utente aspettavano la sessione bloccata da generateArticle (in locale limite 120 s → morte; in prod
+> limite 0 → app ferma per tutta la generazione). Aggiunto session_write_close() in generazione articolo, estrazione
+> SERP e analisi pagina di AI Rank. Prova: durante la SERP un'altra pagina risponde in 0,2 s.
+> **Prossimo passo:** online P3.4 (con l'ok). Con questo i P3 sono finiti (etichette inglesi fatte,
 > nota strategica dell'AI con somme gonfiate, `internal_links_in` sempre 0, generazione articolo oltre i 120 s da capire)
 > e clementeteodonno.it da riaudire (~5 cr). Fatti il 2026-10-16: sessione 8 h, volumi dei cluster, costi AI Keywords,
 > articolo in Anteprima, tempo medio.
