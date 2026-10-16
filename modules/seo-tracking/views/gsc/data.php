@@ -37,6 +37,7 @@
                 </svg>
                 Connetti Google Search Console
             </a>
+            <div class="mt-2 max-w-xs"><?= \Core\View::partial('components/google-unverified-notice') ?></div>
         </div>
         <?php endif; ?>
     </div>

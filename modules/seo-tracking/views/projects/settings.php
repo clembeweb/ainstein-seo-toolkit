@@ -77,6 +77,7 @@
                     <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">
                         Entra con l'account Google che vede il sito in Search Console (solo lettura).
                     </p>
+                    <div class="mt-2"><?= \Core\View::partial('components/google-unverified-notice') ?></div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -112,6 +113,7 @@
                     <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/ga4/select-property') ?>" class="block w-full px-4 py-2 rounded-lg bg-orange-600 text-white font-medium hover:bg-orange-700 transition-colors text-sm text-center">Scegli la proprietà</a>
                     <?php elseif ($googleConfigured): ?>
                     <a href="<?= url('/seo-tracking/project/' . $project['id'] . '/ga4/connect') ?>" class="block w-full px-4 py-2 rounded-lg bg-orange-600 text-white font-medium hover:bg-orange-700 transition-colors text-sm text-center">Collega Google Analytics</a>
+                    <?= \Core\View::partial('components/google-unverified-notice') ?>
                     <?php else: ?>
                     <p class="text-sm text-slate-500">Accesso Google non configurato: contatta l'amministratore.</p>
                     <?php endif; ?>

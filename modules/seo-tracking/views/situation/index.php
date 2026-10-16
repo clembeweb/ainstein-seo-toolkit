@@ -112,6 +112,9 @@ $col = fn(array $rows, string $k) => array_map(fn($r) => $r[$k] ?? null, $rows);
                 </form>
                 <?php endif; ?>
             </div>
+            <?php if ($canEdit && $googleConfigured && (empty($ga4Conn) || empty($gscConn['property_url']))): ?>
+            <div class="mt-2"><?= \Core\View::partial('components/google-unverified-notice') ?></div>
+            <?php endif; ?>
         </div>
     </div>
 
