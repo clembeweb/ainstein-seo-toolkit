@@ -63,6 +63,9 @@ class SerpController
             exit;
         }
 
+        // Rilascia la sessione prima della chiamata lunga (vedi WizardController::generateArticle)
+        session_write_close();
+
         try {
             // Call SerpAPI
             $serpService = new SerpApiService();

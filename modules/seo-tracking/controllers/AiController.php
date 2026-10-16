@@ -426,6 +426,9 @@ class AiController
             ], 400);
         }
 
+        // Rilascia la sessione prima dell'analisi AI (vedi WizardController::generateArticle)
+        session_write_close();
+
         try {
             // Esegui analisi
             // Crediti al proprietario del progetto (progetti condivisi)

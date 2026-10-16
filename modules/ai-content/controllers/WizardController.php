@@ -263,6 +263,10 @@ class WizardController
             exit;
         }
 
+        // Rilascia la sessione: la generazione dura minuti e, con la sessione bloccata, ogni altra richiesta
+        // dell'utente (notifiche, altre schede) resta in coda fino alla fine (prova del 2026-10-15, log Apache)
+        session_write_close();
+
         try {
             // Get article
             $article = $articleId ? $this->article->find($articleId) : null;
