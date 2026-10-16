@@ -45,9 +45,12 @@ class BusinessProfileService
     {
         if (!empty($project['global_project_id'])) {
             $row = Database::fetch("SELECT description FROM projects WHERE id = ?", [(int) $project['global_project_id']]);
-            return trim((string) ($row['description'] ?? ''));
+            $text = trim((string) ($row['description'] ?? ''));
+        } else {
+            $text = trim((string) ($project['description'] ?? ''));
         }
-        return trim((string) ($project['description'] ?? ''));
+        // La descrizione facoltativa del progetto ("sito del cliente") non basta come profilo: si riparte dalla scelta
+        return mb_strlen($text) >= 20 ? $text : '';
     }
 
     public function saveProfile(array $project, string $text): void
