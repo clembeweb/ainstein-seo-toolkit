@@ -52,6 +52,22 @@
 - Successo: le icone del menu laterale (rese più sobrie il 2026-10-15, `d3e98cf`) non sono quelle delle card in dashboard.
 - Note: da allineare in un verso o nell'altro (decide Clemente quali tenere).
 
+### [P2] AI Audit, Panoramica prima della prima scansione piena di riquadri vuoti
+- Scenario / passo: 1B, progetto nuovo "Madcrumbs" (madcrumbs.it, utente 4), AI Audit aperto prima di scansionare.
+- Atteso: una pagina che dice solo cosa fare (avvia la scansione) e come funziona.
+- Successo: "Nessuna scansione ancora" c'è (P1 del 15 OK), ma intorno: anello "/100" con un pallino rosso, 4 riquadri
+  a 0 (Pagine, Problemi critici, Indicizzabili, "0ms" Tempo medio), e "Come funziona" (4 passi) in fondo alla pagina.
+- Proposta di Clemente: senza scansione nascondere riquadri e anello; "Come funziona" in alto.
+- Note: nel "Come funziona" c'è ancora "Crawl Sito" (inglese).
+
+### [P3] AI Audit, "Report AI" e "Piano d'azione" sembrano la stessa cosa
+- Scenario / passo: 1B, Clemente guardando le schede chiede in cosa differiscono.
+- Cosa sono: Report AI (15 cr) = documento da leggere o dare al cliente (sintesi, problemi critici/importanti/minori,
+  aspetti positivi, tempi settimana 1 / 2-3 / 4+). Piano d'azione (10 cr) = lista di lavoro pagina per pagina in ordine
+  di impatto, con la correzione da fare e la spunta, punteggio atteso.
+- Successo: dai nomi non si capisce; in più il Report AI ha una sezione che si chiama "Piano d'azione consigliato".
+- Note: basta una riga sotto ogni scheda che dica a cosa serve (e magari rinominare la sezione del report in "Tempi").
+
 ## Lista corta prima del post
 
 _Si compila alla fine._
