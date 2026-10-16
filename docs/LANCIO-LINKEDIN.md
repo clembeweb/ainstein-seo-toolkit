@@ -81,10 +81,17 @@
 > copertina 3), ~7 min · GEO: profilo 2 + domande 2 + audit 3 domande × 3 AI = 9 → 13 cr, audit ~4 min (0,15 $ API).
 > **AI Keywords provata in PROD il 2026-10-16 mattina** (Chrome di Clemente, progetto "Stabia Boat Rental (test)", ricerca 18):
 > 2 seed → 141 keyword in 20 s (raccolta gratis), clustering AI 61 s, **3 crediti esatti** (7.229,3 → 7.226,3), 8 cluster con
-> volumi/CPC/competizione veri, nota strategica pertinente (coglie anche la stagionalità). Funziona. Da sistemare (P2):
-> il volume dei cluster somma le varianti della stessa ricerca ("giro in barca a capri", "capri giro in barca"… 8 righe da
-> 720 = stessa query di Google) → cluster #1 dichiara 5.900 e il totale 9.810 è gonfiato; "COMP. HIGH/LOW", "Vol. Main",
-> "Intent", "Completed/Error" nelle ricerche precedenti, titolo "Risultati Research" in inglese.
+> volumi/CPC/competizione veri, nota strategica pertinente (coglie anche la stagionalità). Funziona.
+> **Volumi gonfiati: CORRETTO e ONLINE (`2ec50f3`, 2026-10-16 mattina).** Il cluster sommava le varianti della stessa
+> ricerca ("giro in barca a capri", "capri giro in barca"… 8 righe da 720 = stessa query di Google): ora
+> `Cluster::dedupedVolume` le conta una volta (stesse parole al netto di articoli/plurali/ordine + stessi numeri), al
+> salvataggio e in pagina (vale anche per le ricerche vecchie). Verificato in prod sulla ricerca 18: cluster #1 5.900 → 860,
+> totale 9.810 → 2.860, nota "varianti della stessa ricerca contate una volta" sotto il numero. Restano P3: la nota
+> strategica dell'AI può ancora citare somme gonfiate (nel prompt le varianti arrivano una per riga); "COMP. HIGH/LOW",
+> "Vol. Main", "Intent", "Completed/Error", titolo "Risultati Research" in inglese.
+> **P2 nuovo (2026-10-16): la sessione in prod scade dopo 24 minuti di inattività** (`session.gc_maxlifetime=1440` in
+> php-fpm, cookie di sessione) se non si spunta "Ricordami": Clemente ha dovuto rifare il login due volte in un'ora.
+> Proposta: `ini_set('session.gc_maxlifetime', 28800)` + cookie 8 h in `public/index.php`, o "Ricordami" spuntato di default.
 > **Problemi, per priorità:**
 > - **P1 · AI Audit legge i redirect invece delle pagine (anche in prod).** `CrawlerService::normalizeUrl()` e
 >   `normalizeUrlForStorage()` tolgono la barra finale: su WordPress `/contatti/` diventa `/contatti`, il sito risponde 301
@@ -136,7 +143,7 @@
 >   è morta lo stesso: da capire, forse il limite di Apache/FPM) · P3 · `sa_pages.internal_links_in` resta 0
 >   (`discovered_from` mai valorizzato da `crawlPage`): "Pagina orfana — nessun link in entrata" del crawl budget non può
 >   mai scattare · locale: al DB mancavano `last_test_*` in `aic_wp_sites` (aggiunte a mano, in prod ci sono).
-> **Prossimo passo:** decidere quali P2 fare prima del post (proposta: volumi gonfiati nei cluster di AI Keywords, costi
+> **Prossimo passo:** decidere quali P2 fare prima del post (proposta, in ordine: sessione che scade in 24 min, costi
 > sbagliati sulla pagina di AI Keywords, articolo che si apre in Anteprima, tempo medio 0 ms); clementeteodonno.it da riaudire (~5 cr).
 >
 > **PASSAGGIO DI CONSEGNE 2026-10-14 pomeriggio (precedente).** Fatto oggi, tutto online:
