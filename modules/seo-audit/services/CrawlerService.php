@@ -570,10 +570,14 @@ class CrawlerService
                 usleep($backoffMs * 1000);
             }
 
+            // Tempo di risposta = durata del download (prima si misurava solo l'analisi: "0 ms" in pagina)
+            $fetchStart = microtime(true);
             $result = $this->scraperService->fetchRaw($url, [
-                'timeout' => $this->config['timeout'] ?? 20,
-                'follow_redirects' => !empty($this->config['follow_redirects']),
+                'timeout' => $this->timeout,
+                // I redirect non si seguono: la pagina resta registrata come 301 con la sua destinazione
+                'follow_redirects' => false,
             ]);
+            $fetchMs = (int) ((microtime(true) - $fetchStart) * 1000);
 
             if (!empty($result['error'])) {
                 return [
@@ -627,13 +631,11 @@ class CrawlerService
             ]);
         }
 
-        $startTime = microtime(true);
-
         // Estrai dati SEO
         $data = $this->extractPageData($html, $url);
         $data['url'] = $url;
         $data['status_code'] = $httpCode;
-        $data['load_time_ms'] = (int) ((microtime(true) - $startTime) * 1000);
+        $data['load_time_ms'] = $fetchMs; // durata dell'ultimo download riuscito (senza i backoff dei retry)
         $data['content_length'] = strlen($html);
 
         // Sanitizza HTML per UTF-8 (evita errori MySQL "Incorrect string value")
