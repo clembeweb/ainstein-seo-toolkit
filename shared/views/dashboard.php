@@ -143,7 +143,7 @@ $moduleBlocks = [
          ======================================================================== -->
 
     <!-- === SEZIONE 1: Header nuovo utente === -->
-    <div>
+    <div data-tour-welcome="header">
         <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Benvenuto su Ainstein, <?= htmlspecialchars($user['name'] ?? 'Utente') ?>!</h1>
         <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Scegli uno strumento per iniziare.</p>
     </div>
@@ -153,7 +153,7 @@ $moduleBlocks = [
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-1">Cosa vuoi fare?</h2>
         <p class="text-sm text-slate-500 dark:text-slate-400 mb-5">Ogni strumento ti guida passo-passo. Scegli quello che ti serve.</p>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4" data-tour-welcome="modules">
             <?php foreach ($moduleBlocks as $slug => $block):
                 if (!in_array($slug, $_moduleSlugs)) continue;
             ?>
@@ -182,7 +182,7 @@ $moduleBlocks = [
          ======================================================================== -->
 
     <!-- === SEZIONE 1: Header === -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2" data-tour-welcome="header">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white"><?= $_greeting ?>, <?= htmlspecialchars($user['name'] ?? 'Utente') ?>!</h1>
             <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
@@ -257,7 +257,7 @@ $moduleBlocks = [
     <div>
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">I tuoi strumenti</h2>
 
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-wrap gap-2" data-tour-welcome="modules">
             <?php foreach ($modules as $module):
                 $slug = $module['slug'];
                 $color = $moduleColors[$slug] ?? $defaultColor;

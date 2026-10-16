@@ -131,6 +131,7 @@ $_accentShades = \Core\BrandingHelper::generateShades($_brandAccent);
                     <div class="flex items-center gap-x-4 lg:gap-x-6">
                         <!-- Credits badge (Alpine: si aggiorna dopo le operazioni che addebitano, vedi creditBadge()) -->
                         <a href="<?= url('/pricing') ?>" title="Crediti disponibili. Clicca per vedere i piani e ricaricare"
+                           data-tour-welcome="credits"
                            x-data="creditBadge(<?= (float)($user['credits'] ?? 0) ?>)" @credits-updated.window="credits = $event.detail.credits"
                            class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg hover:ring-2 hover:ring-blue-400 transition"
                            :class="credits < 3 ? 'bg-red-100 dark:bg-red-900/30' : (credits < 10 ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-slate-100 dark:bg-slate-700')">

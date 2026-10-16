@@ -660,6 +660,10 @@ Router::get('/dashboard', function () {
         'unusedModuleSlugs' => $unusedModuleSlugs,
         'wpConnected' => $wpConnected,
         'isNewUser' => $isNewUser,
+        // Tour "Benvenuto su Ainstein" al primo accesso (layout.php): prima nessuno passava queste due variabili.
+        // Solo a chi non ha ancora progetti: gli utenti di prima non l'hanno mai visto e non serve mostrarglielo adesso.
+        'onboardingWelcomeCompleted' => $isNewUser ? OnboardingService::isWelcomeCompleted((int) $uid) : true,
+        'onboardingConfig' => require BASE_PATH . '/config/onboarding.php',
     ]);
 });
 
