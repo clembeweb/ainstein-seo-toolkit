@@ -1,9 +1,19 @@
 # TASKS — AI Reputation Radar
 
 > Stato del lavoro. Aggiornare a ogni sessione: fatto, in corso, prossimo passo.
-> Ultimo aggiornamento: 2026-10-15 (check sezioni e menu, come per gli altri 4 tool)
+> Ultimo aggiornamento: 2026-10-16 ("Genera scheda" riparato + riassunto del profilo)
 
 ## Dove siamo
+**2026-10-16 sera — dal giro manuale di Clemente in produzione.** 1) **"Genera scheda" non faceva niente** (`a96ddaa`):
+dal 13 ottobre la conferma è la finestra dell'app (asincrona) e dopo l'`await` `ev.currentTarget` era già `null` → errore
+JS prima della chiamata, nessun credito scalato. Il bottone si prende prima della conferma. Provato in locale sul run 4
+(scheda "Logistica e infrastrutture" generata, 1 credito). 2) **Riassunto del profilo** (`607a7b2`, ADR-019): accordion
+chiuso sopra Identità con il "profilo dell'attività" che usa AI Keywords (`projects.description` del progetto globale,
+letto con `BusinessProfileService::getProfile()`), data, badge "da rifare" e "Rigenera"/"Crea il riassunto" (gratis,
+rifà anche le proposte di AI Keywords). Provato su Stefanelli (progetto 5): testo uguale in AI Keywords. Nessuna
+migrazione. **Da fare:** deploy con l'ok di Clemente, poi prova di "Genera scheda" in prod con lui; guida utente
+`shared/views/docs/ai-reputation.php` (una riga sul riassunto) quando la sessione che sta toccando `shared/views/docs/` ha finito.
+
 **2026-10-15 — Check sezioni e menu (stesso check fatto su AI Rank, AI Keywords, AI Audit, AI Writer).** Verdetto: il GEO
 Audit era già il tool meglio strutturato (4 schede con un ruolo chiaro, niente tipi di progetto, costi già a posto).
 Sistemato: 1) **scheda "Domande" a sé** (`/project/{id}/prompts`, `views/prompts/index.php`, store Alpine condiviso in
