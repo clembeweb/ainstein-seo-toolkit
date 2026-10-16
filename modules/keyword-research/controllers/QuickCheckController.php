@@ -196,6 +196,7 @@ class QuickCheckController
 
         $added = 0;
         $skipped = 0;
+        $newIds = [];
 
         foreach ($keywordsData as $kwData) {
             $kwText = trim($kwData['text'] ?? '');
@@ -225,14 +226,21 @@ class QuickCheckController
             if ($newId && !empty($groupName)) {
                 $keywordGroupModel->syncKeywordToGroup($projectId, $newId, $groupName);
             }
+            if ($newId) {
+                $newIds[] = (int) $newId;
+            }
 
             $added++;
         }
+
+        // Primo controllo posizioni subito (gratis), poi il ritmo dei giorni impostati in AI Rank
+        $queued = $keywordModel->queueFirstCheck($projectId, $newIds);
 
         echo json_encode([
             'success' => true,
             'added' => $added,
             'skipped' => $skipped,
+            'queued' => $queued,
         ]);
     }
 

@@ -284,6 +284,43 @@ class Keyword
     }
 
     /**
+     * Primo controllo posizioni subito per keyword appena aggiunte (o appena tracciate) e mai controllate:
+     * vanno nella coda del rank-dispatcher (cron ogni minuto, 10 keyword per giro) senza job, quindi gratis
+     * come i controlli automatici. Poi seguono il ritmo dei giorni impostati.
+     *
+     * @return int keyword messe in coda
+     */
+    public function queueFirstCheck(int $projectId, array $keywordIds): int
+    {
+        $keywordIds = array_values(array_unique(array_filter(array_map('intval', $keywordIds))));
+        if (empty($keywordIds)) {
+            return 0;
+        }
+        $project = Database::fetch("SELECT domain FROM st_projects WHERE id = ?", [$projectId]);
+        if (!$project || empty($project['domain'])) {
+            return 0;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($keywordIds), '?'));
+        $keywords = Database::fetchAll(
+            "SELECT k.id, k.keyword, k.location_code FROM {$this->table} k
+             WHERE k.project_id = ? AND k.id IN ({$placeholders}) AND k.is_tracked = 1 AND k.last_updated_at IS NULL
+               AND NOT EXISTS (SELECT 1 FROM st_rank_queue q WHERE q.keyword_id = k.id AND q.status IN ('pending', 'processing'))",
+            array_merge([$projectId], $keywordIds)
+        );
+
+        foreach ($keywords as $kw) {
+            Database::execute(
+                "INSERT INTO st_rank_queue (project_id, keyword_id, keyword, target_domain, location_code, device, status, scheduled_at)
+                 VALUES (?, ?, ?, ?, ?, 'mobile', 'pending', NOW())",
+                [$projectId, $kw['id'], $kw['keyword'], $project['domain'], $kw['location_code'] ?? 'IT']
+            );
+        }
+
+        return count($keywords);
+    }
+
+    /**
      * Crea multiple keyword
      */
     public function createMany(int $projectId, array $keywords): int

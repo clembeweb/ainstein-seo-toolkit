@@ -131,7 +131,7 @@ sort($uniqueIntents);
             <div class="rounded-xl border border-slate-200 dark:border-slate-700 p-4">
                 <p class="font-medium text-slate-900 dark:text-white">Monitora le posizioni su Google</p>
                 <?php if ($rankTarget): ?>
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Le keyword vanno in AI Rank (<?= e($rankTarget['name']) ?>), un gruppo per ogni gruppo scelto. Il controllo delle posizioni si paga in AI Rank.</p>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Le keyword vanno in AI Rank (<?= e($rankTarget['name']) ?>), un gruppo per ogni gruppo scelto. La prima posizione arriva in pochi minuti, poi AI Rank le controlla da solo nei giorni impostati.</p>
                 <button type="button" @click="sendToRank()" :disabled="busy || selectedIds().length === 0"
                         class="mt-3 inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                     Manda ad AI Rank
@@ -217,7 +217,7 @@ sort($uniqueIntents);
                         added += data.added || 0;
                         skipped += data.skipped || 0;
                     }
-                    this.rankMsg = this.doneText(added, skipped);
+                    this.rankMsg = this.doneText(added, skipped) + (added ? ' Le posizioni arrivano entro pochi minuti.' : '');
                 } catch (e) {
                     this.errorMsg = e.message || 'Errore di connessione, riprova.';
                 } finally {

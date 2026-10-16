@@ -318,8 +318,12 @@ class KeywordController
             }
         }
 
+        // Primo controllo posizioni subito (gratis), poi il ritmo dei giorni impostati
+        $queued = $this->keyword->queueFirstCheck($projectId, $keywordIds);
+        $queuedMsg = $queued > 0 ? ' Le posizioni arrivano entro pochi minuti.' : '';
+
         if ($added > 0) {
-            $_SESSION['_flash']['success'] = "Aggiunte {$added} keyword" . ($skipped > 0 ? " ({$skipped} duplicate ignorate)" : '') . $fetchedMsg;
+            $_SESSION['_flash']['success'] = "Aggiunte {$added} keyword" . ($skipped > 0 ? " ({$skipped} duplicate ignorate)" : '') . $fetchedMsg . $queuedMsg;
         } else {
             $_SESSION['_flash']['warning'] = 'Nessuna keyword aggiunta (tutte duplicate)';
         }
@@ -561,6 +565,14 @@ class KeywordController
             return;
         }
 
+        // Solo keyword di questo progetto (un ID di un altro progetto viene ignorato)
+        $keywordIds = array_values(array_filter(array_map('intval', (array) $keywordIds)));
+        $placeholders = implode(',', array_fill(0, count($keywordIds), '?'));
+        $keywordIds = $keywordIds ? array_map('intval', array_column(Database::fetchAll(
+            "SELECT id FROM st_keywords WHERE project_id = ? AND id IN ({$placeholders})",
+            array_merge([$projectId], $keywordIds)
+        ), 'id')) : [];
+
         $count = 0;
 
         switch ($action) {
@@ -569,7 +581,9 @@ class KeywordController
                     $this->keyword->update((int) $id, ['is_tracked' => 1]);
                     $count++;
                 }
-                $_SESSION['_flash']['success'] = "{$count} keyword aggiunte al tracking";
+                $queued = $this->keyword->queueFirstCheck($projectId, $keywordIds);
+                $_SESSION['_flash']['success'] = "{$count} keyword aggiunte al tracking"
+                    . ($queued > 0 ? ". Le posizioni di quelle mai controllate arrivano entro pochi minuti." : '');
                 break;
 
             case 'untrack':
@@ -682,6 +696,7 @@ class KeywordController
 
         $added = 0;
         $skipped = 0;
+        $importedIds = [];
 
         while (($row = fgetcsv($file)) !== false) {
             $keyword = trim($row[0] ?? '');
@@ -705,6 +720,9 @@ class KeywordController
                 'is_tracked' => 1,
                 'source' => 'csv_import',
             ]);
+            if ($newId) {
+                $importedIds[] = $newId;
+            }
 
             // Sincronizza keyword con gruppo in st_keyword_groups
             if ($newId && !empty($groupName)) {
@@ -716,7 +734,9 @@ class KeywordController
 
         fclose($file);
 
-        $_SESSION['_flash']['success'] = "Importate {$added} keyword" . ($skipped > 0 ? " ({$skipped} duplicate)" : '');
+        $queued = $this->keyword->queueFirstCheck($projectId, $importedIds);
+        $_SESSION['_flash']['success'] = "Importate {$added} keyword" . ($skipped > 0 ? " ({$skipped} duplicate)" : '')
+            . ($queued > 0 ? '. Le posizioni arrivano entro pochi minuti.' : '');
         Router::redirect('/seo-tracking/project/' . $projectId . '/keywords');
     }
 
