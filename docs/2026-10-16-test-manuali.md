@@ -36,7 +36,21 @@
 - Note (screenshot, utente, URL):
 -->
 
-_Nessuno per ora._
+### [P2] Il tour di benvenuto non parte mai
+- Scenario / passo: 1A, iscrizione con Google (utente 4, bewebagencysrls@gmail.com).
+- Atteso: al primo accesso parte da solo il tour "Benvenuto su Ainstein".
+- Successo: non compare. In prod `user_onboarding_global` ha 0 righe (nessun utente l'ha mai visto), mentre i tour
+  dei moduli si salvano (`user_onboarding` 5 righe).
+- Causa: `shared/views/layout.php:541` lo mostra solo se esiste `$onboardingWelcomeCompleted`, che nessun
+  controller passa mai. Gli step ci sono (`config/onboarding.php`, chiave `welcome`).
+- Note: Clemente: "non fa niente per adesso". Resto dell'iscrizione OK: 100 crediti con movimento
+  "Crediti benvenuto (registrazione Google)", mail di benvenuto arrivata.
+
+### [P3] Icone dei tool diverse tra menu laterale e dashboard
+- Scenario / passo: 1A, prima occhiata alla dashboard dopo l'iscrizione.
+- Atteso: stesso tool = stessa icona ovunque.
+- Successo: le icone del menu laterale (rese più sobrie il 2026-10-15, `d3e98cf`) non sono quelle delle card in dashboard.
+- Note: da allineare in un verso o nell'altro (decide Clemente quali tenere).
 
 ## Lista corta prima del post
 
