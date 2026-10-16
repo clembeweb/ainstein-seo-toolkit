@@ -70,4 +70,5 @@ Prova in prod su Stabia, nuovo ingresso (tutto gratis, saldo invariato 7.226,3):
 |---|---|---|---|---|
 | 2.5 | Attesa del raggruppamento | Tempo indicato vero | "Di solito meno di un minuto", ma con 200 keyword ci vogliono ~2 minuti | P3 |
 | 2.6 | Storico ricerche | Solo le ricerche utili | Ogni raccolta non portata all'AI resta come "Non finita" (oggi 3 righe su Stabia) | P3 |
-| 2.7 | Note dei gruppi | Parole semplici | L'AI scrive ancora "cluster", "pillar page", "CTA" nelle note | P3 |
+| 2.7 | Note dei gruppi | Parole semplici | L'AI scrive ancora "cluster", "pillar page", "CTA" nelle note | P3 — **corretto** (`05d543a`) |
+| 2.8 | Risultati | Leggere in pochi secondi | Clemente: "sti paragrafoni a muro di testo non mi piacciono". Nota strategica di 15 righe, note dei gruppi di 4-5 righe | P1 — **corretto** (`05d543a`): "Da dove partire" = 1 frase + 3 azioni; note max 2 frasi, in card 2 righe + "Leggi tutto"; le note vecchie mostrano la prima frase |
