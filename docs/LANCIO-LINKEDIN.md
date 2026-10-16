@@ -1,6 +1,38 @@
 # Lancio Ainstein su LinkedIn
 
-> File di stato del lancio. Aggiornato: 2026-10-13 notte.
+> File di stato del lancio. Aggiornato: 2026-10-16 sera.
+>
+> **PASSAGGIO DI CONSEGNE 2026-10-16 sera (RIPARTIRE DA QUI). P2 della prova "da utente" tutti corretti IN LOCALE,
+> NON ancora online** (deploy solo con l'ok di Clemente: `git push origin main` + `git pull` sul VPS). Un commit per tool,
+> `php -l` e verifica a schermo su localhost con l'admin locale:
+> - **AI Keywords** (`364a1cb`): tolte le card "Analisi competitor" e "Keyword gap analysis" (il tool non le fa: il piano
+>   editoriale legge solo i titoli in SERP); i costi di "Scegli la modalità" e FAQ erano già giusti (`bb74ec3`).
+> - **Saldo crediti in alto** (`a159e50`): endpoint `GET /credits/balance`; il badge (componente Alpine in `layout.php`)
+>   si rilegge dopo ogni POST fetch/XHR e alla chiusura degli stream SSE, e il polling notifiche (30 s) porta il saldo.
+>   Prova: saldo cambiato nel DB → badge 8.952 → 8.945 senza ricaricare; colori e "Ricarica" sotto i 10 crediti.
+> - **AI Writer, Meta tag** (`c9abb74`): "Leggi pagine (10 di 35)" / "(2)" con 2 spuntate, "Genera AI (N)" vero;
+>   import da sitemap e WordPress esclude di default carrello, checkout, my-account, wishlist, sample-page (anche
+>   "cart-2"/"checkout-2"), con casella per includerle (torronenurzia.it: 7 escluse); "URL del sito" precompilato col dominio.
+> - **AI Rank** (`1053fa2`): nuova impostazione **cost_keyword_volume** (Volumi keyword, default 1 = quanto scalava già il
+>   server; l'anteprima diceva 0,5); "Monitora giornalmente" → giorni veri dalle impostazioni (in prod: lunedì, mercoledì e
+>   venerdì); tolto il filtro "Tutte le posizioni" doppio; posizione "1" invece di "1.0"; avviso DataForSEO solo admin.
+> - **GEO Audit** (`a717423`): "Crediti usati" conta anche profilo, domande e schede (AiService accetta `credit_metadata`,
+>   project_id nel registro); Stefanelli in locale 9 → **13** (= 2 + 2 + 9). In prod i profili/domande fatti PRIMA del
+>   deploy non hanno project_id: restano fuori dal conto (si possono aggiungere con un UPDATE, chiedere a Clemente).
+>   "Ti consigliano 14%" ora spiega "1 risposta su 9 (11% a conto semplice: ChatGPT e Gemini contano di più)";
+>   verdetti in italiano nel registro dal vivo; "Il motore" → "L'AI" (prompt del judge + giudizi già salvati);
+>   "Generane dal profilo", "articolo da scrivere", "Ti citano", "Panoramica".
+> - **AI Writer, articolo in Anteprima**: era già fatto e online (`aed48ae`).
+> **Prima del post restano:** deploy di questi P2 (ok di Clemente), AI Keywords da provare in prod (la fa Clemente),
+> decidere /landing-b, la bozza del post.
+> **DOPO il post (raccolto da questo file):** 1) alert di AI Rank generati a fine controllo posizioni + mail digest (~2 h,
+> scheda nascosta finché non vanno); 2) verifica dell'app Google OAuth (logo, video del collegamento, motivazione scope);
+> 3) nomi definitivi dei moduli (li cambia Clemente da Admin); 4) piano assegnabile agli utenti in admin (`users` non ha
+> `plan_id`: oggi si ricaricano crediti a mano); 5) P3 parole inglesi rimaste ("Quick Wins", "Crawl Budget" e altre);
+> 6) /landing-b da decidere (se non prima); 7) miglioramento di AI Writer che Clemente aveva in mente (sessione "Ragionare
+> su un miglioramento di AI Writer"; c'è anche il brief "alla scheda" in fondo al file); 8) riaudit di clementeteodonno.it
+> — **già fatto il 2026-10-16** (41 pagine, score 41). Più le voci della sezione "Dopo il post" in fondo (Recap SEO,
+> report settimanale, AI Optimizer/SEO On-Page, Google Ads).
 >
 > **PASSAGGIO DI CONSEGNE 2026-10-15 (RIPARTIRE DA QUI).** Fatto il check sezioni su **AI GEO Audit** (ultimo dei 5):
 > scheda "Domande" a sé, menu laterale = schede, "run"→"audit" e "engine"→"AI" in tutti i testi, avvisi sulle chiavi API
