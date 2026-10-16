@@ -35,6 +35,15 @@
 >   - `1fa6c60` tour "Benvenuto su Ainstein" che non partiva mai: ora parte al primo accesso per chi non ha progetti.
 >   - `b3200ac` Panoramica AI Audit prima della scansione: niente anello/riquadri a 0, "Come funziona" in alto.
 >   - Aperto (P1, non fatto qui): Report AI in errore 500 (`unified-view.php:322`, `e()` su array).
+> - **Giro 3 (decisione di Clemente: in AI Audit resta solo il Report AI), in locale, non online:**
+>   `63a9023` Report AI non più in 500 (positives/timeline/impatto come oggetti; provato con una copia del report 1 di
+>   Madcrumbs: si vede senza rigenerarlo, anche il download); `3dc8d9c` revert del Piano rifatto (niente migrazione 007);
+>   `7947b74` sitemap non più "assente" (Disallow vuoto di Yoast mangiava la riga Sitemap; i progetti vecchi la leggono dal
+>   robots.txt salvato) + sitemap e hreflang veri passati al Report AI; `6fe2c3f` Piano d'azione tolto (scheda, menu,
+>   route, costi, tour, docs, landing del modulo, home; /action-plan → Report AI; dati nel DB intatti; in home anche i
+>   costi di AI Keywords letti dalle impostazioni). Nota: le 3 cancellazioni di file (controller, servizio, vista del
+>   Piano) sono finite nel commit `21b3089` della sessione Test manuali (indice git condiviso): risultato giusto.
+>   Deploy: un `git push` porta online tutto il main; nessuna modifica al DB di prod serve.
 > **Prima del post restano:** deploy di questi P2 (ok di Clemente), AI Keywords da provare in prod (la fa Clemente),
 > decidere /landing-b, la bozza del post.
 > **DOPO il post (raccolto da questo file):** 1) alert di AI Rank generati a fine controllo posizioni + mail digest (~2 h,
