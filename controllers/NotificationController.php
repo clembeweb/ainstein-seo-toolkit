@@ -23,8 +23,9 @@ class NotificationController
 
         $count = \Services\NotificationService::getUnreadCount(Auth::id());
 
+        // Anche il saldo: il polling ogni 30 s tiene allineato il badge crediti (job in background, cron)
         header('Content-Type: application/json');
-        echo json_encode(['count' => $count]);
+        echo json_encode(['count' => $count, 'credits' => \Core\Credits::getBalance(Auth::id())]);
         exit;
     }
 

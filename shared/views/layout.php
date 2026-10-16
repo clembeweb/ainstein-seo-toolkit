@@ -129,37 +129,19 @@ $_accentShades = \Core\BrandingHelper::generateShades($_brandAccent);
                     <div class="flex flex-1"></div>
 
                     <div class="flex items-center gap-x-4 lg:gap-x-6">
-                        <!-- Credits badge -->
-                        <?php
-                        $_userCredits = (float)($user['credits'] ?? 0);
-                        $_creditBgClass = 'bg-slate-100 dark:bg-slate-700';
-                        $_creditTextClass = 'text-slate-900 dark:text-white';
-                        $_creditIconClass = 'text-amber-500';
-                        if ($_userCredits < 3) {
-                            $_creditBgClass = 'bg-red-100 dark:bg-red-900/30';
-                            $_creditTextClass = 'text-red-700 dark:text-red-400';
-                            $_creditIconClass = 'text-red-500';
-                        } elseif ($_userCredits < 10) {
-                            $_creditBgClass = 'bg-amber-100 dark:bg-amber-900/30';
-                            $_creditTextClass = 'text-amber-700 dark:text-amber-400';
-                            $_creditIconClass = 'text-amber-600';
-                        }
-                        ?>
+                        <!-- Credits badge (Alpine: si aggiorna dopo le operazioni che addebitano, vedi creditBadge()) -->
                         <a href="<?= url('/pricing') ?>" title="Crediti disponibili. Clicca per vedere i piani e ricaricare"
-                           class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg hover:ring-2 hover:ring-blue-400 transition <?= $_creditBgClass ?>">
-                            <?php if ($_userCredits < 10): ?>
-                            <svg class="w-4 h-4 <?= $_creditIconClass ?>" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                           x-data="creditBadge(<?= (float)($user['credits'] ?? 0) ?>)" @credits-updated.window="credits = $event.detail.credits"
+                           class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg hover:ring-2 hover:ring-blue-400 transition"
+                           :class="credits < 3 ? 'bg-red-100 dark:bg-red-900/30' : (credits < 10 ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-slate-100 dark:bg-slate-700')">
+                            <svg x-show="credits < 10" x-cloak class="w-4 h-4" :class="credits < 3 ? 'text-red-500' : 'text-amber-600'" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
                             </svg>
-                            <?php else: ?>
-                            <svg class="w-4 h-4 <?= $_creditIconClass ?>" fill="currentColor" viewBox="0 0 20 20">
+                            <svg x-show="credits >= 10" class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.736 6.979C9.208 6.193 9.696 6 10 6c.304 0 .792.193 1.264.979a1 1 0 001.715-1.029C12.279 4.784 11.232 4 10 4s-2.279.784-2.979 1.95c-.285.475-.507 1-.67 1.55H6a1 1 0 000 2h.013a9.358 9.358 0 000 1H6a1 1 0 100 2h.351c.163.55.385 1.075.67 1.55C7.721 15.216 8.768 16 10 16s2.279-.784 2.979-1.95a1 1 0 10-1.715-1.029c-.472.786-.96.979-1.264.979-.304 0-.792-.193-1.264-.979a4.265 4.265 0 01-.264-.521H10a1 1 0 100-2H8.017a7.36 7.36 0 010-1H10a1 1 0 100-2H8.472a4.265 4.265 0 01.264-.521z"/>
                             </svg>
-                            <?php endif; ?>
-                            <span class="text-sm font-semibold <?= $_creditTextClass ?>"><?= number_format($_userCredits, 1) ?></span>
-                            <?php if ($_userCredits < 10): ?>
-                            <span class="text-xs font-medium underline <?= $_creditTextClass ?>">Ricarica</span>
-                            <?php endif; ?>
+                            <span class="text-sm font-semibold" :class="textClass()" x-text="formatted()"><?= number_format((float)($user['credits'] ?? 0), 1) ?></span>
+                            <span x-show="credits < 10" x-cloak class="text-xs font-medium underline" :class="textClass()">Ricarica</span>
                         </a>
 
                         <!-- Dark mode toggle -->
@@ -403,6 +385,76 @@ $_accentShades = \Core\BrandingHelper::generateShades($_brandAccent);
     <!-- Global Modals (alert/confirm) -->
     <?= \Core\View::partial('components/global-modals') ?>
 
+    <!-- Credit badge Alpine component + aggiornamento del saldo dopo le operazioni -->
+    <script>
+    function creditBadge(initial) {
+        return {
+            credits: Number(initial) || 0,
+            // Stesso formato di number_format($x, 1) lato PHP
+            formatted() {
+                return this.credits.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+            },
+            textClass() {
+                if (this.credits < 3) return 'text-red-700 dark:text-red-400';
+                if (this.credits < 10) return 'text-amber-700 dark:text-amber-400';
+                return 'text-slate-900 dark:text-white';
+            }
+        };
+    }
+
+    // Le operazioni che addebitano sono POST (fetch/XHR) o stream SSE: quando finiscono rileggiamo il saldo.
+    // Il polling delle notifiche (30 s) porta comunque il saldo, per i job in background e i cron.
+    (function () {
+        const balanceUrl = '<?= url('/credits/balance') ?>';
+        const nativeFetch = window.fetch.bind(window);
+        let timer = null;
+
+        window.refreshCredits = function () {
+            clearTimeout(timer);
+            timer = setTimeout(async () => {
+                try {
+                    const r = await nativeFetch(balanceUrl, { headers: { 'Accept': 'application/json' } });
+                    if (!r.ok) return;
+                    const d = await r.json();
+                    if (typeof d.credits === 'number') {
+                        window.dispatchEvent(new CustomEvent('credits-updated', { detail: { credits: d.credits } }));
+                    }
+                } catch (e) {}
+            }, 400);
+        };
+
+        const sameOrigin = (url) => {
+            try { return new URL(url, location.href).origin === location.origin; } catch (e) { return false; }
+        };
+
+        window.fetch = function (input, init) {
+            const method = ((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+            const url = typeof input === 'string' ? input : (input && input.url) || '';
+            const p = nativeFetch(input, init);
+            if (method !== 'GET' && sameOrigin(url)) {
+                p.then(() => window.refreshCredits(), () => {});
+            }
+            return p;
+        };
+
+        const xhrOpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function (method, url) {
+            if (String(method).toUpperCase() !== 'GET' && sameOrigin(url)) {
+                this.addEventListener('loadend', () => window.refreshCredits());
+            }
+            return xhrOpen.apply(this, arguments);
+        };
+
+        if (window.EventSource) {
+            const esClose = EventSource.prototype.close;
+            EventSource.prototype.close = function () {
+                window.refreshCredits();
+                return esClose.apply(this, arguments);
+            };
+        }
+    })();
+    </script>
+
     <!-- Notification bell Alpine component -->
     <script>
     function notificationBell() {
@@ -426,6 +478,9 @@ $_accentShades = \Core\BrandingHelper::generateShades($_brandAccent);
                     if (r.ok) {
                         const d = await r.json();
                         this.unreadCount = d.count;
+                        if (typeof d.credits === 'number') {
+                            window.dispatchEvent(new CustomEvent('credits-updated', { detail: { credits: d.credits } }));
+                        }
                     }
                 } catch(e) {}
             },

@@ -796,6 +796,15 @@ Router::get('/onboarding/status', function () {
     ]);
 });
 
+// Saldo crediti per il badge in alto (si aggiorna dopo le operazioni che addebitano)
+Router::get('/credits/balance', function () {
+    Middleware::auth();
+    header('Content-Type: application/json');
+    header('Cache-Control: no-store');
+    echo json_encode(['credits' => Credits::getBalance(Auth::id())]);
+    exit;
+});
+
 // --- Notifications Routes ---
 Router::get('/notifications/unread-count', fn() => (new Controllers\NotificationController())->unreadCount());
 Router::get('/notifications/recent', fn() => (new Controllers\NotificationController())->recent());
