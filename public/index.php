@@ -283,6 +283,8 @@ Router::post('/login', function () {
     $remember = isset($_POST['remember']);
 
     if (Auth::attempt($email, $password, $remember)) {
+        \Core\Analytics::event('login', ['method' => 'email']);
+
         // Check for pending invite token (project sharing)
         if (!empty($_SESSION['invite_token'])) {
             $token = $_SESSION['invite_token'];
@@ -353,6 +355,7 @@ Router::post('/register', function () {
     // Login automatico
     $user = Database::fetch("SELECT * FROM users WHERE id = ?", [$userId]);
     Auth::login($user);
+    \Core\Analytics::event('sign_up', ['method' => 'email']);
 
     // Email di benvenuto (non bloccante - errori loggati silenziosamente)
     try {
@@ -801,11 +804,17 @@ Router::get('/onboarding/status', function () {
 });
 
 // Saldo crediti per il badge in alto (si aggiorna dopo le operazioni che addebitano)
+// Saldo crediti per il badge in alto. Con ?since=ID (solo se GA4 è attivo) torna anche le righe nuove di usage_log,
+// che il browser manda a GA4 come eventi credits_spent (vedi layout.php e docs/GA4-AINSTEIN.md).
 Router::get('/credits/balance', function () {
     Middleware::auth();
     header('Content-Type: application/json');
     header('Cache-Control: no-store');
-    echo json_encode(['credits' => Credits::getBalance(Auth::id())]);
+    $out = ['credits' => Credits::getBalance(Auth::id())];
+    if (isset($_GET['since']) && \Core\Analytics::enabled()) {
+        $out['usage'] = \Core\Analytics::usageSince((int) Auth::id(), max(0, (int) $_GET['since']));
+    }
+    echo json_encode($out);
     exit;
 });
 

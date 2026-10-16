@@ -164,6 +164,7 @@ class GlobalProjectController
             ]);
 
             $_SESSION['_flash']['success'] = 'Progetto creato con successo!';
+            \Core\Analytics::event('project_created', ['has_domain' => $domain ? 1 : 0]);
             Router::redirect('/projects/' . $projectId);
 
         } catch (\Exception $e) {
@@ -389,6 +390,7 @@ class GlobalProjectController
 
         if ($moduleProjectId) {
             $_SESSION['_flash']['success'] = $moduleConfig[$moduleSlug]['label'] . ' attivato con successo!';
+            \Core\Analytics::event('module_activated', ['module' => $moduleSlug] + ($type !== '' ? ['type' => $type] : []));
 
             // Ritorno alla pagina di partenza (es. piano editoriale): solo percorsi interni, mai URL esterni
             $returnTo = trim((string) ($_POST['return_to'] ?? ''));

@@ -199,6 +199,7 @@ class OAuthController
 
         // Login
         Auth::login($user, true);
+        \Core\Analytics::event($isNewUser ? 'sign_up' : 'login', ['method' => 'google']);
 
         // Check for pending invite token (project sharing)
         if (!empty($_SESSION['invite_token'])) {
