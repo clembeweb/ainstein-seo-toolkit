@@ -46,6 +46,16 @@
 | GEO "Genera il profilo" non si tronca | scenario 1 o 4 | da fare |
 | AI Audit prima della scansione dice "Nessuna scansione ancora" | scenario 1 | OK (ma riquadri vuoti intorno: P2 sotto) |
 
+## Esito AI Audit (2026-10-16 ~16:20)
+
+**Online `0ce9538`** (deploy da questa sessione, ok di Clemente "manda in prod cose che servono"): Report AI senza 500
+(63a9023), sitemap trovata (7947b74), Piano d'azione tolto (3dc8d9c + 6fe2c3f), IT/EN = traduzione mancante (fe38c6e),
+tour di benvenuto (1fa6c60), Panoramica senza riquadri vuoti (b3200ac), più i P2 di prima. Nessuna migrazione.
+**Verificato a schermo in prod:** /seo-audit/project/19/report 200, impaginato, "Scarica HTML" presente, scheda Piano
+d'azione sparita. Clemente: "ok perfetto". Il report 1 dice ancora "sitemap assente" (testo scritto prima del fix):
+il prossimo report lo dice giusto, senza rifare la scansione.
+P3 visti nel report: "Report SEO Unificato", "Budget Score", "Tipo: generic".
+
 ## Problemi trovati
 
 <!-- Formato: ### [P1/P2/P3] titolo corto
