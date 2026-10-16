@@ -356,9 +356,19 @@ class ArchitectureController
         $brief = json_decode($research['brief'], true);
         $maxClusters = (int) (ModuleLoader::getSetting('keyword-research', 'max_clusters') ?? 8);
 
+        // Una riga per ricerca: le varianti che Google tratta come la stessa keyword vanno tra parentesi (vedi ResearchController)
         $kwLines = [];
+        $groups = [];
         foreach ($keywords as $kw) {
-            $kwLines[] = "- {$kw['text']} (vol: {$kw['volume']}, intent: {$kw['intent']})";
+            $groups[\Modules\KeywordResearch\Models\Cluster::variantKey($kw)][] = $kw;
+        }
+        foreach ($groups as $group) {
+            $kw = $group[0];
+            $line = "- {$kw['text']} (vol: {$kw['volume']}, intent: {$kw['intent']})";
+            if (count($group) > 1) {
+                $line .= " [stessa ricerca, scritta anche: " . implode(', ', array_column(array_slice($group, 1), 'text')) . "]";
+            }
+            $kwLines[] = $line;
         }
         $kwListText = implode("\n", $kwLines);
 
@@ -389,6 +399,8 @@ TASK:
 3. Raggruppa le keyword in max {$maxClusters} pagine/sezioni
 4. Indica l'intent dominante per ogni pagina
 5. Ordina per priorita' (volume + importanza strategica)
+6. Le keyword tra parentesi '[stessa ricerca, scritta anche: ...]' sono la STESSA ricerca di Google con lo stesso volume:
+   nei totali contale UNA volta sola (non sommare le varianti); in 'keywords' elencale tutte
 
 RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
 {

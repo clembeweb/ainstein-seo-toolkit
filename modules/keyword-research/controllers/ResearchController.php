@@ -416,9 +416,20 @@ class ResearchController
         $maxClusters = (int) (ModuleLoader::getSetting('keyword-research', 'max_clusters') ?? 8);
 
         // Prepara prompt
+        // Una riga per ricerca: le varianti che Google tratta come la stessa keyword (stesso volume/CPC/competizione,
+        // stesse parole) vanno tra parentesi, così l'AI non le somma nella nota strategica (prova del 2026-10-16)
         $kwLines = [];
+        $groups = [];
         foreach ($keywords as $kw) {
-            $kwLines[] = "- {$kw['text']} (vol: {$kw['volume']}, comp: {$kw['competition_level']}, intent: {$kw['intent']})";
+            $groups[\Modules\KeywordResearch\Models\Cluster::variantKey($kw)][] = $kw;
+        }
+        foreach ($groups as $group) {
+            $kw = $group[0];
+            $line = "- {$kw['text']} (vol: {$kw['volume']}, comp: {$kw['competition_level']}, intent: {$kw['intent']})";
+            if (count($group) > 1) {
+                $line .= " [stessa ricerca, scritta anche: " . implode(', ', array_column(array_slice($group, 1), 'text')) . "]";
+            }
+            $kwLines[] = $line;
         }
         $kwListText = implode("\n", $kwLines);
 
@@ -438,6 +449,8 @@ TASK:
 2. Raggruppa le keyword pertinenti in cluster semantici (max {$maxClusters} cluster)
 3. Per ogni cluster indica la main keyword (quella con volume piu' alto)
 4. Classifica l'intent dominante di ogni cluster
+5. Le keyword tra parentesi '[stessa ricerca, scritta anche: ...]' sono la STESSA ricerca di Google con lo stesso volume:
+   nei totali e nella nota strategica contale UNA volta sola (non sommare le varianti); in 'keywords' elencale tutte
 
 RISPONDI SOLO IN JSON CON QUESTA STRUTTURA ESATTA:
 {
